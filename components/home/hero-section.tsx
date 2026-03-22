@@ -4,29 +4,23 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { motion } from "motion/react"
+import { itemVariants } from "@/lib/animations"
+
+const heroContainerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.2 },
+  },
+}
 
 export function HeroSection() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2
-      }
-    }
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } }
-  }
-
   return (
     <section className="w-full bg-white dark:bg-slate-950 pt-8 pb-12">
       <div className="container mx-auto px-4 md:px-6">
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 lg:grid-cols-12 gap-8"
-          variants={containerVariants}
+          variants={heroContainerVariants}
           initial="hidden"
           animate="show"
         >
@@ -48,7 +42,7 @@ export function HeroSection() {
               </div>
               <div className="space-y-4">
                 <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 font-medium">
-                  <span className="text-rose-600 dark:text-rose-400 uppercase tracking-wider text-xs font-bold">Xu Hướng 2024</span>
+                  <span className="text-rose-600 dark:text-rose-400 uppercase tracking-wider text-xs font-bold">Xu Hướng 2026</span>
                   <span>•</span>
                   <span>5 phút đọc</span>
                 </div>
@@ -67,7 +61,6 @@ export function HeroSection() {
 
           {/* Secondary Articles */}
           <div className="lg:col-span-4 flex flex-col gap-8">
-            {/* Article 1 */}
             <motion.div variants={itemVariants}>
               <Link href="#" className="group flex flex-col sm:flex-row lg:flex-col gap-4">
                 <div className="relative w-full sm:w-1/3 lg:w-full aspect-[16/9] overflow-hidden rounded-xl shrink-0">
@@ -94,7 +87,6 @@ export function HeroSection() {
 
             <div className="h-px w-full bg-slate-100 dark:bg-slate-800 hidden lg:block" />
 
-            {/* Article 2 */}
             <motion.div variants={itemVariants}>
               <Link href="#" className="group flex flex-col sm:flex-row lg:flex-col gap-4">
                 <div className="relative w-full sm:w-1/3 lg:w-full aspect-[16/9] overflow-hidden rounded-xl shrink-0">

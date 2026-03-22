@@ -1,9 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import Link from "next/link"
-import { Search, Filter, Star, ShieldCheck, CirclePlay } from "lucide-react"
+import { Search, Filter, ShieldCheck } from "lucide-react"
 import { motion } from "motion/react"
 
 import { Input } from "@/components/ui/input"
@@ -11,46 +10,40 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PlatformBadge } from "@/components/platform-badge"
 import { supabase } from "@/lib/supabase"
+import { containerVariants, itemVariants } from "@/lib/animations"
+import type { Kol } from "@/lib/types"
 
 export default function KocTrackerPage() {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [selectedPlatform, setSelectedPlatform] = React.useState<string | null>(null)
-  const [KOLS, setKOLS] = React.useState<any[]>([])
+  const [kols, setKols] = React.useState<Kol[]>([])
 
   React.useEffect(() => {
-    supabase.from('kols').select('*').then(({ data }) => setKOLS(data || []))
+    supabase.from('kols').select('*').then(({ data }) => setKols(data || []))
   }, [])
 
-  const platforms = Array.from(new Set(KOLS.map(k => k.platform)))
+  const platforms = React.useMemo(
+    () => Array.from(new Set(kols.map(k => k.platform))),
+    [kols]
+  )
 
-  const filteredKols = KOLS.filter(kol => {
-    const matchesSearch = kol.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          kol.handle.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesPlatform = selectedPlatform ? kol.platform === selectedPlatform : true
-    return matchesSearch && matchesPlatform
-  })
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } }
-  }
+  const filteredKols = React.useMemo(() =>
+    kols.filter(kol => {
+      const query = searchQuery.toLowerCase()
+      const matchesSearch = kol.name.toLowerCase().includes(query) ||
+                            kol.handle.toLowerCase().includes(query)
+      const matchesPlatform = selectedPlatform ? kol.platform === selectedPlatform : true
+      return matchesSearch && matchesPlatform
+    }),
+    [kols, searchQuery, selectedPlatform]
+  )
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12">
       <div className="container mx-auto px-4 md:px-6">
-        {/* Header Section */}
-        <motion.div 
+        <motion.div
           className="mb-10"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -64,8 +57,7 @@ export default function KocTrackerPage() {
           </p>
         </motion.div>
 
-        {/* Filters and Search */}
-        <motion.div 
+        <motion.div
           className="flex flex-col md:flex-row gap-4 mb-8 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -82,8 +74,8 @@ export default function KocTrackerPage() {
             />
           </div>
           <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-            <Button 
-              variant={selectedPlatform === null ? "default" : "outline"} 
+            <Button
+              variant={selectedPlatform === null ? "default" : "outline"}
               className={`rounded-xl whitespace-nowrap ${selectedPlatform === null ? 'bg-slate-900 text-white dark:bg-slate-50 dark:text-slate-900' : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'}`}
               onClick={() => setSelectedPlatform(null)}
             >
@@ -91,9 +83,9 @@ export default function KocTrackerPage() {
               Tất cả nền tảng
             </Button>
             {platforms.map(platform => (
-              <Button 
+              <Button
                 key={platform}
-                variant={selectedPlatform === platform ? "default" : "outline"} 
+                variant={selectedPlatform === platform ? "default" : "outline"}
                 className={`rounded-xl whitespace-nowrap ${selectedPlatform === platform ? 'bg-slate-900 text-white dark:bg-slate-50 dark:text-slate-900' : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'}`}
                 onClick={() => setSelectedPlatform(platform)}
               >
@@ -103,9 +95,8 @@ export default function KocTrackerPage() {
           </div>
         </motion.div>
 
-        {/* KOL Grid */}
         {filteredKols.length > 0 ? (
-          <motion.div 
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             variants={containerVariants}
             initial="hidden"
@@ -128,43 +119,22 @@ export default function KocTrackerPage() {
                             </h3>
                             {kol.verified && <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0" />}
                           </div>
-                          
-                          {/* Platform Indicator */}
                           <div className="mb-3">
-                            {kol.platform === "Youtube" ? (
-                              <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-full border border-red-100 dark:border-red-900/50 text-[10px] font-bold uppercase tracking-wider">
-                                <CirclePlay className="h-3 w-3" /> {kol.platform}
-                              </span>
-                            ) : kol.platform === "Tiktok" ? (
-                              <span className="inline-flex items-center gap-1 text-slate-900 dark:text-slate-50 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 text-[10px] font-bold uppercase tracking-wider">
-                                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-                                </svg>
-                                {kol.platform}
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 px-2 py-0.5 rounded-full border border-rose-100 dark:border-rose-900/50 text-[10px] font-bold uppercase tracking-wider">
-                                <CirclePlay className="h-3 w-3" /> {kol.platform}
-                              </span>
-                            )}
+                            <PlatformBadge platform={kol.platform} />
                           </div>
-
                           <div className="flex items-center gap-4 text-sm">
                             <div className="flex flex-col">
                               <span className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Followers</span>
                               <span className="font-bold text-slate-900 dark:text-slate-50">{kol.followers}</span>
                             </div>
-                            <div className="w-px h-8 bg-slate-100 dark:bg-slate-800"></div>
+                            <div className="w-px h-8 bg-slate-100 dark:bg-slate-800" />
                             <div className="flex flex-col">
                               <span className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Độ uy tín</span>
-                              <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                                {kol.trustscore}/100
-                              </span>
+                              <span className="font-bold text-emerald-600 dark:text-emerald-400">{kol.trustscore}/100</span>
                             </div>
                           </div>
                         </div>
                       </div>
-
                       <div className="space-y-4">
                         <div>
                           <div className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Chuyên mục</div>
@@ -176,12 +146,9 @@ export default function KocTrackerPage() {
                             ))}
                           </div>
                         </div>
-                        
                         <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                           <div className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Review gần nhất</div>
-                          <div className="font-medium text-slate-900 dark:text-slate-50 text-sm truncate">
-                            {kol.recentreview}
-                          </div>
+                          <div className="font-medium text-slate-900 dark:text-slate-50 text-sm truncate">{kol.recentreview}</div>
                         </div>
                       </div>
                     </CardContent>
@@ -191,29 +158,25 @@ export default function KocTrackerPage() {
             ))}
           </motion.div>
         ) : (
-          <motion.div 
+          <motion.div
             className="text-center py-24 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
             <p className="text-slate-500 dark:text-slate-400 text-lg">Không tìm thấy KOL/KOC nào phù hợp.</p>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="mt-4 rounded-full"
-              onClick={() => {
-                setSearchQuery("")
-                setSelectedPlatform(null)
-              }}
+              onClick={() => { setSearchQuery(""); setSelectedPlatform(null) }}
             >
               Xóa bộ lọc
             </Button>
           </motion.div>
         )}
-        
-        {/* Load More */}
+
         {filteredKols.length > 0 && (
-          <motion.div 
+          <motion.div
             className="mt-12 flex justify-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

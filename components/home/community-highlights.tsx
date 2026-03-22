@@ -7,14 +7,12 @@ import { motion } from "motion/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { containerVariants, itemVariants } from "@/lib/animations"
 
 const DISCUSSIONS = [
   {
     id: "1",
-    author: {
-      name: "Nguyễn Mai",
-      avatar: "https://picsum.photos/seed/mai/100/100",
-    },
+    author: { name: "Nguyễn Mai", avatar: "https://picsum.photos/seed/mai/100/100" },
     title: "Da mụn ẩn có nên dùng BHA Obagi không mọi người?",
     content: "Mình bị mụn ẩn vùng trán và cằm khá nhiều, da hỗn hợp thiên dầu. Nghe review BHA Obagi đẩy mụn tốt nhưng sợ break out. Ai dùng rồi cho mình xin review với ạ!",
     tags: ["Trị mụn", "BHA", "Obagi"],
@@ -24,10 +22,7 @@ const DISCUSSIONS = [
   },
   {
     id: "2",
-    author: {
-      name: "Trần Linh",
-      avatar: "https://picsum.photos/seed/linh/100/100",
-    },
+    author: { name: "Trần Linh", avatar: "https://picsum.photos/seed/linh/100/100" },
     title: "Review chân thực kem chống nắng Skin1004 sau 1 tháng",
     content: "Chất kem mỏng nhẹ, thấm nhanh, không nâng tone lố. Kiềm dầu ở mức khá, cuối ngày vùng chữ T vẫn hơi bóng nhẹ. Phù hợp da dầu mụn, nhạy cảm.",
     tags: ["Review", "Kem chống nắng", "Skin1004"],
@@ -37,10 +32,7 @@ const DISCUSSIONS = [
   },
   {
     id: "3",
-    author: {
-      name: "Lê Hân",
-      avatar: "https://picsum.photos/seed/han/100/100",
-    },
+    author: { name: "Lê Hân", avatar: "https://picsum.photos/seed/han/100/100" },
     title: "Xin routine phục hồi da sau nặn mụn",
     content: "Da mình vừa đi nặn mụn về đang sưng đỏ và nhạy cảm. Mọi người gợi ý giúp mình vài sản phẩm phục hồi lành tính với ạ. Cảm ơn cả nhà!",
     tags: ["Phục hồi", "Hỏi đáp", "Skincare"],
@@ -51,21 +43,6 @@ const DISCUSSIONS = [
 ]
 
 export function CommunityHighlights() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } }
-  }
-
   return (
     <section className="container mx-auto px-4 md:px-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
@@ -85,7 +62,7 @@ export function CommunityHighlights() {
         </Link>
       </div>
 
-      <motion.div 
+      <motion.div
         className="grid grid-cols-1 lg:grid-cols-3 gap-6"
         variants={containerVariants}
         initial="hidden"

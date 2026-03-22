@@ -8,11 +8,11 @@ export function Footer() {
         <div className="space-y-6">
           <Link href="/" className="flex items-center gap-2">
             <span className="font-display text-3xl font-black tracking-tighter text-white uppercase">
-              Đẹp<span className="text-rose-500">Radar</span>
+              360°<span className="text-rose-500">đẹp</span>
             </span>
           </Link>
           <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
-            Tạp chí làm đẹp số 1 Việt Nam. Nơi hội tụ những xu hướng mới nhất, đánh giá chân thực và cộng đồng đam mê làm đẹp.
+            360 độ đẹp - Nền tảng làm đẹp toàn diện số 1 Việt Nam. Nơi hội tụ những xu hướng mới nhất, đánh giá chân thực và cộng đồng đam mê làm đẹp.
           </p>
           <div className="flex gap-4">
             <Link href="#" className="text-slate-400 hover:text-white transition-colors">
@@ -109,7 +109,7 @@ export function Footer() {
         </div>
       </div>
       <div className="container mx-auto px-4 md:px-6 mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium uppercase tracking-wider text-slate-500">
-        <div>&copy; {new Date().getFullYear()} Đẹp Radar. All rights reserved.</div>
+        <div>&copy; {new Date().getFullYear()} 360 độ đẹp. All rights reserved.</div>
         <div className="flex gap-6">
           <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
           <Link href="#" className="hover:text-white transition-colors">Terms</Link>

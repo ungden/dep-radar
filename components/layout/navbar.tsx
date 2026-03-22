@@ -26,7 +26,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm">
       {/* Top Bar - Magazine Style */}
       <div className="hidden md:flex justify-between items-center px-6 py-2 border-b border-slate-100 dark:border-slate-800 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-        <div>Thứ Năm, 5 Tháng 3, 2026</div>
+        <div>{new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
         <div className="flex gap-4">
           <Link href="#" className="hover:text-rose-600 dark:hover:text-rose-400 transition-colors">Đăng ký nhận tin</Link>
           <Link href="#" className="hover:text-rose-600 dark:hover:text-rose-400 transition-colors">Liên hệ</Link>
@@ -37,7 +37,7 @@ export function Navbar() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
             <span className="font-display text-3xl font-black tracking-tighter text-slate-900 dark:text-slate-50 uppercase">
-              Đẹp<span className="text-rose-600 dark:text-rose-500">Radar</span>
+              360°<span className="text-rose-600 dark:text-rose-500">đẹp</span>
             </span>
           </Link>
           <nav className="hidden md:flex gap-8">

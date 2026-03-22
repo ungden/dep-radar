@@ -18,7 +18,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: 'Đẹp Radar | Nền tảng Đánh giá Mỹ phẩm & KOL Tracker',
+  title: '360 độ đẹp | Nền tảng Đánh giá Mỹ phẩm & KOL Tracker',
   description: 'Khám phá đánh giá mỹ phẩm chân thực, theo dõi KOL/KOC yêu thích và mua sắm thông minh cùng cộng đồng làm đẹp lớn nhất Việt Nam.',
 };
 
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-50 antialiased flex flex-col" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >

@@ -3,39 +3,36 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { CircleCheck, CirclePlay, Star, ChevronRight } from "lucide-react"
+import { CircleCheck, Star, ChevronRight } from "lucide-react"
 import { motion } from "motion/react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { PlatformBadge } from "@/components/platform-badge"
 import { supabase } from "@/lib/supabase"
+import { containerVariants, itemVariants } from "@/lib/animations"
+import type { Review, Kol, Product } from "@/lib/types"
 
 export function KolRadar() {
-  const [REVIEWS, setREVIEWS] = React.useState<any[]>([])
-  const [KOLS, setKOLS] = React.useState<any[]>([])
-  const [PRODUCTS, setPRODUCTS] = React.useState<any[]>([])
+  const [reviews, setReviews] = React.useState<Review[]>([])
+  const [kols, setKols] = React.useState<Kol[]>([])
+  const [products, setProducts] = React.useState<Product[]>([])
 
   React.useEffect(() => {
-    supabase.from('reviews').select('*').limit(3).then(({ data }) => setREVIEWS(data || []))
-    supabase.from('kols').select('*').then(({ data }) => setKOLS(data || []))
-    supabase.from('radar_products').select('*').then(({ data }) => setPRODUCTS(data || []))
+    Promise.all([
+      supabase.from('reviews').select('*').limit(3),
+      supabase.from('kols').select('id,name,avatar,platform,verified'),
+      supabase.from('radar_products').select('id,name,brand,image'),
+    ]).then(([reviewsRes, kolsRes, productsRes]) => {
+      setReviews(reviewsRes.data || [])
+      setKols(kolsRes.data || [])
+      setProducts(productsRes.data || [])
+    })
   }, [])
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } }
-  }
+  const kolMap = React.useMemo(() => new Map(kols.map(k => [k.id, k])), [kols])
+  const productMap = React.useMemo(() => new Map(products.map(p => [p.id, p])), [products])
 
   return (
     <section className="bg-slate-100 dark:bg-slate-900/50 py-16 md:py-24">
@@ -57,16 +54,16 @@ export function KolRadar() {
           </Link>
         </div>
 
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           variants={containerVariants}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
         >
-          {REVIEWS.map((review) => {
-            const kol = KOLS.find(k => k.id === review.kolid)
-            const product = PRODUCTS.find(p => p.id === review.productid)
+          {reviews.map((review) => {
+            const kol = kolMap.get(review.kolid)
+            const product = productMap.get(review.productid)
             if (!kol || !product) return null
 
             return (
@@ -81,28 +78,11 @@ export function KolRadar() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                           <h3 className="font-extrabold text-lg text-slate-900 dark:text-slate-50 truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">{kol.name}</h3>
-                          {kol.verified && (
-                            <CircleCheck className="h-4 w-4 text-blue-500 shrink-0" />
-                          )}
-                          {kol.platform === "Youtube" ? (
-                            <span className="flex items-center gap-1 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-full border border-red-100 dark:border-red-900/50 text-[10px] font-bold uppercase tracking-wider">
-                              <CirclePlay className="h-3 w-3" /> {kol.platform}
-                            </span>
-                          ) : kol.platform === "Tiktok" ? (
-                            <span className="flex items-center gap-1 text-slate-900 dark:text-slate-50 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 text-[10px] font-bold uppercase tracking-wider">
-                              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-                              </svg>
-                              {kol.platform}
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 px-2 py-0.5 rounded-full border border-rose-100 dark:border-rose-900/50 text-[10px] font-bold uppercase tracking-wider">
-                              <CirclePlay className="h-3 w-3" /> {kol.platform}
-                            </span>
-                          )}
+                          {kol.verified && <CircleCheck className="h-4 w-4 text-blue-500 shrink-0" />}
+                          <PlatformBadge platform={kol.platform} />
                         </div>
-                        <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-                          <span>{review.timeago}</span>
+                        <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                          {review.timeago}
                         </div>
                       </div>
                       <ChevronRight className="h-5 w-5 text-slate-300 dark:text-slate-600 group-hover:text-rose-500 dark:group-hover:text-rose-400 transition-colors shrink-0" />
@@ -111,18 +91,10 @@ export function KolRadar() {
                   <CardContent className="p-5 bg-white dark:bg-slate-900">
                     <div className="flex gap-4 mb-4">
                       <div className="relative h-20 w-20 shrink-0 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-100 dark:border-slate-800">
-                        <Image
-                          src={product.image}
-                          alt={product.name}
-                          fill
-                          className="object-cover"
-                          referrerPolicy="no-referrer"
-                        />
+                        <Image src={product.image} alt={product.name} fill className="object-cover" referrerPolicy="no-referrer" />
                       </div>
                       <div className="flex flex-col justify-center">
-                        <div className="text-xs font-medium text-rose-500 uppercase tracking-wider mb-1">
-                          {product.brand}
-                        </div>
+                        <div className="text-xs font-medium text-rose-500 uppercase tracking-wider mb-1">{product.brand}</div>
                         <Link href={`/products/${product.id}`} className="font-semibold text-slate-900 dark:text-slate-50 hover:text-rose-500 dark:hover:text-rose-400 line-clamp-2 leading-tight">
                           {product.name}
                         </Link>

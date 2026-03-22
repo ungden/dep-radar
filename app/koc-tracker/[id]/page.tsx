@@ -1,13 +1,15 @@
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Star, ShieldCheck, CirclePlay, ArrowLeft, ExternalLink, Users, Award } from "lucide-react"
+import { Star, ShieldCheck, ArrowLeft, ExternalLink, Users, Award } from "lucide-react"
 import * as motion from "motion/react-client"
 
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
+import { PlatformBadge } from "@/components/platform-badge"
 import { supabase } from "@/lib/supabase"
+import { containerVariants, itemVariants } from "@/lib/animations"
 
 export default async function KocDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -57,22 +59,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                 {kol.verified && <ShieldCheck className="h-8 w-8 text-blue-500" />}
               </div>
               <div className="flex flex-wrap items-center gap-3 mb-6">
-                {kol.platform === "Youtube" ? (
-                  <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/50 text-xs font-bold uppercase tracking-wider">
-                    <CirclePlay className="h-4 w-4" /> Youtube
-                  </span>
-                ) : kol.platform === "Tiktok" ? (
-                  <span className="inline-flex items-center gap-1 text-slate-900 dark:text-slate-50 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-bold uppercase tracking-wider">
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-                    </svg>
-                    Tiktok
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 px-3 py-1 rounded-full border border-rose-100 dark:border-rose-900/50 text-xs font-bold uppercase tracking-wider">
-                    <CirclePlay className="h-4 w-4" /> {kol.platform}
-                  </span>
-                )}
+                <PlatformBadge platform={kol.platform} size="md" />
                 <span className="text-slate-500 dark:text-slate-400 font-medium">{kol.handle}</span>
               </div>
               
@@ -112,29 +99,20 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
           <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-slate-50 mb-6">Sản phẩm đã đánh giá</h2>
           
           {reviews.length > 0 ? (
-            <motion.div 
+            <motion.div
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
               initial="hidden"
               animate="show"
-              variants={{
-                hidden: { opacity: 0 },
-                show: {
-                  opacity: 1,
-                  transition: { staggerChildren: 0.1 }
-                }
-              }}
+              variants={containerVariants}
             >
               {reviews.map((review) => {
                 const product = PRODUCTS.find(p => p.id === review.productid);
                 if (!product) return null;
-                
+
                 return (
-                  <motion.div 
+                  <motion.div
                     key={review.id}
-                    variants={{
-                      hidden: { opacity: 0, y: 20 },
-                      show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } }
-                    }}
+                    variants={itemVariants}
                   >
                     <Card className="overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl h-full flex flex-col">
                       <CardContent className="p-5 flex-1 flex flex-col">

@@ -10,23 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { containerVariants, itemVariants } from "@/lib/animations"
 
 export default function CommunityPage() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } }
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
       <div className="container mx-auto px-4 md:px-6">
@@ -41,7 +27,7 @@ export default function CommunityPage() {
               transition={{ duration: 0.5 }}
             >
               <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900 dark:text-slate-50 mb-2">
-                Cộng đồng Đẹp Radar
+                Cộng đồng 360 độ đẹp
               </h1>
               <p className="text-slate-600 dark:text-slate-400">
                 Nơi chia sẻ kinh nghiệm, hỏi đáp và thảo luận về mọi thứ liên quan đến làm đẹp.

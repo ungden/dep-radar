@@ -12,32 +12,18 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase"
+import { containerVariants, itemVariants } from "@/lib/animations"
 
 export function TrendingSection() {
-  const [PRODUCTS, setPRODUCTS] = React.useState<any[]>([])
+  const [products, setProducts] = React.useState<any[]>([])
 
   React.useEffect(() => {
-    supabase.from('radar_products').select('*').limit(6).then(({ data }) => setPRODUCTS(data || []))
+    supabase.from('radar_products').select('*').limit(6).then(({ data }) => setProducts(data || []))
   }, [])
 
   const [emblaRef] = useEmblaCarousel({ loop: true, align: "start" }, [
     Autoplay({ delay: 4000, stopOnInteraction: true }),
   ])
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } }
-  }
 
   return (
     <section className="container mx-auto px-4 md:px-6 overflow-hidden">
@@ -58,14 +44,14 @@ export function TrendingSection() {
       </div>
 
       <div className="overflow-hidden" ref={emblaRef}>
-        <motion.div 
+        <motion.div
           className="flex -ml-4"
           variants={containerVariants}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
         >
-          {PRODUCTS.map((product) => (
+          {products.map((product) => (
             <motion.div
               key={product.id}
               variants={itemVariants}
