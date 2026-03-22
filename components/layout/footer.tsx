@@ -1,0 +1,121 @@
+import Link from "next/link"
+import { Facebook, Instagram, Twitter, Youtube } from "lucide-react"
+
+export function Footer() {
+  return (
+    <footer className="border-t border-slate-200 dark:border-slate-800 bg-slate-900 dark:bg-slate-950 text-slate-400 py-16">
+      <div className="container mx-auto px-4 md:px-6 grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-6">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="font-display text-3xl font-black tracking-tighter text-white uppercase">
+              Đẹp<span className="text-rose-500">Radar</span>
+            </span>
+          </Link>
+          <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
+            Tạp chí làm đẹp số 1 Việt Nam. Nơi hội tụ những xu hướng mới nhất, đánh giá chân thực và cộng đồng đam mê làm đẹp.
+          </p>
+          <div className="flex gap-4">
+            <Link href="#" className="text-slate-400 hover:text-white transition-colors">
+              <Facebook className="h-5 w-5" />
+            </Link>
+            <Link href="#" className="text-slate-400 hover:text-white transition-colors">
+              <Instagram className="h-5 w-5" />
+            </Link>
+            <Link href="#" className="text-slate-400 hover:text-white transition-colors">
+              <Youtube className="h-5 w-5" />
+            </Link>
+            <Link href="#" className="text-slate-400 hover:text-white transition-colors">
+              <Twitter className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <h4 className="text-sm font-bold text-white uppercase tracking-widest">
+            Chuyên mục
+          </h4>
+          <ul className="space-y-3 text-sm font-medium">
+            <li>
+              <Link href="/products" className="hover:text-rose-500 transition-colors">
+                Xu hướng Skincare
+              </Link>
+            </li>
+            <li>
+              <Link href="/products?sort=trending" className="hover:text-rose-500 transition-colors">
+                Makeup Look
+              </Link>
+            </li>
+            <li>
+              <Link href="/koc-tracker" className="hover:text-rose-500 transition-colors">
+                Góc Reviewer
+              </Link>
+            </li>
+            <li>
+              <Link href="/community" className="hover:text-rose-500 transition-colors">
+                Diễn đàn
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div className="space-y-6">
+          <h4 className="text-sm font-bold text-white uppercase tracking-widest">
+            Thông tin
+          </h4>
+          <ul className="space-y-3 text-sm font-medium">
+            <li>
+              <Link href="#" className="hover:text-rose-500 transition-colors">
+                Về chúng tôi
+              </Link>
+            </li>
+            <li>
+              <Link href="#" className="hover:text-rose-500 transition-colors">
+                Liên hệ quảng cáo
+              </Link>
+            </li>
+            <li>
+              <Link href="#" className="hover:text-rose-500 transition-colors">
+                Chính sách bảo mật
+              </Link>
+            </li>
+            <li>
+              <Link href="#" className="hover:text-rose-500 transition-colors">
+                Điều khoản sử dụng
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div className="space-y-6">
+          <h4 className="text-sm font-bold text-white uppercase tracking-widest">
+            Newsletter
+          </h4>
+          <p className="text-sm text-slate-400">
+            Đăng ký để nhận những bài viết mới nhất và xu hướng làm đẹp mỗi tuần.
+          </p>
+          <form className="flex flex-col gap-3">
+            <input
+              type="email"
+              placeholder="Email của bạn"
+              className="flex h-12 w-full border border-slate-700 bg-slate-800 dark:bg-slate-900 px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-rose-500 transition-colors"
+            />
+            <button
+              type="submit"
+              className="inline-flex h-12 items-center justify-center bg-rose-600 px-6 py-2 text-sm font-bold uppercase tracking-wider text-white hover:bg-rose-700 transition-colors"
+            >
+              Đăng ký ngay
+            </button>
+          </form>
+        </div>
+      </div>
+      <div className="container mx-auto px-4 md:px-6 mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium uppercase tracking-wider text-slate-500">
+        <div>&copy; {new Date().getFullYear()} Đẹp Radar. All rights reserved.</div>
+        <div className="flex gap-6">
+          <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
+          <Link href="#" className="hover:text-white transition-colors">Terms</Link>
+          <Link href="#" className="hover:text-white transition-colors">Cookies</Link>
+        </div>
+      </div>
+    </footer>
+  )
+}
