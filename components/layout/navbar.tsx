@@ -7,9 +7,20 @@ import { Menu, Search, User, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ModeToggle } from "@/components/mode-toggle"
+import { supabase } from "@/lib/supabase"
 
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
+  const [isAdmin, setIsAdmin] = React.useState(false)
+
+  React.useEffect(() => {
+    // Check if user is admin
+    supabase.rpc('is_admin').then(({ data, error }) => {
+      if (!error && data) {
+        setIsAdmin(true)
+      }
+    })
+  }, [])
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm">
@@ -48,6 +59,14 @@ export function Navbar() {
             >
               Cộng đồng
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="text-sm font-bold uppercase tracking-wider text-rose-600 dark:text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 transition-colors"
+              >
+                Admin Panel
+              </Link>
+            )}
           </nav>
         </div>
 
@@ -113,6 +132,15 @@ export function Navbar() {
             >
               Cộng đồng
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="text-lg font-bold uppercase tracking-wider text-rose-600 dark:text-rose-500 hover:text-rose-700 dark:hover:text-rose-400"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Admin Panel
+              </Link>
+            )}
             <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
               <Button variant="outline" className="w-full justify-center rounded-none border-slate-900 dark:border-slate-50 text-slate-900 dark:text-slate-50 h-12 font-bold uppercase tracking-wider">
                 Đăng nhập
