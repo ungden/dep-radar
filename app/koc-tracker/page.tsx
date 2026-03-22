@@ -97,6 +97,7 @@ export default function KocTrackerPage() {
 
         {filteredKols.length > 0 ? (
           <motion.div
+            key={filteredKols.length}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             variants={containerVariants}
             initial="hidden"

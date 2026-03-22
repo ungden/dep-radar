@@ -29,7 +29,7 @@ export function HeroSection() {
             <Link href="#" className="group block">
               <div className="relative aspect-[16/9] md:aspect-[2/1] overflow-hidden rounded-2xl mb-6">
                 <Image
-                  src="https://picsum.photos/seed/skincare-routine/1200/600"
+                  src="/images/hero-featured.png"
                   alt="Featured Article"
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -65,7 +65,7 @@ export function HeroSection() {
               <Link href="#" className="group flex flex-col sm:flex-row lg:flex-col gap-4">
                 <div className="relative w-full sm:w-1/3 lg:w-full aspect-[16/9] overflow-hidden rounded-xl shrink-0">
                   <Image
-                    src="https://picsum.photos/seed/sunscreen/600/400"
+                    src="/images/hero-sunscreen.png"
                     alt="Secondary Article 1"
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -91,7 +91,7 @@ export function HeroSection() {
               <Link href="#" className="group flex flex-col sm:flex-row lg:flex-col gap-4">
                 <div className="relative w-full sm:w-1/3 lg:w-full aspect-[16/9] overflow-hidden rounded-xl shrink-0">
                   <Image
-                    src="https://picsum.photos/seed/makeup-trend/600/400"
+                    src="/images/hero-makeup.png"
                     alt="Secondary Article 2"
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
