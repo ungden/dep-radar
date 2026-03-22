@@ -14,10 +14,13 @@ import { supabase } from "@/lib/supabase"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import type { Review, Kol, Product } from "@/lib/types"
 
+type KolSummary = Pick<Kol, 'id' | 'name' | 'avatar' | 'platform' | 'verified'>
+type ProductSummary = Pick<Product, 'id' | 'name' | 'brand' | 'image'>
+
 export function KolRadar() {
   const [reviews, setReviews] = React.useState<Review[]>([])
-  const [kols, setKols] = React.useState<Kol[]>([])
-  const [products, setProducts] = React.useState<Product[]>([])
+  const [kols, setKols] = React.useState<KolSummary[]>([])
+  const [products, setProducts] = React.useState<ProductSummary[]>([])
 
   React.useEffect(() => {
     Promise.all([
@@ -25,14 +28,14 @@ export function KolRadar() {
       supabase.from('kols').select('id,name,avatar,platform,verified'),
       supabase.from('radar_products').select('id,name,brand,image'),
     ]).then(([reviewsRes, kolsRes, productsRes]) => {
-      setReviews(reviewsRes.data || [])
-      setKols(kolsRes.data || [])
-      setProducts(productsRes.data || [])
+      setReviews((reviewsRes.data as Review[]) || [])
+      setKols((kolsRes.data as KolSummary[]) || [])
+      setProducts((productsRes.data as ProductSummary[]) || [])
     })
   }, [])
 
-  const kolMap = React.useMemo(() => new Map(kols.map(k => [k.id, k])), [kols])
-  const productMap = React.useMemo(() => new Map(products.map(p => [p.id, p])), [products])
+  const kolMap = React.useMemo(() => new Map<string, KolSummary>(kols.map(k => [k.id, k])), [kols])
+  const productMap = React.useMemo(() => new Map<string, ProductSummary>(products.map(p => [p.id, p])), [products])
 
   return (
     <section className="bg-slate-100 dark:bg-slate-900/50 py-16 md:py-24">
