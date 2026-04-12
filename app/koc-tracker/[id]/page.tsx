@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -12,6 +13,26 @@ import { Card, CardContent } from "@/components/ui/card"
 import { PlatformBadge } from "@/components/platform-badge"
 import { supabase } from "@/lib/supabase"
 import { containerVariants, itemVariants } from "@/lib/animations"
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const { data: kol } = await supabase.from('kols').select('name, platform, handle, followers').eq('id', id).single()
+
+  if (!kol) {
+    return { title: 'KOL/KOC không tồn tại | 360° đẹp' }
+  }
+
+  const description = `Theo dõi ${kol.name} trên ${kol.platform}. ${kol.followers} followers. Xem đánh giá sản phẩm làm đẹp từ ${kol.name} tại 360° đẹp.`
+
+  return {
+    title: `${kol.name} - KOL/KOC Tracker | 360° đẹp`,
+    description,
+    openGraph: {
+      title: `${kol.name} - KOL/KOC Tracker | 360° đẹp`,
+      description,
+    },
+  }
+}
 
 export default async function KocDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -2,16 +2,44 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Menu, Search, User, X } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { LogOut, Menu, Search, User, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ModeToggle } from "@/components/mode-toggle"
 import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/lib/auth-context"
 
 export function Navbar() {
+  const router = useRouter()
+  const { user, loading: authLoading, signOut } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState("")
   const [isAdmin, setIsAdmin] = React.useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false)
+  const userMenuRef = React.useRef<HTMLDivElement>(null)
+
+  // Close user menu when clicking outside
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      setIsMobileSearchOpen(false)
+      setIsMobileMenuOpen(false)
+    }
+  }
 
   React.useEffect(() => {
     // Check if user is admin
@@ -77,24 +105,78 @@ export function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-4">
-          <div className="relative w-64 group">
+          <form onSubmit={handleSearch} className="relative w-64 group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500 group-focus-within:text-rose-600 dark:group-focus-within:text-rose-400 transition-colors" />
             <Input
               type="search"
               placeholder="Tìm kiếm..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-900 pl-10 rounded-none border-slate-200 dark:border-slate-800 focus-visible:ring-0 focus-visible:border-rose-600 dark:focus-visible:border-rose-500 transition-colors h-10"
             />
-          </div>
+          </form>
           <ModeToggle />
-          <Button variant="ghost" size="icon" className="rounded-none hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-600 dark:hover:text-rose-400">
-            <User className="h-5 w-5" />
-            <span className="sr-only">Tài khoản</span>
-          </Button>
+          {authLoading ? (
+            <div className="h-9 w-9 rounded-full bg-slate-100 dark:bg-slate-800 animate-pulse" />
+          ) : user ? (
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center justify-center h-9 w-9 rounded-full bg-rose-600 text-white text-sm font-bold uppercase hover:bg-rose-700 transition-colors"
+              >
+                {user.user_metadata?.full_name
+                  ? user.user_metadata.full_name.charAt(0)
+                  : user.email?.charAt(0) ?? "U"}
+              </button>
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg py-1 z-50">
+                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-50 truncate">
+                      {user.user_metadata?.full_name ?? user.email}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                      {user.email}
+                    </p>
+                  </div>
+                  <Link
+                    href="/account"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    <User className="h-4 w-4" />
+                    Tài khoản
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      await signOut()
+                      setIsUserMenuOpen(false)
+                      router.push("/")
+                    }}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link href="/auth/login">
+              <Button variant="ghost" className="rounded-none hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-600 dark:hover:text-rose-400 text-sm font-bold uppercase tracking-wider">
+                Đăng nhập
+              </Button>
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
           <ModeToggle />
-          <Button variant="ghost" size="icon" className="rounded-none">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-none"
+            onClick={() => { setIsMobileSearchOpen(!isMobileSearchOpen); setIsMobileMenuOpen(false) }}
+          >
             <Search className="h-5 w-5 text-slate-900 dark:text-slate-50" />
           </Button>
           <Button
@@ -112,6 +194,23 @@ export function Navbar() {
           </Button>
         </div>
       </div>
+
+      {/* Mobile Search */}
+      {isMobileSearchOpen && (
+        <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-xl absolute w-full left-0 top-[65px] z-50">
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+            <Input
+              type="search"
+              placeholder="Tìm kiếm sản phẩm, bài viết, KOL..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-900 pl-10 rounded-none border-slate-200 dark:border-slate-800 focus-visible:ring-0 focus-visible:border-rose-600 dark:focus-visible:border-rose-500 transition-colors h-12"
+              autoFocus
+            />
+          </form>
+        </div>
+      )}
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
@@ -155,12 +254,53 @@ export function Navbar() {
               </Link>
             )}
             <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-              <Button variant="outline" className="w-full justify-center rounded-none border-slate-900 dark:border-slate-50 text-slate-900 dark:text-slate-50 h-12 font-bold uppercase tracking-wider">
-                Đăng nhập
-              </Button>
-              <Button className="w-full justify-center rounded-none bg-rose-600 hover:bg-rose-700 text-white h-12 font-bold uppercase tracking-wider">
-                Đăng ký
-              </Button>
+              {user ? (
+                <>
+                  <div className="flex items-center gap-3 px-1 pb-3">
+                    <div className="flex items-center justify-center h-10 w-10 rounded-full bg-rose-600 text-white text-sm font-bold uppercase">
+                      {user.user_metadata?.full_name
+                        ? user.user_metadata.full_name.charAt(0)
+                        : user.email?.charAt(0) ?? "U"}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-50 truncate">
+                        {user.user_metadata?.full_name ?? user.email}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <Link href="/account" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full justify-center rounded-none border-slate-900 dark:border-slate-50 text-slate-900 dark:text-slate-50 h-12 font-bold uppercase tracking-wider">
+                      Tài khoản
+                    </Button>
+                  </Link>
+                  <Button
+                    onClick={async () => {
+                      await signOut()
+                      setIsMobileMenuOpen(false)
+                      router.push("/")
+                    }}
+                    className="w-full justify-center rounded-none bg-rose-600 hover:bg-rose-700 text-white h-12 font-bold uppercase tracking-wider"
+                  >
+                    Đăng xuất
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full justify-center rounded-none border-slate-900 dark:border-slate-50 text-slate-900 dark:text-slate-50 h-12 font-bold uppercase tracking-wider">
+                      Đăng nhập
+                    </Button>
+                  </Link>
+                  <Link href="/auth/register" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="w-full justify-center rounded-none bg-rose-600 hover:bg-rose-700 text-white h-12 font-bold uppercase tracking-wider">
+                      Đăng ký
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         </div>

@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { supabase } from "@/lib/supabase"
 import { containerVariants, itemVariants } from "@/lib/animations"
+import { CompareButton } from "@/components/compare-button"
+import { CompareBar } from "@/components/compare-bar"
 import type { Product } from "@/lib/types"
 
 export default function ProductsPage() {
@@ -136,6 +138,9 @@ export default function ProductsPage() {
                           ))}
                         </div>
                       </div>
+                      <div className="mt-3">
+                        <CompareButton productId={product.id} productName={product.name} />
+                      </div>
                     </CardContent>
                   </Card>
                 </Link>
@@ -160,6 +165,7 @@ export default function ProductsPage() {
           </motion.div>
         )}
       </div>
+      <CompareBar />
     </div>
   )
 }

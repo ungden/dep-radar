@@ -1,15 +1,38 @@
 export const dynamic = "force-dynamic"
 
+import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, Clock, Heart, MessageSquare, Share2, Tag } from "lucide-react"
+import { ArrowLeft, Clock, MessageSquare, Tag } from "lucide-react"
 import * as motion from "motion/react-client"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { supabase } from "@/lib/supabase"
+import { LikeButton } from "@/components/like-button"
+import { SocialShare } from "@/components/social-share"
+import { CommentSection } from "@/components/comment-section"
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const { data: post } = await supabase.from('posts').select('title, excerpt, image').eq('id', id).single()
+
+  if (!post) {
+    return { title: 'Bài viết không tồn tại | Blog 360° đẹp' }
+  }
+
+  return {
+    title: `${post.title} | Blog 360° đẹp`,
+    description: post.excerpt,
+    openGraph: {
+      title: `${post.title} | Blog 360° đẹp`,
+      description: post.excerpt,
+      images: post.image ? [post.image] : [],
+    },
+  }
+}
 
 export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -130,19 +153,25 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
 
                 {/* Actions */}
                 <div className="flex items-center gap-6 pt-6 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium">
-                  <button className="flex items-center gap-2 hover:text-rose-600 dark:hover:text-rose-400 transition-colors">
-                    <Heart className="h-5 w-5" /> {post.likes} Thích
-                  </button>
-                  <button className="flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  <LikeButton postId={post.id} initialCount={post.likes} />
+                  <span className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" /> {post.comments} Bình luận
-                  </button>
-                  <button className="flex items-center gap-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors ml-auto">
-                    <Share2 className="h-5 w-5" /> Chia sẻ
-                  </button>
+                  </span>
+                  <div className="ml-auto">
+                    <SocialShare
+                      url={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://360dep.vn'}/blog/${post.id}`}
+                      title={post.title}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </article>
+
+          {/* Comment Section */}
+          <div className="mt-8">
+            <CommentSection postId={post.id} />
+          </div>
 
           {/* Related Posts */}
           {relatedPosts && relatedPosts.length > 0 && (

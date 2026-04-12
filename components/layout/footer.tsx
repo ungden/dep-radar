@@ -1,7 +1,39 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
 import { Facebook, Instagram, Twitter, Youtube } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 export function Footer() {
+  const [email, setEmail] = useState("")
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
+  const [errorMsg, setErrorMsg] = useState("")
+
+  async function handleSubscribe(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email) return
+
+    setStatus("loading")
+    setErrorMsg("")
+
+    const { error } = await supabase
+      .from("newsletter_subscribers")
+      .insert({ email })
+
+    if (error) {
+      setStatus("error")
+      if (error.code === "23505") {
+        setErrorMsg("Email này đã được đăng ký rồi!")
+      } else {
+        setErrorMsg("Đã xảy ra lỗi. Vui lòng thử lại!")
+      }
+    } else {
+      setStatus("success")
+      setEmail("")
+    }
+  }
+
   return (
     <footer className="border-t border-slate-200 dark:border-slate-800 bg-slate-900 dark:bg-slate-950 text-slate-400 py-16">
       <div className="container mx-auto px-4 md:px-6 grid gap-12 md:grid-cols-2 lg:grid-cols-4">
@@ -93,18 +125,28 @@ export function Footer() {
           <p className="text-sm text-slate-400">
             Đăng ký để nhận những bài viết mới nhất và xu hướng làm đẹp mỗi tuần.
           </p>
-          <form className="flex flex-col gap-3">
+          <form onSubmit={handleSubscribe} className="flex flex-col gap-3">
             <input
               type="email"
               placeholder="Email của bạn"
-              className="flex h-12 w-full border border-slate-700 bg-slate-800 dark:bg-slate-900 px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-rose-500 transition-colors"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="flex h-12 w-full rounded-xl border border-slate-700 bg-slate-800 dark:bg-slate-900 px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-rose-500 transition-colors"
             />
             <button
               type="submit"
-              className="inline-flex h-12 items-center justify-center bg-rose-600 px-6 py-2 text-sm font-bold uppercase tracking-wider text-white hover:bg-rose-700 transition-colors"
+              disabled={status === "loading"}
+              className="inline-flex h-12 items-center justify-center rounded-xl bg-rose-600 px-6 py-2 text-sm font-bold uppercase tracking-wider text-white hover:bg-rose-700 transition-colors disabled:opacity-50"
             >
-              Đăng ký ngay
+              {status === "loading" ? "Đang gửi..." : "Đăng ký ngay"}
             </button>
+            {status === "success" && (
+              <p className="text-sm text-emerald-400 font-medium">Đăng ký thành công!</p>
+            )}
+            {status === "error" && (
+              <p className="text-sm text-rose-400 font-medium">{errorMsg}</p>
+            )}
           </form>
         </div>
       </div>

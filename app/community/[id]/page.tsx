@@ -3,15 +3,16 @@ export const dynamic = "force-dynamic"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, MessageSquare, Heart, Share2, Flag } from "lucide-react"
+import { ArrowLeft, MessageSquare } from "lucide-react"
 import * as motion from "motion/react-client"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/lib/supabase"
+import { LikeButton } from "@/components/like-button"
+import { SocialShare } from "@/components/social-share"
+import { CommentSection } from "@/components/comment-section"
 
 export default async function CommunityPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -93,84 +94,22 @@ export default async function CommunityPostPage({ params }: { params: Promise<{ 
 
               {/* Actions */}
               <div className="flex items-center gap-6 pt-6 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium">
-                <button className="flex items-center gap-2 hover:text-rose-600 dark:hover:text-rose-400 transition-colors">
-                  <Heart className="h-5 w-5" /> {post.likes} Thích
-                </button>
-                <button className="flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                <LikeButton postId={post.id} initialCount={post.likes} />
+                <span className="flex items-center gap-2">
                   <MessageSquare className="h-5 w-5" /> {post.comments} Bình luận
-                </button>
-                <button className="flex items-center gap-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors ml-auto">
-                  <Share2 className="h-5 w-5" /> Chia sẻ
-                </button>
+                </span>
+                <div className="ml-auto">
+                  <SocialShare
+                    url={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://360dep.vn'}/community/${post.id}`}
+                    title={post.title}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Comments Section */}
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">Bình luận ({post.comments})</h3>
-
-            {/* Add Comment */}
-            <Card className="border-none shadow-sm rounded-3xl bg-white dark:bg-slate-900">
-              <CardContent className="p-6">
-                <div className="flex gap-4">
-                  <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-800 shadow-sm shrink-0">
-                    <AvatarFallback>ME</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <Input
-                      placeholder="Viết bình luận của bạn..."
-                      className="w-full bg-slate-50 dark:bg-slate-950 border-transparent focus-visible:ring-rose-500 rounded-xl h-12 mb-4"
-                    />
-                    <div className="flex justify-end">
-                      <Button className="bg-slate-900 dark:bg-slate-50 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl px-6 font-bold">
-                        Gửi bình luận
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Static Comment Placeholders */}
-            <div className="space-y-4">
-              {[
-                { name: "Skincare Lover", text: "Bài viết rất hữu ích! Mình đã thử theo và thấy hiệu quả rõ rệt sau 2 tuần. Cảm ơn tác giả nhiều!" },
-                { name: "Beauty Newbie", text: "Cảm ơn bạn đã chia sẻ chi tiết. Mình là người mới bắt đầu nên những thông tin này rất quý giá." },
-                { name: "Makeup Daily", text: "Hay quá! Mong tác giả viết thêm nhiều bài review như thế này. Follow ngay!" },
-              ].map((comment) => (
-                <Card key={comment.name} className="border-none shadow-sm rounded-3xl bg-white dark:bg-slate-900">
-                  <CardContent className="p-6">
-                    <div className="flex gap-4">
-                      <Avatar className="h-10 w-10 shrink-0">
-                        <AvatarFallback>{comment.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="font-bold text-slate-900 dark:text-slate-50 text-sm">{comment.name}</div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">1 giờ trước</div>
-                        </div>
-                        <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed mb-3">
-                          {comment.text}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                          <button className="flex items-center gap-1 hover:text-rose-600 dark:hover:text-rose-400 transition-colors">
-                            <Heart className="h-3.5 w-3.5" /> Thích
-                          </button>
-                          <button className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                            <MessageSquare className="h-3.5 w-3.5" /> Phản hồi
-                          </button>
-                          <button className="flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-300 transition-colors ml-auto">
-                            <Flag className="h-3.5 w-3.5" /> Báo cáo
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+          <CommentSection postId={post.id} />
         </motion.div>
       </div>
     </div>

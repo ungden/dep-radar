@@ -1,15 +1,45 @@
 export const dynamic = 'force-dynamic'
 
+import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Star, ShieldCheck, ThumbsUp, MessageSquare, ArrowLeft, ShoppingCart, Heart } from "lucide-react"
+import { Star, ShieldCheck, ThumbsUp, MessageSquare, ArrowLeft, ShoppingCart } from "lucide-react"
 import * as motion from "motion/react-client"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { supabase } from "@/lib/supabase"
+import { AffiliateButton } from "@/components/affiliate-button"
+import { SocialShare } from "@/components/social-share"
+import { RelatedProducts } from "@/components/related-products"
+import { UserRating } from "@/components/user-rating"
+import { CommentSection } from "@/components/comment-section"
+import { WishlistButton } from "@/components/wishlist-button"
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const { data: product } = await supabase.from('radar_products').select('name, brand, description, image').eq('id', id).single()
+
+  if (!product) {
+    return { title: 'Sản phẩm không tồn tại | 360° đẹp' }
+  }
+
+  const description = product.description?.length > 160
+    ? product.description.substring(0, 157) + '...'
+    : product.description
+
+  return {
+    title: `${product.name} - ${product.brand} | 360° đẹp`,
+    description,
+    openGraph: {
+      title: `${product.name} - ${product.brand} | 360° đẹp`,
+      description,
+      images: product.image ? [product.image] : [],
+    },
+  }
+}
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -80,21 +110,23 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   ))}
                 </div>
 
-                <div className="mt-auto flex gap-4">
-                  {product.affiliate_url ? (
-                    <a href={product.affiliate_url} target="_blank" rel="noopener noreferrer" className="flex-1">
-                      <Button className="w-full h-14 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-lg shadow-lg shadow-rose-200 dark:shadow-rose-900/20">
-                        <ShoppingCart className="h-5 w-5 mr-2" /> Mua ngay trên Shopee
+                <div className="mt-auto space-y-4">
+                  <div className="flex gap-4">
+                    {product.affiliate_url ? (
+                      <div className="flex-1">
+                        <AffiliateButton href={product.affiliate_url} productId={product.id} />
+                      </div>
+                    ) : (
+                      <Button className="flex-1 h-14 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-lg shadow-lg shadow-rose-200 dark:shadow-rose-900/20" disabled>
+                        <ShoppingCart className="h-5 w-5 mr-2" /> Sắp có link mua
                       </Button>
-                    </a>
-                  ) : (
-                    <Button className="flex-1 h-14 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-lg shadow-lg shadow-rose-200 dark:shadow-rose-900/20" disabled>
-                      <ShoppingCart className="h-5 w-5 mr-2" /> Sắp có link mua
-                    </Button>
-                  )}
-                  <Button variant="outline" className="h-14 w-14 rounded-xl border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shrink-0 hover:bg-slate-50 dark:hover:bg-slate-800">
-                    <Heart className="h-5 w-5" />
-                  </Button>
+                    )}
+                    <WishlistButton productId={product.id} />
+                  </div>
+                  <SocialShare
+                    url={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://360dep.vn'}/products/${product.id}`}
+                    title={product.name}
+                  />
                 </div>
               </div>
             </div>
@@ -157,6 +189,21 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 <p className="text-slate-500 dark:text-slate-400 font-medium">Chưa có đánh giá nào từ KOL/KOC cho sản phẩm này.</p>
               </div>
             )}
+          </div>
+
+          {/* User Rating */}
+          <div className="mt-8">
+            <UserRating productId={product.id} />
+          </div>
+
+          {/* Comment Section */}
+          <div className="mt-8">
+            <CommentSection productId={product.id} />
+          </div>
+
+          {/* Related Products */}
+          <div className="mt-8">
+            <RelatedProducts category={product.category} currentProductId={product.id} />
           </div>
         </motion.div>
       </div>
