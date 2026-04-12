@@ -1,52 +1,31 @@
-"use client"
+export const dynamic = "force-dynamic"
 
-import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useParams } from "next/navigation"
-import { ArrowLeft, MessageSquare, Heart, Share2, MoreHorizontal, Flag } from "lucide-react"
-import { motion } from "motion/react"
+import { notFound } from "next/navigation"
+import { ArrowLeft, MessageSquare, Heart, Share2, Flag } from "lucide-react"
+import * as motion from "motion/react-client"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { supabase } from "@/lib/supabase"
 
-export default function CommunityPostPage() {
-  const params = useParams()
-  const id = params.id as string
+export default async function CommunityPostPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
 
-  // Mock data for the post
-  const post = {
-    id: id,
-    author: {
-      name: "Nguyễn Mai",
-      avatar: "https://picsum.photos/seed/mai/100/100",
-      role: "Member",
-    },
-    title: "Da mụn ẩn có nên dùng BHA Obagi không mọi người?",
-    content: `Mình bị mụn ẩn vùng trán và cằm khá nhiều, da hỗn hợp thiên dầu. Nghe review BHA Obagi đẩy mụn tốt nhưng sợ break out. Ai dùng rồi cho mình xin review với ạ!
-    
-Mình đã thử dùng một số loại tẩy da chết hóa học nhẹ nhàng hơn như Mandelic Acid nhưng thấy hiệu quả khá chậm. Mụn ẩn vẫn còn sần sùi dưới da, đặc biệt là khi sờ vào. Thấy nhiều người khen BHA Obagi là "thần dược" trị mụn ẩn nhưng cũng có nhiều trường hợp bị đẩy mụn viêm nặng nề nên mình hơi rén.
+  const { data: post } = await supabase.from("posts").select("*").eq("id", id).single()
+  if (!post) return notFound()
 
-Routine hiện tại của mình:
-- Tẩy trang Bioderma hồng
-- Sữa rửa mặt SVR Sebiaclear
-- Toner hoa cúc Kiehl's
-- Serum B5 GoodnDoc
-- Kem dưỡng Neutrogena Hydro Boost Water Gel
-- Kem chống nắng La Roche-Posay Anthelios
-
-Mọi người xem routine của mình đã ổn chưa và nếu thêm BHA Obagi thì nên dùng ở bước nào, tần suất ra sao ạ? Cảm ơn cả nhà nhiều!`,
-    tags: ["Trị mụn", "BHA", "Obagi", "Skincare Routine"],
-    likes: 45,
-    comments: 28,
-    timeAgo: "3 giờ trước",
-    images: [
-      "https://picsum.photos/seed/post1/800/600",
-      "https://picsum.photos/seed/post2/800/600"
-    ]
+  function formatDate(dateStr: string) {
+    return new Date(dateStr).toLocaleDateString("vi-VN", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
   }
 
   return (
@@ -64,60 +43,53 @@ Mọi người xem routine của mình đã ổn chưa và nếu thêm BHA Obagi
           <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white dark:bg-slate-900 mb-8">
             <CardContent className="p-6 md:p-8">
               {/* Author Info */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-800 shadow-sm">
-                    <AvatarImage src={post.author.avatar} alt={post.author.name} />
-                    <AvatarFallback>{post.author.name[0]}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-bold text-slate-900 dark:text-slate-50 text-lg">{post.author.name}</div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                      <span>{post.timeAgo}</span>
-                      <span>&bull;</span>
-                      <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-normal text-xs">
-                        {post.author.role}
-                      </Badge>
-                    </div>
+              <div className="flex items-center gap-4 mb-6">
+                <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-800 shadow-sm">
+                  <AvatarImage src={post.author_avatar} alt={post.author_name} />
+                  <AvatarFallback>{post.author_name[0]}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="font-bold text-slate-900 dark:text-slate-50 text-lg">{post.author_name}</div>
+                  <div className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <span>{formatDate(post.created_at)}</span>
+                    <span>&bull;</span>
+                    <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-normal text-xs">
+                      {post.category}
+                    </Badge>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                  <MoreHorizontal className="h-5 w-5" />
-                </Button>
               </div>
 
               {/* Post Content */}
               <h1 className="text-2xl md:text-3xl font-display font-bold text-slate-900 dark:text-slate-50 mb-4 leading-tight">
                 {post.title}
               </h1>
-              
+
               <div className="prose prose-slate dark:prose-invert max-w-none mb-6">
-                {post.content.split('\n\n').map((paragraph, index) => (
+                {post.content.split("\n\n").map((paragraph: string, index: number) => (
                   <p key={index} className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4 whitespace-pre-wrap">
                     {paragraph}
                   </p>
                 ))}
               </div>
 
-              {/* Images */}
-              {post.images && post.images.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  {post.images.map((img, index) => (
-                    <div key={index} className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
-                      <Image src={img} alt={`Post image ${index + 1}`} fill className="object-cover" referrerPolicy="no-referrer" />
-                    </div>
-                  ))}
+              {/* Image */}
+              {post.image && (
+                <div className="relative aspect-[16/9] rounded-2xl overflow-hidden mb-6 bg-slate-100 dark:bg-slate-800">
+                  <Image src={post.image} alt={post.title} fill className="object-cover" />
                 </div>
               )}
 
               {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                {post.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-normal">
-                    #{tag}
-                  </Badge>
-                ))}
-              </div>
+              {post.tags && post.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {post.tags.map((tag: string) => (
+                    <Badge key={tag} variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-normal">
+                      #{tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex items-center gap-6 pt-6 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium">
@@ -137,18 +109,17 @@ Mọi người xem routine của mình đã ổn chưa và nếu thêm BHA Obagi
           {/* Comments Section */}
           <div className="space-y-6">
             <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">Bình luận ({post.comments})</h3>
-            
+
             {/* Add Comment */}
             <Card className="border-none shadow-sm rounded-3xl bg-white dark:bg-slate-900">
               <CardContent className="p-6">
                 <div className="flex gap-4">
                   <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-800 shadow-sm shrink-0">
-                    <AvatarImage src="https://picsum.photos/seed/user/100/100" />
                     <AvatarFallback>ME</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <Input 
-                      placeholder="Viết bình luận của bạn..." 
+                    <Input
+                      placeholder="Viết bình luận của bạn..."
                       className="w-full bg-slate-50 dark:bg-slate-950 border-transparent focus-visible:ring-rose-500 rounded-xl h-12 mb-4"
                     />
                     <div className="flex justify-end">
@@ -161,23 +132,26 @@ Mọi người xem routine của mình đã ổn chưa và nếu thêm BHA Obagi
               </CardContent>
             </Card>
 
-            {/* Comment List */}
+            {/* Static Comment Placeholders */}
             <div className="space-y-4">
-              {[1, 2, 3].map((comment) => (
-                <Card key={comment} className="border-none shadow-sm rounded-3xl bg-white dark:bg-slate-900">
+              {[
+                { name: "Skincare Lover", text: "Bài viết rất hữu ích! Mình đã thử theo và thấy hiệu quả rõ rệt sau 2 tuần. Cảm ơn tác giả nhiều!" },
+                { name: "Beauty Newbie", text: "Cảm ơn bạn đã chia sẻ chi tiết. Mình là người mới bắt đầu nên những thông tin này rất quý giá." },
+                { name: "Makeup Daily", text: "Hay quá! Mong tác giả viết thêm nhiều bài review như thế này. Follow ngay!" },
+              ].map((comment) => (
+                <Card key={comment.name} className="border-none shadow-sm rounded-3xl bg-white dark:bg-slate-900">
                   <CardContent className="p-6">
                     <div className="flex gap-4">
                       <Avatar className="h-10 w-10 shrink-0">
-                        <AvatarImage src={`https://picsum.photos/seed/commenter${comment}/100/100`} />
-                        <AvatarFallback>C</AvatarFallback>
+                        <AvatarFallback>{comment.name[0]}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
-                          <div className="font-bold text-slate-900 dark:text-slate-50 text-sm">Người dùng {comment}</div>
+                          <div className="font-bold text-slate-900 dark:text-slate-50 text-sm">{comment.name}</div>
                           <div className="text-xs text-slate-500 dark:text-slate-400">1 giờ trước</div>
                         </div>
                         <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed mb-3">
-                          Mình da dầu mụn dùng BHA Obagi thấy đẩy mụn khá tốt, nhưng bạn nhớ cấp ẩm kỹ nha. Routine của bạn có B5 GoodnDoc là ổn rồi đó, nhưng có thể thêm một loại kem dưỡng phục hồi tốt hơn như B5 La Roche-Posay hoặc Bioderma Cicabio.
+                          {comment.text}
                         </p>
                         <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 font-medium">
                           <button className="flex items-center gap-1 hover:text-rose-600 dark:hover:text-rose-400 transition-colors">
@@ -195,12 +169,6 @@ Mọi người xem routine của mình đã ổn chưa và nếu thêm BHA Obagi
                   </CardContent>
                 </Card>
               ))}
-            </div>
-            
-            <div className="flex justify-center pt-4">
-              <Button variant="outline" className="rounded-full px-8 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
-                Xem thêm bình luận
-              </Button>
             </div>
           </div>
         </motion.div>

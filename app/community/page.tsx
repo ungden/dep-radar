@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { MessageSquare, Heart, Share2, TrendingUp, Search, Image as ImageIcon } from "lucide-react"
@@ -10,17 +11,39 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { supabase } from "@/lib/supabase"
 import { containerVariants, itemVariants } from "@/lib/animations"
+import type { Post } from "@/lib/types"
+
+function formatRelative(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const hours = Math.floor(diff / 3600000)
+  if (hours < 1) return "Vừa xong"
+  if (hours < 24) return `${hours} giờ trước`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days} ngày trước`
+  return new Date(dateStr).toLocaleDateString("vi-VN", { day: "numeric", month: "long" })
+}
 
 export default function CommunityPage() {
+  const [posts, setPosts] = React.useState<Post[]>([])
+
+  React.useEffect(() => {
+    supabase
+      .from("posts")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setPosts(data || []))
+  }, [])
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex flex-col md:flex-row gap-8">
-          
+
           {/* Main Feed */}
           <div className="flex-1">
-            <motion.div 
+            <motion.div
               className="mb-8"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -44,12 +67,11 @@ export default function CommunityPage() {
                 <CardContent className="p-6">
                   <div className="flex gap-4">
                     <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-800 shadow-sm">
-                      <AvatarImage src="https://picsum.photos/seed/user/100/100" />
                       <AvatarFallback>ME</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <Input 
-                        placeholder="Bạn muốn chia sẻ điều gì về làm đẹp hôm nay?" 
+                      <Input
+                        placeholder="Bạn muốn chia sẻ điều gì về làm đẹp hôm nay?"
                         className="w-full bg-slate-50 dark:bg-slate-950 border-transparent focus-visible:ring-rose-500 rounded-xl h-12 mb-4"
                       />
                       <div className="flex justify-between items-center">
@@ -67,48 +89,58 @@ export default function CommunityPage() {
             </motion.div>
 
             {/* Posts */}
-            <motion.div 
+            <motion.div
               className="space-y-6"
               variants={containerVariants}
               initial="hidden"
               animate="show"
             >
-              {[1, 2, 3, 4].map((post) => (
-                <motion.div key={post} variants={itemVariants}>
+              {posts.map((post) => (
+                <motion.div key={post.id} variants={itemVariants}>
                   <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white dark:bg-slate-900 hover:shadow-md transition-shadow">
                     <CardContent className="p-6">
                       <div className="flex items-center gap-3 mb-4">
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={`https://picsum.photos/seed/user${post}/100/100`} />
-                          <AvatarFallback>U</AvatarFallback>
+                          <AvatarImage src={post.author_avatar} />
+                          <AvatarFallback>{post.author_name[0]}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-bold text-slate-900 dark:text-slate-50">Người dùng {post}</div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">2 giờ trước &bull; Skincare Routine</div>
+                          <div className="font-bold text-slate-900 dark:text-slate-50">{post.author_name}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">{formatRelative(post.created_at)} &bull; {post.category}</div>
                         </div>
                       </div>
-                      
-                      <Link href={`/community/${post}`} className="block group">
+
+                      <Link href={`/community/${post.id}`} className="block group">
                         <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-2 group-hover:text-rose-500 transition-colors">
-                          Xin review kem chống nắng cho da dầu mụn mùa hè!
+                          {post.title}
                         </h3>
-                        <p className="text-slate-700 dark:text-slate-300 mb-4 leading-relaxed">
-                          Chào mọi người, da mình thuộc tuýp dầu mụn, mùa hè đổ dầu rất nhiều. Mình đang phân vân giữa La Roche-Posay và Eucerin. Ai dùng qua cả 2 loại này rồi cho mình xin ít review với ạ. Cảm ơn cả nhà!
+                        <p className="text-slate-700 dark:text-slate-300 mb-4 leading-relaxed line-clamp-3">
+                          {post.excerpt}
                         </p>
-                        
-                        {post % 2 === 0 && (
+
+                        {post.image && (
                           <div className="relative h-64 w-full rounded-2xl overflow-hidden mb-4 bg-slate-100 dark:bg-slate-800">
-                            <Image src={`https://picsum.photos/seed/post${post}/800/400`} alt="Post image" fill className="object-cover" referrerPolicy="no-referrer" />
+                            <Image src={post.image} alt={post.title} fill className="object-cover" />
                           </div>
                         )}
                       </Link>
 
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {post.tags.slice(0, 3).map((tag) => (
+                            <Badge key={tag} variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-normal text-xs">
+                              #{tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+
                       <div className="flex items-center gap-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium">
                         <button className="flex items-center gap-2 hover:text-rose-600 dark:hover:text-rose-400 transition-colors">
-                          <Heart className="h-5 w-5" /> 124
+                          <Heart className="h-5 w-5" /> {post.likes}
                         </button>
                         <button className="flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                          <MessageSquare className="h-5 w-5" /> 32 Bình luận
+                          <MessageSquare className="h-5 w-5" /> {post.comments} Bình luận
                         </button>
                         <button className="flex items-center gap-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors ml-auto">
                           <Share2 className="h-5 w-5" /> Chia sẻ
@@ -119,10 +151,21 @@ export default function CommunityPage() {
                 </motion.div>
               ))}
             </motion.div>
+
+            {posts.length === 0 && (
+              <motion.div
+                className="text-center py-24 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <p className="text-slate-500 dark:text-slate-400 text-lg">Chưa có bài viết nào trong cộng đồng.</p>
+              </motion.div>
+            )}
           </div>
 
           {/* Sidebar */}
-          <motion.div 
+          <motion.div
             className="w-full md:w-80 shrink-0 space-y-6"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -156,15 +199,19 @@ export default function CommunityPage() {
               <CardContent className="p-6">
                 <h3 className="font-bold text-slate-900 dark:text-slate-50 mb-4">Thành viên tích cực</h3>
                 <div className="space-y-4">
-                  {[1, 2, 3].map((user) => (
-                    <div key={user} className="flex items-center gap-3">
+                  {[
+                    { name: "Hà Linh Official", avatar: "/images/kol-halinh.png", posts: 142 },
+                    { name: "Trinh Phạm", avatar: "/images/kol-trinh.png", posts: 98 },
+                    { name: "Call Me Duy", avatar: "/images/kol-duy.png", posts: 76 },
+                  ].map((user) => (
+                    <div key={user.name} className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={`https://picsum.photos/seed/top${user}/100/100`} />
-                        <AvatarFallback>T</AvatarFallback>
+                        <AvatarImage src={user.avatar} />
+                        <AvatarFallback>{user.name[0]}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <div className="font-bold text-slate-900 dark:text-slate-50 text-sm truncate">Chuyên gia {user}</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">120 bài viết</div>
+                        <div className="font-bold text-slate-900 dark:text-slate-50 text-sm truncate">{user.name}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">{user.posts} bài viết</div>
                       </div>
                       <Button variant="outline" size="sm" className="rounded-full text-xs h-8 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
                         Theo dõi
@@ -175,7 +222,7 @@ export default function CommunityPage() {
               </CardContent>
             </Card>
           </motion.div>
-          
+
         </div>
       </div>
     </div>

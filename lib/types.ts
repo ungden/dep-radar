@@ -37,3 +37,20 @@ export interface Review {
   likes: number
   comments: number
 }
+
+export interface Post {
+  id: string
+  title: string
+  slug: string
+  excerpt: string
+  content: string
+  author_name: string
+  author_avatar: string
+  category: string
+  tags: string[]
+  image: string
+  likes: number
+  comments: number
+  created_at: string
+  product_ids: string[]
+}

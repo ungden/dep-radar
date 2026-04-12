@@ -44,12 +44,31 @@ CREATE TABLE IF NOT EXISTS public.reviews (
     comments integer
 );
 
+-- Create POSTS table
+CREATE TABLE IF NOT EXISTS public.posts (
+    id text PRIMARY KEY,
+    title text NOT NULL,
+    slug text UNIQUE NOT NULL,
+    excerpt text,
+    content text,
+    author_name text NOT NULL,
+    author_avatar text,
+    category text,
+    tags text[],
+    image text,
+    likes integer DEFAULT 0,
+    comments integer DEFAULT 0,
+    created_at timestamptz DEFAULT now()
+);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.kols ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.radar_products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for public access (read-only)
 CREATE POLICY "Allow public read-only access on kols" ON public.kols FOR SELECT USING (true);
 CREATE POLICY "Allow public read-only access on radar_products" ON public.radar_products FOR SELECT USING (true);
 CREATE POLICY "Allow public read-only access on reviews" ON public.reviews FOR SELECT USING (true);
+CREATE POLICY "Allow public read-only access on posts" ON public.posts FOR SELECT USING (true);
