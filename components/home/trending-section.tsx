@@ -90,10 +90,21 @@ export function TrendingSection() {
                   <div className="text-lg font-bold text-slate-900 dark:text-slate-50">{product.price}</div>
                 </CardContent>
                 <CardFooter className="p-4 pt-0">
-                  <Button className="w-full rounded-xl gap-2 font-semibold shadow-sm" variant="default">
-                    <ShoppingCart className="w-4 h-4" />
-                    So sánh giá
-                  </Button>
+                  {product.affiliate_url ? (
+                    <a href={product.affiliate_url} target="_blank" rel="noopener noreferrer" className="w-full" onClick={(e) => e.stopPropagation()}>
+                      <Button className="w-full rounded-xl gap-2 font-semibold shadow-sm" variant="default">
+                        <ShoppingCart className="w-4 h-4" />
+                        Mua trên Shopee
+                      </Button>
+                    </a>
+                  ) : (
+                    <Link href={`/products/${product.id}`} className="w-full">
+                      <Button className="w-full rounded-xl gap-2 font-semibold shadow-sm" variant="default">
+                        <ShoppingCart className="w-4 h-4" />
+                        Xem chi tiết
+                      </Button>
+                    </Link>
+                  )}
                 </CardFooter>
               </Card>
             </motion.div>

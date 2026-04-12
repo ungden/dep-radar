@@ -1,55 +1,121 @@
-import Link from "next/link"
-import { ArrowLeft, Settings, BarChart3, Users, FileText, Package } from "lucide-react"
-import * as motion from "motion/react-client"
+"use client"
 
-export default function AdminPage() {
-  const stats = [
-    { label: "Sản phẩm", icon: Package, count: "—" },
-    { label: "KOL/KOC", icon: Users, count: "—" },
-    { label: "Bài viết", icon: FileText, count: "—" },
-    { label: "Lượt truy cập", icon: BarChart3, count: "—" },
+import * as React from "react"
+import { Package, Users, FileText, MessageSquare, TrendingUp, Eye } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { supabase } from "@/lib/supabase"
+
+interface Stats {
+  products: number
+  kols: number
+  posts: number
+  reviews: number
+}
+
+export default function AdminDashboard() {
+  const [stats, setStats] = React.useState<Stats>({ products: 0, kols: 0, posts: 0, reviews: 0 })
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    Promise.all([
+      supabase.from("radar_products").select("id", { count: "exact", head: true }),
+      supabase.from("kols").select("id", { count: "exact", head: true }),
+      supabase.from("posts").select("id", { count: "exact", head: true }),
+      supabase.from("reviews").select("id", { count: "exact", head: true }),
+    ]).then(([products, kols, posts, reviews]) => {
+      setStats({
+        products: products.count || 0,
+        kols: kols.count || 0,
+        posts: posts.count || 0,
+        reviews: reviews.count || 0,
+      })
+      setLoading(false)
+    })
+  }, [])
+
+  const statCards = [
+    { label: "Sản phẩm", value: stats.products, icon: Package, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
+    { label: "KOL/KOC", value: stats.kols, icon: Users, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+    { label: "Bài viết", value: stats.posts, icon: FileText, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950/30" },
+    { label: "Đánh giá", value: stats.reviews, icon: MessageSquare, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-950/30" },
   ]
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12">
-      <div className="container mx-auto px-4 md:px-6 max-w-4xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Link
-            href="/"
-            className="inline-flex items-center text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 mb-8 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" /> Về trang chủ
-          </Link>
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-slate-50">Dashboard</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">Tổng quan hệ thống 360° đẹp</p>
+      </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 md:p-12 shadow-sm border border-slate-100 dark:border-slate-800 text-center mb-8">
-            <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 mb-6">
-              <Settings className="h-8 w-8" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900 dark:text-slate-50 mb-4">
-              Admin Panel
-            </h1>
-            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-lg mx-auto">
-              Trang quản trị đang được phát triển. Các tính năng quản lý sản phẩm, KOL, bài viết và thống kê sẽ sớm được ra mắt.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 text-center"
-              >
-                <stat.icon className="h-6 w-6 text-slate-400 dark:text-slate-500 mx-auto mb-3" />
-                <div className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-1">{stat.count}</div>
-                <div className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{stat.label}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {statCards.map((stat) => (
+          <Card key={stat.label} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`h-12 w-12 rounded-xl ${stat.bg} flex items-center justify-center ${stat.color}`}>
+                  <stat.icon className="h-6 w-6" />
+                </div>
+                <TrendingUp className="h-4 w-4 text-emerald-500" />
               </div>
-            ))}
-          </div>
-        </motion.div>
+              <div className="text-3xl font-bold text-slate-900 dark:text-slate-50 mb-1">
+                {loading ? "..." : stat.value}
+              </div>
+              <div className="text-sm font-medium text-slate-500 dark:text-slate-400">{stat.label}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
+              <Eye className="h-5 w-5 text-slate-400" /> Hướng dẫn nhanh
+            </h3>
+            <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
+              <li className="flex items-start gap-2">
+                <span className="text-rose-500 font-bold">1.</span>
+                Vào <strong>Sản phẩm</strong> để thêm/sửa sản phẩm và gắn link Shopee affiliate
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-rose-500 font-bold">2.</span>
+                Vào <strong>KOL/KOC</strong> để quản lý danh sách beauty blogger
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-rose-500 font-bold">3.</span>
+                Vào <strong>Bài viết</strong> để quản lý blog (AI tự động tạo 16 bài/ngày)
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-rose-500 font-bold">4.</span>
+                Vào <strong>Đánh giá</strong> để quản lý reviews từ KOL
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-4">Cấu hình hệ thống</h3>
+            <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
+              <li className="flex justify-between">
+                <span>AI Blog Generation</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">Hoạt động</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Cron Schedule</span>
+                <span className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">14:00 VN daily</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Google Analytics</span>
+                <span className="text-amber-600 dark:text-amber-400 font-medium">Chờ GA ID</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Shopee Affiliate</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">Sẵn sàng</span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

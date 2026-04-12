@@ -81,9 +81,17 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 </div>
 
                 <div className="mt-auto flex gap-4">
-                  <Button className="flex-1 h-14 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-lg shadow-lg shadow-rose-200 dark:shadow-rose-900/20">
-                    <ShoppingCart className="h-5 w-5 mr-2" /> Mua ngay
-                  </Button>
+                  {product.affiliate_url ? (
+                    <a href={product.affiliate_url} target="_blank" rel="noopener noreferrer" className="flex-1">
+                      <Button className="w-full h-14 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-lg shadow-lg shadow-rose-200 dark:shadow-rose-900/20">
+                        <ShoppingCart className="h-5 w-5 mr-2" /> Mua ngay trên Shopee
+                      </Button>
+                    </a>
+                  ) : (
+                    <Button className="flex-1 h-14 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-lg shadow-lg shadow-rose-200 dark:shadow-rose-900/20" disabled>
+                      <ShoppingCart className="h-5 w-5 mr-2" /> Sắp có link mua
+                    </Button>
+                  )}
                   <Button variant="outline" className="h-14 w-14 rounded-xl border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shrink-0 hover:bg-slate-50 dark:hover:bg-slate-800">
                     <Heart className="h-5 w-5" />
                   </Button>
