@@ -54,6 +54,12 @@ export function Navbar() {
               KOL/KOC Tracker
             </Link>
             <Link
+              href="/blog"
+              className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-50 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+            >
+              Blog
+            </Link>
+            <Link
               href="/community"
               className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-50 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
             >
@@ -124,6 +130,13 @@ export function Navbar() {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               KOL/KOC Tracker
+            </Link>
+            <Link
+              href="/blog"
+              className="text-lg font-bold uppercase tracking-wider text-slate-900 dark:text-slate-50 hover:text-rose-600 dark:hover:text-rose-400"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Blog
             </Link>
             <Link
               href="/community"

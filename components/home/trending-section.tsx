@@ -13,9 +13,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase"
 import { containerVariants, itemVariants } from "@/lib/animations"
+import type { Product } from "@/lib/types"
 
 export function TrendingSection() {
-  const [products, setProducts] = React.useState<any[]>([])
+  const [products, setProducts] = React.useState<Product[]>([])
 
   React.useEffect(() => {
     supabase.from('radar_products').select('*').limit(6).then(({ data }) => setProducts(data || []))
