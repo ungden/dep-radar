@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import type { ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -9,13 +8,14 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   catalogueSections,
+  type CatalogueSection,
   getCatalogueSection,
   postMatchesCatalogue,
   productMatchesCatalogue,
   secondaryFilterGroups,
 } from "@/lib/catalogue"
-import { getCatalogueEducation } from "@/lib/catalogue-education"
-import { getCatalogueGuide } from "@/lib/catalogue-guide"
+import { getCatalogueEducation, getCatalogueEducationImage, type CatalogueEducation } from "@/lib/catalogue-education"
+import { getCatalogueGuide, type CatalogueGuide } from "@/lib/catalogue-guide"
 import { getPosts, getProducts } from "@/lib/data"
 
 export function generateStaticParams() {
@@ -92,131 +92,13 @@ export default async function CatalogueDetailPage({ params }: { params: Promise<
           </div>
         </section>
 
-        {guide && (
-          <section className="mb-8 space-y-5">
-            <Card className="border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <CardContent className="p-6 md:p-8">
-                <div className="mb-4 flex flex-wrap items-center gap-3">
-                  <Badge variant="secondary" className="bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">
-                    {guide.updated}
-                  </Badge>
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Đang đáng chú ý</span>
-                </div>
-                <p className="max-w-5xl text-base leading-relaxed text-slate-600 dark:text-slate-300 md:text-lg">
-                  {guide.snapshot}
-                </p>
-              </CardContent>
-            </Card>
-
-            <div className="grid gap-5 lg:grid-cols-3">
-              <GuideList
-                title="Bắt đầu thế nào"
-                icon={<Compass className="h-4 w-4 text-rose-500" />}
-                items={guide.startHere}
-              />
-              <GuideList
-                title="Chọn theo tiêu chí"
-                icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />}
-                items={guide.chooseBy}
-              />
-              <GuideList
-                title="Đừng vội nếu"
-                icon={<AlertCircle className="h-4 w-4 text-amber-500" />}
-                items={guide.pauseIf}
-              />
-            </div>
-
-            <Card className="border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <CardContent className="p-6">
-                <div className="mb-4 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-rose-500" />
-                  <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">Nên đọc tiếp</h2>
-                </div>
-                <div className="grid gap-3 md:grid-cols-3">
-                  {guide.nextReads.map((read) => (
-                    <Link
-                      key={read}
-                      href={`/search?q=${encodeURIComponent(read)}`}
-                      className="group flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-rose-200 hover:text-rose-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
-                    >
-                      <span>{read}</span>
-                      <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-rose-500" />
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-        )}
-
-        {education && (
-          <section className="mb-8 space-y-5">
-            <div>
-              <Badge className="mb-3 bg-slate-900 text-white hover:bg-slate-900 dark:bg-slate-50 dark:text-slate-900">
-                Học nhanh
-              </Badge>
-              <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50 md:text-3xl">
-                {education.headline}
-              </h2>
-            </div>
-
-            <div className="grid gap-5 md:grid-cols-3">
-              {education.basics.map((point) => (
-                <Card key={point.title} className="border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <CardContent className="p-6">
-                    <BookOpen className="mb-3 h-5 w-5 text-rose-500" />
-                    <h3 className="font-display text-lg font-bold text-slate-900 dark:text-slate-50">{point.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">{point.body}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-              <VisualDiagram
-                title={education.visualTitle}
-                caption={education.visualCaption}
-                nodes={education.visualNodes}
-              />
-              <FlowDiagram title={education.flowTitle} steps={education.flowSteps} />
-            </div>
-
-            <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
-              <Card className="border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <CardContent className="p-6">
-                  <div className="mb-4 flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-rose-500" />
-                    <h3 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">Từ khóa cần hiểu</h3>
-                  </div>
-                  <div className="grid gap-3">
-                    {education.glossary.map((item) => (
-                      <div key={item.title} className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
-                        <div className="text-sm font-bold text-slate-900 dark:text-slate-50">{item.title}</div>
-                        <p className="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">{item.body}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <CardContent className="p-6">
-                  <div className="mb-4 flex items-center gap-2">
-                    <XCircle className="h-4 w-4 text-amber-500" />
-                    <h3 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">Lỗi dễ gặp</h3>
-                  </div>
-                  <ul className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                    {education.mistakes.map((mistake) => (
-                      <li key={mistake} className="flex gap-2">
-                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
-                        <span>{mistake}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </div>
-          </section>
+        {guide && education && (
+          <CatalogueArticle
+            section={section}
+            guide={guide}
+            education={education}
+            imageSrc={getCatalogueEducationImage(slug)}
+          />
         )}
 
         <section className="mb-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -342,6 +224,191 @@ export default async function CatalogueDetailPage({ params }: { params: Promise<
   )
 }
 
+function CatalogueArticle({
+  section,
+  guide,
+  education,
+  imageSrc,
+}: {
+  section: CatalogueSection
+  guide: CatalogueGuide
+  education: CatalogueEducation
+  imageSrc: string
+}) {
+  return (
+    <article className="mb-10 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="relative min-h-[320px] bg-slate-100 dark:bg-slate-800">
+          <Image
+            src={imageSrc}
+            alt={`Minh họa kiến thức ${section.shortTitle}`}
+            fill
+            sizes="(min-width: 1024px) 52vw, 100vw"
+            className="object-cover"
+            priority
+          />
+        </div>
+        <div className="p-6 md:p-8 lg:p-10">
+          <div className="mb-5 flex flex-wrap items-center gap-3">
+            <Badge variant="secondary" className="bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">
+              {guide.updated}
+            </Badge>
+            <Badge className="bg-slate-900 text-white hover:bg-slate-900 dark:bg-slate-50 dark:text-slate-900">
+              Học nhanh
+            </Badge>
+          </div>
+          <h2 className="font-display text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50 md:text-4xl">
+            {education.headline}
+          </h2>
+          <p className="mt-5 text-base leading-relaxed text-slate-600 dark:text-slate-300 md:text-lg">
+            {guide.snapshot}
+          </p>
+          <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-300">
+            Trước khi chọn sản phẩm hoặc dịch vụ, hãy đọc phần này như một bài nền tảng:
+            hiểu khái niệm, nhìn dấu hiệu đúng, đi theo flow ra quyết định và biết lúc nào
+            nên dừng lại để tránh mua sai hoặc làm da yếu hơn.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-8 border-t border-slate-100 p-6 dark:border-slate-800 md:p-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:p-10">
+        <div className="space-y-8">
+          <section>
+            <div className="mb-4 flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-rose-500" />
+              <h3 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">
+                Kiến thức cơ bản cần nắm
+              </h3>
+            </div>
+            <div className="space-y-6">
+              {education.basics.map((point) => (
+                <section key={point.title} className="border-l-2 border-rose-200 pl-5 dark:border-rose-900">
+                  <h4 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">{point.title}</h4>
+                  <p className="mt-2 text-base leading-relaxed text-slate-600 dark:text-slate-300">{point.body}</p>
+                </section>
+              ))}
+            </div>
+          </section>
+
+          <VisualDiagram
+            title={education.visualTitle}
+            caption={education.visualCaption}
+            nodes={education.visualNodes}
+          />
+
+          <section className="rounded-3xl bg-slate-50 p-6 dark:bg-slate-950">
+            <div className="mb-4 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-rose-500" />
+              <h3 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">
+                Áp dụng vào thực tế
+              </h3>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Với {section.shortTitle.toLowerCase()}, cách đọc thông minh là bắt đầu bằng vấn đề chính,
+              sau đó mới xét loại da, ngân sách, tần suất dùng và mức rủi ro. Nếu một sản phẩm hoặc
+              dịch vụ không trả lời rõ “hợp với ai, tránh cho ai, dùng thế nào”, hãy coi đó là tín hiệu
+              cần đọc kỹ hơn.
+            </p>
+          </section>
+        </div>
+
+        <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
+          <FlowDiagram title={education.flowTitle} steps={education.flowSteps} />
+
+          <Card className="border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <CardContent className="p-6">
+              <div className="mb-4 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                <h3 className="font-display text-lg font-bold text-slate-900 dark:text-slate-50">Chọn theo tiêu chí</h3>
+              </div>
+              <ul className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                {guide.chooseBy.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="border-amber-100 bg-amber-50/70 shadow-sm dark:border-amber-950 dark:bg-amber-950/20">
+            <CardContent className="p-6">
+              <div className="mb-4 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <h3 className="font-display text-lg font-bold text-slate-900 dark:text-slate-50">Đừng vội nếu</h3>
+              </div>
+              <ul className="space-y-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                {guide.pauseIf.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </aside>
+      </div>
+
+      <div className="grid gap-6 border-t border-slate-100 p-6 dark:border-slate-800 md:p-8 lg:grid-cols-[1fr_1fr] lg:p-10">
+        <Card className="border-slate-100 bg-slate-50 shadow-none dark:border-slate-800 dark:bg-slate-950">
+          <CardContent className="p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-rose-500" />
+              <h3 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">Từ khóa cần hiểu</h3>
+            </div>
+            <div className="space-y-4">
+              {education.glossary.map((item) => (
+                <div key={item.title}>
+                  <div className="text-sm font-bold text-slate-900 dark:text-slate-50">{item.title}</div>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">{item.body}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-100 bg-slate-50 shadow-none dark:border-slate-800 dark:bg-slate-950">
+          <CardContent className="p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <XCircle className="h-4 w-4 text-amber-500" />
+              <h3 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">Lỗi dễ gặp</h3>
+            </div>
+            <ul className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              {education.mistakes.map((mistake) => (
+                <li key={mistake} className="flex gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                  <span>{mistake}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="border-t border-slate-100 p-6 dark:border-slate-800 md:p-8 lg:p-10">
+        <div className="mb-4 flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-rose-500" />
+          <h3 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">Nên đọc tiếp</h3>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {guide.nextReads.map((read) => (
+            <Link
+              key={read}
+              href={`/search?q=${encodeURIComponent(read)}`}
+              className="group flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-rose-200 hover:text-rose-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+            >
+              <span>{read}</span>
+              <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-rose-500" />
+            </Link>
+          ))}
+        </div>
+      </div>
+    </article>
+  )
+}
+
 function VisualDiagram({ title, caption, nodes }: { title: string; caption: string; nodes: { label: string; detail: string }[] }) {
   return (
     <Card className="overflow-hidden border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -390,27 +457,6 @@ function FlowDiagram({ title, steps }: { title: string; steps: string[] }) {
             </li>
           ))}
         </ol>
-      </CardContent>
-    </Card>
-  )
-}
-
-function GuideList({ title, icon, items }: { title: string; icon: ReactNode; items: string[] }) {
-  return (
-    <Card className="border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <CardContent className="p-6">
-        <div className="mb-4 flex items-center gap-2">
-          {icon}
-          <h2 className="font-display text-lg font-bold text-slate-900 dark:text-slate-50">{title}</h2>
-        </div>
-        <ul className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-          {items.map((item) => (
-            <li key={item} className="flex gap-2">
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-300 dark:bg-slate-600" />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
       </CardContent>
     </Card>
   )

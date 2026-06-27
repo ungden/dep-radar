@@ -362,3 +362,19 @@ export const catalogueEducation: Record<string, CatalogueEducation> = {
 export function getCatalogueEducation(slug: string) {
   return catalogueEducation[slug]
 }
+
+export function getCatalogueEducationImage(slug: string) {
+  if (["tri-mun", "sang-da-chong-nang", "clinic-treatment"].includes(slug)) {
+    return "/images/catalogue/acne-sun-education.jpg"
+  }
+
+  if (["bodycare", "toc-da-dau", "nam-gioi"].includes(slug)) {
+    return "/images/catalogue/hair-body-grooming.jpg"
+  }
+
+  if (["makeup", "mui-huong", "nails-mi-long-may", "beauty-tech"].includes(slug)) {
+    return "/images/catalogue/makeup-fragrance-tech.jpg"
+  }
+
+  return "/images/catalogue/skincare-foundation.jpg"
+}
