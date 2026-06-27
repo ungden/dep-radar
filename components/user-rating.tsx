@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
-import { supabase } from "@/lib/supabase"
+import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 
@@ -24,6 +24,10 @@ export function UserRating({ productId }: UserRatingProps) {
 
   React.useEffect(() => {
     if (!user) {
+      setLoading(false)
+      return
+    }
+    if (!isSupabaseSchemaReady) {
       setLoading(false)
       return
     }
@@ -51,6 +55,12 @@ export function UserRating({ productId }: UserRatingProps) {
     if (!user || rating === 0 || submitting) return
 
     setSubmitting(true)
+    if (!isSupabaseSchemaReady) {
+      setSubmitted(true)
+      setSubmitting(false)
+      return
+    }
+
     const { error } = await supabase
       .from("user_ratings")
       .upsert(

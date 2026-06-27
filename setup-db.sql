@@ -28,8 +28,12 @@ CREATE TABLE IF NOT EXISTS public.radar_products (
     price text,
     category text,
     tags text[],
-    description text
+    description text,
+    affiliate_url text
 );
+
+ALTER TABLE public.radar_products
+ADD COLUMN IF NOT EXISTS affiliate_url text;
 
 -- Create REVIEWS table
 CREATE TABLE IF NOT EXISTS public.reviews (
@@ -58,17 +62,184 @@ CREATE TABLE IF NOT EXISTS public.posts (
     image text,
     likes integer DEFAULT 0,
     comments integer DEFAULT 0,
+    created_at timestamptz DEFAULT now(),
+    product_ids text[] DEFAULT '{}'
+);
+
+ALTER TABLE public.posts
+ADD COLUMN IF NOT EXISTS product_ids text[] DEFAULT '{}';
+
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    full_name text,
+    avatar_url text,
+    role text NOT NULL DEFAULT 'user',
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.wishlist (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    product_id text NOT NULL REFERENCES public.radar_products(id) ON DELETE CASCADE,
+    created_at timestamptz DEFAULT now(),
+    UNIQUE (user_id, product_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.user_ratings (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    product_id text NOT NULL REFERENCES public.radar_products(id) ON DELETE CASCADE,
+    rating integer NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    review text,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now(),
+    UNIQUE (user_id, product_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.comments (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    content text NOT NULL CHECK (char_length(content) BETWEEN 1 AND 2000),
+    post_id text REFERENCES public.posts(id) ON DELETE CASCADE,
+    product_id text REFERENCES public.radar_products(id) ON DELETE CASCADE,
+    parent_id uuid REFERENCES public.comments(id) ON DELETE CASCADE,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now(),
+    CHECK (
+        (post_id IS NOT NULL AND product_id IS NULL)
+        OR (post_id IS NULL AND product_id IS NOT NULL)
+    )
+);
+
+CREATE TABLE IF NOT EXISTS public.likes (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    post_id text REFERENCES public.posts(id) ON DELETE CASCADE,
+    product_id text REFERENCES public.radar_products(id) ON DELETE CASCADE,
+    comment_id uuid REFERENCES public.comments(id) ON DELETE CASCADE,
+    created_at timestamptz DEFAULT now(),
+    CHECK (
+        num_nonnulls(post_id, product_id, comment_id) = 1
+    ),
+    UNIQUE (user_id, post_id),
+    UNIQUE (user_id, product_id),
+    UNIQUE (user_id, comment_id)
+);
+
+ALTER TABLE public.likes
+ADD COLUMN IF NOT EXISTS comment_id uuid REFERENCES public.comments(id) ON DELETE CASCADE;
+
+CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    email text NOT NULL UNIQUE,
     created_at timestamptz DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS public.affiliate_clicks (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id text NOT NULL REFERENCES public.radar_products(id) ON DELETE CASCADE,
+    clicked_at timestamptz DEFAULT now(),
+    referrer text,
+    user_agent text
+);
+
+ALTER TABLE public.affiliate_clicks
+ADD COLUMN IF NOT EXISTS referrer text;
+
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY INVOKER
+AS $$
+    SELECT EXISTS (
+        SELECT 1
+        FROM public.profiles
+        WHERE id = (SELECT auth.uid())
+          AND role = 'admin'
+    );
+$$;
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.kols ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.radar_products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.wishlist ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_ratings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.affiliate_clicks ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT ON public.kols, public.radar_products, public.reviews, public.posts TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.kols, public.radar_products, public.reviews, public.posts TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
+GRANT SELECT, INSERT, DELETE ON public.wishlist, public.likes TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON public.user_ratings TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.comments TO anon, authenticated;
+GRANT INSERT ON public.newsletter_subscribers, public.affiliate_clicks TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO anon, authenticated;
 
 -- Create policies for public access (read-only)
-CREATE POLICY "Allow public read-only access on kols" ON public.kols FOR SELECT USING (true);
-CREATE POLICY "Allow public read-only access on radar_products" ON public.radar_products FOR SELECT USING (true);
-CREATE POLICY "Allow public read-only access on reviews" ON public.reviews FOR SELECT USING (true);
-CREATE POLICY "Allow public read-only access on posts" ON public.posts FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read-only access on kols" ON public.kols;
+DROP POLICY IF EXISTS "Allow public read-only access on radar_products" ON public.radar_products;
+DROP POLICY IF EXISTS "Allow public read-only access on reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Allow public read-only access on posts" ON public.posts;
+CREATE POLICY "Allow public read-only access on kols" ON public.kols FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Allow public read-only access on radar_products" ON public.radar_products FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Allow public read-only access on reviews" ON public.reviews FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Allow public read-only access on posts" ON public.posts FOR SELECT TO anon, authenticated USING (true);
+
+DROP POLICY IF EXISTS "Admins can manage kols" ON public.kols;
+DROP POLICY IF EXISTS "Admins can manage radar_products" ON public.radar_products;
+DROP POLICY IF EXISTS "Admins can manage reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Admins can manage posts" ON public.posts;
+CREATE POLICY "Admins can manage kols" ON public.kols FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admins can manage radar_products" ON public.radar_products FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admins can manage reviews" ON public.reviews FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admins can manage posts" ON public.posts FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+DROP POLICY IF EXISTS "Profiles are readable" ON public.profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+CREATE POLICY "Profiles are readable" ON public.profiles FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT TO authenticated WITH CHECK ((SELECT auth.uid()) = id);
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE TO authenticated USING ((SELECT auth.uid()) = id) WITH CHECK ((SELECT auth.uid()) = id);
+
+DROP POLICY IF EXISTS "Users can read own wishlist" ON public.wishlist;
+DROP POLICY IF EXISTS "Users can insert own wishlist" ON public.wishlist;
+DROP POLICY IF EXISTS "Users can delete own wishlist" ON public.wishlist;
+CREATE POLICY "Users can read own wishlist" ON public.wishlist FOR SELECT TO authenticated USING ((SELECT auth.uid()) = user_id);
+CREATE POLICY "Users can insert own wishlist" ON public.wishlist FOR INSERT TO authenticated WITH CHECK ((SELECT auth.uid()) = user_id);
+CREATE POLICY "Users can delete own wishlist" ON public.wishlist FOR DELETE TO authenticated USING ((SELECT auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Users can read own ratings" ON public.user_ratings;
+DROP POLICY IF EXISTS "Users can insert own ratings" ON public.user_ratings;
+DROP POLICY IF EXISTS "Users can update own ratings" ON public.user_ratings;
+CREATE POLICY "Users can read own ratings" ON public.user_ratings FOR SELECT TO authenticated USING ((SELECT auth.uid()) = user_id);
+CREATE POLICY "Users can insert own ratings" ON public.user_ratings FOR INSERT TO authenticated WITH CHECK ((SELECT auth.uid()) = user_id);
+CREATE POLICY "Users can update own ratings" ON public.user_ratings FOR UPDATE TO authenticated USING ((SELECT auth.uid()) = user_id) WITH CHECK ((SELECT auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Comments are readable" ON public.comments;
+DROP POLICY IF EXISTS "Users can insert own comments" ON public.comments;
+DROP POLICY IF EXISTS "Users can update own comments" ON public.comments;
+DROP POLICY IF EXISTS "Users can delete own comments" ON public.comments;
+CREATE POLICY "Comments are readable" ON public.comments FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Users can insert own comments" ON public.comments FOR INSERT TO authenticated WITH CHECK ((SELECT auth.uid()) = user_id);
+CREATE POLICY "Users can update own comments" ON public.comments FOR UPDATE TO authenticated USING ((SELECT auth.uid()) = user_id) WITH CHECK ((SELECT auth.uid()) = user_id);
+CREATE POLICY "Users can delete own comments" ON public.comments FOR DELETE TO authenticated USING ((SELECT auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Likes are readable" ON public.likes;
+DROP POLICY IF EXISTS "Users can insert own likes" ON public.likes;
+DROP POLICY IF EXISTS "Users can delete own likes" ON public.likes;
+CREATE POLICY "Likes are readable" ON public.likes FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Users can insert own likes" ON public.likes FOR INSERT TO authenticated WITH CHECK ((SELECT auth.uid()) = user_id);
+CREATE POLICY "Users can delete own likes" ON public.likes FOR DELETE TO authenticated USING ((SELECT auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Anyone can subscribe to newsletter" ON public.newsletter_subscribers;
+DROP POLICY IF EXISTS "Anyone can record affiliate clicks" ON public.affiliate_clicks;
+CREATE POLICY "Anyone can subscribe to newsletter" ON public.newsletter_subscribers FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "Anyone can record affiliate clicks" ON public.affiliate_clicks FOR INSERT TO anon, authenticated WITH CHECK (true);

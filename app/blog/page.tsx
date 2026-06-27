@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { supabase } from "@/lib/supabase"
+import { getPosts } from "@/lib/data"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import type { Post } from "@/lib/types"
 
@@ -24,11 +24,7 @@ export default function BlogPage() {
   const [visibleCount, setVisibleCount] = React.useState(POSTS_PER_PAGE)
 
   React.useEffect(() => {
-    supabase
-      .from("posts")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => setPosts(data || []))
+    getPosts().then(setPosts)
   }, [])
 
   const categories = React.useMemo(
@@ -136,6 +132,7 @@ export default function BlogPage() {
                           src={featured.image}
                           alt={featured.title}
                           fill
+                          sizes="(min-width: 1024px) 50vw, 100vw"
                           className="object-cover group-hover:scale-105 transition-transform duration-700"
                           priority
                         />
@@ -191,7 +188,7 @@ export default function BlogPage() {
                 initial="hidden"
                 animate="show"
               >
-                {rest.map((post) => (
+                {rest.map((post, index) => (
                   <motion.div key={post.id} variants={itemVariants}>
                     <Link href={`/blog/${post.id}`} className="group block h-full">
                       <Card className="overflow-hidden border-none shadow-sm hover:shadow-xl transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl h-full flex flex-col">
@@ -200,6 +197,8 @@ export default function BlogPage() {
                             src={post.image}
                             alt={post.title}
                             fill
+                            sizes="(min-width: 768px) 50vw, 100vw"
+                            priority={index === 0}
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                           <div className="absolute top-3 left-3">

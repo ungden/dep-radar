@@ -60,7 +60,7 @@ export function CompareBar() {
           <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row items-center gap-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 shrink-0">
               <Scale className="h-4 w-4 text-rose-500" />
-              So sanh ({items.length})
+              So sánh ({items.length})
             </div>
 
             <div className="flex flex-wrap gap-2 flex-1 justify-center sm:justify-start">
@@ -73,7 +73,7 @@ export function CompareBar() {
                   <button
                     onClick={() => remove(item.id)}
                     className="shrink-0 hover:text-rose-500 transition-colors"
-                    aria-label={`Xoa ${item.name}`}
+                    aria-label={`Xóa ${item.name}`}
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -88,10 +88,10 @@ export function CompareBar() {
                 onClick={clearAll}
                 className="text-xs text-slate-500 dark:text-slate-400 hover:text-red-500"
               >
-                Xoa tat ca
+                Xóa tất cả
               </Button>
               <Button asChild size="sm" className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl">
-                <Link href={compareUrl}>So sanh ngay</Link>
+                <Link href={compareUrl}>So sánh ngay</Link>
               </Button>
             </div>
           </div>

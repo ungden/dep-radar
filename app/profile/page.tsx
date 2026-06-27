@@ -7,7 +7,7 @@ import Image from "next/image"
 import { Star, Heart, MessageSquare, LogOut, User, BookmarkCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
-import { supabase } from "@/lib/supabase"
+import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -74,6 +74,17 @@ export default function ProfilePage() {
     if (authLoading) return
     if (!user) {
       router.push("/auth/login")
+      return
+    }
+    if (!isSupabaseSchemaReady) {
+      setProfile({
+        full_name: user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? null,
+        avatar_url: user.user_metadata?.avatar_url ?? null,
+      })
+      setWishlist([])
+      setRatings([])
+      setComments([])
+      setLoading(false)
       return
     }
 
@@ -270,6 +281,7 @@ export default function ProfilePage() {
                                 src={item.product.image}
                                 alt={item.product.name}
                                 fill
+                                sizes="64px"
                                 className="object-cover"
                                 referrerPolicy="no-referrer"
                               />
@@ -402,6 +414,7 @@ function ProductCard({ product }: { product?: Product | null }) {
               src={product.image}
               alt={product.name}
               fill
+              sizes="64px"
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               referrerPolicy="no-referrer"
             />

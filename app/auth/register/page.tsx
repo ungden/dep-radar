@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { supabase } from "@/lib/supabase"
+import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,7 +20,7 @@ export default function RegisterPage() {
     setError("")
     setLoading(true)
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -34,6 +34,13 @@ export default function RegisterPage() {
       setError(error.message)
       setLoading(false)
       return
+    }
+
+    if (data.user && isSupabaseSchemaReady) {
+      await supabase.from("profiles").upsert({
+        id: data.user.id,
+        full_name: fullName,
+      })
     }
 
     setSuccess(true)

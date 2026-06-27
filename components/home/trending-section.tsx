@@ -11,7 +11,7 @@ import { motion } from "motion/react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { supabase } from "@/lib/supabase"
+import { getProducts } from "@/lib/data"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import type { Product } from "@/lib/types"
 
@@ -19,7 +19,7 @@ export function TrendingSection() {
   const [products, setProducts] = React.useState<Product[]>([])
 
   React.useEffect(() => {
-    supabase.from('radar_products').select('*').limit(6).then(({ data }) => setProducts(data || []))
+    getProducts().then((items) => setProducts(items.slice(0, 6)))
   }, [])
 
   const [emblaRef] = useEmblaCarousel({ loop: true, align: "start" }, [
@@ -52,7 +52,7 @@ export function TrendingSection() {
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
         >
-          {products.map((product) => (
+          {products.map((product, index) => (
             <motion.div
               key={product.id}
               variants={itemVariants}
@@ -64,6 +64,8 @@ export function TrendingSection() {
                     src={product.image}
                     alt={product.name}
                     fill
+                    sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    priority={index === 0}
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                     referrerPolicy="no-referrer"
                   />

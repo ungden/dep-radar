@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Send } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
-import { supabase } from "@/lib/supabase"
+import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -55,6 +55,12 @@ export function CommentSection({ postId, productId }: CommentSectionProps) {
   const [submitting, setSubmitting] = React.useState(false)
 
   const fetchComments = React.useCallback(async () => {
+    if (!isSupabaseSchemaReady) {
+      setComments([])
+      setLoading(false)
+      return
+    }
+
     let query = supabase
       .from("comments")
       .select("*, profile:profiles(full_name)")
@@ -77,6 +83,25 @@ export function CommentSection({ postId, productId }: CommentSectionProps) {
     if (!user || !content.trim() || submitting) return
 
     setSubmitting(true)
+    if (!isSupabaseSchemaReady) {
+      const optimisticComment: Comment = {
+        id: `local-${Date.now()}`,
+        user_id: user.id,
+        content: content.trim(),
+        created_at: new Date().toISOString(),
+        post_id: postId ?? null,
+        product_id: productId ?? null,
+        parent_id: null,
+        profile: {
+          full_name: user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Bạn",
+        },
+      }
+      setComments((items) => [optimisticComment, ...items])
+      setContent("")
+      setSubmitting(false)
+      return
+    }
+
     const row: Record<string, string> = {
       user_id: user.id,
       content: content.trim(),
@@ -193,8 +218,7 @@ export function CommentSection({ postId, productId }: CommentSectionProps) {
                   </p>
                   <div className="mt-2">
                     <LikeButton
-                      postId={comment.post_id || undefined}
-                      productId={comment.product_id || undefined}
+                      commentId={comment.id}
                       initialCount={0}
                     />
                   </div>

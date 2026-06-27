@@ -1,22 +1,20 @@
 import type { MetadataRoute } from 'next'
-import { supabase } from '@/lib/supabase'
+import { catalogueSections } from '@/lib/catalogue'
+import { getKols, getPosts, getProducts } from '@/lib/data'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://360dodep.vn'
 
-  const [productsRes, postsRes, kolsRes] = await Promise.all([
-    supabase.from('radar_products').select('id'),
-    supabase.from('posts').select('id'),
-    supabase.from('kols').select('id'),
+  const [products, posts, kols] = await Promise.all([
+    getProducts(),
+    getPosts(),
+    getKols(),
   ])
-
-  const products = productsRes.data || []
-  const posts = postsRes.data || []
-  const kols = kolsRes.data || []
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
     { url: `${baseUrl}/products`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
+    { url: `${baseUrl}/catalogue`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/koc-tracker`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
     { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
     { url: `${baseUrl}/community`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
@@ -43,5 +41,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  return [...staticPages, ...productPages, ...postPages, ...kolPages]
+  const cataloguePages: MetadataRoute.Sitemap = catalogueSections.map((section) => ({
+    url: `${baseUrl}/catalogue/${section.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: section.topMenu ? 0.8 : 0.65,
+  }))
+
+  return [...staticPages, ...cataloguePages, ...productPages, ...postPages, ...kolPages]
 }

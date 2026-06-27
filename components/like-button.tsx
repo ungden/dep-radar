@@ -5,15 +5,16 @@ import { useRouter } from "next/navigation"
 import { Heart } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
-import { supabase } from "@/lib/supabase"
+import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 
 interface LikeButtonProps {
   postId?: string
   productId?: string
+  commentId?: string
   initialCount: number
 }
 
-export function LikeButton({ postId, productId, initialCount }: LikeButtonProps) {
+export function LikeButton({ postId, productId, commentId, initialCount }: LikeButtonProps) {
   const { user } = useAuth()
   const router = useRouter()
   const [liked, setLiked] = React.useState(false)
@@ -25,6 +26,7 @@ export function LikeButton({ postId, productId, initialCount }: LikeButtonProps)
       setLiked(false)
       return
     }
+    if (!isSupabaseSchemaReady) return
 
     const checkLiked = async () => {
       let query = supabase
@@ -34,13 +36,14 @@ export function LikeButton({ postId, productId, initialCount }: LikeButtonProps)
 
       if (postId) query = query.eq("post_id", postId)
       if (productId) query = query.eq("product_id", productId)
+      if (commentId) query = query.eq("comment_id", commentId)
 
       const { data } = await query.maybeSingle()
       setLiked(!!data)
     }
 
     checkLiked()
-  }, [user, postId, productId])
+  }, [user, postId, productId, commentId])
 
   const handleClick = async () => {
     if (!user) {
@@ -57,6 +60,11 @@ export function LikeButton({ postId, productId, initialCount }: LikeButtonProps)
     setLiked(!wasLiked)
     setCount(wasLiked ? prevCount - 1 : prevCount + 1)
 
+    if (!isSupabaseSchemaReady) {
+      setLoading(false)
+      return
+    }
+
     try {
       if (wasLiked) {
         let query = supabase
@@ -66,6 +74,7 @@ export function LikeButton({ postId, productId, initialCount }: LikeButtonProps)
 
         if (postId) query = query.eq("post_id", postId)
         if (productId) query = query.eq("product_id", productId)
+        if (commentId) query = query.eq("comment_id", commentId)
 
         const { error } = await query
         if (error) throw error
@@ -73,6 +82,7 @@ export function LikeButton({ postId, productId, initialCount }: LikeButtonProps)
         const row: Record<string, string> = { user_id: user.id }
         if (postId) row.post_id = postId
         if (productId) row.product_id = productId
+        if (commentId) row.comment_id = commentId
 
         const { error } = await supabase.from("likes").insert(row)
         if (error) throw error

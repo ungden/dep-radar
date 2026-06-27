@@ -11,12 +11,12 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { PlatformBadge } from "@/components/platform-badge"
-import { supabase } from "@/lib/supabase"
+import { getKol, getProducts, getReviews } from "@/lib/data"
 import { containerVariants, itemVariants } from "@/lib/animations"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const { data: kol } = await supabase.from('kols').select('name, platform, handle, followers').eq('id', id).single()
+  const kol = await getKol(id)
 
   if (!kol) {
     return { title: 'KOL/KOC không tồn tại | 360° đẹp' }
@@ -37,13 +37,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function KocDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   
-  const { data: kol } = await supabase.from('kols').select('*').eq('id', id).single();
+  const kol = await getKol(id);
   if (!kol) return notFound();
 
-  const { data: kolReviews } = await supabase.from('reviews').select('*').eq('kolid', id);
-  const { data: productsData } = await supabase.from('radar_products').select('*');
-  const PRODUCTS = productsData || [];
-  const reviews = kolReviews || [];
+  const PRODUCTS = await getProducts();
+  const reviews = await getReviews({ kolId: id });
   
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-12">
@@ -53,6 +51,8 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
           src={kol.cover}
           alt="Cover"
           fill
+          sizes="100vw"
+          priority
           className="object-cover"
           referrerPolicy="no-referrer"
         />
@@ -141,7 +141,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                       <CardContent className="p-5 flex-1 flex flex-col">
                         <div className="flex gap-4 mb-4">
                           <div className="relative h-20 w-20 shrink-0 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
-                            <Image src={product.image} alt={product.name} fill className="object-cover" referrerPolicy="no-referrer" />
+                            <Image src={product.image} alt={product.name} fill sizes="80px" className="object-cover" referrerPolicy="no-referrer" />
                           </div>
                           <div className="flex flex-col justify-center">
                             <div className="text-xs font-bold text-rose-500 uppercase tracking-wider mb-1">{product.brand}</div>

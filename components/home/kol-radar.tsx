@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { PlatformBadge } from "@/components/platform-badge"
-import { supabase } from "@/lib/supabase"
+import { getKols, getProducts, getReviews } from "@/lib/data"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import type { Review, Kol, Product } from "@/lib/types"
 
@@ -24,13 +24,13 @@ export function KolRadar() {
 
   React.useEffect(() => {
     Promise.all([
-      supabase.from('reviews').select('*').limit(3),
-      supabase.from('kols').select('id,name,avatar,platform,verified'),
-      supabase.from('radar_products').select('id,name,brand,image'),
-    ]).then(([reviewsRes, kolsRes, productsRes]) => {
-      setReviews((reviewsRes.data as Review[]) || [])
-      setKols((kolsRes.data as KolSummary[]) || [])
-      setProducts((productsRes.data as ProductSummary[]) || [])
+      getReviews(),
+      getKols(),
+      getProducts(),
+    ]).then(([reviewsData, kolsData, productsData]) => {
+      setReviews(reviewsData.slice(0, 3))
+      setKols(kolsData)
+      setProducts(productsData)
     })
   }, [])
 
@@ -94,7 +94,7 @@ export function KolRadar() {
                   <CardContent className="p-5 bg-white dark:bg-slate-900">
                     <div className="flex gap-4 mb-4">
                       <div className="relative h-20 w-20 shrink-0 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-100 dark:border-slate-800">
-                        <Image src={product.image} alt={product.name} fill className="object-cover" referrerPolicy="no-referrer" />
+                        <Image src={product.image} alt={product.name} fill sizes="80px" className="object-cover" referrerPolicy="no-referrer" />
                       </div>
                       <div className="flex flex-col justify-center">
                         <div className="text-xs font-medium text-rose-500 uppercase tracking-wider mb-1">{product.brand}</div>

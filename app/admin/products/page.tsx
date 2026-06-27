@@ -1,5 +1,7 @@
 "use client"
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useEffect, useState, useCallback } from "react"
 import { supabase } from "@/lib/supabase"
 import type { Product } from "@/lib/types"
@@ -56,8 +58,8 @@ export default function AdminProductsPage() {
   const [tagsInput, setTagsInput] = useState("")
   const [saving, setSaving] = useState(false)
 
-  const fetchProducts = useCallback(async () => {
-    setLoading(true)
+  const fetchProducts = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true)
     const { data, error } = await supabase
       .from("radar_products")
       .select("*")
@@ -69,8 +71,26 @@ export default function AdminProductsPage() {
   }, [])
 
   useEffect(() => {
-    fetchProducts()
-  }, [fetchProducts])
+    let active = true
+
+    async function loadProducts() {
+      const { data, error } = await supabase
+        .from("radar_products")
+        .select("*")
+        .order("name")
+
+      if (!active) return
+      if (!error && data) {
+        setProducts(data as Product[])
+      }
+      setLoading(false)
+    }
+
+    loadProducts()
+    return () => {
+      active = false
+    }
+  }, [])
 
   const filtered = products.filter((p) => {
     const q = search.toLowerCase()
@@ -139,7 +159,7 @@ export default function AdminProductsPage() {
 
     setSaving(false)
     setDialogOpen(false)
-    fetchProducts()
+    fetchProducts(false)
   }
 
   async function handleDelete() {
@@ -150,7 +170,7 @@ export default function AdminProductsPage() {
       .eq("id", deletingProduct.id)
     setDeleteDialogOpen(false)
     setDeletingProduct(null)
-    fetchProducts()
+    fetchProducts(false)
   }
 
   return (

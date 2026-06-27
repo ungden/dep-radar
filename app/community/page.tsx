@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { supabase } from "@/lib/supabase"
+import { getPosts } from "@/lib/data"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import type { Post } from "@/lib/types"
 
@@ -27,14 +27,59 @@ function formatRelative(dateStr: string) {
 
 export default function CommunityPage() {
   const [posts, setPosts] = React.useState<Post[]>([])
+  const [searchQuery, setSearchQuery] = React.useState("")
+  const [composerText, setComposerText] = React.useState("")
+  const [selectedTopic, setSelectedTopic] = React.useState<string | null>(null)
 
   React.useEffect(() => {
-    supabase
-      .from("posts")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => setPosts(data || []))
+    getPosts().then(setPosts)
   }, [])
+
+  const topics = ["SkincareRoutine", "ReviewMyPham", "DaDauMun", "GocLamDep", "SaleHunting"]
+
+  const filteredPosts = React.useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    return posts.filter((post) => {
+      const matchesQuery =
+        !query ||
+        [post.title, post.excerpt, post.author_name, post.category, ...post.tags].some((field) =>
+          field.toLowerCase().includes(query)
+        )
+      const matchesTopic = selectedTopic
+        ? post.tags.some((tag) =>
+            tag.toLowerCase().replace(/\s/g, "").includes(selectedTopic.toLowerCase())
+          )
+        : true
+
+      return matchesQuery && matchesTopic
+    })
+  }, [posts, searchQuery, selectedTopic])
+
+  function handleCreatePost() {
+    const content = composerText.trim()
+    if (!content) return
+
+    const createdAt = new Date().toISOString()
+    const optimisticPost: Post = {
+      id: `local-${Date.now()}`,
+      title: content.length > 72 ? `${content.slice(0, 69)}...` : content,
+      slug: `local-${Date.now()}`,
+      excerpt: content,
+      content,
+      author_name: "Bạn",
+      author_avatar: "",
+      category: "Cộng đồng",
+      tags: selectedTopic ? [selectedTopic] : ["Góc làm đẹp"],
+      image: "",
+      likes: 0,
+      comments: 0,
+      created_at: createdAt,
+      product_ids: [],
+    }
+
+    setPosts((items) => [optimisticPost, ...items])
+    setComposerText("")
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
@@ -72,13 +117,19 @@ export default function CommunityPage() {
                     <div className="flex-1">
                       <Input
                         placeholder="Bạn muốn chia sẻ điều gì về làm đẹp hôm nay?"
+                        value={composerText}
+                        onChange={(event) => setComposerText(event.target.value)}
                         className="w-full bg-slate-50 dark:bg-slate-950 border-transparent focus-visible:ring-rose-500 rounded-xl h-12 mb-4"
                       />
                       <div className="flex justify-between items-center">
                         <Button variant="ghost" className="text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg">
                           <ImageIcon className="h-5 w-5 mr-2" /> Thêm ảnh
                         </Button>
-                        <Button className="bg-slate-900 dark:bg-slate-50 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl px-6 font-bold">
+                        <Button
+                          onClick={handleCreatePost}
+                          disabled={!composerText.trim()}
+                          className="bg-slate-900 dark:bg-slate-50 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl px-6 font-bold"
+                        >
                           Đăng bài
                         </Button>
                       </div>
@@ -95,7 +146,7 @@ export default function CommunityPage() {
               initial="hidden"
               animate="show"
             >
-              {posts.map((post) => (
+              {filteredPosts.map((post) => (
                 <motion.div key={post.id} variants={itemVariants}>
                   <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white dark:bg-slate-900 hover:shadow-md transition-shadow">
                     <CardContent className="p-6">
@@ -120,7 +171,7 @@ export default function CommunityPage() {
 
                         {post.image && (
                           <div className="relative h-64 w-full rounded-2xl overflow-hidden mb-4 bg-slate-100 dark:bg-slate-800">
-                            <Image src={post.image} alt={post.title} fill className="object-cover" />
+                            <Image src={post.image} alt={post.title} fill sizes="(min-width: 768px) calc(100vw - 24rem), 100vw" className="object-cover" />
                           </div>
                         )}
                       </Link>
@@ -152,14 +203,16 @@ export default function CommunityPage() {
               ))}
             </motion.div>
 
-            {posts.length === 0 && (
+            {filteredPosts.length === 0 && (
               <motion.div
                 className="text-center py-24 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
               >
-                <p className="text-slate-500 dark:text-slate-400 text-lg">Chưa có bài viết nào trong cộng đồng.</p>
+                <p className="text-slate-500 dark:text-slate-400 text-lg">
+                  {posts.length === 0 ? "Chưa có bài viết nào trong cộng đồng." : "Không tìm thấy bài viết phù hợp."}
+                </p>
               </motion.div>
             )}
           </div>
@@ -176,6 +229,8 @@ export default function CommunityPage() {
               <Input
                 type="search"
                 placeholder="Tìm kiếm bài viết..."
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
                 className="w-full pl-10 bg-white dark:bg-slate-900 border-none shadow-sm focus-visible:ring-rose-500 rounded-xl h-12"
               />
             </div>
@@ -186,10 +241,19 @@ export default function CommunityPage() {
                   <TrendingUp className="h-5 w-5 text-rose-500" /> Chủ đề nổi bật
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {["#SkincareRoutine", "#ReviewMyPham", "#DaDauMun", "#GocLamDep", "#SaleHunting"].map((tag) => (
-                    <Badge key={tag} variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer px-3 py-1">
-                      {tag}
-                    </Badge>
+                  {topics.map((tag) => (
+                    <button key={tag} type="button" onClick={() => setSelectedTopic(selectedTopic === tag ? null : tag)}>
+                      <Badge
+                        variant="secondary"
+                        className={
+                          selectedTopic === tag
+                            ? "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 cursor-pointer px-3 py-1"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer px-3 py-1"
+                        }
+                      >
+                        #{tag}
+                      </Badge>
+                    </button>
                   ))}
                 </div>
               </CardContent>

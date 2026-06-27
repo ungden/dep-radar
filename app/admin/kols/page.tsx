@@ -1,5 +1,7 @@
 "use client"
 
+/* eslint-disable @next/next/no-img-element */
+
 import * as React from "react"
 import { Plus, Pencil, Trash2, Search, CheckCircle2, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"

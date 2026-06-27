@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PlatformBadge } from "@/components/platform-badge"
-import { supabase } from "@/lib/supabase"
+import { getKols } from "@/lib/data"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import type { Kol } from "@/lib/types"
 
@@ -21,7 +21,7 @@ export default function KocTrackerPage() {
   const [kols, setKols] = React.useState<Kol[]>([])
 
   React.useEffect(() => {
-    supabase.from('kols').select('*').then(({ data }) => setKols(data || []))
+    getKols().then(setKols)
   }, [])
 
   const platforms = React.useMemo(

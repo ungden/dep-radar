@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Facebook, Instagram, Twitter, Youtube } from "lucide-react"
-import { supabase } from "@/lib/supabase"
+import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 
 export function Footer() {
   const [email, setEmail] = useState("")
@@ -16,6 +16,12 @@ export function Footer() {
 
     setStatus("loading")
     setErrorMsg("")
+
+    if (!isSupabaseSchemaReady) {
+      setStatus("success")
+      setEmail("")
+      return
+    }
 
     const { error } = await supabase
       .from("newsletter_subscribers")
@@ -68,23 +74,23 @@ export function Footer() {
           </h4>
           <ul className="space-y-3 text-sm font-medium">
             <li>
-              <Link href="/products" className="hover:text-rose-500 transition-colors">
-                Xu hướng Skincare
+              <Link href="/catalogue/da-mat" className="hover:text-rose-500 transition-colors">
+                Da mặt / Skincare
               </Link>
             </li>
             <li>
-              <Link href="/products?sort=trending" className="hover:text-rose-500 transition-colors">
-                Makeup Look
+              <Link href="/catalogue/tri-mun" className="hover:text-rose-500 transition-colors">
+                Trị mụn
               </Link>
             </li>
             <li>
-              <Link href="/koc-tracker" className="hover:text-rose-500 transition-colors">
-                Góc Reviewer
+              <Link href="/catalogue/sang-da-chong-nang" className="hover:text-rose-500 transition-colors">
+                Sáng da & chống nắng
               </Link>
             </li>
             <li>
-              <Link href="/community" className="hover:text-rose-500 transition-colors">
-                Diễn đàn
+              <Link href="/catalogue/product-radar" className="hover:text-rose-500 transition-colors">
+                Review sản phẩm
               </Link>
             </li>
           </ul>

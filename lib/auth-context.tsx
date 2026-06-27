@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import type { User } from "@supabase/supabase-js"
-import { supabase } from "@/lib/supabase"
+import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 
 interface AuthContextType {
   user: User | null
@@ -16,6 +16,16 @@ const AuthContext = React.createContext<AuthContextType>({
   signOut: async () => {},
 })
 
+async function ensureProfile(user: User | null) {
+  if (!user || !isSupabaseSchemaReady) return
+
+  await supabase.from("profiles").upsert({
+    id: user.id,
+    full_name: user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? null,
+    avatar_url: user.user_metadata?.avatar_url ?? null,
+  })
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null)
   const [loading, setLoading] = React.useState(true)
@@ -24,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
+      ensureProfile(session?.user ?? null)
       setLoading(false)
     })
 
@@ -32,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      ensureProfile(session?.user ?? null)
       setLoading(false)
     })
 

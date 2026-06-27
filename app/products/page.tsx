@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { supabase } from "@/lib/supabase"
+import { beautyNeedFilters, productMatchesNeed } from "@/lib/catalogue"
+import { getProducts } from "@/lib/data"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import { CompareButton } from "@/components/compare-button"
 import { CompareBar } from "@/components/compare-bar"
@@ -18,11 +19,13 @@ import type { Product } from "@/lib/types"
 
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = React.useState("")
+  const [selectedNeed, setSelectedNeed] = React.useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
+  const [selectedBudget, setSelectedBudget] = React.useState("all")
   const [products, setProducts] = React.useState<Product[]>([])
 
   React.useEffect(() => {
-    supabase.from('radar_products').select('*').then(({ data }) => setProducts(data || []))
+    getProducts().then(setProducts)
   }, [])
 
   const categories = React.useMemo(
@@ -34,11 +37,15 @@ export default function ProductsPage() {
     products.filter(product => {
       const query = searchQuery.toLowerCase()
       const matchesSearch = product.name.toLowerCase().includes(query) ||
-                            product.brand.toLowerCase().includes(query)
+                            product.brand.toLowerCase().includes(query) ||
+                            product.description.toLowerCase().includes(query) ||
+                            product.tags?.some((tag) => tag.toLowerCase().includes(query))
+      const matchesNeed = selectedNeed ? productMatchesNeed(product, selectedNeed) : true
       const matchesCategory = selectedCategory ? product.category === selectedCategory : true
-      return matchesSearch && matchesCategory
+      const matchesBudget = matchesBudgetFilter(product.price, selectedBudget)
+      return matchesSearch && matchesNeed && matchesCategory && matchesBudget
     }),
-    [products, searchQuery, selectedCategory]
+    [products, searchQuery, selectedNeed, selectedCategory, selectedBudget]
   )
 
   return (
@@ -59,22 +66,64 @@ export default function ProductsPage() {
         </motion.div>
 
         <motion.div
-          className="flex flex-col md:flex-row gap-4 mb-8 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800"
+          className="mb-8 space-y-4 bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
-            <Input
-              type="search"
-              placeholder="Tìm kiếm sản phẩm, thương hiệu..."
-              className="w-full pl-10 bg-slate-50 dark:bg-slate-950 border-transparent focus-visible:ring-rose-500 rounded-xl"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="relative w-full lg:w-96">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+              <Input
+                type="search"
+                placeholder="Tìm theo nhu cầu: trị mụn, da dầu, chống nắng..."
+                className="w-full pl-10 bg-slate-50 dark:bg-slate-950 border-transparent focus-visible:ring-rose-500 rounded-xl"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <select
+              value={selectedBudget}
+              onChange={(event) => setSelectedBudget(event.target.value)}
+              className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700 outline-none transition-colors focus:border-rose-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+            >
+              <option value="all">Tất cả ngân sách</option>
+              <option value="under-200">Dưới 200k</option>
+              <option value="200-500">200-500k</option>
+              <option value="luxury">Luxury</option>
+            </select>
           </div>
-          <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+
+          <div>
+            <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+              Nhu cầu làm đẹp
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              <Button
+                variant={selectedNeed === null ? "default" : "outline"}
+                className={`rounded-xl whitespace-nowrap ${selectedNeed === null ? 'bg-rose-600 text-white hover:bg-rose-700' : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'}`}
+                onClick={() => setSelectedNeed(null)}
+              >
+                Tất cả nhu cầu
+              </Button>
+              {beautyNeedFilters.map((need) => (
+                <Button
+                  key={need.slug}
+                  variant={selectedNeed === need.slug ? "default" : "outline"}
+                  className={`rounded-xl whitespace-nowrap ${selectedNeed === need.slug ? 'bg-rose-600 text-white hover:bg-rose-700' : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'}`}
+                  onClick={() => setSelectedNeed(need.slug)}
+                >
+                  {need.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+              Loại sản phẩm
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2">
             <Button
               variant={selectedCategory === null ? "default" : "outline"}
               className={`rounded-xl whitespace-nowrap ${selectedCategory === null ? 'bg-slate-900 text-white dark:bg-slate-50 dark:text-slate-900' : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'}`}
@@ -93,6 +142,7 @@ export default function ProductsPage() {
                 {category}
               </Button>
             ))}
+            </div>
           </div>
         </motion.div>
 
@@ -104,12 +154,12 @@ export default function ProductsPage() {
             initial="hidden"
             animate="show"
           >
-            {filteredProducts.map((product) => (
+            {filteredProducts.map((product, index) => (
               <motion.div key={product.id} variants={itemVariants}>
                 <Link href={`/products/${product.id}`} className="block h-full">
                   <Card className="overflow-hidden border-none shadow-sm hover:shadow-xl transition-all duration-300 group bg-white dark:bg-slate-900 rounded-2xl h-full flex flex-col">
                     <div className="relative aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                      <Image src={product.image} alt={product.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
+                      <Image src={product.image} alt={product.name} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" priority={index === 0} className="object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
                       <div className="absolute top-3 left-3">
                         <Badge className="bg-white/90 dark:bg-slate-950/90 text-slate-900 dark:text-slate-50 hover:bg-white dark:hover:bg-slate-950 backdrop-blur-sm font-bold shadow-sm">
                           {product.category}
@@ -158,7 +208,7 @@ export default function ProductsPage() {
             <Button
               variant="outline"
               className="mt-4 rounded-full"
-              onClick={() => { setSearchQuery(""); setSelectedCategory(null) }}
+              onClick={() => { setSearchQuery(""); setSelectedNeed(null); setSelectedCategory(null); setSelectedBudget("all") }}
             >
               Xóa bộ lọc
             </Button>
@@ -168,4 +218,15 @@ export default function ProductsPage() {
       <CompareBar />
     </div>
   )
+}
+
+function matchesBudgetFilter(price: string, budget: string) {
+  if (budget === "all") return true
+  const amount = Number(price.replace(/[^\d]/g, ""))
+  if (!Number.isFinite(amount)) return true
+
+  if (budget === "under-200") return amount < 200000
+  if (budget === "200-500") return amount >= 200000 && amount <= 500000
+  if (budget === "luxury") return amount > 500000
+  return true
 }

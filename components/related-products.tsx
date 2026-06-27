@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { supabase } from "@/lib/supabase"
+import { getProducts } from "@/lib/data"
 import type { Product } from "@/lib/types"
 
 interface RelatedProductsProps {
@@ -17,14 +17,12 @@ export function RelatedProducts({ category, currentProductId }: RelatedProductsP
 
   useEffect(() => {
     async function fetchRelated() {
-      const { data } = await supabase
-        .from("radar_products")
-        .select("*")
-        .eq("category", category)
-        .neq("id", currentProductId)
-        .limit(4)
-
-      setProducts((data as Product[]) || [])
+      const data = await getProducts()
+      setProducts(
+        data
+          .filter((product) => product.category === category && product.id !== currentProductId)
+          .slice(0, 4)
+      )
       setLoading(false)
     }
 
@@ -64,6 +62,7 @@ export function RelatedProducts({ category, currentProductId }: RelatedProductsP
                 src={product.image}
                 alt={product.name}
                 fill
+                sizes="(min-width: 768px) 25vw, 50vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
                 referrerPolicy="no-referrer"
               />

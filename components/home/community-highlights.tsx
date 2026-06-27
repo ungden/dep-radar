@@ -8,7 +8,7 @@ import { motion } from "motion/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { supabase } from "@/lib/supabase"
+import { getPosts } from "@/lib/data"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import type { Post } from "@/lib/types"
 
@@ -16,12 +16,7 @@ export function CommunityHighlights() {
   const [posts, setPosts] = React.useState<Post[]>([])
 
   React.useEffect(() => {
-    supabase
-      .from("posts")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(3)
-      .then(({ data }) => setPosts(data || []))
+    getPosts().then((items) => setPosts(items.slice(0, 3)))
   }, [])
 
   function formatDate(dateStr: string) {

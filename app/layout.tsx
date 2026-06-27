@@ -20,6 +20,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://360dodep.vn'),
   title: '360 độ đẹp | Nền tảng Đánh giá Mỹ phẩm & KOL Tracker',
   description: 'Khám phá đánh giá mỹ phẩm chân thực, theo dõi KOL/KOC yêu thích và mua sắm thông minh cùng cộng đồng làm đẹp lớn nhất Việt Nam.',
 };

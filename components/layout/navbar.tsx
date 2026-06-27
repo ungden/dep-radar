@@ -8,7 +8,8 @@ import { LogOut, Menu, Search, User, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ModeToggle } from "@/components/mode-toggle"
-import { supabase } from "@/lib/supabase"
+import { topCatalogueNavigation } from "@/lib/catalogue"
+import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 import { useAuth } from "@/lib/auth-context"
 
 export function Navbar() {
@@ -42,6 +43,8 @@ export function Navbar() {
   }
 
   React.useEffect(() => {
+    if (!isSupabaseSchemaReady) return
+
     // Check if user is admin
     supabase.rpc('is_admin').then(({ data, error }) => {
       if (!error && data) {
@@ -69,6 +72,12 @@ export function Navbar() {
             </span>
           </Link>
           <nav className="hidden md:flex gap-8">
+            <Link
+              href="/catalogue"
+              className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-50 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+            >
+              Catalogue
+            </Link>
             <Link
               href="/products"
               className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-50 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
@@ -139,7 +148,7 @@ export function Navbar() {
                     </p>
                   </div>
                   <Link
-                    href="/account"
+                    href="/profile"
                     className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                     onClick={() => setIsUserMenuOpen(false)}
                   >
@@ -195,6 +204,20 @@ export function Navbar() {
         </div>
       </div>
 
+      <div className="hidden md:block border-t border-slate-100 dark:border-slate-800 bg-white/90 dark:bg-slate-950/90">
+        <nav className="container mx-auto flex gap-5 overflow-x-auto px-4 py-3 md:px-6">
+          {topCatalogueNavigation.map((item) => (
+            <Link
+              key={item.slug}
+              href={`/catalogue/${item.slug}`}
+              className="shrink-0 text-xs font-bold uppercase tracking-wider text-slate-500 transition-colors hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-300"
+            >
+              {item.shortTitle}
+            </Link>
+          ))}
+        </nav>
+      </div>
+
       {/* Mobile Search */}
       {isMobileSearchOpen && (
         <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-xl absolute w-full left-0 top-[65px] z-50">
@@ -216,6 +239,13 @@ export function Navbar() {
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-xl absolute w-full left-0 top-[65px]">
           <nav className="flex flex-col gap-6">
+            <Link
+              href="/catalogue"
+              className="text-lg font-bold uppercase tracking-wider text-slate-900 dark:text-slate-50 hover:text-rose-600 dark:hover:text-rose-400"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Catalogue
+            </Link>
             <Link
               href="/products"
               className="text-lg font-bold uppercase tracking-wider text-slate-900 dark:text-slate-50 hover:text-rose-600 dark:hover:text-rose-400"
@@ -253,6 +283,18 @@ export function Navbar() {
                 Admin Panel
               </Link>
             )}
+            <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-5 dark:border-slate-800">
+              {topCatalogueNavigation.map((item) => (
+                <Link
+                  key={item.slug}
+                  href={`/catalogue/${item.slug}`}
+                  className="rounded-xl bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item.shortTitle}
+                </Link>
+              ))}
+            </div>
             <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
               {user ? (
                 <>
@@ -271,7 +313,7 @@ export function Navbar() {
                       </p>
                     </div>
                   </div>
-                  <Link href="/account" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)}>
                     <Button variant="outline" className="w-full justify-center rounded-none border-slate-900 dark:border-slate-50 text-slate-900 dark:text-slate-50 h-12 font-bold uppercase tracking-wider">
                       Tài khoản
                     </Button>

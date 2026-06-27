@@ -10,7 +10,7 @@ import * as motion from "motion/react-client"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { supabase } from "@/lib/supabase"
+import { getKols, getProduct, getReviews } from "@/lib/data"
 import { AffiliateButton } from "@/components/affiliate-button"
 import { SocialShare } from "@/components/social-share"
 import { RelatedProducts } from "@/components/related-products"
@@ -20,7 +20,7 @@ import { WishlistButton } from "@/components/wishlist-button"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const { data: product } = await supabase.from('radar_products').select('name, brand, description, image').eq('id', id).single()
+  const product = await getProduct(id)
 
   if (!product) {
     return { title: 'Sản phẩm không tồn tại | 360° đẹp' }
@@ -44,13 +44,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   
-  const { data: product } = await supabase.from('radar_products').select('*').eq('id', id).single();
+  const product = await getProduct(id);
   if (!product) return notFound();
 
-  const { data: productReviews } = await supabase.from('reviews').select('*').eq('productid', id);
-  const { data: kolsData } = await supabase.from('kols').select('*');
-  const KOLS = kolsData || [];
-  const reviews = productReviews || [];
+  const KOLS = await getKols();
+  const reviews = await getReviews({ productId: id });
   
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
@@ -72,6 +70,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   src={product.image}
                   alt={product.name}
                   fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  priority
                   className="object-cover"
                   referrerPolicy="no-referrer"
                 />

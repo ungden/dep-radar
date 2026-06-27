@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { supabase } from "@/lib/supabase"
+import { searchAll } from "@/lib/data"
 import type { Product, Post, Kol } from "@/lib/types"
 
 function SearchResults() {
@@ -26,41 +26,25 @@ function SearchResults() {
 
   useEffect(() => {
     if (!query.trim()) {
-      setProducts([])
-      setPosts([])
-      setKols([])
       return
     }
 
+    let active = true
+
     async function search() {
       setLoading(true)
-      const pattern = `%${query}%`
-
-      const [productsRes, postsRes, kolsRes] = await Promise.all([
-        supabase
-          .from("radar_products")
-          .select("*")
-          .or(`name.ilike.${pattern},brand.ilike.${pattern}`)
-          .limit(12),
-        supabase
-          .from("posts")
-          .select("*")
-          .or(`title.ilike.${pattern},excerpt.ilike.${pattern}`)
-          .limit(12),
-        supabase
-          .from("kols")
-          .select("*")
-          .or(`name.ilike.${pattern},handle.ilike.${pattern}`)
-          .limit(12),
-      ])
-
-      setProducts((productsRes.data as Product[]) || [])
-      setPosts((postsRes.data as Post[]) || [])
-      setKols((kolsRes.data as Kol[]) || [])
+      const results = await searchAll(query)
+      if (!active) return
+      setProducts(results.products)
+      setPosts(results.posts)
+      setKols(results.kols)
       setLoading(false)
     }
 
     search()
+    return () => {
+      active = false
+    }
   }, [query])
 
   const totalResults = products.length + posts.length + kols.length
@@ -72,16 +56,16 @@ function SearchResults() {
         {/* Header */}
         <div className="mb-10">
           <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900 dark:text-slate-50 mb-2">
-            Tim kiem
+            Tìm kiếm
           </h1>
           {hasQuery && !loading && (
             <p className="text-slate-500 dark:text-slate-400 font-medium">
-              {totalResults} ket qua cho &ldquo;{query}&rdquo;
+              {totalResults} kết quả cho &ldquo;{query}&rdquo;
             </p>
           )}
         </div>
 
-        {loading && (
+        {hasQuery && loading && (
           <div className="flex items-center justify-center py-20">
             <div className="h-8 w-8 border-4 border-rose-200 dark:border-rose-800 border-t-rose-600 dark:border-t-rose-400 rounded-full animate-spin" />
           </div>
@@ -91,10 +75,10 @@ function SearchResults() {
           <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
             <Search className="h-12 w-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
             <p className="text-lg font-medium text-slate-500 dark:text-slate-400">
-              Khong tim thay ket qua cho &ldquo;{query}&rdquo;
+              Không tìm thấy kết quả cho &ldquo;{query}&rdquo;
             </p>
             <p className="text-sm text-slate-400 dark:text-slate-500 mt-2">
-              Thu tim kiem voi tu khoa khac
+              Thử tìm kiếm với từ khóa khác
             </p>
           </div>
         )}
@@ -103,7 +87,7 @@ function SearchResults() {
           <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
             <Search className="h-12 w-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
             <p className="text-lg font-medium text-slate-500 dark:text-slate-400">
-              Nhap tu khoa de bat dau tim kiem
+              Nhập từ khóa để bắt đầu tìm kiếm
             </p>
           </div>
         )}
@@ -116,14 +100,14 @@ function SearchResults() {
                 <Package className="h-5 w-5" />
               </div>
               <h2 className="text-xl font-display font-bold text-slate-900 dark:text-slate-50">
-                San pham
+                Sản phẩm
               </h2>
               <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                 {products.length}
               </Badge>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product) => (
+              {products.map((product, index) => (
                 <Link key={product.id} href={`/products/${product.id}`}>
                   <Card className="overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl h-full group">
                     <div className="relative aspect-square bg-slate-100 dark:bg-slate-800">
@@ -131,6 +115,8 @@ function SearchResults() {
                         src={product.image}
                         alt={product.name}
                         fill
+                        sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                        priority={index === 0}
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                         referrerPolicy="no-referrer"
                       />
@@ -161,14 +147,14 @@ function SearchResults() {
                 <FileText className="h-5 w-5" />
               </div>
               <h2 className="text-xl font-display font-bold text-slate-900 dark:text-slate-50">
-                Bai viet
+                Bài viết
               </h2>
               <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                 {posts.length}
               </Badge>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post) => (
+              {posts.map((post, index) => (
                 <Link key={post.id} href={`/blog/${post.id}`}>
                   <Card className="overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl h-full group">
                     <div className="relative h-48 bg-slate-100 dark:bg-slate-800">
@@ -176,6 +162,8 @@ function SearchResults() {
                         src={post.image}
                         alt={post.title}
                         fill
+                        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                        priority={products.length === 0 && index === 0}
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                         referrerPolicy="no-referrer"
                       />

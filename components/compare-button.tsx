@@ -68,7 +68,7 @@ export function CompareButton({ productId, productName }: CompareButtonProps) {
       }`}
     >
       <Scale className="h-3.5 w-3.5" />
-      {isSelected ? "Da chon" : "So sanh"}
+      {isSelected ? "Đã chọn" : "So sánh"}
     </Button>
   )
 }

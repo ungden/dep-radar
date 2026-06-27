@@ -9,7 +9,7 @@ import { motion } from "motion/react"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { supabase } from "@/lib/supabase"
+import { getProducts } from "@/lib/data"
 import type { Product } from "@/lib/types"
 
 function CompareContent() {
@@ -23,12 +23,12 @@ function CompareContent() {
       setLoading(false)
       return
     }
-    supabase
-      .from("radar_products")
-      .select("*")
-      .in("id", ids)
-      .then(({ data }) => {
-        setProducts(data || [])
+    getProducts()
+      .then((data) => {
+        const selected = ids
+          .map((id) => data.find((product) => product.id === id))
+          .filter((product): product is Product => Boolean(product))
+        setProducts(selected)
         setLoading(false)
       })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -68,7 +68,7 @@ function CompareContent() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
         <div className="animate-pulse text-slate-500 dark:text-slate-400 text-lg">
-          Dang tai du lieu...
+          Đang tải dữ liệu...
         </div>
       </div>
     )
@@ -78,12 +78,12 @@ function CompareContent() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-4">
         <p className="text-slate-500 dark:text-slate-400 text-lg">
-          Khong co san pham nao de so sanh.
+          Không có sản phẩm nào để so sánh.
         </p>
         <Button asChild variant="outline" className="rounded-xl">
           <Link href="/products">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Quay lai
+            Quay lại
           </Link>
         </Button>
       </div>
@@ -96,7 +96,7 @@ function CompareContent() {
     render: (product: Product) => React.ReactNode
   }[] = [
     {
-      label: "Hinh anh",
+      label: "Hình ảnh",
       key: "image",
       render: (p) => (
         <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
@@ -104,6 +104,8 @@ function CompareContent() {
             src={p.image}
             alt={p.name}
             fill
+            sizes="200px"
+            priority
             className="object-cover"
             referrerPolicy="no-referrer"
           />
@@ -111,7 +113,7 @@ function CompareContent() {
       ),
     },
     {
-      label: "Ten san pham",
+      label: "Tên sản phẩm",
       key: "name",
       render: (p) => (
         <Link
@@ -123,7 +125,7 @@ function CompareContent() {
       ),
     },
     {
-      label: "Thuong hieu",
+      label: "Thương hiệu",
       key: "brand",
       render: (p) => (
         <span className="text-xs font-bold text-rose-500 uppercase tracking-wider">
@@ -132,7 +134,7 @@ function CompareContent() {
       ),
     },
     {
-      label: "Gia",
+      label: "Giá",
       key: "price",
       render: (p) => (
         <span
@@ -145,7 +147,7 @@ function CompareContent() {
       ),
     },
     {
-      label: "Danh gia",
+      label: "Đánh giá",
       key: "rating",
       render: (p) => (
         <div
@@ -161,7 +163,7 @@ function CompareContent() {
       ),
     },
     {
-      label: "Luot danh gia",
+      label: "Lượt đánh giá",
       key: "reviews",
       render: (p) => (
         <span
@@ -169,12 +171,12 @@ function CompareContent() {
             bestValue.reviews?.has(p.id) ? highlightClass + " px-2 py-0.5 rounded-md" : "text-slate-600 dark:text-slate-400"
           }`}
         >
-          {p.reviews.toLocaleString()} danh gia
+          {p.reviews.toLocaleString()} đánh giá
         </span>
       ),
     },
     {
-      label: "Da ban",
+      label: "Đã bán",
       key: "sold",
       render: (p) => (
         <span className="text-sm text-slate-600 dark:text-slate-400">
@@ -183,7 +185,7 @@ function CompareContent() {
       ),
     },
     {
-      label: "Danh muc",
+      label: "Danh mục",
       key: "category",
       render: (p) => (
         <Badge
@@ -212,7 +214,7 @@ function CompareContent() {
       ),
     },
     {
-      label: "Mo ta",
+      label: "Mô tả",
       key: "description",
       render: (p) => (
         <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-4">
@@ -249,14 +251,14 @@ function CompareContent() {
           <Button asChild variant="ghost" size="sm" className="mb-4 text-slate-500 dark:text-slate-400">
             <Link href="/products">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Quay lai
+              Quay lại
             </Link>
           </Button>
           <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900 dark:text-slate-50">
-            So sanh san pham
+            So sánh sản phẩm
           </h1>
           <p className="mt-2 text-slate-600 dark:text-slate-400">
-            So sanh {products.length} san pham da chon
+            So sánh {products.length} sản phẩm đã chọn
           </p>
         </motion.div>
 
@@ -271,7 +273,7 @@ function CompareContent() {
               <thead>
                 <tr>
                   <th className="sticky left-0 z-10 bg-slate-50 dark:bg-slate-800/50 text-left p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-[140px] min-w-[140px]">
-                    Tieu chi
+                    Tiêu chí
                   </th>
                   {products.map((product) => (
                     <th
@@ -323,7 +325,7 @@ export default function ComparePage() {
       fallback={
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
           <div className="animate-pulse text-slate-500 dark:text-slate-400 text-lg">
-            Dang tai...
+            Đang tải...
           </div>
         </div>
       }

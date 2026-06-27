@@ -9,7 +9,7 @@ import * as motion from "motion/react-client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { supabase } from "@/lib/supabase"
+import { getPost } from "@/lib/data"
 import { LikeButton } from "@/components/like-button"
 import { SocialShare } from "@/components/social-share"
 import { CommentSection } from "@/components/comment-section"
@@ -17,7 +17,7 @@ import { CommentSection } from "@/components/comment-section"
 export default async function CommunityPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  const { data: post } = await supabase.from("posts").select("*").eq("id", id).single()
+  const post = await getPost(id)
   if (!post) return notFound()
 
   function formatDate(dateStr: string) {
@@ -77,7 +77,7 @@ export default async function CommunityPostPage({ params }: { params: Promise<{ 
               {/* Image */}
               {post.image && (
                 <div className="relative aspect-[16/9] rounded-2xl overflow-hidden mb-6 bg-slate-100 dark:bg-slate-800">
-                  <Image src={post.image} alt={post.title} fill className="object-cover" />
+                  <Image src={post.image} alt={post.title} fill sizes="(min-width: 768px) 56rem, 100vw" className="object-cover" />
                 </div>
               )}
 

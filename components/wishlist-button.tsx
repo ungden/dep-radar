@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Bookmark, BookmarkCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
-import { supabase } from "@/lib/supabase"
+import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 
 interface WishlistButtonProps {
   productId: string
@@ -22,6 +22,7 @@ export function WishlistButton({ productId }: WishlistButtonProps) {
       setSaved(false)
       return
     }
+    if (!isSupabaseSchemaReady) return
 
     const checkWishlist = async () => {
       const { data } = await supabase
@@ -48,6 +49,11 @@ export function WishlistButton({ productId }: WishlistButtonProps) {
 
     const wasSaved = saved
     setSaved(!wasSaved)
+
+    if (!isSupabaseSchemaReady) {
+      setLoading(false)
+      return
+    }
 
     try {
       if (wasSaved) {

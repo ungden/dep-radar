@@ -10,14 +10,14 @@ import * as motion from "motion/react-client"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { supabase } from "@/lib/supabase"
+import { getPost, getRelatedPosts } from "@/lib/data"
 import { LikeButton } from "@/components/like-button"
 import { SocialShare } from "@/components/social-share"
 import { CommentSection } from "@/components/comment-section"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const { data: post } = await supabase.from('posts').select('title, excerpt, image').eq('id', id).single()
+  const post = await getPost(id)
 
   if (!post) {
     return { title: 'Bài viết không tồn tại | Blog 360° đẹp' }
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  const { data: post } = await supabase.from("posts").select("*").eq("id", id).single()
+  const post = await getPost(id)
   if (!post) return notFound()
 
   function formatDate(dateStr: string) {
@@ -50,12 +50,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
   }
 
   // Fetch related posts in the same category
-  const { data: relatedPosts } = await supabase
-    .from("posts")
-    .select("id, title, image, category, created_at")
-    .eq("category", post.category)
-    .neq("id", id)
-    .limit(2)
+  const relatedPosts = await getRelatedPosts(post.category, post.id, 2)
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-16">
@@ -65,6 +60,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
           src={post.image}
           alt={post.title}
           fill
+          sizes="100vw"
           className="object-cover"
           priority
         />
@@ -188,6 +184,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
                           src={related.image}
                           alt={related.title}
                           fill
+                          sizes="(min-width: 768px) 10rem, 8rem"
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
