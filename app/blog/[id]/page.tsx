@@ -15,16 +15,47 @@ import { LikeButton } from "@/components/like-button"
 import { SocialShare } from "@/components/social-share"
 import { CommentSection } from "@/components/comment-section"
 
+function renderPostContent(content: string) {
+  return content.split("\n\n").map((block, index) => {
+    if (block.startsWith("## ")) {
+      return (
+        <h2 key={index} className="mt-10 text-2xl font-display font-black tracking-tight text-slate-900 dark:text-slate-50">
+          {block.replace(/^##\s+/, "")}
+        </h2>
+      )
+    }
+
+    if (block.startsWith("- ")) {
+      return (
+        <ul key={index} className="my-5 space-y-2 rounded-2xl bg-slate-50 p-5 dark:bg-slate-950">
+          {block.split("\n").map((item) => (
+            <li key={item} className="flex gap-3 text-slate-700 dark:text-slate-300">
+              <span className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
+              <span>{item.replace(/^-\s+/, "")}</span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    return (
+      <p key={index} className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+        {block}
+      </p>
+    )
+  })
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const post = await getPost(id)
 
   if (!post) {
-    return { title: 'Bài viết không tồn tại | Blog 360 độ đẹp' }
+    return { title: 'Bài viết không tồn tại | Blog' }
   }
 
   return {
-    title: `${post.title} | Blog 360 độ đẹp`,
+    title: `${post.title} | Blog`,
     description: post.excerpt,
     openGraph: {
       title: `${post.title} | Blog 360 độ đẹp`,
@@ -122,11 +153,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
             {/* Article Content */}
             <div className="px-6 md:px-10 lg:px-12 pb-10">
               <div className="max-w-3xl mx-auto prose prose-slate dark:prose-invert prose-lg prose-headings:font-display prose-a:text-rose-600 dark:prose-a:text-rose-400">
-                {post.content.split("\n\n").map((paragraph: string, index: number) => (
-                  <p key={index} className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-                    {paragraph}
-                  </p>
-                ))}
+                {renderPostContent(post.content)}
               </div>
             </div>
 

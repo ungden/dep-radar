@@ -1,4 +1,5 @@
 import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
+import { CATALOGUE_READ_POSTS, getCatalogueReadPost } from "@/lib/catalogue-read-posts"
 import type { Kol, Post, Product, Review } from "@/lib/types"
 
 export const SAMPLE_KOLS: Kol[] = [
@@ -127,6 +128,18 @@ export const SAMPLE_POSTS: Post[] = [
   },
 ]
 
+const ALL_FALLBACK_POSTS: Post[] = [...CATALOGUE_READ_POSTS, ...SAMPLE_POSTS]
+
+function mergePosts(primary: Post[], fallback: Post[]) {
+  const seen = new Set<string>()
+  return [...primary, ...fallback].filter((post) => {
+    const key = post.slug || post.id
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 async function fromSupabase<T>(query: PromiseLike<{ data: T | null; error: unknown }>, fallback: T): Promise<T> {
   if (!isSupabaseSchemaReady) return fallback
   try {
@@ -184,14 +197,15 @@ export async function getReviews(filters: { productId?: string; kolId?: string }
 }
 
 export async function getPosts() {
-  return fromSupabase<Post[]>(
+  const posts = await fromSupabase<Post[]>(
     supabase.from("posts").select("*").order("created_at", { ascending: false }),
-    SAMPLE_POSTS
+    ALL_FALLBACK_POSTS
   )
+  return mergePosts(posts, CATALOGUE_READ_POSTS)
 }
 
 export async function getPost(id: string) {
-  const fallback = SAMPLE_POSTS.find((post) => post.id === id || post.slug === id) ?? null
+  const fallback = ALL_FALLBACK_POSTS.find((post) => post.id === id || post.slug === id) ?? getCatalogueReadPost(id)
   if (!isSupabaseSchemaReady) return fallback
 
   const byId = await fromSupabase<Post | null>(
@@ -207,7 +221,7 @@ export async function getPost(id: string) {
 }
 
 export async function getRelatedPosts(category: string, currentId: string, limit = 2) {
-  const fallback = SAMPLE_POSTS
+  const fallback = ALL_FALLBACK_POSTS
     .filter((post) => post.category === category && post.id !== currentId)
     .slice(0, limit)
 
@@ -232,7 +246,7 @@ export async function searchAll(query: string) {
         field.toLowerCase().includes(normalized)
       )
     ),
-    posts: SAMPLE_POSTS.filter((post) =>
+    posts: ALL_FALLBACK_POSTS.filter((post) =>
       [post.title, post.excerpt, post.author_name, post.category, ...post.tags].some((field) =>
         field.toLowerCase().includes(normalized)
       )
@@ -256,7 +270,7 @@ export async function searchAll(query: string) {
 
     return {
       products: (productsRes.data as Product[] | null) ?? fallback.products,
-      posts: (postsRes.data as Post[] | null) ?? fallback.posts,
+      posts: mergePosts((postsRes.data as Post[] | null) ?? [], fallback.posts).slice(0, 12),
       kols: (kolsRes.data as Kol[] | null) ?? fallback.kols,
     }
   } catch {

@@ -17,6 +17,7 @@ import {
 } from "@/lib/catalogue"
 import { getCatalogueEducation, getCatalogueEducationImage, type CatalogueEducation } from "@/lib/catalogue-education"
 import { getCatalogueGuide, type CatalogueGuide } from "@/lib/catalogue-guide"
+import { getCatalogueReadPostByTitle } from "@/lib/catalogue-read-posts"
 import { getPosts, getProducts } from "@/lib/data"
 
 export function generateStaticParams() {
@@ -492,14 +493,7 @@ function CatalogueArticle({
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {guide.nextReads.map((read) => (
-            <Link
-              key={read}
-              href={`/search?q=${encodeURIComponent(read)}`}
-              className="group flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-rose-200 hover:text-rose-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
-            >
-              <span>{read}</span>
-              <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-rose-500" />
-            </Link>
+            <NextReadLink key={read} title={read} />
           ))}
         </div>
       </div>
@@ -530,6 +524,21 @@ function CatalogueArticle({
         </div>
       )}
     </article>
+  )
+}
+
+function NextReadLink({ title }: { title: string }) {
+  const post = getCatalogueReadPostByTitle(title)
+  const href = post ? `/blog/${post.slug}` : `/search?q=${encodeURIComponent(title)}`
+
+  return (
+    <Link
+      href={href}
+      className="group flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-rose-200 hover:text-rose-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+    >
+      <span>{title}</span>
+      <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-rose-500" />
+    </Link>
   )
 }
 
