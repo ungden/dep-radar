@@ -6,6 +6,7 @@ import { AlertCircle, ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Compass, Se
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { getCatalogueArticle, type CatalogueArticleContent } from "@/lib/catalogue-articles"
 import {
   catalogueSections,
   type CatalogueSection,
@@ -40,6 +41,7 @@ export default async function CatalogueDetailPage({ params }: { params: Promise<
   if (!section) return notFound()
   const guide = getCatalogueGuide(slug)
   const education = getCatalogueEducation(slug)
+  const article = getCatalogueArticle(slug)
 
   const [products, posts] = await Promise.all([getProducts(), getPosts()])
   const relatedProducts = products.filter((product) => productMatchesCatalogue(product, section)).slice(0, 6)
@@ -56,69 +58,60 @@ export default async function CatalogueDetailPage({ params }: { params: Promise<
           Quay lại catalogue
         </Link>
 
-        <section className="mb-8 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-10">
-          <div className="grid gap-8 lg:grid-cols-[1.45fr_0.8fr]">
-            <div>
-              <Badge className="mb-4 bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/30 dark:text-rose-300">
-                Catalogue nhu cầu
-              </Badge>
-              <h1 className="font-display text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50 md:text-5xl">
-                {section.title}
-              </h1>
-              <p className="mt-5 max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-400 md:text-lg">
-                {section.description}
-              </p>
-              <div className="mt-6 rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
-                <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Phù hợp với</div>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{section.audience}</p>
+        {!(guide && education) && (
+          <section className="mb-8 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-10">
+            <div className="grid gap-8 lg:grid-cols-[1.45fr_0.8fr]">
+              <div>
+                <Badge className="mb-4 bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/30 dark:text-rose-300">
+                  Catalogue nhu cầu
+                </Badge>
+                <h1 className="font-display text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50 md:text-5xl">
+                  {section.title}
+                </h1>
+                <p className="mt-5 max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-400 md:text-lg">
+                  {section.description}
+                </p>
               </div>
             </div>
-
-            <div className="rounded-2xl bg-slate-50 p-5 dark:bg-slate-950">
-              <div className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-50">
-                <Search className="h-4 w-4 text-rose-500" />
-                Tìm nhanh theo nhu cầu
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {section.featuredQueries.map((query) => (
-                  <Link key={query} href={`/search?q=${encodeURIComponent(query)}`}>
-                    <Badge variant="outline" className="border-slate-200 bg-white px-3 py-1 text-slate-600 hover:border-rose-200 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                      {query}
-                    </Badge>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {guide && education && (
           <CatalogueArticle
             section={section}
             guide={guide}
             education={education}
+            article={article}
             imageSrc={getCatalogueEducationImage(slug)}
           />
         )}
 
-        <section className="mb-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {section.branches.map((branch) => (
-            <Card key={branch.title} className="border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <CardContent className="p-6">
-                <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">{branch.title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">{branch.description}</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {branch.keywords.slice(0, 5).map((keyword) => (
-                    <Link key={keyword} href={`/search?q=${encodeURIComponent(keyword)}`}>
-                      <Badge variant="secondary" className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                        {keyword}
-                      </Badge>
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <section className="mb-8">
+          <div className="mb-5">
+            <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">Khám phá theo nhánh</h2>
+            <p className="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+              Sau khi nắm nền tảng, chọn nhánh cụ thể để đi sâu theo vấn đề hoặc sản phẩm liên quan.
+            </p>
+          </div>
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {section.branches.map((branch) => (
+              <Card key={branch.title} className="border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <CardContent className="p-6">
+                  <h3 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">{branch.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">{branch.description}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {branch.keywords.slice(0, 5).map((keyword) => (
+                      <Link key={keyword} href={`/search?q=${encodeURIComponent(keyword)}`}>
+                        <Badge variant="secondary" className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                          {keyword}
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </section>
 
         <section className="mb-8 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
@@ -228,11 +221,13 @@ function CatalogueArticle({
   section,
   guide,
   education,
+  article,
   imageSrc,
 }: {
   section: CatalogueSection
   guide: CatalogueGuide
   education: CatalogueEducation
+  article?: CatalogueArticleContent
   imageSrc: string
 }) {
   return (
@@ -250,29 +245,114 @@ function CatalogueArticle({
         </div>
         <div className="p-6 md:p-8 lg:p-10">
           <div className="mb-5 flex flex-wrap items-center gap-3">
+            <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/30 dark:text-rose-300">
+              Catalogue nhu cầu
+            </Badge>
             <Badge variant="secondary" className="bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">
               {guide.updated}
             </Badge>
-            <Badge className="bg-slate-900 text-white hover:bg-slate-900 dark:bg-slate-50 dark:text-slate-900">
-              Học nhanh
-            </Badge>
           </div>
-          <h2 className="font-display text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50 md:text-4xl">
-            {education.headline}
-          </h2>
+          <h1 className="font-display text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50 md:text-5xl">
+            {section.title}
+          </h1>
           <p className="mt-5 text-base leading-relaxed text-slate-600 dark:text-slate-300 md:text-lg">
-            {guide.snapshot}
+            {section.description}
+          </p>
+          <div className="mt-6 rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Bài hướng dẫn</div>
+            <p className="mt-2 font-display text-xl font-bold text-slate-900 dark:text-slate-50">
+              {education.headline}
+            </p>
+          </div>
+          <p className="mt-5 text-base leading-relaxed text-slate-600 dark:text-slate-300 md:text-lg">
+            {article?.deck ?? guide.snapshot}
           </p>
           <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-300">
             Trước khi chọn sản phẩm hoặc dịch vụ, hãy đọc phần này như một bài nền tảng:
             hiểu khái niệm, nhìn dấu hiệu đúng, đi theo flow ra quyết định và biết lúc nào
             nên dừng lại để tránh mua sai hoặc làm da yếu hơn.
           </p>
+          {article?.learningGoals && (
+            <div className="mt-6 rounded-2xl border border-slate-100 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-900/70">
+              <div className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">Đọc xong bạn nắm được</div>
+              <ul className="space-y-2 text-sm font-semibold leading-relaxed text-slate-700 dark:text-slate-300">
+                {article.learningGoals.map((goal) => (
+                  <li key={goal} className="flex gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <span>{goal}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <div className="mt-6 rounded-2xl border border-slate-100 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-900/70">
+            <div className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-50">
+              <Search className="h-4 w-4 text-rose-500" />
+              Tìm nhanh theo nhu cầu
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {section.featuredQueries.map((query) => (
+                <Link key={query} href={`/search?q=${encodeURIComponent(query)}`}>
+                  <Badge variant="outline" className="border-slate-200 bg-white px-3 py-1 text-slate-600 hover:border-rose-200 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                    {query}
+                  </Badge>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="grid gap-8 border-t border-slate-100 p-6 dark:border-slate-800 md:p-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:p-10">
         <div className="space-y-8">
+          {article && (
+            <section className="space-y-8">
+              {article.blocks.map((block) => (
+                <section key={block.title} className="max-w-3xl">
+                  <Badge variant="outline" className="mb-3 border-rose-200 bg-rose-50/60 text-rose-700 dark:border-rose-900 dark:bg-rose-950/20 dark:text-rose-300">
+                    {block.eyebrow}
+                  </Badge>
+                  <h3 className="font-display text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">
+                    {block.title}
+                  </h3>
+                  <div className="mt-4 space-y-4 text-base leading-8 text-slate-600 dark:text-slate-300">
+                    {block.paragraphs.map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
+                  </div>
+                  <div className="mt-5 rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4 text-sm font-semibold leading-relaxed text-slate-700 dark:border-cyan-950 dark:bg-cyan-950/20 dark:text-slate-300">
+                    {block.takeaway}
+                  </div>
+                </section>
+              ))}
+
+              {article.diagnosticLens && (
+                <DiagnosticLens
+                  title={article.diagnosticLens.title}
+                  paragraphs={article.diagnosticLens.paragraphs}
+                  cues={article.diagnosticLens.cues}
+                />
+              )}
+
+              {article.careProtocol && (
+                <CareProtocol
+                  homeTitle={article.careProtocol.homeTitle}
+                  homeSteps={article.careProtocol.homeSteps}
+                  professionalTitle={article.careProtocol.professionalTitle}
+                  professionalSigns={article.careProtocol.professionalSigns}
+                />
+              )}
+
+              {article.decisionMatrix && (
+                <DecisionMatrix rows={article.decisionMatrix} />
+              )}
+
+              {article.mythReality && (
+                <MythReality items={article.mythReality} />
+              )}
+            </section>
+          )}
+
           <section>
             <div className="mb-4 flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-rose-500" />
@@ -405,7 +485,153 @@ function CatalogueArticle({
           ))}
         </div>
       </div>
+
+      {article?.references && (
+        <div className="border-t border-slate-100 p-6 dark:border-slate-800 md:p-8 lg:p-10">
+          <div className="mb-4 flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-rose-500" />
+            <h3 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">Nguồn tham khảo</h3>
+          </div>
+          <p className="mb-4 max-w-3xl text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+            Các ghi chú y khoa trong bài được viết theo hướng giáo dục cơ bản, không thay thế chẩn đoán hoặc điều trị cá nhân.
+          </p>
+          <div className="grid gap-3 md:grid-cols-3">
+            {article.references.map((reference) => (
+              <a
+                key={reference.url}
+                href={reference.url}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex items-start justify-between gap-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold leading-relaxed text-slate-700 transition-colors hover:border-rose-200 hover:text-rose-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+              >
+                <span>{reference.label}</span>
+                <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-slate-300 group-hover:text-rose-500" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </article>
+  )
+}
+
+function DiagnosticLens({ title, paragraphs, cues }: { title: string; paragraphs: string[]; cues: string[] }) {
+  return (
+    <section className="max-w-4xl rounded-3xl border border-slate-100 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950">
+      <Badge variant="outline" className="mb-3 border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/20 dark:text-cyan-300">
+        Lăng kính chẩn đoán
+      </Badge>
+      <h3 className="font-display text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">
+        {title}
+      </h3>
+      <div className="mt-4 space-y-4 text-base leading-8 text-slate-600 dark:text-slate-300">
+        {paragraphs.map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
+      </div>
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
+        {cues.map((cue) => (
+          <div key={cue} className="rounded-2xl border border-white bg-white p-4 text-sm font-semibold leading-relaxed text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+            {cue}
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function CareProtocol({
+  homeTitle,
+  homeSteps,
+  professionalTitle,
+  professionalSigns,
+}: {
+  homeTitle: string
+  homeSteps: string[]
+  professionalTitle: string
+  professionalSigns: string[]
+}) {
+  return (
+    <section className="grid max-w-4xl gap-4 md:grid-cols-2">
+      <div className="rounded-3xl border border-emerald-100 bg-emerald-50/70 p-6 dark:border-emerald-950 dark:bg-emerald-950/20">
+        <div className="mb-4 flex items-center gap-2">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+          <h3 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">{homeTitle}</h3>
+        </div>
+        <ol className="space-y-3">
+          {homeSteps.map((step, index) => (
+            <li key={step} className="flex gap-3 text-sm font-semibold leading-relaxed text-slate-700 dark:text-slate-300">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-xs font-black text-emerald-700 shadow-sm dark:bg-slate-900 dark:text-emerald-300">
+                {index + 1}
+              </span>
+              <span className="pt-1">{step}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="rounded-3xl border border-amber-100 bg-amber-50/70 p-6 dark:border-amber-950 dark:bg-amber-950/20">
+        <div className="mb-4 flex items-center gap-2">
+          <AlertCircle className="h-5 w-5 text-amber-600" />
+          <h3 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">{professionalTitle}</h3>
+        </div>
+        <ul className="space-y-3">
+          {professionalSigns.map((sign) => (
+            <li key={sign} className="flex gap-3 text-sm font-semibold leading-relaxed text-slate-700 dark:text-slate-300">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+              <span>{sign}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+function DecisionMatrix({ rows }: { rows: { signal: string; meaning: string; action: string }[] }) {
+  return (
+    <section className="max-w-4xl">
+      <div className="mb-4 flex items-center gap-2">
+        <Compass className="h-5 w-5 text-rose-500" />
+        <h3 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">Ma trận quyết định</h3>
+      </div>
+      <div className="overflow-hidden rounded-3xl border border-slate-100 dark:border-slate-800">
+        <div className="hidden grid-cols-[0.95fr_1fr_1fr] bg-slate-100 text-xs font-black uppercase tracking-wider text-slate-500 dark:bg-slate-800 dark:text-slate-300 md:grid">
+          <div className="p-3">Dấu hiệu</div>
+          <div className="border-l border-white p-3 dark:border-slate-700">Cách hiểu</div>
+          <div className="border-l border-white p-3 dark:border-slate-700">Nên làm</div>
+        </div>
+        {rows.map((row) => (
+          <div key={row.signal} className="grid grid-cols-1 border-t border-slate-100 bg-white text-sm leading-relaxed text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 md:grid-cols-[0.95fr_1fr_1fr]">
+            <div className="p-4 font-bold text-slate-900 dark:text-slate-50">{row.signal}</div>
+            <div className="border-t border-slate-100 p-4 dark:border-slate-800 md:border-l md:border-t-0">{row.meaning}</div>
+            <div className="border-t border-slate-100 p-4 font-semibold dark:border-slate-800 md:border-l md:border-t-0">{row.action}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function MythReality({ items }: { items: { myth: string; reality: string }[] }) {
+  return (
+    <section className="max-w-4xl">
+      <div className="mb-4 flex items-center gap-2">
+        <XCircle className="h-5 w-5 text-amber-500" />
+        <h3 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">Hiểu lầm thường gặp</h3>
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        {items.map((item) => (
+          <div key={item.myth} className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="text-xs font-black uppercase tracking-wider text-amber-500">Hiểu lầm</div>
+            <p className="mt-2 text-sm font-bold leading-relaxed text-slate-900 dark:text-slate-50">{item.myth}</p>
+            <div className="my-4 h-px bg-slate-100 dark:bg-slate-800" />
+            <div className="text-xs font-black uppercase tracking-wider text-emerald-500">Thực tế</div>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{item.reality}</p>
+          </div>
+        ))}
+      </div>
+    </section>
   )
 }
 
