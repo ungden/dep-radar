@@ -3,7 +3,7 @@ import { catalogueSections } from '@/lib/catalogue'
 import { getKols, getPosts, getProducts } from '@/lib/data'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://360dodep.vn'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://360dep.vn'
 
   const [products, posts, kols] = await Promise.all([
     getProducts(),

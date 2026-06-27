@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { LogOut, Menu, Search, User, X } from "lucide-react"
 
+import { BrandLogo } from "@/components/brand-logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ModeToggle } from "@/components/mode-toggle"
@@ -66,11 +67,7 @@ export function Navbar() {
 
       <div className="container mx-auto flex h-16 md:h-20 items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="font-display text-3xl font-black tracking-tighter text-slate-900 dark:text-slate-50 uppercase">
-              360°<span className="text-rose-600 dark:text-rose-500">đẹp</span>
-            </span>
-          </Link>
+          <BrandLogo markClassName="h-10 w-10 rounded-xl md:h-11 md:w-11 md:rounded-2xl" />
           <nav className="hidden md:flex gap-8">
             <Link
               href="/catalogue"

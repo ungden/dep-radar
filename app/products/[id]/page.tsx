@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const product = await getProduct(id)
 
   if (!product) {
-    return { title: 'Sản phẩm không tồn tại | 360° đẹp' }
+    return { title: 'Sản phẩm không tồn tại | 360 độ đẹp' }
   }
 
   const description = product.description?.length > 160
@@ -31,10 +31,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     : product.description
 
   return {
-    title: `${product.name} - ${product.brand} | 360° đẹp`,
+    title: `${product.name} - ${product.brand} | 360 độ đẹp`,
     description,
     openGraph: {
-      title: `${product.name} - ${product.brand} | 360° đẹp`,
+      title: `${product.name} - ${product.brand} | 360 độ đẹp`,
       description,
       images: product.image ? [product.image] : [],
     },

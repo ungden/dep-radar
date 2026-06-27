@@ -7,8 +7,26 @@ import { catalogueSections, secondaryFilterGroups, topCatalogueNavigation } from
 import { getCatalogueGuide } from "@/lib/catalogue-guide"
 
 export const metadata = {
-  title: "Catalogue nhu cầu làm đẹp | 360° đẹp",
-  description: "Bản đồ catalogue Đẹp Radar theo nhu cầu: da mặt, trị mụn, sáng da, chống nắng, tóc, bodycare, makeup, nam giới, clinic và ingredient radar.",
+  title: "Catalogue nhu cầu làm đẹp",
+  description: "Bản đồ catalogue 360 độ đẹp theo nhu cầu: da mặt, trị mụn, sáng da, chống nắng, tóc, bodycare, makeup, nam giới, clinic và ingredient radar.",
+  openGraph: {
+    title: "Catalogue nhu cầu làm đẹp | 360 độ đẹp",
+    description: "Bản đồ catalogue theo nhu cầu: da mặt, trị mụn, sáng da, chống nắng, tóc, bodycare, makeup, nam giới, clinic và ingredient radar.",
+    images: [
+      {
+        url: "/brand/social-share.jpg",
+        width: 1200,
+        height: 630,
+        alt: "360 độ đẹp - catalogue nhu cầu làm đẹp",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Catalogue nhu cầu làm đẹp | 360 độ đẹp",
+    description: "Bản đồ catalogue theo nhu cầu làm đẹp, review mỹ phẩm và kiến thức có kiểm chứng.",
+    images: ["/brand/social-share.jpg"],
+  },
 }
 
 export default function CataloguePage() {
@@ -22,7 +40,7 @@ export default function CataloguePage() {
               Catalogue theo nhu cầu
             </div>
             <h1 className="font-display text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50 md:text-5xl">
-              Đẹp Radar ưu tiên nhu cầu làm đẹp trước, giới tính chỉ là filter.
+              360 độ đẹp ưu tiên nhu cầu làm đẹp trước, giới tính chỉ là filter.
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-400 md:text-lg">
               Người dùng thường tìm theo vấn đề thật: trị mụn, kem chống nắng da dầu,

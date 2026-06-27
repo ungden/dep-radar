@@ -20,9 +20,56 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://360dodep.vn'),
-  title: '360 độ đẹp | Nền tảng Đánh giá Mỹ phẩm & KOL Tracker',
-  description: 'Khám phá đánh giá mỹ phẩm chân thực, theo dõi KOL/KOC yêu thích và mua sắm thông minh cùng cộng đồng làm đẹp lớn nhất Việt Nam.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://360dep.vn'),
+  applicationName: '360 độ đẹp',
+  title: {
+    default: '360 độ đẹp | Catalogue, review mỹ phẩm và beauty radar',
+    template: '%s | 360 độ đẹp',
+  },
+  description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
+  keywords: ['360 độ đẹp', '360dep', 'review mỹ phẩm', 'catalogue làm đẹp', 'beauty radar', 'skincare Việt Nam'],
+  alternates: {
+    canonical: '/',
+  },
+  manifest: '/brand/site.webmanifest',
+  icons: {
+    icon: [
+      { url: '/brand/favicon.ico', sizes: 'any' },
+      { url: '/brand/favicon.svg', type: 'image/svg+xml' },
+      { url: '/brand/favicon-32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/brand/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: ['/brand/favicon.ico'],
+  },
+  appleWebApp: {
+    title: '360 độ đẹp',
+    capable: true,
+    statusBarStyle: 'default',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'vi_VN',
+    siteName: '360 độ đẹp',
+    url: '/',
+    title: '360 độ đẹp | Catalogue, review mỹ phẩm và beauty radar',
+    description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
+    images: [
+      {
+        url: '/brand/social-share.jpg',
+        width: 1200,
+        height: 630,
+        alt: '360 độ đẹp - Beauty Radar',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '360 độ đẹp | Catalogue, review mỹ phẩm và beauty radar',
+    description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
+    images: ['/brand/social-share.jpg'],
+  },
 };
 
 const gaId = process.env.NEXT_PUBLIC_GA_ID;

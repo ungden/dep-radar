@@ -199,7 +199,7 @@ export const catalogueSections: CatalogueSection[] = [
     slug: "clinic-treatment",
     title: "Clinic / Treatment / Spa Radar",
     shortTitle: "Clinic & Treatment",
-    description: "Khác biệt của Đẹp Radar: thủ thuật da liễu thẩm mỹ, checklist chọn clinic, cảnh báo rủi ro và câu hỏi cần hỏi bác sĩ.",
+    description: "Khác biệt của 360 độ đẹp: thủ thuật da liễu thẩm mỹ, checklist chọn clinic, cảnh báo rủi ro và câu hỏi cần hỏi bác sĩ.",
     audience: "Người cân nhắc peel, laser, trị sẹo, nám, botox/filler, triệt lông hoặc facial chuyên sâu.",
     filters: ["Vấn đề da", "Mức xâm lấn", "Downtime", "Ngân sách", "Rủi ro", "Bác sĩ/clinic"],
     productTypes: ["Peel", "Laser", "RF microneedling", "TCA cross", "Botox", "Filler", "Hydrafacial"],

@@ -20,14 +20,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const post = await getPost(id)
 
   if (!post) {
-    return { title: 'Bài viết không tồn tại | Blog 360° đẹp' }
+    return { title: 'Bài viết không tồn tại | Blog 360 độ đẹp' }
   }
 
   return {
-    title: `${post.title} | Blog 360° đẹp`,
+    title: `${post.title} | Blog 360 độ đẹp`,
     description: post.excerpt,
     openGraph: {
-      title: `${post.title} | Blog 360° đẹp`,
+      title: `${post.title} | Blog 360 độ đẹp`,
       description: post.excerpt,
       images: post.image ? [post.image] : [],
     },

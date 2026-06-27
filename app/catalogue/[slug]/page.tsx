@@ -27,11 +27,29 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const section = getCatalogueSection(slug)
 
-  if (!section) return { title: "Catalogue không tồn tại | 360° đẹp" }
+  if (!section) return { title: "Catalogue không tồn tại | 360 độ đẹp" }
 
   return {
-    title: `${section.title} | Catalogue Đẹp Radar`,
+    title: `${section.title} | Catalogue làm đẹp`,
     description: section.description,
+    openGraph: {
+      title: `${section.title} | 360 độ đẹp`,
+      description: section.description,
+      images: [
+        {
+          url: "/brand/social-share.jpg",
+          width: 1200,
+          height: 630,
+          alt: `${section.title} trên 360 độ đẹp`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${section.title} | 360 độ đẹp`,
+      description: section.description,
+      images: ["/brand/social-share.jpg"],
+    },
   }
 }
 

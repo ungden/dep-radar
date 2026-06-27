@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Facebook, Instagram, Twitter, Youtube } from "lucide-react"
+import { BrandLogo } from "@/components/brand-logo"
 import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 
 export function Footer() {
@@ -44,13 +45,9 @@ export function Footer() {
     <footer className="border-t border-slate-200 dark:border-slate-800 bg-slate-900 dark:bg-slate-950 text-slate-400 py-16">
       <div className="container mx-auto px-4 md:px-6 grid gap-12 md:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-6">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="font-display text-3xl font-black tracking-tighter text-white uppercase">
-              360°<span className="text-rose-500">đẹp</span>
-            </span>
-          </Link>
+          <BrandLogo variant="dark" />
           <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
-            360 độ đẹp - Nền tảng làm đẹp toàn diện số 1 Việt Nam. Nơi hội tụ những xu hướng mới nhất, đánh giá chân thực và cộng đồng đam mê làm đẹp.
+            360 độ đẹp - nền tảng catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.
           </p>
           <div className="flex gap-4">
             <Link href="#" className="text-slate-400 hover:text-white transition-colors">
