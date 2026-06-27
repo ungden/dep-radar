@@ -17,7 +17,7 @@ import {
 } from "@/lib/catalogue"
 import { getCatalogueEducation, getCatalogueEducationImage, type CatalogueEducation } from "@/lib/catalogue-education"
 import { getCatalogueGuide, type CatalogueGuide } from "@/lib/catalogue-guide"
-import { getCatalogueReadPostByTitle } from "@/lib/catalogue-read-posts"
+import { getPublishedNextReadPosts } from "@/lib/editorial"
 import { getPosts, getProducts } from "@/lib/data"
 
 export function generateStaticParams() {
@@ -61,6 +61,7 @@ export default async function CatalogueDetailPage({ params }: { params: Promise<
   const guide = getCatalogueGuide(slug)
   const education = getCatalogueEducation(slug)
   const article = getCatalogueArticle(slug)
+  const nextReadPosts = getPublishedNextReadPosts(slug)
 
   const [products, posts] = await Promise.all([getProducts(), getPosts()])
   const relatedProducts = products.filter((product) => productMatchesCatalogue(product, section)).slice(0, 6)
@@ -101,6 +102,7 @@ export default async function CatalogueDetailPage({ params }: { params: Promise<
             guide={guide}
             education={education}
             article={article}
+            nextReadPosts={nextReadPosts}
             imageSrc={getCatalogueEducationImage(slug)}
           />
         )}
@@ -241,12 +243,14 @@ function CatalogueArticle({
   guide,
   education,
   article,
+  nextReadPosts,
   imageSrc,
 }: {
   section: CatalogueSection
   guide: CatalogueGuide
   education: CatalogueEducation
   article?: CatalogueArticleContent
+  nextReadPosts: { title: string; slug: string }[]
   imageSrc: string
 }) {
   return (
@@ -492,8 +496,8 @@ function CatalogueArticle({
           <h3 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">Nên đọc tiếp</h3>
         </div>
         <div className="grid gap-3 md:grid-cols-3">
-          {guide.nextReads.map((read) => (
-            <NextReadLink key={read} title={read} />
+          {nextReadPosts.map((post) => (
+            <NextReadLink key={post.slug} title={post.title} slug={post.slug} />
           ))}
         </div>
       </div>
@@ -527,13 +531,10 @@ function CatalogueArticle({
   )
 }
 
-function NextReadLink({ title }: { title: string }) {
-  const post = getCatalogueReadPostByTitle(title)
-  const href = post ? `/blog/${post.slug}` : `/search?q=${encodeURIComponent(title)}`
-
+function NextReadLink({ title, slug }: { title: string; slug: string }) {
   return (
     <Link
-      href={href}
+      href={`/blog/${slug}`}
       className="group flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-rose-200 hover:text-rose-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
     >
       <span>{title}</span>

@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, Clock, MessageSquare, Tag } from "lucide-react"
+import { AlertCircle, ArrowLeft, BookOpen, CheckCircle2, Clock, MessageSquare, Tag } from "lucide-react"
 import * as motion from "motion/react-client"
 
 import { Button } from "@/components/ui/button"
@@ -58,6 +58,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     title: `${post.title} | Blog`,
     description: post.excerpt,
     openGraph: {
+      title: `${post.title} | Blog 360 độ đẹp`,
+      description: post.excerpt,
+      images: post.image
+        ? [
+            {
+              url: post.image,
+              width: 1200,
+              height: 630,
+              alt: post.title,
+            },
+          ]
+        : [],
+    },
+    twitter: {
+      card: "summary_large_image",
       title: `${post.title} | Blog 360 độ đẹp`,
       description: post.excerpt,
       images: post.image ? [post.image] : [],
@@ -156,6 +171,78 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
                 {renderPostContent(post.content)}
               </div>
             </div>
+
+            {(post.takeaways?.length || post.faq?.length || post.sourceNotes?.length || post.medicalDisclaimerLevel === "medical") && (
+              <div className="px-6 md:px-10 lg:px-12 pb-10">
+                <div className="mx-auto grid max-w-3xl gap-5">
+                  {post.takeaways && post.takeaways.length > 0 && (
+                    <section className="rounded-3xl border border-emerald-100 bg-emerald-50/70 p-6 dark:border-emerald-950 dark:bg-emerald-950/20">
+                      <div className="mb-4 flex items-center gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                        <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">Điểm cần nhớ</h2>
+                      </div>
+                      <ul className="space-y-3 text-sm font-semibold leading-relaxed text-slate-700 dark:text-slate-300">
+                        {post.takeaways.map((item) => (
+                          <li key={item} className="flex gap-2">
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  )}
+
+                  {post.medicalDisclaimerLevel === "medical" && (
+                    <section className="rounded-3xl border border-amber-100 bg-amber-50/70 p-5 text-sm font-semibold leading-relaxed text-slate-700 dark:border-amber-950 dark:bg-amber-950/20 dark:text-slate-300">
+                      <div className="mb-2 flex items-center gap-2 text-slate-900 dark:text-slate-50">
+                        <AlertCircle className="h-4 w-4 text-amber-600" />
+                        <span className="font-display text-base font-bold">Lưu ý an toàn</span>
+                      </div>
+                      Nội dung này dùng để giáo dục và chuẩn bị câu hỏi trước khi mua sản phẩm hoặc làm dịch vụ. Nó không thay thế chẩn đoán, kê đơn hoặc điều trị cá nhân từ bác sĩ da liễu.
+                    </section>
+                  )}
+
+                  {post.faq && post.faq.length > 0 && (
+                    <section className="rounded-3xl border border-slate-100 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950">
+                      <div className="mb-4 flex items-center gap-2">
+                        <MessageSquare className="h-5 w-5 text-rose-500" />
+                        <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">FAQ nhanh</h2>
+                      </div>
+                      <div className="space-y-4">
+                        {post.faq.map((item) => (
+                          <div key={item.question}>
+                            <h3 className="font-bold text-slate-900 dark:text-slate-50">{item.question}</h3>
+                            <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{item.answer}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {post.sourceNotes && post.sourceNotes.length > 0 && (
+                    <section className="rounded-3xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+                      <div className="mb-4 flex items-center gap-2">
+                        <BookOpen className="h-5 w-5 text-rose-500" />
+                        <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">Nguồn tham khảo</h2>
+                      </div>
+                      <div className="grid gap-2">
+                        {post.sourceNotes.map((source) => (
+                          <a
+                            key={source.url}
+                            href={source.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold leading-relaxed text-slate-700 transition-colors hover:text-rose-600 dark:bg-slate-950 dark:text-slate-300"
+                          >
+                            {source.label}
+                          </a>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Tags & Actions */}
             <div className="px-6 md:px-10 lg:px-12 pb-10">

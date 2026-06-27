@@ -1,5 +1,5 @@
 import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
-import { CATALOGUE_READ_POSTS, getCatalogueReadPost } from "@/lib/catalogue-read-posts"
+import { getPublishedEditorialPost, getPublishedEditorialPosts } from "@/lib/editorial"
 import type { Kol, Post, Product, Review } from "@/lib/types"
 
 export const SAMPLE_KOLS: Kol[] = [
@@ -128,7 +128,8 @@ export const SAMPLE_POSTS: Post[] = [
   },
 ]
 
-const ALL_FALLBACK_POSTS: Post[] = [...CATALOGUE_READ_POSTS, ...SAMPLE_POSTS]
+const EDITORIAL_PUBLISHED_POSTS = getPublishedEditorialPosts()
+const ALL_FALLBACK_POSTS: Post[] = [...EDITORIAL_PUBLISHED_POSTS, ...SAMPLE_POSTS]
 
 function mergePosts(primary: Post[], fallback: Post[]) {
   const seen = new Set<string>()
@@ -201,11 +202,11 @@ export async function getPosts() {
     supabase.from("posts").select("*").order("created_at", { ascending: false }),
     ALL_FALLBACK_POSTS
   )
-  return mergePosts(posts, CATALOGUE_READ_POSTS)
+  return mergePosts(posts, EDITORIAL_PUBLISHED_POSTS)
 }
 
 export async function getPost(id: string) {
-  const fallback = ALL_FALLBACK_POSTS.find((post) => post.id === id || post.slug === id) ?? getCatalogueReadPost(id)
+  const fallback = ALL_FALLBACK_POSTS.find((post) => post.id === id || post.slug === id) ?? getPublishedEditorialPost(id)
   if (!isSupabaseSchemaReady) return fallback
 
   const byId = await fromSupabase<Post | null>(

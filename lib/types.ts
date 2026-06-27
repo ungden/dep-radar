@@ -54,4 +54,10 @@ export interface Post {
   comments: number
   created_at: string
   product_ids: string[]
+  hubSlug?: string
+  status?: "planned" | "draft" | "published"
+  takeaways?: string[]
+  faq?: { question: string; answer: string }[]
+  sourceNotes?: { label: string; url: string }[]
+  medicalDisclaimerLevel?: "none" | "light" | "medical"
 }
