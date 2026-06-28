@@ -40,13 +40,12 @@ export default function CataloguePage() {
               Catalogue theo nhu cầu
             </div>
             <h1 className="font-display text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50 md:text-5xl">
-              360dep.vn ưu tiên nhu cầu làm đẹp trước, giới tính chỉ là filter.
+              Chọn sản phẩm và kiến thức làm đẹp theo vấn đề bạn đang gặp.
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-400 md:text-lg">
-              Người dùng thường tìm theo vấn đề thật: trị mụn, kem chống nắng da dầu,
-              rụng tóc, nám sau sinh, makeup đi tiệc, body sáng da. Catalogue này biến
-              các intent đó thành lối vào chính, sau đó mới lọc theo nam/nữ, tuổi,
-              loại da và ngân sách.
+              Bạn có thể bắt đầu từ trị mụn, kem chống nắng da dầu, rụng tóc,
+              nám sau sinh, makeup đi tiệc hoặc body sáng da. Sau đó thu hẹp lựa chọn
+              theo loại da, độ nhạy cảm, độ tuổi, ngân sách và thói quen sử dụng.
             </p>
           </div>
 

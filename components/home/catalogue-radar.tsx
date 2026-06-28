@@ -17,10 +17,10 @@ export function CatalogueRadar() {
         <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">
-              Tìm theo nhu cầu, không chia nam/nữ trước
+              Tìm đúng vấn đề làm đẹp của bạn
             </h2>
             <p className="mt-2 text-slate-500 dark:text-slate-400">
-              Chọn vấn đề làm đẹp trước, rồi lọc theo loại da, ngân sách, tuổi hoặc đối tượng.
+              Bắt đầu từ trị mụn, chống nắng, tóc, makeup hay bodycare, rồi thu hẹp theo loại da và ngân sách.
             </p>
           </div>
           <Link href="/catalogue" className="inline-flex items-center gap-2 text-sm font-bold text-rose-500 hover:text-rose-600">
@@ -65,7 +65,7 @@ export function CatalogueRadar() {
         <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
             <Filter className="h-4 w-4 text-rose-500" />
-            Filter phụ:
+            Lọc thêm:
           </div>
           <div className="flex flex-wrap gap-2">
             {[...secondaryFilterGroups.audience.slice(1, 4), ...secondaryFilterGroups.skinType.slice(1, 4), ...secondaryFilterGroups.budget.slice(1, 3)].map((filter) => (

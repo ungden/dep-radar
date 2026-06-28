@@ -83,7 +83,7 @@ export default function AdminDashboard() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-rose-500 font-bold">3.</span>
-                Vào <strong>Bài viết</strong> để quản lý blog (AI tự động tạo 16 bài/ngày)
+                Vào <strong>Bài viết</strong> để quản lý lịch xuất bản và nội dung blog
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-rose-500 font-bold">4.</span>
@@ -98,11 +98,11 @@ export default function AdminDashboard() {
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-4">Cấu hình hệ thống</h3>
             <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
               <li className="flex justify-between">
-                <span>AI Blog Generation</span>
+                <span>Tạo bài tự động</span>
                 <span className="text-emerald-600 dark:text-emerald-400 font-medium">Hoạt động</span>
               </li>
               <li className="flex justify-between">
-                <span>Cron Schedule</span>
+                <span>Lịch chạy</span>
                 <span className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">14:00 VN daily</span>
               </li>
               <li className="flex justify-between">
