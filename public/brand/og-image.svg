@@ -1,28 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="360 độ đẹp social share">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="360dep.vn social share">
   <defs>
     <linearGradient id="og-bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#fff7ed"/>
-      <stop offset=".58" stop-color="#fff1f2"/>
-      <stop offset="1" stop-color="#ecfeff"/>
+      <stop offset="0" stop-color="#fffaf6"/>
+      <stop offset=".58" stop-color="#f7efe7"/>
+      <stop offset="1" stop-color="#f3ebe5"/>
     </linearGradient>
-    <radialGradient id="og-pulse" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(790 276) rotate(82) scale(260 260)">
-      <stop offset="0" stop-color="#fb7185" stop-opacity=".32"/>
-      <stop offset="1" stop-color="#fb7185" stop-opacity="0"/>
-    </radialGradient>
+    <linearGradient id="og-mark-bg" x1="78" y1="72" x2="180" y2="188" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#26211f"/>
+      <stop offset=".56" stop-color="#111113"/>
+      <stop offset="1" stop-color="#09090b"/>
+    </linearGradient>
+    <linearGradient id="og-brass" x1="678" y1="454" x2="1084" y2="126" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8f4a40"/>
+      <stop offset=".55" stop-color="#d8a48f"/>
+      <stop offset="1" stop-color="#f0d8c8"/>
+    </linearGradient>
   </defs>
   <rect width="1200" height="630" fill="url(#og-bg)"/>
-  <circle cx="835" cy="288" r="248" fill="none" stroke="#fda4af" stroke-width="2" stroke-opacity=".42"/>
-  <circle cx="835" cy="288" r="176" fill="none" stroke="#67e8f9" stroke-width="2" stroke-opacity=".34"/>
-  <circle cx="835" cy="288" r="96" fill="url(#og-pulse)"/>
-  <path d="M835 288 1012 132" fill="none" stroke="#0f172a" stroke-width="8" stroke-linecap="round" stroke-opacity=".18"/>
-  <rect x="70" y="70" width="116" height="116" rx="30" fill="#0f172a"/>
-  <circle cx="128" cy="128" r="39" fill="none" stroke="#fda4af" stroke-width="4" stroke-opacity=".65"/>
-  <circle cx="128" cy="128" r="26" fill="none" stroke="#67e8f9" stroke-width="3" stroke-opacity=".55"/>
-  <circle cx="128" cy="128" r="15" fill="#e11d48"/>
-  <path d="M128 128 158 101" fill="none" stroke="#fff7ed" stroke-width="5" stroke-linecap="round"/>
-  <text x="70" y="286" font-family="Arial, Helvetica, sans-serif" font-size="86" font-weight="900" letter-spacing="-4.4" fill="#0f172a">360 độ</text>
-  <text x="390" y="286" font-family="Arial, Helvetica, sans-serif" font-size="86" font-weight="900" letter-spacing="-4.4" fill="#e11d48">đẹp</text>
-  <text x="74" y="352" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="800" letter-spacing="7" fill="#64748b">BEAUTY RADAR</text>
-  <text x="74" y="432" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700" fill="#334155">Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng.</text>
-  <text x="74" y="506" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#0f172a">360dep.vn</text>
+  <path d="M680 418c88-138 240-178 408-93" fill="none" stroke="url(#og-brass)" stroke-width="18" stroke-linecap="round" stroke-opacity=".92"/>
+  <path d="M712 472c116 62 252 50 371-34" fill="none" stroke="#111113" stroke-width="9" stroke-linecap="round" stroke-opacity=".16"/>
+  <circle cx="1068" cy="310" r="16" fill="#d8a48f"/>
+  <rect x="70" y="70" width="124" height="124" rx="30" fill="url(#og-mark-bg)"/>
+  <rect x="78" y="78" width="108" height="108" rx="22" fill="none" stroke="#f7efe7" stroke-opacity=".1" stroke-width="2"/>
+  <path d="M94 139c22-34 61-47 90-24" fill="none" stroke="#d8a48f" stroke-width="6" stroke-linecap="round"/>
+  <path d="M100 151c23 13 54 12 78-6" fill="none" stroke="#f7efe7" stroke-width="3" stroke-linecap="round" stroke-opacity=".34"/>
+  <text x="132" y="151" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="900" letter-spacing="0" fill="#f7efe7">đ</text>
+  <text x="70" y="292" font-family="Arial, Helvetica, sans-serif" font-size="90" font-weight="900" letter-spacing="0" fill="#111113">360</text>
+  <text x="231" y="292" font-family="Arial, Helvetica, sans-serif" font-size="90" font-weight="900" letter-spacing="0" fill="#a94f43">dep</text>
+  <circle cx="401" cy="280" r="7" fill="#78716c"/>
+  <text x="420" y="292" font-family="Arial, Helvetica, sans-serif" font-size="90" font-weight="900" letter-spacing="0" fill="#78716c">vn</text>
+  <text x="74" y="358" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" letter-spacing="8" fill="#78716c">BEAUTY RADAR</text>
+  <text x="74" y="430" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="700" fill="#292524">Catalogue, review mỹ phẩm</text>
+  <text x="74" y="478" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="700" fill="#292524">và kiến thức làm đẹp có kiểm chứng.</text>
+  <text x="74" y="546" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="800" fill="#a94f43">beauty radar for Vietnam</text>
 </svg>

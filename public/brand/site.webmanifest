@@ -1,12 +1,12 @@
 {
-  "name": "360 độ đẹp",
-  "short_name": "360dep",
+  "name": "360dep.vn",
+  "short_name": "360dep.vn",
   "description": "Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#fff7ed",
-  "theme_color": "#e11d48",
+  "theme_color": "#111113",
   "icons": [
     {
       "src": "/brand/icon-192.png",

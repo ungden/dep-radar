@@ -21,13 +21,13 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://360dep.vn'),
-  applicationName: '360 độ đẹp',
+  applicationName: '360dep.vn',
   title: {
-    default: '360 độ đẹp | Catalogue, review mỹ phẩm và beauty radar',
-    template: '%s | 360 độ đẹp',
+    default: '360dep.vn | Catalogue, review mỹ phẩm và beauty radar',
+    template: '%s | 360dep.vn',
   },
   description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
-  keywords: ['360 độ đẹp', '360dep', 'review mỹ phẩm', 'catalogue làm đẹp', 'beauty radar', 'skincare Việt Nam'],
+  keywords: ['360dep.vn', '360dep', 'review mỹ phẩm', 'catalogue làm đẹp', 'beauty radar', 'skincare Việt Nam'],
   alternates: {
     canonical: '/',
   },
@@ -44,29 +44,29 @@ export const metadata: Metadata = {
     shortcut: ['/brand/favicon.ico'],
   },
   appleWebApp: {
-    title: '360 độ đẹp',
+    title: '360dep.vn',
     capable: true,
     statusBarStyle: 'default',
   },
   openGraph: {
     type: 'website',
     locale: 'vi_VN',
-    siteName: '360 độ đẹp',
+    siteName: '360dep.vn',
     url: '/',
-    title: '360 độ đẹp | Catalogue, review mỹ phẩm và beauty radar',
+    title: '360dep.vn | Catalogue, review mỹ phẩm và beauty radar',
     description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
     images: [
       {
         url: '/brand/social-share.jpg',
         width: 1200,
         height: 630,
-        alt: '360 độ đẹp - Beauty Radar',
+        alt: '360dep.vn - Beauty Radar',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '360 độ đẹp | Catalogue, review mỹ phẩm và beauty radar',
+    title: '360dep.vn | Catalogue, review mỹ phẩm và beauty radar',
     description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
     images: ['/brand/social-share.jpg'],
   },

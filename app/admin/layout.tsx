@@ -24,7 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">
             Admin Panel
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">360 độ đẹp Management</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">360dep.vn Management</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">

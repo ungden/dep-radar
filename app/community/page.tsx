@@ -95,7 +95,7 @@ export default function CommunityPage() {
               transition={{ duration: 0.5 }}
             >
               <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900 dark:text-slate-50 mb-2">
-                Cộng đồng 360 độ đẹp
+                Cộng đồng 360dep.vn
               </h1>
               <p className="text-slate-600 dark:text-slate-400">
                 Nơi chia sẻ kinh nghiệm, hỏi đáp và thảo luận về mọi thứ liên quan đến làm đẹp.

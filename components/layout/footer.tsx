@@ -47,7 +47,7 @@ export function Footer() {
         <div className="space-y-6">
           <BrandLogo variant="dark" />
           <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
-            360 độ đẹp - nền tảng catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.
+            360dep.vn - nền tảng catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.
           </p>
           <div className="flex gap-4">
             <Link href="#" className="text-slate-400 hover:text-white transition-colors">
@@ -154,7 +154,7 @@ export function Footer() {
         </div>
       </div>
       <div className="container mx-auto px-4 md:px-6 mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium uppercase tracking-wider text-slate-500">
-        <div>&copy; {new Date().getFullYear()} 360 độ đẹp. All rights reserved.</div>
+        <div>&copy; {new Date().getFullYear()} 360dep.vn. All rights reserved.</div>
         <div className="flex gap-6">
           <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
           <Link href="#" className="hover:text-white transition-colors">Terms</Link>

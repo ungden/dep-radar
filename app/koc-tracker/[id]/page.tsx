@@ -19,16 +19,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const kol = await getKol(id)
 
   if (!kol) {
-    return { title: 'KOL/KOC không tồn tại | 360 độ đẹp' }
+    return { title: 'KOL/KOC không tồn tại | 360dep.vn' }
   }
 
-  const description = `Theo dõi ${kol.name} trên ${kol.platform}. ${kol.followers} followers. Xem đánh giá sản phẩm làm đẹp từ ${kol.name} tại 360 độ đẹp.`
+  const description = `Theo dõi ${kol.name} trên ${kol.platform}. ${kol.followers} followers. Xem đánh giá sản phẩm làm đẹp từ ${kol.name} tại 360dep.vn.`
 
   return {
-    title: `${kol.name} - KOL/KOC Tracker | 360 độ đẹp`,
+    title: `${kol.name} - KOL/KOC Tracker | 360dep.vn`,
     description,
     openGraph: {
-      title: `${kol.name} - KOL/KOC Tracker | 360 độ đẹp`,
+      title: `${kol.name} - KOL/KOC Tracker | 360dep.vn`,
       description,
     },
   }

@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     title: `${post.title} | Blog`,
     description: post.excerpt,
     openGraph: {
-      title: `${post.title} | Blog 360 độ đẹp`,
+      title: `${post.title} | Blog 360dep.vn`,
       description: post.excerpt,
       images: post.image
         ? [
@@ -73,7 +73,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     },
     twitter: {
       card: "summary_large_image",
-      title: `${post.title} | Blog 360 độ đẹp`,
+      title: `${post.title} | Blog 360dep.vn`,
       description: post.excerpt,
       images: post.image ? [post.image] : [],
     },
