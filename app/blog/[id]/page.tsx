@@ -315,7 +315,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
                     </section>
                   )}
 
-                  {post.medicalDisclaimerLevel === "medical" && (
+                  {post.medicalDisclaimerLevel && post.medicalDisclaimerLevel !== "none" && (
                     <section className="rounded-3xl border border-amber-100 bg-amber-50/70 p-5 text-sm font-semibold leading-relaxed text-slate-700 dark:border-amber-950 dark:bg-amber-950/20 dark:text-slate-300">
                       <div className="mb-2 flex items-center gap-2 text-slate-900 dark:text-slate-50">
                         <AlertCircle className="h-4 w-4 text-amber-600" />
