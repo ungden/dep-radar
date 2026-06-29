@@ -114,21 +114,21 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
   const bioParagraphs = kol.bio ? kol.bio.split(/\n\n+/).map(p => p.trim()).filter(Boolean) : []
   const primaryUrl = buildSocialUrl(socials[0])
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://360dep.vn"
+  // Cover: real banner (6 originals) > blurred avatar (when we have a photo) > brand gradient.
+  const realCover = kol.cover && kol.cover.startsWith("/") && !kol.cover.includes("picsum") ? kol.cover : null
+  const coverFromAvatar = !realCover && kol.avatar && kol.avatar.startsWith("/images/") ? kol.avatar : null
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-12">
       <JsonLd data={buildKolJsonLd(kol, siteUrl)} />
-      {/* Cover Image */}
-      <div className="h-64 md:h-80 w-full bg-slate-200 dark:bg-slate-800 relative">
-        <Image
-          src={kol.cover}
-          alt="Cover"
-          fill
-          sizes="100vw"
-          priority
-          className="object-cover"
-          referrerPolicy="no-referrer"
-        />
+      {/* Cover */}
+      <div className="h-64 md:h-80 w-full relative bg-gradient-to-br from-rose-200 via-rose-100 to-indigo-200 dark:from-rose-950/40 dark:via-slate-900 dark:to-indigo-950/40">
+        {realCover && (
+          <Image src={realCover} alt="" fill sizes="100vw" priority className="object-cover" referrerPolicy="no-referrer" />
+        )}
+        {coverFromAvatar && (
+          <Image src={coverFromAvatar} alt="" fill sizes="100vw" priority className="object-cover blur-2xl scale-110 opacity-60" referrerPolicy="no-referrer" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 dark:from-slate-950/80 to-transparent"></div>
       </div>
 
