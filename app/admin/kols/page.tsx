@@ -122,6 +122,7 @@ export default function AdminKolsPage() {
     Youtube: "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400",
     Tiktok: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
     Instagram: "bg-pink-100 text-pink-700 dark:bg-pink-950/40 dark:text-pink-400",
+    Facebook: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400",
   }
 
   return (
@@ -322,6 +323,7 @@ export default function AdminKolsPage() {
                 <option value="Youtube">Youtube</option>
                 <option value="Tiktok">Tiktok</option>
                 <option value="Instagram">Instagram</option>
+                <option value="Facebook">Facebook</option>
               </Select>
             </div>
 

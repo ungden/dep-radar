@@ -1,15 +1,10 @@
 import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 import { getPublishedEditorialPost, getPublishedEditorialPosts } from "@/lib/editorial"
+import { REAL_KOLS } from "@/lib/kols-data"
 import type { Kol, Post, Product, Review } from "@/lib/types"
 
-export const SAMPLE_KOLS: Kol[] = [
-  { id: "1", name: "Hà Linh Official", avatar: "/images/kol-halinh.png", cover: "/images/cover-halinh.png", platform: "Youtube", handle: "@halinhofficial", followers: "2.1M", trustscore: 98, categories: ["Skincare", "Makeup"], recentreview: "Serum B5 GoodnDoc", verified: true },
-  { id: "2", name: "Góc Của Rư", avatar: "/images/kol-ru.png", cover: "/images/cover-ru.png", platform: "Tiktok", handle: "@goccuaru", followers: "850K", trustscore: 85, categories: ["Makeup", "Bodycare"], recentreview: "Kem nền Maybelline Fit Me", verified: true },
-  { id: "3", name: "Trinh Phạm", avatar: "/images/kol-trinh.png", cover: "/images/cover-trinh.png", platform: "Youtube", handle: "@trinhpham", followers: "1.5M", trustscore: 95, categories: ["Skincare", "Lifestyle"], recentreview: "Tẩy trang L'Oreal", verified: true },
-  { id: "4", name: "Call Me Duy", avatar: "/images/kol-duy.png", cover: "/images/cover-duy.png", platform: "Youtube", handle: "@callmeduy", followers: "500K", trustscore: 92, categories: ["Skincare", "Treatment"], recentreview: "Retinol Obagi", verified: true },
-  { id: "5", name: "Bồng Bềnh", avatar: "/images/kol-bong.png", cover: "/images/cover-bong.png", platform: "Tiktok", handle: "@bongbenh", followers: "1.2M", trustscore: 88, categories: ["Haircare", "Bodycare"], recentreview: "Dầu gội Tsubaki", verified: false },
-  { id: "6", name: "Chloe Nguyen", avatar: "/images/kol-chloe.png", cover: "/images/cover-chloe.png", platform: "Instagram", handle: "@chloenguyen", followers: "600K", trustscore: 90, categories: ["High-end Makeup", "Perfume"], recentreview: "Dior Lip Glow", verified: true },
-]
+// Toàn bộ hồ sơ KOL/KOC (100 người) nằm trong REAL_KOLS; id "1"–"6" được giữ để reviews tham chiếu qua kolid.
+export const SAMPLE_KOLS: Kol[] = REAL_KOLS
 
 export const SAMPLE_PRODUCTS: Product[] = [
   { id: "1", name: "Tinh chất phục hồi da B5 GoodnDoc", brand: "GoodnDoc", image: "/images/product-b5-serum.png", rating: 4.8, reviews: 1240, sold: "8,500+", price: "350.000đ", category: "Skincare", tags: ["Phục hồi", "Cấp ẩm"], affiliate_url: null, description: "Phục hồi hàng rào bảo vệ da, cấp ẩm sâu và làm dịu da nhạy cảm. Phù hợp cho da treatment hoặc cần phục hồi sau mụn." },

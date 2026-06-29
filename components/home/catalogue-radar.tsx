@@ -1,19 +1,76 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, Filter } from "lucide-react"
+import {
+  ArrowRight,
+  BadgeCheck,
+  Droplets,
+  Filter,
+  FlaskConical,
+  ScanSearch,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { motion } from "motion/react"
 
 import { Badge } from "@/components/ui/badge"
 import { catalogueSections, secondaryFilterGroups, topCatalogueNavigation } from "@/lib/catalogue"
 import { containerVariants, itemVariants } from "@/lib/animations"
 
+type CatalogueVisual = {
+  image: string
+  label: string
+  Icon: LucideIcon
+  accent: string
+}
+
+const catalogueVisuals: Record<string, CatalogueVisual> = {
+  "da-mat": {
+    image: "/images/editorial/huong-dan-nen-skincare-cho-nguoi-moi.png",
+    label: "Skincare map",
+    Icon: Droplets,
+    accent: "from-rose-500/85 to-orange-300/70",
+  },
+  "tri-mun": {
+    image: "/images/editorial/ban-do-tri-mun-tu-mun-an-den-mun-nang.png",
+    label: "Acne care",
+    Icon: ShieldCheck,
+    accent: "from-red-500/85 to-rose-300/70",
+  },
+  "sang-da-chong-nang": {
+    image: "/images/editorial/pillar-sang-da-va-chong-nang-an-toan.png",
+    label: "SPF guide",
+    Icon: Sparkles,
+    accent: "from-amber-500/85 to-rose-300/70",
+  },
+  "ingredient-radar": {
+    image: "/images/editorial/cach-doc-ingredient-list-cho-nguoi-moi.png",
+    label: "Ingredient check",
+    Icon: FlaskConical,
+    accent: "from-cyan-600/85 to-emerald-300/70",
+  },
+  "product-radar": {
+    image: "/images/editorial/cach-doc-review-my-pham-dang-tin.png",
+    label: "Product shortlist",
+    Icon: ScanSearch,
+    accent: "from-violet-500/85 to-rose-300/70",
+  },
+  bodycare: {
+    image: "/images/editorial/pillar-bodycare-theo-tung-vung-co-the.png",
+    label: "Body routine",
+    Icon: BadgeCheck,
+    accent: "from-teal-600/85 to-cyan-300/70",
+  },
+}
+
 export function CatalogueRadar() {
   const featured = topCatalogueNavigation.slice(0, 6)
 
   return (
     <section className="container mx-auto px-4 md:px-6">
-      <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
+      <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
         <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">
@@ -36,40 +93,73 @@ export function CatalogueRadar() {
           viewport={{ once: true, margin: "-100px" }}
         >
           {featured.map((section) => (
-            <motion.div key={section.slug} variants={itemVariants}>
+            <motion.div key={section.slug} variants={itemVariants} className="min-w-0">
               <Link
                 href={`/catalogue/${section.slug}`}
-                className="group block h-full rounded-2xl bg-slate-50 p-5 transition-colors hover:bg-rose-50 dark:bg-slate-950 dark:hover:bg-rose-950/20"
+                className="group block h-full overflow-hidden rounded-2xl bg-slate-50 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-lg dark:bg-slate-950 dark:hover:bg-slate-900"
               >
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <h3 className="font-display text-lg font-bold text-slate-900 group-hover:text-rose-600 dark:text-slate-50 dark:group-hover:text-rose-300">
-                    {section.shortTitle}
-                  </h3>
-                  <ArrowRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-rose-500" />
-                </div>
-                <p className="line-clamp-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                  {section.description}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {section.branches.slice(0, 3).map((branch) => (
-                    <Badge key={branch.title} variant="secondary" className="bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300">
-                      {branch.title}
-                    </Badge>
-                  ))}
-                </div>
+                {(() => {
+                  const visual = catalogueVisuals[section.slug] ?? catalogueVisuals["da-mat"]
+                  const Icon = visual.Icon
+
+                  return (
+                    <>
+                      <div className="relative aspect-[16/9] overflow-hidden">
+                        <Image
+                          src={visual.image}
+                          alt={visual.label}
+                          fill
+                          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className={`absolute inset-0 bg-gradient-to-tr ${visual.accent} mix-blend-multiply`} />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/10 to-transparent" />
+                        <div className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/92 text-slate-950 shadow-sm backdrop-blur">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <div className="text-xs font-bold uppercase tracking-[0.22em] text-white/75">{visual.label}</div>
+                          <h3 className="mt-1 font-display text-xl font-black text-white">
+                            {section.shortTitle}
+                          </h3>
+                        </div>
+                      </div>
+                      <div className="p-5">
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                          <p className="line-clamp-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                            {section.description}
+                          </p>
+                          <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-rose-500" />
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {section.branches.slice(0, 3).map((branch) => (
+                            <Badge key={branch.title} variant="secondary" className="bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                              {branch.title}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )
+                })()}
               </Link>
             </motion.div>
           ))}
         </motion.div>
 
-        <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
-            <Filter className="h-4 w-4 text-rose-500" />
-            Lọc thêm:
+        <div className="mt-6 grid gap-3 md:grid-cols-[1.1fr_1.9fr]">
+          <div className="rounded-2xl bg-stone-950 p-5 text-stone-50">
+            <div className="flex items-center gap-2 text-sm font-bold">
+              <Filter className="h-4 w-4 text-[#d8a48f]" />
+              Lọc thêm
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-stone-300">
+              Sau khi chọn vấn đề, thu hẹp theo loại da, ngân sách và thói quen dùng sản phẩm.
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
             {[...secondaryFilterGroups.audience.slice(1, 4), ...secondaryFilterGroups.skinType.slice(1, 4), ...secondaryFilterGroups.budget.slice(1, 3)].map((filter) => (
-              <Badge key={filter} variant="outline" className="border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+              <Badge key={filter} variant="outline" className="border-slate-200 bg-white px-3 py-1 text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
                 {filter}
               </Badge>
             ))}

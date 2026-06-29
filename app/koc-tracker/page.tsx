@@ -24,20 +24,26 @@ export default function KocTrackerPage() {
     getKols().then(setKols)
   }, [])
 
+  const kolPlatforms = React.useCallback(
+    (kol: Kol) => (kol.socials?.length ? kol.socials.map(s => s.platform) : [kol.platform]),
+    []
+  )
+
   const platforms = React.useMemo(
-    () => Array.from(new Set(kols.map(k => k.platform))),
-    [kols]
+    () => Array.from(new Set(kols.flatMap(kolPlatforms))),
+    [kols, kolPlatforms]
   )
 
   const filteredKols = React.useMemo(() =>
     kols.filter(kol => {
       const query = searchQuery.toLowerCase()
       const matchesSearch = kol.name.toLowerCase().includes(query) ||
-                            kol.handle.toLowerCase().includes(query)
-      const matchesPlatform = selectedPlatform ? kol.platform === selectedPlatform : true
+                            kol.handle.toLowerCase().includes(query) ||
+                            (kol.socials?.some(s => s.handle.toLowerCase().includes(query)) ?? false)
+      const matchesPlatform = selectedPlatform ? kolPlatforms(kol).includes(selectedPlatform) : true
       return matchesSearch && matchesPlatform
     }),
-    [kols, searchQuery, selectedPlatform]
+    [kols, searchQuery, selectedPlatform, kolPlatforms]
   )
 
   return (
@@ -120,8 +126,10 @@ export default function KocTrackerPage() {
                             </h3>
                             {kol.verified && <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0" />}
                           </div>
-                          <div className="mb-3">
-                            <PlatformBadge platform={kol.platform} />
+                          <div className="mb-3 flex flex-wrap gap-1.5">
+                            {Array.from(new Set(kol.socials?.length ? kol.socials.map(s => s.platform) : [kol.platform])).map((p) => (
+                              <PlatformBadge key={p} platform={p} />
+                            ))}
                           </div>
                           <div className="flex items-center gap-4 text-sm">
                             <div className="flex flex-col">
@@ -137,6 +145,11 @@ export default function KocTrackerPage() {
                         </div>
                       </div>
                       <div className="space-y-4">
+                        {kol.bio && (
+                          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">
+                            {kol.bio}
+                          </p>
+                        )}
                         <div>
                           <div className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Chuyên mục</div>
                           <div className="flex flex-wrap gap-2">

@@ -4,19 +4,60 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Star, ShieldCheck, ThumbsUp, MessageSquare, ArrowLeft, ShoppingCart } from "lucide-react"
+import { Star, ShieldCheck, ThumbsUp, MessageSquare, ArrowLeft, ShoppingCart, BookOpen, ArrowRight } from "lucide-react"
 import * as motion from "motion/react-client"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { getKols, getProduct, getReviews } from "@/lib/data"
+import { getKols, getPost, getProduct, getReviews } from "@/lib/data"
+import { getMatrixNodesByProductId } from "@/lib/content-matrix"
 import { AffiliateButton } from "@/components/affiliate-button"
 import { SocialShare } from "@/components/social-share"
 import { RelatedProducts } from "@/components/related-products"
 import { UserRating } from "@/components/user-rating"
 import { CommentSection } from "@/components/comment-section"
 import { WishlistButton } from "@/components/wishlist-button"
+import type { Post } from "@/lib/types"
+
+function JsonLd({ data }: { data: Record<string, unknown> }) {
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  )
+}
+
+function buildProductJsonLd(product: Awaited<ReturnType<typeof getProduct>>, siteUrl: string) {
+  if (!product) return null
+  const numericPrice = product.price.replace(/[^\d]/g, "")
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: product.image.startsWith("/") ? `${siteUrl}${product.image}` : product.image,
+    description: product.description,
+    brand: {
+      "@type": "Brand",
+      name: product.brand,
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: product.rating,
+      reviewCount: product.reviews,
+    },
+    offers: numericPrice
+      ? {
+          "@type": "Offer",
+          priceCurrency: "VND",
+          price: numericPrice,
+          availability: "https://schema.org/InStock",
+          url: `${siteUrl}/products/${product.id}`,
+        }
+      : undefined,
+  }
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
@@ -49,9 +90,17 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   const KOLS = await getKols();
   const reviews = await getReviews({ productId: id });
+  const matrixNodes = getMatrixNodesByProductId(product.id)
+  const graphKolIds = new Set(matrixNodes.flatMap((node) => node.kolIds))
+  const sortedReviews = [...reviews].sort((a, b) => Number(graphKolIds.has(b.kolid)) - Number(graphKolIds.has(a.kolid)))
+  const graphPostSlugs = unique(matrixNodes.flatMap((node) => [node.articleSlug, ...node.nextArticleSlugs])).slice(0, 4)
+  const graphPosts = (await Promise.all(graphPostSlugs.map((slug) => getPost(slug)))).filter((post): post is Post => Boolean(post))
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://360dep.vn"
+  const productJsonLd = buildProductJsonLd(product, siteUrl)
   
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
+      {productJsonLd && <JsonLd data={productJsonLd} />}
       <div className="container mx-auto px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -132,13 +181,42 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             </div>
           </div>
 
+          {graphPosts.length > 0 && (
+            <section className="mb-8 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
+              <div className="mb-5 flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-rose-500" />
+                <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">Bài nên đọc trước khi mua</h2>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {graphPosts.map((post) => (
+                  <Link
+                    key={post.slug}
+                    href={`/blog/${post.slug}`}
+                    className="group rounded-2xl bg-slate-50 p-4 transition-colors hover:text-rose-600 dark:bg-slate-950 dark:hover:text-rose-300"
+                  >
+                    <Badge variant="secondary" className="mb-2 bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                      {post.category}
+                    </Badge>
+                    <div className="flex items-start justify-between gap-4">
+                      <h3 className="font-display text-lg font-black leading-tight text-slate-900 group-hover:text-rose-600 dark:text-slate-50 dark:group-hover:text-rose-300">
+                        {post.title}
+                      </h3>
+                      <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-slate-300 group-hover:text-rose-500" />
+                    </div>
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{post.excerpt}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Reviews Section */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100 dark:border-slate-800">
             <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-slate-50 mb-8">Đánh giá từ KOL/KOC</h2>
             
-            {reviews.length > 0 ? (
+            {sortedReviews.length > 0 ? (
               <div className="space-y-6">
-                {reviews.map((review) => {
+                {sortedReviews.map((review) => {
                   const kol = KOLS.find(k => k.id === review.kolid);
                   if (!kol) return null;
                   
@@ -209,4 +287,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       </div>
     </div>
   )
+}
+
+function unique(items: string[]) {
+  return Array.from(new Set(items.filter(Boolean)))
 }

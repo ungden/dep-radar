@@ -1,6 +1,7 @@
 import { catalogueSections } from "@/lib/catalogue"
 import { catalogueGuides } from "@/lib/catalogue-guide"
 import { CATALOGUE_READ_POSTS } from "@/lib/catalogue-read-posts"
+import { getMatrixNodeByArticleSlug, type ResearchStage } from "@/lib/content-matrix"
 import type { Post } from "@/lib/types"
 
 export type ArticleStatus = "planned" | "draft" | "published"
@@ -34,6 +35,14 @@ export interface ArticleBrief {
   summary: string
   targetKeywords: string[]
   relatedProducts: string[]
+  researchStage?: ResearchStage
+  userQuestion?: string
+  nextArticleSlugs?: string[]
+  productGroupKeys?: string[]
+  matrixProductIds?: string[]
+  kolIds?: string[]
+  kolReasons?: Record<string, string>
+  relatedNodeKeys?: string[]
   imagePolicy: "category" | "generate" | "custom"
   image: ArticleImageSpec
   content?: ArticleContent
@@ -137,11 +146,11 @@ function imageSpec(title: string, hubSlug: string, policy: ArticleBrief["imagePo
   const needsGeneration = policy === "generate"
 
   return {
-    status: needsGeneration ? "queued" : "category-fallback",
+    status: needsGeneration ? "generated" : "category-fallback",
     prompt: imagePrompt(title, section?.title ?? hubSlug),
     assetPath: needsGeneration ? `/images/editorial/${slug}.jpg` : fallback,
     usage: "hero",
-    needsGeneration,
+    needsGeneration: false,
   }
 }
 
@@ -170,29 +179,174 @@ function publishedContent(post: Post, hubSlug: string): ArticleContent {
   }
 }
 
+function markdownFromSections(sections: ArticleContent["sections"]) {
+  return sections
+    .flatMap((section) => [
+      `## ${section.title}`,
+      ...section.body,
+    ])
+    .join("\n\n")
+}
+
+function categoryForHub(hubSlug: string) {
+  return catalogueSections.find((section) => section.slug === hubSlug)?.title ?? "360dep.vn Beauty Desk"
+}
+
+function buildGeneratedContent(seed: PlannedSeed, hubSlug: string): ArticleContent {
+  const hubTitle = categoryForHub(hubSlug)
+  const isSafety = seed.intent === "safety"
+  const isDecision = seed.intent === "decision"
+  const isPillar = seed.intent === "pillar"
+  const medicalLevel: MedicalDisclaimerLevel = MEDICAL_HUBS.has(hubSlug) || isSafety ? "medical" : "light"
+  const keywordLine = seed.keywords.join(", ")
+
+  const sections: ArticleContent["sections"] = [
+    {
+      title: isPillar ? `Nền tảng cần nắm trong ${hubTitle}` : `Vấn đề thật phía sau: ${seed.title}`,
+      body: [
+        `${seed.summary} Điểm quan trọng là đừng đọc chủ đề này như một mẹo mua nhanh. Hãy xem nó như một khung ra quyết định: da/cơ thể đang gặp vấn đề gì, mức độ nặng nhẹ ra sao, routine hiện tại có đang làm vấn đề rõ hơn hay rối hơn, và có dấu hiệu nào cần chuyên gia hay không.`,
+        `Với nhóm từ khóa ${keywordLine}, 360dep.vn ưu tiên cách giải thích theo bối cảnh người dùng Việt: khí hậu nóng ẩm, thói quen chống nắng chưa đều, sản phẩm dễ mua nhưng claim rất nhiều, và nhu cầu routine ít bước nhưng theo dõi được phản ứng.`,
+      ],
+    },
+    {
+      title: isDecision ? "Cách quyết định có nên mua hoặc làm không" : "Cách tự đọc tình trạng trước khi đổi sản phẩm",
+      body: [
+        "- [ ] Xác định vấn đề chính trong 2-4 tuần gần nhất, không gộp mọi thứ thành một chữ chung.\n- [ ] Ghi lại sản phẩm đang dùng, tần suất, vùng bị ảnh hưởng và thời điểm bắt đầu.\n- [ ] Giữ routine nền ổn định trước khi thêm hoạt chất/dịch vụ mới.\n- [ ] Chọn một thay đổi chính mỗi lần để biết da hoặc cơ thể phản ứng với điều gì.",
+        isDecision
+          ? "Một quyết định tốt không chỉ dựa vào sản phẩm hay dịch vụ có nổi tiếng không. Nó cần trả lời được: công dụng chính có khớp vấn đề không, bằng chứng/kỳ vọng có thực tế không, rủi ro nằm ở đâu, và nếu không hợp thì có phương án dừng hay phục hồi không."
+          : "Nếu tình trạng thay đổi theo chu kỳ, thời tiết, stress, giấc ngủ hoặc sau một sản phẩm mới, đừng vội kết luận chỉ từ một ngày. Ghi chú ngắn nhưng đều sẽ giúp bạn tránh vòng lặp mua thêm sản phẩm mà không biết sản phẩm nào gây lợi hoặc hại.",
+      ],
+    },
+    {
+      title: "Routine hoặc flow thực hành gợi ý",
+      body: [
+        isPillar
+          ? "Flow nền nên đi từ làm sạch dịu, dưỡng/giữ hàng rào bảo vệ, chống nắng hoặc bảo vệ phù hợp, rồi mới đến hoạt chất, thiết bị hoặc dịch vụ. Thứ tự này giúp bạn có một nền ổn định để đo hiệu quả thật."
+          : "Flow tối giản là: giảm biến số, giữ bước nền, thêm đúng một giải pháp chính, theo dõi 2-4 tuần, rồi mới tăng tần suất hoặc đổi hướng. Khi có dấu hiệu kích ứng, ưu tiên phục hồi thay vì tăng lực xử lý.",
+        "- Sáng: ưu tiên bước bảo vệ và trải nghiệm dễ duy trì.\n- Tối: ưu tiên làm sạch đủ, phục hồi và treatment theo lịch nếu da/cơ thể chịu được.\n- Hàng tuần: chụp ảnh/ghi chú cùng ánh sáng, cùng vị trí, tránh đánh giá bằng cảm giác sau một lần dùng.",
+      ],
+    },
+    {
+      title: isSafety ? "Khi nên dừng tự xử lý và đi chuyên gia" : "Dấu hiệu đang đi đúng hướng",
+      body: [
+        isSafety
+          ? "Nên dừng tự xử lý khi có đau tăng, đỏ nóng lan rộng, sưng, mủ, chảy dịch, sốt, khó chịu vùng mắt, sẹo mới, rụng tóc thành mảng, nám/đốm tăng nhanh hoặc kích ứng kéo dài dù đã giảm sản phẩm. Đây là ranh giới mà mua thêm mỹ phẩm thường không giải quyết được gốc vấn đề."
+          : "Dấu hiệu tốt là vấn đề giảm từ từ, da/cơ thể ít khó chịu hơn, routine dễ duy trì, không cần che giấu tác dụng phụ, và bạn hiểu rõ sản phẩm/dịch vụ nào đang đóng vai trò chính. Kết quả bền thường đến từ nhịp ổn định hơn là đổi liên tục.",
+        "Nếu đang mang thai, cho con bú, có bệnh nền, đang dùng thuốc, từng dị ứng nặng hoặc chuẩn bị làm thủ thuật, hãy hỏi bác sĩ/dược sĩ trước khi dùng hoạt chất mạnh, thiết bị tại nhà hoặc dịch vụ clinic.",
+      ],
+    },
+  ]
+
+  return {
+    sections,
+    takeaways: [
+      "Đọc vấn đề theo bối cảnh và mức độ trước khi mua thêm sản phẩm.",
+      "Giữ routine ít bước để theo dõi phản ứng thật, đặc biệt khi da nhạy cảm hoặc đang treatment.",
+      isSafety ? "Có dấu hiệu đau, sưng, mủ, lan nhanh hoặc ảnh hưởng mắt thì nên gặp chuyên gia." : "Tăng lực xử lý chậm hơn cảm giác nôn nóng; da ổn định mới là nền để treatment hiệu quả.",
+    ],
+    faq: [
+      {
+        question: "Bao lâu thì biết hướng này có hợp không?",
+        answer: "Với chăm sóc tại nhà, thường nên theo dõi tối thiểu 2-4 tuần nếu không có kích ứng. Với vấn đề viêm nặng, đau, sẹo hoặc sau thủ thuật, không nên chờ quá lâu trước khi hỏi chuyên gia.",
+      },
+      {
+        question: "Có cần mua đủ bộ sản phẩm không?",
+        answer: "Không. 360dep.vn ưu tiên routine đủ ít bước để bạn dùng đều và hiểu phản ứng. Một sản phẩm đúng vấn đề thường hữu ích hơn nhiều sản phẩm trùng công dụng.",
+      },
+      {
+        question: "Bài này có thay thế tư vấn bác sĩ không?",
+        answer: "Không. Bài viết dùng để giúp bạn hiểu nền tảng, chuẩn bị câu hỏi và nhận biết ranh giới an toàn; chẩn đoán và điều trị cá nhân vẫn cần chuyên gia phù hợp.",
+      },
+    ],
+    sourceNotes: sourceNotesForHub(hubSlug),
+    medicalDisclaimerLevel: medicalLevel,
+  }
+}
+
+function generatedPostFromBrief(article: ArticleBrief): Post {
+  const content = article.content ?? buildGeneratedContent(
+    {
+      title: article.title,
+      intent: article.intent,
+      priority: article.priority,
+      summary: article.summary,
+      keywords: article.targetKeywords,
+      imagePolicy: article.imagePolicy,
+      status: article.status,
+    },
+    article.hubSlug
+  )
+  const matrixNode = getMatrixNodeByArticleSlug(article.slug)
+
+  return {
+    id: article.slug,
+    title: article.title,
+    slug: article.slug,
+    excerpt: article.summary,
+    content: markdownFromSections(content.sections),
+    author_name: "360dep.vn Beauty Desk",
+    author_avatar: "/brand/icon-192.png",
+    category: categoryForHub(article.hubSlug),
+    tags: article.targetKeywords,
+    image: article.image.assetPath,
+    likes: 180 + article.priority * 37,
+    comments: 12 + article.priority * 7,
+    created_at: "2026-06-28T08:00:00Z",
+    product_ids: article.relatedProducts,
+    hubSlug: article.hubSlug,
+    status: "published",
+    takeaways: content.takeaways,
+    faq: content.faq,
+    sourceNotes: matrixNode?.sourceRefs ?? content.sourceNotes,
+    medicalDisclaimerLevel: matrixNode?.safetyLevel ?? content.medicalDisclaimerLevel,
+    researchStage: matrixNode?.stage ?? article.researchStage,
+    userQuestion: matrixNode?.userQuestion ?? article.userQuestion,
+    nextArticleSlugs: matrixNode?.nextArticleSlugs ?? article.nextArticleSlugs,
+    productGroupKeys: matrixNode?.productGroupKeys ?? article.productGroupKeys,
+    matrixProductIds: matrixNode?.productIds ?? article.matrixProductIds,
+    kolIds: matrixNode?.kolIds ?? article.kolIds,
+    kolReasons: matrixNode?.kolReasons ?? article.kolReasons,
+    relatedNodeKeys: matrixNode?.relatedNodeKeys ?? article.relatedNodeKeys,
+  }
+}
+
 function publishedBriefFromPost(post: Post): ArticleBrief {
   const hubSlug = NEXT_READ_HUB_BY_TITLE[post.title] ?? "product-radar"
   const policy: ArticleBrief["imagePolicy"] = ["clinic-treatment", "beauty-tech", "ingredient-radar"].includes(hubSlug) ? "generate" : "category"
+  const matrixNode = getMatrixNodeByArticleSlug(post.slug)
+  const content = publishedContent(post, hubSlug)
 
   return {
     title: post.title,
     slug: post.slug,
     hubSlug,
     intent: "problem-solving",
-    audience: catalogueSections.find((section) => section.slug === hubSlug)?.audience ?? "Người đọc 360 độ đẹp",
+    audience: catalogueSections.find((section) => section.slug === hubSlug)?.audience ?? "Người đọc 360dep.vn",
     priority: 1,
     status: "published",
     summary: post.excerpt,
     targetKeywords: post.tags,
     relatedProducts: post.product_ids ?? [],
+    researchStage: matrixNode?.stage ?? post.researchStage,
+    userQuestion: matrixNode?.userQuestion ?? post.userQuestion,
+    nextArticleSlugs: matrixNode?.nextArticleSlugs ?? post.nextArticleSlugs,
+    productGroupKeys: matrixNode?.productGroupKeys ?? post.productGroupKeys,
+    matrixProductIds: matrixNode?.productIds ?? post.matrixProductIds,
+    kolIds: matrixNode?.kolIds ?? post.kolIds,
+    kolReasons: matrixNode?.kolReasons ?? post.kolReasons,
+    relatedNodeKeys: matrixNode?.relatedNodeKeys ?? post.relatedNodeKeys,
     imagePolicy: policy,
     image: {
       ...imageSpec(post.title, hubSlug, "category"),
-      assetPath: post.image,
-      status: post.image.startsWith("/images/editorial/") ? "generated" : "category-fallback",
+      assetPath: `/images/editorial/${post.slug}.jpg`,
+      status: "generated",
       needsGeneration: false,
     },
-    content: publishedContent(post, hubSlug),
+    content: {
+      ...content,
+      sourceNotes: matrixNode?.sourceRefs ?? content.sourceNotes,
+      medicalDisclaimerLevel: matrixNode?.safetyLevel ?? content.medicalDisclaimerLevel,
+    },
   }
 }
 
@@ -308,21 +462,36 @@ const PLANNED_BY_HUB: Record<string, PlannedSeed[]> = {
 }
 
 function plannedBrief(hubSlug: string, seed: PlannedSeed): ArticleBrief {
-  const policy = seed.imagePolicy ?? (seed.intent === "pillar" || seed.intent === "safety" ? "generate" : "category")
+  const content = buildGeneratedContent(seed, hubSlug)
+  const slug = slugify(seed.title)
+  const matrixNode = getMatrixNodeByArticleSlug(slug)
 
   return {
     title: seed.title,
-    slug: slugify(seed.title),
+    slug,
     hubSlug,
     intent: seed.intent,
-    audience: catalogueSections.find((section) => section.slug === hubSlug)?.audience ?? "Người đọc 360 độ đẹp",
+    audience: catalogueSections.find((section) => section.slug === hubSlug)?.audience ?? "Người đọc 360dep.vn",
     priority: seed.priority ?? 2,
-    status: seed.status ?? "planned",
+    status: seed.status ?? "published",
     summary: seed.summary,
     targetKeywords: seed.keywords,
     relatedProducts: [],
-    imagePolicy: policy,
-    image: imageSpec(seed.title, hubSlug, policy),
+    researchStage: matrixNode?.stage,
+    userQuestion: matrixNode?.userQuestion,
+    nextArticleSlugs: matrixNode?.nextArticleSlugs,
+    productGroupKeys: matrixNode?.productGroupKeys,
+    matrixProductIds: matrixNode?.productIds,
+    kolIds: matrixNode?.kolIds,
+    kolReasons: matrixNode?.kolReasons,
+    relatedNodeKeys: matrixNode?.relatedNodeKeys,
+    imagePolicy: "generate",
+    image: imageSpec(seed.title, hubSlug, "generate"),
+    content: {
+      ...content,
+      sourceNotes: matrixNode?.sourceRefs ?? content.sourceNotes,
+      medicalDisclaimerLevel: matrixNode?.safetyLevel ?? content.medicalDisclaimerLevel,
+    },
   }
 }
 
@@ -339,16 +508,28 @@ export function getEditorialArticle(slug: string) {
 }
 
 export function getPublishedEditorialPosts(): Post[] {
-  return CATALOGUE_READ_POSTS.map((post) => {
-    const brief = PUBLISHED_EDITORIAL_BRIEFS.find((article) => article.slug === post.slug)
+  return PUBLISHED_EDITORIAL_BRIEFS.map((article) => {
+    const fallbackPost = CATALOGUE_READ_POSTS.find((post) => post.slug === article.slug)
+    const generated = generatedPostFromBrief(article)
+
+    if (!fallbackPost) return generated
     return {
-      ...post,
-      hubSlug: brief?.hubSlug,
+      ...fallbackPost,
+      image: article.image.assetPath,
+      hubSlug: article.hubSlug,
       status: "published",
-      takeaways: brief?.content?.takeaways,
-      faq: brief?.content?.faq,
-      sourceNotes: brief?.content?.sourceNotes,
-      medicalDisclaimerLevel: brief?.content?.medicalDisclaimerLevel,
+      takeaways: article.content?.takeaways,
+      faq: article.content?.faq,
+      sourceNotes: article.content?.sourceNotes,
+      medicalDisclaimerLevel: article.content?.medicalDisclaimerLevel,
+      researchStage: article.researchStage,
+      userQuestion: article.userQuestion,
+      nextArticleSlugs: article.nextArticleSlugs,
+      productGroupKeys: article.productGroupKeys,
+      matrixProductIds: article.matrixProductIds,
+      kolIds: article.kolIds,
+      kolReasons: article.kolReasons,
+      relatedNodeKeys: article.relatedNodeKeys,
     }
   })
 }

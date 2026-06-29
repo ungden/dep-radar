@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { MessageSquare, ThumbsUp, Clock } from "lucide-react"
 import { motion } from "motion/react"
@@ -53,7 +54,21 @@ export function CommunityHighlights() {
       >
         {posts.map((post) => (
           <motion.div key={post.id} variants={itemVariants}>
-            <Card className="flex flex-col hover:shadow-lg transition-shadow duration-300 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 h-full">
+            <Card className="flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
+              <Link href={`/blog/${post.id}`} className="group relative block aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">
+                <Image
+                  src={post.image || "/brand/social-share.jpg"}
+                  alt={post.title}
+                  fill
+                  sizes="(min-width: 1024px) 33vw, 100vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent" />
+                <Badge className="absolute bottom-4 left-4 border-none bg-white/92 text-slate-900 shadow-sm backdrop-blur hover:bg-white">
+                  {post.category}
+                </Badge>
+              </Link>
               <CardHeader className="flex flex-row items-center gap-4 p-5 pb-3">
                 <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-800 shadow-sm">
                   <AvatarImage src={post.author_avatar} alt={post.author_name} />

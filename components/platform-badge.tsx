@@ -1,4 +1,4 @@
-import { CirclePlay } from "lucide-react"
+import { CirclePlay, Instagram, Facebook } from "lucide-react"
 
 function TikTokIcon({ className }: { className?: string }) {
   return (
@@ -18,6 +18,16 @@ const PLATFORM_STYLES = {
     text: "text-slate-900 dark:text-slate-50",
     bg: "bg-slate-100 dark:bg-slate-800",
     border: "border-slate-200 dark:border-slate-700",
+  },
+  Instagram: {
+    text: "text-fuchsia-600 dark:text-fuchsia-400",
+    bg: "bg-fuchsia-50 dark:bg-fuchsia-950/30",
+    border: "border-fuchsia-100 dark:border-fuchsia-900/50",
+  },
+  Facebook: {
+    text: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-950/30",
+    border: "border-blue-100 dark:border-blue-900/50",
   },
   default: {
     text: "text-rose-600 dark:text-rose-400",
@@ -40,6 +50,10 @@ export function PlatformBadge({ platform, size = "sm" }: PlatformBadgeProps) {
     <span className={`inline-flex items-center gap-1 ${styles.text} ${styles.bg} ${textSize} rounded-full border ${styles.border} font-bold uppercase tracking-wider`}>
       {platform === "Tiktok" ? (
         <TikTokIcon className={iconSize} />
+      ) : platform === "Instagram" ? (
+        <Instagram className={iconSize} />
+      ) : platform === "Facebook" ? (
+        <Facebook className={iconSize} />
       ) : (
         <CirclePlay className={iconSize} />
       )}
