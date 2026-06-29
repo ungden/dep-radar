@@ -10,10 +10,11 @@ import * as motion from "motion/react-client"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { getPost, getRelatedPosts } from "@/lib/data"
+import { getPost, getPostProductRecommendations, getRelatedPosts } from "@/lib/data"
 import { LikeButton } from "@/components/like-button"
 import { SocialShare } from "@/components/social-share"
 import { CommentSection } from "@/components/comment-section"
+import { ArticleProductRecommendations } from "@/components/article-product-recommendations"
 
 function renderPostContent(content: string) {
   return content.split("\n\n").map((block, index) => {
@@ -95,8 +96,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
     })
   }
 
-  // Fetch related posts in the same category
-  const relatedPosts = await getRelatedPosts(post.category, post.id, 2)
+  const [relatedPosts, recommendedProducts] = await Promise.all([
+    getRelatedPosts(post.category, post.id, 2),
+    getPostProductRecommendations(post, 3),
+  ])
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-16">
@@ -169,6 +172,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
             <div className="px-6 md:px-10 lg:px-12 pb-10">
               <div className="max-w-3xl mx-auto prose prose-slate dark:prose-invert prose-lg prose-headings:font-display prose-a:text-rose-600 dark:prose-a:text-rose-400">
                 {renderPostContent(post.content)}
+                <ArticleProductRecommendations products={recommendedProducts} />
               </div>
             </div>
 

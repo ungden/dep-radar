@@ -167,6 +167,86 @@ export async function getProduct(id: string) {
   )
 }
 
+const HUB_PRODUCT_CATEGORIES: Record<string, string[]> = {
+  "da-mat": ["Skincare"],
+  "tri-mun": ["Skincare"],
+  "sang-da-chong-nang": ["Skincare", "Bodycare"],
+  "ingredient-radar": ["Skincare"],
+  "product-radar": ["Skincare", "Makeup", "Bodycare", "Haircare", "Perfume"],
+  bodycare: ["Bodycare"],
+  "toc-da-dau": ["Haircare"],
+  makeup: ["Makeup"],
+  "mui-huong": ["Perfume", "Bodycare"],
+  "nam-gioi": ["Skincare", "Haircare"],
+  "clinic-treatment": ["Skincare"],
+  "beauty-lifestyle": ["Skincare", "Bodycare"],
+  "nails-mi-long-may": ["Makeup"],
+  "beauty-tech": ["Skincare", "Haircare"],
+}
+
+function normalizeText(text: string) {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+}
+
+function scoreProductForPost(product: Product, post: Post, explicitRank: number | null) {
+  const postText = normalizeText([
+    post.title,
+    post.excerpt,
+    post.content,
+    post.category,
+    post.hubSlug,
+    ...(post.tags ?? []),
+  ].join(" "))
+  const productText = normalizeText([
+    product.name,
+    product.brand,
+    product.category,
+    product.description,
+    ...(product.tags ?? []),
+  ].join(" "))
+  const hubCategories = post.hubSlug ? HUB_PRODUCT_CATEGORIES[post.hubSlug] ?? [] : []
+  let score = explicitRank == null ? 0 : 1000 - explicitRank
+
+  if (hubCategories.some((category) => normalizeText(category) === normalizeText(product.category))) score += 80
+  if (normalizeText(post.category) === normalizeText(product.category)) score += 70
+  if (postText.includes(normalizeText(product.category))) score += 30
+  if (postText.includes(normalizeText(product.brand))) score += 12
+
+  for (const tag of product.tags ?? []) {
+    const normalizedTag = normalizeText(tag)
+    if (postText.includes(normalizedTag)) score += 24
+  }
+
+  for (const tag of post.tags ?? []) {
+    const normalizedTag = normalizeText(tag)
+    if (productText.includes(normalizedTag)) score += 18
+  }
+
+  score += Math.min(product.rating, 5)
+  score += Math.min(product.reviews / 1000, 5)
+  return score
+}
+
+export async function getPostProductRecommendations(post: Post, limit = 3) {
+  const products = await getProducts()
+  const explicitIds = post.product_ids ?? []
+  const explicitRank = new Map(explicitIds.map((id, index) => [id, index]))
+
+  return products
+    .map((product) => ({
+      product,
+      score: scoreProductForPost(product, post, explicitRank.get(product.id) ?? null),
+    }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || b.product.rating - a.product.rating)
+    .slice(0, limit)
+    .map((item) => item.product)
+}
+
 export async function getKols() {
   return fromSupabase<Kol[]>(
     supabase.from("kols").select("*").order("trustscore", { ascending: false }),

@@ -3,14 +3,16 @@
 import { ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { trackAffiliateClick } from "@/lib/track-click"
+import { cn } from "@/lib/utils"
 
 interface AffiliateButtonProps {
   href: string
   productId: string
   children?: React.ReactNode
+  className?: string
 }
 
-export function AffiliateButton({ href, productId, children }: AffiliateButtonProps) {
+export function AffiliateButton({ href, productId, children, className }: AffiliateButtonProps) {
   async function handleClick() {
     await trackAffiliateClick(productId)
     window.open(href, "_blank", "noopener,noreferrer")
@@ -19,7 +21,10 @@ export function AffiliateButton({ href, productId, children }: AffiliateButtonPr
   return (
     <Button
       onClick={handleClick}
-      className="w-full h-14 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-lg shadow-lg shadow-rose-200 dark:shadow-rose-900/20"
+      className={cn(
+        "w-full h-14 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-lg shadow-lg shadow-rose-200 dark:shadow-rose-900/20",
+        className
+      )}
     >
       {children || (
         <>
