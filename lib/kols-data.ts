@@ -235,6 +235,44 @@ export const REAL_KOLS: Kol[] = [
     "ownBrand": "CMD Cosmetics"
   },
   {
+    "id": "5",
+    "name": "Bác sĩ Đặng Thị Minh Châu",
+    "avatar": "/images/kol/bac-si-dang-thi-minh-chau.jpg",
+    "cover": "",
+    "platform": "Facebook",
+    "handle": "@drminhchau.skinone",
+    "followers": "120K",
+    "recentreview": "Tư vấn da liễu, laser thẩm mỹ và phục hồi da sau treatment",
+    "trustscore": 72,
+    "categories": [
+      "Treatment",
+      "Skincare"
+    ],
+    "verified": true,
+    "bio": "Bác sĩ Đặng Thị Minh Châu là bác sĩ chuyên khoa da liễu, gắn với hệ thống SkinOne và nội dung tư vấn điều trị, phục hồi da, laser thẩm mỹ. Hồ sơ này được đưa vào thay cho các account mơ hồ vì có người thật, chuyên môn rõ và hình ảnh nhận diện công khai.",
+    "socials": [
+      {
+        "platform": "Facebook",
+        "handle": "@drminhchau.skinone",
+        "followers": "120K",
+        "url": "https://www.facebook.com/drminhchau.skinone"
+      }
+    ],
+    "realName": "Đặng Thị Minh Châu",
+    "basedIn": "TP.HCM",
+    "specialties": [
+      "Da liễu",
+      "Laser thẩm mỹ",
+      "Phục hồi da sau treatment"
+    ],
+    "knownFor": [
+      "Bác sĩ chuyên khoa da liễu xuất hiện trong nội dung SkinOne",
+      "Tư vấn chăm sóc da và treatment theo hướng chuyên môn",
+      "Được thêm vào registry sau audit loại bỏ hồ sơ không xác định"
+    ],
+    "contentStyle": "Giải thích vấn đề da và lựa chọn treatment dưới góc nhìn bác sĩ."
+  },
+  {
     "id": "6",
     "name": "Chloe Nguyen",
     "avatar": "/images/kol-chloe.png",
@@ -2762,38 +2800,48 @@ export const REAL_KOLS: Kol[] = [
   },
   {
     "id": "71",
-    "name": "Kim Võ Perfume",
-    "avatar": "/images/kol/kim-vo-perfume.jpg",
+    "name": "Dr Hiếu - Bác sĩ da liễu",
+    "avatar": "/images/kol/bac-si-luong-trung-hieu.jpg",
     "cover": "",
     "platform": "Tiktok",
-    "handle": "@kimvoperfume",
-    "followers": "200K",
-    "recentreview": "Review nước hoa Chloe Iris, Loewe",
-    "trustscore": 74,
+    "handle": "@bacsi.hieu.official",
+    "followers": "850K",
+    "recentreview": "Giải thích mụn, nám, treatment và routine chăm sóc da dưới góc nhìn bác sĩ",
+    "trustscore": 82,
     "categories": [
-      "Perfume"
+      "Treatment",
+      "Skincare"
     ],
-    "verified": false,
-    "bio": "Kim Võ Perfume là một cửa hàng nước hoa chính hãng tại TP.HCM, chuyên kinh doanh và tư vấn các dòng nước hoa nam nữ. Bên cạnh bán lẻ, thương hiệu còn chia sẻ nội dung gợi ý và review mùi hương để hỗ trợ khách hàng chọn sản phẩm phù hợp.",
+    "verified": true,
+    "bio": "Dr Hiếu (bác sĩ Lương Trung Hiếu) là bác sĩ da liễu làm nội dung giáo dục về mụn, nám, treatment và chăm sóc da đúng cách trên TikTok, YouTube và website riêng. Hồ sơ này thay thế account shop perfume sau audit để ưu tiên người thật có chuyên môn.",
     "socials": [
       {
         "platform": "Tiktok",
-        "handle": "@kimvoperfume",
-        "followers": "200K"
+        "handle": "@bacsi.hieu.official",
+        "followers": "850K",
+        "url": "https://www.tiktok.com/@bacsi.hieu.official"
+      },
+      {
+        "platform": "Youtube",
+        "handle": "Dr Hiếu",
+        "followers": "800K",
+        "url": "https://www.youtube.com/channel/UCPiIYO3KUwS5Ocnry7WqEiw"
       }
     ],
-    "basedIn": "TP.HCM",
+    "realName": "Lương Trung Hiếu",
+    "basedIn": "Hà Nội",
     "specialties": [
-      "Review nước hoa",
-      "Tư vấn mùi hương",
-      "Kinh doanh nước hoa"
+      "Da liễu",
+      "Điều trị mụn",
+      "Nám và sắc tố",
+      "Treatment an toàn"
     ],
     "knownFor": [
-      "Kênh review nước hoa gắn với cửa hàng nước hoa chính hãng Kim Vo Perfume",
-      "Tư vấn và gợi ý mùi hương cho người mê nước hoa"
+      "Bác sĩ da liễu, founder hệ sinh thái nội dung Dr Hiếu",
+      "Tư vấn routine da mụn, treatment và chăm sóc da khoa học",
+      "Có website chuyên môn bacsihieu.vn và kênh video riêng"
     ],
-    "contentStyle": "Review nước hoa và gợi ý mùi hương, hỗ trợ người mua chọn lựa.",
-    "ownBrand": "Kim Vo Perfume"
+    "contentStyle": "Giải thích kiến thức da liễu theo dạng video ngắn, dễ hiểu, có cảnh báo khi cần khám bác sĩ."
   },
   {
     "id": "72",
@@ -3195,107 +3243,132 @@ export const REAL_KOLS: Kol[] = [
   },
   {
     "id": "83",
-    "name": "Ken Perfume",
-    "avatar": "/images/kol/ken-perfume.jpg",
+    "name": "Bác sĩ Minh Điềm",
+    "avatar": "/images/kol/bac-si-minh-diem.png",
     "cover": "",
     "platform": "Tiktok",
-    "handle": "@kenperfume2015",
-    "followers": "129K",
-    "recentreview": "Review nước hoa authentic và unbox limited edition",
-    "trustscore": 68,
+    "handle": "@drdiemdalieu.medici",
+    "followers": "183K",
+    "recentreview": "Tư vấn da liễu thẩm mỹ, mụn và phục hồi da",
+    "trustscore": 72,
     "categories": [
-      "Perfume"
+      "Treatment",
+      "Skincare"
     ],
-    "verified": false,
-    "bio": "Kênh review và bán nước hoa authentic, nổi bật với các video đánh giá mùi hương và unbox sản phẩm limited edition. Có cộng đồng người xem đông trong giới yêu nước hoa. Hoạt động trên TikTok và website riêng.",
+    "verified": true,
+    "bio": "Bác sĩ Minh Điềm là bác sĩ da liễu thẩm mỹ hoạt động trên TikTok với nội dung tư vấn chăm sóc da, mụn và treatment. Hồ sơ này được bổ sung sau audit để thay cho account perfume-shop.",
     "socials": [
       {
         "platform": "Tiktok",
-        "handle": "@kenperfume2015",
-        "followers": "129K"
+        "handle": "@drdiemdalieu.medici",
+        "followers": "183K",
+        "url": "https://www.tiktok.com/@drdiemdalieu.medici"
       }
     ],
     "basedIn": "Việt Nam",
     "specialties": [
-      "Review nước hoa",
-      "Tư vấn chọn hương theo phong cách",
-      "Unbox nước hoa limited",
-      "So sánh và deal nước hoa"
+      "Da liễu thẩm mỹ",
+      "Điều trị mụn",
+      "Phục hồi da",
+      "Tư vấn treatment"
     ],
     "knownFor": [
-      "Tự nhận là 'dân chơi nước hoa lâu năm', tư vấn theo gu cá nhân",
-      "Tagline 'The Art Of Scent', đăng đều đặn và livestream định kỳ",
-      "Có cả kênh YouTube song song với TikTok"
+      "Được The Influencer nhắc trong danh sách bác sĩ da liễu nên follow",
+      "Tài khoản TikTok @drdiemdalieu.medici có hơn 180K follower trong snapshot nguồn",
+      "Nội dung xoay quanh điều trị da và chăm sóc da sau treatment"
     ],
-    "contentStyle": "Review thẳng thắn theo tinh thần 'thô nhưng thật', kèm gợi ý chọn hương và mẹo mua nước hoa.",
-    "transparencyNote": "Kênh gắn với hoạt động kinh doanh nước hoa (deal, bán hàng) bên cạnh review."
+    "contentStyle": "Giải thích ngắn gọn các tình trạng da và hướng xử lý dưới góc nhìn bác sĩ."
   },
   {
     "id": "84",
-    "name": "Nghiện Nước Hoa - Lê Văn Sỹ",
-    "avatar": "/images/kol/nghien-nuoc-hoa-le-van-sy.jpg",
+    "name": "Bác sĩ Hằng Trần",
+    "avatar": "/images/kol/bac-si-hang-tran.png",
     "cover": "",
     "platform": "Tiktok",
-    "handle": "@nghien.nuochoa",
-    "followers": "120K",
-    "recentreview": "Review và gợi ý nước hoa theo gu và dịp dùng",
-    "trustscore": 68,
+    "handle": "@bshangtrandalieu.medici",
+    "followers": "174K",
+    "recentreview": "Tư vấn mụn, da dầu và lựa chọn treatment an toàn",
+    "trustscore": 72,
     "categories": [
-      "Perfume"
+      "Treatment",
+      "Skincare"
     ],
-    "verified": false,
-    "bio": "Reviewer nước hoa với kênh 'Nghiện Nước Hoa' chuyên giới thiệu, đánh giá và gợi ý mùi hương theo gu và dịp sử dụng. Nội dung gần gũi cho người mới lẫn người đam mê hương. Hoạt động chính trên TikTok.",
+    "verified": true,
+    "bio": "Bác sĩ Hằng Trần là bác sĩ chuyên khoa da liễu và thẩm mỹ, làm nội dung TikTok về mụn, treatment và lựa chọn sản phẩm chăm sóc da. Hồ sơ này thay thế account cửa hàng nước hoa để registry tập trung vào người thật.",
     "socials": [
       {
         "platform": "Tiktok",
-        "handle": "@nghien.nuochoa",
-        "followers": "120K"
-      }
-    ],
-    "basedIn": "TP.HCM",
-    "specialties": [
-      "Review nước hoa",
-      "Bán lẻ nước hoa chính hãng"
-    ],
-    "knownFor": [
-      "Tài khoản gắn với cửa hàng nước hoa 'Nghiện Nước Hoa' tại TP.HCM",
-      "Hoạt động trên cả TikTok và Instagram"
-    ],
-    "ownBrand": "Nghiện Nước Hoa (cửa hàng nước hoa chính hãng tại TP.HCM)",
-    "transparencyNote": "Là tài khoản của một cửa hàng nước hoa nên nội dung gắn liền với hoạt động bán hàng."
-  },
-  {
-    "id": "85",
-    "name": "Min Perfume",
-    "avatar": "/images/kol/min-perfume.jpg",
-    "cover": "",
-    "platform": "Tiktok",
-    "handle": "@nuochoaperfume",
-    "followers": "120K",
-    "recentreview": "Review và gợi ý nước hoa theo mùi hương phổ biến",
-    "trustscore": 68,
-    "categories": [
-      "Perfume"
-    ],
-    "verified": false,
-    "bio": "Kênh review nước hoa với lượng follower lớn, chuyên giới thiệu và gợi ý mùi hương cho người dùng. Được nhắc trong toplist các tiktoker nước hoa hàng đầu Việt Nam. Nội dung tập trung trải nghiệm mùi hương.",
-    "socials": [
-      {
-        "platform": "Tiktok",
-        "handle": "@nuochoaperfume",
-        "followers": "120K"
+        "handle": "@bshangtrandalieu.medici",
+        "followers": "174K",
+        "url": "https://www.tiktok.com/@bshangtrandalieu.medici"
       }
     ],
     "basedIn": "Việt Nam",
     "specialties": [
-      "Review nước hoa",
-      "Tư vấn chọn hương theo cá tính và dịp dùng"
+      "Da liễu",
+      "Mụn và da dầu",
+      "Thẩm mỹ da",
+      "Treatment an toàn"
     ],
     "knownFor": [
-      "Một trong những kênh review nước hoa có lượng theo dõi khá lớn trên TikTok",
-      "Khuyến khích chọn nước hoa chất lượng theo cá tính và hoàn cảnh"
+      "Được The Influencer nhắc trong danh sách bác sĩ da liễu nên follow",
+      "Tài khoản TikTok @bshangtrandalieu.medici có hơn 170K follower trong snapshot nguồn",
+      "Nội dung hỏi đáp da liễu và review sản phẩm theo vấn đề da"
     ],
-    "contentStyle": "Review nước hoa và gợi ý lựa chọn hương phù hợp với cá tính, mục đích sử dụng."
+    "contentStyle": "Tư vấn theo tình huống da cụ thể, ưu tiên kiến thức bác sĩ thay vì trend mua sắm."
+  },
+  {
+    "id": "85",
+    "name": "Hạnh Mai (Mailovesbeauty)",
+    "avatar": "/images/kol/mailovesbeauty.jpg",
+    "cover": "",
+    "platform": "Instagram",
+    "handle": "@mailovesbeauty",
+    "followers": "100K",
+    "recentreview": "Review skincare, makeup và trải nghiệm làm đẹp lâu năm",
+    "trustscore": 74,
+    "categories": [
+      "Skincare",
+      "Makeup",
+      "Lifestyle"
+    ],
+    "verified": true,
+    "bio": "Hạnh Mai, được biết đến qua Mailovesbeauty, là beauty blogger Việt Nam làm nội dung review mỹ phẩm, skincare và lifestyle. Cô được nhiều báo nhắc tới như một beauty blogger có hành trình cá nhân rõ ràng, phù hợp để thay cho account shop trong registry.",
+    "socials": [
+      {
+        "platform": "Instagram",
+        "handle": "@mailovesbeauty",
+        "followers": "100K",
+        "url": "https://www.instagram.com/mailovesbeauty"
+      },
+      {
+        "platform": "Youtube",
+        "handle": "@Mailovesbeauty",
+        "followers": "80K",
+        "url": "https://www.youtube.com/@Mailovesbeauty"
+      },
+      {
+        "platform": "Facebook",
+        "handle": "@mailovesbeauty",
+        "followers": "100K",
+        "url": "https://www.facebook.com/mailovesbeauty"
+      }
+    ],
+    "realName": "Mai Hạnh",
+    "basedIn": "Hà Nội",
+    "activeSince": "2010s",
+    "specialties": [
+      "Review mỹ phẩm",
+      "Skincare",
+      "Makeup",
+      "Lifestyle"
+    ],
+    "knownFor": [
+      "Beauty blogger đời đầu với blog/kênh Mailovesbeauty",
+      "Được báo chí nhắc tới trong các bài về beauty blogger Việt",
+      "Nội dung thiên về trải nghiệm cá nhân và review sản phẩm"
+    ],
+    "contentStyle": "Chia sẻ trải nghiệm mỹ phẩm và đời sống cá nhân với giọng văn gần gũi."
   },
   {
     "id": "86",
@@ -3374,39 +3447,55 @@ export const REAL_KOLS: Kol[] = [
   },
   {
     "id": "88",
-    "name": "LAN Perfume",
-    "avatar": "/images/kol/lan-perfume.jpg",
+    "name": "Misoa Kim Anh",
+    "avatar": "/images/kol/misoa-kim-anh.jpg",
     "cover": "",
-    "platform": "Tiktok",
-    "handle": "@lanperfume",
-    "followers": "110K",
-    "recentreview": "Review nước hoa nữ và dịch vụ khắc tên",
-    "trustscore": 68,
+    "platform": "Instagram",
+    "handle": "@misoa.kimanh",
+    "followers": "300K",
+    "recentreview": "Beauty Must-Have, makeup và lifestyle",
+    "trustscore": 75,
     "categories": [
-      "Perfume"
+      "Makeup",
+      "Skincare",
+      "Lifestyle"
     ],
-    "verified": false,
-    "bio": "LAN Perfume là một cửa hàng nước hoa chính hãng tại Hà Nội, được thành lập năm 2021, chuyên các dòng nước hoa nam nữ với thế mạnh ở phân khúc niche. Bên cạnh bán lẻ, thương hiệu chia sẻ nội dung tư vấn và review mùi hương để giúp khách hàng tìm được hương phù hợp.",
+    "verified": true,
+    "bio": "Misoa Kim Anh là MC, beauty blogger và content creator Việt Nam. Cô từng xuất hiện trong series Beauty Must-Have của ELLE và được báo chí nhắc tới với vai trò beauty blogger, phù hợp thay cho account shop để user có người thật để follow.",
     "socials": [
       {
+        "platform": "Instagram",
+        "handle": "@misoa.kimanh",
+        "followers": "300K",
+        "url": "https://www.instagram.com/misoa.kimanh"
+      },
+      {
         "platform": "Tiktok",
-        "handle": "@lanperfume",
-        "followers": "110K"
+        "handle": "@misoa.kimanh",
+        "followers": "200K",
+        "url": "https://www.tiktok.com/@misoa.kimanh"
+      },
+      {
+        "platform": "Facebook",
+        "handle": "@MisoaKimAnh",
+        "followers": "200K",
+        "url": "https://www.facebook.com/MisoaKimAnh"
       }
     ],
-    "basedIn": "Hà Nội và TP.HCM",
+    "realName": "Trần Thị Kim Anh",
+    "basedIn": "TP.HCM",
     "specialties": [
-      "Review nước hoa nữ",
-      "Tư vấn nước hoa tầm trung/niche",
-      "Top list theo dịp & mùa"
+      "Beauty blogger",
+      "Makeup",
+      "Lifestyle",
+      "MC/KOL"
     ],
     "knownFor": [
-      "Kênh review nước hoa gắn với cửa hàng LAN Perfume, có cửa hàng tại Hà Nội và TP.HCM",
-      "Tập trung mạnh vào nước hoa nữ, gồm cả dòng tinh tế giá hợp lý",
-      "Nội dung top list và gợi ý theo dịp (20/10, mùa…)"
+      "Được ELLE giới thiệu trong series Beauty Must-Have",
+      "Hoạt động với vai trò MC, beauty blogger và influencer",
+      "Nội dung làm đẹp gắn với makeup, skincare và phong cách sống"
     ],
-    "ownBrand": "LAN Perfume (cửa hàng nước hoa tại Hà Nội và TP.HCM)",
-    "transparencyNote": "Tài khoản gắn với cửa hàng nước hoa nên review đi kèm hoạt động bán hàng."
+    "contentStyle": "Nội dung hình ảnh chỉn chu, thiên về beauty lifestyle và trải nghiệm sản phẩm cá nhân."
   },
   {
     "id": "89",
@@ -3701,37 +3790,41 @@ export const REAL_KOLS: Kol[] = [
   },
   {
     "id": "97",
-    "name": "Bầu Perfume",
-    "avatar": "/images/kol/bau-perfume.jpg",
+    "name": "Óng Ánh",
+    "avatar": "/images/kol/ong-anh.jpg",
     "cover": "",
-    "platform": "Tiktok",
-    "handle": "@bauperfume",
-    "followers": "51K",
-    "recentreview": "Review nước hoa chi tiết, 'Hương thơm nâng tầm lối sống'",
+    "platform": "Facebook",
+    "handle": "@onganh.beauty.blog",
+    "followers": "79K",
+    "recentreview": "Chia sẻ skincare, makeup và trải nghiệm làm đẹp với góc nhìn beauty editor",
     "trustscore": 68,
     "categories": [
-      "Perfume"
+      "Skincare",
+      "Makeup",
+      "Lifestyle"
     ],
-    "verified": false,
-    "bio": "Reviewer nước hoa nổi tiếng trong cộng đồng với slogan 'Hương thơm nâng tầm lối sống'. Xây dựng thương hiệu cá nhân qua các review chi tiết, hình ảnh đầu tư và tương tác với người xem. Phong cách tinh tế, gần gũi.",
+    "verified": true,
+    "bio": "Óng Ánh là beauty blogger/editor được các nguồn báo và ELLE nhắc tới trong mảng làm đẹp tại Việt Nam. Hồ sơ này thay thế account perfume-shop sau audit để giữ registry tập trung vào cá nhân có tiếng nói riêng.",
     "socials": [
       {
-        "platform": "Tiktok",
-        "handle": "@bauperfume",
-        "followers": "51K"
+        "platform": "Facebook",
+        "handle": "@onganh.beauty.blog",
+        "followers": "79K",
+        "url": "https://www.facebook.com/onganh.beauty.blog"
       }
     ],
     "specialties": [
-      "Review nước hoa",
-      "Nước hoa luxury mới ra mắt",
-      "Hướng dẫn sử dụng nước hoa theo tình huống"
+      "Beauty editor",
+      "Review mỹ phẩm",
+      "Skincare",
+      "Makeup"
     ],
     "knownFor": [
-      "Slogan 'Fragrance elevates your lifestyle', xây dựng thương hiệu cá nhân qua review tỉ mỉ",
-      "Luôn cập nhật các hương mới nhất ở phân khúc luxury",
-      "Hình ảnh đầu tư, giọng kể gần gũi"
+      "Beauty blogger/editor từng được nhắc trong các bài về cộng đồng làm đẹp Việt",
+      "Facebook page Beauty Blogger Óng Ánh có tín hiệu người thật và nội dung làm đẹp",
+      "Phù hợp vai trò nguồn tham khảo beauty hơn các shop perfume"
     ],
-    "contentStyle": "Review nước hoa luxury chỉn chu, kèm hướng dẫn cách dùng hương theo nhiều tình huống khác nhau."
+    "contentStyle": "Viết và chia sẻ trải nghiệm làm đẹp theo hướng beauty editor, có bối cảnh sử dụng sản phẩm."
   },
   {
     "id": "98",

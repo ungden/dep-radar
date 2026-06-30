@@ -30,7 +30,6 @@ const KOLS = REAL_KOLS.map((kol) => ({
   verified: kol.verified,
 }));
 
-const STALE_KOL_IDS = ["5"];
 const STALE_CREATOR_EVENT_IDS = ["evt-2026-04-02-bong-benh-batiste-dry-shampoo"];
 
 const PRODUCTS = [
@@ -243,12 +242,6 @@ async function seed() {
     .delete()
     .in('id', STALE_CREATOR_EVENT_IDS);
   if (staleEventError) console.error("STALE CREATOR EVENT Error:", staleEventError.message);
-
-  const { error: staleKolError } = await supabaseAdmin
-    .from('kols')
-    .delete()
-    .in('id', STALE_KOL_IDS);
-  if (staleKolError) console.error("STALE KOL Error:", staleKolError.message);
 
   console.log(`Seeding KOLS (${KOLS.length})...`);
   const { error: e1 } = await supabaseAdmin.from('kols').upsert(KOLS);
