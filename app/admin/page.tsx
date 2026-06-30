@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { CalendarClock, Package, Store, Users, FileText, MessageSquare, TrendingUp, Eye, ClipboardList, AlertTriangle } from "lucide-react"
+import Link from "next/link"
+import { CalendarClock, Package, Store, Users, FileText, MessageSquare, TrendingUp, Eye, ClipboardList, AlertTriangle, SearchCheck, Settings, Tags, Link2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getProductCategoryLabel } from "@/lib/product-taxonomy"
@@ -16,6 +17,8 @@ interface Stats {
   timeline: number
   evidence: number
   readyEvidence: number
+  missingTaxonomy: number
+  productsWithoutOffers: number
 }
 
 interface ProductRow {
@@ -24,6 +27,8 @@ interface ProductRow {
   brand: string
   category: string | null
   category_key: string | null
+  subcategory_key: string | null
+  status: string | null
 }
 
 interface EventRow {
@@ -39,8 +44,14 @@ interface KolRow {
   name: string
 }
 
+interface OfferRow {
+  product_id: string
+  affiliate_url: string | null
+  seller_url: string | null
+}
+
 export default function AdminDashboard() {
-  const [stats, setStats] = React.useState<Stats>({ products: 0, kols: 0, posts: 0, reviews: 0, offers: 0, timeline: 0, evidence: 0, readyEvidence: 0 })
+  const [stats, setStats] = React.useState<Stats>({ products: 0, kols: 0, posts: 0, reviews: 0, offers: 0, timeline: 0, evidence: 0, readyEvidence: 0, missingTaxonomy: 0, productsWithoutOffers: 0 })
   const [categoryStats, setCategoryStats] = React.useState<{ label: string; count: number }[]>([])
   const [trendingProducts, setTrendingProducts] = React.useState<{ label: string; count: number }[]>([])
   const [staleKols, setStaleKols] = React.useState<KolRow[]>([])
@@ -56,14 +67,17 @@ export default function AdminDashboard() {
       supabase.from("creator_product_events").select("id", { count: "exact", head: true }),
       supabase.from("creator_evidence_items").select("id", { count: "exact", head: true }),
       supabase.from("creator_evidence_items").select("id", { count: "exact", head: true }).in("status", ["new", "needs_product_match", "ready_to_publish"]),
-      supabase.from("radar_products").select("id,name,brand,category,category_key"),
+      supabase.from("radar_products").select("id,name,brand,category,category_key,subcategory_key,status"),
+      supabase.from("product_offers").select("product_id,affiliate_url,seller_url"),
       supabase.from("creator_product_events").select("id,creator_id,product_id,event_date,observed_at"),
       supabase.from("kols").select("id,name"),
-    ]).then(([products, kols, posts, reviews, offers, timeline, evidence, readyEvidence, productRows, eventRows, kolRows]) => {
+    ]).then(([products, kols, posts, reviews, offers, timeline, evidence, readyEvidence, productRows, offerRows, eventRows, kolRows]) => {
       const productList = (productRows.data as ProductRow[] | null) ?? []
+      const offerList = (offerRows.data as OfferRow[] | null) ?? []
       const eventList = (eventRows.data as EventRow[] | null) ?? []
       const kolList = (kolRows.data as KolRow[] | null) ?? []
       const productMap = Object.fromEntries(productList.map((product) => [product.id, product]))
+      const productsWithOffers = new Set(offerList.filter((offer) => offer.affiliate_url || offer.seller_url).map((offer) => offer.product_id))
 
       const byCategory = new Map<string, number>()
       for (const event of eventList) {
@@ -92,6 +106,8 @@ export default function AdminDashboard() {
         timeline: timeline.count || 0,
         evidence: evidence.count || 0,
         readyEvidence: readyEvidence.count || 0,
+        missingTaxonomy: productList.filter((product) => product.status !== "archived" && (!product.category_key || !product.subcategory_key)).length,
+        productsWithoutOffers: productList.filter((product) => product.status !== "archived" && !productsWithOffers.has(product.id)).length,
       })
       setCategoryStats(Array.from(byCategory.entries()).map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count).slice(0, 6))
       setTrendingProducts(Array.from(byProduct.entries())
@@ -121,9 +137,21 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-slate-50">Dashboard</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Tổng quan hệ thống 360dep.vn</p>
+      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-slate-50">Ops Command Center</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Tổng quan freshness, creator data, commerce readiness, SEO và tracking.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/seo" className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-700 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-200">
+            <SearchCheck className="h-4 w-4" />
+            SEO audit
+          </Link>
+          <Link href="/admin/settings" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+            <Settings className="h-4 w-4" />
+            Settings
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-6 mb-8">
@@ -143,6 +171,41 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <OpsCard
+          href="/admin/evidence"
+          icon={ClipboardList}
+          title="Evidence cần duyệt"
+          value={loading ? "..." : stats.readyEvidence}
+          detail="Nguồn public đã vào inbox nhưng chưa publish timeline."
+          tone={stats.readyEvidence > 0 ? "amber" : "emerald"}
+        />
+        <OpsCard
+          href="/admin/products"
+          icon={Tags}
+          title="Thiếu taxonomy"
+          value={loading ? "..." : stats.missingTaxonomy}
+          detail="Product cần category/subcategory trước khi lên catalogue chuẩn."
+          tone={stats.missingTaxonomy > 0 ? "rose" : "emerald"}
+        />
+        <OpsCard
+          href="/admin/offers"
+          icon={Link2}
+          title="Thiếu offer"
+          value={loading ? "..." : stats.productsWithoutOffers}
+          detail="Sản phẩm chưa có Shopee/official offer để route affiliate."
+          tone={stats.productsWithoutOffers > 0 ? "amber" : "emerald"}
+        />
+        <OpsCard
+          href="/admin/settings"
+          icon={SearchCheck}
+          title="GA4 tracking"
+          value={process.env.NEXT_PUBLIC_GA_ID ? "Ready" : "No ID"}
+          detail="Public page views/events no-op nếu chưa set NEXT_PUBLIC_GA_ID."
+          tone={process.env.NEXT_PUBLIC_GA_ID ? "emerald" : "slate"}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -205,6 +268,10 @@ export default function AdminDashboard() {
                 <span className="text-rose-500 font-bold">4.</span>
                 Vào <strong>KOL/KOC</strong> và <strong>Bài viết</strong> để quản lý hồ sơ creator và nội dung editorial
               </li>
+              <li className="flex items-start gap-2">
+                <span className="text-rose-500 font-bold">5.</span>
+                Vào <strong>SEO audit</strong> để rà metadata, sitemap, JSON-LD và tín hiệu AI-friendly
+              </li>
             </ul>
           </CardContent>
         </Card>
@@ -255,5 +322,43 @@ function MetricList({ items, empty }: { items: { label: string; count: number }[
         </div>
       ))}
     </div>
+  )
+}
+
+function OpsCard({
+  href,
+  icon: Icon,
+  title,
+  value,
+  detail,
+  tone,
+}: {
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  value: number | string
+  detail: string
+  tone: "emerald" | "amber" | "rose" | "slate"
+}) {
+  const toneClass = {
+    emerald: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300",
+    amber: "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300",
+    rose: "bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300",
+    slate: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  }[tone]
+
+  return (
+    <Link href={href}>
+      <Card className="h-full border-none bg-white shadow-sm transition-transform hover:-translate-y-0.5 dark:bg-slate-900">
+        <CardContent className="p-6">
+          <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-2xl ${toneClass}`}>
+            <Icon className="h-5 w-5" />
+          </div>
+          <div className="text-3xl font-black text-slate-900 dark:text-slate-50">{value}</div>
+          <div className="mt-1 font-bold text-slate-900 dark:text-slate-50">{title}</div>
+          <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">{detail}</p>
+        </CardContent>
+      </Card>
+    </Link>
   )
 }

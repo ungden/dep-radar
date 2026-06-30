@@ -1,15 +1,17 @@
 import type { MetadataRoute } from 'next'
 import { catalogueSections } from '@/lib/catalogue'
 import { getKols, getPosts, getProducts } from '@/lib/data'
+import { dateOrNow, getSiteUrl, postPath } from '@/lib/seo'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://360dep.vn'
+  const baseUrl = getSiteUrl()
 
   const [products, posts, kols] = await Promise.all([
     getProducts(),
     getPosts(),
     getKols(),
   ])
+  const publishedPosts = posts.filter((post) => post.status !== 'draft' && post.status !== 'planned')
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
@@ -27,9 +29,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  const postPages: MetadataRoute.Sitemap = posts.map((post) => ({
-    url: `${baseUrl}/blog/${post.id}`,
-    lastModified: new Date(),
+  const postPages: MetadataRoute.Sitemap = publishedPosts.map((post) => ({
+    url: `${baseUrl}${postPath(post)}`,
+    lastModified: dateOrNow(post.created_at),
     changeFrequency: 'weekly' as const,
     priority: 0.7,
   }))

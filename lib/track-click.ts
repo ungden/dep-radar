@@ -1,13 +1,21 @@
 import { isSupabaseSchemaReady, supabase } from '@/lib/supabase'
+import { trackEvent } from '@/lib/analytics'
 
 export async function trackAffiliateClick(productId: string, offerId?: string) {
+  const referrer = typeof window !== 'undefined' ? window.location.pathname : null
+  trackEvent('affiliate_click', {
+    product_id: productId,
+    offer_id: offerId,
+    referrer,
+  })
+
   if (!isSupabaseSchemaReady) return
 
   try {
     await supabase.from('affiliate_clicks').insert({
       product_id: productId,
       offer_id: offerId ?? null,
-      referrer: typeof window !== 'undefined' ? window.location.pathname : null,
+      referrer,
       user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : null,
     })
   } catch {

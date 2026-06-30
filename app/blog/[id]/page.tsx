@@ -9,11 +9,14 @@ import * as motion from "motion/react-client"
 
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { getKols, getPost, getPostProductRecommendations, getPosts, getProducts, getRelatedPosts } from "@/lib/data"
+import { TrackArticleRead } from "@/components/analytics/public-events"
+import { getKols, getPost, getPostProductRecommendations, getPosts, getProducts } from "@/lib/data"
 import { LikeButton } from "@/components/like-button"
 import { SocialShare } from "@/components/social-share"
 import { CommentSection } from "@/components/comment-section"
-import { getMatrixNodeByArticleSlug, getMatrixProductGroups, researchStageLabels, type ProductGroup } from "@/lib/content-matrix"
+import { getCatalogueSection } from "@/lib/catalogue"
+import { articleHref, buildRelatedArticles, getGraphNodeForPost } from "@/lib/content-graph"
+import { getMatrixProductGroups, researchStageLabels, type ProductGroup } from "@/lib/content-matrix"
 import { getKolCredibility } from "@/lib/kol-credibility"
 import type { Kol, Post, Product } from "@/lib/types"
 
@@ -183,9 +186,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
     })
   }
 
-  const matrixNode = getMatrixNodeByArticleSlug(post.slug)
-  const [relatedPosts, recommendedProducts, allPosts, allProducts, allKols] = await Promise.all([
-    getRelatedPosts(post.category, post.id, 2),
+  const matrixNode = getGraphNodeForPost(post)
+  const [recommendedProducts, allPosts, allProducts, allKols] = await Promise.all([
     getPostProductRecommendations(post, 3),
     getPosts(),
     getProducts(),
@@ -207,11 +209,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
   ])
   const graphKols = graphKolIds.map((kolId) => allKols.find((kol) => kol.id === kolId)).filter((kol): kol is Kol => Boolean(kol))
   const journeyKols = graphKols.length > 0 ? graphKols.slice(0, 3) : scoreKolsForPost(allKols, post).slice(0, 3)
+  const relatedArticles = buildRelatedArticles({ post, posts: allPosts, products: allProducts, kols: allKols, limit: 4 })
+  const matrixSection = matrixNode ? getCatalogueSection(matrixNode.hubSlug) : null
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://360dep.vn"
   const jsonLdItems = buildBlogJsonLd(post, nextMatrixPosts, journeyProducts, journeyKols, siteUrl)
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-16">
+      <TrackArticleRead postId={post.id} slug={post.slug} category={post.category} />
       {jsonLdItems.map((item) => (
         <JsonLd key={String(item["@type"])} data={item} />
       ))}
@@ -248,8 +253,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
               <div className="max-w-3xl mx-auto">
                 {matrixNode && (
                   <div className="mb-5 flex flex-wrap items-center gap-2 text-sm font-bold text-slate-500 dark:text-slate-400">
-                    <Link href="/catalogue/da-mat" className="hover:text-rose-600 dark:hover:text-rose-300">
-                      Ma trận Da mặt
+                    <Link href={`/catalogue/${matrixNode.hubSlug}`} className="hover:text-rose-600 dark:hover:text-rose-300">
+                      Ma trận {matrixSection?.shortTitle ?? matrixNode.hubSlug}
                     </Link>
                     <span>/</span>
                     <span>{researchStageLabels[matrixNode.stage]}</span>
@@ -406,7 +411,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
                   </span>
                   <div className="ml-auto">
                     <SocialShare
-                      url={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://360dep.vn'}/blog/${post.id}`}
+                      url={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://360dep.vn'}${articleHref(post)}`}
                       title={post.title}
                     />
                   </div>
@@ -421,14 +426,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
           </div>
 
           {/* Related Posts */}
-          {relatedPosts && relatedPosts.length > 0 && (
+          {relatedArticles.length > 0 && (
             <div className="mt-12">
               <h3 className="text-2xl font-display font-bold text-slate-900 dark:text-slate-50 mb-6">
-                Bài viết liên quan
+                Đọc tiếp theo graph
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {relatedPosts.map((related) => (
-                  <Link key={related.id} href={`/blog/${related.id}`} className="group">
+                {relatedArticles.map(({ post: related, href, reasons }) => (
+                  <Link key={related.id} href={href} className="group">
                     <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 flex">
                       <div className="relative w-32 md:w-40 shrink-0 bg-slate-100 dark:bg-slate-800">
                         <Image
@@ -446,6 +451,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
                         <h4 className="font-bold text-slate-900 dark:text-slate-50 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors line-clamp-2 leading-tight">
                           {related.title}
                         </h4>
+                        {reasons[0] && (
+                          <p className="mt-2 line-clamp-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                            {reasons[0]}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </Link>

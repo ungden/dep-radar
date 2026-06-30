@@ -104,9 +104,11 @@ export default async function CatalogueDetailPage({ params }: { params: Promise<
     }) ?? []
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://360dep.vn"
   const catalogueJsonLd = contentMatrix ? buildCatalogueMatrixJsonLd(contentMatrix, matrixItems, siteUrl) : null
+  const breadcrumbJsonLd = buildCatalogueBreadcrumbJsonLd(section, siteUrl)
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-10 md:py-14">
+      <JsonLd data={breadcrumbJsonLd} />
       {catalogueJsonLd && <JsonLd data={catalogueJsonLd} />}
       <div className="container mx-auto px-4 md:px-6">
         <Link
@@ -299,6 +301,18 @@ function buildCatalogueMatrixJsonLd(matrix: ContentMatrix, items: MatrixItem[], 
         name: item.name,
         url: item.url,
       })),
+  }
+}
+
+function buildCatalogueBreadcrumbJsonLd(section: CatalogueSection, siteUrl: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "360dep.vn", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "Catalogue", item: `${siteUrl}/catalogue` },
+      { "@type": "ListItem", position: 3, name: section.title, item: `${siteUrl}/catalogue/${section.slug}` },
+    ],
   }
 }
 

@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { searchAll } from "@/lib/data"
+import { trackEvent } from "@/lib/analytics"
 import type { Product, Post, Kol } from "@/lib/types"
 
 function SearchResults() {
@@ -38,6 +39,10 @@ function SearchResults() {
       setProducts(results.products)
       setPosts(results.posts)
       setKols(results.kols)
+      trackEvent("search", {
+        search_term: query,
+        result_count: results.products.length + results.posts.length + results.kols.length,
+      })
       setLoading(false)
     }
 

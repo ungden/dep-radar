@@ -1,4 +1,5 @@
 import { catalogueSections, topCatalogueNavigation, type CatalogueSection } from "@/lib/catalogue"
+import { articleHref, buildDailyEditorialPlan, type DailyEditorialCandidate, type DailyEditorialPlan } from "@/lib/content-graph"
 import type { CreatorProductEvent, Kol, Post, Product } from "@/lib/types"
 
 export type HomeBriefingItemKind = "article" | "creator" | "product"
@@ -43,6 +44,7 @@ export interface HomeDailyBriefing {
   productSignals: HomeProductSignal[]
   cataloguePrompts: CatalogueSection[]
   staleOrNeedsUpdate: Pick<Kol, "id" | "name" | "avatar" | "platform">[]
+  editorialPlan: DailyEditorialPlan
 }
 
 type ProductSignalStats = {
@@ -52,7 +54,7 @@ type ProductSignalStats = {
 }
 
 function postHref(post: Post) {
-  return `/blog/${post.slug || post.id}`
+  return articleHref(post)
 }
 
 function productHref(product: Product) {
@@ -177,19 +179,33 @@ function buildCreatorUpdates(
 function buildDailyUpdates(
   posts: Post[],
   creatorUpdates: HomeCreatorUpdate[],
-  productSignals: HomeProductSignal[]
+  productSignals: HomeProductSignal[],
+  editorialCandidates: DailyEditorialCandidate[]
 ) {
-  const articleItems: HomeBriefingItem[] = posts.slice(0, 8).map((post) => ({
+  const scoredArticleItems: HomeBriefingItem[] = editorialCandidates.slice(0, 8).map((candidate) => ({
     kind: "article",
-    title: post.title,
-    excerpt: post.excerpt,
-    href: postHref(post),
-    date: post.created_at,
-    image: post.image,
-    avatar: post.author_avatar,
-    label: post.category,
-    sourceName: post.author_name || "Beauty Desk",
+    title: candidate.post.title,
+    excerpt: candidate.reason || candidate.post.excerpt,
+    href: candidate.href,
+    date: candidate.post.created_at,
+    image: candidate.post.image,
+    avatar: candidate.post.author_avatar,
+    label: candidate.label,
+    sourceName: candidate.post.author_name || "Beauty Desk",
   }))
+  const articleItems = scoredArticleItems.length > 0
+    ? scoredArticleItems
+    : posts.slice(0, 8).map((post) => ({
+        kind: "article" as const,
+        title: post.title,
+        excerpt: post.excerpt,
+        href: postHref(post),
+        date: post.created_at,
+        image: post.image,
+        avatar: post.author_avatar,
+        label: post.category,
+        sourceName: post.author_name || "Beauty Desk",
+      }))
 
   const creatorItems: HomeBriefingItem[] = creatorUpdates.slice(0, 8).map((update) => ({
     kind: "creator",
@@ -263,20 +279,21 @@ export function buildHomeDailyBriefing({
   const productMap = new Map(products.map((product) => [product.id, product]))
   const productSignals = buildProductSignals(products, timelineEvents, creatorMap)
   const creatorUpdates = buildCreatorUpdates(timelineEvents, creatorMap, productMap)
-  const dailyUpdates = buildDailyUpdates(posts, creatorUpdates, productSignals)
-  const leadPost = posts[0]
+  const editorialPlan = buildDailyEditorialPlan({ posts, products, timelineEvents, kols })
+  const dailyUpdates = buildDailyUpdates(posts, creatorUpdates, productSignals, editorialPlan.candidates)
+  const leadPost = editorialPlan.leadStory?.post ?? posts[0]
 
   return {
     leadStory: leadPost
       ? {
           kind: "article",
           title: leadPost.title,
-          excerpt: leadPost.excerpt,
-          href: postHref(leadPost),
+          excerpt: editorialPlan.leadStory?.reason ?? leadPost.excerpt,
+          href: editorialPlan.leadStory?.href ?? postHref(leadPost),
           date: leadPost.created_at,
           image: leadPost.image,
           avatar: leadPost.author_avatar,
-          label: leadPost.category,
+          label: editorialPlan.leadStory?.label ?? leadPost.category,
           sourceName: leadPost.author_name || "Beauty Desk",
         }
       : null,
@@ -288,5 +305,6 @@ export function buildHomeDailyBriefing({
       .filter((section): section is CatalogueSection => Boolean(section))
       .slice(0, 10),
     staleOrNeedsUpdate: buildStaleCreatorList(kols, timelineEvents),
+    editorialPlan,
   }
 }

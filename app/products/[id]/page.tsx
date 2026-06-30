@@ -15,6 +15,7 @@ import { getMatrixNodesByProductId } from "@/lib/content-matrix"
 import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
 import { getProductCategoryLabel, getProductSubcategoryLabel } from "@/lib/product-taxonomy"
 import { AffiliateButton } from "@/components/affiliate-button"
+import { TrackProductView } from "@/components/analytics/public-events"
 import { SocialShare } from "@/components/social-share"
 import { RelatedProducts } from "@/components/related-products"
 import { CommentSection } from "@/components/comment-section"
@@ -153,6 +154,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
       {productJsonLd && <JsonLd data={productJsonLd} />}
+      <TrackProductView productId={product.id} brand={product.brand} category={product.category_key ?? product.category} />
       <div className="container mx-auto px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

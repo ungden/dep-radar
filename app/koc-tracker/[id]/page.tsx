@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PlatformBadge } from "@/components/platform-badge"
+import { TrackKolProfileView } from "@/components/analytics/public-events"
 import { getCreatorProductEvents, getKol, getPost, getProducts, getReviews } from "@/lib/data"
 import { getMatrixNodesByKolId, getMatrixProductGroups } from "@/lib/content-matrix"
 import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
@@ -175,6 +176,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-12">
       <JsonLd data={buildKolJsonLd(kol, siteUrl)} />
+      <TrackKolProfileView creatorId={kol.id} platform={kol.platform} />
       {/* Cover */}
       <div className="h-64 md:h-80 w-full relative bg-gradient-to-br from-rose-200 via-rose-100 to-indigo-200 dark:from-rose-950/40 dark:via-slate-900 dark:to-indigo-950/40">
         {realCover && (
