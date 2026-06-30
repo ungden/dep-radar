@@ -68,7 +68,7 @@ function formatTimelineDate(value: string) {
 
 function eventTypeLabel(event: CreatorProductEvent) {
   const labels: Record<CreatorProductEvent["event_type"], string> = {
-    first_seen: "Bắt đầu theo dõi",
+    first_seen: "Tin mới ghi nhận",
     used: "Đã dùng",
     reviewed: "Đã review",
     recommended: "Recommend",
@@ -304,7 +304,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">Dòng thời gian KOL/KOC</h2>
                 </div>
                 <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                  Các lần sản phẩm xuất hiện trong review, routine, livestream hoặc watchlist theo nguồn đã ghi nhận.
+                  Các lần sản phẩm xuất hiện trong review, routine, livestream hoặc tin công khai đã ghi nhận.
                 </p>
               </div>
               <Badge variant="secondary" className="w-fit bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">

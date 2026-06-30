@@ -32,15 +32,15 @@ export function KolRadar({ creatorUpdates }: { creatorUpdates: HomeCreatorUpdate
               Luồng KOL/KOC
             </div>
             <h2 className="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-4xl">
-              KOL/KOC vừa có cập nhật gì?
+              Tin mới từ KOL/KOC
             </h2>
             <p className="mt-3 text-base leading-relaxed text-slate-600 dark:text-slate-400 md:text-lg">
-              Theo dõi video review, routine mới, creator vừa vào watchlist và nguồn công khai đã ghi nhận.
+              Video review, routine mới, sản phẩm được nhắc và các nguồn công khai đáng chú ý trong ngày.
             </p>
           </div>
           <Link href="/koc-tracker" className="shrink-0">
             <span className="flex items-center gap-2 font-semibold text-rose-500 hover:text-rose-600 dark:hover:text-rose-400">
-              Xem tất cả KOL/KOC <span aria-hidden="true">&rarr;</span>
+              Xem dòng tin KOL/KOC <span aria-hidden="true">&rarr;</span>
             </span>
           </Link>
         </div>

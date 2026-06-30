@@ -135,7 +135,7 @@ export default function ProductsPage() {
             <div className="grid grid-cols-3 gap-2 rounded-2xl border border-slate-100 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <Metric label="Sản phẩm" value={products.length} />
               <Metric label="Catalogue" value={catalogueBuckets.length} />
-              <Metric label="KOL signals" value={timelineEvents.length} />
+              <Metric label="Lượt nhắc" value={timelineEvents.length} />
             </div>
           </div>
         </motion.section>
@@ -470,7 +470,7 @@ function ScientificProductCard({ product, priority, eventStats }: { product: Pro
           )}
           {eventStats && eventStats.count > 0 && (
             <Badge variant="secondary" className="bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-300">
-              {eventStats.count} KOL signals
+              {eventStats.count} lượt nhắc
             </Badge>
           )}
         </div>

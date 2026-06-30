@@ -68,7 +68,7 @@ export function HeroSection({ briefing }: HeroSectionProps) {
                 Hôm nay trong beauty
               </h1>
               <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-400 md:text-lg">
-                Tin mới, động thái từ KOL/KOC và sản phẩm đang được bàn luận, gom lại để mở trang mỗi ngày là thấy có gì đáng theo dõi.
+                Tin mới, động thái từ KOL/KOC và sản phẩm đang được bàn luận, gom lại như một bản tin beauty để mở mỗi ngày là có chuyện mới đáng đọc.
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2 rounded-lg border border-slate-100 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900">
@@ -132,7 +132,7 @@ export function HeroSection({ briefing }: HeroSectionProps) {
                 icon={UsersRound}
                 title="Mới cập nhật"
                 href="/koc-tracker"
-                action="Theo dõi"
+                action="Đọc tin"
                 meta="Tin, KOL và sản phẩm"
                 inverse
               />
@@ -170,7 +170,7 @@ export function HeroSection({ briefing }: HeroSectionProps) {
                         {signal.product.brand} - {signal.product.name}
                       </h3>
                       <div className="mt-2 text-xs leading-relaxed text-slate-500 line-clamp-1 dark:text-slate-400">
-                        {signal.creatorNames.length ? signal.creatorNames.slice(0, 2).join(", ") : "Beauty Radar"} đang theo dõi
+                        {signal.creatorNames.length ? `${signal.creatorNames.slice(0, 2).join(", ")} vừa nhắc` : "Tin beauty mới ghi nhận"}
                       </div>
                     </div>
                   </Link>
@@ -182,7 +182,7 @@ export function HeroSection({ briefing }: HeroSectionProps) {
           <motion.div variants={itemVariants} className="grid gap-3 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
             <div className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
               <CalendarDays className="h-4 w-4 text-rose-500" />
-              Theo dõi nhanh theo vấn đề
+              Đọc nhanh theo vấn đề
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {cataloguePrompts.map((item) => (

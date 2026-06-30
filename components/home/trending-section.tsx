@@ -88,8 +88,8 @@ export function TrendingSection({ productSignals }: { productSignals: HomeProduc
                     </div>
                     <p className="text-sm leading-relaxed text-slate-500 line-clamp-2 dark:text-slate-400">
                       {signal.creatorNames.length
-                        ? `${signal.creatorNames.slice(0, 2).join(", ")} đang tạo tín hiệu cho sản phẩm này.`
-                        : "Đang được Beauty Radar đưa vào danh sách theo dõi."}
+                        ? `${signal.creatorNames.slice(0, 2).join(", ")} vừa nhắc đến sản phẩm này.`
+                        : "Sản phẩm vừa xuất hiện trong dòng tin beauty."}
                     </p>
                   </CardContent>
                 </Card>

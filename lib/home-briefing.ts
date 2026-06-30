@@ -67,7 +67,7 @@ function creatorHref(creator: Pick<Kol, "id">) {
 
 function eventLabel(type: CreatorProductEvent["event_type"]) {
   return {
-    first_seen: "Mới vào watchlist",
+    first_seen: "Tin mới ghi nhận",
     used: "Đang dùng",
     reviewed: "Vừa review",
     recommended: "Có gợi ý",
@@ -84,7 +84,7 @@ function sentimentLabel(sentiment: CreatorProductEvent["sentiment"]) {
     positive: "Tín hiệu tích cực",
     mixed: "Có khen có chê",
     negative: "Không hợp",
-    neutral: "Đang theo dõi",
+    neutral: "Tin trung lập",
   }[sentiment]
 }
 
@@ -223,7 +223,7 @@ function buildDailyUpdates(
     title: signal.product.name,
     excerpt: signal.creatorNames.length
       ? `${signal.creatorNames.slice(0, 2).join(", ")} đang tạo tín hiệu cho sản phẩm này.`
-      : "Sản phẩm đang được đưa vào radar để theo dõi thêm.",
+      : "Sản phẩm vừa xuất hiện trong dòng tin beauty và sẽ được cập nhật thêm khi có nguồn mới.",
     href: productHref(signal.product),
     date: signal.latestDate,
     image: signal.product.image,
