@@ -4,21 +4,21 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Star, ShieldCheck, ThumbsUp, MessageSquare, ArrowLeft, ShoppingCart, BookOpen, ArrowRight } from "lucide-react"
+import { Star, ShieldCheck, ThumbsUp, MessageSquare, ArrowLeft, ShoppingCart, BookOpen, ArrowRight, CalendarDays, ExternalLink, Store } from "lucide-react"
 import * as motion from "motion/react-client"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { getKols, getPost, getProduct, getReviews } from "@/lib/data"
+import { getCommunityReviews, getCreatorProductEvents, getKols, getPost, getProduct, getProductOffers, getReviews } from "@/lib/data"
 import { getMatrixNodesByProductId } from "@/lib/content-matrix"
 import { AffiliateButton } from "@/components/affiliate-button"
 import { SocialShare } from "@/components/social-share"
 import { RelatedProducts } from "@/components/related-products"
-import { UserRating } from "@/components/user-rating"
 import { CommentSection } from "@/components/comment-section"
 import { WishlistButton } from "@/components/wishlist-button"
-import type { Post } from "@/lib/types"
+import { RealReviewPanel } from "@/components/real-review-panel"
+import type { CreatorProductEvent, Kol, Post, ProductOffer } from "@/lib/types"
 
 function JsonLd({ data }: { data: Record<string, unknown> }) {
   return (
@@ -29,9 +29,9 @@ function JsonLd({ data }: { data: Record<string, unknown> }) {
   )
 }
 
-function buildProductJsonLd(product: Awaited<ReturnType<typeof getProduct>>, siteUrl: string) {
+function buildProductJsonLd(product: Awaited<ReturnType<typeof getProduct>>, siteUrl: string, preferredOffer?: ProductOffer | null) {
   if (!product) return null
-  const numericPrice = product.price.replace(/[^\d]/g, "")
+  const numericPrice = (preferredOffer?.price_snapshot ?? product.price).replace(/[^\d]/g, "")
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -53,10 +53,51 @@ function buildProductJsonLd(product: Awaited<ReturnType<typeof getProduct>>, sit
           priceCurrency: "VND",
           price: numericPrice,
           availability: "https://schema.org/InStock",
-          url: `${siteUrl}/products/${product.id}`,
+          url: preferredOffer?.affiliate_url ?? preferredOffer?.seller_url ?? `${siteUrl}/products/${product.id}`,
         }
       : undefined,
   }
+}
+
+function formatTimelineDate(value: string) {
+  return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(value))
+}
+
+function eventTypeLabel(event: CreatorProductEvent) {
+  const labels: Record<CreatorProductEvent["event_type"], string> = {
+    first_seen: "Bắt đầu theo dõi",
+    used: "Đã dùng",
+    reviewed: "Đã review",
+    recommended: "Recommend",
+    disliked: "Không hợp",
+    emptied: "Dùng hết",
+    repurchased: "Mua lại",
+    live_sold: "Live bán",
+    sponsored: "Tài trợ",
+  }
+  return labels[event.event_type]
+}
+
+function disclosureLabel(event: CreatorProductEvent) {
+  const labels: Record<CreatorProductEvent["disclosure"], string> = {
+    organic: "Tự mua/organic",
+    pr: "PR",
+    sponsored: "Tài trợ",
+    affiliate: "Affiliate",
+    unknown: "Chưa rõ",
+  }
+  return labels[event.disclosure]
+}
+
+function sentimentClass(event: CreatorProductEvent) {
+  if (event.sentiment === "positive") return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+  if (event.sentiment === "negative") return "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300"
+  if (event.sentiment === "mixed") return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+  return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+}
+
+function kolForEvent(event: CreatorProductEvent, kols: Kol[]) {
+  return kols.find((kol) => kol.id === event.creator_id)
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -90,13 +131,22 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   const KOLS = await getKols();
   const reviews = await getReviews({ productId: id });
+  const communityReviews = await getCommunityReviews({ productId: id });
+  const productOffers = await getProductOffers({ productId: id });
+  const preferredOffer = productOffers.find((offer) => offer.is_preferred && offer.affiliate_url)
+    ?? productOffers.find((offer) => offer.affiliate_url)
+    ?? productOffers.find((offer) => offer.is_preferred)
+    ?? productOffers[0]
+    ?? null
+  const affiliateHref = preferredOffer?.affiliate_url ?? product.affiliate_url
+  const timelineEvents = await getCreatorProductEvents({ productId: id })
   const matrixNodes = getMatrixNodesByProductId(product.id)
   const graphKolIds = new Set(matrixNodes.flatMap((node) => node.kolIds))
   const sortedReviews = [...reviews].sort((a, b) => Number(graphKolIds.has(b.kolid)) - Number(graphKolIds.has(a.kolid)))
   const graphPostSlugs = unique(matrixNodes.flatMap((node) => [node.articleSlug, ...node.nextArticleSlugs])).slice(0, 4)
   const graphPosts = (await Promise.all(graphPostSlugs.map((slug) => getPost(slug)))).filter((post): post is Post => Boolean(post))
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://360dep.vn"
-  const productJsonLd = buildProductJsonLd(product, siteUrl)
+  const productJsonLd = buildProductJsonLd(product, siteUrl, preferredOffer)
   
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
@@ -161,9 +211,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
                 <div className="mt-auto space-y-4">
                   <div className="flex gap-4">
-                    {product.affiliate_url ? (
+                    {affiliateHref ? (
                       <div className="flex-1">
-                        <AffiliateButton href={product.affiliate_url} productId={product.id} />
+                        <AffiliateButton href={affiliateHref} productId={product.id} offerId={preferredOffer?.id} />
                       </div>
                     ) : (
                       <Button className="flex-1 h-14 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-lg shadow-lg shadow-rose-200 dark:shadow-rose-900/20" disabled>
@@ -176,6 +226,32 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     url={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://360dep.vn'}/products/${product.id}`}
                     title={product.name}
                   />
+                  {preferredOffer && (
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm dark:border-slate-800 dark:bg-slate-950">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-50">
+                          <Store className="h-4 w-4 text-orange-500" />
+                          {preferredOffer.shop_name}
+                        </div>
+                        <Badge variant="secondary" className="bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                          {preferredOffer.marketplace === "shopee" ? "Shopee" : preferredOffer.marketplace}
+                        </Badge>
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                        <span>Snapshot: {preferredOffer.price_snapshot ?? product.price}</span>
+                        <span>&bull;</span>
+                        <span>{preferredOffer.affiliate_url ? "Đã có affiliate URL" : "Đang chờ affiliate URL thật"}</span>
+                        {preferredOffer.seller_url && (
+                          <>
+                            <span>&bull;</span>
+                            <a href={preferredOffer.seller_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-orange-600 hover:text-orange-700 dark:text-orange-300">
+                              Xem nguồn Shopee <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -209,6 +285,72 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               </div>
             </section>
           )}
+
+          <section className="mb-8 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
+            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5 text-indigo-500" />
+                  <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">Dòng thời gian KOL/KOC</h2>
+                </div>
+                <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                  Các lần sản phẩm xuất hiện trong review, routine, livestream hoặc watchlist theo nguồn đã ghi nhận.
+                </p>
+              </div>
+              <Badge variant="secondary" className="w-fit bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                {timelineEvents.length} tín hiệu
+              </Badge>
+            </div>
+
+            {timelineEvents.length > 0 ? (
+              <div className="space-y-4">
+                {timelineEvents.map((event) => {
+                  const kol = kolForEvent(event, KOLS)
+                  if (!kol) return null
+                  return (
+                    <div key={event.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
+                      <div className="flex gap-4">
+                        <Link href={`/koc-tracker/${kol.id}`}>
+                          <Avatar className="h-12 w-12 border-2 border-white shadow-sm dark:border-slate-800">
+                            <AvatarImage src={kol.avatar} />
+                            <AvatarFallback>{kol.name[0]}</AvatarFallback>
+                          </Avatar>
+                        </Link>
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex flex-wrap items-center gap-2">
+                            <Link href={`/koc-tracker/${kol.id}`} className="font-bold text-slate-900 transition-colors hover:text-rose-600 dark:text-slate-50 dark:hover:text-rose-300">
+                              {kol.name}
+                            </Link>
+                            <Badge className={sentimentClass(event)}>{event.sentiment}</Badge>
+                            <Badge variant="secondary" className="bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                              {disclosureLabel(event)}
+                            </Badge>
+                          </div>
+                          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                            {formatTimelineDate(event.event_date)} &bull; {eventTypeLabel(event)} &bull; {event.source_platform}
+                          </div>
+                          <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">{event.source_title}</p>
+                          <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{event.source_excerpt}</p>
+                          {event.usage_context && (
+                            <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">Ngữ cảnh: {event.usage_context}</p>
+                          )}
+                          {event.source_url && (
+                            <a href={event.source_url} target={event.source_url.startsWith("/") ? undefined : "_blank"} rel={event.source_url.startsWith("/") ? undefined : "noopener noreferrer"} className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-300">
+                              Xem nguồn <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 py-10 text-center dark:border-slate-800 dark:bg-slate-950">
+                <p className="font-medium text-slate-500 dark:text-slate-400">Chưa có tín hiệu lịch sử cho sản phẩm này.</p>
+              </div>
+            )}
+          </section>
 
           {/* Reviews Section */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100 dark:border-slate-800">
@@ -269,9 +411,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             )}
           </div>
 
-          {/* User Rating */}
           <div className="mt-8">
-            <UserRating productId={product.id} />
+            <RealReviewPanel productId={product.id} productName={product.name} initialReviews={communityReviews} kols={KOLS} />
           </div>
 
           {/* Comment Section */}

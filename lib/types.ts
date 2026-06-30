@@ -15,6 +15,19 @@ export interface Product {
   affiliate_url: string | null
 }
 
+export interface ProductOffer {
+  id: string
+  product_id: string
+  marketplace: "shopee" | "lazada" | "tiktok_shop" | "official" | "other"
+  shop_name: string
+  seller_url: string | null
+  affiliate_url: string | null
+  price_snapshot: string | null
+  stock_status: "in_stock" | "out_of_stock" | "unknown"
+  is_preferred: boolean
+  last_checked_at: string
+}
+
 export interface KolSocial {
   platform: string
   handle: string
@@ -80,6 +93,61 @@ export interface Review {
   content: string
   likes: number
   comments: number
+}
+
+export interface CommunityReview {
+  id: string
+  user_id: string
+  product_id: string
+  rating: number
+  review: string | null
+  status: "pending" | "approved" | "rejected"
+  reviewer_alias: string | null
+  skin_type: string | null
+  usage_duration: string | null
+  purchase_source: string | null
+  would_repurchase: boolean | null
+  proof_url: string | null
+  linked_kol_id: string | null
+  reviewer_relation: string | null
+  helpful_count: number
+  created_at: string
+  updated_at: string
+}
+
+export type CreatorProductEventType =
+  | "first_seen"
+  | "used"
+  | "reviewed"
+  | "recommended"
+  | "disliked"
+  | "emptied"
+  | "repurchased"
+  | "live_sold"
+  | "sponsored"
+
+export type CreatorProductSentiment = "positive" | "mixed" | "negative" | "neutral"
+export type CreatorProductDisclosure = "organic" | "pr" | "sponsored" | "affiliate" | "unknown"
+export type CreatorProductConfidence = "high" | "medium" | "low"
+
+export interface CreatorProductEvent {
+  id: string
+  creator_id: string
+  product_id: string
+  event_type: CreatorProductEventType
+  event_date: string
+  observed_at: string
+  source_platform: string
+  source_url: string | null
+  source_post_id?: string | null
+  source_title: string
+  source_excerpt: string
+  media_url?: string | null
+  sentiment: CreatorProductSentiment
+  disclosure: CreatorProductDisclosure
+  usage_context: string | null
+  evidence_note: string
+  confidence: CreatorProductConfidence
 }
 
 export interface Post {

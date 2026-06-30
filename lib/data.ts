@@ -1,7 +1,8 @@
 import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 import { getPublishedEditorialPost, getPublishedEditorialPosts } from "@/lib/editorial"
 import { REAL_KOLS } from "@/lib/kols-data"
-import type { Kol, Post, Product, Review } from "@/lib/types"
+import { SAMPLE_CREATOR_PRODUCT_EVENTS, SAMPLE_PRODUCT_OFFERS, reviewToTimelineEvent } from "@/lib/timeline-data"
+import type { CommunityReview, CreatorProductEvent, Kol, Post, Product, ProductOffer, Review } from "@/lib/types"
 
 // Toàn bộ hồ sơ KOL/KOC (100 người) nằm trong REAL_KOLS; id "1"–"6" được giữ để reviews tham chiếu qua kolid.
 export const SAMPLE_KOLS: Kol[] = REAL_KOLS
@@ -23,6 +24,61 @@ export const SAMPLE_REVIEWS: Review[] = [
   { id: "r3", kolid: "3", productid: "3", rating: 5, ispr: false, timeago: "1 ngày trước", content: "Sạch sâu, không rát mắt, giá tốt. Một lựa chọn tẩy trang drugstore đáng mua.", likes: 890, comments: 102 },
   { id: "r4", kolid: "4", productid: "4", rating: 4, ispr: true, timeago: "2 ngày trước", content: "Màu son lên chuẩn, chất son mềm mịn. Độ bám màu ở mức trung bình.", likes: 456, comments: 38 },
 ]
+
+function legacyAffiliateOffer(product: Product): ProductOffer | null {
+  if (!product.affiliate_url) return null
+  return {
+    id: `legacy-affiliate-${product.id}`,
+    product_id: product.id,
+    marketplace: "shopee",
+    shop_name: "Shopee affiliate",
+    seller_url: null,
+    affiliate_url: product.affiliate_url,
+    price_snapshot: product.price,
+    stock_status: "unknown",
+    is_preferred: true,
+    last_checked_at: "2026-06-30T00:00:00Z",
+  }
+}
+
+function mergeOffers(offers: ProductOffer[], products: Product[] = SAMPLE_PRODUCTS) {
+  const legacyOffers = products.map(legacyAffiliateOffer).filter((offer): offer is ProductOffer => Boolean(offer))
+  const seen = new Set<string>()
+  return [...offers, ...legacyOffers]
+    .filter((offer) => {
+      if (seen.has(offer.id)) return false
+      seen.add(offer.id)
+      return true
+    })
+    .sort((a, b) => {
+      if (a.is_preferred !== b.is_preferred) return Number(b.is_preferred) - Number(a.is_preferred)
+      if (Boolean(a.affiliate_url) !== Boolean(b.affiliate_url)) return Number(Boolean(b.affiliate_url)) - Number(Boolean(a.affiliate_url))
+      return b.last_checked_at.localeCompare(a.last_checked_at)
+    })
+}
+
+function mergeTimelineEvents(events: CreatorProductEvent[]) {
+  const seen = new Set<string>()
+  return events
+    .filter((event) => {
+      const key = [
+        event.creator_id,
+        event.product_id,
+        event.event_type,
+        event.event_date,
+        event.source_excerpt,
+      ].join("|")
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .sort((a, b) => b.event_date.localeCompare(a.event_date) || b.observed_at.localeCompare(a.observed_at))
+}
+
+const ALL_FALLBACK_TIMELINE_EVENTS = mergeTimelineEvents([
+  ...SAMPLE_CREATOR_PRODUCT_EVENTS,
+  ...SAMPLE_REVIEWS.map(reviewToTimelineEvent),
+])
 
 export const SAMPLE_POSTS: Post[] = [
   {
@@ -154,6 +210,33 @@ export async function getProducts() {
   )
 }
 
+export async function getProductOffers(filters: { productId?: string } = {}) {
+  const products = filters.productId
+    ? SAMPLE_PRODUCTS.filter((product) => product.id === filters.productId)
+    : SAMPLE_PRODUCTS
+  const fallback = mergeOffers(
+    SAMPLE_PRODUCT_OFFERS.filter((offer) => !filters.productId || offer.product_id === filters.productId),
+    products
+  )
+
+  if (!isSupabaseSchemaReady) return fallback
+
+  let query = supabase.from("product_offers").select("*")
+  if (filters.productId) query = query.eq("product_id", filters.productId)
+  const offers = await fromSupabase<ProductOffer[]>(query, fallback)
+  return mergeOffers(offers, products)
+}
+
+export async function getPreferredProductOffer(product: Product) {
+  const offers = await getProductOffers({ productId: product.id })
+  return offers.find((offer) => offer.is_preferred && offer.affiliate_url)
+    ?? offers.find((offer) => offer.affiliate_url)
+    ?? offers.find((offer) => offer.is_preferred)
+    ?? offers[0]
+    ?? legacyAffiliateOffer(product)
+    ?? null
+}
+
 export async function getProduct(id: string) {
   const fallback = SAMPLE_PRODUCTS.find((product) => product.id === id) ?? null
   return fromSupabase<Product | null>(
@@ -270,6 +353,40 @@ export async function getReviews(filters: { productId?: string; kolId?: string }
   if (filters.productId) query = query.eq("productid", filters.productId)
   if (filters.kolId) query = query.eq("kolid", filters.kolId)
   return fromSupabase<Review[]>(query, fallback)
+}
+
+export async function getCommunityReviews(filters: { productId?: string; userId?: string } = {}) {
+  if (!isSupabaseSchemaReady) return [] as CommunityReview[]
+
+  let query = supabase
+    .from("user_ratings")
+    .select("*")
+    .order("created_at", { ascending: false })
+
+  if (filters.productId) query = query.eq("product_id", filters.productId)
+  if (filters.userId) {
+    query = query.eq("user_id", filters.userId)
+  } else {
+    query = query.eq("status", "approved")
+  }
+
+  return fromSupabase<CommunityReview[]>(query, [])
+}
+
+export async function getCreatorProductEvents(filters: { productId?: string; creatorId?: string } = {}) {
+  const fallback = ALL_FALLBACK_TIMELINE_EVENTS.filter((event) => {
+    if (filters.productId && event.product_id !== filters.productId) return false
+    if (filters.creatorId && event.creator_id !== filters.creatorId) return false
+    return true
+  })
+
+  if (!isSupabaseSchemaReady) return fallback
+
+  let query = supabase.from("creator_product_events").select("*")
+  if (filters.productId) query = query.eq("product_id", filters.productId)
+  if (filters.creatorId) query = query.eq("creator_id", filters.creatorId)
+  const events = await fromSupabase<CreatorProductEvent[]>(query, fallback)
+  return mergeTimelineEvents(events)
 }
 
 export async function getPosts() {

@@ -6,7 +6,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import {
   Star, ShieldCheck, ArrowLeft, ExternalLink, Users, Award,
-  Layers, CalendarDays, Sparkles, MapPin, Building2, Tag, UserRound, ShieldQuestion, Quote,
+  Layers, CalendarDays, Sparkles, MapPin, Building2, Tag, UserRound, ShieldQuestion, Quote, PackageCheck,
 } from "lucide-react"
 import * as motion from "motion/react-client"
 
@@ -15,11 +15,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PlatformBadge } from "@/components/platform-badge"
-import { getKol, getPost, getProducts, getReviews } from "@/lib/data"
+import { getCreatorProductEvents, getKol, getPost, getProducts, getReviews } from "@/lib/data"
 import { getMatrixNodesByKolId, getMatrixProductGroups } from "@/lib/content-matrix"
 import { parseFollowers } from "@/lib/kols-data"
 import { containerVariants, itemVariants } from "@/lib/animations"
-import type { Kol, KolSocial, Post, Product } from "@/lib/types"
+import type { CreatorProductEvent, Kol, KolSocial, Post, Product } from "@/lib/types"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
@@ -92,6 +92,43 @@ function buildKolJsonLd(kol: Kol, siteUrl: string) {
   }
 }
 
+function formatTimelineDate(value: string) {
+  return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(value))
+}
+
+function eventTypeLabel(event: CreatorProductEvent) {
+  const labels: Record<CreatorProductEvent["event_type"], string> = {
+    first_seen: "Bắt đầu theo dõi",
+    used: "Đã dùng",
+    reviewed: "Đã review",
+    recommended: "Recommend",
+    disliked: "Không hợp",
+    emptied: "Dùng hết",
+    repurchased: "Mua lại",
+    live_sold: "Live bán",
+    sponsored: "Tài trợ",
+  }
+  return labels[event.event_type]
+}
+
+function disclosureLabel(event: CreatorProductEvent) {
+  const labels: Record<CreatorProductEvent["disclosure"], string> = {
+    organic: "Tự mua/organic",
+    pr: "PR",
+    sponsored: "Tài trợ",
+    affiliate: "Affiliate",
+    unknown: "Chưa rõ",
+  }
+  return labels[event.disclosure]
+}
+
+function sentimentClass(event: CreatorProductEvent) {
+  if (event.sentiment === "positive") return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+  if (event.sentiment === "negative") return "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300"
+  if (event.sentiment === "mixed") return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+  return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+}
+
 export default async function KocDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
@@ -100,6 +137,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
 
   const PRODUCTS = await getProducts()
   const reviews = await getReviews({ kolId: id })
+  const timelineEvents = await getCreatorProductEvents({ creatorId: id })
   const matrixNodes = getMatrixNodesByKolId(kol.id)
   const graphPostSlugs = unique(matrixNodes.flatMap((node) => [node.articleSlug, ...node.nextArticleSlugs])).slice(0, 5)
   const graphPosts = (await Promise.all(graphPostSlugs.map((slug) => getPost(slug)))).filter((post): post is Post => Boolean(post))
@@ -327,6 +365,68 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                   )}
                 </section>
               )}
+
+              <section className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+                <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="text-xl font-display font-bold text-slate-900 dark:text-slate-50 flex items-center gap-2">
+                      <PackageCheck className="h-5 w-5 text-indigo-500" /> Dòng thời gian sản phẩm
+                    </h2>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                      Các lần {kol.name} dùng, review, recommend hoặc được hệ thống bắt đầu theo dõi với một sản phẩm.
+                    </p>
+                  </div>
+                  <Badge variant="secondary" className="w-fit bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    {timelineEvents.length} tín hiệu
+                  </Badge>
+                </div>
+
+                {timelineEvents.length > 0 ? (
+                  <div className="relative space-y-4">
+                    <div className="absolute bottom-4 left-4 top-4 w-px bg-slate-200 dark:bg-slate-800" />
+                    {timelineEvents.map((event) => {
+                      const product = PRODUCTS.find((item) => item.id === event.product_id)
+                      if (!product) return null
+                      return (
+                        <div key={event.id} className="relative pl-10">
+                          <span className="absolute left-2 top-5 h-4 w-4 rounded-full border-4 border-white bg-rose-500 shadow-sm dark:border-slate-900" />
+                          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
+                            <div className="mb-2 flex flex-wrap items-center gap-2">
+                              <Badge variant="secondary" className="bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                                {formatTimelineDate(event.event_date)}
+                              </Badge>
+                              <Badge className={sentimentClass(event)}>{event.sentiment}</Badge>
+                              <Badge variant="secondary" className="bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                                {disclosureLabel(event)}
+                              </Badge>
+                            </div>
+                            <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                              {eventTypeLabel(event)} &bull; {event.source_platform}
+                            </div>
+                            <Link href={`/products/${product.id}`} className="mt-1 block font-display text-lg font-black leading-tight text-slate-900 transition-colors hover:text-rose-600 dark:text-slate-50 dark:hover:text-rose-300">
+                              {product.name}
+                            </Link>
+                            <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">{product.brand} &bull; {product.price}</p>
+                            <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{event.source_excerpt}</p>
+                            {event.usage_context && (
+                              <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">Ngữ cảnh: {event.usage_context}</p>
+                            )}
+                            {event.source_url && (
+                              <a href={event.source_url} target={event.source_url.startsWith("/") ? undefined : "_blank"} rel={event.source_url.startsWith("/") ? undefined : "noopener noreferrer"} className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-300">
+                                Xem nguồn <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 py-10 text-center dark:border-slate-800 dark:bg-slate-950">
+                    <p className="font-medium text-slate-500 dark:text-slate-400">Chưa có timeline sản phẩm cho {kol.name}.</p>
+                  </div>
+                )}
+              </section>
 
               {/* Reviews on the platform */}
               <section>

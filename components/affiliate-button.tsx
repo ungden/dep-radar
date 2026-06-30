@@ -8,13 +8,14 @@ import { cn } from "@/lib/utils"
 interface AffiliateButtonProps {
   href: string
   productId: string
+  offerId?: string
   children?: React.ReactNode
   className?: string
 }
 
-export function AffiliateButton({ href, productId, children, className }: AffiliateButtonProps) {
+export function AffiliateButton({ href, productId, offerId, children, className }: AffiliateButtonProps) {
   async function handleClick() {
-    await trackAffiliateClick(productId)
+    await trackAffiliateClick(productId, offerId)
     window.open(href, "_blank", "noopener,noreferrer")
   }
 

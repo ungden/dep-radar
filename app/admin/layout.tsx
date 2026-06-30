@@ -2,15 +2,17 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Package, Users, FileText, MessageSquare, ArrowLeft } from "lucide-react"
+import { LayoutDashboard, Package, Users, FileText, MessageSquare, ArrowLeft, CalendarClock, Store } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Sản phẩm", icon: Package },
+  { href: "/admin/offers", label: "Affiliate offers", icon: Store },
   { href: "/admin/kols", label: "KOL/KOC", icon: Users },
   { href: "/admin/posts", label: "Bài viết", icon: FileText },
   { href: "/admin/reviews", label: "Đánh giá", icon: MessageSquare },
+  { href: "/admin/timeline", label: "Timeline", icon: CalendarClock },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

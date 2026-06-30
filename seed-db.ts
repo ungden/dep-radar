@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { resolve } from 'path';
+import { REAL_KOLS } from './lib/kols-data';
+import { SAMPLE_CREATOR_PRODUCT_EVENTS, SAMPLE_PRODUCT_OFFERS } from './lib/timeline-data';
 
 dotenv.config({ path: resolve(process.cwd(), '.env.local') });
 
@@ -14,14 +16,19 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
 
-const KOLS = [
-  { id: "1", name: "Hà Linh Official", avatar: "/images/kol-halinh.png", cover: "/images/cover-halinh.png", platform: "Youtube", handle: "@halinhofficial", followers: "2.1M", trustscore: 98, categories: ["Skincare", "Makeup"], recentreview: "Serum B5 GoodnDoc", verified: true },
-  { id: "2", name: "Góc Của Rư", avatar: "/images/kol-ru.png", cover: "/images/cover-ru.png", platform: "Tiktok", handle: "@goccuaru", followers: "850K", trustscore: 85, categories: ["Makeup", "Bodycare"], recentreview: "Kem nền Maybelline Fit Me", verified: true },
-  { id: "3", name: "Trinh Phạm", avatar: "/images/kol-trinh.png", cover: "/images/cover-trinh.png", platform: "Youtube", handle: "@trinhpham", followers: "1.5M", trustscore: 95, categories: ["Skincare", "Lifestyle"], recentreview: "Tẩy trang L'Oreal", verified: true },
-  { id: "4", name: "Call Me Duy", avatar: "/images/kol-duy.png", cover: "/images/cover-duy.png", platform: "Youtube", handle: "@callmeduy", followers: "500K", trustscore: 92, categories: ["Skincare", "Treatment"], recentreview: "Retinol Obagi", verified: true },
-  { id: "5", name: "Bồng Bềnh", avatar: "/images/kol-bong.png", cover: "/images/cover-bong.png", platform: "Tiktok", handle: "@bongbenh", followers: "1.2M", trustscore: 88, categories: ["Haircare", "Bodycare"], recentreview: "Dầu gội Tsubaki", verified: false },
-  { id: "6", name: "Chloe Nguyen", avatar: "/images/kol-chloe.png", cover: "/images/cover-chloe.png", platform: "Instagram", handle: "@chloenguyen", followers: "600K", trustscore: 90, categories: ["High-end Makeup", "Perfume"], recentreview: "Dior Lip Glow", verified: true }
-];
+const KOLS = REAL_KOLS.map((kol) => ({
+  id: kol.id,
+  name: kol.name,
+  avatar: kol.avatar,
+  cover: kol.cover,
+  platform: kol.platform,
+  handle: kol.handle,
+  followers: kol.followers,
+  trustscore: kol.trustscore,
+  categories: kol.categories,
+  recentreview: kol.recentreview,
+  verified: kol.verified,
+}));
 
 const PRODUCTS = [
   { id: "1", name: "Tinh chất phục hồi da B5 GoodnDoc", brand: "GoodnDoc", image: "/images/product-b5-serum.png", rating: 4.8, reviews: 1240, sold: "8,500+", price: "350.000đ", category: "Skincare", tags: ["Phục hồi", "Cấp ẩm"], description: "Sản phẩm giúp phục hồi hàng rào bảo vệ da, cung cấp độ ẩm sâu và làm dịu làn da nhạy cảm. Phù hợp cho mọi loại da, đặc biệt là da đang treatment hoặc cần phục hồi sau mụn." },
@@ -227,21 +234,29 @@ Về màu sắc, đỏ gạch (terracotta red), hồng đất (dusty pink) và n
 ];
 
 async function seed() {
-  console.log("Seeding KOLS...");
+  console.log(`Seeding KOLS (${KOLS.length})...`);
   const { error: e1 } = await supabaseAdmin.from('kols').upsert(KOLS);
   if (e1) console.error("KOLS Error:", e1.message);
 
-  console.log("Seeding PRODUCTS...");
+  console.log(`Seeding PRODUCTS (${PRODUCTS.length})...`);
   const { error: e2 } = await supabaseAdmin.from('radar_products').upsert(PRODUCTS);
   if (e2) console.error("PRODUCTS Error:", e2.message);
 
-  console.log("Seeding REVIEWS...");
+  console.log(`Seeding REVIEWS (${REVIEWS.length})...`);
   const { error: e3 } = await supabaseAdmin.from('reviews').upsert(REVIEWS);
   if (e3) console.error("REVIEWS Error:", e3.message);
 
-  console.log("Seeding POSTS...");
+  console.log(`Seeding POSTS (${POSTS.length})...`);
   const { error: e4 } = await supabaseAdmin.from('posts').upsert(POSTS);
   if (e4) console.error("POSTS Error:", e4.message);
+
+  console.log(`Seeding PRODUCT OFFERS (${SAMPLE_PRODUCT_OFFERS.length})...`);
+  const { error: e5 } = await supabaseAdmin.from('product_offers').upsert(SAMPLE_PRODUCT_OFFERS);
+  if (e5) console.error("PRODUCT OFFERS Error:", e5.message);
+
+  console.log(`Seeding CREATOR PRODUCT EVENTS (${SAMPLE_CREATOR_PRODUCT_EVENTS.length})...`);
+  const { error: e6 } = await supabaseAdmin.from('creator_product_events').upsert(SAMPLE_CREATOR_PRODUCT_EVENTS);
+  if (e6) console.error("CREATOR PRODUCT EVENTS Error:", e6.message);
 
   console.log("Seeding done!");
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Package, Users, FileText, MessageSquare, TrendingUp, Eye } from "lucide-react"
+import { CalendarClock, Package, Store, Users, FileText, MessageSquare, TrendingUp, Eye } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { supabase } from "@/lib/supabase"
 
@@ -10,10 +10,12 @@ interface Stats {
   kols: number
   posts: number
   reviews: number
+  offers: number
+  timeline: number
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = React.useState<Stats>({ products: 0, kols: 0, posts: 0, reviews: 0 })
+  const [stats, setStats] = React.useState<Stats>({ products: 0, kols: 0, posts: 0, reviews: 0, offers: 0, timeline: 0 })
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
@@ -22,12 +24,16 @@ export default function AdminDashboard() {
       supabase.from("kols").select("id", { count: "exact", head: true }),
       supabase.from("posts").select("id", { count: "exact", head: true }),
       supabase.from("reviews").select("id", { count: "exact", head: true }),
-    ]).then(([products, kols, posts, reviews]) => {
+      supabase.from("product_offers").select("id", { count: "exact", head: true }),
+      supabase.from("creator_product_events").select("id", { count: "exact", head: true }),
+    ]).then(([products, kols, posts, reviews, offers, timeline]) => {
       setStats({
         products: products.count || 0,
         kols: kols.count || 0,
         posts: posts.count || 0,
         reviews: reviews.count || 0,
+        offers: offers.count || 0,
+        timeline: timeline.count || 0,
       })
       setLoading(false)
     })
@@ -36,6 +42,8 @@ export default function AdminDashboard() {
   const statCards = [
     { label: "Sản phẩm", value: stats.products, icon: Package, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
     { label: "KOL/KOC", value: stats.kols, icon: Users, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+    { label: "Offers", value: stats.offers, icon: Store, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/30" },
+    { label: "Timeline", value: stats.timeline, icon: CalendarClock, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-950/30" },
     { label: "Bài viết", value: stats.posts, icon: FileText, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950/30" },
     { label: "Đánh giá", value: stats.reviews, icon: MessageSquare, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-950/30" },
   ]
@@ -47,7 +55,7 @@ export default function AdminDashboard() {
         <p className="text-slate-500 dark:text-slate-400 mt-1">Tổng quan hệ thống 360dep.vn</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
         {statCards.map((stat) => (
           <Card key={stat.label} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl">
             <CardContent className="p-6">
@@ -79,15 +87,15 @@ export default function AdminDashboard() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-rose-500 font-bold">2.</span>
-                Vào <strong>KOL/KOC</strong> để quản lý danh sách beauty blogger
+                Vào <strong>Affiliate offers</strong> để thêm link Shopee thật, chọn offer ưu tiên và theo dõi giá snapshot
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-rose-500 font-bold">3.</span>
-                Vào <strong>Bài viết</strong> để quản lý lịch xuất bản và nội dung blog
+                Vào <strong>Timeline</strong> mỗi khi KOL/KOC dùng, review, recommend hoặc live bán sản phẩm mới
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-rose-500 font-bold">4.</span>
-                Vào <strong>Đánh giá</strong> để quản lý reviews từ KOL
+                Vào <strong>KOL/KOC</strong> và <strong>Bài viết</strong> để quản lý hồ sơ creator và nội dung editorial
               </li>
             </ul>
           </CardContent>

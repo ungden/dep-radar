@@ -186,25 +186,25 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "4",
     "name": "Call Me Duy",
-    "avatar": "/images/kol-duy.png",
+    "avatar": "/images/kol/call-me-duy-tiktok.jpg",
     "cover": "/images/cover-duy.png",
-    "platform": "Youtube",
-    "handle": "@callmeduy",
-    "followers": "500K",
-    "recentreview": "Retinol Obagi",
-    "trustscore": 89,
+    "platform": "Tiktok",
+    "handle": "@justvuduy16",
+    "followers": "1.2M",
+    "recentreview": "Phân tích skincare, treatment và mỹ phẩm",
+    "trustscore": 92,
     "categories": [
       "Skincare",
       "Treatment",
       "Makeup"
     ],
     "verified": true,
-    "bio": "Call Me Duy (Vũ Duy) là một trong số ít KOL nam có ảnh hưởng trong lĩnh vực làm đẹp tại Việt Nam, từng đăng quang KOC Vietnam mùa đầu tiên. Anh hoạt động trên YouTube, TikTok và Facebook, nổi bật với cách review đi sâu phân tích thành phần, cơ chế và công dụng của từng sản phẩm.",
+    "bio": "Call Me Duy (Vũ Duy) là một trong số ít KOL nam có ảnh hưởng trong lĩnh vực làm đẹp tại Việt Nam, từng đăng quang KOC Vietnam mùa đầu tiên. Anh hoạt động mạnh trên TikTok, YouTube và Facebook, nổi bật với cách review đi sâu phân tích thành phần, cơ chế và công dụng của từng sản phẩm.",
     "socials": [
       {
         "platform": "Tiktok",
-        "handle": "@vuduy2412",
-        "followers": "650K"
+        "handle": "@justvuduy16",
+        "followers": "1.2M"
       },
       {
         "platform": "Youtube",
@@ -229,7 +229,7 @@ export const REAL_KOLS: Kol[] = [
       "Beauty blogger nam với phong cách review chân thật, khen chê rõ ràng",
       "Khả năng phân tích bảng thành phần (ingredient list)",
       "Quán quân KOC Vietnam 2022",
-      "Sáng lập thương hiệu mỹ phẩm riêng CMD Cosmetics"
+      "TikTok profile live-check 06/2026: 1.2M followers, 83.1M likes"
     ],
     "contentStyle": "Review dựa trên kiến thức về thành phần và khoa học chăm sóc da, đánh giá thẳng thắn cả ưu lẫn nhược điểm.",
     "ownBrand": "CMD Cosmetics"
@@ -316,7 +316,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "7",
     "name": "Đan Thy",
-    "avatar": "",
+    "avatar": "/images/kol/dan-thy.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@thybui.__",
@@ -386,7 +386,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "9",
     "name": "Lê Thị Khánh Huyền",
-    "avatar": "",
+    "avatar": "/images/kol/le-thi-khanh-huyen.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@lethikhanhhuyen2004",
@@ -422,41 +422,41 @@ export const REAL_KOLS: Kol[] = [
   },
   {
     "id": "10",
-    "name": "Webtretho",
-    "avatar": "",
+    "name": "Yên Đan",
+    "avatar": "/images/kol/yen-dan.jpg",
     "cover": "",
-    "platform": "Facebook",
-    "handle": "@webtretho.vietnam",
-    "followers": "7.4M",
-    "recentreview": "Chia sẻ kinh nghiệm làm đẹp và mỹ phẩm",
-    "trustscore": 94,
+    "platform": "Tiktok",
+    "handle": "@yendan7",
+    "followers": "989.4K",
+    "recentreview": "Makeup, skincare routine và lifestyle beauty",
+    "trustscore": 84,
     "categories": [
+      "Makeup",
       "Skincare",
       "Lifestyle"
     ],
     "verified": true,
-    "bio": "Webtretho là một trong những diễn đàn và cộng đồng trực tuyến lâu đời nhất Việt Nam, nơi người dùng trao đổi về làm đẹp, mỹ phẩm, chăm sóc da cùng nhiều chủ đề đời sống, gia đình. Đây là không gian review và chia sẻ kinh nghiệm của đông đảo thành viên thay vì một cá nhân KOL.",
+    "bio": "Yên Đan là creator TikTok nổi bật với nội dung makeup, skincare routine và lifestyle beauty dành cho nhóm người xem trẻ. Profile live-check tháng 06/2026 ghi nhận gần 1 triệu follower và video grid hoạt động đều.",
     "socials": [
       {
-        "platform": "Facebook",
-        "handle": "@webtretho.vietnam",
-        "followers": "7.4M"
+        "platform": "Tiktok",
+        "handle": "@yendan7",
+        "followers": "989.4K"
       }
     ],
     "basedIn": "Việt Nam",
-    "activeSince": "2002",
+    "activeSince": "2020",
     "specialties": [
-      "Cộng đồng phụ nữ",
-      "Mẹ và bé",
-      "Làm đẹp",
-      "Thời trang"
+      "Makeup look",
+      "Skincare routine",
+      "Lifestyle beauty"
     ],
     "knownFor": [
-      "Diễn đàn phụ nữ Việt Nam thành lập từ tháng 3/2002",
-      "Cộng đồng chia sẻ kinh nghiệm chăm sóc gia đình, con cái",
-      "Có các chuyên mục làm đẹp, thời trang và tâm sự cho các mẹ"
+      "Có mặt trong Favikon Top Beauty Influencers Vietnam 2026",
+      "TikTok profile live-check 06/2026: 989.4K followers, 39.6M likes",
+      "Nội dung beauty/lifestyle dễ tiếp cận với Gen Z"
     ],
-    "contentStyle": "Nền tảng cộng đồng/diễn đàn nơi người dùng chia sẻ kinh nghiệm về chăm sóc gia đình, nuôi con, làm đẹp và thời trang."
+    "contentStyle": "Video ngắn thiên về makeup, routine cá nhân, lifestyle và các format bắt trend nhưng vẫn bám beauty."
   },
   {
     "id": "11",
@@ -502,7 +502,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "12",
     "name": "Ty Lê",
-    "avatar": "",
+    "avatar": "/images/kol/ty-le.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@tyle.makeup",
@@ -541,7 +541,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "13",
     "name": "Sinh Anh",
-    "avatar": "",
+    "avatar": "/images/kol/sinh-anh.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@sinhanh.hair",
@@ -628,7 +628,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "15",
     "name": "Phạm Thoại",
-    "avatar": "",
+    "avatar": "/images/kol/pham-thoai.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@phamthoai.real",
@@ -664,7 +664,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "16",
     "name": "Nguyễn Thu Trang Beauty",
-    "avatar": "",
+    "avatar": "/images/kol/nguyen-thu-trang-beauty.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@nguyenthutrang.beauty",
@@ -696,7 +696,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "17",
     "name": "Hunilovebeauty",
-    "avatar": "",
+    "avatar": "/images/kol/hunilovebeauty.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@hunilovebeauty",
@@ -733,7 +733,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "18",
     "name": "Lê Đại Phát",
-    "avatar": "",
+    "avatar": "/images/kol/le-dai-phat.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@phatnail",
@@ -810,7 +810,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "20",
     "name": "Salim (Hoàng Kim Ngân)",
-    "avatar": "",
+    "avatar": "/images/kol/salim.jpg",
     "cover": "",
     "platform": "Instagram",
     "handle": "@salimhwg",
@@ -847,7 +847,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "21",
     "name": "Đinh Phát",
-    "avatar": "",
+    "avatar": "/images/kol/dinh-phat.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@dinhphatmakeup",
@@ -896,7 +896,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "22",
     "name": "Quỳnh Nhi Trần",
-    "avatar": "",
+    "avatar": "/images/kol/quynh-nhi-tran.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@quynhnhitran",
@@ -932,7 +932,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "23",
     "name": "Blingbabi",
-    "avatar": "",
+    "avatar": "/images/kol/blingbabi.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@blingbabi_",
@@ -1070,7 +1070,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "26",
     "name": "Thuỷ Sophia",
-    "avatar": "",
+    "avatar": "/images/kol/thuy-sophia.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@sophia.beauty99",
@@ -1136,7 +1136,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "28",
     "name": "Hoàng Thạch",
-    "avatar": "",
+    "avatar": "/images/kol/hoang-thach.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@hoangthachhh",
@@ -1220,7 +1220,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "30",
     "name": "Lucie Nguyễn",
-    "avatar": "",
+    "avatar": "/images/kol/lucie-nguyen.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@lucienguyenlove",
@@ -1256,7 +1256,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "31",
     "name": "Lê Lý Lan Hương",
-    "avatar": "",
+    "avatar": "/images/kol/le-ly-lan-huong.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@actress.lanhuong",
@@ -1291,7 +1291,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "32",
     "name": "Tama",
-    "avatar": "",
+    "avatar": "/images/kol/tama.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@jjhahehi",
@@ -1325,7 +1325,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "33",
     "name": "Happi Phạm",
-    "avatar": "",
+    "avatar": "/images/kol/happi-pham.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@happipham",
@@ -1364,7 +1364,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "34",
     "name": "Vũ Thái Bình",
-    "avatar": "",
+    "avatar": "/images/kol/vu-thai-binh.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@bbskincare1",
@@ -1406,7 +1406,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "35",
     "name": "Vân Miu",
-    "avatar": "",
+    "avatar": "/images/kol/van-miu.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@vanmiu.makeup",
@@ -1445,7 +1445,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "36",
     "name": "Quách Ánh",
-    "avatar": "",
+    "avatar": "/images/kol/quach-anh.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@quachanhmakeupstudio",
@@ -1500,33 +1500,45 @@ export const REAL_KOLS: Kol[] = [
   },
   {
     "id": "37",
-    "name": "Skincare - Review Mỹ Phẩm Có Tâm",
-    "avatar": "",
+    "name": "Kim Chung Phan",
+    "avatar": "/images/kol/kim-chung-phan.jpg",
     "cover": "",
-    "platform": "Facebook",
-    "handle": "@skincarereviewcotam",
-    "followers": "1M",
-    "recentreview": "Cộng đồng review mỹ phẩm trị mụn và phục hồi da",
-    "trustscore": 85,
+    "platform": "Tiktok",
+    "handle": "@kimchungphan20",
+    "followers": "2.1M",
+    "recentreview": "Makeup, lifestyle beauty và review sản phẩm phổ thông",
+    "trustscore": 94,
     "categories": [
-      "Skincare",
-      "Treatment"
+      "Makeup",
+      "Lifestyle",
+      "Skincare"
     ],
-    "verified": false,
-    "bio": "Skincare - Review Mỹ Phẩm Có Tâm là một cộng đồng (group) làm đẹp lớn trên Facebook, nơi các thành viên chia sẻ routine chăm da và review mỹ phẩm một cách minh bạch. Nội dung trải rộng từ skincare cơ bản đến các hoạt chất nâng cao như AHA, BHA, Retinol, Tretinoin.",
+    "verified": true,
+    "bio": "Kim Chung Phan là creator TikTok có độ phủ lớn, thường làm nội dung beauty/lifestyle, makeup và các sản phẩm làm đẹp phổ thông. Profile live-check tháng 06/2026 ghi nhận 2.1M follower và 87.1M likes.",
     "socials": [
       {
-        "platform": "Facebook",
-        "handle": "@skincarereviewcotam",
-        "followers": "1M"
+        "platform": "Tiktok",
+        "handle": "@kimchungphan20",
+        "followers": "2.1M"
       }
     ],
-    "contentStyle": "Cộng đồng/nhóm trên Facebook nơi thành viên chia sẻ trải nghiệm thực tế và review mỹ phẩm, skincare cho nhiều loại da."
+    "basedIn": "Việt Nam",
+    "specialties": [
+      "Makeup lifestyle",
+      "Beauty routine",
+      "Sản phẩm làm đẹp phổ thông"
+    ],
+    "knownFor": [
+      "Có mặt trong influData Top 20 Beauty & Cosmetics Vietnam TikTok 06/2026",
+      "TikTok profile live-check 06/2026: 2.1M followers, 87.1M likes",
+      "Tệp người xem lớn, hợp để theo dõi tín hiệu beauty đại chúng"
+    ],
+    "contentStyle": "Nội dung TikTok nhanh, gần gũi, trộn giữa lifestyle, makeup và các sản phẩm làm đẹp đang được quan tâm."
   },
   {
     "id": "38",
     "name": "Minh Thái",
-    "avatar": "",
+    "avatar": "/images/kol/minh-thai.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@thethailyfe",
@@ -1549,7 +1561,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "39",
     "name": "Yến Jii",
-    "avatar": "",
+    "avatar": "/images/kol/yen-jii.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@yenjiivu",
@@ -1587,7 +1599,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "40",
     "name": "Minaash",
-    "avatar": "",
+    "avatar": "/images/kol/minaash.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@minaashmi",
@@ -1617,43 +1629,45 @@ export const REAL_KOLS: Kol[] = [
   },
   {
     "id": "41",
-    "name": "Mint Cosmetics",
-    "avatar": "",
+    "name": "Thuý Kiều",
+    "avatar": "/images/kol/thuy-kieu.jpg",
     "cover": "",
     "platform": "Tiktok",
-    "handle": "@mintcosmetics.vn",
-    "followers": "900K",
-    "recentreview": "Tư vấn skincare La Roche-Posay, Cosrx",
+    "handle": "@thuykieu773",
+    "followers": "906.1K",
+    "recentreview": "Beauty, fashion và sản phẩm lifestyle",
     "trustscore": 84,
     "categories": [
-      "Skincare",
-      "Treatment"
+      "Makeup",
+      "Lifestyle",
+      "Skincare"
     ],
     "verified": true,
-    "bio": "Mint Cosmetics là một hệ thống phân phối và bán lẻ mỹ phẩm chính hãng có nhiều cửa hàng tại Hà Nội. Thương hiệu này là nhà phân phối của nhiều nhãn mỹ phẩm quốc tế và thường tổ chức các hoạt động, workshop chia sẻ kiến thức làm đẹp cho cộng đồng.",
+    "bio": "Thuý Kiều là creator TikTok hoạt động mạnh ở mảng lifestyle, beauty và sản phẩm tiêu dùng gần với nhóm người xem trẻ. Profile live-check tháng 06/2026 ghi nhận hơn 900K follower và hơn 32M likes.",
     "socials": [
       {
         "platform": "Tiktok",
-        "handle": "@mintcosmetics.vn",
-        "followers": "900K"
+        "handle": "@thuykieu773",
+        "followers": "906.1K"
       }
     ],
-    "basedIn": "Hà Nội",
+    "basedIn": "Việt Nam",
     "specialties": [
-      "Chuỗi bán lẻ mỹ phẩm chính hãng",
-      "Phân phối thương hiệu skincare và trang điểm quốc tế"
+      "Beauty lifestyle",
+      "Makeup everyday",
+      "Gợi ý sản phẩm phổ thông"
     ],
     "knownFor": [
-      "Chuỗi cửa hàng mỹ phẩm chính hãng tại Hà Nội với slogan 'Save The Best For You'",
-      "Nhà phân phối ủy quyền của nhiều thương hiệu quốc tế (L'Oreal, Paula's Choice, La Roche-Posay, Cosrx...)",
-      "Phát triển từ một cửa hàng nhỏ thành hệ thống nhiều cơ sở"
+      "Có mặt trong influData Top 20 Beauty & Cosmetics Vietnam TikTok 06/2026",
+      "TikTok profile live-check 06/2026: 906.1K followers, 32.3M likes",
+      "Hoạt động đều với video grid công khai"
     ],
-    "contentStyle": "Nội dung mang tính thương hiệu/bán lẻ, tập trung giới thiệu sản phẩm chính hãng, ưu đãi và tư vấn skincare."
+    "contentStyle": "Video ngắn thiên về lifestyle, beauty và mua sắm; phù hợp để bắt tín hiệu sản phẩm đang lan trong nhóm đại chúng."
   },
   {
     "id": "42",
     "name": "Diệp Lê",
-    "avatar": "",
+    "avatar": "/images/kol/diep-le.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@diep.lez",
@@ -1686,7 +1700,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "43",
     "name": "Helly Tống",
-    "avatar": "",
+    "avatar": "/images/kol/helly-tong.jpg",
     "cover": "",
     "platform": "Instagram",
     "handle": "@hellytong",
@@ -1725,7 +1739,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "44",
     "name": "Hà Trang (Meichan)",
-    "avatar": "",
+    "avatar": "/images/kol/ha-trang.jpg",
     "cover": "",
     "platform": "Instagram",
     "handle": "@meichannnnn",
@@ -1757,51 +1771,45 @@ export const REAL_KOLS: Kol[] = [
   },
   {
     "id": "45",
-    "name": "Happy Skin Vietnam",
-    "avatar": "/images/kol/happy-skin-vietnam-youtube.jpg",
+    "name": "Tee 8 Phun Xăm",
+    "avatar": "/images/kol/tee-8.jpg",
     "cover": "",
-    "platform": "Youtube",
-    "handle": "@happyskinvn",
-    "followers": "650K",
-    "recentreview": "Phân tích thành phần serum và phục hồi da",
-    "trustscore": 89,
+    "platform": "Tiktok",
+    "handle": "@tee8eyebrows",
+    "followers": "475.7K",
+    "recentreview": "Phun xăm thẩm mỹ, lông mày, môi và mí",
+    "trustscore": 78,
     "categories": [
-      "Skincare",
+      "Makeup",
       "Treatment"
     ],
     "verified": true,
-    "bio": "Happy Skin Vietnam khởi đầu là một cộng đồng và kênh nội dung làm đẹp, sau phát triển thành thương hiệu mỹ phẩm và hệ thống chăm sóc da. Nền tảng này nổi bật với các bài viết và review tập trung phân tích thành phần, công thức và trải nghiệm thực tế để người đọc lựa chọn phù hợp với làn da.",
+    "bio": "Tee 8 Phun Xăm là creator/mentor trong niche phun xăm thẩm mỹ, tập trung vào lông mày, môi, mí và đào tạo kỹ thuật làm đẹp bán vĩnh viễn. Profile live-check tháng 06/2026 ghi nhận 475.7K follower.",
     "socials": [
       {
-        "platform": "Youtube",
-        "handle": "@happyskinvn",
-        "followers": "650K"
-      },
-      {
-        "platform": "Facebook",
-        "handle": "@happyskin.vn",
-        "followers": "100K"
+        "platform": "Tiktok",
+        "handle": "@tee8eyebrows",
+        "followers": "475.7K"
       }
     ],
-    "basedIn": "TP.HCM",
-    "activeSince": "2015",
+    "basedIn": "Việt Nam",
     "specialties": [
-      "Cộng đồng và kiến thức chăm sóc da chuyên sâu",
-      "Review mỹ phẩm",
-      "Hệ sinh thái làm đẹp (clinic, sản phẩm)"
+      "Phun xăm thẩm mỹ",
+      "Lông mày",
+      "Môi và mí",
+      "Đào tạo kỹ thuật beauty"
     ],
     "knownFor": [
-      "Khởi nguồn từ cộng đồng làm đẹp Happyskin.vn do Emmi Hoàng sáng lập",
-      "Phát triển thành hệ sinh thái gồm thương hiệu Emmié, Happy Skin Beauty Clinic và chuỗi Skin Store",
-      "Kênh chia sẻ kiến thức skincare có chiều sâu"
+      "Có mặt trong influData Top 20 Beauty & Cosmetics Vietnam TikTok 06/2026",
+      "TikTok profile live-check 06/2026: 475.7K followers, 4.7M likes",
+      "Niche phun xăm giúp cân bằng list ngoài makeup/skincare truyền thống"
     ],
-    "contentStyle": "Nội dung chăm sóc da mang tính kiến thức, dựa trên thành phần và khoa học làn da.",
-    "ownBrand": "Emmié by Happy Skin"
+    "contentStyle": "Nội dung chuyên môn về phun xăm, case thực tế và kiến thức làm đẹp bán vĩnh viễn."
   },
   {
     "id": "46",
     "name": "Hà Trúc",
-    "avatar": "",
+    "avatar": "/images/kol/ha-truc.jpg",
     "cover": "",
     "platform": "Instagram",
     "handle": "@lehatruc",
@@ -1847,7 +1855,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "47",
     "name": "Hana Giang Anh",
-    "avatar": "",
+    "avatar": "/images/kol/hana-giang-anh.jpg",
     "cover": "",
     "platform": "Youtube",
     "handle": "@HanaGiangAnh",
@@ -1885,7 +1893,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "48",
     "name": "Lou Lê",
-    "avatar": "",
+    "avatar": "/images/kol/lou-le.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@lou.le",
@@ -1908,7 +1916,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "49",
     "name": "TS.BS Lã Thanh Hà",
-    "avatar": "",
+    "avatar": "/images/kol/ts-bs-la-thanh-ha.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@bacsilaha",
@@ -1944,7 +1952,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "50",
     "name": "Chou Lười Makeup",
-    "avatar": "",
+    "avatar": "/images/kol/chou-luoi-makeup.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@chouchinchan",
@@ -1984,7 +1992,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "51",
     "name": "Hiwon",
-    "avatar": "",
+    "avatar": "/images/kol/hiwon.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@hiwon91",
@@ -2031,7 +2039,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "52",
     "name": "Skincare Đúng Cách by Sơn",
-    "avatar": "",
+    "avatar": "/images/kol/skincare-dung-cach-by-son.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@skincaredungcach.byson",
@@ -2114,7 +2122,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "54",
     "name": "Sun HT (Sunnie)",
-    "avatar": "",
+    "avatar": "/images/kol/sun-ht.jpg",
     "cover": "",
     "platform": "Instagram",
     "handle": "@sunht",
@@ -2187,7 +2195,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "56",
     "name": "Hoàng XXIV",
-    "avatar": "",
+    "avatar": "/images/kol/hoang-xxiv.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@hoangxxiv",
@@ -2218,7 +2226,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "57",
     "name": "Cô Em Trendy",
-    "avatar": "",
+    "avatar": "/images/kol/co-em-trendy.jpg",
     "cover": "",
     "platform": "Facebook",
     "handle": "@coemtrendy",
@@ -2349,7 +2357,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "60",
     "name": "Bống Bee",
-    "avatar": "",
+    "avatar": "/images/kol/bong-bee.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@bongbee1301",
@@ -2421,7 +2429,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "62",
     "name": "Bác sĩ Đỗ Quốc Tuấn",
-    "avatar": "",
+    "avatar": "/images/kol/bac-si-do-quoc-tuan.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@drdotuan",
@@ -2459,7 +2467,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "63",
     "name": "Trần Lâm (Bimm)",
-    "avatar": "",
+    "avatar": "/images/kol/tran-lam.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@tran_lam18",
@@ -2500,43 +2508,40 @@ export const REAL_KOLS: Kol[] = [
   },
   {
     "id": "64",
-    "name": "Bác sĩ Đặng Thị Minh Châu",
-    "avatar": "",
+    "name": "Trần Thiên Lý",
+    "avatar": "/images/kol/tran-thien-ly.jpg",
     "cover": "",
     "platform": "Tiktok",
-    "handle": "@skinone.vn",
-    "followers": "326K",
-    "recentreview": "Phục hồi da hư tổn do kem trộn, lăn kim sai cách",
-    "trustscore": 78,
+    "handle": "@tranthienly.com",
+    "followers": "180.7K",
+    "recentreview": "Beauty coaching, makeup và mentor nội dung làm đẹp",
+    "trustscore": 72,
     "categories": [
-      "Treatment",
-      "Skincare"
+      "Makeup",
+      "High-end Makeup",
+      "Lifestyle"
     ],
     "verified": true,
-    "bio": "Bác sĩ chuyên khoa I Da liễu, đại diện chuyên môn phòng khám SkinOne (TP.HCM) với hơn 10 năm kinh nghiệm. Nội dung giới thiệu routine và sản phẩm theo từng loại da, chuyên các case da hư tổn nặng do kem trộn và lăn kim sai cách. Phong cách chia sẻ thân thiện, dễ tiếp cận.",
+    "bio": "Trần Thiên Lý là beauty creator/coach hoạt động trên TikTok với định vị beauty coaching and mentor. Nội dung tập trung vào makeup, định hướng hình ảnh và chia sẻ kinh nghiệm làm đẹp.",
     "socials": [
       {
         "platform": "Tiktok",
-        "handle": "@skinone.vn",
-        "followers": "326K"
+        "handle": "@tranthienly.com",
+        "followers": "180.7K"
       }
     ],
-    "realName": "Đặng Thị Minh Châu",
-    "basedIn": "TP.HCM",
-    "activeSince": "2010",
+    "basedIn": "Việt Nam",
     "specialties": [
-      "Da liễu (chuyên khoa I)",
-      "Điều trị nám",
-      "Điều trị mụn & sẹo rỗ",
-      "Trẻ hóa da"
+      "Beauty coaching",
+      "Makeup",
+      "Định hướng hình ảnh cá nhân"
     ],
     "knownFor": [
-      "Bác sĩ chuyên khoa I Da liễu, tốt nghiệp ĐH Y khoa Phạm Ngọc Thạch",
-      "Nhà sáng lập hệ thống Phòng khám Da liễu SkinOne",
-      "Hơn 10 năm kinh nghiệm trong lĩnh vực da liễu"
+      "Profile bio công khai: Beauty Coaching and Mentor",
+      "TikTok profile live-check 06/2026: 180.7K followers, 1.8M likes",
+      "Bổ sung nhóm creator có định vị hướng dẫn và coaching làm đẹp"
     ],
-    "contentStyle": "Truyền tải kiến thức điều trị da chuẩn y khoa dưới góc nhìn bác sĩ chuyên khoa.",
-    "ownBrand": "Phòng khám Da liễu SkinOne"
+    "contentStyle": "Nội dung beauty coach, makeup và chia sẻ kinh nghiệm làm đẹp theo hướng mentor."
   },
   {
     "id": "65",
@@ -2587,7 +2592,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "66",
     "name": "Emmi Hoàng",
-    "avatar": "",
+    "avatar": "/images/kol/emmi-hoang.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@emmihoang",
@@ -2625,7 +2630,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "67",
     "name": "Sunhuyn",
-    "avatar": "",
+    "avatar": "/images/kol/sunhuyn.jpg",
     "cover": "",
     "platform": "Youtube",
     "handle": "@Sunhuyn95",
@@ -2700,7 +2705,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "69",
     "name": "Linh Jace",
-    "avatar": "",
+    "avatar": "/images/kol/linh-jace.jpg",
     "cover": "",
     "platform": "Facebook",
     "handle": "@LinhJace91",
@@ -2743,7 +2748,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "70",
     "name": "Khánh The MUA",
-    "avatar": "",
+    "avatar": "/images/kol/khanh-the-mua.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@khanhtq_makeup",
@@ -2777,7 +2782,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "71",
     "name": "Kim Võ Perfume",
-    "avatar": "",
+    "avatar": "/images/kol/kim-vo-perfume.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@kimvoperfume",
@@ -2853,7 +2858,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "73",
     "name": "Thuý Hiền Makeup",
-    "avatar": "",
+    "avatar": "/images/kol/thuy-hien-makeup.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@thuyhienmakeup",
@@ -2886,7 +2891,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "74",
     "name": "Bác sĩ Khổng Hạnh Nguyên",
-    "avatar": "",
+    "avatar": "/images/kol/bac-si-khong-hanh-nguyen.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@drkhonghanhnguyen",
@@ -2961,7 +2966,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "76",
     "name": "Phương Ly (Pretty Much Channel)",
-    "avatar": "",
+    "avatar": "/images/kol/phuong-ly.jpg",
     "cover": "",
     "platform": "Youtube",
     "handle": "@PrettyMuchChannel",
@@ -2999,7 +3004,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "77",
     "name": "Hồng Beauty",
-    "avatar": "",
+    "avatar": "/images/kol/hong-beauty.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@hongbeauty",
@@ -3031,7 +3036,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "78",
     "name": "Bác sĩ Hoàng Văn Tâm",
-    "avatar": "",
+    "avatar": "/images/kol/bac-si-hoang-van-tam.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@bacsitamdalieu",
@@ -3074,7 +3079,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "79",
     "name": "Bác sĩ Nam Võ",
-    "avatar": "",
+    "avatar": "/images/kol/bac-si-nam-vo.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@drnamvo.dalieu",
@@ -3109,7 +3114,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "80",
     "name": "Chung Thành",
-    "avatar": "",
+    "avatar": "/images/kol/chung-thanh.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@chungthanh_",
@@ -3132,7 +3137,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "81",
     "name": "Bích Uyên",
-    "avatar": "",
+    "avatar": "/images/kol/bich-uyen.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@bubutranxoxo",
@@ -3173,7 +3178,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "82",
     "name": "Thời Toki",
-    "avatar": "",
+    "avatar": "/images/kol/thoi-toki.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@thoitoki_perfume",
@@ -3209,7 +3214,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "83",
     "name": "Ken Perfume",
-    "avatar": "",
+    "avatar": "/images/kol/ken-perfume.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@kenperfume2015",
@@ -3246,7 +3251,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "84",
     "name": "Nghiện Nước Hoa - Lê Văn Sỹ",
-    "avatar": "",
+    "avatar": "/images/kol/nghien-nuoc-hoa-le-van-sy.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@nghien.nuochoa",
@@ -3280,7 +3285,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "85",
     "name": "Min Perfume",
-    "avatar": "",
+    "avatar": "/images/kol/min-perfume.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@nuochoaperfume",
@@ -3313,7 +3318,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "86",
     "name": "Phương thích makeup",
-    "avatar": "",
+    "avatar": "/images/kol/phuong-thich-makeup.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@hinhthucphuong",
@@ -3352,7 +3357,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "87",
     "name": "Tôm (Tomskincare)",
-    "avatar": "",
+    "avatar": "/images/kol/tom.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@tomskincare",
@@ -3388,7 +3393,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "88",
     "name": "LAN Perfume",
-    "avatar": "",
+    "avatar": "/images/kol/lan-perfume.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@lanperfume",
@@ -3423,45 +3428,40 @@ export const REAL_KOLS: Kol[] = [
   },
   {
     "id": "89",
-    "name": "Emmié by Happy Skin",
-    "avatar": "",
+    "name": "Trần Kiều Loan",
+    "avatar": "/images/kol/tran-kieu-loan.jpg",
     "cover": "",
-    "platform": "Facebook",
-    "handle": "@emmiebyhappyskin",
-    "followers": "100K",
-    "recentreview": "Thiết bị làm đẹp và mỹ phẩm nồng độ cao",
+    "platform": "Tiktok",
+    "handle": "@loan_rose0810",
+    "followers": "168.7K",
+    "recentreview": "Beauty, lifestyle và fashion",
     "trustscore": 72,
     "categories": [
-      "Skincare",
-      "High-end Makeup"
+      "Makeup",
+      "Lifestyle",
+      "Skincare"
     ],
     "verified": true,
-    "bio": "Emmié by Happy Skin là thương hiệu mỹ phẩm Việt thuộc hệ sinh thái làm đẹp Happy Skin, do beauty blogger Emmi Hoàng sáng lập. Thương hiệu chuyên các sản phẩm chăm sóc da và thiết bị làm đẹp, hướng tới giải pháp phù hợp với làn da người Việt. Đây là một thương hiệu nội địa, từng được vinh danh tại các giải thưởng làm đẹp như Elle Beauty Awards.",
+    "bio": "Trần Kiều Loan là creator TikTok làm nội dung beauty, lifestyle và fashion. Profile live-check tháng 06/2026 ghi nhận 168.7K follower và 2.4M likes, có video grid công khai và hoạt động đều.",
     "socials": [
       {
-        "platform": "Facebook",
-        "handle": "@emmiebyhappyskin",
-        "followers": "100K"
+        "platform": "Tiktok",
+        "handle": "@loan_rose0810",
+        "followers": "168.7K"
       }
     ],
     "basedIn": "Việt Nam",
-    "activeSince": "2015",
     "specialties": [
-      "Mỹ phẩm nồng độ cao",
-      "Thiết bị làm đẹp",
-      "Chăm sóc da chuyên sâu cho da Việt"
+      "Beauty lifestyle",
+      "Fashion",
+      "Makeup everyday"
     ],
     "knownFor": [
-      "Thương hiệu mỹ phẩm DTC do Emmi Hoàng (founder Happy Skin) sáng lập",
-      "Định hướng mỹ phẩm nồng độ cao và thiết bị làm đẹp cho da người Việt",
-      "Phát triển cùng hệ sinh thái Happy Skin"
+      "Profile TikTok tự mô tả Beauty / Lifestyle / Fashion",
+      "TikTok profile live-check 06/2026: 168.7K followers, 2.4M likes",
+      "Phù hợp làm creator watchlist cho beauty-lifestyle"
     ],
-    "ownBrand": "Emmié by Happy Skin",
-    "signatureProducts": [
-      "Luminboost Skin Refining Serum",
-      "Soothing & Hydrating Derma Cleansing",
-      "Bio-Cellulose Mask"
-    ]
+    "contentStyle": "Nội dung lifestyle/fashion pha beauty, thiên về trải nghiệm cá nhân và hình ảnh đời sống."
   },
   {
     "id": "90",
@@ -3513,7 +3513,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "91",
     "name": "Quân Nguyễn",
-    "avatar": "",
+    "avatar": "/images/kol/quan-nguyen.jpg",
     "cover": "",
     "platform": "Facebook",
     "handle": "@quan.nguyenmakeup",
@@ -3550,7 +3550,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "92",
     "name": "Motrang hít hà",
-    "avatar": "",
+    "avatar": "/images/kol/motrang-hit-ha.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@motrang_",
@@ -3584,7 +3584,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "93",
     "name": "Pang Mỹ Nguyên",
-    "avatar": "",
+    "avatar": "/images/kol/pang-my-nguyen.jpg",
     "cover": "",
     "platform": "Instagram",
     "handle": "@pangmynguyen",
@@ -3619,7 +3619,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "94",
     "name": "Huỳnh Thi Makeup",
-    "avatar": "",
+    "avatar": "/images/kol/huynh-thi-makeup.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@makeuphuynhthi",
@@ -3650,41 +3650,44 @@ export const REAL_KOLS: Kol[] = [
   },
   {
     "id": "95",
-    "name": "My Linh Cosmetics",
-    "avatar": "",
+    "name": "Lương Lee",
+    "avatar": "/images/kol/luong-lee.jpg",
     "cover": "",
     "platform": "Tiktok",
-    "handle": "@mylinh.cosmetics.hanviet",
-    "followers": "68K",
-    "recentreview": "Review mỹ phẩm Hàn - Việt",
-    "trustscore": 68,
+    "handle": "@luonglee1404",
+    "followers": "86.5K",
+    "recentreview": "Skincare, treatment và routine chăm da",
+    "trustscore": 72,
     "categories": [
       "Skincare",
-      "Makeup"
+      "Treatment"
     ],
-    "verified": false,
-    "bio": "My Linh Cosmetics là một kênh/trang về mỹ phẩm và làm đẹp tại Việt Nam, chuyên giới thiệu và review các sản phẩm makeup, skincare. Nội dung thiên về trải nghiệm sản phẩm và gợi ý mua sắm cho người tiêu dùng.",
+    "verified": true,
+    "bio": "Lương Lee là skincare creator có định vị rõ về treatment và routine chăm da. Profile TikTok live-check tháng 06/2026 ghi bio “12 năm skincare, dùng treatment 8 năm” và có 86.5K follower.",
     "socials": [
       {
         "platform": "Tiktok",
-        "handle": "@mylinh.cosmetics.hanviet",
-        "followers": "68K"
+        "handle": "@luonglee1404",
+        "followers": "86.5K"
       }
     ],
+    "basedIn": "Việt Nam",
     "specialties": [
-      "Review & bán mỹ phẩm Hàn - Việt - Trung",
-      "Sản phẩm chăm sóc cơ thể, làm đẹp trending"
+      "Skincare routine",
+      "Treatment",
+      "Chống nắng và phục hồi da"
     ],
     "knownFor": [
-      "Tài khoản chuyên nội dung mỹ phẩm Hàn Việt và sản phẩm làm đẹp đang trend",
-      "Đăng review các sản phẩm phổ thông"
+      "Profile bio công khai: 12 năm skincare, dùng treatment 8 năm",
+      "TikTok profile live-check 06/2026: 86.5K followers, 849.8K likes",
+      "Hợp để bổ sung niche skincare chuyên sâu thay cho shop mỹ phẩm"
     ],
-    "contentStyle": "Giới thiệu và review mỹ phẩm trending, thiên về dòng Hàn - Việt - Trung."
+    "contentStyle": "Chia sẻ routine, kinh nghiệm treatment và skincare thực dụng, ít thiên về entertainment hơn nhóm beauty-lifestyle."
   },
   {
     "id": "96",
     "name": "Kiên Fragrance",
-    "avatar": "",
+    "avatar": "/images/kol/kien-fragrance.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@kienfragranceca",
@@ -3717,7 +3720,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "97",
     "name": "Bầu Perfume",
-    "avatar": "",
+    "avatar": "/images/kol/bau-perfume.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@bauperfume",
@@ -3750,44 +3753,45 @@ export const REAL_KOLS: Kol[] = [
   },
   {
     "id": "98",
-    "name": "Beaudy",
-    "avatar": "/images/kol/beaudy-youtube.jpg",
+    "name": "Nga nèe",
+    "avatar": "/images/kol/nga-nee.jpg",
     "cover": "",
-    "platform": "Youtube",
-    "handle": "@Beaudy.vn",
-    "followers": "50K",
-    "recentreview": "Review mỹ phẩm và chăm sóc da",
-    "trustscore": 70,
+    "platform": "Tiktok",
+    "handle": "@thuyngareview",
+    "followers": "111.9K",
+    "recentreview": "Chống nắng, skincare và review sản phẩm dùng hằng ngày",
+    "trustscore": 72,
     "categories": [
       "Skincare",
-      "Treatment"
+      "Treatment",
+      "Lifestyle"
     ],
-    "verified": false,
-    "bio": "Beaudy (Beaudy.vn) là một nền tảng nội dung làm đẹp chuyên sâu tại Việt Nam, tập trung vào review mỹ phẩm và tra cứu, phân tích thành phần sản phẩm. Trang nổi bật với cách đánh giá độ an toàn của thành phần theo các tiêu chuẩn quốc tế, hỗ trợ người dùng so sánh và lựa chọn sản phẩm.",
+    "verified": true,
+    "bio": "Nga nèe là skincare/lifestyle creator với nội dung review sản phẩm, chống nắng và thói quen chăm sóc cá nhân. Profile live-check tháng 06/2026 ghi nhận 111.9K follower, 4.6M likes và video grid công khai.",
     "socials": [
       {
-        "platform": "Youtube",
-        "handle": "@Beaudy.vn",
-        "followers": "50K"
+        "platform": "Tiktok",
+        "handle": "@thuyngareview",
+        "followers": "111.9K"
       }
     ],
     "basedIn": "Việt Nam",
     "specialties": [
-      "Review mỹ phẩm trải nghiệm thật",
-      "Phân tích thành phần theo chuẩn quốc tế (CIR/EWG)",
-      "Kiến thức chăm sóc da & tóc"
+      "Skincare thực dụng",
+      "Chống nắng",
+      "Review sản phẩm hằng ngày"
     ],
     "knownFor": [
-      "Trang/kênh review mỹ phẩm chuyên sâu, phân tích thành phần theo chuẩn quốc tế",
-      "Có công cụ tra cứu & phân tích độ an toàn thành phần mỹ phẩm",
-      "Nội dung do đội ngũ biên tập và cộng tác viên thực hiện"
+      "TikTok profile live-check 06/2026: 111.9K followers, 4.6M likes",
+      "Nội dung có nhiều tín hiệu skincare/chống nắng",
+      "Phù hợp làm creator theo dõi cho nhóm review thực dụng"
     ],
-    "contentStyle": "Review dựa trên trải nghiệm thật kết hợp phân tích thành phần và độ an toàn theo thang EWG/CIR."
+    "contentStyle": "Video review ngắn, nói thẳng về thói quen chăm sóc cá nhân, chống nắng và các sản phẩm đời thường."
   },
   {
     "id": "99",
     "name": "Jena",
-    "avatar": "",
+    "avatar": "/images/kol/jena.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@nuochoa.jena",

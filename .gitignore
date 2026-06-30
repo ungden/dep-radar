@@ -6,3 +6,6 @@ coverage/
 .env*
 !.env.example
 .vercel
+supabase/.temp/
+.claude/
+tsconfig.tsbuildinfo
