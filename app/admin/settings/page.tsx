@@ -14,7 +14,10 @@ export default function AdminSettingsPage() {
     { label: "robots.txt", value: "/admin/* disallowed", ok: true },
     { label: "Sitemap", value: `${siteUrl}/sitemap.xml`, ok: true },
     { label: "Shopee affiliate readiness", value: "Product/offers supported", ok: true },
+    { label: "Daily briefing cron", value: "14:00 VN via /api/cron/daily-briefing", ok: true },
+    { label: "Cron auth secret", value: process.env.CRON_SECRET ? "Configured" : "Missing", ok: Boolean(process.env.CRON_SECRET) },
     { label: "Editorial guard", value: "npm run check:editorial", ok: true },
+    { label: "Daily guard", value: "npm run check:daily", ok: true },
     { label: "SEO guard", value: "npm run check:seo", ok: true },
   ]
 
@@ -61,6 +64,7 @@ export default function AdminSettingsPage() {
             <div className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
               <p>Admin pages export noindex metadata and robots blocks `/admin/`.</p>
               <p>GA only runs when `NEXT_PUBLIC_GA_ID` exists and skips admin routes.</p>
+              <p>Daily briefing cron only revalidates reviewed editorial/KOL/product data; crawler or AI output must enter draft/evidence review first.</p>
               <p>Affiliate links are tracked as public events without user identity, email, review text or private admin fields.</p>
               <Link href="/admin/seo" className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-slate-700 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-200">
                 Open SEO audit

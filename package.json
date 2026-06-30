@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "check:editorial": "node scripts/check-editorial.mjs",
     "check:content-graph": "tsx scripts/check-content-graph.ts",
+    "check:daily": "tsx scripts/check-daily-briefing.ts",
     "check:seo": "tsx scripts/check-seo.ts",
     "seed:db": "tsx seed-db.ts",
     "clean": "next clean"

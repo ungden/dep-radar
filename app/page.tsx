@@ -6,6 +6,8 @@ import { CommunityHighlights } from "@/components/home/community-highlights"
 import { getCreatorProductEvents, getKols, getPosts, getProducts } from "@/lib/data"
 import { buildHomeDailyBriefing } from "@/lib/home-briefing"
 
+export const revalidate = 3600
+
 export default async function HomePage() {
   const [posts, products, timelineEvents, kols] = await Promise.all([
     getPosts(),

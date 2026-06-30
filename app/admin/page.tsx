@@ -281,12 +281,16 @@ export default function AdminDashboard() {
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-4">Cấu hình hệ thống</h3>
             <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
               <li className="flex justify-between">
-                <span>Tạo bài tự động</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-medium">Hoạt động</span>
+                <span>Daily briefing</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">Có cron</span>
               </li>
               <li className="flex justify-between">
                 <span>Lịch chạy</span>
                 <span className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">14:00 VN daily</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Auto-publish crawler/AI</span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Không, cần duyệt</span>
               </li>
               <li className="flex justify-between">
                 <span>Google Analytics</span>

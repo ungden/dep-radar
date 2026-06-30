@@ -7,7 +7,7 @@ import { getSiteUrl, postPath } from "@/lib/seo"
 import type { Kol, Post, Product, ProductOffer } from "@/lib/types"
 
 export type SeoAuditSeverity = "error" | "warning" | "info"
-export type SeoAuditArea = "metadata" | "sitemap" | "blog" | "product" | "catalogue" | "kol" | "analytics" | "admin" | "ai"
+export type SeoAuditArea = "metadata" | "sitemap" | "blog" | "product" | "catalogue" | "kol" | "analytics" | "admin" | "ai" | "cron"
 
 export interface SeoAuditIssue {
   severity: SeoAuditSeverity
@@ -51,6 +51,9 @@ const ROUTE_FILES = {
   productDetail: "app/products/[id]/page.tsx",
   catalogueDetail: "app/catalogue/[slug]/page.tsx",
   kolDetail: "app/koc-tracker/[id]/page.tsx",
+  homePage: "app/page.tsx",
+  vercel: "vercel.json",
+  dailyCronRoute: "app/api/cron/daily-briefing/route.ts",
 }
 
 export async function buildSeoAuditReport(): Promise<SeoAuditReport> {
@@ -137,6 +140,9 @@ function auditRouteFiles(issues: SeoAuditIssue[]) {
   const productDetail = readFile(ROUTE_FILES.productDetail)
   const catalogueDetail = readFile(ROUTE_FILES.catalogueDetail)
   const kolDetail = readFile(ROUTE_FILES.kolDetail)
+  const homePage = readFile(ROUTE_FILES.homePage)
+  const vercel = readFile(ROUTE_FILES.vercel)
+  const dailyCronRoute = readFile(ROUTE_FILES.dailyCronRoute)
 
   addIf(issues, !rootLayout.includes("metadataBase") || !rootLayout.includes("openGraph"), "error", "metadata", "Global metadata is incomplete", "Root layout should define metadataBase, canonical metadata, and Open Graph defaults.")
   addIf(issues, !rootLayout.includes("GoogleAnalytics"), "error", "analytics", "GA component missing from root layout", "Root layout should mount the App Router GA page-view tracker.")
@@ -149,6 +155,10 @@ function auditRouteFiles(issues: SeoAuditIssue[]) {
   addIf(issues, !productDetail.includes('"@type": "Product"'), "error", "product", "Product detail missing Product JSON-LD", "Product pages should emit Product structured data.")
   addIf(issues, !catalogueDetail.includes('"@type": "BreadcrumbList"'), "error", "catalogue", "Catalogue detail missing Breadcrumb JSON-LD", "Catalogue pages should emit a BreadcrumbList.")
   addIf(issues, !kolDetail.includes('"@type": "ProfilePage"'), "error", "kol", "KOL detail missing ProfilePage JSON-LD", "KOL pages should emit ProfilePage/Person structured data.")
+  addIf(issues, !homePage.includes("export const revalidate"), "warning", "cron", "Homepage has no ISR revalidate window", "Daily briefing should be able to refresh without waiting for a full redeploy.")
+  addIf(issues, !vercel.includes('"/api/cron/daily-briefing"') || !vercel.includes('"0 7 * * *"'), "error", "cron", "Daily briefing cron is not configured", "vercel.json should schedule /api/cron/daily-briefing at 14:00 VN daily.")
+  addIf(issues, !dailyCronRoute.includes("CRON_SECRET") || !dailyCronRoute.includes("authorization"), "error", "cron", "Daily briefing cron is not authenticated", "Cron route must verify Authorization: Bearer CRON_SECRET.")
+  addIf(issues, !dailyCronRoute.includes("revalidatePath"), "error", "cron", "Daily briefing cron does not revalidate public routes", "Cron route should revalidate homepage and related public index pages.")
 }
 
 function auditPosts(posts: Post[], issues: SeoAuditIssue[]) {
