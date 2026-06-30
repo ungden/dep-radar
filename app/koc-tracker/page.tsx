@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PlatformBadge } from "@/components/platform-badge"
 import { getKols } from "@/lib/data"
+import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import type { Kol } from "@/lib/types"
 
@@ -42,6 +43,10 @@ export default function KocTrackerPage() {
                             (kol.socials?.some(s => s.handle.toLowerCase().includes(query)) ?? false)
       const matchesPlatform = selectedPlatform ? kolPlatforms(kol).includes(selectedPlatform) : true
       return matchesSearch && matchesPlatform
+    }).sort((a, b) => {
+      const aCredibility = getKolCredibility(a)
+      const bCredibility = getKolCredibility(b)
+      return bCredibility.credibilityScore - aCredibility.credibilityScore || b.trustscore - a.trustscore
     }),
     [kols, searchQuery, selectedPlatform, kolPlatforms]
   )
@@ -59,7 +64,7 @@ export default function KocTrackerPage() {
             KOL/KOC Tracker
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400 max-w-3xl">
-            Khám phá và theo dõi các Beauty Blogger, KOC hàng đầu. Đánh giá độ uy tín, xem lịch sử review và phát hiện các bài đăng tài trợ (PR) một cách minh bạch.
+            Khám phá Beauty Blogger, KOC và chuyên gia làm đẹp theo hai lớp điểm: độ tin cậy để biết nên tin đến đâu, và độ phủ để biết sức ảnh hưởng lớn đến mức nào.
           </p>
         </motion.div>
 
@@ -109,7 +114,9 @@ export default function KocTrackerPage() {
             initial="hidden"
             animate="show"
           >
-            {filteredKols.map((kol) => (
+            {filteredKols.map((kol) => {
+              const credibility = getKolCredibility(kol)
+              return (
               <motion.div key={kol.id} variants={itemVariants}>
                 <Link href={`/koc-tracker/${kol.id}`}>
                   <Card className="overflow-hidden border-none shadow-sm hover:shadow-xl transition-all duration-300 group bg-white dark:bg-slate-900 rounded-2xl h-full">
@@ -126,20 +133,26 @@ export default function KocTrackerPage() {
                             </h3>
                             {kol.verified && <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0" />}
                           </div>
+                          <Badge variant="outline" className={`mb-3 rounded-full border ${credibilityToneClass(credibility.tier)}`}>
+                            {credibility.shortLabel}
+                          </Badge>
                           <div className="mb-3 flex flex-wrap gap-1.5">
                             {Array.from(new Set(kol.socials?.length ? kol.socials.map(s => s.platform) : [kol.platform])).map((p) => (
                               <PlatformBadge key={p} platform={p} />
                             ))}
                           </div>
-                          <div className="flex items-center gap-4 text-sm">
+                          <div className="grid grid-cols-3 gap-3 text-sm">
                             <div className="flex flex-col">
                               <span className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Followers</span>
                               <span className="font-bold text-slate-900 dark:text-slate-50">{kol.followers}</span>
                             </div>
-                            <div className="w-px h-8 bg-slate-100 dark:bg-slate-800" />
                             <div className="flex flex-col">
-                              <span className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Độ uy tín</span>
-                              <span className="font-bold text-emerald-600 dark:text-emerald-400">{kol.trustscore}/100</span>
+                              <span className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Tin cậy</span>
+                              <span className="font-bold text-emerald-600 dark:text-emerald-400">{credibility.credibilityScore}/100</span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Độ phủ</span>
+                              <span className="font-bold text-slate-900 dark:text-slate-50">{credibility.influenceScore}/100</span>
                             </div>
                           </div>
                         </div>
@@ -169,7 +182,8 @@ export default function KocTrackerPage() {
                   </Card>
                 </Link>
               </motion.div>
-            ))}
+              )
+            })}
           </motion.div>
         ) : (
           <motion.div

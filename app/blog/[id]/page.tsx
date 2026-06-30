@@ -14,6 +14,7 @@ import { LikeButton } from "@/components/like-button"
 import { SocialShare } from "@/components/social-share"
 import { CommentSection } from "@/components/comment-section"
 import { getMatrixNodeByArticleSlug, getMatrixProductGroups, researchStageLabels, type ProductGroup } from "@/lib/content-matrix"
+import { getKolCredibility } from "@/lib/kol-credibility"
 import type { Kol, Post, Product } from "@/lib/types"
 
 function JsonLd({ data }: { data: Record<string, unknown> }) {
@@ -621,6 +622,6 @@ function scoreKolsForPost(kols: Kol[], post: Post) {
       return { kol, score }
     })
     .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score || b.kol.trustscore - a.kol.trustscore)
+    .sort((a, b) => b.score - a.score || getKolCredibility(b.kol).credibilityScore - getKolCredibility(a.kol).credibilityScore)
     .map((item) => item.kol)
 }

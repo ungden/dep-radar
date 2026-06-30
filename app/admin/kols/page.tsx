@@ -229,7 +229,7 @@ export default function AdminKolsPage() {
                     {kol.followers} followers
                   </span>
                   <span className="text-xs font-medium text-rose-600 dark:text-rose-400">
-                    Trust {kol.trustscore}%
+                    Do phu {kol.trustscore}%
                   </span>
                 </div>
 
@@ -339,9 +339,9 @@ export default function AdminKolsPage() {
               />
             </div>
 
-            {/* Trust Score */}
+            {/* Influence Score */}
             <div className="grid gap-2">
-              <Label htmlFor="trustscore">Trust Score (0-100): {form.trustscore}</Label>
+              <Label htmlFor="trustscore">Do phu / Influence (0-100): {form.trustscore}</Label>
               <input
                 id="trustscore"
                 type="range"

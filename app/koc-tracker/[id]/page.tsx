@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { PlatformBadge } from "@/components/platform-badge"
 import { getCreatorProductEvents, getKol, getPost, getProducts, getReviews } from "@/lib/data"
 import { getMatrixNodesByKolId, getMatrixProductGroups } from "@/lib/content-matrix"
+import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
 import { parseFollowers } from "@/lib/kols-data"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import type { CreatorProductEvent, Kol, KolSocial, Post, Product } from "@/lib/types"
@@ -151,6 +152,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
   const totalReach = formatReach(socials.reduce((sum, s) => sum + parseFollowers(s.followers), 0))
   const bioParagraphs = kol.bio ? kol.bio.split(/\n\n+/).map(p => p.trim()).filter(Boolean) : []
   const primaryUrl = buildSocialUrl(socials[0])
+  const credibility = getKolCredibility(kol)
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://360dep.vn"
   // Cover: real banner (6 originals) > blurred avatar (when we have a photo) > brand gradient.
   const realCover = kol.cover && kol.cover.startsWith("/") && !kol.cover.includes("picsum") ? kol.cover : null
@@ -192,6 +194,9 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                 <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900 dark:text-slate-50">{kol.name}</h1>
                 {kol.verified && <ShieldCheck className="h-8 w-8 text-blue-500" />}
               </div>
+              <Badge variant="outline" className={`mb-3 rounded-full border px-3 py-1 ${credibilityToneClass(credibility.tier)}`}>
+                {credibility.label}
+              </Badge>
               {kol.realName && kol.realName !== kol.name && (
                 <p className="text-slate-500 dark:text-slate-400 mb-3">Tên thật: {kol.realName}</p>
               )}
@@ -225,8 +230,17 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                     <Award className="h-6 w-6" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Độ uy tín</div>
-                    <div className="text-xl font-bold text-slate-900 dark:text-slate-50">{kol.trustscore}/100</div>
+                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Độ tin cậy</div>
+                    <div className="text-xl font-bold text-slate-900 dark:text-slate-50">{credibility.credibilityScore}/100</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-full bg-cyan-50 dark:bg-cyan-950/30 flex items-center justify-center text-cyan-600 dark:text-cyan-400">
+                    <ShieldQuestion className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Độ phủ</div>
+                    <div className="text-xl font-bold text-slate-900 dark:text-slate-50">{credibility.influenceScore}/100</div>
                   </div>
                 </div>
                 {kol.activeSince && (
@@ -482,6 +496,40 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
 
             {/* Sidebar */}
             <aside className="space-y-6">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+                  <Award className="h-4 w-4" /> Độ tin cậy
+                </h3>
+                <div className="mb-3 flex items-end gap-2">
+                  <span className="font-display text-4xl font-black text-slate-900 dark:text-slate-50">{credibility.credibilityScore}</span>
+                  <span className="pb-1 text-sm font-bold text-slate-400">/100</span>
+                </div>
+                <Badge variant="outline" className={`mb-4 rounded-full border ${credibilityToneClass(credibility.tier)}`}>
+                  {credibility.label}
+                </Badge>
+                <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{credibility.summary}</p>
+                {credibility.strengths.length > 0 && (
+                  <div className="mt-4">
+                    <div className="mb-2 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Điểm cộng</div>
+                    <ul className="space-y-2">
+                      {credibility.strengths.map((item) => (
+                        <li key={item} className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {credibility.cautions.length > 0 && (
+                  <div className="mt-4">
+                    <div className="mb-2 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-300">Cần đọc kèm bối cảnh</div>
+                    <ul className="space-y-2">
+                      {credibility.cautions.map((item) => (
+                        <li key={item} className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
               {/* Quick facts */}
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">Thông tin nhanh</h3>

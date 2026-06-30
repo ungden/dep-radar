@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getCommunityReviews, getCreatorProductEvents, getKols, getPost, getProduct, getProductOffers, getReviews } from "@/lib/data"
 import { getMatrixNodesByProductId } from "@/lib/content-matrix"
+import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
 import { AffiliateButton } from "@/components/affiliate-button"
 import { SocialShare } from "@/components/social-share"
 import { RelatedProducts } from "@/components/related-products"
@@ -361,6 +362,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 {sortedReviews.map((review) => {
                   const kol = KOLS.find(k => k.id === review.kolid);
                   if (!kol) return null;
+                  const credibility = getKolCredibility(kol);
                   
                   return (
                     <div key={review.id} className="flex gap-4 p-6 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
@@ -377,6 +379,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                               {kol.name}
                             </Link>
                             {kol.verified && <ShieldCheck className="h-4 w-4 text-blue-500" />}
+                            <Badge variant="outline" className={`rounded-full border text-[10px] ${credibilityToneClass(credibility.tier)}`}>
+                              {credibility.shortLabel}
+                            </Badge>
                           </div>
                           <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{review.timeago}</span>
                         </div>
