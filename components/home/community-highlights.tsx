@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { MessageSquare, ThumbsUp, Clock } from "lucide-react"
@@ -9,17 +8,13 @@ import { motion } from "motion/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { getPosts } from "@/lib/data"
 import { containerVariants, itemVariants } from "@/lib/animations"
+import { getHomeRecencyLabel, type HomeBriefingItem } from "@/lib/home-briefing"
 import type { Post } from "@/lib/types"
 
-export function CommunityHighlights() {
-  const [posts, setPosts] = React.useState<Post[]>([])
-
-  React.useEffect(() => {
-    getPosts().then((items) => setPosts(items.slice(0, 3)))
-  }, [])
-
+export function CommunityHighlights({ posts, dailyUpdates = [] }: { posts: Post[]; dailyUpdates?: HomeBriefingItem[] }) {
+  const latestPosts = posts.slice(0, 6)
+  const mixedUpdates = dailyUpdates.slice(0, 5)
   function formatDate(dateStr: string) {
     return new Date(dateStr).toLocaleDateString("vi-VN", {
       day: "numeric",
@@ -32,10 +27,10 @@ export function CommunityHighlights() {
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
         <div className="max-w-2xl">
           <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-slate-900 dark:text-slate-50 mb-4">
-            Blog Làm Đẹp
+            Mới cập nhật từ Beauty Desk
           </h2>
           <p className="text-lg text-slate-600 dark:text-slate-400">
-            Cập nhật xu hướng mới nhất, chia sẻ kinh nghiệm và bí quyết làm đẹp từ các chuyên gia hàng đầu.
+            Nhiều bài hơn trên trang chủ: routine, ingredient, clinic, makeup, bodycare và beauty tech.
           </p>
         </div>
         <Link href="/blog" className="shrink-0">
@@ -45,14 +40,33 @@ export function CommunityHighlights() {
         </Link>
       </div>
 
+      {mixedUpdates.length > 0 && (
+        <div className="mb-8 flex gap-3 overflow-x-auto pb-1">
+          {mixedUpdates.map((item) => (
+            <Link
+              key={`${item.kind}-${item.href}-${item.title}`}
+              href={item.href}
+              className="min-w-[250px] max-w-[280px] rounded-lg border border-slate-100 bg-white p-4 shadow-sm transition-colors hover:border-rose-100 hover:text-rose-600 dark:border-slate-800 dark:bg-slate-900 dark:hover:text-rose-300"
+            >
+              <div className="mb-2 flex items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <span>{getHomeRecencyLabel(item.date)}</span>
+                <span>{item.kind === "article" ? "Tin" : item.kind === "creator" ? "KOL/KOC" : "Sản phẩm"}</span>
+              </div>
+              <h3 className="text-sm font-bold leading-tight text-slate-900 line-clamp-2 dark:text-slate-50">{item.title}</h3>
+              <p className="mt-2 text-xs leading-relaxed text-slate-500 line-clamp-2 dark:text-slate-400">{item.excerpt}</p>
+            </Link>
+          ))}
+        </div>
+      )}
+
       <motion.div
-        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+        className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
         variants={containerVariants}
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, margin: "-100px" }}
       >
-        {posts.map((post) => (
+        {latestPosts.map((post) => (
           <motion.div key={post.id} variants={itemVariants}>
             <Card className="flex h-full flex-col overflow-hidden border-slate-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
               <Link href={`/blog/${post.id}`} className="group relative block aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">

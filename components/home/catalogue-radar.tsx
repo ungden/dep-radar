@@ -16,8 +16,16 @@ import type { LucideIcon } from "lucide-react"
 import { motion } from "motion/react"
 
 import { Badge } from "@/components/ui/badge"
-import { catalogueSections, secondaryFilterGroups, topCatalogueNavigation } from "@/lib/catalogue"
+import {
+  type CatalogueSection,
+  catalogueSections,
+  postMatchesCatalogue,
+  productMatchesCatalogue,
+  secondaryFilterGroups,
+  topCatalogueNavigation,
+} from "@/lib/catalogue"
 import { containerVariants, itemVariants } from "@/lib/animations"
+import type { Post, Product } from "@/lib/types"
 
 type CatalogueVisual = {
   image: string
@@ -28,50 +36,51 @@ type CatalogueVisual = {
 
 const catalogueVisuals: Record<string, CatalogueVisual> = {
   "da-mat": {
-    image: "/images/editorial/huong-dan-nen-skincare-cho-nguoi-moi.png",
+    image: "/images/editorial/huong-dan-nen-skincare-cho-nguoi-moi.jpg",
     label: "Skincare map",
     Icon: Droplets,
     accent: "from-rose-500/85 to-orange-300/70",
   },
   "tri-mun": {
-    image: "/images/editorial/ban-do-tri-mun-tu-mun-an-den-mun-nang.png",
+    image: "/images/editorial/ban-do-tri-mun-tu-mun-an-den-mun-nang.jpg",
     label: "Acne care",
     Icon: ShieldCheck,
     accent: "from-red-500/85 to-rose-300/70",
   },
   "sang-da-chong-nang": {
-    image: "/images/editorial/pillar-sang-da-va-chong-nang-an-toan.png",
+    image: "/images/editorial/pillar-sang-da-va-chong-nang-an-toan.jpg",
     label: "SPF guide",
     Icon: Sparkles,
     accent: "from-amber-500/85 to-rose-300/70",
   },
   "ingredient-radar": {
-    image: "/images/editorial/cach-doc-ingredient-list-cho-nguoi-moi.png",
+    image: "/images/editorial/cach-doc-ingredient-list-cho-nguoi-moi.jpg",
     label: "Ingredient check",
     Icon: FlaskConical,
     accent: "from-cyan-600/85 to-emerald-300/70",
   },
   "product-radar": {
-    image: "/images/editorial/cach-doc-review-my-pham-dang-tin.png",
+    image: "/images/editorial/cach-doc-review-my-pham-dang-tin.jpg",
     label: "Product shortlist",
     Icon: ScanSearch,
     accent: "from-violet-500/85 to-rose-300/70",
   },
   bodycare: {
-    image: "/images/editorial/pillar-bodycare-theo-tung-vung-co-the.png",
+    image: "/images/editorial/pillar-bodycare-theo-tung-vung-co-the.jpg",
     label: "Body routine",
     Icon: BadgeCheck,
     accent: "from-teal-600/85 to-cyan-300/70",
   },
 }
 
-export function CatalogueRadar() {
-  const featured = topCatalogueNavigation.slice(0, 6)
+export function CatalogueRadar({ posts, products, prompts }: { posts: Post[]; products: Product[]; prompts?: CatalogueSection[] }) {
+  const featured = (prompts?.length ? prompts : topCatalogueNavigation).slice(0, 6)
+  const mobileSecondary = featured.slice(3)
 
   return (
     <section className="container mx-auto px-4 md:px-6">
-      <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
-        <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:rounded-3xl md:p-8">
+        <div className="mb-5 flex flex-col gap-4 md:mb-7 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">
               Tìm đúng vấn đề làm đẹp của bạn
@@ -92,8 +101,8 @@ export function CatalogueRadar() {
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
         >
-          {featured.map((section) => (
-            <motion.div key={section.slug} variants={itemVariants} className="min-w-0">
+          {featured.map((section, index) => (
+            <motion.div key={section.slug} variants={itemVariants} className={`min-w-0 ${index > 2 ? "hidden sm:block" : ""}`}>
               <Link
                 href={`/catalogue/${section.slug}`}
                 className="group block h-full overflow-hidden rounded-2xl bg-slate-50 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-lg dark:bg-slate-950 dark:hover:bg-slate-900"
@@ -101,6 +110,8 @@ export function CatalogueRadar() {
                 {(() => {
                   const visual = catalogueVisuals[section.slug] ?? catalogueVisuals["da-mat"]
                   const Icon = visual.Icon
+                  const postCount = posts.filter((post) => postMatchesCatalogue(post, section)).length
+                  const productCount = products.filter((product) => productMatchesCatalogue(product, section)).length
 
                   return (
                     <>
@@ -122,6 +133,10 @@ export function CatalogueRadar() {
                           <h3 className="mt-1 font-display text-xl font-black text-white">
                             {section.shortTitle}
                           </h3>
+                          <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-wider text-white/80">
+                            <span>{postCount} bài</span>
+                            <span>{productCount} sản phẩm</span>
+                          </div>
                         </div>
                       </div>
                       <div className="p-5">
@@ -147,7 +162,21 @@ export function CatalogueRadar() {
           ))}
         </motion.div>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-[1.1fr_1.9fr]">
+        {mobileSecondary.length > 0 && (
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1 sm:hidden">
+            {mobileSecondary.map((section) => (
+              <Link
+                key={section.slug}
+                href={`/catalogue/${section.slug}`}
+                className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+              >
+                {section.shortTitle}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-6 hidden gap-3 md:grid md:grid-cols-[1.1fr_1.9fr]">
           <div className="rounded-2xl bg-stone-950 p-5 text-stone-50">
             <div className="flex items-center gap-2 text-sm font-bold">
               <Filter className="h-4 w-4 text-[#d8a48f]" />

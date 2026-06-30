@@ -1,114 +1,99 @@
 "use client"
 
-import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Star, ShoppingCart } from "lucide-react"
+import { MessageCircle, Sparkles } from "lucide-react"
 import useEmblaCarousel from "embla-carousel-react"
 import Autoplay from "embla-carousel-autoplay"
 import { motion } from "motion/react"
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { getProducts } from "@/lib/data"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { containerVariants, itemVariants } from "@/lib/animations"
-import type { Product } from "@/lib/types"
+import { getHomeRecencyLabel, type HomeProductSignal } from "@/lib/home-briefing"
 
-export function TrendingSection() {
-  const [products, setProducts] = React.useState<Product[]>([])
-
-  React.useEffect(() => {
-    getProducts().then((items) => setProducts(items.slice(0, 6)))
-  }, [])
-
+export function TrendingSection({ productSignals }: { productSignals: HomeProductSignal[] }) {
   const [emblaRef] = useEmblaCarousel({ loop: true, align: "start" }, [
-    Autoplay({ delay: 4000, stopOnInteraction: true }),
+    Autoplay({ delay: 4200, stopOnInteraction: true }),
   ])
+  const visibleSignals = productSignals.slice(0, 10)
 
   return (
-    <section className="container mx-auto px-4 md:px-6 overflow-hidden">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-            Top Sản Phẩm Thịnh Hành
+    <section className="container mx-auto overflow-hidden px-4 md:px-6">
+      <div className="mb-6 flex items-end justify-between gap-4 md:mb-8">
+        <div className="max-w-2xl">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wider text-rose-600 shadow-sm dark:bg-slate-900 dark:text-rose-300">
+            <Sparkles className="h-3.5 w-3.5" />
+            Đang được bàn luận
+          </div>
+          <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">
+            Sản phẩm nổi lên từ tín hiệu thật
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">
-            Những sản phẩm được tìm kiếm và đánh giá nhiều nhất tuần qua.
+          <p className="mt-2 text-slate-500 dark:text-slate-400">
+            Xếp theo số lần được creator nhắc và độ mới của timeline, không đặt giá hay deal lên trước.
           </p>
         </div>
-        <Link href="/products">
-          <Button variant="outline" className="hidden sm:flex rounded-full">
-            Xem tất cả
-          </Button>
+        <Link href="/products" className="hidden shrink-0 text-sm font-bold text-rose-500 hover:text-rose-600 sm:inline-flex">
+          Xem catalogue <span aria-hidden="true" className="ml-1">&rarr;</span>
         </Link>
       </div>
 
       <div className="overflow-hidden" ref={emblaRef}>
         <motion.div
-          className="flex -ml-4"
+          className="-ml-4 flex"
           variants={containerVariants}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
         >
-          {products.map((product, index) => (
+          {visibleSignals.map((signal, index) => (
             <motion.div
-              key={product.id}
+              key={signal.product.id}
               variants={itemVariants}
-              className="min-w-0 shrink-0 grow-0 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5 pl-4"
+              className="min-w-0 shrink-0 grow-0 basis-full pl-4 sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
             >
-              <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden group">
-                <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-slate-800">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
-                    priority={index === 0}
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    referrerPolicy="no-referrer"
-                  />
-                  <Badge className="absolute top-3 left-3 bg-white/90 dark:bg-slate-950/90 text-slate-900 dark:text-slate-50 hover:bg-white dark:hover:bg-slate-950 backdrop-blur-sm border-none shadow-sm">
-                    {product.category}
-                  </Badge>
-                </div>
-                <CardHeader className="p-4 pb-2 flex-1">
-                  <div className="text-xs font-medium text-rose-500 uppercase tracking-wider mb-1">
-                    {product.brand}
+              <Link href={`/products/${signal.product.id}`} className="group block h-full">
+                <Card className="flex h-full flex-col overflow-hidden border-slate-100 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
+                  <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-slate-800">
+                    <Image
+                      src={signal.product.image}
+                      alt={signal.product.name}
+                      fill
+                      sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      priority={index === 0}
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                    <Badge className="absolute left-3 top-3 border-none bg-white/90 text-slate-900 shadow-sm backdrop-blur hover:bg-white">
+                      {signal.categoryLabel}
+                    </Badge>
+                    {signal.latestDate && (
+                      <Badge className="absolute bottom-3 left-3 border-none bg-slate-950/80 text-white backdrop-blur hover:bg-slate-950/80">
+                        {getHomeRecencyLabel(signal.latestDate)}
+                      </Badge>
+                    )}
                   </div>
-                  <CardTitle className="text-base font-semibold leading-tight line-clamp-2">
-                    <Link href={`/products/${product.id}`} className="hover:text-rose-500 dark:hover:text-rose-400 transition-colors text-slate-900 dark:text-slate-50">
-                      {product.name}
-                    </Link>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="flex items-center gap-1.5 mb-3">
-                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{product.rating}</span>
-                    <span className="text-xs text-slate-400">({product.reviews} đánh giá)</span>
-                  </div>
-                  <div className="text-lg font-bold text-slate-900 dark:text-slate-50">{product.price}</div>
-                </CardContent>
-                <CardFooter className="p-4 pt-0">
-                  {product.affiliate_url ? (
-                    <a href={product.affiliate_url} target="_blank" rel="noopener noreferrer" className="w-full" onClick={(e) => e.stopPropagation()}>
-                      <Button className="w-full rounded-xl gap-2 font-semibold shadow-sm" variant="default">
-                        <ShoppingCart className="w-4 h-4" />
-                        Mua trên Shopee
-                      </Button>
-                    </a>
-                  ) : (
-                    <Link href={`/products/${product.id}`} className="w-full">
-                      <Button className="w-full rounded-xl gap-2 font-semibold shadow-sm" variant="default">
-                        <ShoppingCart className="w-4 h-4" />
-                        Xem chi tiết
-                      </Button>
-                    </Link>
-                  )}
-                </CardFooter>
-              </Card>
+                  <CardHeader className="flex-1 p-4 pb-2">
+                    <div className="mb-1 text-xs font-bold uppercase tracking-wider text-rose-500">
+                      {signal.product.brand}
+                    </div>
+                    <CardTitle className="text-base font-semibold leading-tight text-slate-900 line-clamp-2 transition-colors group-hover:text-rose-600 dark:text-slate-50 dark:group-hover:text-rose-300">
+                      {signal.product.name}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <div className="mb-3 flex items-center gap-1.5 text-sm font-bold text-slate-700 dark:text-slate-300">
+                      <MessageCircle className="h-4 w-4 text-rose-500" />
+                      {signal.mentions || 1} lượt nhắc
+                    </div>
+                    <p className="text-sm leading-relaxed text-slate-500 line-clamp-2 dark:text-slate-400">
+                      {signal.creatorNames.length
+                        ? `${signal.creatorNames.slice(0, 2).join(", ")} đang tạo tín hiệu cho sản phẩm này.`
+                        : "Đang được Beauty Radar đưa vào danh sách theo dõi."}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
             </motion.div>
           ))}
         </motion.div>
