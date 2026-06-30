@@ -180,8 +180,8 @@ export const SAMPLE_CREATOR_PRODUCT_EVENTS: CreatorProductEvent[] = [
     confidence: "medium",
   },
   {
-    id: "evt-2026-04-02-bong-benh-batiste-dry-shampoo",
-    creator_id: "5",
+    id: "evt-2026-04-02-bong-bee-batiste-dry-shampoo",
+    creator_id: "60",
     product_id: "5",
     event_type: "used",
     event_date: "2026-04-02",
@@ -193,7 +193,7 @@ export const SAMPLE_CREATOR_PRODUCT_EVENTS: CreatorProductEvent[] = [
     sentiment: "positive",
     disclosure: "organic",
     usage_context: "Tóc bết, tóc sau tẩy nhuộm cần giảm tần suất gội",
-    evidence_note: "Seed từ bài fallback ban đầu để chuẩn hóa mô hình timeline.",
+    evidence_note: "Seed fallback đã chuyển sang creator haircare xác định được, loại bỏ hồ sơ Bồng Bềnh không đủ tín hiệu.",
     confidence: "medium",
   },
   {

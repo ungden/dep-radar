@@ -30,6 +30,9 @@ const KOLS = REAL_KOLS.map((kol) => ({
   verified: kol.verified,
 }));
 
+const STALE_KOL_IDS = ["5"];
+const STALE_CREATOR_EVENT_IDS = ["evt-2026-04-02-bong-benh-batiste-dry-shampoo"];
+
 const PRODUCTS = [
   { id: "1", name: "Tinh chất phục hồi da B5 GoodnDoc", brand: "GoodnDoc", image: "/images/product-b5-serum.png", rating: 4.8, reviews: 1240, sold: "8,500+", price: "350.000đ", category: "Skincare", tags: ["Phục hồi", "Cấp ẩm"], description: "Sản phẩm giúp phục hồi hàng rào bảo vệ da, cung cấp độ ẩm sâu và làm dịu làn da nhạy cảm. Phù hợp cho mọi loại da, đặc biệt là da đang treatment hoặc cần phục hồi sau mụn." },
   { id: "2", name: "Kem nền Maybelline Fit Me Matte + Poreless", brand: "Maybelline", image: "/images/product-foundation.png", rating: 4.5, reviews: 3500, sold: "15,000+", price: "180.000đ", category: "Makeup", tags: ["Kiềm dầu", "Drugstore"], description: "Kem nền kiềm dầu, che phủ lỗ chân lông hoàn hảo. Phù hợp cho da dầu và hỗn hợp thiên dầu, mang lại lớp nền mịn lì tự nhiên suốt cả ngày dài." },
@@ -151,8 +154,8 @@ Bước 1 — Chuyển sang dầu gội không sulfate. Sulfate là chất tẩy
 Bước 2 — Ủ tóc tuần 2 lần. Sử dụng mặt nạ tóc chứa Keratin hoặc Protein để bù đắp lại cấu trúc tóc bị phá vỡ. Ủ ít nhất 15-20 phút rồi xả sạch. Fino Premium Touch Hair Mask của Shiseido là sản phẩm "thần thánh" mà hội mê nhuộm tóc không thể thiếu.
 
 Bước 3 — Dùng tinh dầu dưỡng tóc. Sau khi gội, thoa một lượng nhỏ tinh dầu Argan hoặc Moroccanoil lên phần đuôi tóc khi tóc còn ẩm. Điều này giúp khóa ẩm, giảm xơ rối và tạo độ bóng tự nhiên. Tránh bôi lên da đầu để không gây bết.`,
-    author_name: "Bồng Bềnh",
-    author_avatar: "/images/kol-bong.png",
+    author_name: "Bống Bee",
+    author_avatar: "/images/kol/bong-bee.jpg",
     category: "Chăm Sóc Tóc",
     tags: ["Tóc hư tổn", "Nhuộm tóc", "Phục hồi", "Tại nhà"],
     image: "/images/product-dry-shampoo.png",
@@ -234,6 +237,19 @@ Về màu sắc, đỏ gạch (terracotta red), hồng đất (dusty pink) và n
 ];
 
 async function seed() {
+  console.log("Removing stale unidentified KOL records...");
+  const { error: staleEventError } = await supabaseAdmin
+    .from('creator_product_events')
+    .delete()
+    .in('id', STALE_CREATOR_EVENT_IDS);
+  if (staleEventError) console.error("STALE CREATOR EVENT Error:", staleEventError.message);
+
+  const { error: staleKolError } = await supabaseAdmin
+    .from('kols')
+    .delete()
+    .in('id', STALE_KOL_IDS);
+  if (staleKolError) console.error("STALE KOL Error:", staleKolError.message);
+
   console.log(`Seeding KOLS (${KOLS.length})...`);
   const { error: e1 } = await supabaseAdmin.from('kols').upsert(KOLS);
   if (e1) console.error("KOLS Error:", e1.message);

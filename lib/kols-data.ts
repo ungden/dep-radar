@@ -7,7 +7,7 @@ import type { Kol } from "@/lib/types"
  * - Follower là snapshot thời điểm research, mang tính tham khảo.
  * - trustscore là chỉ số nội bộ tính bằng computeTrustScore() (follower + độ phủ + verified),
  *   KHÔNG phải đánh giá chủ quan về cá nhân.
- * - avatar tải về /public/images/kol khi lấy được ảnh công khai; rỗng -> UI hiển thị chữ cái đầu.
+ * - avatar tải về /public/images/kol khi lấy được ảnh công khai; hồ sơ không xác định được bị loại khỏi registry.
  */
 
 export function parseFollowers(value: string): number {
@@ -233,30 +233,6 @@ export const REAL_KOLS: Kol[] = [
     ],
     "contentStyle": "Review dựa trên kiến thức về thành phần và khoa học chăm sóc da, đánh giá thẳng thắn cả ưu lẫn nhược điểm.",
     "ownBrand": "CMD Cosmetics"
-  },
-  {
-    "id": "5",
-    "name": "Bồng Bềnh",
-    "avatar": "/images/kol-bong.png",
-    "cover": "/images/cover-bong.png",
-    "platform": "Tiktok",
-    "handle": "@bongbenh",
-    "followers": "1.2M",
-    "recentreview": "Dầu gội Tsubaki",
-    "trustscore": 85,
-    "categories": [
-      "Haircare",
-      "Bodycare"
-    ],
-    "verified": false,
-    "bio": "Bồng Bềnh là một KOC trong lĩnh vực làm đẹp, chia sẻ review mỹ phẩm và kinh nghiệm chăm sóc da trên mạng xã hội. Nội dung của cô tập trung vào trải nghiệm sản phẩm thực tế và các mẹo làm đẹp gần gũi với người dùng phổ thông.",
-    "socials": [
-      {
-        "platform": "Tiktok",
-        "handle": "@bongbenh",
-        "followers": "1.2M"
-      }
-    ]
   },
   {
     "id": "6",
@@ -606,7 +582,8 @@ export const REAL_KOLS: Kol[] = [
       {
         "platform": "Youtube",
         "handle": "@QuynhAnhShyn",
-        "followers": "450K"
+        "followers": "450K",
+        "url": "https://www.youtube.com/user/quynhanhh212"
       }
     ],
     "realName": "Phí Quỳnh Anh",
@@ -1043,7 +1020,8 @@ export const REAL_KOLS: Kol[] = [
       {
         "platform": "Youtube",
         "handle": "@GiangOiOfficial",
-        "followers": "1.5M"
+        "followers": "1.5M",
+        "url": "https://www.youtube.com/@GiangOi"
       },
       {
         "platform": "Facebook",
@@ -1466,7 +1444,8 @@ export const REAL_KOLS: Kol[] = [
       {
         "platform": "Youtube",
         "handle": "@QuachAnhMakeupStore",
-        "followers": "840K"
+        "followers": "840K",
+        "url": "https://www.youtube.com/c/QuachAnhMakeupStore"
       },
       {
         "platform": "Facebook",
@@ -1872,7 +1851,8 @@ export const REAL_KOLS: Kol[] = [
       {
         "platform": "Youtube",
         "handle": "@HanaGiangAnh",
-        "followers": "640K"
+        "followers": "640K",
+        "url": "https://www.youtube.com/@HanaGiangAnhOfficial"
       }
     ],
     "realName": "Nguyễn Đăng Hương Giang",
@@ -2647,7 +2627,8 @@ export const REAL_KOLS: Kol[] = [
       {
         "platform": "Youtube",
         "handle": "@Sunhuyn95",
-        "followers": "300K"
+        "followers": "300K",
+        "url": "https://www.youtube.com/@sunhuyn"
       }
     ],
     "realName": "Trần Thị Thanh Huyền",
@@ -2983,7 +2964,8 @@ export const REAL_KOLS: Kol[] = [
       {
         "platform": "Youtube",
         "handle": "@PrettyMuchChannel",
-        "followers": "169K"
+        "followers": "169K",
+        "url": "https://www.youtube.com/user/PrettyMuchChannel"
       }
     ],
     "realName": "Lê Phương Ly",

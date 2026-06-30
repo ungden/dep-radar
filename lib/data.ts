@@ -4,7 +4,7 @@ import { REAL_KOLS } from "@/lib/kols-data"
 import { SAMPLE_CREATOR_PRODUCT_EVENTS, SAMPLE_PRODUCT_OFFERS, reviewToTimelineEvent } from "@/lib/timeline-data"
 import type { CommunityReview, CreatorProductEvent, Kol, Post, Product, ProductOffer, Review } from "@/lib/types"
 
-// Toàn bộ hồ sơ KOL/KOC (100 người) nằm trong REAL_KOLS; id "1"–"6" được giữ để reviews tham chiếu qua kolid.
+// Toàn bộ hồ sơ KOL/KOC đã xác minh nằm trong REAL_KOLS; hồ sơ mơ hồ bị loại khỏi public registry.
 export const SAMPLE_KOLS: Kol[] = REAL_KOLS
 
 export const SAMPLE_PRODUCTS: Product[] = [
@@ -151,8 +151,8 @@ export const SAMPLE_POSTS: Post[] = [
     slug: "giai-cuu-toc-hu-ton-sau-tay-nhuom",
     excerpt: "Ba bước phục hồi tóc đơn giản tại nhà cho tóc khô xơ, dễ rối và thiếu bóng.",
     content: "Sau tẩy nhuộm, tóc thường mất độ ẩm và dễ gãy hơn. Hãy giảm tần suất gội, ưu tiên dầu gội dịu nhẹ và thêm bước ủ tóc hằng tuần.\n\nTinh dầu dưỡng ở phần đuôi tóc giúp giảm ma sát và tạo độ bóng. Tránh dùng nhiệt quá thường xuyên nếu tóc đang yếu.\n\nKiên trì trong 4 đến 8 tuần sẽ cho kết quả rõ hơn so với đổi sản phẩm liên tục.",
-    author_name: "Bồng Bềnh",
-    author_avatar: "/images/kol-bong.png",
+    author_name: "Bống Bee",
+    author_avatar: "/images/kol/bong-bee.jpg",
     category: "Chăm Sóc Tóc",
     tags: ["Tóc hư tổn", "Nhuộm tóc", "Phục hồi"],
     image: "/images/product-dry-shampoo.png",
