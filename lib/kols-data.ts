@@ -350,7 +350,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "8",
     "name": "Lê Bống",
-    "avatar": "",
+    "avatar": "/images/kol/le-bong.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@lebong95",
@@ -461,7 +461,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "11",
     "name": "Chi Pu",
-    "avatar": "",
+    "avatar": "/images/kol/chi-pu.jpg",
     "cover": "",
     "platform": "Instagram",
     "handle": "@chipupu",
@@ -574,7 +574,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "14",
     "name": "Quỳnh Anh Shyn",
-    "avatar": "",
+    "avatar": "/images/kol/quynh-anh-shyn.jpg",
     "cover": "",
     "platform": "Instagram",
     "handle": "@quynhanhshyn_",
@@ -767,7 +767,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "19",
     "name": "Michelle Phan",
-    "avatar": "",
+    "avatar": "/images/kol/michelle-phan.jpg",
     "cover": "",
     "platform": "Instagram",
     "handle": "@michellephan",
@@ -1026,7 +1026,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "25",
     "name": "Giang Ơi",
-    "avatar": "",
+    "avatar": "/images/kol/giang-oi.jpg",
     "cover": "",
     "platform": "Youtube",
     "handle": "@GiangOiOfficial",
@@ -1106,7 +1106,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "27",
     "name": "Khả Ngân",
-    "avatar": "",
+    "avatar": "/images/kol/kha-ngan.jpg",
     "cover": "",
     "platform": "Instagram",
     "handle": "@29kunkun",
@@ -2377,7 +2377,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "61",
     "name": "Đỗ Thị Hà",
-    "avatar": "",
+    "avatar": "/images/kol/do-thi-ha.jpg",
     "cover": "",
     "platform": "Instagram",
     "handle": "@doha.hhvn",
