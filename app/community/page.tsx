@@ -264,8 +264,8 @@ export default function CommunityPage() {
                 <h3 className="font-bold text-slate-900 dark:text-slate-50 mb-4">Thành viên tích cực</h3>
                 <div className="space-y-4">
                   {[
-                    { name: "Hà Linh Official", avatar: "/images/kol-halinh.png", posts: 142 },
-                    { name: "Trinh Phạm", avatar: "/images/kol-trinh.png", posts: 98 },
+                    { name: "Hà Linh Official", avatar: "/images/kol/vo-ha-linh-tiktok.jpg", posts: 142 },
+                    { name: "Trinh Phạm", avatar: "/images/kol/trinh-pham-tiktok.jpg", posts: 98 },
                     { name: "Call Me Duy", avatar: "/images/kol-duy.png", posts: 76 },
                   ].map((user) => (
                     <div key={user.name} className="flex items-center gap-3">

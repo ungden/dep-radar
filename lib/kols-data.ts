@@ -42,7 +42,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "1",
     "name": "Hà Linh Official",
-    "avatar": "/images/kol-halinh.png",
+    "avatar": "/images/kol/vo-ha-linh-tiktok.jpg",
     "cover": "/images/cover-halinh.png",
     "platform": "Youtube",
     "handle": "@halinhofficial",
@@ -132,7 +132,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "3",
     "name": "Trinh Phạm",
-    "avatar": "/images/kol-trinh.png",
+    "avatar": "/images/kol/trinh-pham-tiktok.jpg",
     "cover": "/images/cover-trinh.png",
     "platform": "Youtube",
     "handle": "@trinhpham",
@@ -237,7 +237,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "5",
     "name": "Bác sĩ Đặng Thị Minh Châu",
-    "avatar": "/images/kol/bac-si-dang-thi-minh-chau.jpg",
+    "avatar": "/images/kol/bac-si-dang-thi-minh-chau-avatar.jpg",
     "cover": "",
     "platform": "Facebook",
     "handle": "@drminhchau.skinone",
@@ -2685,7 +2685,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "68",
     "name": "Quin",
-    "avatar": "/images/kol/quin.jpg",
+    "avatar": "/images/kol/quin-vu-thuy-quynh-kols-koc.png",
     "cover": "",
     "platform": "Youtube",
     "handle": "@Quin",
@@ -3066,7 +3066,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "78",
     "name": "Bác sĩ Hoàng Văn Tâm",
-    "avatar": "/images/kol/bac-si-hoang-van-tam.jpg",
+    "avatar": "/images/kol/bac-si-hoang-van-tam-bookingcare.png",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@bacsitamdalieu",
@@ -3144,7 +3144,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "80",
     "name": "Chung Thành",
-    "avatar": "/images/kol/chung-thanh.jpg",
+    "avatar": "/images/kol/chung-thanh-avatar.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@chungthanh_",
@@ -3208,7 +3208,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "82",
     "name": "Thời Toki",
-    "avatar": "/images/kol/thoi-toki.jpg",
+    "avatar": "/images/kol/thoi-toki-avatar.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@thoitoki_perfume",
@@ -3244,7 +3244,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "83",
     "name": "Bác sĩ Minh Điềm",
-    "avatar": "/images/kol/bac-si-minh-diem.png",
+    "avatar": "/images/kol/bac-si-minh-diem-avatar.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@drdiemdalieu.medici",
@@ -3282,7 +3282,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "84",
     "name": "Bác sĩ Hằng Trần",
-    "avatar": "/images/kol/bac-si-hang-tran.png",
+    "avatar": "/images/kol/bac-si-hang-tran-avatar.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@bshangtrandalieu.medici",
@@ -3621,7 +3621,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "92",
     "name": "Motrang hít hà",
-    "avatar": "/images/kol/motrang-hit-ha.jpg",
+    "avatar": "/images/kol/motrang-hit-ha-avatar.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@motrang_",
@@ -3758,7 +3758,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "96",
     "name": "Kiên Fragrance",
-    "avatar": "/images/kol/kien-fragrance.jpg",
+    "avatar": "/images/kol/kien-fragrance-avatar.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@kienfragranceca",
@@ -3866,7 +3866,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "99",
     "name": "Jena",
-    "avatar": "/images/kol/jena.jpg",
+    "avatar": "/images/kol/jena-avatar.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@nuochoa.jena",
