@@ -13,7 +13,26 @@ export interface Product {
   category: string
   tags: string[]
   affiliate_url: string | null
+  category_key?: ProductCategoryKey | null
+  subcategory_key?: string | null
+  concern_tags?: string[]
+  ingredient_tags?: string[]
+  aliases?: string[]
+  status?: ProductStatus | null
 }
+
+export type ProductStatus = "published" | "pending" | "archived"
+
+export type ProductCategoryKey =
+  | "skincare"
+  | "haircare"
+  | "makeup"
+  | "fragrance"
+  | "bodycare"
+  | "beauty_tools_tech"
+  | "clinic_treatment"
+  | "nails_lash_brow"
+  | "men_grooming"
 
 export interface ProductOffer {
   id: string
@@ -129,11 +148,33 @@ export type CreatorProductEventType =
 export type CreatorProductSentiment = "positive" | "mixed" | "negative" | "neutral"
 export type CreatorProductDisclosure = "organic" | "pr" | "sponsored" | "affiliate" | "unknown"
 export type CreatorProductConfidence = "high" | "medium" | "low"
+export type CreatorEvidenceStatus = "new" | "needs_product_match" | "ready_to_publish" | "published" | "rejected"
+
+export interface CreatorEvidenceItem {
+  id: string
+  creator_id: string
+  source_platform: string
+  source_url: string | null
+  source_post_id: string | null
+  published_at: string | null
+  observed_at: string
+  source_title: string
+  source_excerpt: string
+  raw_text: string | null
+  media_url: string | null
+  status: CreatorEvidenceStatus
+  candidate_product_ids: string[]
+  candidate_product_names: string[]
+  researcher_note: string | null
+  created_at?: string
+  updated_at?: string
+}
 
 export interface CreatorProductEvent {
   id: string
   creator_id: string
   product_id: string
+  evidence_id?: string | null
   event_type: CreatorProductEventType
   event_date: string
   observed_at: string

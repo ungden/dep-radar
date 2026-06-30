@@ -1,13 +1,14 @@
 import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 import { getPublishedEditorialPost, getPublishedEditorialPosts } from "@/lib/editorial"
 import { REAL_KOLS } from "@/lib/kols-data"
+import { productsWithTaxonomy, productWithTaxonomy } from "@/lib/product-taxonomy"
 import { SAMPLE_CREATOR_PRODUCT_EVENTS, SAMPLE_PRODUCT_OFFERS, reviewToTimelineEvent } from "@/lib/timeline-data"
-import type { CommunityReview, CreatorProductEvent, Kol, Post, Product, ProductOffer, Review } from "@/lib/types"
+import type { CommunityReview, CreatorEvidenceItem, CreatorProductEvent, Kol, Post, Product, ProductOffer, Review } from "@/lib/types"
 
 // Toàn bộ hồ sơ KOL/KOC đã xác minh nằm trong REAL_KOLS; hồ sơ mơ hồ bị loại khỏi public registry.
 export const SAMPLE_KOLS: Kol[] = REAL_KOLS
 
-export const SAMPLE_PRODUCTS: Product[] = [
+export const SAMPLE_PRODUCTS: Product[] = productsWithTaxonomy([
   { id: "1", name: "Tinh chất phục hồi da B5 GoodnDoc", brand: "GoodnDoc", image: "/images/product-b5-serum.png", rating: 4.8, reviews: 1240, sold: "8,500+", price: "350.000đ", category: "Skincare", tags: ["Phục hồi", "Cấp ẩm"], affiliate_url: null, description: "Phục hồi hàng rào bảo vệ da, cấp ẩm sâu và làm dịu da nhạy cảm. Phù hợp cho da treatment hoặc cần phục hồi sau mụn." },
   { id: "2", name: "Kem nền Maybelline Fit Me Matte + Poreless", brand: "Maybelline", image: "/images/product-foundation.png", rating: 4.5, reviews: 3500, sold: "15,000+", price: "180.000đ", category: "Makeup", tags: ["Kiềm dầu", "Drugstore"], affiliate_url: null, description: "Kem nền kiềm dầu, che phủ lỗ chân lông và tạo lớp nền mịn lì tự nhiên cho da dầu, da hỗn hợp thiên dầu." },
   { id: "3", name: "Nước tẩy trang L'Oreal Micellar Water 3-in-1", brand: "L'Oreal", image: "/images/product-micellar.png", rating: 4.9, reviews: 5200, sold: "20,000+", price: "150.000đ", category: "Skincare", tags: ["Làm sạch sâu", "Da nhạy cảm"], affiliate_url: null, description: "Nước tẩy trang 3 trong 1 giúp làm sạch lớp trang điểm, bụi bẩn và bã nhờn mà không gây khô rát." },
@@ -16,7 +17,25 @@ export const SAMPLE_PRODUCTS: Product[] = [
   { id: "6", name: "Sữa rửa mặt Cerave Hydrating Cleanser", brand: "Cerave", image: "/images/product-cleanser.png", rating: 4.8, reviews: 4100, sold: "12,000+", price: "380.000đ", category: "Skincare", tags: ["Dịu nhẹ", "Cấp ẩm"], affiliate_url: null, description: "Sữa rửa mặt không tạo bọt, bổ sung ceramides và hyaluronic acid để làm sạch nhẹ mà vẫn giữ ẩm." },
   { id: "7", name: "Nước hoa nữ Narciso Rodriguez For Her EDP", brand: "Narciso Rodriguez", image: "/images/product-perfume.png", rating: 4.9, reviews: 650, sold: "1,500+", price: "2.500.000đ", category: "Perfume", tags: ["Quyến rũ", "Lưu hương lâu"], affiliate_url: null, description: "Hương xạ hương quyến rũ kết hợp hoa hồng và đào, lưu hương lâu, phù hợp cho những dịp đặc biệt." },
   { id: "8", name: "Sữa dưỡng thể Vaseline Gluta-Hya", brand: "Vaseline", image: "/images/product-body-lotion.png", rating: 4.5, reviews: 1800, sold: "6,000+", price: "140.000đ", category: "Bodycare", tags: ["Trắng da", "Thấm nhanh"], affiliate_url: null, description: "Sữa dưỡng thể dạng serum mỏng nhẹ, thấm nhanh, hỗ trợ dưỡng sáng và cấp ẩm cho da body." },
-]
+])
+
+export const SAMPLE_CREATOR_EVIDENCE_ITEMS: CreatorEvidenceItem[] = SAMPLE_CREATOR_PRODUCT_EVENTS.slice(0, 4).map((event) => ({
+  id: `evidence-${event.id}`,
+  creator_id: event.creator_id,
+  source_platform: event.source_platform,
+  source_url: event.source_url,
+  source_post_id: event.source_post_id ?? null,
+  published_at: event.event_date,
+  observed_at: event.observed_at,
+  source_title: event.source_title,
+  source_excerpt: event.source_excerpt,
+  raw_text: event.source_excerpt,
+  media_url: event.media_url ?? null,
+  status: "published",
+  candidate_product_ids: [event.product_id],
+  candidate_product_names: [],
+  researcher_note: event.evidence_note,
+}))
 
 export const SAMPLE_REVIEWS: Review[] = [
   { id: "r1", kolid: "1", productid: "1", rating: 5, ispr: false, timeago: "2 giờ trước", content: "Phục hồi da rất ổn, thấm nhanh và không bết dính. Hợp với da đang treatment.", likes: 342, comments: 45 },
@@ -204,10 +223,11 @@ async function fromSupabase<T>(query: PromiseLike<{ data: T | null; error: unkno
 }
 
 export async function getProducts() {
-  return fromSupabase<Product[]>(
+  const products = await fromSupabase<Product[]>(
     supabase.from("radar_products").select("*").order("name"),
     SAMPLE_PRODUCTS
   )
+  return productsWithTaxonomy(products).filter((product) => product.status !== "pending" && product.status !== "archived")
 }
 
 export async function getProductOffers(filters: { productId?: string } = {}) {
@@ -239,10 +259,26 @@ export async function getPreferredProductOffer(product: Product) {
 
 export async function getProduct(id: string) {
   const fallback = SAMPLE_PRODUCTS.find((product) => product.id === id) ?? null
-  return fromSupabase<Product | null>(
+  const product = await fromSupabase<Product | null>(
     supabase.from("radar_products").select("*").eq("id", id).maybeSingle(),
     fallback
   )
+  return product ? productWithTaxonomy(product) : null
+}
+
+export async function getCreatorEvidenceItems(filters: { creatorId?: string; status?: string } = {}) {
+  const fallback = SAMPLE_CREATOR_EVIDENCE_ITEMS.filter((item) => {
+    if (filters.creatorId && item.creator_id !== filters.creatorId) return false
+    if (filters.status && item.status !== filters.status) return false
+    return true
+  })
+
+  if (!isSupabaseSchemaReady) return fallback
+
+  let query = supabase.from("creator_evidence_items").select("*").order("observed_at", { ascending: false })
+  if (filters.creatorId) query = query.eq("creator_id", filters.creatorId)
+  if (filters.status) query = query.eq("status", filters.status)
+  return fromSupabase<CreatorEvidenceItem[]>(query, fallback)
 }
 
 const HUB_PRODUCT_CATEGORIES: Record<string, string[]> = {

@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getCommunityReviews, getCreatorProductEvents, getKols, getPost, getProduct, getProductOffers, getReviews } from "@/lib/data"
 import { getMatrixNodesByProductId } from "@/lib/content-matrix"
 import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
+import { getProductCategoryLabel, getProductSubcategoryLabel } from "@/lib/product-taxonomy"
 import { AffiliateButton } from "@/components/affiliate-button"
 import { SocialShare } from "@/components/social-share"
 import { RelatedProducts } from "@/components/related-products"
@@ -205,6 +206,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 </p>
 
                 <div className="flex flex-wrap gap-2 mb-8">
+                  <Badge className="bg-slate-900 text-white hover:bg-slate-900 dark:bg-slate-50 dark:text-slate-900">
+                    {getProductCategoryLabel(product.category_key, product.category)}
+                  </Badge>
+                  <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    {getProductSubcategoryLabel(product.category_key, product.subcategory_key)}
+                  </Badge>
                   {product.tags?.map((tag: string) => (
                     <Badge key={tag} variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">{tag}</Badge>
                   ))}
@@ -325,6 +332,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                             <Badge className={sentimentClass(event)}>{event.sentiment}</Badge>
                             <Badge variant="secondary" className="bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300">
                               {disclosureLabel(event)}
+                            </Badge>
+                            <Badge variant="secondary" className="bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-300">
+                              {event.confidence} confidence
                             </Badge>
                           </div>
                           <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">

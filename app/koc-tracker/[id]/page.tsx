@@ -19,6 +19,7 @@ import { getCreatorProductEvents, getKol, getPost, getProducts, getReviews } fro
 import { getMatrixNodesByKolId, getMatrixProductGroups } from "@/lib/content-matrix"
 import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
 import { parseFollowers } from "@/lib/kols-data"
+import { getProductCategoryLabel, productWithTaxonomy } from "@/lib/product-taxonomy"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import type { CreatorProductEvent, Kol, KolSocial, Post, Product } from "@/lib/types"
 
@@ -139,6 +140,19 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
   const PRODUCTS = await getProducts()
   const reviews = await getReviews({ kolId: id })
   const timelineEvents = await getCreatorProductEvents({ creatorId: id })
+  const timelineProducts = timelineEvents
+    .map((event) => {
+      const product = PRODUCTS.find((item) => item.id === event.product_id)
+      return product ? { event, product: productWithTaxonomy(product) } : null
+    })
+    .filter((item): item is { event: CreatorProductEvent; product: Product } => Boolean(item))
+  const categoryStats = topCounts(timelineProducts.map(({ product }) => getProductCategoryLabel(product.category_key, product.category)))
+  const brandStats = topCounts(timelineProducts.map(({ product }) => product.brand))
+  const latestProducts = unique(timelineProducts.map(({ product }) => product.id))
+    .map((productId) => timelineProducts.find(({ product }) => product.id === productId)?.product)
+    .filter((product): product is Product => Boolean(product))
+    .slice(0, 4)
+  const disclosureStats = topCounts(timelineEvents.map((event) => disclosureLabel(event)))
   const matrixNodes = getMatrixNodesByKolId(kol.id)
   const graphPostSlugs = unique(matrixNodes.flatMap((node) => [node.articleSlug, ...node.nextArticleSlugs])).slice(0, 5)
   const graphPosts = (await Promise.all(graphPostSlugs.map((slug) => getPost(slug)))).filter((post): post is Post => Boolean(post))
@@ -395,6 +409,24 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                   </Badge>
                 </div>
 
+                {timelineEvents.length > 0 && (
+                  <div className="mb-6 grid gap-3 md:grid-cols-4">
+                    <TimelineSummary title="Category" items={categoryStats} />
+                    <TimelineSummary title="Brand" items={brandStats} />
+                    <TimelineSummary title="Disclosure" items={disclosureStats} />
+                    <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+                      <div className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">Moi nhat</div>
+                      <div className="space-y-2">
+                        {latestProducts.map((product) => (
+                          <Link key={product.id} href={`/products/${product.id}`} className="line-clamp-1 block text-sm font-bold text-slate-700 hover:text-rose-600 dark:text-slate-300 dark:hover:text-rose-300">
+                            {product.brand} - {product.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {timelineEvents.length > 0 ? (
                   <div className="relative space-y-4">
                     <div className="absolute bottom-4 left-4 top-4 w-px bg-slate-200 dark:bg-slate-800" />
@@ -632,4 +664,31 @@ function BookOpenIcon() {
 
 function unique(items: string[]) {
   return Array.from(new Set(items.filter(Boolean)))
+}
+
+function topCounts(items: string[], limit = 4) {
+  const counts = new Map<string, number>()
+  for (const item of items.filter(Boolean)) counts.set(item, (counts.get(item) ?? 0) + 1)
+  return Array.from(counts.entries())
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+    .slice(0, limit)
+}
+
+function TimelineSummary({ title, items }: { title: string; items: { label: string; count: number }[] }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+      <div className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">{title}</div>
+      <div className="space-y-2">
+        {items.map((item) => (
+          <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
+            <span className="line-clamp-1 font-medium text-slate-600 dark:text-slate-300">{item.label}</span>
+            <Badge variant="secondary" className="bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+              {item.count}
+            </Badge>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }

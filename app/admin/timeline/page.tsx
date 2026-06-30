@@ -136,11 +136,12 @@ export default function AdminTimelinePage() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData()
   }, [loadData])
 
   async function handleSave() {
-    if (!form.creator_id || !form.product_id || !form.source_title || !form.source_excerpt) return
+    if (!form.creator_id || !form.product_id || !form.source_url || !form.source_title || !form.source_excerpt) return
     setSaving(true)
     setError(null)
 
@@ -290,7 +291,7 @@ export default function AdminTimelinePage() {
                   <Input id="evidence_note" value={form.evidence_note} onChange={(event) => setForm((prev) => ({ ...prev, evidence_note: event.target.value }))} placeholder="Live-check, manually reviewed..." />
                 </div>
 
-                <Button onClick={handleSave} disabled={saving || !form.creator_id || !form.product_id || !form.source_title || !form.source_excerpt} className="h-12 gap-2">
+                <Button onClick={handleSave} disabled={saving || !form.creator_id || !form.product_id || !form.source_url || !form.source_title || !form.source_excerpt} className="h-12 gap-2">
                   <Save className="h-4 w-4" />
                   {saving ? "Đang lưu..." : "Lưu event"}
                 </Button>

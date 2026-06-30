@@ -2,13 +2,14 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Package, Users, FileText, MessageSquare, ArrowLeft, CalendarClock, Store } from "lucide-react"
+import { LayoutDashboard, Package, Users, FileText, MessageSquare, ArrowLeft, CalendarClock, Store, ClipboardList } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Sản phẩm", icon: Package },
   { href: "/admin/offers", label: "Affiliate offers", icon: Store },
+  { href: "/admin/evidence", label: "Evidence inbox", icon: ClipboardList },
   { href: "/admin/kols", label: "KOL/KOC", icon: Users },
   { href: "/admin/posts", label: "Bài viết", icon: FileText },
   { href: "/admin/reviews", label: "Đánh giá", icon: MessageSquare },

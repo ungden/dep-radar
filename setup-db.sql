@@ -35,6 +35,22 @@ CREATE TABLE IF NOT EXISTS public.radar_products (
 ALTER TABLE public.radar_products
 ADD COLUMN IF NOT EXISTS affiliate_url text;
 
+ALTER TABLE public.radar_products
+ADD COLUMN IF NOT EXISTS category_key text,
+ADD COLUMN IF NOT EXISTS subcategory_key text,
+ADD COLUMN IF NOT EXISTS concern_tags text[] DEFAULT '{}',
+ADD COLUMN IF NOT EXISTS ingredient_tags text[] DEFAULT '{}',
+ADD COLUMN IF NOT EXISTS aliases text[] DEFAULT '{}',
+ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'published';
+
+DO $$
+BEGIN
+    ALTER TABLE public.radar_products
+    ADD CONSTRAINT radar_products_status_check
+    CHECK (status IN ('published', 'pending', 'archived'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
 -- Create REVIEWS table
 CREATE TABLE IF NOT EXISTS public.reviews (
     id text PRIMARY KEY,
@@ -193,10 +209,37 @@ CREATE TABLE IF NOT EXISTS public.product_offers (
 CREATE INDEX IF NOT EXISTS product_offers_product_id_idx ON public.product_offers(product_id);
 CREATE INDEX IF NOT EXISTS product_offers_preferred_idx ON public.product_offers(product_id, is_preferred DESC, last_checked_at DESC);
 
+CREATE TABLE IF NOT EXISTS public.creator_evidence_items (
+    id text PRIMARY KEY,
+    creator_id text NOT NULL REFERENCES public.kols(id) ON DELETE CASCADE,
+    source_platform text NOT NULL,
+    source_url text,
+    source_post_id text,
+    published_at timestamptz,
+    observed_at timestamptz NOT NULL DEFAULT now(),
+    source_title text NOT NULL,
+    source_excerpt text NOT NULL,
+    raw_text text,
+    media_url text,
+    status text NOT NULL DEFAULT 'new',
+    candidate_product_ids text[] NOT NULL DEFAULT '{}',
+    candidate_product_names text[] NOT NULL DEFAULT '{}',
+    researcher_note text,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now(),
+    CHECK (status IN ('new', 'needs_product_match', 'ready_to_publish', 'published', 'rejected')),
+    CHECK (source_url IS NOT NULL OR source_excerpt <> '')
+);
+
+CREATE INDEX IF NOT EXISTS creator_evidence_items_creator_idx ON public.creator_evidence_items(creator_id, observed_at DESC);
+CREATE INDEX IF NOT EXISTS creator_evidence_items_status_idx ON public.creator_evidence_items(status, observed_at DESC);
+CREATE INDEX IF NOT EXISTS creator_evidence_items_source_idx ON public.creator_evidence_items(source_platform, source_post_id);
+
 CREATE TABLE IF NOT EXISTS public.creator_product_events (
     id text PRIMARY KEY,
     creator_id text NOT NULL REFERENCES public.kols(id) ON DELETE CASCADE,
     product_id text NOT NULL REFERENCES public.radar_products(id) ON DELETE CASCADE,
+    evidence_id text REFERENCES public.creator_evidence_items(id) ON DELETE SET NULL,
     event_type text NOT NULL,
     event_date date NOT NULL,
     observed_at timestamptz NOT NULL DEFAULT now(),
@@ -219,9 +262,21 @@ CREATE TABLE IF NOT EXISTS public.creator_product_events (
     CHECK (confidence IN ('high', 'medium', 'low'))
 );
 
+ALTER TABLE public.creator_product_events
+ADD COLUMN IF NOT EXISTS evidence_id text REFERENCES public.creator_evidence_items(id) ON DELETE SET NULL;
+
+DO $$
+BEGIN
+    ALTER TABLE public.creator_product_events
+    ADD CONSTRAINT creator_product_events_source_or_evidence_check
+    CHECK (source_url IS NOT NULL OR evidence_id IS NOT NULL) NOT VALID;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
 CREATE INDEX IF NOT EXISTS creator_product_events_creator_idx ON public.creator_product_events(creator_id, event_date DESC);
 CREATE INDEX IF NOT EXISTS creator_product_events_product_idx ON public.creator_product_events(product_id, event_date DESC);
 CREATE INDEX IF NOT EXISTS creator_product_events_observed_idx ON public.creator_product_events(observed_at DESC);
+CREATE INDEX IF NOT EXISTS creator_product_events_evidence_idx ON public.creator_product_events(evidence_id);
 
 CREATE TABLE IF NOT EXISTS public.affiliate_clicks (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -264,11 +319,13 @@ ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_offers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.creator_evidence_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.creator_product_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.affiliate_clicks ENABLE ROW LEVEL SECURITY;
 
 GRANT SELECT ON public.kols, public.radar_products, public.reviews, public.posts, public.product_offers, public.creator_product_events TO anon, authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.kols, public.radar_products, public.reviews, public.posts, public.product_offers, public.creator_product_events TO authenticated;
+GRANT SELECT ON public.creator_evidence_items TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.kols, public.radar_products, public.reviews, public.posts, public.product_offers, public.creator_product_events, public.creator_evidence_items TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
 GRANT SELECT, INSERT, DELETE ON public.wishlist, public.likes TO authenticated;
 GRANT SELECT ON public.user_ratings TO anon, authenticated;
@@ -284,6 +341,8 @@ DROP POLICY IF EXISTS "Allow public read-only access on reviews" ON public.revie
 DROP POLICY IF EXISTS "Allow public read-only access on posts" ON public.posts;
 DROP POLICY IF EXISTS "Allow public read-only access on product_offers" ON public.product_offers;
 DROP POLICY IF EXISTS "Allow public read-only access on creator_product_events" ON public.creator_product_events;
+DROP POLICY IF EXISTS "Admins can read creator evidence" ON public.creator_evidence_items;
+DROP POLICY IF EXISTS "Admins can manage creator evidence" ON public.creator_evidence_items;
 CREATE POLICY "Allow public read-only access on kols" ON public.kols FOR SELECT TO anon, authenticated USING (true);
 CREATE POLICY "Allow public read-only access on radar_products" ON public.radar_products FOR SELECT TO anon, authenticated USING (true);
 CREATE POLICY "Allow public read-only access on reviews" ON public.reviews FOR SELECT TO anon, authenticated USING (true);
@@ -303,6 +362,8 @@ CREATE POLICY "Admins can manage reviews" ON public.reviews FOR ALL TO authentic
 CREATE POLICY "Admins can manage posts" ON public.posts FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 CREATE POLICY "Admins can manage product_offers" ON public.product_offers FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 CREATE POLICY "Admins can manage creator_product_events" ON public.creator_product_events FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admins can read creator evidence" ON public.creator_evidence_items FOR SELECT TO authenticated USING (public.is_admin());
+CREATE POLICY "Admins can manage creator evidence" ON public.creator_evidence_items FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Profiles are readable" ON public.profiles;
 DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;

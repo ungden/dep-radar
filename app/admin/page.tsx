@@ -1,8 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { CalendarClock, Package, Store, Users, FileText, MessageSquare, TrendingUp, Eye } from "lucide-react"
+import { CalendarClock, Package, Store, Users, FileText, MessageSquare, TrendingUp, Eye, ClipboardList, AlertTriangle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { getProductCategoryLabel } from "@/lib/product-taxonomy"
 import { supabase } from "@/lib/supabase"
 
 interface Stats {
@@ -12,10 +14,36 @@ interface Stats {
   reviews: number
   offers: number
   timeline: number
+  evidence: number
+  readyEvidence: number
+}
+
+interface ProductRow {
+  id: string
+  name: string
+  brand: string
+  category: string | null
+  category_key: string | null
+}
+
+interface EventRow {
+  id: string
+  creator_id: string
+  product_id: string
+  event_date: string
+  observed_at: string
+}
+
+interface KolRow {
+  id: string
+  name: string
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = React.useState<Stats>({ products: 0, kols: 0, posts: 0, reviews: 0, offers: 0, timeline: 0 })
+  const [stats, setStats] = React.useState<Stats>({ products: 0, kols: 0, posts: 0, reviews: 0, offers: 0, timeline: 0, evidence: 0, readyEvidence: 0 })
+  const [categoryStats, setCategoryStats] = React.useState<{ label: string; count: number }[]>([])
+  const [trendingProducts, setTrendingProducts] = React.useState<{ label: string; count: number }[]>([])
+  const [staleKols, setStaleKols] = React.useState<KolRow[]>([])
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
@@ -26,7 +54,35 @@ export default function AdminDashboard() {
       supabase.from("reviews").select("id", { count: "exact", head: true }),
       supabase.from("product_offers").select("id", { count: "exact", head: true }),
       supabase.from("creator_product_events").select("id", { count: "exact", head: true }),
-    ]).then(([products, kols, posts, reviews, offers, timeline]) => {
+      supabase.from("creator_evidence_items").select("id", { count: "exact", head: true }),
+      supabase.from("creator_evidence_items").select("id", { count: "exact", head: true }).in("status", ["new", "needs_product_match", "ready_to_publish"]),
+      supabase.from("radar_products").select("id,name,brand,category,category_key"),
+      supabase.from("creator_product_events").select("id,creator_id,product_id,event_date,observed_at"),
+      supabase.from("kols").select("id,name"),
+    ]).then(([products, kols, posts, reviews, offers, timeline, evidence, readyEvidence, productRows, eventRows, kolRows]) => {
+      const productList = (productRows.data as ProductRow[] | null) ?? []
+      const eventList = (eventRows.data as EventRow[] | null) ?? []
+      const kolList = (kolRows.data as KolRow[] | null) ?? []
+      const productMap = Object.fromEntries(productList.map((product) => [product.id, product]))
+
+      const byCategory = new Map<string, number>()
+      for (const event of eventList) {
+        const product = productMap[event.product_id]
+        const label = getProductCategoryLabel(product?.category_key, product?.category ?? "Chua phan loai")
+        byCategory.set(label, (byCategory.get(label) ?? 0) + 1)
+      }
+
+      const byProduct = new Map<string, number>()
+      for (const event of eventList) byProduct.set(event.product_id, (byProduct.get(event.product_id) ?? 0) + 1)
+
+      const latestByCreator = new Map<string, string>()
+      for (const event of eventList) {
+        const current = latestByCreator.get(event.creator_id)
+        if (!current || event.event_date > current) latestByCreator.set(event.creator_id, event.event_date)
+      }
+      const staleCutoff = new Date()
+      staleCutoff.setDate(staleCutoff.getDate() - 45)
+
       setStats({
         products: products.count || 0,
         kols: kols.count || 0,
@@ -34,7 +90,21 @@ export default function AdminDashboard() {
         reviews: reviews.count || 0,
         offers: offers.count || 0,
         timeline: timeline.count || 0,
+        evidence: evidence.count || 0,
+        readyEvidence: readyEvidence.count || 0,
       })
+      setCategoryStats(Array.from(byCategory.entries()).map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count).slice(0, 6))
+      setTrendingProducts(Array.from(byProduct.entries())
+        .map(([productId, count]) => {
+          const product = productMap[productId]
+          return { label: product ? `${product.brand} - ${product.name}` : productId, count }
+        })
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6))
+      setStaleKols(kolList.filter((kol) => {
+        const latest = latestByCreator.get(kol.id)
+        return !latest || new Date(latest) < staleCutoff
+      }).slice(0, 8))
       setLoading(false)
     })
   }, [])
@@ -44,6 +114,7 @@ export default function AdminDashboard() {
     { label: "KOL/KOC", value: stats.kols, icon: Users, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
     { label: "Offers", value: stats.offers, icon: Store, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/30" },
     { label: "Timeline", value: stats.timeline, icon: CalendarClock, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-950/30" },
+    { label: "Evidence", value: stats.evidence, icon: ClipboardList, color: "text-cyan-600 dark:text-cyan-400", bg: "bg-cyan-50 dark:bg-cyan-950/30" },
     { label: "Bài viết", value: stats.posts, icon: FileText, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950/30" },
     { label: "Đánh giá", value: stats.reviews, icon: MessageSquare, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-950/30" },
   ]
@@ -55,7 +126,7 @@ export default function AdminDashboard() {
         <p className="text-slate-500 dark:text-slate-400 mt-1">Tổng quan hệ thống 360dep.vn</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-6 mb-8">
         {statCards.map((stat) => (
           <Card key={stat.label} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl">
             <CardContent className="p-6">
@@ -74,7 +145,44 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-emerald-500" /> Category hot
+            </h3>
+            <MetricList items={categoryStats} empty="Chưa có timeline theo category" />
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
+              <Package className="h-5 w-5 text-blue-500" /> Product đang lên
+            </h3>
+            <MetricList items={trendingProducts} empty="Chưa có product mention" />
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" /> KOL cần cập nhật
+            </h3>
+            {staleKols.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {staleKols.map((kol) => (
+                  <Badge key={kol.id} variant="secondary" className="bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+                    {kol.name}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 dark:text-slate-400">Không có KOL stale trong dữ liệu hiện tại.</p>
+            )}
+          </CardContent>
+        </Card>
+
         <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl">
           <CardContent className="p-6">
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
@@ -91,7 +199,7 @@ export default function AdminDashboard() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-rose-500 font-bold">3.</span>
-                Vào <strong>Timeline</strong> mỗi khi KOL/KOC dùng, review, recommend hoặc live bán sản phẩm mới
+                Vào <strong>Evidence inbox</strong> để lưu link nguồn public, match product rồi publish timeline event
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-rose-500 font-bold">4.</span>
@@ -121,10 +229,31 @@ export default function AdminDashboard() {
                 <span>Shopee Affiliate</span>
                 <span className="text-emerald-600 dark:text-emerald-400 font-medium">Sẵn sàng</span>
               </li>
+              <li className="flex justify-between">
+                <span>Evidence cần duyệt</span>
+                <span className="text-cyan-600 dark:text-cyan-400 font-medium">{loading ? "..." : stats.readyEvidence}</span>
+              </li>
             </ul>
           </CardContent>
         </Card>
       </div>
+    </div>
+  )
+}
+
+function MetricList({ items, empty }: { items: { label: string; count: number }[]; empty: string }) {
+  if (items.length === 0) return <p className="text-sm text-slate-500 dark:text-slate-400">{empty}</p>
+
+  return (
+    <div className="space-y-3">
+      {items.map((item) => (
+        <div key={item.label} className="flex items-center justify-between gap-4 text-sm">
+          <span className="line-clamp-1 font-medium text-slate-600 dark:text-slate-300">{item.label}</span>
+          <Badge variant="secondary" className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            {item.count}
+          </Badge>
+        </div>
+      ))}
     </div>
   )
 }

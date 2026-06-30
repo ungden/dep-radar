@@ -14,12 +14,13 @@ import { CompareBar } from "@/components/compare-bar"
 import { CompareButton } from "@/components/compare-button"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import { beautyNeedFilters, catalogueSections, productMatchesCatalogue, productMatchesNeed } from "@/lib/catalogue"
-import { getProducts } from "@/lib/data"
+import { getCreatorProductEvents, getProducts } from "@/lib/data"
+import { PRODUCT_CATEGORIES, getProductCategoryLabel, productMatchesTaxonomy, productWithTaxonomy } from "@/lib/product-taxonomy"
 import { getMatrixNodesByProductId, productGroups, researchStageLabels, type ProductGroup } from "@/lib/content-matrix"
 import type { CatalogueSection } from "@/lib/catalogue"
-import type { Product } from "@/lib/types"
+import type { CreatorProductEvent, Product } from "@/lib/types"
 
-type SortMode = "science" | "rating" | "price-low" | "price-high"
+type SortMode = "science" | "kol-mentions" | "recent" | "rating" | "price-low" | "price-high"
 
 const SCIENCE_GROUPS = Object.values(productGroups)
 const PRODUCT_CATALOGUE_SECTIONS = catalogueSections.filter((section) => section.slug !== "product-radar")
@@ -28,14 +29,30 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [selectedNeed, setSelectedNeed] = React.useState<string | null>(null)
   const [selectedCatalogue, setSelectedCatalogue] = React.useState("all")
+  const [selectedTaxonomy, setSelectedTaxonomy] = React.useState("all")
   const [selectedGroup, setSelectedGroup] = React.useState("all")
   const [selectedBudget, setSelectedBudget] = React.useState("all")
   const [sortMode, setSortMode] = React.useState<SortMode>("science")
   const [products, setProducts] = React.useState<Product[]>([])
+  const [timelineEvents, setTimelineEvents] = React.useState<CreatorProductEvent[]>([])
 
   React.useEffect(() => {
-    getProducts().then(setProducts)
+    getProducts().then((items) => setProducts(items.map(productWithTaxonomy)))
+    getCreatorProductEvents().then(setTimelineEvents)
   }, [])
+
+  const productEventStats = React.useMemo(() => {
+    const stats = new Map<string, { count: number; latest: string; highConfidence: number }>()
+    for (const event of timelineEvents) {
+      const current = stats.get(event.product_id) ?? { count: 0, latest: "", highConfidence: 0 }
+      stats.set(event.product_id, {
+        count: current.count + 1,
+        latest: event.event_date > current.latest ? event.event_date : current.latest,
+        highConfidence: current.highConfidence + (event.confidence === "high" ? 1 : 0),
+      })
+    }
+    return stats
+  }, [timelineEvents])
 
   const catalogueBuckets = React.useMemo(
     () =>
@@ -69,8 +86,13 @@ export default function ProductsPage() {
           product.name,
           product.brand,
           product.category,
+          getProductCategoryLabel(product.category_key, ""),
+          product.subcategory_key ?? "",
           product.description,
           ...product.tags,
+          ...(product.concern_tags ?? []),
+          ...(product.ingredient_tags ?? []),
+          ...(product.aliases ?? []),
           ...profile.catalogues.map((section) => section.title),
           ...profile.groups.map((group) => group.title),
           ...profile.nodes.map((node) => node.title),
@@ -79,18 +101,14 @@ export default function ProductsPage() {
         const matchesSearch = query ? haystack.includes(query) : true
         const matchesNeed = selectedNeed ? productMatchesNeed(product, selectedNeed) : true
         const matchesCatalogue = selectedCatalogueSection ? productMatchesCatalogue(product, selectedCatalogueSection) : true
+        const matchesTaxonomy = productMatchesTaxonomy(product, selectedTaxonomy)
         const matchesGroup = selectedScienceGroup ? productMatchesScienceGroup(product, selectedScienceGroup) : true
         const matchesBudget = matchesBudgetFilter(product.price, selectedBudget)
 
-        return matchesSearch && matchesNeed && matchesCatalogue && matchesGroup && matchesBudget
+        return matchesSearch && matchesNeed && matchesCatalogue && matchesTaxonomy && matchesGroup && matchesBudget
       })
-      .sort((a, b) => sortProducts(a, b, sortMode))
-  }, [products, searchQuery, selectedNeed, selectedCatalogue, selectedGroup, selectedBudget, sortMode])
-
-  const totalMappedProducts = React.useMemo(
-    () => products.filter((product) => getProductScienceProfile(product).catalogues.length > 0).length,
-    [products]
-  )
+      .sort((a, b) => sortProducts(a, b, sortMode, productEventStats))
+  }, [products, searchQuery, selectedNeed, selectedCatalogue, selectedTaxonomy, selectedGroup, selectedBudget, sortMode, productEventStats])
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 dark:bg-slate-950 md:py-12">
@@ -117,7 +135,7 @@ export default function ProductsPage() {
             <div className="grid grid-cols-3 gap-2 rounded-2xl border border-slate-100 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <Metric label="Sản phẩm" value={products.length} />
               <Metric label="Catalogue" value={catalogueBuckets.length} />
-              <Metric label="Đã map" value={totalMappedProducts} />
+              <Metric label="KOL signals" value={timelineEvents.length} />
             </div>
           </div>
         </motion.section>
@@ -223,12 +241,20 @@ export default function ProductsPage() {
                 onChange={(event) => setSearchQuery(event.target.value)}
               />
             </div>
-            <div className="grid gap-2 sm:grid-cols-3 lg:w-[520px]">
+            <div className="grid gap-2 sm:grid-cols-4 lg:w-[680px]">
               <SelectControl label="Catalogue" value={selectedCatalogue} onChange={setSelectedCatalogue}>
                 <option value="all">Tất cả catalogue</option>
                 {PRODUCT_CATALOGUE_SECTIONS.map((section) => (
                   <option key={section.slug} value={section.slug}>
                     {section.shortTitle}
+                  </option>
+                ))}
+              </SelectControl>
+              <SelectControl label="Category" value={selectedTaxonomy} onChange={setSelectedTaxonomy}>
+                <option value="all">Tất cả category</option>
+                {PRODUCT_CATEGORIES.map((category) => (
+                  <option key={category.key} value={category.key}>
+                    {category.label}
                   </option>
                 ))}
               </SelectControl>
@@ -240,6 +266,8 @@ export default function ProductsPage() {
               </SelectControl>
               <SelectControl label="Sắp xếp" value={sortMode} onChange={(value) => setSortMode(value as SortMode)}>
                 <option value="science">Map khoa học</option>
+                <option value="kol-mentions">KOL mention nhiều</option>
+                <option value="recent">Mention mới nhất</option>
                 <option value="rating">Rating cao</option>
                 <option value="price-low">Giá thấp</option>
                 <option value="price-high">Giá cao</option>
@@ -280,7 +308,7 @@ export default function ProductsPage() {
               Ưu tiên sản phẩm đã nối với catalogue, nhóm research và timeline KOL/KOC.
             </p>
           </div>
-          {(selectedCatalogue !== "all" || selectedGroup !== "all" || selectedNeed || selectedBudget !== "all" || searchQuery) && (
+          {(selectedCatalogue !== "all" || selectedTaxonomy !== "all" || selectedGroup !== "all" || selectedNeed || selectedBudget !== "all" || searchQuery) && (
             <Button
               variant="outline"
               className="gap-2 rounded-xl"
@@ -288,6 +316,7 @@ export default function ProductsPage() {
                 setSearchQuery("")
                 setSelectedNeed(null)
                 setSelectedCatalogue("all")
+                setSelectedTaxonomy("all")
                 setSelectedGroup("all")
                 setSelectedBudget("all")
                 setSortMode("science")
@@ -309,7 +338,7 @@ export default function ProductsPage() {
           >
             {filteredProducts.map((product, index) => (
               <motion.div key={product.id} variants={itemVariants}>
-                <ScientificProductCard product={product} priority={index === 0} />
+                <ScientificProductCard product={product} priority={index === 0} eventStats={productEventStats.get(product.id)} />
               </motion.div>
             ))}
           </motion.div>
@@ -328,6 +357,7 @@ export default function ProductsPage() {
                 setSearchQuery("")
                 setSelectedNeed(null)
                 setSelectedCatalogue("all")
+                setSelectedTaxonomy("all")
                 setSelectedGroup("all")
                 setSelectedBudget("all")
               }}
@@ -376,11 +406,12 @@ function SelectControl({
   )
 }
 
-function ScientificProductCard({ product, priority }: { product: Product; priority: boolean }) {
+function ScientificProductCard({ product, priority, eventStats }: { product: Product; priority: boolean; eventStats?: { count: number; latest: string; highConfidence: number } }) {
   const profile = getProductScienceProfile(product)
   const primaryCatalogue = profile.catalogues[0]
   const primaryGroup = profile.groups[0]
   const stageLabels = Array.from(new Set(profile.nodes.map((node) => researchStageLabels[node.stage]))).slice(0, 2)
+  const normalizedProduct = productWithTaxonomy(product)
 
   return (
     <Card className="flex h-full flex-col overflow-hidden border-none bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl dark:bg-slate-900">
@@ -402,6 +433,9 @@ function ScientificProductCard({ product, priority }: { product: Product; priori
                 {primaryCatalogue.shortTitle}
               </Badge>
             )}
+            <Badge className="bg-slate-900/90 font-bold text-white shadow-sm hover:bg-slate-900 dark:bg-slate-50/90 dark:text-slate-900 dark:hover:bg-slate-50">
+              {getProductCategoryLabel(normalizedProduct.category_key, normalizedProduct.category)}
+            </Badge>
             {primaryGroup && (
               <Badge className="bg-rose-600 font-bold text-white hover:bg-rose-600">
                 {primaryGroup.title}
@@ -432,6 +466,11 @@ function ScientificProductCard({ product, priority }: { product: Product; priori
           {profile.groups.length === 0 && (
             <Badge variant="secondary" className="bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
               Cần map nhóm
+            </Badge>
+          )}
+          {eventStats && eventStats.count > 0 && (
+            <Badge variant="secondary" className="bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-300">
+              {eventStats.count} KOL signals
             </Badge>
           )}
         </div>
@@ -480,7 +519,11 @@ function productMatchesScienceGroup(product: Product, group: ProductGroup) {
   return [...group.productIds, ...group.comparisonProductIds].includes(product.id)
 }
 
-function sortProducts(a: Product, b: Product, sortMode: SortMode) {
+function sortProducts(a: Product, b: Product, sortMode: SortMode, eventStats: Map<string, { count: number; latest: string; highConfidence: number }>) {
+  const aStats = eventStats.get(a.id) ?? { count: 0, latest: "", highConfidence: 0 }
+  const bStats = eventStats.get(b.id) ?? { count: 0, latest: "", highConfidence: 0 }
+  if (sortMode === "kol-mentions") return bStats.count - aStats.count || bStats.highConfidence - aStats.highConfidence || scienceScore(b) - scienceScore(a)
+  if (sortMode === "recent") return bStats.latest.localeCompare(aStats.latest) || bStats.count - aStats.count || scienceScore(b) - scienceScore(a)
   if (sortMode === "rating") return b.rating - a.rating
   if (sortMode === "price-low") return parsePrice(a.price) - parsePrice(b.price)
   if (sortMode === "price-high") return parsePrice(b.price) - parsePrice(a.price)

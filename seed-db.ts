@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { resolve } from 'path';
 import { REAL_KOLS } from './lib/kols-data';
+import { deriveProductTaxonomy, getProductCategory } from './lib/product-taxonomy';
 import { SAMPLE_CREATOR_PRODUCT_EVENTS, SAMPLE_PRODUCT_OFFERS } from './lib/timeline-data';
 
 dotenv.config({ path: resolve(process.cwd(), '.env.local') });
@@ -41,7 +42,43 @@ const PRODUCTS = [
   { id: "6", name: "Sữa rửa mặt Cerave Hydrating Cleanser", brand: "Cerave", image: "/images/product-cleanser.png", rating: 4.8, reviews: 4100, sold: "12,000+", price: "380.000đ", category: "Skincare", tags: ["Dịu nhẹ", "Cấp ẩm"], description: "Sữa rửa mặt không tạo bọt, làm sạch nhẹ nhàng mà không làm tổn thương hàng rào bảo vệ da. Bổ sung Ceramides và Hyaluronic Acid giúp da luôn ẩm mượt." },
   { id: "7", name: "Nước hoa nữ Narciso Rodriguez For Her EDP", brand: "Narciso Rodriguez", image: "/images/product-perfume.png", rating: 4.9, reviews: 650, sold: "1,500+", price: "2.500.000đ", category: "Perfume", tags: ["Quyến rũ", "Lưu hương lâu"], description: "Hương thơm quyến rũ, nữ tính với nốt hương xạ hương đặc trưng kết hợp cùng hoa hồng và đào. Lưu hương lâu, tỏa hương vừa phải, thích hợp cho những dịp đặc biệt." },
   { id: "8", name: "Sữa dưỡng thể Vaseline Gluta-Hya", brand: "Vaseline", image: "/images/product-body-lotion.png", rating: 4.5, reviews: 1800, sold: "6,000+", price: "140.000đ", category: "Bodycare", tags: ["Trắng da", "Thấm nhanh"], description: "Sữa dưỡng thể dạng serum mỏng nhẹ, thấm cực nhanh không gây bết dính. Chứa Gluta-Hya giúp dưỡng sáng da hiệu quả gấp 10 lần Vitamin C." },
-];
+].map((product) => {
+  const taxonomy = deriveProductTaxonomy(product);
+  return {
+    ...product,
+    ...taxonomy,
+    category: getProductCategory(taxonomy.category_key)?.displayCategory ?? product.category,
+    concern_tags: product.tags,
+    ingredient_tags: [],
+    aliases: [product.name, `${product.brand} ${product.name}`],
+    status: 'published',
+  };
+});
+
+const CREATOR_EVIDENCE_ITEMS = SAMPLE_CREATOR_PRODUCT_EVENTS.slice(0, 6).map((event) => ({
+  id: `evidence-${event.id}`,
+  creator_id: event.creator_id,
+  source_platform: event.source_platform,
+  source_url: event.source_url,
+  source_post_id: event.source_post_id ?? null,
+  published_at: `${event.event_date}T00:00:00Z`,
+  observed_at: event.observed_at,
+  source_title: event.source_title,
+  source_excerpt: event.source_excerpt,
+  raw_text: event.source_excerpt,
+  media_url: event.media_url ?? null,
+  status: 'published',
+  candidate_product_ids: [event.product_id],
+  candidate_product_names: [],
+  researcher_note: event.evidence_note,
+}));
+
+const CREATOR_PRODUCT_EVENTS = SAMPLE_CREATOR_PRODUCT_EVENTS.map((event) => ({
+  ...event,
+  evidence_id: CREATOR_EVIDENCE_ITEMS.some((item) => item.id === `evidence-${event.id}`)
+    ? `evidence-${event.id}`
+    : null,
+}));
 
 const REVIEWS = [
   { id: "r1", kolid: "1", productid: "1", rating: 5, ispr: false, timeago: "2 giờ trước", content: "Phục hồi da siêu đỉnh, thấm nhanh không bết dính. Highly recommend cho da treatment!", likes: 342, comments: 45 },
@@ -263,9 +300,13 @@ async function seed() {
   const { error: e5 } = await supabaseAdmin.from('product_offers').upsert(SAMPLE_PRODUCT_OFFERS);
   if (e5) console.error("PRODUCT OFFERS Error:", e5.message);
 
-  console.log(`Seeding CREATOR PRODUCT EVENTS (${SAMPLE_CREATOR_PRODUCT_EVENTS.length})...`);
-  const { error: e6 } = await supabaseAdmin.from('creator_product_events').upsert(SAMPLE_CREATOR_PRODUCT_EVENTS);
-  if (e6) console.error("CREATOR PRODUCT EVENTS Error:", e6.message);
+  console.log(`Seeding CREATOR EVIDENCE (${CREATOR_EVIDENCE_ITEMS.length})...`);
+  const { error: e6 } = await supabaseAdmin.from('creator_evidence_items').upsert(CREATOR_EVIDENCE_ITEMS);
+  if (e6) console.error("CREATOR EVIDENCE Error:", e6.message);
+
+  console.log(`Seeding CREATOR PRODUCT EVENTS (${CREATOR_PRODUCT_EVENTS.length})...`);
+  const { error: e7 } = await supabaseAdmin.from('creator_product_events').upsert(CREATOR_PRODUCT_EVENTS);
+  if (e7) console.error("CREATOR PRODUCT EVENTS Error:", e7.message);
 
   console.log("Seeding done!");
 }
