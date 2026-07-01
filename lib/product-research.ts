@@ -1,0 +1,183 @@
+import { productsWithTaxonomy } from "@/lib/product-taxonomy"
+import type { Product, ProductCategoryKey, ProductOffer } from "@/lib/types"
+
+export interface ProductResearchSource {
+  productId: string
+  label: string
+  url: string
+  sourceType: "official" | "brand-retail" | "retailer"
+}
+
+interface ProductSeed {
+  id: string
+  name: string
+  brand: string
+  category: string
+  categoryKey: ProductCategoryKey
+  subcategoryKey: string
+  price: string
+  tags: string[]
+  concernTags: string[]
+  ingredientTags: string[]
+  aliases: string[]
+  description: string
+  sourceLabel: string
+  sourceUrl: string
+  sourceType?: ProductResearchSource["sourceType"]
+}
+
+const PRODUCT_SEEDS: ProductSeed[] = [
+  seed("cerave-hydrating-facial-cleanser", "Hydrating Facial Cleanser", "CeraVe", "Skincare", "skincare", "cleanser", "380.000đ", ["Dịu nhẹ", "Ceramide", "Không hương liệu"], ["da khô", "da nhạy cảm", "làm sạch"], ["ceramides", "hyaluronic acid"], ["CeraVe Hydrating Cleanser"], "Sữa rửa mặt dịu nhẹ cho da thường đến khô, làm sạch mà không khiến da căng rát.", "CeraVe official product page", "https://www.cerave.com/skincare/cleansers/hydrating-facial-cleanser"),
+  seed("cerave-foaming-facial-cleanser", "Foaming Facial Cleanser", "CeraVe", "Skincare", "skincare", "cleanser", "390.000đ", ["Gel tạo bọt", "Da dầu", "Ceramide"], ["da dầu", "làm sạch", "mụn"], ["ceramides", "niacinamide"], ["CeraVe Foaming Cleanser"], "Gel rửa mặt tạo bọt cho da thường đến dầu, phù hợp routine da dầu cần làm sạch nhưng vẫn giữ hàng rào bảo vệ da.", "CeraVe official product page", "https://www.cerave.com/skincare/cleansers/foaming-facial-cleanser"),
+  seed("estee-lauder-advanced-night-repair-serum", "Advanced Night Repair Serum", "Estee Lauder", "Skincare", "skincare", "serum", "2.650.000đ", ["Anti-aging", "Luxury", "Night serum"], ["tuổi 30", "phục hồi", "da xỉn màu"], ["peptide", "hyaluronic acid"], ["Estee Lauder ANR", "Advanced Night Repair"], "Serum đêm luxury lâu đời, nên có trong nhóm chống lão hóa và phục hồi da mệt mỏi.", "Estee Lauder official product page", "https://www.esteelauder.com/product/681/77491/product-catalog/skincare/advanced-night-repair/synchronized-multi-recovery-complex-serum"),
+  seed("the-ordinary-niacinamide-10-zinc-1", "Niacinamide 10% + Zinc 1% Serum", "The Ordinary", "Skincare", "skincare", "serum", "280.000đ", ["Niacinamide", "Dầu thừa", "Pore care"], ["da dầu", "lỗ chân lông", "thâm mụn"], ["niacinamide", "zinc PCA"], ["The Ordinary Niacinamide", "TO Niacinamide"], "Serum niacinamide phổ biến cho da dầu và bề mặt da không đều màu.", "The Ordinary official product page", "https://theordinary.com/en-us/niacinamide-10-zinc-1-serum-100436.html"),
+  seed("the-ordinary-hyaluronic-acid-2-b5", "Hyaluronic Acid 2% + B5", "The Ordinary", "Skincare", "skincare", "serum", "300.000đ", ["HA", "B5", "Cấp ẩm"], ["da thiếu nước", "phục hồi", "da khô"], ["hyaluronic acid", "panthenol", "ceramides"], ["The Ordinary Hyaluronic Acid", "TO HA B5"], "Serum cấp ẩm budget với HA và B5, phù hợp routine tối giản cho da thiếu nước.", "The Ordinary official product page", "https://theordinary.com/en-us/hyaluronic-acid-2-b5-serum-100425.html"),
+  seed("the-ordinary-glycolic-acid-7-toning-solution", "Glycolic Acid 7% Exfoliating Toner", "The Ordinary", "Skincare", "skincare", "treatment", "390.000đ", ["AHA", "Texture", "Bodycare hack"], ["da xỉn màu", "texture", "bodycare"], ["glycolic acid", "aloe"], ["TO Glycolic Toner", "The Ordinary Glycolic Acid"], "Toner AHA budget cho texture và da xỉn màu, cũng hay được dùng trong content bodycare.", "The Ordinary official product page", "https://theordinary.com/en-us/glycolic-acid-7-exfoliating-toner-100418.html"),
+  seed("the-ordinary-retinol-1-in-squalane", "Retinol 1% in Squalane", "The Ordinary", "Skincare", "skincare", "treatment", "350.000đ", ["Retinol", "Budget", "Squalane"], ["tuổi 30", "texture", "mụn"], ["retinol", "squalane"], ["TO Retinol 1%", "The Ordinary Retinol"], "Retinol budget nồng độ cao, cần gắn cảnh báo dùng chậm khi viết content cho người mới.", "The Ordinary official product page", "https://theordinary.com/en-us/retinol-1-in-squalane-serum-100441.html"),
+  seed("the-ordinary-azelaic-acid-suspension-10", "Azelaic Acid Suspension 10%", "The Ordinary", "Skincare", "skincare", "treatment", "360.000đ", ["Azelaic acid", "Budget", "Da không đều màu"], ["thâm mụn", "đỏ da", "texture"], ["azelaic acid"], ["The Ordinary Azelaic Acid", "TO Azelaic"], "Azelaic acid budget cho thâm mụn, đỏ da và bề mặt da không đều, bổ sung lựa chọn treatment dịu hơn BHA mạnh.", "The Ordinary official product page", "https://theordinary.com/en-us/azelaic-acid-suspension-10-exfoliator-100407.html"),
+  seed("the-ordinary-multi-peptide-copper-peptides-1", "Multi-Peptide + Copper Peptides 1% Serum", "The Ordinary", "Skincare", "skincare", "serum", "850.000đ", ["Peptide", "Copper peptide", "Anti-aging"], ["tuổi 30", "da thiếu đàn hồi", "phục hồi"], ["copper peptides", "multi-peptide complex"], ["The Ordinary Copper Peptides", "TO Copper Peptides"], "Serum peptide/copper peptide cho nhóm chống lão hóa giá vừa phải, dùng làm đối trọng với serum luxury.", "The Ordinary official product page", "https://theordinary.com/en-us/multi-peptide-copper-peptides-1-serum-100625.html"),
+  seed("paulas-choice-skin-perfecting-2-bha-liquid-exfoliant", "Skin Perfecting 2% BHA Liquid Exfoliant", "Paula's Choice", "Skincare", "skincare", "treatment", "790.000đ", ["2% BHA", "Mụn ẩn", "Lỗ chân lông"], ["mụn ẩn", "mụn đầu đen", "da dầu"], ["salicylic acid", "green tea"], ["Paula's Choice BHA", "PC BHA 2%"], "Treatment BHA leave-on nổi tiếng để tham chiếu trong bài mụn ẩn, lỗ chân lông và exfoliant cho người mới.", "Paula's Choice official product page", "https://www.paulaschoice.com/skin-perfecting-2pct-bha-liquid-exfoliant/201.html"),
+  seed("paulas-choice-10-azelaic-acid-booster", "10% Azelaic Acid Booster", "Paula's Choice", "Skincare", "skincare", "treatment", "980.000đ", ["Azelaic acid", "Đỏ da", "Thâm mụn"], ["thâm mụn", "đỏ da", "mụn"], ["azelaic acid", "salicylic acid"], ["PC Azelaic", "Paula's Choice Azelaic Acid"], "Booster azelaic acid cho thâm mụn và da dễ đỏ, hữu ích khi so sánh BHA, benzoyl peroxide và azelaic.", "Paula's Choice official product page", "https://www.paulaschoice.com/10pct-azelaic-acid-booster/775.html"),
+  seed("bioderma-sensibio-h2o-micellar-water", "Sensibio H2O Micellar Water", "Bioderma", "Skincare", "skincare", "cleanser", "320.000đ", ["Micellar", "Da nhạy cảm", "Không cần rửa lại"], ["làm sạch", "da nhạy cảm", "tẩy trang"], ["micellar technology"], ["Bioderma Sensibio", "Sensibio H2O"], "Nước tẩy trang biểu tượng cho da nhạy cảm, cần có để so sánh nhóm micellar water.", "Bioderma official product page", "https://www.bioderma.us/en/p/sensibio-h2o-micellar-water.html"),
+  seed("bioderma-sebium-h2o-micellar-water", "Sebium H2O Micellar Water", "Bioderma", "Skincare", "skincare", "cleanser", "320.000đ", ["Micellar", "Da dầu", "Purifying"], ["da dầu", "mụn", "làm sạch"], ["zinc gluconate", "copper sulfate"], ["Bioderma Sebium H2O"], "Micellar water cho da hỗn hợp đến dầu, bổ sung lựa chọn tẩy trang ngoài Sensibio.", "Bioderma official product page", "https://www.bioderma.us/en/p/sebium-h2o-micellar-water.html"),
+  seed("eucerin-sun-oil-control-gel-cream-spf50", "Sun Oil Control Gel-Cream SPF50+", "Eucerin", "Skincare", "skincare", "sunscreen", "520.000đ", ["Oil control", "Dry touch", "Da dầu mụn"], ["chống nắng", "da dầu", "da mụn"], ["l-carnitine", "SPF50+"], ["Eucerin Oil Control", "Eucerin Sun Gel-Cream"], "Kem chống nắng dry-touch cho da dầu, da mụn, dùng làm mốc so sánh khi người dùng hỏi finish ráo.", "Eucerin official product page", "https://int.eucerin.com/products/sun-protection/sun-gel-creme-dry-touch-spf-50plus"),
+  seed("eucerin-anti-pigment-dual-serum", "Anti-Pigment Dual Serum", "Eucerin", "Skincare", "skincare", "serum", "1.350.000đ", ["Thiamidol", "Đốm nâu", "Hyperpigmentation"], ["nám", "thâm mụn", "da không đều màu"], ["thiamidol", "hyaluronic acid"], ["Eucerin Dual Serum", "Eucerin Anti-Pigment"], "Serum hỗ trợ đốm nâu và tăng sắc tố, cần có cho cluster nám, thâm và sáng da an toàn.", "Eucerin official product page", "https://int.eucerin.com/products/anti-pigment/dual-serum"),
+  seed("boj-relief-sun-rice-probiotics", "Relief Sun: Rice + Probiotics SPF50+ PA++++", "Beauty of Joseon", "Skincare", "skincare", "sunscreen", "390.000đ", ["SPF50+", "Rice", "Probiotics"], ["chống nắng", "da khô", "da nhạy cảm"], ["rice extract", "probiotics"], ["BOJ Relief Sun", "Beauty of Joseon sunscreen"], "Kem chống nắng K-beauty texture giống kem dưỡng, hợp routine sáng cần finish ẩm nhẹ.", "Beauty of Joseon official product page", "https://beautyofjoseon.com/products/relief-sun-rice-probiotics"),
+  seed("boj-ginseng-cleansing-oil", "Ginseng Cleansing Oil", "Beauty of Joseon", "Skincare", "skincare", "cleanser", "380.000đ", ["Cleansing oil", "Ginseng", "K-beauty"], ["tẩy trang", "làm sạch", "da khô"], ["ginseng seed oil", "soybean oil"], ["BOJ Cleansing Oil"], "Dầu tẩy trang K-beauty cho routine double cleansing, dễ ghép với sunscreen và makeup hằng ngày.", "Beauty of Joseon official product page", "https://beautyofjoseon.com/products/ginseng-cleansing-oil"),
+  seed("boj-glow-serum-propolis-niacinamide", "Glow Serum: Propolis + Niacinamide", "Beauty of Joseon", "Skincare", "skincare", "serum", "360.000đ", ["Propolis", "Niacinamide", "Glow"], ["thâm mụn", "da xỉn màu", "mụn"], ["propolis extract", "niacinamide"], ["BOJ Glow Serum"], "Serum propolis/niacinamide cho glow và da sau mụn, phù hợp nội dung K-beauty serum dễ dùng.", "Beauty of Joseon official product page", "https://beautyofjoseon.com/products/glow-serum-propolis-niacinamide"),
+  seed("boj-dynasty-cream", "Dynasty Cream", "Beauty of Joseon", "Skincare", "skincare", "moisturizer", "450.000đ", ["Moisturizer", "Ginseng", "K-beauty"], ["da khô", "da xỉn màu", "phục hồi"], ["rice bran water", "ginseng root water"], ["Beauty of Joseon Dynasty Cream", "BOJ Dynasty Cream"], "Kem dưỡng K-beauty giàu ẩm, dùng làm lựa chọn moisturizer cùng brand với Relief Sun và Glow Serum.", "Beauty of Joseon official product page", "https://beautyofjoseon.com/products/dynasty-cream"),
+  seed("boj-revive-eye-serum-ginseng-retinal", "Revive Eye Serum: Ginseng + Retinal", "Beauty of Joseon", "Skincare", "skincare", "treatment", "420.000đ", ["Retinal", "Eye serum", "Ginseng"], ["quầng mắt", "nếp nhăn", "tuổi 30"], ["retinal", "ginseng root extract"], ["BOJ Eye Serum", "Beauty of Joseon Retinal"], "Serum mắt retinal/ginseng phổ biến, bổ sung nhóm eye care và retinoid nhẹ.", "Beauty of Joseon official product page", "https://beautyofjoseon.com/products/revive-eye-serum-ginseng-retinal"),
+  seed("boj-red-bean-water-gel", "Red Bean Water Gel", "Beauty of Joseon", "Skincare", "skincare", "moisturizer", "360.000đ", ["Gel moisturizer", "Da dầu", "K-beauty"], ["da dầu", "da thiếu nước", "mụn"], ["red bean extract", "peptide"], ["BOJ Red Bean Water Gel"], "Kem dưỡng gel cho da dầu/hỗn hợp, giúp catalogue có moisturizer nhẹ cạnh các kem barrier dày.", "Beauty of Joseon official product page", "https://beautyofjoseon.com/products/red-bean-water-gel"),
+  seed("cosrx-advanced-snail-96-mucin-power-essence", "Advanced Snail 96 Mucin Power Essence", "COSRX", "Skincare", "skincare", "serum", "430.000đ", ["Snail mucin", "Cấp ẩm", "K-beauty"], ["phục hồi", "da thiếu nước", "texture"], ["snail secretion filtrate", "hyaluronic acid"], ["COSRX Snail 96", "Snail Mucin Essence"], "Essence snail mucin kinh điển cho cấp ẩm, làm dịu và hỗ trợ hàng rào bảo vệ da.", "COSRX official product page", "https://www.cosrx.com/products/advanced-snail-96-mucin-power-essence"),
+  seed("cosrx-low-ph-good-morning-gel-cleanser", "Low pH Good Morning Gel Cleanser", "COSRX", "Skincare", "skincare", "cleanser", "240.000đ", ["Low pH", "Gel cleanser", "K-beauty"], ["làm sạch", "da dầu", "mụn"], ["tea tree leaf oil", "betaine salicylate"], ["COSRX Low pH Cleanser"], "Gel rửa mặt low pH phổ biến cho routine da dầu mụn và người mới skincare.", "COSRX official product page", "https://www.cosrx.com/products/low-ph-good-morning-gel-cleanser"),
+  seed("cosrx-acne-pimple-master-patch", "Acne Pimple Master Patch", "COSRX", "Skincare", "skincare", "treatment", "95.000đ", ["Pimple patch", "Mụn", "K-beauty"], ["mụn viêm", "mụn đầu trắng", "spot care"], ["hydrocolloid"], ["COSRX Pimple Patch"], "Miếng dán mụn hydrocolloid nổi tiếng, cần có cho nhóm spot treatment giá dễ tiếp cận.", "COSRX official product page", "https://www.cosrx.com/products/acne-pimple-master-patch"),
+  seed("cosrx-advanced-snail-92-all-in-one-cream", "Advanced Snail 92 All In One Cream", "COSRX", "Skincare", "skincare", "moisturizer", "420.000đ", ["Snail mucin", "Cream", "K-beauty"], ["phục hồi", "da thiếu nước", "texture"], ["snail secretion filtrate"], ["COSRX Snail Cream", "Snail 92 Cream"], "Kem dưỡng snail mucin đi cùng essence Snail 96, hợp routine phục hồi/cấp ẩm K-beauty.", "COSRX official product page", "https://www.cosrx.com/products/advanced-snail-92-all-in-one-cream"),
+  seed("cosrx-the-6-peptide-skin-booster-serum", "The 6 Peptide Skin Booster Serum", "COSRX", "Skincare", "skincare", "serum", "520.000đ", ["Peptide", "Booster", "K-beauty"], ["phục hồi", "tuổi 30", "texture"], ["peptide complex"], ["COSRX 6 Peptide", "6 Peptide Booster"], "Booster peptide K-beauty dùng trước serum chính, bổ sung nhóm peptide giá vừa.", "COSRX official product page", "https://www.cosrx.com/products/the-6-peptide-skin-booster-serum"),
+  seed("cosrx-aha-bha-clarifying-treatment-toner", "AHA/BHA Clarifying Treatment Toner", "COSRX", "Skincare", "skincare", "treatment", "320.000đ", ["AHA/BHA", "Toner", "Mụn"], ["mụn ẩn", "texture", "da dầu"], ["glycolic acid", "betaine salicylate"], ["COSRX AHA BHA Toner"], "Toner acid nhẹ cho người mới, đối trọng với Paula's Choice BHA nồng độ rõ hơn.", "COSRX official product page", "https://www.cosrx.com/products/aha-bha-clarifying-treatment-toner"),
+  seed("laneige-lip-sleeping-mask", "Lip Sleeping Mask", "LANEIGE", "Makeup", "makeup", "lip", "540.000đ", ["Lip mask", "K-beauty", "Dưỡng môi"], ["môi khô", "makeup môi", "phục hồi môi"], ["shea butter", "berry fruit complex"], ["Laneige Lip Mask"], "Mặt nạ ngủ môi viral, nằm giữa skincare và makeup prep trước son tint/lipstick.", "LANEIGE official product page", "https://us.laneige.com/products/lip-sleeping-mask"),
+  seed("laneige-water-sleeping-mask", "Water Sleeping Mask", "LANEIGE", "Skincare", "skincare", "moisturizer", "820.000đ", ["Sleeping mask", "Cấp ẩm", "K-beauty"], ["da thiếu nước", "da xỉn màu", "da khô"], ["squalane", "probiotic-derived complex"], ["Laneige Water Sleeping Mask"], "Mặt nạ ngủ cấp ẩm nổi tiếng, hợp content phục hồi da thiếu nước sau ngày dài.", "LANEIGE official product page", "https://us.laneige.com/products/water-sleeping-mask"),
+  seed("laneige-cream-skin-toner-moisturizer", "Cream Skin Toner & Moisturizer", "LANEIGE", "Skincare", "skincare", "serum", "750.000đ", ["Milky toner", "Barrier", "Cấp ẩm"], ["da khô", "da nhạy cảm", "phục hồi"], ["ceramide", "peptide"], ["Laneige Cream Skin"], "Toner dưỡng ẩm dạng milky, phù hợp routine tối giản cho da khô và da yếu.", "LANEIGE official product page", "https://us.laneige.com/products/cream-skin-toner-moisturizer"),
+  seed("laneige-lip-glowy-balm", "Lip Glowy Balm", "LANEIGE", "Makeup", "makeup", "lip", "420.000đ", ["Lip balm", "Glossy", "K-beauty"], ["môi khô", "son dưỡng màu", "makeup hằng ngày"], ["shea butter", "murmuru seed butter"], ["Laneige Lip Glowy Balm"], "Son dưỡng bóng ban ngày, đi cùng Lip Sleeping Mask để phủ đủ routine môi khô.", "LANEIGE official product page", "https://us.laneige.com/products/lip-glowy-balm"),
+  seed("laneige-water-bank-blue-hyaluronic-cream", "Water Bank Blue Hyaluronic Cream Moisturizer", "LANEIGE", "Skincare", "skincare", "moisturizer", "950.000đ", ["Blue HA", "Cream", "Hydration"], ["da khô", "da thiếu nước", "phục hồi"], ["blue hyaluronic acid", "squalane"], ["Laneige Water Bank Cream"], "Kem dưỡng cấp ẩm dòng Water Bank, bổ sung lựa chọn prestige K-beauty moisturizer.", "LANEIGE official product page", "https://us.laneige.com/products/water-bank-blue-hyaluronic-cream-moisturizer"),
+  seed("innisfree-green-tea-seed-hyaluronic-serum", "Green Tea Seed Hyaluronic Serum", "Innisfree", "Skincare", "skincare", "serum", "680.000đ", ["Green tea", "HA", "Hydration"], ["da thiếu nước", "da khô", "phục hồi"], ["green tea", "hyaluronic acid"], ["Innisfree Green Tea Serum"], "Serum cấp ẩm green tea/HA cho routine K-beauty cơ bản.", "Innisfree official product page", "https://us.innisfree.com/products/green-tea-seed-hyaluronic-serum"),
+  seed("sulwhasoo-first-care-activating-serum", "First Care Activating Serum", "Sulwhasoo", "Skincare", "skincare", "serum", "2.100.000đ", ["Luxury K-beauty", "Ginseng", "First serum"], ["tuổi 30", "da xỉn màu", "phục hồi"], ["ginseng", "herbal complex"], ["Sulwhasoo First Care"], "First serum luxury K-beauty, làm anchor cho nhóm ginseng và chống lão hóa cao cấp.", "Sulwhasoo official product page", "https://us.sulwhasoo.com/products/first-care-activating-serum"),
+  seed("anua-heartleaf-77-soothing-toner", "Heartleaf 77 Soothing Toner", "Anua", "Skincare", "skincare", "serum", "390.000đ", ["Heartleaf 77%", "Soothing", "K-beauty"], ["da nhạy cảm", "đỏ da", "mụn"], ["heartleaf", "hyaluron"], ["Anua Heartleaf Toner"], "Toner K-beauty viral với heartleaf, phù hợp cluster làm dịu da, da dễ đỏ và routine tối giản.", "Anua official product page", "https://anua.com/products/heartleaf-77-soothing-toner"),
+  seed("anua-heartleaf-pore-control-cleansing-oil", "Heartleaf Pore Control Cleansing Oil", "Anua", "Skincare", "skincare", "cleanser", "450.000đ", ["Cleansing oil", "Pore care", "Heartleaf"], ["tẩy trang", "mụn đầu đen", "da dầu"], ["heartleaf", "plant oils"], ["Anua Cleansing Oil"], "Dầu tẩy trang viral cho routine làm sạch sâu, dùng khi so sánh cleansing oil cho da dễ bí.", "Anua official product page", "https://anua.com/products/heartleaf-pore-control-cleansing-oil"),
+  seed("anua-niacinamide-10-txa-4-serum", "Niacinamide 10% + TXA 4% Serum", "Anua", "Skincare", "skincare", "serum", "520.000đ", ["Niacinamide", "TXA", "Thâm mụn"], ["thâm mụn", "da không đều màu", "sáng da"], ["niacinamide", "tranexamic acid"], ["Anua TXA Serum"], "Serum sáng da K-beauty với niacinamide và TXA, hợp cụm thâm mụn và tăng sắc tố nhẹ.", "Anua official product page", "https://anua.com/products/niacinamide-10-txa-4-serum"),
+  seed("anua-rice-70-glow-milky-toner", "Rice 70 Glow Milky Toner", "Anua", "Skincare", "skincare", "serum", "480.000đ", ["Rice", "Milky toner", "Glow"], ["da khô", "da xỉn màu", "phục hồi"], ["rice water", "niacinamide"], ["Anua Rice Toner"], "Toner sữa gạo cho glow và cấp ẩm, mở rộng Anua ngoài Heartleaf và TXA.", "Anua official product page", "https://anua.com/products/rice-70-glow-milky-toner"),
+  seed("round-lab-birch-juice-moisturizing-sunscreen", "Birch Juice Moisturizing Sunscreen UVLock SPF45+", "Round Lab", "Skincare", "skincare", "sunscreen", "480.000đ", ["Birch sap", "Dewy", "No white cast"], ["chống nắng", "da khô", "dùng dưới makeup"], ["birch sap", "hyaluronic acid"], ["Round Lab Birch Sunscreen"], "Kem chống nắng dưỡng ẩm có birch sap và HA, hợp bài so sánh sunscreen finish ẩm.", "ROUND LAB official product page", "https://roundlab.com/products/birch-moisturizing-uv-sunscreen"),
+  seed("round-lab-1025-dokdo-cleanser", "1025 Dokdo Cleanser", "Round Lab", "Skincare", "skincare", "cleanser", "330.000đ", ["Low pH", "Dokdo", "Dịu nhẹ"], ["làm sạch", "da nhạy cảm", "da dầu"], ["deep sea water"], ["Round Lab Dokdo Cleanser"], "Sữa rửa mặt dịu nhẹ K-beauty, bổ sung lựa chọn cleanser không quá khô da.", "ROUND LAB official product page", "https://roundlab.com/products/1025-dokdo-cleanser"),
+  seed("round-lab-1025-dokdo-toner", "1025 Dokdo Toner", "Round Lab", "Skincare", "skincare", "serum", "360.000đ", ["Hydrating toner", "Dokdo", "K-beauty"], ["da thiếu nước", "da nhạy cảm", "texture"], ["deep sea water", "protease"], ["Round Lab Dokdo Toner"], "Toner cấp ẩm dịu nhẹ, thường được gợi ý cho routine K-beauty tối giản.", "ROUND LAB official product page", "https://roundlab.com/products/1025-dokdo-toner"),
+  seed("skin1004-hyalu-cica-water-fit-sun-serum", "Madagascar Centella Hyalu-Cica Water-Fit Sun Serum", "SKIN1004", "Skincare", "skincare", "sunscreen", "360.000đ", ["SPF50", "Centella", "Serum sunscreen"], ["chống nắng", "da nhạy cảm", "da thiếu nước"], ["centella asiatica", "hyaluronic acid", "panthenol"], ["SKIN1004 sunscreen"], "Kem chống nắng dạng serum nhẹ, có centella và humectant, phù hợp danh sách sunscreen K-beauty dễ dùng.", "SKIN1004 official product page", "https://www.skin1004.com/products/hyalu-cica-water-fit-sun-serum-uv"),
+  seed("aestura-atobarrier365-cream", "ATOBARRIER365 Cream", "Aestura", "Skincare", "skincare", "moisturizer", "650.000đ", ["Ceramide", "Barrier", "Da khô nhạy cảm"], ["phục hồi", "da khô", "hàng rào bảo vệ da"], ["ceramide", "barrier capsule"], ["Aestura 365 Cream"], "Kem dưỡng ceramide K-derma cho da khô, nhạy cảm và da yếu sau treatment.", "AESTURA official product page", "https://int.aestura.com/products/atobarrier365-cream"),
+  seed("illiyoon-ceramide-ato-concentrate-cream", "Ceramide Ato Concentrate Cream", "ILLIYOON", "Skincare", "skincare", "moisturizer", "360.000đ", ["Ceramide", "Face & body", "Da khô"], ["da khô", "da nhạy cảm", "bodycare"], ["ceramide", "panthenol"], ["Illiyoon Ato Cream"], "Kem dưỡng mặt/body giá dễ tiếp cận, thường được nhắc khi da khô, nhạy cảm cần khóa ẩm.", "ILLIYOON official site", "https://theilliyoon.com/"),
+  seed("dr-jart-cicapair-tiger-grass-color-correcting-treatment", "Cicapair Tiger Grass Color Correcting Treatment", "Dr.Jart+", "Skincare", "skincare", "moisturizer", "1.100.000đ", ["Cica", "Color correcting", "Đỏ da"], ["đỏ da", "da nhạy cảm", "makeup prep"], ["centella asiatica", "spf"], ["Dr Jart Cicapair", "Tiger Grass Color Corrector"], "Kem cica hiệu chỉnh sắc đỏ, nằm giữa skincare và makeup base cho da dễ đỏ.", "Dr.Jart+ official product page", "https://www.drjart.com/product/28258/90137/moisturizers/cicapair-tiger-grass-color-correcting-treatment-spf-30"),
+  seed("maybelline-fit-me-matte-poreless-foundation", "Fit Me Matte + Poreless Foundation", "Maybelline New York", "Makeup", "makeup", "foundation", "180.000đ", ["Foundation", "Drugstore", "Da dầu"], ["nền", "da dầu", "lỗ chân lông"], ["oil-free"], ["Maybelline Fit Me"], "Kem nền drugstore finish matte tự nhiên, phù hợp da thường đến dầu và ngân sách học sinh sinh viên.", "Maybelline official product page", "https://www.maybelline.com/face-makeup/foundation-makeup/fit-me-matte-poreless-foundation"),
+  seed("maybelline-sky-high-mascara", "Lash Sensational Sky High Mascara", "Maybelline New York", "Makeup", "makeup", "eye", "220.000đ", ["Mascara", "Drugstore", "Dài mi"], ["mi ngắn", "makeup mắt", "không lem"], ["bamboo extract"], ["Maybelline Sky High"], "Mascara drugstore viral cho hiệu ứng dài mi, nên có trong nhóm eye makeup giá dễ mua.", "Maybelline official product page", "https://www.maybelline.com/eye-makeup/mascara/lash-sensational-sky-high-washable-mascara-makeup"),
+  seed("loreal-paris-telescopic-original-mascara", "Telescopic Original Mascara", "L'Oreal Paris", "Makeup", "makeup", "eye", "260.000đ", ["Mascara", "Lengthening", "Drugstore"], ["mi ngắn", "makeup mắt", "không vón"], ["lengthening brush"], ["L'Oreal Telescopic"], "Mascara kéo dài mi nổi tiếng, đối trọng với Maybelline Sky High trong nhóm drugstore eye makeup.", "L'Oreal Paris official product page", "https://www.lorealparisusa.com/makeup/eye/mascara/telescopic-original-mascara"),
+  seed("loreal-paris-infallible-24h-fresh-wear-foundation", "Infallible 24H Fresh Wear Foundation", "L'Oreal Paris", "Makeup", "makeup", "foundation", "360.000đ", ["Foundation", "Longwear", "Drugstore"], ["nền lâu trôi", "da dầu", "makeup đi làm"], ["longwear formula"], ["L'Oreal Fresh Wear"], "Kem nền drugstore longwear, phù hợp nhóm base makeup cho thời tiết nóng ẩm.", "L'Oreal Paris official product page", "https://www.lorealparisusa.com/makeup/face/foundation-makeup/infallible-24-hour-fresh-wear-foundation-lightweight"),
+  seed("mac-powder-kiss-lip-cheek-mousse", "Powder Kiss Lip + Cheek Mousse", "MAC Cosmetics", "Makeup", "makeup", "lip", "720.000đ", ["Soft matte", "Lip & cheek", "Prestige"], ["son lì", "má hồng", "môi khô"], ["mousse texture"], ["MAC Powder Kiss Liquid", "MAC Powder Kiss Mousse"], "Son/má dạng mousse hazy matte, nối tiếp seed MAC Powder Kiss với variant đa năng hơn.", "MAC official product page", "https://www.maccosmetics.com/product/13854/142086/products/makeup/lips/lipstick/powder-kiss-lip-cheek-mousse"),
+  seed("mac-retro-matte-lipstick-ruby-woo", "Retro Matte Lipstick - Ruby Woo", "MAC Cosmetics", "Makeup", "makeup", "lip", "650.000đ", ["Red lipstick", "Iconic", "Matte"], ["son đỏ", "makeup dự tiệc", "môi lì"], ["matte lipstick"], ["MAC Ruby Woo"], "Thỏi son đỏ iconic, dùng làm anchor cho bài chọn son đỏ và lipstick classic.", "MAC official product page", "https://www.maccosmetics.com/product/13854/310/products/makeup/lips/lipstick/retro-matte-lipstick"),
+  seed("nars-powder-blush-orgasm", "Powder Blush - Orgasm", "NARS", "Makeup", "makeup", "cheek", "950.000đ", ["Blush", "Iconic shade", "Prestige"], ["má hồng", "makeup glow", "trang điểm nền"], ["powder blush"], ["NARS Orgasm"], "Má hồng biểu tượng tông peachy-pink, nên có trong nhóm prestige makeup và bài blush cho da châu Á.", "NARS official product page", "https://www.narscosmetics.com/USA/powder-blush/999NAC0000192.html"),
+  seed("nars-light-reflecting-foundation", "Light Reflecting Foundation", "NARS", "Makeup", "makeup", "foundation", "1.450.000đ", ["Foundation", "Natural glow", "Prestige"], ["nền mỏng", "makeup đi làm", "da hỗn hợp"], ["light reflecting complex"], ["NARS Light Reflecting"], "Kem nền prestige finish tự nhiên, bổ sung lựa chọn base makeup cao cấp.", "NARS official product page", "https://www.narscosmetics.com/USA/light-reflecting-advanced-skincare-foundation/999NAC0000136.html"),
+  seed("dior-addict-lip-glow-oil", "Dior Addict Lip Glow Oil", "Dior Beauty", "Makeup", "makeup", "lip", "1.050.000đ", ["Lip oil", "Luxury", "Gloss"], ["môi khô", "makeup clean girl", "lip gloss"], ["cherry oil", "pH color"], ["Dior Lip Glow Oil"], "Lip oil luxury viral, dùng làm anchor cho nhóm lip oil/gloss và makeup clean girl.", "Dior official product page", "https://www.dior.com/en_us/beauty/products/dior-addict-lip-glow-oil-Y0000163.html"),
+  seed("dior-forever-skin-glow-foundation", "Dior Forever Skin Glow Foundation", "Dior Beauty", "Makeup", "makeup", "foundation", "1.650.000đ", ["Foundation", "Luxury", "Glow"], ["nền glow", "da khô", "makeup cao cấp"], ["floral skincare ingredients"], ["Dior Forever Skin Glow"], "Kem nền luxury finish glow, cần có trong nhóm high-end foundation.", "Dior official product page", "https://www.dior.com/en_us/beauty/products/dior-forever-skin-glow-Y0996398.html"),
+  seed("rare-beauty-soft-pinch-liquid-blush", "Soft Pinch Liquid Blush", "Rare Beauty", "Makeup", "makeup", "cheek", "650.000đ", ["Liquid blush", "Viral", "Pigmented"], ["má hồng", "makeup clean girl", "da khô"], ["liquid pigment"], ["Rare Beauty Blush"], "Má hồng liquid viral, độ lên màu cao, nên có trong nhóm creator-led makeup.", "Rare Beauty official product page", "https://www.rarebeauty.com/products/soft-pinch-liquid-blush"),
+  seed("fenty-beauty-gloss-bomb-universal-lip-luminizer", "Gloss Bomb Universal Lip Luminizer", "Fenty Beauty", "Makeup", "makeup", "lip", "650.000đ", ["Lip gloss", "Universal shade", "Prestige"], ["lip gloss", "môi khô", "makeup glow"], ["shea butter"], ["Fenty Gloss Bomb"], "Lip gloss iconic với shade dễ dùng, bổ sung cạnh tranh với Dior Lip Glow Oil.", "Fenty Beauty official product page", "https://fentybeauty.com/products/gloss-bomb-universal-lip-luminizer-fenty-glow"),
+  seed("benefit-precisely-my-brow-pencil", "Precisely, My Brow Pencil", "Benefit Cosmetics", "Makeup", "nails_lash_brow", "brow", "760.000đ", ["Brow pencil", "Prestige", "Mày"], ["lông mày", "makeup mắt", "kẻ mày"], ["micro tip pencil"], ["Benefit Brow Pencil"], "Chì kẻ mày đầu nhỏ nổi tiếng, mở rộng catalogue sang nhóm brow/lash.", "Benefit official product page", "https://www.benefitcosmetics.com/en-us/product/precisely-my-brow-pencil"),
+  seed("romand-juicy-lasting-tint", "Juicy Lasting Tint", "rom&nd", "Makeup", "makeup", "lip", "220.000đ", ["Tint bóng", "K-beauty", "MLBB"], ["son tint", "môi khô", "makeup hằng ngày"], ["gloss tint"], ["Romand Juicy Lasting Tint", "romand tint"], "Son tint bóng K-beauty có độ phủ tìm kiếm cao, hợp nhóm son tint bền màu nhưng không quá khô môi.", "rom&nd official product page", "https://romandbeauty.com/products/juicy-lasting-tint"),
+  seed("romand-glasting-melting-balm", "Glasting Melting Balm", "rom&nd", "Makeup", "makeup", "lip", "220.000đ", ["Tinted balm", "Glossy", "K-beauty"], ["môi khô", "son dưỡng màu", "makeup hằng ngày"], ["plant oils"], ["Romand Melting Balm"], "Tinted balm bóng nhẹ, hợp xu hướng môi căng mọng nhưng dễ dùng hằng ngày.", "rom&nd official product page", "https://romandbeauty.com/products/glasting-melting-balm"),
+  seed("peripera-ink-velvet", "Ink Velvet Lip Tint", "Peripera", "Makeup", "makeup", "lip", "180.000đ", ["Lip tint", "Velvet", "K-beauty"], ["son tint", "môi lì", "makeup hằng ngày"], ["velvet tint"], ["Peripera Ink Velvet"], "Son tint velvet K-beauty giá dễ mua, cần có trong nhóm lip tint cho học sinh sinh viên.", "Peripera official store product page", "https://clubclio.shop/products/peripera-ink-velvet", "brand-retail"),
+  seed("vaseline-gluta-hya-dewy-radiance-lotion", "Gluta-Hya Serum Burst Lotion Dewy Radiance", "Vaseline", "Bodycare", "bodycare", "body_lotion", "140.000đ", ["Body lotion", "Gluta-Hya", "Dewy"], ["body sáng da", "da khô", "bodycare"], ["glutaglow", "hyaluron", "niacinamide"], ["Vaseline Gluta-Hya Dewy"], "Sữa dưỡng thể dạng serum burst, hợp khí hậu nóng ẩm và content body sáng da.", "Vaseline official product page", "https://www.vaseline.com/my/en/p/vaseline-gluta-hya-serum-burst-lotion-dewy-radiance.html/09556126670661"),
+  seed("k18-leave-in-molecular-repair-hair-mask", "Leave-In Molecular Repair Hair Mask", "K18", "Haircare", "haircare", "hair_mask", "1.650.000đ", ["Bond repair", "4 phút", "Tóc tẩy nhuộm"], ["tóc hư tổn", "tóc tẩy nhuộm", "gãy rụng"], ["K18PEPTIDE"], ["K18 mask", "K18 Molecular Repair"], "Mask leave-in cho tóc hư tổn do tẩy, nhuộm, nhiệt và hóa chất.", "K18 official product page", "https://www.k18hair.com/products/leave-in-molecular-repair-hair-mask-50-ml"),
+  seed("olaplex-no3plus-complete-repair-treatment", "No.3PLUS Complete Repair Treatment", "OLAPLEX", "Haircare", "haircare", "hair_mask", "850.000đ", ["Bond repair", "Pre-wash", "Tóc yếu"], ["tóc hư tổn", "tóc khô xơ", "tóc tẩy nhuộm"], ["bond-building technology"], ["Olaplex No.3", "Olaplex No3Plus"], "Treatment pre-wash bond repair phổ biến, phù hợp đối trọng với K18.", "OLAPLEX official product page", "https://olaplex.com/products/n-3plus-complete-repair-treatment"),
+  seed("head-and-shoulders-classic-clean-shampoo", "Classic Clean Shampoo", "Head & Shoulders", "Haircare", "haircare", "scalp_care", "160.000đ", ["Anti-dandruff", "Scalp care", "Drugstore"], ["gàu", "da đầu ngứa", "dầu da đầu"], ["zinc pyrithione"], ["Head & Shoulders Classic Clean"], "Dầu gội trị gàu phổ thông, cần cho nhóm scalp care và nội dung gàu/da đầu.", "Head & Shoulders official product page", "https://headandshoulders.com/en-us/shop-products/dandruff-shampoo/classic-clean-shampoo"),
+  seed("mise-en-scene-perfect-serum-original", "Perfect Serum Original", "Mise-en-Scene", "Haircare", "haircare", "styling", "250.000đ", ["Hair serum", "K-beauty", "Tóc khô"], ["tóc khô xơ", "frizz", "tóc nhuộm"], ["argan oil", "camellia oil"], ["Mise en Scene Perfect Serum"], "Serum dưỡng tóc K-beauty viral, hợp nhóm tóc khô xơ và tẩy nhuộm.", "Amorepacific official brand page", "https://www.apgroup.com/int/en/brands/mise-en-scene.html"),
+  seed("dior-sauvage-eau-de-parfum", "Sauvage Eau de Parfum", "Dior Beauty", "Perfume", "fragrance", "edp", "3.850.000đ", ["EDP", "Men fragrance", "Luxury"], ["nước hoa nam", "mùi văn phòng", "lưu hương"], ["bergamot", "vanilla", "ambroxan"], ["Dior Sauvage EDP"], "Nước hoa nam đại chúng nhưng có sức kéo tìm kiếm mạnh, cần cho catalogue fragrance.", "Dior official product page", "https://www.dior.com/en_us/beauty/products/sauvage-eau-de-parfum-Y0785220.html"),
+  seed("miss-dior-eau-de-parfum", "Miss Dior Eau de Parfum", "Dior Beauty", "Perfume", "fragrance", "edp", "3.950.000đ", ["EDP", "Floral", "Luxury"], ["nước hoa nữ", "mùi hẹn hò", "lưu hương"], ["centifolia rose", "lily of the valley"], ["Miss Dior EDP"], "Nước hoa nữ floral luxury, giúp catalogue fragrance có anchor phổ biến.", "Dior official product page", "https://www.dior.com/en_us/beauty/products/miss-dior-eau-de-parfum-Y0996347.html"),
+  seed("jo-malone-english-pear-freesia-cologne", "English Pear & Freesia Cologne", "Jo Malone London", "Perfume", "fragrance", "edt", "3.600.000đ", ["Cologne", "Fresh floral", "Prestige"], ["nước hoa nữ", "mùa hè", "mùi công sở"], ["king william pear", "freesia", "patchouli"], ["Jo Malone English Pear"], "Mùi hương fresh floral dễ dùng, phù hợp bài nước hoa văn phòng và mùa nóng.", "Jo Malone official product page", "https://www.jomalone.com/product/25946/10010/colognes/english-pear-freesia-cologne"),
+]
+
+const sourceByProductId = new Map(PRODUCT_SEEDS.map((item) => [item.id, item]))
+
+export const RESEARCHED_PRODUCT_SOURCES: ProductResearchSource[] = PRODUCT_SEEDS.map((item) => ({
+  productId: item.id,
+  label: item.sourceLabel,
+  url: item.sourceUrl,
+  sourceType: item.sourceType ?? "official",
+}))
+
+export const RESEARCHED_PRODUCTS: Product[] = productsWithTaxonomy(PRODUCT_SEEDS.map((item) => ({
+  id: item.id,
+  name: item.name,
+  brand: item.brand,
+  image: `/images/products/${item.id}.jpg`,
+  description: item.description,
+  rating: 4.7,
+  reviews: 0,
+  sold: "Đang cập nhật",
+  price: item.price,
+  category: item.category,
+  tags: item.tags,
+  affiliate_url: null,
+  category_key: item.categoryKey,
+  subcategory_key: item.subcategoryKey,
+  concern_tags: item.concernTags,
+  ingredient_tags: item.ingredientTags,
+  aliases: item.aliases,
+  status: "published",
+})))
+
+export const RESEARCHED_PRODUCT_REFERENCES = RESEARCHED_PRODUCTS.map(({ id, brand, name }) => ({ id, brand, name }))
+
+export const RESEARCHED_PRODUCT_OFFERS: ProductOffer[] = RESEARCHED_PRODUCTS.map((product) => {
+  const researchSource = sourceByProductId.get(product.id)
+  return {
+    id: `offer-${product.id}-official`,
+    product_id: product.id,
+    marketplace: researchSource?.sourceType === "retailer" ? "other" : "official",
+    shop_name: researchSource?.sourceLabel ?? `${product.brand} official source`,
+    seller_url: researchSource?.sourceUrl ?? null,
+    affiliate_url: null,
+    price_snapshot: product.price,
+    stock_status: "unknown",
+    is_preferred: true,
+    last_checked_at: "2026-07-01T00:00:00Z",
+  }
+})
+
+function seed(
+  id: string,
+  name: string,
+  brand: string,
+  category: string,
+  categoryKey: ProductCategoryKey,
+  subcategoryKey: string,
+  price: string,
+  tags: string[],
+  concernTags: string[],
+  ingredientTags: string[],
+  aliases: string[],
+  description: string,
+  sourceLabel: string,
+  sourceUrl: string,
+  sourceType?: ProductResearchSource["sourceType"]
+): ProductSeed {
+  return {
+    id,
+    name,
+    brand,
+    category,
+    categoryKey,
+    subcategoryKey,
+    price,
+    tags,
+    concernTags,
+    ingredientTags,
+    aliases,
+    description,
+    sourceLabel,
+    sourceUrl,
+    sourceType,
+  }
+}

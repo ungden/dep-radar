@@ -3,7 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, Beaker, BookOpen, CheckCircle2, Filter, Layers3, Search, Star } from "lucide-react"
+import { ArrowRight, Beaker, BookOpen, CheckCircle2, ExternalLink, Filter, Layers3, Search, ShoppingBag, Star, TrendingUp } from "lucide-react"
 import { motion } from "motion/react"
 
 import { Badge } from "@/components/ui/badge"
@@ -14,11 +14,12 @@ import { CompareBar } from "@/components/compare-bar"
 import { CompareButton } from "@/components/compare-button"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import { beautyNeedFilters, catalogueSections, productMatchesCatalogue, productMatchesNeed } from "@/lib/catalogue"
-import { getCreatorProductEvents, getProducts } from "@/lib/data"
+import { getCreatorProductEvents, getProductOffers, getProducts } from "@/lib/data"
 import { PRODUCT_CATEGORIES, getProductCategoryLabel, productMatchesTaxonomy, productWithTaxonomy } from "@/lib/product-taxonomy"
 import { getMatrixNodesByProductId, productGroups, researchStageLabels, type ProductGroup } from "@/lib/content-matrix"
+import { trackAffiliateClick } from "@/lib/track-click"
 import type { CatalogueSection } from "@/lib/catalogue"
-import type { CreatorProductEvent, Product } from "@/lib/types"
+import type { CreatorProductEvent, Product, ProductOffer } from "@/lib/types"
 
 type SortMode = "science" | "kol-mentions" | "recent" | "rating" | "price-low" | "price-high"
 
@@ -35,10 +36,14 @@ export default function ProductsPage() {
   const [sortMode, setSortMode] = React.useState<SortMode>("science")
   const [products, setProducts] = React.useState<Product[]>([])
   const [timelineEvents, setTimelineEvents] = React.useState<CreatorProductEvent[]>([])
+  const [productOffers, setProductOffers] = React.useState<ProductOffer[]>([])
 
   React.useEffect(() => {
-    getProducts().then((items) => setProducts(items.map(productWithTaxonomy)))
-    getCreatorProductEvents().then(setTimelineEvents)
+    Promise.all([getProducts(), getCreatorProductEvents(), getProductOffers()]).then(([items, events, offers]) => {
+      setProducts(items.map(productWithTaxonomy))
+      setTimelineEvents(events)
+      setProductOffers(offers)
+    })
   }, [])
 
   const productEventStats = React.useMemo(() => {
@@ -53,6 +58,14 @@ export default function ProductsPage() {
     }
     return stats
   }, [timelineEvents])
+
+  const productOfferMap = React.useMemo(() => {
+    const offers = new Map<string, ProductOffer[]>()
+    for (const offer of productOffers) {
+      offers.set(offer.product_id, [...(offers.get(offer.product_id) ?? []), offer])
+    }
+    return offers
+  }, [productOffers])
 
   const catalogueBuckets = React.useMemo(
     () =>
@@ -338,7 +351,7 @@ export default function ProductsPage() {
           >
             {filteredProducts.map((product, index) => (
               <motion.div key={product.id} variants={itemVariants}>
-                <ScientificProductCard product={product} priority={index === 0} eventStats={productEventStats.get(product.id)} />
+                <ScientificProductCard product={product} priority={index === 0} eventStats={productEventStats.get(product.id)} offers={productOfferMap.get(product.id) ?? []} />
               </motion.div>
             ))}
           </motion.div>
@@ -406,12 +419,26 @@ function SelectControl({
   )
 }
 
-function ScientificProductCard({ product, priority, eventStats }: { product: Product; priority: boolean; eventStats?: { count: number; latest: string; highConfidence: number } }) {
+function ScientificProductCard({
+  product,
+  priority,
+  eventStats,
+  offers,
+}: {
+  product: Product
+  priority: boolean
+  eventStats?: { count: number; latest: string; highConfidence: number }
+  offers: ProductOffer[]
+}) {
   const profile = getProductScienceProfile(product)
   const primaryCatalogue = profile.catalogues[0]
   const primaryGroup = profile.groups[0]
   const stageLabels = Array.from(new Set(profile.nodes.map((node) => researchStageLabels[node.stage]))).slice(0, 2)
   const normalizedProduct = productWithTaxonomy(product)
+  const preferredOffer = getPreferredOffer(offers, product)
+  const shopHref = preferredOffer?.affiliate_url ?? preferredOffer?.seller_url ?? null
+  const latestMention = eventStats?.latest ? formatShortDate(eventStats.latest) : null
+  const decisionReason = primaryGroup?.whenToConsider ?? primaryCatalogue?.filters.slice(0, 3).join(" / ") ?? product.description
 
   return (
     <Card className="flex h-full flex-col overflow-hidden border-none bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl dark:bg-slate-900">
@@ -442,6 +469,24 @@ function ScientificProductCard({ product, priority, eventStats }: { product: Pro
               </Badge>
             )}
           </div>
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
+            {shopHref ? (
+              <Badge className="bg-white/95 font-bold text-emerald-700 shadow-sm backdrop-blur hover:bg-white dark:bg-slate-950/95 dark:text-emerald-300">
+                <ShoppingBag className="mr-1 h-3.5 w-3.5" />
+                Có link shop
+              </Badge>
+            ) : (
+              <Badge className="bg-white/95 font-bold text-slate-600 shadow-sm backdrop-blur hover:bg-white dark:bg-slate-950/95 dark:text-slate-300">
+                Đang chờ offer
+              </Badge>
+            )}
+            {latestMention && (
+              <Badge className="bg-slate-900/90 font-bold text-white shadow-sm hover:bg-slate-900 dark:bg-slate-50/90 dark:text-slate-900">
+                <TrendingUp className="mr-1 h-3.5 w-3.5" />
+                {latestMention}
+              </Badge>
+            )}
+          </div>
         </div>
       </Link>
 
@@ -455,6 +500,10 @@ function ScientificProductCard({ product, priority, eventStats }: { product: Pro
         <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
           {product.description}
         </p>
+
+        <div className="mb-4 rounded-xl bg-rose-50/70 p-3 text-xs leading-relaxed text-rose-950 dark:bg-rose-950/20 dark:text-rose-100">
+          <span className="font-bold">Nên xem khi:</span> {decisionReason}
+        </div>
 
         <div className="mb-4 flex flex-wrap gap-2">
           {stageLabels.map((stage) => (
@@ -471,6 +520,11 @@ function ScientificProductCard({ product, priority, eventStats }: { product: Pro
           {eventStats && eventStats.count > 0 && (
             <Badge variant="secondary" className="bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-300">
               {eventStats.count} lượt nhắc
+            </Badge>
+          )}
+          {preferredOffer && (
+            <Badge variant="secondary" className="bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-300">
+              {preferredOffer.marketplace === "shopee" ? "Shopee" : preferredOffer.marketplace}
             </Badge>
           )}
         </div>
@@ -496,8 +550,11 @@ function ScientificProductCard({ product, priority, eventStats }: { product: Pro
               </Badge>
             ))}
           </div>
-          <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+          <div className="grid grid-cols-[1fr_auto_auto] items-center gap-2">
             <CompareButton productId={product.id} productName={product.name} />
+            {shopHref && (
+              <ShopLinkButton href={shopHref} productId={product.id} offerId={preferredOffer?.id} />
+            )}
             <Link href={`/products/${product.id}`} className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white transition-colors hover:bg-rose-600 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-rose-200" aria-label={`Mở ${product.name}`}>
               <BookOpen className="h-4 w-4" />
             </Link>
@@ -505,6 +562,26 @@ function ScientificProductCard({ product, priority, eventStats }: { product: Pro
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+function ShopLinkButton({ href, productId, offerId }: { href: string; productId: string; offerId?: string }) {
+  async function openShop(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault()
+    event.stopPropagation()
+    await trackAffiliateClick(productId, offerId)
+    window.open(href, "_blank", "noopener,noreferrer")
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={openShop}
+      className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-rose-600 text-white transition-colors hover:bg-rose-700"
+      aria-label="Mở link shop"
+    >
+      <ExternalLink className="h-4 w-4" />
+    </button>
   )
 }
 
@@ -549,4 +626,29 @@ function matchesBudgetFilter(price: string, budget: string) {
 
 function parsePrice(price: string) {
   return Number(price.replace(/[^\d]/g, ""))
+}
+
+function getPreferredOffer(offers: ProductOffer[], product: Product) {
+  return offers.find((offer) => offer.is_preferred && offer.affiliate_url)
+    ?? offers.find((offer) => offer.affiliate_url)
+    ?? offers.find((offer) => offer.is_preferred)
+    ?? offers[0]
+    ?? (product.affiliate_url
+      ? {
+          id: `legacy-affiliate-${product.id}`,
+          product_id: product.id,
+          marketplace: "shopee" as const,
+          shop_name: "Shopee affiliate",
+          seller_url: null,
+          affiliate_url: product.affiliate_url,
+          price_snapshot: product.price,
+          stock_status: "unknown" as const,
+          is_preferred: true,
+          last_checked_at: "2026-06-30T00:00:00Z",
+        }
+      : null)
+}
+
+function formatShortDate(value: string) {
+  return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit" }).format(new Date(value))
 }

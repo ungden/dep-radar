@@ -5,16 +5,26 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { catalogueSections, secondaryFilterGroups, topCatalogueNavigation } from "@/lib/catalogue"
 import { getCatalogueGuide } from "@/lib/catalogue-guide"
+import { absoluteUrl } from "@/lib/seo"
+
+const catalogueUrl = absoluteUrl("/catalogue")
+const catalogueSocialImage = absoluteUrl("/brand/social-share.jpg")
 
 export const metadata = {
   title: "Catalogue nhu cầu làm đẹp",
   description: "Bản đồ catalogue 360dep.vn theo nhu cầu: da mặt, trị mụn, sáng da, chống nắng, tóc, bodycare, makeup, nam giới, clinic và ingredient radar.",
+  alternates: {
+    canonical: catalogueUrl,
+  },
   openGraph: {
+    type: "website",
+    siteName: "360dep.vn",
+    url: catalogueUrl,
     title: "Catalogue nhu cầu làm đẹp | 360dep.vn",
     description: "Bản đồ catalogue theo nhu cầu: da mặt, trị mụn, sáng da, chống nắng, tóc, bodycare, makeup, nam giới, clinic và ingredient radar.",
     images: [
       {
-        url: "/brand/social-share.jpg",
+        url: catalogueSocialImage,
         width: 1200,
         height: 630,
         alt: "360dep.vn - catalogue nhu cầu làm đẹp",
@@ -25,7 +35,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Catalogue nhu cầu làm đẹp | 360dep.vn",
     description: "Bản đồ catalogue theo nhu cầu làm đẹp, review mỹ phẩm và kiến thức có kiểm chứng.",
-    images: ["/brand/social-share.jpg"],
+    images: [catalogueSocialImage],
   },
 }
 

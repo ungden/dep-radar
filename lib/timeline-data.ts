@@ -1,4 +1,5 @@
 import type { CreatorProductEvent, ProductOffer, Review } from "@/lib/types"
+import { RESEARCHED_PRODUCT_OFFERS, RESEARCHED_PRODUCT_REFERENCES } from "@/lib/product-research"
 
 export const SAMPLE_PRODUCT_REFERENCES = [
   { id: "1", brand: "GoodnDoc", name: "Tinh chất phục hồi da B5 GoodnDoc" },
@@ -9,6 +10,7 @@ export const SAMPLE_PRODUCT_REFERENCES = [
   { id: "6", brand: "Cerave", name: "Sữa rửa mặt Cerave Hydrating Cleanser" },
   { id: "7", brand: "Narciso Rodriguez", name: "Nước hoa nữ Narciso Rodriguez For Her EDP" },
   { id: "8", brand: "Vaseline", name: "Sữa dưỡng thể Vaseline Gluta-Hya" },
+  ...RESEARCHED_PRODUCT_REFERENCES,
 ]
 
 export const SAMPLE_PRODUCT_OFFERS: ProductOffer[] = [
@@ -108,6 +110,7 @@ export const SAMPLE_PRODUCT_OFFERS: ProductOffer[] = [
     is_preferred: true,
     last_checked_at: "2026-06-30T00:00:00Z",
   },
+  ...RESEARCHED_PRODUCT_OFFERS,
 ]
 
 export const SAMPLE_CREATOR_PRODUCT_EVENTS: CreatorProductEvent[] = [

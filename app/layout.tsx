@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/footer';
 import { PageTransition } from '@/components/layout/page-transition';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/lib/auth-context';
+import { absoluteUrl, getSiteUrl } from '@/lib/seo';
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
@@ -20,7 +21,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://360dep.vn'),
+  metadataBase: new URL(getSiteUrl()),
   applicationName: '360dep.vn',
   title: {
     default: '360dep.vn | Catalogue, review mỹ phẩm và beauty radar',
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
   description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
   keywords: ['360dep.vn', '360dep', 'review mỹ phẩm', 'catalogue làm đẹp', 'beauty radar', 'skincare Việt Nam'],
   alternates: {
-    canonical: '/',
+    canonical: getSiteUrl(),
   },
   manifest: '/brand/site.webmanifest',
   icons: {
@@ -52,12 +53,12 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'vi_VN',
     siteName: '360dep.vn',
-    url: '/',
+    url: getSiteUrl(),
     title: '360dep.vn | Catalogue, review mỹ phẩm và beauty radar',
     description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
     images: [
       {
-        url: '/brand/social-share.jpg',
+        url: absoluteUrl('/brand/social-share.jpg'),
         width: 1200,
         height: 630,
         alt: '360dep.vn - Beauty Radar',
@@ -68,7 +69,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '360dep.vn | Catalogue, review mỹ phẩm và beauty radar',
     description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
-    images: ['/brand/social-share.jpg'],
+    images: [absoluteUrl('/brand/social-share.jpg')],
   },
 };
 

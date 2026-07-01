@@ -2,6 +2,7 @@ import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 import { getPublishedEditorialPost, getPublishedEditorialPosts } from "@/lib/editorial"
 import { REAL_KOLS } from "@/lib/kols-data"
 import { productsWithTaxonomy, productWithTaxonomy } from "@/lib/product-taxonomy"
+import { RESEARCHED_PRODUCTS } from "@/lib/product-research"
 import { SAMPLE_CREATOR_PRODUCT_EVENTS, SAMPLE_PRODUCT_OFFERS, reviewToTimelineEvent } from "@/lib/timeline-data"
 import type { CommunityReview, CreatorEvidenceItem, CreatorProductEvent, Kol, Post, Product, ProductOffer, Review } from "@/lib/types"
 
@@ -17,6 +18,7 @@ export const SAMPLE_PRODUCTS: Product[] = productsWithTaxonomy([
   { id: "6", name: "Sữa rửa mặt Cerave Hydrating Cleanser", brand: "Cerave", image: "/images/product-cleanser.png", rating: 4.8, reviews: 4100, sold: "12,000+", price: "380.000đ", category: "Skincare", tags: ["Dịu nhẹ", "Cấp ẩm"], affiliate_url: null, description: "Sữa rửa mặt không tạo bọt, bổ sung ceramides và hyaluronic acid để làm sạch nhẹ mà vẫn giữ ẩm." },
   { id: "7", name: "Nước hoa nữ Narciso Rodriguez For Her EDP", brand: "Narciso Rodriguez", image: "/images/product-perfume.png", rating: 4.9, reviews: 650, sold: "1,500+", price: "2.500.000đ", category: "Perfume", tags: ["Quyến rũ", "Lưu hương lâu"], affiliate_url: null, description: "Hương xạ hương quyến rũ kết hợp hoa hồng và đào, lưu hương lâu, phù hợp cho những dịp đặc biệt." },
   { id: "8", name: "Sữa dưỡng thể Vaseline Gluta-Hya", brand: "Vaseline", image: "/images/product-body-lotion.png", rating: 4.5, reviews: 1800, sold: "6,000+", price: "140.000đ", category: "Bodycare", tags: ["Trắng da", "Thấm nhanh"], affiliate_url: null, description: "Sữa dưỡng thể dạng serum mỏng nhẹ, thấm nhanh, hỗ trợ dưỡng sáng và cấp ẩm cho da body." },
+  ...RESEARCHED_PRODUCTS,
 ])
 
 export const SAMPLE_CREATOR_EVIDENCE_ITEMS: CreatorEvidenceItem[] = SAMPLE_CREATOR_PRODUCT_EVENTS.slice(0, 4).map((event) => ({
@@ -211,6 +213,15 @@ function mergePosts(primary: Post[], fallback: Post[]) {
   })
 }
 
+function mergeProducts(primary: Product[], fallback: Product[]) {
+  const seen = new Set<string>()
+  return [...primary, ...fallback].filter((product) => {
+    if (seen.has(product.id)) return false
+    seen.add(product.id)
+    return true
+  })
+}
+
 async function fromSupabase<T>(query: PromiseLike<{ data: T | null; error: unknown }>, fallback: T): Promise<T> {
   if (!isSupabaseSchemaReady) return fallback
   try {
@@ -227,7 +238,7 @@ export async function getProducts() {
     supabase.from("radar_products").select("*").order("name"),
     SAMPLE_PRODUCTS
   )
-  return productsWithTaxonomy(products).filter((product) => product.status !== "pending" && product.status !== "archived")
+  return productsWithTaxonomy(mergeProducts(products, SAMPLE_PRODUCTS)).filter((product) => product.status !== "pending" && product.status !== "archived")
 }
 
 export async function getProductOffers(filters: { productId?: string } = {}) {

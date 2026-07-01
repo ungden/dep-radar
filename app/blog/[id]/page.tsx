@@ -18,6 +18,7 @@ import { getCatalogueSection } from "@/lib/catalogue"
 import { articleHref, buildRelatedArticles, getGraphNodeForPost } from "@/lib/content-graph"
 import { getMatrixProductGroups, researchStageLabels, type ProductGroup } from "@/lib/content-matrix"
 import { getKolCredibility } from "@/lib/kol-credibility"
+import { absoluteUrl, postPath } from "@/lib/seo"
 import type { Kol, Post, Product } from "@/lib/types"
 
 function JsonLd({ data }: { data: Record<string, unknown> }) {
@@ -144,29 +145,36 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!post) {
     return { title: 'Bài viết không tồn tại | Blog' }
   }
+  const title = `${post.title} | Blog 360dep.vn`
+  const url = absoluteUrl(postPath(post))
+  const image = absoluteUrl(post.image)
 
   return {
     title: `${post.title} | Blog`,
     description: post.excerpt,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
-      title: `${post.title} | Blog 360dep.vn`,
+      type: "article",
+      siteName: "360dep.vn",
+      url,
+      title,
       description: post.excerpt,
-      images: post.image
-        ? [
-            {
-              url: post.image,
-              width: 1200,
-              height: 630,
-              alt: post.title,
-            },
-          ]
-        : [],
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${post.title} | Blog 360dep.vn`,
+      title,
       description: post.excerpt,
-      images: post.image ? [post.image] : [],
+      images: [image],
     },
   }
 }

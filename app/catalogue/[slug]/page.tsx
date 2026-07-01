@@ -28,6 +28,7 @@ import {
 } from "@/lib/content-matrix"
 import { getPublishedNextReadPosts } from "@/lib/editorial"
 import { getKols, getPosts, getProducts } from "@/lib/data"
+import { absoluteUrl } from "@/lib/seo"
 import type { Kol, Post, Product } from "@/lib/types"
 
 export function generateStaticParams() {
@@ -39,16 +40,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const section = getCatalogueSection(slug)
 
   if (!section) return { title: "Catalogue không tồn tại | 360dep.vn" }
+  const title = `${section.title} | 360dep.vn`
+  const url = absoluteUrl(`/catalogue/${section.slug}`)
+  const image = absoluteUrl("/brand/social-share.jpg")
 
   return {
     title: `${section.title} | Catalogue làm đẹp`,
     description: section.description,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
-      title: `${section.title} | 360dep.vn`,
+      type: "website",
+      siteName: "360dep.vn",
+      url,
+      title,
       description: section.description,
       images: [
         {
-          url: "/brand/social-share.jpg",
+          url: image,
           width: 1200,
           height: 630,
           alt: `${section.title} trên 360dep.vn`,
@@ -57,9 +67,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     },
     twitter: {
       card: "summary_large_image",
-      title: `${section.title} | 360dep.vn`,
+      title,
       description: section.description,
-      images: ["/brand/social-share.jpg"],
+      images: [image],
     },
   }
 }

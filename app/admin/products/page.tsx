@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { BRAND_NAME_OPTIONS } from "@/lib/brand-registry"
 import {
   PRODUCT_CATEGORIES,
   getProductCategory,
@@ -193,6 +194,7 @@ export default function AdminProductsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <BrandOptionsDatalist />
       <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -314,7 +316,7 @@ export default function AdminProductsPage() {
                 <Input id="name" value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} />
               </Field>
               <Field label="Thuong hieu" id="brand">
-                <Input id="brand" value={form.brand} onChange={(event) => setForm((prev) => ({ ...prev, brand: event.target.value }))} />
+                <Input id="brand" list="beauty-brand-options" value={form.brand} onChange={(event) => setForm((prev) => ({ ...prev, brand: event.target.value }))} />
               </Field>
             </div>
 
@@ -451,5 +453,15 @@ function Field({ label, id, children }: { label: string; id: string; children: R
       <Label htmlFor={id}>{label}</Label>
       {children}
     </div>
+  )
+}
+
+function BrandOptionsDatalist() {
+  return (
+    <datalist id="beauty-brand-options">
+      {BRAND_NAME_OPTIONS.map((brand) => (
+        <option key={brand} value={brand} />
+      ))}
+    </datalist>
   )
 }

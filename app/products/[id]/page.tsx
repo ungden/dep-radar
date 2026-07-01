@@ -4,14 +4,14 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Star, ShieldCheck, ThumbsUp, MessageSquare, ArrowLeft, ShoppingCart, BookOpen, ArrowRight, CalendarDays, ExternalLink, Store } from "lucide-react"
+import { Star, ShieldCheck, ThumbsUp, MessageSquare, ArrowLeft, ShoppingCart, BookOpen, ArrowRight, CalendarDays, ExternalLink, Store, CheckCircle2, Layers3, Users } from "lucide-react"
 import * as motion from "motion/react-client"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getCommunityReviews, getCreatorProductEvents, getKols, getPost, getProduct, getProductOffers, getReviews } from "@/lib/data"
-import { getMatrixNodesByProductId } from "@/lib/content-matrix"
+import { getMatrixNodesByProductId, getMatrixProductGroups, researchStageLabels } from "@/lib/content-matrix"
 import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
 import { getProductCategoryLabel, getProductSubcategoryLabel } from "@/lib/product-taxonomy"
 import { AffiliateButton } from "@/components/affiliate-button"
@@ -21,6 +21,7 @@ import { RelatedProducts } from "@/components/related-products"
 import { CommentSection } from "@/components/comment-section"
 import { WishlistButton } from "@/components/wishlist-button"
 import { RealReviewPanel } from "@/components/real-review-panel"
+import { absoluteUrl } from "@/lib/seo"
 import type { CreatorProductEvent, Kol, Post, ProductOffer } from "@/lib/types"
 
 function JsonLd({ data }: { data: Record<string, unknown> }) {
@@ -114,14 +115,34 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const description = product.description?.length > 160
     ? product.description.substring(0, 157) + '...'
     : product.description
+  const title = `${product.name} - ${product.brand} | 360dep.vn`
+  const url = absoluteUrl(`/products/${product.id}`)
+  const image = absoluteUrl(product.image)
 
   return {
-    title: `${product.name} - ${product.brand} | 360dep.vn`,
+    title,
     description,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
-      title: `${product.name} - ${product.brand} | 360dep.vn`,
+      type: "website",
+      siteName: "360dep.vn",
+      url,
+      title,
       description,
-      images: product.image ? [product.image] : [],
+      images: [
+        {
+          url: image,
+          alt: `${product.name} - ${product.brand}`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
     },
   }
 }
@@ -132,22 +153,34 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const product = await getProduct(id);
   if (!product) return notFound();
 
-  const KOLS = await getKols();
-  const reviews = await getReviews({ productId: id });
-  const communityReviews = await getCommunityReviews({ productId: id });
-  const productOffers = await getProductOffers({ productId: id });
+  const [KOLS, reviews, communityReviews, productOffers, timelineEvents] = await Promise.all([
+    getKols(),
+    getReviews({ productId: id }),
+    getCommunityReviews({ productId: id }),
+    getProductOffers({ productId: id }),
+    getCreatorProductEvents({ productId: id }),
+  ])
   const preferredOffer = productOffers.find((offer) => offer.is_preferred && offer.affiliate_url)
     ?? productOffers.find((offer) => offer.affiliate_url)
     ?? productOffers.find((offer) => offer.is_preferred)
     ?? productOffers[0]
     ?? null
-  const affiliateHref = preferredOffer?.affiliate_url ?? product.affiliate_url
-  const timelineEvents = await getCreatorProductEvents({ productId: id })
+  const affiliateHref = preferredOffer?.affiliate_url ?? preferredOffer?.seller_url ?? product.affiliate_url
   const matrixNodes = getMatrixNodesByProductId(product.id)
   const graphKolIds = new Set(matrixNodes.flatMap((node) => node.kolIds))
   const sortedReviews = [...reviews].sort((a, b) => Number(graphKolIds.has(b.kolid)) - Number(graphKolIds.has(a.kolid)))
   const graphPostSlugs = unique(matrixNodes.flatMap((node) => [node.articleSlug, ...node.nextArticleSlugs])).slice(0, 4)
   const graphPosts = (await Promise.all(graphPostSlugs.map((slug) => getPost(slug)))).filter((post): post is Post => Boolean(post))
+  const matrixProductGroups = getMatrixProductGroups(unique(matrixNodes.flatMap((node) => node.productGroupKeys))).filter((group) => [
+    ...group.productIds,
+    ...group.comparisonProductIds,
+  ].includes(product.id))
+  const researchStages = unique(matrixNodes.map((node) => researchStageLabels[node.stage])).slice(0, 3)
+  const signalCreatorIds = unique([...timelineEvents.map((event) => event.creator_id), ...reviews.map((review) => review.kolid)])
+  const signalCreators = signalCreatorIds.map((creatorId) => KOLS.find((kol) => kol.id === creatorId)).filter((kol): kol is Kol => Boolean(kol)).slice(0, 4)
+  const positiveSignals = timelineEvents.filter((event) => event.sentiment === "positive").length
+  const cautionSignals = timelineEvents.filter((event) => event.sentiment === "mixed" || event.sentiment === "negative" || event.disclosure !== "organic").length
+  const leadGroup = matrixProductGroups[0]
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://360dep.vn"
   const productJsonLd = buildProductJsonLd(product, siteUrl, preferredOffer)
   
@@ -218,6 +251,29 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     <Badge key={tag} variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">{tag}</Badge>
                   ))}
                 </div>
+
+                <div className="mb-8 grid gap-3 sm:grid-cols-2">
+                  <DecisionMetric icon={<Users className="h-4 w-4" />} label="Tín hiệu KOL/KOC" value={`${timelineEvents.length}`} detail={signalCreators.length ? signalCreators.map((kol) => kol.name).join(", ") : "Đang gom nguồn"} />
+                  <DecisionMetric icon={<MessageSquare className="h-4 w-4" />} label="Review đối chiếu" value={`${reviews.length + communityReviews.length}`} detail={`${reviews.length} KOL/KOC, ${communityReviews.length} cộng đồng`} />
+                  <DecisionMetric icon={<Layers3 className="h-4 w-4" />} label="Research graph" value={`${matrixNodes.length}`} detail={researchStages.length ? researchStages.join(" / ") : "Chưa map node"} />
+                  <DecisionMetric icon={<Store className="h-4 w-4" />} label="Offer" value={preferredOffer ? "Sẵn sàng" : "Chưa có"} detail={preferredOffer?.shop_name ?? "Chưa có link shop public"} />
+                </div>
+
+                {(leadGroup || positiveSignals > 0 || cautionSignals > 0) && (
+                  <div className="mb-8 rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+                    <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-50">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      Tóm tắt trước khi mua
+                    </div>
+                    <div className="space-y-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                      {leadGroup && <p><span className="font-bold text-slate-900 dark:text-slate-50">Nên cân nhắc:</span> {leadGroup.whenToConsider}</p>}
+                      {leadGroup && <p><span className="font-bold text-slate-900 dark:text-slate-50">Tránh khi:</span> {leadGroup.whenToAvoid}</p>}
+                      {(positiveSignals > 0 || cautionSignals > 0) && (
+                        <p><span className="font-bold text-slate-900 dark:text-slate-50">Tín hiệu:</span> {positiveSignals} tích cực, {cautionSignals} cần đọc kèm bối cảnh PR/affiliate/mixed.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-auto space-y-4">
                   <div className="flex gap-4">
@@ -291,6 +347,38 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     </div>
                     <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{post.excerpt}</p>
                   </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {matrixProductGroups.length > 0 && (
+            <section className="mb-8 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
+              <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <Layers3 className="h-5 w-5 text-emerald-500" />
+                    <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">Nhóm quyết định mua</h2>
+                  </div>
+                  <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                    Đặt sản phẩm vào đúng nhóm nhu cầu để đọc tiêu chí trước khi bấm mua.
+                  </p>
+                </div>
+                <Badge variant="secondary" className="w-fit bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                  {matrixProductGroups.length} nhóm
+                </Badge>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                {matrixProductGroups.map((group) => (
+                  <div key={group.key} className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+                    <div className="font-display text-lg font-black text-slate-900 dark:text-slate-50">{group.title}</div>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{group.description}</p>
+                    <div className="mt-4 grid gap-3">
+                      <DecisionNote label="Nên cân nhắc" value={group.whenToConsider} tone="good" />
+                      <DecisionNote label="Tránh khi" value={group.whenToAvoid} tone="caution" />
+                      <DecisionNote label="Affiliate note" value={group.affiliateDisclosure} tone="neutral" />
+                    </div>
+                  </div>
                 ))}
               </div>
             </section>
@@ -449,4 +537,31 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
 function unique(items: string[]) {
   return Array.from(new Set(items.filter(Boolean)))
+}
+
+function DecisionMetric({ icon, label, value, detail }: { icon: React.ReactNode; label: string; value: string; detail: string }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+      <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+        <span className="text-rose-500">{icon}</span>
+        {label}
+      </div>
+      <div className="font-display text-xl font-black text-slate-900 dark:text-slate-50">{value}</div>
+      <div className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{detail}</div>
+    </div>
+  )
+}
+
+function DecisionNote({ label, value, tone }: { label: string; value: string; tone: "good" | "caution" | "neutral" }) {
+  const toneClass = tone === "good"
+    ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200"
+    : tone === "caution"
+      ? "bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+      : "bg-white text-slate-700 dark:bg-slate-900 dark:text-slate-300"
+
+  return (
+    <div className={`rounded-xl p-3 text-sm leading-relaxed ${toneClass}`}>
+      <span className="font-bold">{label}:</span> {value}
+    </div>
+  )
 }
