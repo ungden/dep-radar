@@ -388,7 +388,7 @@ export default function AdminEvidencePage() {
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Platform" id="source_platform">
                   <Select id="source_platform" value={evidenceForm.source_platform} onChange={(event) => setEvidenceForm((prev) => ({ ...prev, source_platform: event.target.value }))}>
-                    {["TikTok", "Instagram", "YouTube", "Facebook", "360dep.vn seed", "Other"].map((platform) => (
+                    {["TikTok", "Instagram", "YouTube", "Facebook", "Other"].map((platform) => (
                       <option key={platform} value={platform}>{platform}</option>
                     ))}
                   </Select>

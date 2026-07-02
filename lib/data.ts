@@ -3,11 +3,14 @@ import { getPublishedEditorialPost, getPublishedEditorialPosts } from "@/lib/edi
 import { REAL_KOLS } from "@/lib/kols-data"
 import { productsWithTaxonomy, productWithTaxonomy } from "@/lib/product-taxonomy"
 import { RESEARCHED_PRODUCTS } from "@/lib/product-research"
-import { SAMPLE_CREATOR_PRODUCT_EVENTS, SAMPLE_PRODUCT_OFFERS, reviewToTimelineEvent } from "@/lib/timeline-data"
+import { SAMPLE_CREATOR_PRODUCT_EVENTS, SAMPLE_PRODUCT_OFFERS } from "@/lib/timeline-data"
 import type { CommunityReview, CreatorEvidenceItem, CreatorProductEvent, Kol, Post, Product, ProductOffer, Review } from "@/lib/types"
 
 // Toàn bộ hồ sơ KOL/KOC đã xác minh nằm trong REAL_KOLS; hồ sơ mơ hồ bị loại khỏi public registry.
 export const SAMPLE_KOLS: Kol[] = REAL_KOLS
+
+export const EDITORIAL_AUTHOR_NAME = "360dep.vn Beauty Desk"
+export const EDITORIAL_AUTHOR_AVATAR = "/brand/icon-192.png"
 
 export const SAMPLE_PRODUCTS: Product[] = productsWithTaxonomy([
   { id: "1", name: "Hyaluronic Acid 2% + B5 Serum", brand: "The Ordinary", image: "/images/products/the-ordinary-hyaluronic-acid-2-b5.jpg", rating: 4.7, reviews: 0, sold: "Đang cập nhật", price: "300.000đ", category: "Skincare", category_key: "skincare", subcategory_key: "serum", concern_tags: ["da thiếu nước", "phục hồi", "da khô"], ingredient_tags: ["hyaluronic acid", "panthenol", "ceramides"], aliases: ["The Ordinary Hyaluronic Acid", "TO HA B5"], tags: ["HA", "B5", "Cấp ẩm"], affiliate_url: null, description: "Serum cấp ẩm có hyaluronic acid và B5, hợp routine phục hồi khi da thiếu nước hoặc cần lớp serum tối giản trước kem dưỡng." },
@@ -36,7 +39,14 @@ function hasPublicAffiliate(product: Product) {
   return isPublicAffiliateUrl(product.affiliate_url) || PUBLIC_AFFILIATE_PRODUCT_IDS.has(product.id)
 }
 
-export const SAMPLE_CREATOR_EVIDENCE_ITEMS: CreatorEvidenceItem[] = SAMPLE_CREATOR_PRODUCT_EVENTS.slice(0, 4).map((event) => ({
+function isPublicCreatorEvidenceEvent(event: CreatorProductEvent) {
+  const sourcePlatform = event.source_platform.toLowerCase()
+  return !sourcePlatform.includes("seed") && !sourcePlatform.includes("internal") && !event.source_url?.startsWith("/blog/")
+}
+
+const PUBLIC_CREATOR_PRODUCT_EVENTS = SAMPLE_CREATOR_PRODUCT_EVENTS.filter(isPublicCreatorEvidenceEvent)
+
+export const SAMPLE_CREATOR_EVIDENCE_ITEMS: CreatorEvidenceItem[] = PUBLIC_CREATOR_PRODUCT_EVENTS.slice(0, 4).map((event) => ({
   id: `evidence-${event.id}`,
   creator_id: event.creator_id,
   source_platform: event.source_platform,
@@ -54,12 +64,7 @@ export const SAMPLE_CREATOR_EVIDENCE_ITEMS: CreatorEvidenceItem[] = SAMPLE_CREAT
   researcher_note: event.evidence_note,
 }))
 
-export const SAMPLE_REVIEWS: Review[] = [
-  { id: "r1", kolid: "1", productid: "1", rating: 5, ispr: false, timeago: "2 giờ trước", content: "Cấp ẩm ổn, dễ layer trước kem dưỡng và hợp routine tối giản khi da thiếu nước.", likes: 342, comments: 45 },
-  { id: "r2", kolid: "2", productid: "2", rating: 4, ispr: true, timeago: "5 giờ trước", content: "Độ che phủ ổn, kiềm dầu tốt nhưng xuống tone hơi nhanh. Phù hợp học sinh sinh viên.", likes: 128, comments: 12 },
-  { id: "r3", kolid: "3", productid: "3", rating: 5, ispr: false, timeago: "1 ngày trước", content: "Dịu, không rát mắt, hợp làm sạch cuối ngày cho da nhạy cảm.", likes: 890, comments: 102 },
-  { id: "r4", kolid: "4", productid: "4", rating: 4, ispr: true, timeago: "2 ngày trước", content: "Chất mousse mềm, hiệu ứng blur đẹp trên môi và có thể tán nhẹ lên má.", likes: 456, comments: 38 },
-]
+export const SAMPLE_REVIEWS: Review[] = []
 
 function legacyAffiliateOffer(product: Product): ProductOffer | null {
   if (!product.affiliate_url) return null
@@ -112,8 +117,7 @@ function mergeTimelineEvents(events: CreatorProductEvent[]) {
 }
 
 const ALL_FALLBACK_TIMELINE_EVENTS = mergeTimelineEvents([
-  ...SAMPLE_CREATOR_PRODUCT_EVENTS,
-  ...SAMPLE_REVIEWS.map(reviewToTimelineEvent),
+  ...PUBLIC_CREATOR_PRODUCT_EVENTS,
 ])
 
 export const SAMPLE_POSTS: Post[] = [
@@ -123,8 +127,8 @@ export const SAMPLE_POSTS: Post[] = [
     slug: "top-5-serum-phuc-hoi-da-2026",
     excerpt: "Tổng hợp các serum phục hồi được cộng đồng skincare Việt yêu thích sau nhiều tuần dùng thực tế.",
     content: "Serum cấp ẩm và phục hồi là nhóm đáng cân nhắc khi da thiếu nước, bong nhẹ hoặc đang cần routine ít biến số.\n\nThe Ordinary Hyaluronic Acid 2% + B5 là lựa chọn dễ hiểu trong nhóm HA/B5: tập trung cấp ẩm, hỗ trợ cảm giác da mềm hơn và dễ layer trước kem dưỡng. Các lựa chọn có ceramide, panthenol hoặc HA cũng đáng cân nhắc nếu da dễ căng rát.\n\nĐiều quan trọng là chọn routine tối giản, chống nắng đều và cho da đủ thời gian phục hồi thay vì thay sản phẩm liên tục.",
-    author_name: "Hà Linh Official",
-    author_avatar: "/images/kol/vo-ha-linh-tiktok.jpg",
+    author_name: EDITORIAL_AUTHOR_NAME,
+    author_avatar: EDITORIAL_AUTHOR_AVATAR,
     category: "Review Sản Phẩm",
     tags: ["Serum", "Phục hồi da", "Review"],
     image: "/images/products/the-ordinary-hyaluronic-acid-2-b5.jpg",
@@ -139,8 +143,8 @@ export const SAMPLE_POSTS: Post[] = [
     slug: "huong-dan-chon-kem-chong-nang",
     excerpt: "Kem chống nắng không chỉ là SPF. Kết cấu, finish và độ hợp da mới quyết định bạn có dùng đều không.",
     content: "Da dầu thường hợp kem chống nắng dạng gel, fluid hoặc finish ráo. Da khô nên ưu tiên công thức có thành phần cấp ẩm.\n\nDa nhạy cảm cần thử sản phẩm trên vùng nhỏ trước, tránh đổi quá nhiều sản phẩm cùng lúc. Một sản phẩm tốt là sản phẩm bạn có thể dùng đủ lượng mỗi ngày.\n\nKhi hoạt động ngoài trời, hãy thoa lại sau vài giờ và kết hợp mũ, kính, khẩu trang để bảo vệ da tốt hơn.",
-    author_name: "Trinh Phạm",
-    author_avatar: "/images/kol/trinh-pham-tiktok.jpg",
+    author_name: EDITORIAL_AUTHOR_NAME,
+    author_avatar: EDITORIAL_AUTHOR_AVATAR,
     category: "Chăm Sóc Da",
     tags: ["Chống nắng", "SPF", "Da dầu", "Da khô"],
     image: "/images/hero-sunscreen.png",
@@ -155,8 +159,8 @@ export const SAMPLE_POSTS: Post[] = [
     slug: "drugstore-makeup-haul-duoi-500k",
     excerpt: "Những món makeup giá dễ chịu nhưng đủ dùng cho một layout hằng ngày gọn đẹp.",
     content: "Một layout drugstore hợp lý nên bắt đầu từ nền mỏng nhẹ, son dễ tán và mascara không lem.\n\nMaybelline Fit Me là lựa chọn quen thuộc cho da dầu vì độ che phủ vừa phải và finish lì. Khi phối với son velvet hoặc tint, tổng thể vẫn tươi mà không quá dày.\n\nMẹo nhỏ là đầu tư vào dụng cụ tán nền tốt, vì cùng một sản phẩm nhưng cách apply có thể tạo khác biệt lớn.",
-    author_name: "Góc Của Rư",
-    author_avatar: "/images/kol-ru.png",
+    author_name: EDITORIAL_AUTHOR_NAME,
+    author_avatar: EDITORIAL_AUTHOR_AVATAR,
     category: "Trang Điểm",
     tags: ["Drugstore", "Makeup haul", "Tiết kiệm"],
     image: "/images/hero-makeup.png",
@@ -171,8 +175,8 @@ export const SAMPLE_POSTS: Post[] = [
     slug: "skincare-routine-da-dau-mun",
     excerpt: "Routine 5 bước cơ bản, tập trung vào làm sạch, phục hồi và chống nắng đều đặn.",
     content: "Da dầu mụn không cần routine quá nhiều bước. Làm sạch dịu nhẹ, dưỡng ẩm vừa đủ và chống nắng ổn định thường hiệu quả hơn việc liên tục thêm treatment.\n\nNếu dùng BHA hoặc retinoid, hãy tăng tần suất chậm và theo dõi phản ứng của da. Khi da kích ứng, ưu tiên phục hồi trước.\n\nMột routine tốt là routine bạn duy trì được trong nhiều tuần, có ghi chú phản ứng và điều chỉnh từ từ.",
-    author_name: "Call Me Duy",
-    author_avatar: "/images/kol-duy.png",
+    author_name: EDITORIAL_AUTHOR_NAME,
+    author_avatar: EDITORIAL_AUTHOR_AVATAR,
     category: "Skincare Routine",
     tags: ["Da dầu mụn", "Routine", "BHA"],
     image: "/images/products/bioderma-sensibio-h2o-micellar-water.jpg",
@@ -187,8 +191,8 @@ export const SAMPLE_POSTS: Post[] = [
     slug: "giai-cuu-toc-hu-ton-sau-tay-nhuom",
     excerpt: "Ba bước phục hồi tóc đơn giản tại nhà cho tóc khô xơ, dễ rối và thiếu bóng.",
     content: "Sau tẩy nhuộm, tóc thường mất độ ẩm và dễ gãy hơn. Hãy giảm nhiệt, ưu tiên dầu gội dịu nhẹ và thêm bước dưỡng phần thân đuôi tóc.\n\nSerum dưỡng tóc như Mise-en-Scene Perfect Serum Original giúp giảm ma sát, giảm rối và tạo độ bóng ở phần đuôi tóc. Tránh dùng nhiệt quá thường xuyên nếu tóc đang yếu.\n\nKiên trì trong 4 đến 8 tuần sẽ cho kết quả rõ hơn so với đổi sản phẩm liên tục.",
-    author_name: "Bống Bee",
-    author_avatar: "/images/kol/bong-bee.jpg",
+    author_name: EDITORIAL_AUTHOR_NAME,
+    author_avatar: EDITORIAL_AUTHOR_AVATAR,
     category: "Chăm Sóc Tóc",
     tags: ["Tóc hư tổn", "Nhuộm tóc", "Phục hồi"],
     image: "/images/products/mise-en-scene-perfect-serum-original.jpg",
@@ -203,8 +207,8 @@ export const SAMPLE_POSTS: Post[] = [
     slug: "so-sanh-sua-duong-the-trang-da",
     excerpt: "Nhìn vào kết cấu, độ thấm, cảm giác sau bôi và hiệu quả dưỡng sáng theo thời gian.",
     content: "Sữa dưỡng thể dưỡng sáng nên được đánh giá theo độ thấm, khả năng cấp ẩm và trải nghiệm dùng hằng ngày.\n\nVaseline Gluta-Hya có texture nhẹ, hợp thời tiết nóng ẩm. Những sản phẩm có SPF tiện cho ban ngày nhưng vẫn không thay thế chống nắng chuyên dụng khi phơi nắng lâu.\n\nDưỡng body cần đều đặn. Hiệu quả thường đến từ việc dùng đủ lượng và duy trì nhiều tuần.",
-    author_name: "Hà Linh Official",
-    author_avatar: "/images/kol/vo-ha-linh-tiktok.jpg",
+    author_name: EDITORIAL_AUTHOR_NAME,
+    author_avatar: EDITORIAL_AUTHOR_AVATAR,
     category: "Mẹo Làm Đẹp",
     tags: ["Body lotion", "Trắng da", "So sánh"],
     image: "/images/products/vaseline-gluta-hya-dewy-radiance-lotion.jpg",
@@ -218,14 +222,24 @@ export const SAMPLE_POSTS: Post[] = [
 const EDITORIAL_PUBLISHED_POSTS = getPublishedEditorialPosts()
 const ALL_FALLBACK_POSTS: Post[] = [...EDITORIAL_PUBLISHED_POSTS, ...SAMPLE_POSTS]
 
+function normalizeEditorialPost(post: Post): Post {
+  return {
+    ...post,
+    author_name: EDITORIAL_AUTHOR_NAME,
+    author_avatar: EDITORIAL_AUTHOR_AVATAR,
+  }
+}
+
 function mergePosts(primary: Post[], fallback: Post[]) {
   const seen = new Set<string>()
-  return [...primary, ...fallback].filter((post) => {
-    const key = post.slug || post.id
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
+  return [...primary, ...fallback]
+    .filter((post) => {
+      const key = post.slug || post.id
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .map(normalizeEditorialPost)
 }
 
 function mergeProducts(primary: Product[], fallback: Product[]) {
@@ -471,18 +485,19 @@ export async function getPosts() {
 
 export async function getPost(id: string) {
   const fallback = ALL_FALLBACK_POSTS.find((post) => post.id === id || post.slug === id) ?? getPublishedEditorialPost(id)
-  if (!isSupabaseSchemaReady) return fallback
+  if (!isSupabaseSchemaReady) return fallback ? normalizeEditorialPost(fallback) : null
 
   const byId = await fromSupabase<Post | null>(
     supabase.from("posts").select("*").eq("id", id).maybeSingle(),
     null
   )
-  if (byId) return byId
+  if (byId) return normalizeEditorialPost(byId)
 
-  return fromSupabase<Post | null>(
+  const post = await fromSupabase<Post | null>(
     supabase.from("posts").select("*").eq("slug", id).maybeSingle(),
     fallback
   )
+  return post ? normalizeEditorialPost(post) : null
 }
 
 export async function getRelatedPosts(category: string, currentId: string, limit = 2) {
@@ -490,7 +505,7 @@ export async function getRelatedPosts(category: string, currentId: string, limit
     .filter((post) => post.category === category && post.id !== currentId)
     .slice(0, limit)
 
-  return fromSupabase<Post[]>(
+  const posts = await fromSupabase<Post[]>(
     supabase
       .from("posts")
       .select("id, title, image, category, created_at, slug, excerpt, content, author_name, author_avatar, tags, likes, comments, product_ids")
@@ -499,6 +514,7 @@ export async function getRelatedPosts(category: string, currentId: string, limit
       .limit(limit),
     fallback
   )
+  return posts.map(normalizeEditorialPost)
 }
 
 export async function searchAll(query: string) {

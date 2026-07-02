@@ -10,7 +10,7 @@ import * as motion from "motion/react-client"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { TrackArticleRead } from "@/components/analytics/public-events"
-import { getPost, getPostProductRecommendations, getPosts, getProducts } from "@/lib/data"
+import { EDITORIAL_AUTHOR_AVATAR, EDITORIAL_AUTHOR_NAME, getPost, getPostProductRecommendations, getPosts, getProducts } from "@/lib/data"
 import { LikeButton } from "@/components/like-button"
 import { SocialShare } from "@/components/social-share"
 import { CommentSection } from "@/components/comment-section"
@@ -41,7 +41,7 @@ function buildBlogJsonLd(post: Post, nextPosts: Post[], products: Product[], sit
       datePublished: post.created_at,
       author: {
         "@type": "Organization",
-        name: post.author_name,
+        name: EDITORIAL_AUTHOR_NAME,
       },
       publisher: {
         "@type": "Organization",
@@ -280,14 +280,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
                 {/* Author */}
                 <div className="flex items-center gap-4 pb-8 border-b border-slate-100 dark:border-slate-800">
                   <Avatar className="h-14 w-14 border-2 border-white dark:border-slate-800 shadow-md">
-                    <AvatarImage src={post.author_avatar} />
-                    <AvatarFallback>{post.author_name[0]}</AvatarFallback>
+                    <AvatarImage src={EDITORIAL_AUTHOR_AVATAR} />
+                    <AvatarFallback>{EDITORIAL_AUTHOR_NAME[0]}</AvatarFallback>
                   </Avatar>
                   <div>
                     <div className="font-bold text-slate-900 dark:text-slate-50 text-lg">
-                      {post.author_name}
+                      {EDITORIAL_AUTHOR_NAME}
                     </div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400">Tác giả</div>
+                    <div className="text-sm text-slate-500 dark:text-slate-400">Biên tập</div>
                   </div>
                 </div>
               </div>
