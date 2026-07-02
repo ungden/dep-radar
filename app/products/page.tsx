@@ -443,14 +443,14 @@ function ScientificProductCard({
   return (
     <Card className="flex h-full flex-col overflow-hidden border-none bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl dark:bg-slate-900">
       <Link href={`/products/${product.id}`} className="block">
-        <div className="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-800">
+        <div className="relative aspect-square overflow-hidden bg-white dark:bg-slate-950">
           <Image
             src={product.image}
             alt={product.name}
             fill
             sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
             priority={priority}
-            className="object-cover transition-transform duration-500 hover:scale-105"
+            className="object-contain p-4 transition-transform duration-500 hover:scale-105"
             referrerPolicy="no-referrer"
             unoptimized
           />

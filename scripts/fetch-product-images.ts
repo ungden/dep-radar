@@ -1,5 +1,6 @@
 import fs from "node:fs/promises"
 import path from "node:path"
+import crypto from "node:crypto"
 import { execFile } from "node:child_process"
 import { promisify } from "node:util"
 
@@ -9,6 +10,11 @@ const execFileAsync = promisify(execFile)
 const outDir = path.join(process.cwd(), "public", "images", "products")
 const userAgent = "Mozilla/5.0 (compatible; 360dep-product-research/1.0)"
 const requestTimeoutMs = 12000
+const BANNED_PRODUCT_IMAGE_HASHES = new Set([
+  // Brand-logo placeholders that are not acceptable product packshots.
+  "40e70f1ee96c912548f25ac54f678323fb84e611cc74b9305f1e1514c9aa8049",
+  "708ba85f10d3e9ae77b5d69e3da068bf9dd96ae33bb37ef3cbcbdab751a22cb2",
+])
 
 async function main() {
   await fs.mkdir(outDir, { recursive: true })
@@ -227,6 +233,7 @@ async function downloadAsJpeg(imageUrl: string, targetPath: string) {
     if (buffer.length < 1000) return false
 
     if (contentType.includes("jpeg") || isJpeg(buffer)) {
+      if (isBannedImage(buffer)) return false
       await fs.writeFile(targetPath, buffer)
       return true
     }
@@ -237,6 +244,12 @@ async function downloadAsJpeg(imageUrl: string, targetPath: string) {
     await fs.writeFile(tempPath, buffer)
     try {
       await execFileAsync("sips", ["-s", "format", "jpeg", tempPath, "--out", targetPath], { timeout: 30000 })
+      const converted = await fs.readFile(targetPath)
+      if (isBannedImage(converted)) {
+        await fs.unlink(targetPath).catch(() => undefined)
+        await fs.unlink(tempPath).catch(() => undefined)
+        return false
+      }
       await fs.unlink(tempPath)
       return true
     } catch {
@@ -280,10 +293,17 @@ function decodeHtml(value: string) {
 async function hasExistingImage(targetPath: string) {
   try {
     const stat = await fs.stat(targetPath)
-    return stat.size > 1000
+    if (stat.size <= 1000) return false
+    const bytes = await fs.readFile(targetPath)
+    return !isBannedImage(bytes)
   } catch {
     return false
   }
+}
+
+function isBannedImage(buffer: Buffer) {
+  const hash = crypto.createHash("sha256").update(buffer).digest("hex")
+  return BANNED_PRODUCT_IMAGE_HASHES.has(hash)
 }
 
 main().catch((error) => {

@@ -1,5 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
+import crypto from "node:crypto"
 
 import { SAMPLE_PRODUCTS } from "../lib/data"
 import { SAMPLE_PRODUCT_OFFERS } from "../lib/timeline-data"
@@ -9,6 +10,11 @@ const productIds = new Set<string>()
 const sourceProductIds = new Set(RESEARCHED_PRODUCT_SOURCES.map((source) => source.productId))
 const offerProductIds = new Set(SAMPLE_PRODUCT_OFFERS.filter((offer) => offer.seller_url || offer.affiliate_url).map((offer) => offer.product_id))
 const errors: string[] = []
+const BANNED_PRODUCT_IMAGE_HASHES = new Set([
+  // Brand-logo placeholders that previously passed the JPEG existence check.
+  "40e70f1ee96c912548f25ac54f678323fb84e611cc74b9305f1e1514c9aa8049",
+  "708ba85f10d3e9ae77b5d69e3da068bf9dd96ae33bb37ef3cbcbdab751a22cb2",
+])
 
 for (const product of SAMPLE_PRODUCTS) {
   if (productIds.has(product.id)) errors.push(`Duplicate product id: ${product.id}`)
@@ -29,6 +35,8 @@ for (const product of SAMPLE_PRODUCTS) {
       const bytes = fs.readFileSync(assetPath)
       const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff
       if (!isJpeg) errors.push(`${product.id} local image is not a JPEG: ${product.image}`)
+      const hash = crypto.createHash("sha256").update(bytes).digest("hex")
+      if (BANNED_PRODUCT_IMAGE_HASHES.has(hash)) errors.push(`${product.id} local image is a banned logo/placeholder asset: ${product.image}`)
     }
   }
 }

@@ -201,14 +201,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100 dark:border-slate-800 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               {/* Product Image */}
-              <div className="relative aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl overflow-hidden">
+              <div className="relative aspect-square overflow-hidden rounded-2xl bg-white dark:bg-slate-950">
                 <Image
                   src={product.image}
                   alt={product.name}
                   fill
                   sizes="(min-width: 768px) 50vw, 100vw"
                   priority
-                  className="object-cover"
+                  className="object-contain p-6"
                   referrerPolicy="no-referrer"
                 />
               </div>
