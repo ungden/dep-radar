@@ -244,7 +244,7 @@ export const BEAUTY_BRANDS: BeautyBrand[] = [
   brand("muji", "MUJI", [], "Ryohin Keikaku", "Japan", "mass", ["skincare", "bodycare"], "medium", "Minimal skincare and bodycare brand.", ["market-radar"]),
   brand("d-program", "d program", ["D Program"], "Shiseido Company", "Japan", "dermocosmetic", ["skincare"], "watch", "Sensitive-skin J-beauty derm brand.", ["shiseido-portfolio"]),
 
-  brand("goodndoc", "GoodnDoc", ["GoodnDoc", "Goodn Doc"], "GoodnDoc", "South Korea", "masstige", ["skincare"], "seed-now", "Already in seed products; barrier serum listing anchor.", ["market-radar"]),
+  brand("goodndoc", "GoodnDoc", ["GoodnDoc", "Goodn Doc"], "GoodnDoc", "South Korea", "masstige", ["skincare"], "watch", "Keep for future source-backed research before listing as a product anchor.", ["market-radar"]),
   brand("maycreate", "MayCreate", [], "MayCreate", "China", "mass", ["makeup", "skincare"], "watch", "Affordable marketplace brand to track carefully for source quality.", ["market-radar"]),
   brand("judydoll", "JudyDoll", ["Judy Doll"], "Joy Group", "China", "mass", ["makeup"], "medium", "C-beauty color makeup and contour candidate.", ["market-radar"]),
   brand("flortte", "Flortte", [], "Flortte", "China", "mass", ["makeup"], "medium", "C-beauty affordable color makeup candidate.", ["market-radar"]),

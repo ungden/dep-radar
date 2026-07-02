@@ -10,16 +10,18 @@ import type { CommunityReview, CreatorEvidenceItem, CreatorProductEvent, Kol, Po
 export const SAMPLE_KOLS: Kol[] = REAL_KOLS
 
 export const SAMPLE_PRODUCTS: Product[] = productsWithTaxonomy([
-  { id: "1", name: "Tinh chất phục hồi da B5 GoodnDoc", brand: "GoodnDoc", image: "/images/product-b5-serum.png", rating: 4.8, reviews: 1240, sold: "8,500+", price: "350.000đ", category: "Skincare", tags: ["Phục hồi", "Cấp ẩm"], affiliate_url: null, description: "Phục hồi hàng rào bảo vệ da, cấp ẩm sâu và làm dịu da nhạy cảm. Phù hợp cho da treatment hoặc cần phục hồi sau mụn." },
-  { id: "2", name: "Kem nền Maybelline Fit Me Matte + Poreless", brand: "Maybelline", image: "/images/product-foundation.png", rating: 4.5, reviews: 3500, sold: "15,000+", price: "180.000đ", category: "Makeup", tags: ["Kiềm dầu", "Drugstore"], affiliate_url: null, description: "Kem nền kiềm dầu, che phủ lỗ chân lông và tạo lớp nền mịn lì tự nhiên cho da dầu, da hỗn hợp thiên dầu." },
-  { id: "3", name: "Nước tẩy trang L'Oreal Micellar Water 3-in-1", brand: "L'Oreal", image: "/images/product-micellar.png", rating: 4.9, reviews: 5200, sold: "20,000+", price: "150.000đ", category: "Skincare", tags: ["Làm sạch sâu", "Da nhạy cảm"], affiliate_url: null, description: "Nước tẩy trang 3 trong 1 giúp làm sạch lớp trang điểm, bụi bẩn và bã nhờn mà không gây khô rát." },
-  { id: "4", name: "Son kem lì MAC Powder Kiss Liquid Lipcolour", brand: "MAC", image: "/images/product-lipstick.png", rating: 4.7, reviews: 890, sold: "3,200+", price: "650.000đ", category: "Makeup", tags: ["Lì", "Mềm môi"], affiliate_url: null, description: "Son kem lì kết cấu xốp mịn như nhung, lên màu chuẩn, tạo hiệu ứng blur thời thượng và không làm khô môi." },
-  { id: "5", name: "Dầu gội khô Batiste Dry Shampoo", brand: "Batiste", image: "/images/product-dry-shampoo.png", rating: 4.6, reviews: 2100, sold: "10,000+", price: "120.000đ", category: "Haircare", tags: ["Làm sạch nhanh", "Tiện lợi"], affiliate_url: null, description: "Giải pháp cứu nguy cho tóc bết trong một phút, hút dầu thừa và trả lại độ bồng bềnh nhẹ nhàng." },
-  { id: "6", name: "Sữa rửa mặt Cerave Hydrating Cleanser", brand: "Cerave", image: "/images/product-cleanser.png", rating: 4.8, reviews: 4100, sold: "12,000+", price: "380.000đ", category: "Skincare", tags: ["Dịu nhẹ", "Cấp ẩm"], affiliate_url: null, description: "Sữa rửa mặt không tạo bọt, bổ sung ceramides và hyaluronic acid để làm sạch nhẹ mà vẫn giữ ẩm." },
-  { id: "7", name: "Nước hoa nữ Narciso Rodriguez For Her EDP", brand: "Narciso Rodriguez", image: "/images/product-perfume.png", rating: 4.9, reviews: 650, sold: "1,500+", price: "2.500.000đ", category: "Perfume", tags: ["Quyến rũ", "Lưu hương lâu"], affiliate_url: null, description: "Hương xạ hương quyến rũ kết hợp hoa hồng và đào, lưu hương lâu, phù hợp cho những dịp đặc biệt." },
-  { id: "8", name: "Sữa dưỡng thể Vaseline Gluta-Hya", brand: "Vaseline", image: "/images/product-body-lotion.png", rating: 4.5, reviews: 1800, sold: "6,000+", price: "140.000đ", category: "Bodycare", tags: ["Trắng da", "Thấm nhanh"], affiliate_url: null, description: "Sữa dưỡng thể dạng serum mỏng nhẹ, thấm nhanh, hỗ trợ dưỡng sáng và cấp ẩm cho da body." },
+  { id: "1", name: "Hyaluronic Acid 2% + B5 Serum", brand: "The Ordinary", image: "/images/products/the-ordinary-hyaluronic-acid-2-b5.jpg", rating: 4.7, reviews: 0, sold: "Đang cập nhật", price: "300.000đ", category: "Skincare", category_key: "skincare", subcategory_key: "serum", concern_tags: ["da thiếu nước", "phục hồi", "da khô"], ingredient_tags: ["hyaluronic acid", "panthenol", "ceramides"], aliases: ["The Ordinary Hyaluronic Acid", "TO HA B5"], tags: ["HA", "B5", "Cấp ẩm"], affiliate_url: null, description: "Serum cấp ẩm có hyaluronic acid và B5, hợp routine phục hồi khi da thiếu nước hoặc cần lớp serum tối giản trước kem dưỡng." },
+  { id: "2", name: "Fit Me Matte + Poreless Foundation", brand: "Maybelline New York", image: "/images/products/maybelline-fit-me-matte-poreless-foundation.jpg", rating: 4.5, reviews: 0, sold: "Đang cập nhật", price: "180.000đ", category: "Makeup", category_key: "makeup", subcategory_key: "foundation", concern_tags: ["nền", "da dầu", "lỗ chân lông"], ingredient_tags: ["oil-free"], aliases: ["Maybelline Fit Me"], tags: ["Foundation", "Drugstore", "Da dầu"], affiliate_url: null, description: "Kem nền drugstore finish matte tự nhiên, phù hợp da thường đến dầu và ngân sách học sinh sinh viên." },
+  { id: "3", name: "Sensibio H2O Micellar Water", brand: "Bioderma", image: "/images/products/bioderma-sensibio-h2o-micellar-water.jpg", rating: 4.8, reviews: 0, sold: "Đang cập nhật", price: "320.000đ", category: "Skincare", category_key: "skincare", subcategory_key: "cleanser", concern_tags: ["làm sạch", "da nhạy cảm", "tẩy trang"], ingredient_tags: ["micellar technology"], aliases: ["Bioderma Sensibio", "Sensibio H2O"], tags: ["Micellar", "Da nhạy cảm", "Không cần rửa lại"], affiliate_url: null, description: "Nước tẩy trang micellar cho da nhạy cảm, dùng để làm sạch makeup, bụi mịn và kem chống nắng nhẹ trong routine tối giản." },
+  { id: "4", name: "Powder Kiss Lip + Cheek Mousse", brand: "MAC Cosmetics", image: "/images/products/mac-powder-kiss-lip-cheek-mousse.jpg", rating: 4.7, reviews: 0, sold: "Đang cập nhật", price: "720.000đ", category: "Makeup", category_key: "makeup", subcategory_key: "lip", concern_tags: ["son lì", "má hồng", "môi khô"], ingredient_tags: ["mousse texture"], aliases: ["MAC Powder Kiss Liquid", "MAC Powder Kiss Mousse"], tags: ["Soft matte", "Lip & cheek", "Prestige"], affiliate_url: null, description: "Son/má dạng mousse hazy matte, dùng cho môi và má khi muốn hiệu ứng blur mềm thay vì lớp lì khô." },
+  { id: "5", name: "Perfect Serum Original", brand: "Mise-en-Scene", image: "/images/products/mise-en-scene-perfect-serum-original.jpg", rating: 4.6, reviews: 0, sold: "Đang cập nhật", price: "250.000đ", category: "Haircare", category_key: "haircare", subcategory_key: "styling", concern_tags: ["tóc khô xơ", "frizz", "tóc nhuộm"], ingredient_tags: ["argan oil", "camellia oil"], aliases: ["Mise en Scene Perfect Serum"], tags: ["Hair serum", "K-beauty", "Tóc khô"], affiliate_url: null, description: "Serum dưỡng tóc K-beauty cho tóc khô xơ, giúp giảm rối, thêm bóng và làm mềm phần đuôi tóc sau tạo kiểu." },
+  { id: "6", name: "Hydrating Facial Cleanser", brand: "CeraVe", image: "/images/products/cerave-hydrating-facial-cleanser.jpg", rating: 4.8, reviews: 0, sold: "Đang cập nhật", price: "380.000đ", category: "Skincare", category_key: "skincare", subcategory_key: "cleanser", concern_tags: ["da khô", "da nhạy cảm", "làm sạch"], ingredient_tags: ["ceramides", "hyaluronic acid"], aliases: ["CeraVe Hydrating Cleanser"], tags: ["Dịu nhẹ", "Ceramide", "Không hương liệu"], affiliate_url: null, description: "Sữa rửa mặt dịu nhẹ cho da thường đến khô, làm sạch mà không khiến da căng rát." },
+  { id: "7", name: "Miss Dior Eau de Parfum", brand: "Dior Beauty", image: "/images/products/miss-dior-eau-de-parfum.jpg", rating: 4.8, reviews: 0, sold: "Đang cập nhật", price: "3.950.000đ", category: "Perfume", category_key: "fragrance", subcategory_key: "edp", concern_tags: ["nước hoa nữ", "mùi hẹn hò", "lưu hương"], ingredient_tags: ["centifolia rose", "lily of the valley"], aliases: ["Miss Dior EDP"], tags: ["EDP", "Floral", "Luxury"], affiliate_url: null, description: "Nước hoa nữ floral luxury với cảm giác tươi, mềm và nữ tính, làm anchor cho nhóm fragrance hẹn hò hoặc quà tặng." },
+  { id: "8", name: "Gluta-Hya Serum Burst Lotion Dewy Radiance", brand: "Vaseline", image: "/images/products/vaseline-gluta-hya-dewy-radiance-lotion.jpg", rating: 4.5, reviews: 0, sold: "Đang cập nhật", price: "140.000đ", category: "Bodycare", category_key: "bodycare", subcategory_key: "body_lotion", concern_tags: ["body sáng da", "da khô", "bodycare"], ingredient_tags: ["glutaglow", "hyaluron", "niacinamide"], aliases: ["Vaseline Gluta-Hya Dewy"], tags: ["Body lotion", "Gluta-Hya", "Dewy"], affiliate_url: null, description: "Sữa dưỡng thể dạng serum burst, thấm nhanh, hỗ trợ da body ẩm mượt và nhìn sáng khỏe hơn trong routine hằng ngày." },
   ...RESEARCHED_PRODUCTS,
 ])
+
+const CURATED_LEGACY_PRODUCTS = new Map(SAMPLE_PRODUCTS.slice(0, 8).map((product) => [product.id, product]))
 
 export const SAMPLE_CREATOR_EVIDENCE_ITEMS: CreatorEvidenceItem[] = SAMPLE_CREATOR_PRODUCT_EVENTS.slice(0, 4).map((event) => ({
   id: `evidence-${event.id}`,
@@ -40,10 +42,10 @@ export const SAMPLE_CREATOR_EVIDENCE_ITEMS: CreatorEvidenceItem[] = SAMPLE_CREAT
 }))
 
 export const SAMPLE_REVIEWS: Review[] = [
-  { id: "r1", kolid: "1", productid: "1", rating: 5, ispr: false, timeago: "2 giờ trước", content: "Phục hồi da rất ổn, thấm nhanh và không bết dính. Hợp với da đang treatment.", likes: 342, comments: 45 },
+  { id: "r1", kolid: "1", productid: "1", rating: 5, ispr: false, timeago: "2 giờ trước", content: "Cấp ẩm ổn, dễ layer trước kem dưỡng và hợp routine tối giản khi da thiếu nước.", likes: 342, comments: 45 },
   { id: "r2", kolid: "2", productid: "2", rating: 4, ispr: true, timeago: "5 giờ trước", content: "Độ che phủ ổn, kiềm dầu tốt nhưng xuống tone hơi nhanh. Phù hợp học sinh sinh viên.", likes: 128, comments: 12 },
-  { id: "r3", kolid: "3", productid: "3", rating: 5, ispr: false, timeago: "1 ngày trước", content: "Sạch sâu, không rát mắt, giá tốt. Một lựa chọn tẩy trang drugstore đáng mua.", likes: 890, comments: 102 },
-  { id: "r4", kolid: "4", productid: "4", rating: 4, ispr: true, timeago: "2 ngày trước", content: "Màu son lên chuẩn, chất son mềm mịn. Độ bám màu ở mức trung bình.", likes: 456, comments: 38 },
+  { id: "r3", kolid: "3", productid: "3", rating: 5, ispr: false, timeago: "1 ngày trước", content: "Dịu, không rát mắt, hợp làm sạch cuối ngày cho da nhạy cảm.", likes: 890, comments: 102 },
+  { id: "r4", kolid: "4", productid: "4", rating: 4, ispr: true, timeago: "2 ngày trước", content: "Chất mousse mềm, hiệu ứng blur đẹp trên môi và có thể tán nhẹ lên má.", likes: 456, comments: 38 },
 ]
 
 function legacyAffiliateOffer(product: Product): ProductOffer | null {
@@ -104,15 +106,15 @@ const ALL_FALLBACK_TIMELINE_EVENTS = mergeTimelineEvents([
 export const SAMPLE_POSTS: Post[] = [
   {
     id: "p1",
-    title: "Top 5 serum phục hồi da tốt nhất 2026",
+    title: "Top serum cấp ẩm phục hồi đáng cân nhắc 2026",
     slug: "top-5-serum-phuc-hoi-da-2026",
     excerpt: "Tổng hợp các serum phục hồi được cộng đồng skincare Việt yêu thích sau nhiều tuần dùng thực tế.",
-    content: "Serum phục hồi da là nhóm sản phẩm đáng đầu tư khi hàng rào bảo vệ da yếu, da bong tróc hoặc đang dùng treatment.\n\nB5 GoodnDoc nổi bật nhờ kết cấu dễ chịu, thấm nhanh và cấp ẩm vừa đủ. Các lựa chọn có ceramide và hyaluronic acid cũng rất đáng cân nhắc nếu da thiếu nước hoặc nhạy cảm.\n\nĐiều quan trọng là chọn routine tối giản, chống nắng đều và cho da đủ thời gian phục hồi thay vì thay sản phẩm liên tục.",
+    content: "Serum cấp ẩm và phục hồi là nhóm đáng cân nhắc khi da thiếu nước, bong nhẹ hoặc đang cần routine ít biến số.\n\nThe Ordinary Hyaluronic Acid 2% + B5 là lựa chọn dễ hiểu trong nhóm HA/B5: tập trung cấp ẩm, hỗ trợ cảm giác da mềm hơn và dễ layer trước kem dưỡng. Các lựa chọn có ceramide, panthenol hoặc HA cũng đáng cân nhắc nếu da dễ căng rát.\n\nĐiều quan trọng là chọn routine tối giản, chống nắng đều và cho da đủ thời gian phục hồi thay vì thay sản phẩm liên tục.",
     author_name: "Hà Linh Official",
     author_avatar: "/images/kol/vo-ha-linh-tiktok.jpg",
     category: "Review Sản Phẩm",
     tags: ["Serum", "Phục hồi da", "Review"],
-    image: "/images/product-b5-serum.png",
+    image: "/images/products/the-ordinary-hyaluronic-acid-2-b5.jpg",
     likes: 342,
     comments: 56,
     created_at: "2026-04-10T08:00:00Z",
@@ -160,7 +162,7 @@ export const SAMPLE_POSTS: Post[] = [
     author_avatar: "/images/kol-duy.png",
     category: "Skincare Routine",
     tags: ["Da dầu mụn", "Routine", "BHA"],
-    image: "/images/product-micellar.png",
+    image: "/images/products/bioderma-sensibio-h2o-micellar-water.jpg",
     likes: 489,
     comments: 67,
     created_at: "2026-04-04T09:00:00Z",
@@ -168,15 +170,15 @@ export const SAMPLE_POSTS: Post[] = [
   },
   {
     id: "p5",
-    title: "Giải cứu mái tóc hư tổn sau tẩy nhuộm",
+    title: "Giảm rối cho mái tóc hư tổn sau tẩy nhuộm",
     slug: "giai-cuu-toc-hu-ton-sau-tay-nhuom",
     excerpt: "Ba bước phục hồi tóc đơn giản tại nhà cho tóc khô xơ, dễ rối và thiếu bóng.",
-    content: "Sau tẩy nhuộm, tóc thường mất độ ẩm và dễ gãy hơn. Hãy giảm tần suất gội, ưu tiên dầu gội dịu nhẹ và thêm bước ủ tóc hằng tuần.\n\nTinh dầu dưỡng ở phần đuôi tóc giúp giảm ma sát và tạo độ bóng. Tránh dùng nhiệt quá thường xuyên nếu tóc đang yếu.\n\nKiên trì trong 4 đến 8 tuần sẽ cho kết quả rõ hơn so với đổi sản phẩm liên tục.",
+    content: "Sau tẩy nhuộm, tóc thường mất độ ẩm và dễ gãy hơn. Hãy giảm nhiệt, ưu tiên dầu gội dịu nhẹ và thêm bước dưỡng phần thân đuôi tóc.\n\nSerum dưỡng tóc như Mise-en-Scene Perfect Serum Original giúp giảm ma sát, giảm rối và tạo độ bóng ở phần đuôi tóc. Tránh dùng nhiệt quá thường xuyên nếu tóc đang yếu.\n\nKiên trì trong 4 đến 8 tuần sẽ cho kết quả rõ hơn so với đổi sản phẩm liên tục.",
     author_name: "Bống Bee",
     author_avatar: "/images/kol/bong-bee.jpg",
     category: "Chăm Sóc Tóc",
     tags: ["Tóc hư tổn", "Nhuộm tóc", "Phục hồi"],
-    image: "/images/product-dry-shampoo.png",
+    image: "/images/products/mise-en-scene-perfect-serum-original.jpg",
     likes: 198,
     comments: 32,
     created_at: "2026-04-02T16:00:00Z",
@@ -192,7 +194,7 @@ export const SAMPLE_POSTS: Post[] = [
     author_avatar: "/images/kol/vo-ha-linh-tiktok.jpg",
     category: "Mẹo Làm Đẹp",
     tags: ["Body lotion", "Trắng da", "So sánh"],
-    image: "/images/product-body-lotion.png",
+    image: "/images/products/vaseline-gluta-hya-dewy-radiance-lotion.jpg",
     likes: 371,
     comments: 48,
     created_at: "2026-03-30T11:00:00Z",
@@ -238,7 +240,9 @@ export async function getProducts() {
     supabase.from("radar_products").select("*").order("name"),
     SAMPLE_PRODUCTS
   )
-  return productsWithTaxonomy(mergeProducts(products, SAMPLE_PRODUCTS)).filter((product) => product.status !== "pending" && product.status !== "archived")
+  return productsWithTaxonomy(mergeProducts(products, SAMPLE_PRODUCTS))
+    .map((product) => CURATED_LEGACY_PRODUCTS.get(product.id) ?? product)
+    .filter((product) => product.status !== "pending" && product.status !== "archived")
 }
 
 export async function getProductOffers(filters: { productId?: string } = {}) {
@@ -270,11 +274,14 @@ export async function getPreferredProductOffer(product: Product) {
 
 export async function getProduct(id: string) {
   const fallback = SAMPLE_PRODUCTS.find((product) => product.id === id) ?? null
+  const curatedLegacyProduct = fallback ? CURATED_LEGACY_PRODUCTS.get(fallback.id) : null
+  if (curatedLegacyProduct) return productWithTaxonomy(curatedLegacyProduct)
+
   const product = await fromSupabase<Product | null>(
     supabase.from("radar_products").select("*").eq("id", id).maybeSingle(),
     fallback
   )
-  return product ? productWithTaxonomy(product) : null
+  return product ? productWithTaxonomy(CURATED_LEGACY_PRODUCTS.get(product.id) ?? product) : null
 }
 
 export async function getCreatorEvidenceItems(filters: { creatorId?: string; status?: string } = {}) {

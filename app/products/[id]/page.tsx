@@ -115,7 +115,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const description = product.description?.length > 160
     ? product.description.substring(0, 157) + '...'
     : product.description
-  const title = `${product.name} - ${product.brand} | 360dep.vn`
+  const title = `${product.name} - ${product.brand}`
   const url = absoluteUrl(`/products/${product.id}`)
   const image = absoluteUrl(product.image)
 
@@ -129,7 +129,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       type: "website",
       siteName: "360dep.vn",
       url,
-      title,
+      title: `${title} | 360dep.vn`,
       description,
       images: [
         {
@@ -140,7 +140,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: `${title} | 360dep.vn`,
       description,
       images: [image],
     },

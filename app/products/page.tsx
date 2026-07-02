@@ -550,13 +550,18 @@ function ScientificProductCard({
               </Badge>
             ))}
           </div>
-          <div className="grid grid-cols-[1fr_auto_auto] items-center gap-2">
+          <div className="grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-2">
             <CompareButton productId={product.id} productName={product.name} />
             {shopHref && (
               <ShopLinkButton href={shopHref} productId={product.id} offerId={preferredOffer?.id} />
             )}
-            <Link href={`/products/${product.id}`} className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white transition-colors hover:bg-rose-600 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-rose-200" aria-label={`Mở ${product.name}`}>
-              <BookOpen className="h-4 w-4" />
+            <Link
+              href={`/products/${product.id}`}
+              className="inline-flex h-10 min-w-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 text-sm font-bold text-white transition-colors hover:bg-rose-600 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-rose-200"
+              aria-label={`Xem detail ${product.name}`}
+            >
+              <BookOpen className="h-4 w-4 shrink-0" />
+              <span className="truncate">Xem detail</span>
             </Link>
           </div>
         </div>

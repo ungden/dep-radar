@@ -57,7 +57,7 @@ const HUB_CATEGORY_IMAGE: Record<string, string> = {
   bodycare: "/images/catalogue/hair-body-grooming.jpg",
   "toc-da-dau": "/images/catalogue/hair-body-grooming.jpg",
   makeup: "/images/catalogue/makeup-fragrance-tech.jpg",
-  "mui-huong": "/images/product-perfume.png",
+  "mui-huong": "/images/products/miss-dior-eau-de-parfum.jpg",
   "nam-gioi": "/images/catalogue/hair-body-grooming.jpg",
   "clinic-treatment": "/images/catalogue/acne-sun-education.jpg",
   "beauty-lifestyle": "/images/catalogue/skincare-foundation.jpg",
