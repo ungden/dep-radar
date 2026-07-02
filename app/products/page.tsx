@@ -571,22 +571,22 @@ function ScientificProductCard({
 }
 
 function ShopLinkButton({ href, productId, offerId }: { href: string; productId: string; offerId?: string }) {
-  async function openShop(event: React.MouseEvent<HTMLButtonElement>) {
-    event.preventDefault()
+  function openShop(event: React.MouseEvent<HTMLAnchorElement>) {
     event.stopPropagation()
-    await trackAffiliateClick(productId, offerId)
-    window.open(href, "_blank", "noopener,noreferrer")
+    void trackAffiliateClick(productId, offerId)
   }
 
   return (
-    <button
-      type="button"
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
       onClick={openShop}
       className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-rose-600 text-white transition-colors hover:bg-rose-700"
       aria-label="Mở link shop"
     >
       <ExternalLink className="h-4 w-4" />
-    </button>
+    </a>
   )
 }
 

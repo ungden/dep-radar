@@ -100,6 +100,63 @@ const PRODUCT_SEEDS: ProductSeed[] = [
 
 const sourceByProductId = new Map(PRODUCT_SEEDS.map((item) => [item.id, item]))
 
+const SHOPEE_AFFILIATE_OFFER_OVERRIDES: Record<string, Partial<Omit<ProductOffer, "id" | "product_id" | "is_preferred">>> = {
+  "maybelline-fit-me-matte-poreless-foundation": {
+    marketplace: "shopee",
+    shop_name: "Shopee Mall - Maybelline Fit Me",
+    seller_url: "https://shopee.vn/product/37252407/2356429108",
+    affiliate_url: "https://s.shopee.vn/AAFF9rjVZ3",
+    price_snapshot: "229.000đ",
+    stock_status: "in_stock",
+    last_checked_at: "2026-07-02T00:00:00Z",
+  },
+  "bioderma-sensibio-h2o-micellar-water": {
+    marketplace: "shopee",
+    shop_name: "Shopee - Bioderma Sensibio bundle",
+    seller_url: "https://shopee.vn/product/233692311/41263180850",
+    affiliate_url: "https://s.shopee.vn/1gGh2G6njK",
+    price_snapshot: "879.000đ",
+    stock_status: "in_stock",
+    last_checked_at: "2026-07-02T00:00:00Z",
+  },
+  "mise-en-scene-perfect-serum-original": {
+    marketplace: "shopee",
+    shop_name: "Shopee - Mise-en-Scene official offer",
+    seller_url: "https://shopee.vn/product/1808224532/53559404132",
+    affiliate_url: "https://s.shopee.vn/20tXQuDf3a",
+    price_snapshot: "246.400đ",
+    stock_status: "in_stock",
+    last_checked_at: "2026-07-02T00:00:00Z",
+  },
+  "vaseline-gluta-hya-dewy-radiance-lotion": {
+    marketplace: "shopee",
+    shop_name: "Shopee - Vaseline Gluta-Hya high-sales offer",
+    seller_url: "https://shopee.vn/product/193849872/22410469736",
+    affiliate_url: "https://s.shopee.vn/7VETz0OgIc",
+    price_snapshot: "140.000đ",
+    stock_status: "in_stock",
+    last_checked_at: "2026-07-02T00:00:00Z",
+  },
+  "anua-heartleaf-pore-control-cleansing-oil": {
+    marketplace: "shopee",
+    shop_name: "Shopee - Anua hàng công ty",
+    seller_url: "https://shopee.vn/product/263742354/25890249402",
+    affiliate_url: "https://s.shopee.vn/5q6FzvymhC",
+    price_snapshot: "425.000đ",
+    stock_status: "in_stock",
+    last_checked_at: "2026-07-02T00:00:00Z",
+  },
+  "anua-niacinamide-10-txa-4-serum": {
+    marketplace: "shopee",
+    shop_name: "Shopee - Anua hàng công ty",
+    seller_url: "https://shopee.vn/product/107386134/22777901830",
+    affiliate_url: "https://s.shopee.vn/BRtFVpYjR",
+    price_snapshot: "484.000đ",
+    stock_status: "in_stock",
+    last_checked_at: "2026-07-02T00:00:00Z",
+  },
+}
+
 export const RESEARCHED_PRODUCT_SOURCES: ProductResearchSource[] = PRODUCT_SEEDS.map((item) => ({
   productId: item.id,
   label: item.sourceLabel,
@@ -132,6 +189,7 @@ export const RESEARCHED_PRODUCT_REFERENCES = RESEARCHED_PRODUCTS.map(({ id, bran
 
 export const RESEARCHED_PRODUCT_OFFERS: ProductOffer[] = RESEARCHED_PRODUCTS.map((product) => {
   const researchSource = sourceByProductId.get(product.id)
+  const shopeeOverride = SHOPEE_AFFILIATE_OFFER_OVERRIDES[product.id]
   return {
     id: `offer-${product.id}-official`,
     product_id: product.id,
@@ -143,6 +201,7 @@ export const RESEARCHED_PRODUCT_OFFERS: ProductOffer[] = RESEARCHED_PRODUCTS.map
     stock_status: "unknown",
     is_preferred: true,
     last_checked_at: "2026-07-01T00:00:00Z",
+    ...shopeeOverride,
   }
 })
 

@@ -45,6 +45,13 @@ for (const productId of sourceProductIds) {
   if (!productIds.has(productId)) errors.push(`Research source references missing product: ${productId}`)
 }
 
+for (const offer of SAMPLE_PRODUCT_OFFERS) {
+  if (offer.marketplace !== "shopee") continue
+  if (!offer.affiliate_url) errors.push(`${offer.product_id} Shopee offer missing affiliate_url`)
+  if (!offer.seller_url?.startsWith("https://shopee.vn/product/")) errors.push(`${offer.product_id} Shopee offer seller_url should be a product URL`)
+  if (offer.affiliate_url && !offer.affiliate_url.startsWith("https://s.shopee.vn/")) errors.push(`${offer.product_id} Shopee offer affiliate_url should be a Shopee short affiliate link`)
+}
+
 console.log(JSON.stringify({
   products: SAMPLE_PRODUCTS.length,
   researchedProducts: sourceProductIds.size,
