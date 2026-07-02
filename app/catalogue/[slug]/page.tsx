@@ -27,9 +27,9 @@ import {
   type ProductGroup,
 } from "@/lib/content-matrix"
 import { getPublishedNextReadPosts } from "@/lib/editorial"
-import { getKols, getPosts, getProducts } from "@/lib/data"
+import { getPosts, getProducts } from "@/lib/data"
 import { absoluteUrl } from "@/lib/seo"
-import type { Kol, Post, Product } from "@/lib/types"
+import type { Post, Product } from "@/lib/types"
 
 export function generateStaticParams() {
   return catalogueSections.map((section) => ({ slug: section.slug }))
@@ -84,23 +84,18 @@ export default async function CatalogueDetailPage({ params }: { params: Promise<
   const nextReadPosts = getPublishedNextReadPosts(slug)
   const contentMatrix = getContentMatrix(slug)
 
-  const [products, posts, kols] = await Promise.all([getProducts(), getPosts(), getKols()])
+  const [products, posts] = await Promise.all([getProducts(), getPosts()])
   const relatedProducts = products.filter((product) => productMatchesCatalogue(product, section)).slice(0, 6)
   const relatedPosts = posts.filter((post) => postMatchesCatalogue(post, section)).slice(0, 4)
   const postsByTitle = new Map(posts.map((post) => [post.title, post.slug]))
   const postsBySlug = new Map(posts.map((post) => [post.slug, post]))
   const productsById = new Map(products.map((product) => [product.id, product]))
-  const kolsById = new Map(kols.map((kol) => [kol.id, kol]))
   const matrixItems =
     contentMatrix?.nodes.map((node) => {
       const productGroups = getMatrixProductGroups(node.productGroupKeys)
       const productIds = unique([
         ...node.productIds,
         ...productGroups.flatMap((group) => [...group.productIds, ...group.comparisonProductIds]),
-      ])
-      const kolIds = unique([
-        ...node.kolIds,
-        ...productGroups.flatMap((group) => group.recommendedKolIds),
       ])
 
       return {
@@ -109,7 +104,6 @@ export default async function CatalogueDetailPage({ params }: { params: Promise<
         nextPosts: node.nextArticleSlugs.map((nextSlug) => postsBySlug.get(nextSlug)).filter((post): post is Post => Boolean(post)),
         productGroups,
         products: productIds.map((productId) => productsById.get(productId)).filter((product): product is Product => Boolean(product)),
-        kols: kolIds.map((kolId) => kolsById.get(kolId)).filter((kol): kol is Kol => Boolean(kol)),
       }
     }) ?? []
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://360dep.vn"
@@ -295,7 +289,6 @@ function buildCatalogueMatrixJsonLd(matrix: ContentMatrix, items: MatrixItem[], 
     const entries: { name: string; url: string }[] = []
     if (item.post) entries.push({ name: item.post.title, url: `${siteUrl}/blog/${item.post.slug}` })
     item.products.forEach((product) => entries.push({ name: product.name, url: `${siteUrl}/products/${product.id}` }))
-    item.kols.forEach((kol) => entries.push({ name: kol.name, url: `${siteUrl}/koc-tracker/${kol.id}` }))
     return entries
   })
 
@@ -332,7 +325,6 @@ type MatrixItem = {
   nextPosts: Post[]
   productGroups: ProductGroup[]
   products: Product[]
-  kols: Kol[]
 }
 
 function unique(items: string[]) {
@@ -396,7 +388,7 @@ function ResearchMatrixSection({ matrix, items }: { matrix: ContentMatrix; items
 }
 
 function ResearchMatrixCard({ item }: { item: MatrixItem }) {
-  const { node, post, nextPosts, productGroups, products, kols } = item
+  const { node, post, nextPosts, productGroups, products } = item
 
   return (
     <Card className="h-full border-slate-100 bg-slate-50 shadow-none dark:border-slate-800 dark:bg-slate-950">
@@ -470,32 +462,6 @@ function ResearchMatrixCard({ item }: { item: MatrixItem }) {
                       {product.name}
                     </div>
                     <div className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{product.price}</div>
-                  </Link>
-                ))}
-              </div>
-            </MatrixInfoBlock>
-          )}
-
-          {kols.length > 0 && (
-            <MatrixInfoBlock label="KOL/KOC nên đối chiếu">
-              <div className="grid gap-2">
-                {kols.slice(0, 3).map((kol) => (
-                  <Link
-                    key={kol.id}
-                    href={`/koc-tracker/${kol.id}`}
-                    className="group rounded-2xl bg-white p-3 transition-colors hover:text-rose-600 dark:bg-slate-900 dark:hover:text-rose-300"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-sm font-black text-slate-900 group-hover:text-rose-600 dark:text-slate-50 dark:group-hover:text-rose-300">
-                        {kol.name}
-                      </div>
-                      <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-rose-500" />
-                    </div>
-                    <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-500 dark:text-slate-400">
-                      {node.kolReasons[kol.id] ??
-                        productGroups.find((group) => group.recommendedKolReasons[kol.id])?.recommendedKolReasons[kol.id] ??
-                        "Dùng để đối chiếu trải nghiệm review trước khi quyết định mua."}
-                    </p>
                   </Link>
                 ))}
               </div>

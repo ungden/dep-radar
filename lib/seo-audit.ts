@@ -263,7 +263,7 @@ function auditContentGraph(
       "warning",
       "ai",
       "Hub content graph coverage is thin",
-      `${hub.hubTitle} coverage is ${hub.coverageScore}%. Add next reads, product groups, and KOL links.`
+      `${hub.hubTitle} coverage is ${hub.coverageScore}%. Add next reads, product groups, and source-backed context.`
     )
   }
 }

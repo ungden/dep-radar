@@ -6,7 +6,6 @@ const readPosts = fs.readFileSync("lib/catalogue-read-posts.ts", "utf8")
 const editorial = fs.readFileSync("lib/editorial.ts", "utf8")
 const cataloguePage = fs.readFileSync("app/catalogue/[slug]/page.tsx", "utf8")
 const data = fs.readFileSync("lib/data.ts", "utf8")
-const kolsData = fs.readFileSync("lib/kols-data.ts", "utf8")
 const contentMatrix = fs.existsSync("lib/content-matrix.ts") ? fs.readFileSync("lib/content-matrix.ts", "utf8") : ""
 
 const nextReads = [...guide.matchAll(/nextReads:\s*\[([\s\S]*?)\]/g)].flatMap((match) =>
@@ -42,20 +41,11 @@ const matrixProductGroupRefs = [...contentMatrix.matchAll(/productGroupKeys:\s*\
 const productGroupBlocks = [...contentMatrix.matchAll(/"([^"]+)":\s*\{\s*key:\s*"([^"]+)"([\s\S]*?)\n  \}/g)]
 const productGroupKeys = productGroupBlocks.map((match) => match[2])
 const localProductIds = [...data.matchAll(/\{\s*id:\s*"([^"]+)"/g)].map((item) => item[1])
-const localKolIds = [...kolsData.matchAll(/"id":\s*"([^"]+)"/g)].map((item) => item[1])
 const matrixProductIds = [
   ...[...contentMatrix.matchAll(/productIds:\s*\[([\s\S]*?)\]/g)].flatMap((match) =>
     [...match[1].matchAll(/"([^"]+)"/g)].map((item) => item[1])
   ),
   ...[...contentMatrix.matchAll(/comparisonProductIds:\s*\[([\s\S]*?)\]/g)].flatMap((match) =>
-    [...match[1].matchAll(/"([^"]+)"/g)].map((item) => item[1])
-  ),
-]
-const matrixKolIds = [
-  ...[...contentMatrix.matchAll(/kolIds:\s*\[([\s\S]*?)\]/g)].flatMap((match) =>
-    [...match[1].matchAll(/"([^"]+)"/g)].map((item) => item[1])
-  ),
-  ...[...contentMatrix.matchAll(/recommendedKolIds:\s*\[([\s\S]*?)\]/g)].flatMap((match) =>
     [...match[1].matchAll(/"([^"]+)"/g)].map((item) => item[1])
   ),
 ]
@@ -65,30 +55,16 @@ const productGroupIssues = productGroupBlocks.flatMap((match) => {
   const productIds = block.match(/productIds:\s*\[([\s\S]*?)\]/)?.[1] ?? ""
   const hasProductId = /"[^"]+"/.test(productIds)
   const hasShopeeQuery = /shopeeQuery:\s*"[^"]+"/.test(block)
-  const recommendedKolIds = [...(block.match(/recommendedKolIds:\s*\[([\s\S]*?)\]/)?.[1] ?? "").matchAll(/"([^"]+)"/g)].map((item) => item[1])
   return [
     !hasShopeeQuery ? `${key} missing shopeeQuery` : null,
     !hasProductId && !hasShopeeQuery ? `${key} missing both productIds and shopeeQuery` : null,
     !/affiliateDisclosure:\s*"[^"]+"/.test(block) ? `${key} missing affiliateDisclosure` : null,
-    ...recommendedKolIds
-      .filter((id) => !new RegExp(`recommendedKolReasons:\\s*\\{[\\s\\S]*"${id}":`).test(block))
-      .map((id) => `${key} missing display reason for recommendedKolIds ${id}`),
   ].filter(Boolean)
-})
-const nodeBlocks = [...contentMatrix.matchAll(/\{\s*key:\s*"([^"]+)"[\s\S]*?sourceRefs:\s*\[[^\]]*\],?\s*\n      \}/g)]
-const nodeKolReasonIssues = nodeBlocks.flatMap((match) => {
-  const key = match[1]
-  const block = match[0]
-  const kolIds = [...(block.match(/kolIds:\s*\[([\s\S]*?)\]/)?.[1] ?? "").matchAll(/"([^"]+)"/g)].map((item) => item[1])
-  return kolIds
-    .filter((id) => !new RegExp(`kolReasons:\\s*\\{[\\s\\S]*"${id}":`).test(block))
-    .map((id) => `${key} missing display reason for kolIds ${id}`)
 })
 const missingMatrixArticles = [...new Set(matrixArticleSlugs.filter((slug) => !allArticleSlugs.includes(slug)))]
 const missingMatrixNextReads = [...new Set(matrixNextSlugs.filter((slug) => !allArticleSlugs.includes(slug)))]
 const missingProductGroups = [...new Set(matrixProductGroupRefs.filter((key) => !productGroupKeys.includes(key)))]
 const missingMatrixProducts = [...new Set(matrixProductIds.filter((id) => !localProductIds.includes(id)))]
-const missingMatrixKols = [...new Set(matrixKolIds.filter((id) => !localKolIds.includes(id)))]
 const medicalMatrixBlocks = [...contentMatrix.matchAll(/\{\s*[\s\S]*?safetyLevel:\s*"medical"[\s\S]*?\n      \}/g)]
 const medicalNodesWithoutSources = medicalMatrixBlocks
   .filter((match) => !/sourceRefs:\s*\[[^\]]+\]/.test(match[0]))
@@ -111,9 +87,7 @@ const errors = [
   missingMatrixNextReads.length > 0 ? `Content matrix nextArticleSlugs point to missing article(s): ${missingMatrixNextReads.join(", ")}` : null,
   missingProductGroups.length > 0 ? `Content matrix references missing product group(s): ${missingProductGroups.join(", ")}` : null,
   missingMatrixProducts.length > 0 ? `Content matrix productIds point to missing product(s): ${missingMatrixProducts.join(", ")}` : null,
-  missingMatrixKols.length > 0 ? `Content matrix kolIds point to missing KOL(s): ${missingMatrixKols.join(", ")}` : null,
   productGroupIssues.length > 0 ? `Product group issue(s): ${productGroupIssues.join(", ")}` : null,
-  nodeKolReasonIssues.length > 0 ? `Matrix node KOL reason issue(s): ${nodeKolReasonIssues.join(", ")}` : null,
   medicalNodesWithoutSources.length > 0 ? `Medical matrix node(s) missing sources: ${medicalNodesWithoutSources.join(", ")}` : null,
 ].filter(Boolean)
 
@@ -133,7 +107,7 @@ console.log(
       matrixNodes: matrixArticleSlugs.length,
       matrixProductGroups: productGroupKeys.length,
       matrixProductLinks: matrixProductIds.length,
-      matrixKolLinks: matrixKolIds.length,
+      articleCreatorLinks: "disabled",
       registry: "ok",
     },
     null,

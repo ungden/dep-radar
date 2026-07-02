@@ -10,16 +10,15 @@ import * as motion from "motion/react-client"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { TrackArticleRead } from "@/components/analytics/public-events"
-import { getKols, getPost, getPostProductRecommendations, getPosts, getProducts } from "@/lib/data"
+import { getPost, getPostProductRecommendations, getPosts, getProducts } from "@/lib/data"
 import { LikeButton } from "@/components/like-button"
 import { SocialShare } from "@/components/social-share"
 import { CommentSection } from "@/components/comment-section"
 import { getCatalogueSection } from "@/lib/catalogue"
 import { articleHref, buildRelatedArticles, getGraphNodeForPost } from "@/lib/content-graph"
 import { getMatrixProductGroups, researchStageLabels, type ProductGroup } from "@/lib/content-matrix"
-import { getKolCredibility } from "@/lib/kol-credibility"
 import { absoluteUrl, postPath } from "@/lib/seo"
-import type { Kol, Post, Product } from "@/lib/types"
+import type { Post, Product } from "@/lib/types"
 
 function JsonLd({ data }: { data: Record<string, unknown> }) {
   return (
@@ -30,7 +29,7 @@ function JsonLd({ data }: { data: Record<string, unknown> }) {
   )
 }
 
-function buildBlogJsonLd(post: Post, nextPosts: Post[], products: Product[], kols: Kol[], siteUrl: string) {
+function buildBlogJsonLd(post: Post, nextPosts: Post[], products: Product[], siteUrl: string) {
   const articleUrl = `${siteUrl}/blog/${post.slug}`
   const items: Record<string, unknown>[] = [
     {
@@ -83,7 +82,6 @@ function buildBlogJsonLd(post: Post, nextPosts: Post[], products: Product[], kol
   const journeyItems = [
     ...nextPosts.map((item) => ({ name: item.title, url: `${siteUrl}/blog/${item.slug}` })),
     ...products.map((item) => ({ name: item.name, url: `${siteUrl}/products/${item.id}` })),
-    ...kols.map((item) => ({ name: item.name, url: `${siteUrl}/koc-tracker/${item.id}` })),
   ]
 
   if (journeyItems.length > 0) {
@@ -195,11 +193,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
   }
 
   const matrixNode = getGraphNodeForPost(post)
-  const [recommendedProducts, allPosts, allProducts, allKols] = await Promise.all([
+  const [recommendedProducts, allPosts, allProducts] = await Promise.all([
     getPostProductRecommendations(post, 3),
     getPosts(),
     getProducts(),
-    getKols(),
   ])
   const nextMatrixPosts = matrixNode
     ? matrixNode.nextArticleSlugs.map((slug) => allPosts.find((item) => item.slug === slug)).filter((item): item is Post => Boolean(item)).slice(0, 4)
@@ -211,16 +208,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
   ])
   const graphProducts = graphProductIds.map((productId) => allProducts.find((product) => product.id === productId)).filter((product): product is Product => Boolean(product))
   const journeyProducts = uniqueProducts([...graphProducts, ...recommendedProducts]).slice(0, 4)
-  const graphKolIds = unique([
-    ...(matrixNode?.kolIds ?? post.kolIds ?? []),
-    ...productGroups.flatMap((group) => group.recommendedKolIds),
-  ])
-  const graphKols = graphKolIds.map((kolId) => allKols.find((kol) => kol.id === kolId)).filter((kol): kol is Kol => Boolean(kol))
-  const journeyKols = graphKols.length > 0 ? graphKols.slice(0, 3) : scoreKolsForPost(allKols, post).slice(0, 3)
-  const relatedArticles = buildRelatedArticles({ post, posts: allPosts, products: allProducts, kols: allKols, limit: 4 })
+  const relatedArticles = buildRelatedArticles({ post, posts: allPosts, products: allProducts, limit: 4 })
   const matrixSection = matrixNode ? getCatalogueSection(matrixNode.hubSlug) : null
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://360dep.vn"
-  const jsonLdItems = buildBlogJsonLd(post, nextMatrixPosts, journeyProducts, journeyKols, siteUrl)
+  const jsonLdItems = buildBlogJsonLd(post, nextMatrixPosts, journeyProducts, siteUrl)
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-16">
@@ -381,14 +372,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
               </div>
             )}
 
-            {(nextMatrixPosts.length > 0 || productGroups.length > 0 || journeyProducts.length > 0 || journeyKols.length > 0) && (
+            {(nextMatrixPosts.length > 0 || productGroups.length > 0 || journeyProducts.length > 0) && (
               <div className="px-6 md:px-10 lg:px-12 pb-10">
                 <ArticleJourney
                   currentQuestion={matrixNode?.userQuestion ?? post.userQuestion}
                   nextPosts={nextMatrixPosts}
                   products={journeyProducts}
-                  kols={journeyKols}
-                  kolReasons={matrixNode?.kolReasons ?? post.kolReasons ?? {}}
                   productGroups={productGroups}
                 />
               </div>
@@ -481,15 +470,11 @@ function ArticleJourney({
   currentQuestion,
   nextPosts,
   products,
-  kols,
-  kolReasons,
   productGroups,
 }: {
   currentQuestion?: string
   nextPosts: Post[]
   products: Product[]
-  kols: Kol[]
-  kolReasons: Record<string, string>
   productGroups: ProductGroup[]
 }) {
   return (
@@ -579,30 +564,6 @@ function ArticleJourney({
         </div>
       )}
 
-      {kols.length > 0 && (
-        <div>
-          <div className="mb-3 text-xs font-black uppercase tracking-wider text-slate-400">KOL/KOC nên đối chiếu</div>
-          <div className="grid gap-3">
-            {kols.map((kol) => (
-              <Link
-                key={kol.id}
-                href={`/koc-tracker/${kol.id}`}
-                className="group flex items-start justify-between gap-4 rounded-2xl bg-white p-4 transition-colors hover:text-rose-600 dark:bg-slate-900 dark:hover:text-rose-300"
-              >
-                <div>
-                  <div className="font-display text-lg font-black text-slate-900 group-hover:text-rose-600 dark:text-slate-50 dark:group-hover:text-rose-300">
-                    {kol.name}
-                  </div>
-                  <p className="mt-1 text-sm font-semibold leading-relaxed text-slate-600 dark:text-slate-300">
-                    {kolReasons[kol.id] ?? "Đối chiếu thêm trải nghiệm review, độ minh bạch PR và ngữ cảnh loại da trước khi mua."}
-                  </p>
-                </div>
-                <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-slate-300 group-hover:text-rose-500" />
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </section>
   )
 }
@@ -618,28 +579,4 @@ function uniqueProducts(products: Product[]) {
     seen.add(product.id)
     return true
   })
-}
-
-function normalizeText(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-}
-
-function scoreKolsForPost(kols: Kol[], post: Post) {
-  const text = normalizeText([post.title, post.excerpt, post.category, ...(post.tags ?? [])].join(" "))
-  return kols
-    .map((kol) => {
-      const kolText = normalizeText([...(kol.categories ?? []), ...(kol.specialties ?? []), ...(kol.signatureProducts ?? [])].join(" "))
-      const score = text
-        .split(/\s+/)
-        .filter((token) => token.length > 2 && kolText.includes(token))
-        .length + (kol.categories?.includes("Skincare") ? 2 : 0)
-      return { kol, score }
-    })
-    .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score || getKolCredibility(b.kol).credibilityScore - getKolCredibility(a.kol).credibilityScore)
-    .map((item) => item.kol)
 }

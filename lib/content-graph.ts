@@ -1,6 +1,6 @@
 import { catalogueSections } from "@/lib/catalogue"
 import { getContentMatrix, getMatrixNodeByArticleSlug, getMatrixProductGroups } from "@/lib/content-matrix"
-import type { CreatorProductEvent, Kol, Post, Product } from "@/lib/types"
+import type { CreatorProductEvent, Post, Product } from "@/lib/types"
 
 export type ContentGraphEdgeKind =
   | "next_read"
@@ -8,7 +8,6 @@ export type ContentGraphEdgeKind =
   | "same_stage"
   | "shared_product_group"
   | "shared_product"
-  | "shared_kol"
   | "related_node"
   | "same_category"
   | "shared_tag"
@@ -40,7 +39,6 @@ export interface ContentGraphCoverage {
   matrixNodes: number
   postsWithNextReads: number
   postsWithProductGroups: number
-  postsWithKols: number
   coverageScore: number
 }
 
@@ -63,7 +61,6 @@ const EDGE_REASONS: Record<ContentGraphEdgeKind, string> = {
   same_stage: "Cùng giai đoạn nghiên cứu",
   shared_product_group: "Cùng nhóm sản phẩm cần cân nhắc",
   shared_product: "Nhắc cùng sản phẩm",
-  shared_kol: "Liên quan cùng KOL/KOC",
   related_node: "Nối từ node liên quan trong ma trận",
   same_category: "Cùng chủ đề biên tập",
   shared_tag: "Có tag nội dung giao nhau",
@@ -85,7 +82,6 @@ export function buildRelatedArticles({
   post: Post
   posts: Post[]
   products?: Product[]
-  kols?: Kol[]
   limit?: number
 }): RelatedArticle[] {
   const publishedPosts = posts.filter((item) => item.status !== "draft" && item.status !== "planned" && item.id !== post.id)
@@ -99,11 +95,6 @@ export function buildRelatedArticles({
     ...(post.matrixProductIds ?? []),
     ...(post.product_ids ?? []),
     ...productGroups.flatMap((group) => [...group.productIds, ...group.comparisonProductIds]),
-  ])
-  const kolIds = new Set([
-    ...(matrixNode?.kolIds ?? []),
-    ...(post.kolIds ?? []),
-    ...productGroups.flatMap((group) => group.recommendedKolIds),
   ])
   const nextSlugs = [
     ...(matrixNode?.nextArticleSlugs ?? []),
@@ -129,12 +120,6 @@ export function buildRelatedArticles({
       ...(candidate.product_ids ?? []),
       ...candidateGroups.flatMap((group) => [...group.productIds, ...group.comparisonProductIds]),
     ])
-    const candidateKolIds = new Set([
-      ...(candidateNode?.kolIds ?? []),
-      ...(candidate.kolIds ?? []),
-      ...candidateGroups.flatMap((group) => group.recommendedKolIds),
-    ])
-
     if (post.hubSlug && candidate.hubSlug === post.hubSlug) add(candidate, 18, "same_hub")
     if ((matrixNode?.stage ?? post.researchStage) && (matrixNode?.stage ?? post.researchStage) === (candidateNode?.stage ?? candidate.researchStage)) {
       add(candidate, 18, "same_stage")
@@ -142,7 +127,6 @@ export function buildRelatedArticles({
     if (post.category && candidate.category === post.category) add(candidate, 12, "same_category")
     if (overlap(productGroupKeys, candidateGroupKeys)) add(candidate, 34, "shared_product_group")
     if (overlap(productIds, candidateProductIds)) add(candidate, 28, "shared_product")
-    if (overlap(kolIds, candidateKolIds)) add(candidate, 20, "shared_kol")
     if (overlap(new Set(post.tags ?? []), new Set(candidate.tags ?? []))) add(candidate, 10, "shared_tag")
   }
 
@@ -183,20 +167,17 @@ export function buildDailyEditorialPlan({
   posts,
   products,
   timelineEvents,
-  kols,
   limit = 12,
 }: {
   posts: Post[]
   products: Product[]
   timelineEvents: CreatorProductEvent[]
-  kols: Kol[]
+  kols?: unknown[]
   limit?: number
 }): DailyEditorialPlan {
   const publishedPosts = posts.filter((post) => post.status !== "draft" && post.status !== "planned")
   const productMentionCounts = countBy(timelineEvents.map((event) => event.product_id))
-  const creatorMentionCounts = countBy(timelineEvents.map((event) => event.creator_id))
   const productMap = new Map(products.map((product) => [product.id, product]))
-  const kolMap = new Map(kols.map((kol) => [kol.id, kol]))
   const coverage = buildContentGraphCoverage(publishedPosts)
 
   const candidates = publishedPosts
@@ -208,23 +189,17 @@ export function buildDailyEditorialPlan({
         ...(post.product_ids ?? []),
         ...productGroups.flatMap((group) => [...group.productIds, ...group.comparisonProductIds]),
       ]
-      const graphKolIds = [
-        ...(matrixNode?.kolIds ?? post.kolIds ?? []),
-        ...productGroups.flatMap((group) => group.recommendedKolIds),
-      ]
       const related = buildRelatedArticles({ post, posts: publishedPosts, limit: 8 })
       const freshnessScore = freshnessScoreFor(post.created_at)
-      const relationScore = Math.min(45, related.length * 5 + productGroups.length * 4 + graphKolIds.length * 3)
+      const relationScore = Math.min(45, related.length * 5 + productGroups.length * 4)
       const trustScore = Math.min(30, (post.sourceNotes?.length ?? 0) * 8 + (post.takeaways?.length ? 7 : 0) + (post.faq?.length ? 7 : 0))
       const signalScore = Math.min(
         25,
-        graphProductIds.reduce((sum, id) => sum + (productMentionCounts.get(id) ?? 0), 0) * 3 +
-          graphKolIds.reduce((sum, id) => sum + (creatorMentionCounts.get(id) ?? 0), 0) * 2
+        graphProductIds.reduce((sum, id) => sum + (productMentionCounts.get(id) ?? 0), 0) * 3
       )
       const safetyBoost = post.medicalDisclaimerLevel === "medical" && post.sourceNotes?.length ? 8 : 0
       const score = freshnessScore + relationScore + trustScore + signalScore + safetyBoost
       const productNames = graphProductIds.map((id) => productMap.get(id)?.name).filter(Boolean)
-      const kolNames = graphKolIds.map((id) => kolMap.get(id)?.name).filter(Boolean)
 
       return {
         post,
@@ -235,7 +210,7 @@ export function buildDailyEditorialPlan({
         trustScore,
         diversityKey: post.hubSlug || post.category || "beauty-desk",
         label: labelForCandidate(post, matrixNode?.stage),
-        reason: reasonForCandidate({ productNames, kolNames, relatedCount: related.length, sourceCount: post.sourceNotes?.length ?? 0 }),
+        reason: reasonForCandidate({ productNames, relatedCount: related.length, sourceCount: post.sourceNotes?.length ?? 0 }),
       }
     })
     .sort((a, b) => b.score - a.score || b.post.created_at.localeCompare(a.post.created_at))
@@ -253,10 +228,9 @@ export function buildContentGraphCoverage(posts: Post[]): ContentGraphCoverage[]
     const matrix = getContentMatrix(hub.slug)
     const postsWithNextReads = hubPosts.filter((post) => getGraphNodeForPost(post)?.nextArticleSlugs.length || post.nextArticleSlugs?.length).length
     const postsWithProductGroups = hubPosts.filter((post) => getGraphNodeForPost(post)?.productGroupKeys.length || post.productGroupKeys?.length).length
-    const postsWithKols = hubPosts.filter((post) => getGraphNodeForPost(post)?.kolIds.length || post.kolIds?.length).length
     const coverageScore = hubPosts.length === 0
       ? 0
-      : Math.round(((postsWithNextReads + postsWithProductGroups + postsWithKols) / (hubPosts.length * 3)) * 100)
+      : Math.round(((postsWithNextReads + postsWithProductGroups) / (hubPosts.length * 2)) * 100)
 
     return {
       hubSlug: hub.slug,
@@ -265,7 +239,6 @@ export function buildContentGraphCoverage(posts: Post[]): ContentGraphCoverage[]
       matrixNodes: matrix?.nodes.length ?? 0,
       postsWithNextReads,
       postsWithProductGroups,
-      postsWithKols,
       coverageScore,
     }
   })
@@ -306,23 +279,19 @@ function freshnessScoreFor(date: string) {
 
 function labelForCandidate(post: Post, stage?: string) {
   if (stage === "safety" || post.medicalDisclaimerLevel === "medical") return "An toàn & kiểm chứng"
-  if (post.kolIds?.length) return "Có KOL/KOC liên quan"
   if (post.productGroupKeys?.length || post.product_ids?.length) return "Có product context"
   return post.category
 }
 
 function reasonForCandidate({
   productNames,
-  kolNames,
   relatedCount,
   sourceCount,
 }: {
   productNames: (string | undefined)[]
-  kolNames: (string | undefined)[]
   relatedCount: number
   sourceCount: number
 }) {
-  if (kolNames.length > 0) return `Nối được với ${kolNames.slice(0, 2).join(", ")} và ${relatedCount} bài đọc tiếp.`
   if (productNames.length > 0) return `Có ngữ cảnh sản phẩm như ${productNames.slice(0, 2).join(", ")} nhưng vẫn đi từ vấn đề trước.`
   if (sourceCount > 0) return `Có nguồn tham khảo và ${relatedCount} hướng đọc tiếp trong graph.`
   return `Có ${relatedCount} bài liên quan để kéo người đọc sang chủ đề kế tiếp.`
