@@ -22,6 +22,19 @@ export const SAMPLE_PRODUCTS: Product[] = productsWithTaxonomy([
 ])
 
 const CURATED_LEGACY_PRODUCTS = new Map(SAMPLE_PRODUCTS.slice(0, 8).map((product) => [product.id, product]))
+const PUBLIC_AFFILIATE_PRODUCT_IDS = new Set(
+  SAMPLE_PRODUCT_OFFERS
+    .filter((offer) => isPublicAffiliateUrl(offer.affiliate_url))
+    .map((offer) => offer.product_id)
+)
+
+function isPublicAffiliateUrl(url?: string | null) {
+  return Boolean(url?.startsWith("https://s.shopee.vn/"))
+}
+
+function hasPublicAffiliate(product: Product) {
+  return isPublicAffiliateUrl(product.affiliate_url) || PUBLIC_AFFILIATE_PRODUCT_IDS.has(product.id)
+}
 
 export const SAMPLE_CREATOR_EVIDENCE_ITEMS: CreatorEvidenceItem[] = SAMPLE_CREATOR_PRODUCT_EVENTS.slice(0, 4).map((event) => ({
   id: `evidence-${event.id}`,
@@ -243,6 +256,7 @@ export async function getProducts() {
   return productsWithTaxonomy(mergeProducts(products, SAMPLE_PRODUCTS))
     .map((product) => CURATED_LEGACY_PRODUCTS.get(product.id) ?? product)
     .filter((product) => product.status !== "pending" && product.status !== "archived")
+    .filter(hasPublicAffiliate)
 }
 
 export async function getProductOffers(filters: { productId?: string } = {}) {
@@ -275,13 +289,17 @@ export async function getPreferredProductOffer(product: Product) {
 export async function getProduct(id: string) {
   const fallback = SAMPLE_PRODUCTS.find((product) => product.id === id) ?? null
   const curatedLegacyProduct = fallback ? CURATED_LEGACY_PRODUCTS.get(fallback.id) : null
-  if (curatedLegacyProduct) return productWithTaxonomy(curatedLegacyProduct)
+  if (curatedLegacyProduct) {
+    const publicLegacyProduct = productWithTaxonomy(curatedLegacyProduct)
+    return hasPublicAffiliate(publicLegacyProduct) ? publicLegacyProduct : null
+  }
 
   const product = await fromSupabase<Product | null>(
     supabase.from("radar_products").select("*").eq("id", id).maybeSingle(),
     fallback
   )
-  return product ? productWithTaxonomy(CURATED_LEGACY_PRODUCTS.get(product.id) ?? product) : null
+  const publicProduct = product ? productWithTaxonomy(CURATED_LEGACY_PRODUCTS.get(product.id) ?? product) : null
+  return publicProduct && hasPublicAffiliate(publicProduct) ? publicProduct : null
 }
 
 export async function getCreatorEvidenceItems(filters: { creatorId?: string; status?: string } = {}) {
