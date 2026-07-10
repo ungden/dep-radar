@@ -16,14 +16,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PlatformBadge } from "@/components/platform-badge"
 import { TrackKolProfileView } from "@/components/analytics/public-events"
-import { getCreatorProductEvents, getKol, getPost, getProductOffers, getProducts, getReviews } from "@/lib/data"
+import { getCreatorProductEvents, getCreatorProductStates, getKol, getPost, getProductOffers, getProducts, getReviews } from "@/lib/data"
 import { getMatrixNodesByKolId, getMatrixProductGroups } from "@/lib/content-matrix"
 import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
 import { parseFollowers } from "@/lib/kols-data"
 import { getProductCategoryLabel, productWithTaxonomy } from "@/lib/product-taxonomy"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import { absoluteUrl } from "@/lib/seo"
-import type { CreatorProductEvent, Kol, KolSocial, Post, Product, ProductOffer, Review } from "@/lib/types"
+import type { CreatorProductEvent, CreatorProductState, CreatorProductStateValue, Kol, KolSocial, Post, Product, ProductOffer, Review } from "@/lib/types"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
@@ -124,16 +124,42 @@ function formatTimelineDate(value: string) {
 function eventTypeLabel(event: CreatorProductEvent) {
   const labels: Record<CreatorProductEvent["event_type"], string> = {
     first_seen: "Tin mới ghi nhận",
+    mentioned: "Được nhắc tới",
+    unboxed: "Mở hộp",
     used: "Đã dùng",
     reviewed: "Đã review",
     recommended: "Recommend",
     disliked: "Không hợp",
     emptied: "Dùng hết",
     repurchased: "Mua lại",
+    switched_to: "Chuyển sang dùng",
+    stopped_using: "Ngừng dùng",
     live_sold: "Live bán",
     sponsored: "Tài trợ",
   }
   return labels[event.event_type]
+}
+
+function buildStateGroups(states: CreatorProductState[], products: Product[]) {
+  const productMap = new Map(products.map((product) => [product.id, productWithTaxonomy(product)]))
+  const groups: Array<{
+    key: string
+    label: string
+    states: CreatorProductStateValue[]
+    tone: string
+  }> = [
+    { key: "current", label: "Đang dùng có bằng chứng", states: ["current"], tone: "border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/50 dark:bg-emerald-950/20" },
+    { key: "history", label: "Đã dùng / review", states: ["recently_used", "past", "reviewed_only", "disliked"], tone: "border-blue-200 bg-blue-50/70 dark:border-blue-900/50 dark:bg-blue-950/20" },
+    { key: "commercial", label: "Quảng bá / bán", states: ["promoted_only"], tone: "border-amber-200 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/20" },
+  ]
+  return groups.map((group) => ({
+    ...group,
+    items: states
+      .filter((state) => group.states.includes(state.state))
+      .map((state) => ({ state, product: productMap.get(state.product_id) }))
+      .filter((item): item is { state: CreatorProductState; product: Product } => Boolean(item.product))
+      .sort((a, b) => (b.state.last_confirmed_at ?? "").localeCompare(a.state.last_confirmed_at ?? "")),
+  }))
 }
 
 function disclosureLabel(event: CreatorProductEvent) {
@@ -242,10 +268,11 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
   const kol = await getKol(id)
   if (!kol) return notFound()
 
-  const [PRODUCTS, reviews, timelineEvents] = await Promise.all([
+  const [PRODUCTS, reviews, timelineEvents, productStates] = await Promise.all([
     getProducts(),
     getReviews({ kolId: id }),
     getCreatorProductEvents({ creatorId: id }),
+    getCreatorProductStates({ creatorId: id }),
   ])
   const timelineProducts = timelineEvents
     .map((event) => {
@@ -281,6 +308,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
     reviews,
     offersByProductId,
   })
+  const stateGroups = buildStateGroups(productStates, PRODUCTS)
 
   const socials = socialList(kol)
   const totalReach = formatReach(socials.reduce((sum, s) => sum + parseFollowers(s.followers), 0))
@@ -529,6 +557,44 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                       </div>
                     </div>
                   )}
+                </section>
+              )}
+
+              {stateGroups.some((group) => group.items.length > 0) && (
+                <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
+                  <div className="mb-5">
+                    <h2 className="flex items-center gap-2 font-display text-xl font-bold text-slate-900 dark:text-slate-50">
+                      <PackageCheck className="h-5 w-5 text-emerald-500" /> Trạng thái sản phẩm có bằng chứng
+                    </h2>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                      Chỉ phản ánh bằng chứng công khai đã được xác minh. Review, affiliate hoặc live bán hàng không tự động được xem là đang sử dụng.
+                    </p>
+                  </div>
+                  <div className="grid gap-4 lg:grid-cols-3">
+                    {stateGroups.map((group) => (
+                      <div key={group.key} className={`rounded-2xl border p-4 ${group.tone}`}>
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                          <div className="font-display font-black text-slate-900 dark:text-slate-50">{group.label}</div>
+                          <Badge variant="secondary">{group.items.length}</Badge>
+                        </div>
+                        {group.items.length > 0 ? (
+                          <div className="space-y-3">
+                            {group.items.map(({ state, product }) => (
+                              <Link key={product.id} href={`/products/${product.id}`} className="block rounded-xl bg-white/80 p-3 transition-colors hover:text-rose-600 dark:bg-slate-900/80 dark:hover:text-rose-300">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-400">{product.brand}</div>
+                                <div className="mt-1 line-clamp-2 text-sm font-bold">{product.name}</div>
+                                <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                  Xác nhận {state.last_confirmed_at ? formatTimelineDate(state.last_confirmed_at) : "chưa rõ ngày"} · {state.evidence_count} bằng chứng · {state.state_confidence}/100
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-500 dark:text-slate-400">Chưa có sản phẩm.</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </section>
               )}
 

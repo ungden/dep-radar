@@ -70,12 +70,16 @@ function formatTimelineDate(value: string) {
 function eventTypeLabel(event: CreatorProductEvent) {
   const labels: Record<CreatorProductEvent["event_type"], string> = {
     first_seen: "Tin mới ghi nhận",
+    mentioned: "Được nhắc tới",
+    unboxed: "Mở hộp",
     used: "Đã dùng",
     reviewed: "Đã review",
     recommended: "Recommend",
     disliked: "Không hợp",
     emptied: "Dùng hết",
     repurchased: "Mua lại",
+    switched_to: "Chuyển sang dùng",
+    stopped_using: "Ngừng dùng",
     live_sold: "Live bán",
     sponsored: "Tài trợ",
   }

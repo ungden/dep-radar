@@ -1,10 +1,11 @@
-import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
+import { isEvidenceRadarSchemaReady, isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 import { getPublishedEditorialPost, getPublishedEditorialPosts } from "@/lib/editorial"
+import { deriveCreatorProductState, isPublicEvidenceEvent } from "@/lib/evidence-radar/state-engine"
 import { REAL_KOLS } from "@/lib/kols-data"
 import { productsWithTaxonomy, productWithTaxonomy } from "@/lib/product-taxonomy"
 import { RESEARCHED_PRODUCTS } from "@/lib/product-research"
 import { SAMPLE_CREATOR_PRODUCT_EVENTS, SAMPLE_PRODUCT_OFFERS } from "@/lib/timeline-data"
-import type { CommunityReview, CreatorEvidenceItem, CreatorProductEvent, Kol, Post, Product, ProductOffer, Review } from "@/lib/types"
+import type { CommunityReview, CreatorEvidenceItem, CreatorProductEvent, CreatorProductState, Kol, Post, Product, ProductOffer, Review } from "@/lib/types"
 
 // Toàn bộ hồ sơ KOL/KOC đã xác minh nằm trong REAL_KOLS; hồ sơ mơ hồ bị loại khỏi public registry.
 export const SAMPLE_KOLS: Kol[] = REAL_KOLS
@@ -44,7 +45,9 @@ function isPublicCreatorEvidenceEvent(event: CreatorProductEvent) {
   return !sourcePlatform.includes("seed") && !sourcePlatform.includes("internal") && !event.source_url?.startsWith("/blog/")
 }
 
-const PUBLIC_CREATOR_PRODUCT_EVENTS = SAMPLE_CREATOR_PRODUCT_EVENTS.filter(isPublicCreatorEvidenceEvent)
+const PUBLIC_CREATOR_PRODUCT_EVENTS = SAMPLE_CREATOR_PRODUCT_EVENTS
+  .filter(isPublicCreatorEvidenceEvent)
+  .filter(isPublicEvidenceEvent)
 
 export const SAMPLE_CREATOR_EVIDENCE_ITEMS: CreatorEvidenceItem[] = PUBLIC_CREATOR_PRODUCT_EVENTS.slice(0, 4).map((event) => ({
   id: `evidence-${event.id}`,
@@ -472,7 +475,38 @@ export async function getCreatorProductEvents(filters: { productId?: string; cre
   if (filters.productId) query = query.eq("product_id", filters.productId)
   if (filters.creatorId) query = query.eq("creator_id", filters.creatorId)
   const events = await fromSupabase<CreatorProductEvent[]>(query, fallback)
-  return mergeTimelineEvents(events)
+  return mergeTimelineEvents(events).filter(isPublicEvidenceEvent)
+}
+
+export async function getCreatorProductStates(filters: { productId?: string; creatorId?: string } = {}) {
+  const grouped = new Map<string, CreatorProductEvent[]>()
+  for (const event of PUBLIC_CREATOR_PRODUCT_EVENTS) {
+    if (filters.productId && event.product_id !== filters.productId) continue
+    if (filters.creatorId && event.creator_id !== filters.creatorId) continue
+    const key = `${event.creator_id}|${event.product_id}`
+    grouped.set(key, [...(grouped.get(key) ?? []), event])
+  }
+  const fallback = Array.from(grouped.entries()).map(([key, events]) => {
+    const [creatorId, productId] = key.split("|")
+    const derived = deriveCreatorProductState(events)
+    return {
+      creator_id: creatorId,
+      product_id: productId,
+      state: derived.state,
+      state_confidence: derived.stateConfidence,
+      last_confirmed_at: derived.lastConfirmedAt,
+      expires_at: derived.expiresAt,
+      evidence_count: derived.evidenceCount,
+      last_event_id: derived.lastEventId,
+      computed_at: new Date().toISOString(),
+    } satisfies CreatorProductState
+  })
+
+  if (!isEvidenceRadarSchemaReady) return fallback
+  let query = supabase.from("creator_product_states").select("*").gte("state_confidence", 70)
+  if (filters.productId) query = query.eq("product_id", filters.productId)
+  if (filters.creatorId) query = query.eq("creator_id", filters.creatorId)
+  return fromSupabase<CreatorProductState[]>(query, fallback)
 }
 
 export async function getPosts() {

@@ -12,4 +12,7 @@ export const isSupabaseConfigured =
 export const isSupabaseSchemaReady =
   isSupabaseConfigured && process.env.NEXT_PUBLIC_SUPABASE_SCHEMA_READY === 'true';
 
+export const isEvidenceRadarSchemaReady =
+  isSupabaseSchemaReady && process.env.NEXT_PUBLIC_EVIDENCE_RADAR_READY === 'true';
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

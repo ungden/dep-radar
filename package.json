@@ -14,6 +14,7 @@
     "fetch:product-images": "tsx scripts/fetch-product-images.ts",
     "check:content-graph": "tsx scripts/check-content-graph.ts",
     "check:daily": "tsx scripts/check-daily-briefing.ts",
+    "check:evidence-radar": "tsx scripts/check-evidence-radar.ts",
     "check:seo": "tsx scripts/check-seo.ts",
     "seed:db": "tsx seed-db.ts",
     "clean": "next clean"

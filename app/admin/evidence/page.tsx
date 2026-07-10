@@ -42,12 +42,16 @@ const STATUS_OPTIONS: { value: CreatorEvidenceStatus; label: string }[] = [
 ]
 
 const EVENT_TYPES: { value: CreatorProductEventType; label: string }[] = [
+  { value: "mentioned", label: "Chỉ được nhắc" },
+  { value: "unboxed", label: "Mở hộp" },
   { value: "used", label: "Da dung" },
   { value: "reviewed", label: "Da review" },
   { value: "recommended", label: "Recommend" },
   { value: "disliked", label: "Khong hop" },
   { value: "emptied", label: "Dung het" },
   { value: "repurchased", label: "Mua lai" },
+  { value: "switched_to", label: "Chuyển sang dùng" },
+  { value: "stopped_using", label: "Ngừng dùng" },
   { value: "live_sold", label: "Live ban" },
   { value: "sponsored", label: "Tai tro" },
   { value: "first_seen", label: "Bat dau theo doi" },
@@ -255,10 +259,27 @@ export default function AdminEvidencePage() {
 
   async function updateEvidenceStatus(item: CreatorEvidenceItem, status: CreatorEvidenceStatus) {
     setError(null)
-    const { error: updateError } = await supabase.from("creator_evidence_items").update({ status }).eq("id", item.id)
+    const { data: authData } = await supabase.auth.getUser()
+    const reviewed = ["ready_to_publish", "published", "rejected"].includes(status)
+    const { error: updateError } = await supabase.from("creator_evidence_items").update({
+      status,
+      reviewed_by: reviewed ? authData.user?.id ?? null : item.reviewed_by ?? null,
+      reviewed_at: reviewed ? new Date().toISOString() : item.reviewed_at ?? null,
+    }).eq("id", item.id)
     if (updateError) {
       setError(updateError.message)
     } else {
+      if (status === "ready_to_publish" || status === "rejected") {
+        await supabase.from("evidence_audit_log").insert({
+          evidence_id: item.id,
+          actor_id: authData.user?.id ?? null,
+          actor_type: "admin",
+          decision: status === "rejected" ? "rejected" : "edited",
+          reason: status === "rejected" ? "Rejected during human review." : "Marked ready during human review.",
+          before_data: { status: item.status },
+          after_data: { status },
+        })
+      }
       setEvidenceItems((items) => items.map((current) => current.id === item.id ? { ...current, status } : current))
     }
   }
@@ -327,12 +348,25 @@ export default function AdminEvidencePage() {
       usage_context: publishForm.usage_context || null,
       evidence_note: selectedEvidence.researcher_note || "Published from Evidence Inbox.",
       confidence: publishForm.confidence,
+      confidence_score: selectedEvidence.confidence_score ?? (publishForm.confidence === "high" ? 92 : publishForm.confidence === "medium" ? 75 : 50),
+      verification_status: "verified",
+      verified_at: new Date().toISOString(),
     }
 
     const { error: insertError } = await supabase.from("creator_product_events").insert(payload)
     if (insertError) {
       setError(insertError.message)
     } else {
+      const { data: authData } = await supabase.auth.getUser()
+      await supabase.from("evidence_audit_log").insert({
+        evidence_id: selectedEvidence.id,
+        event_id: payload.id,
+        actor_id: authData.user?.id ?? null,
+        actor_type: "admin",
+        decision: "published",
+        reason: "Published from Evidence Inbox after human review.",
+        after_data: payload,
+      })
       await updateEvidenceStatus(selectedEvidence, "published")
       setPublishForm({ ...emptyPublishForm, product_id: publishForm.product_id })
       setMessage("Da publish thanh timeline event. Evidence van co the publish them product khac neu video co nhieu san pham.")
@@ -483,6 +517,12 @@ export default function AdminEvidencePage() {
                         <div className="mb-2 flex flex-wrap items-center gap-2">
                           <Badge className={statusClass(item.status)}>{STATUS_OPTIONS.find((status) => status.value === item.status)?.label ?? item.status}</Badge>
                           <Badge variant="secondary" className="bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300">{item.source_platform}</Badge>
+                          {typeof item.confidence_score === "number" && (
+                            <Badge variant="secondary" className={item.confidence_score >= 92 ? "bg-emerald-100 text-emerald-700" : item.confidence_score >= 70 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}>
+                              {item.confidence_score}/100
+                            </Badge>
+                          )}
+                          {item.requires_human_review && <Badge variant="secondary" className="bg-violet-100 text-violet-700">Cần người duyệt</Badge>}
                           <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{formatDate(item.published_at)}</span>
                         </div>
                         <div className="font-bold text-slate-900 dark:text-slate-50">{item.source_title}</div>
@@ -515,6 +555,27 @@ export default function AdminEvidencePage() {
                       <div className="font-bold text-slate-900 dark:text-slate-50">{selectedEvidence.source_title}</div>
                       <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{selectedEvidence.source_excerpt}</p>
                     </div>
+
+                    {((selectedEvidence.extracted_claims?.length ?? 0) > 0 || (selectedEvidence.risk_flags?.length ?? 0) > 0) && (
+                      <div className="space-y-3 rounded-2xl border border-violet-100 bg-violet-50/60 p-4 dark:border-violet-900/40 dark:bg-violet-950/20">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <strong className="text-sm text-slate-900 dark:text-slate-50">AI evidence extraction</strong>
+                          {selectedEvidence.model_name && <Badge variant="secondary">{selectedEvidence.model_name}</Badge>}
+                          {selectedEvidence.prompt_version && <Badge variant="secondary">{selectedEvidence.prompt_version}</Badge>}
+                        </div>
+                        {(selectedEvidence.risk_flags?.length ?? 0) > 0 && (
+                          <div className="flex flex-wrap gap-2">{selectedEvidence.risk_flags?.map((flag) => <Badge key={flag} className="bg-rose-100 text-rose-700">{flag}</Badge>)}</div>
+                        )}
+                        <div className="grid gap-3">
+                          {selectedEvidence.extracted_claims?.map((claim, index) => (
+                            <button key={`${claim.product_name}-${index}`} type="button" onClick={() => setPublishForm((prev) => ({ ...prev, product_id: claim.matched_product_id ?? prev.product_id, event_type: claim.event_type, sentiment: claim.sentiment, disclosure: claim.disclosure, usage_context: claim.usage_context ?? "", confidence: claim.confidence_score >= 92 ? "high" : claim.confidence_score >= 70 ? "medium" : "low" }))} className="rounded-xl bg-white p-3 text-left shadow-sm dark:bg-slate-900">
+                              <div className="flex flex-wrap items-center gap-2"><strong>{claim.brand} {claim.product_name}</strong><Badge variant="secondary">{claim.event_type}</Badge><Badge variant="secondary">{claim.confidence_score}/100</Badge></div>
+                              {claim.evidence_spans[0] && <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{claim.evidence_spans[0].timestamp_seconds != null ? `${claim.evidence_spans[0].timestamp_seconds}s · ` : ""}{claim.evidence_spans[0].value}</p>}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {productSuggestions.length > 0 && (
                       <div>

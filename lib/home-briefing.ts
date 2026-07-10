@@ -66,17 +66,22 @@ function creatorHref(creator: Pick<Kol, "id">) {
 }
 
 function eventLabel(type: CreatorProductEvent["event_type"]) {
-  return {
+  const labels: Record<CreatorProductEvent["event_type"], string> = {
     first_seen: "Tin mới ghi nhận",
+    mentioned: "Được nhắc tới",
+    unboxed: "Mở hộp",
     used: "Đang dùng",
     reviewed: "Vừa review",
     recommended: "Có gợi ý",
     disliked: "Có điểm chê",
     emptied: "Dùng hết",
     repurchased: "Mua lại",
+    switched_to: "Chuyển sang dùng",
+    stopped_using: "Ngừng dùng",
     live_sold: "Có live bán",
     sponsored: "Nội dung tài trợ",
-  }[type]
+  }
+  return labels[type]
 }
 
 function sentimentLabel(sentiment: CreatorProductEvent["sentiment"]) {

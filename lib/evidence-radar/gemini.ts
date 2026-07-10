@@ -1,0 +1,216 @@
+import "server-only"
+
+import type { EvidenceClaim, EvidenceRiskFlag, Product, SourcePost } from "@/lib/types"
+
+export const EVIDENCE_PROMPT_VERSION = "evidence-radar-v1"
+export const EVIDENCE_MODEL = process.env.EVIDENCE_RADAR_GEMINI_MODEL || "gemini-3.5-flash"
+
+const EVENT_TYPES = [
+  "mentioned", "unboxed", "used", "reviewed", "recommended", "disliked", "emptied",
+  "repurchased", "switched_to", "stopped_using", "live_sold", "sponsored",
+] as const
+
+const RISK_FLAGS: EvidenceRiskFlag[] = [
+  "ocr_only", "ambiguous_variant", "disclosure_unknown", "repost", "multi_product_bundle",
+  "source_unavailable", "product_not_in_catalogue", "contradictory_claim",
+]
+
+function normalize(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+}
+
+function clampScore(value: unknown, max: number) {
+  const number = typeof value === "number" ? value : Number(value)
+  return Number.isFinite(number) ? Math.max(0, Math.min(max, Math.round(number))) : 0
+}
+
+function matchClaimToProduct(claim: EvidenceClaim, products: Product[]) {
+  const needle = normalize([claim.brand, claim.product_name, claim.variant ?? ""].join(" "))
+  const ranked = products
+    .map((product) => {
+      const names = [product.name, `${product.brand} ${product.name}`, ...(product.aliases ?? [])]
+      const score = names.reduce((best, candidate) => {
+        const normalizedCandidate = normalize(candidate)
+        if (!normalizedCandidate) return best
+        if (needle === normalizedCandidate) return Math.max(best, 100)
+        if (needle.includes(normalizedCandidate) || normalizedCandidate.includes(needle)) return Math.max(best, 80)
+        const tokens = normalizedCandidate.split(" ").filter((token) => token.length > 2)
+        const overlap = tokens.filter((token) => needle.includes(token)).length
+        return Math.max(best, tokens.length ? Math.round(overlap / tokens.length * 60) : 0)
+      }, 0)
+      return { product, score }
+    })
+    .sort((a, b) => b.score - a.score)
+
+  if (!ranked[0] || ranked[0].score < 55 || ranked[0].score === ranked[1]?.score) return null
+  return ranked[0].product.id
+}
+
+function catalogueForPrompt(products: Product[]) {
+  return products.map((product) => ({
+    id: product.id,
+    brand: product.brand,
+    name: product.name,
+    aliases: product.aliases ?? [],
+  }))
+}
+
+function responseSchema() {
+  return {
+    type: "array",
+    maxItems: 30,
+    items: {
+      type: "object",
+      additionalProperties: false,
+      required: [
+        "product_name", "brand", "variant", "event_type", "sentiment", "disclosure",
+        "usage_context", "evidence_spans", "product_identity_score", "action_evidence_score",
+        "source_authenticity_score", "evidence_localization_score", "risk_flags",
+      ],
+      properties: {
+        product_name: { type: "string" },
+        brand: { type: "string" },
+        variant: { type: ["string", "null"] },
+        event_type: { type: "string", enum: [...EVENT_TYPES] },
+        sentiment: { type: "string", enum: ["positive", "mixed", "negative", "neutral"] },
+        disclosure: { type: "string", enum: ["organic", "pr", "sponsored", "affiliate", "unknown"] },
+        usage_context: { type: ["string", "null"] },
+        evidence_spans: {
+          type: "array",
+          minItems: 1,
+          maxItems: 6,
+          items: {
+            type: "object",
+            required: ["kind", "value", "timestamp_seconds"],
+            properties: {
+              kind: { type: "string", enum: ["quote", "timestamp", "frame", "caption"] },
+              value: { type: "string" },
+              timestamp_seconds: { type: ["number", "null"] },
+            },
+          },
+        },
+        product_identity_score: { type: "integer", minimum: 0, maximum: 40 },
+        action_evidence_score: { type: "integer", minimum: 0, maximum: 35 },
+        source_authenticity_score: { type: "integer", minimum: 0, maximum: 15 },
+        evidence_localization_score: { type: "integer", minimum: 0, maximum: 10 },
+        risk_flags: { type: "array", items: { type: "string", enum: RISK_FLAGS } },
+      },
+    },
+  }
+}
+
+async function mediaInput(post: SourcePost) {
+  if (!post.media_url) return []
+  if (post.source_platform.toLowerCase().includes("youtube")) {
+    return [{ type: "video", uri: post.source_url }]
+  }
+
+  try {
+    const response = await fetch(post.media_url, { signal: AbortSignal.timeout(20_000) })
+    if (!response.ok) return []
+    const contentLength = Number(response.headers.get("content-length") || 0)
+    if (contentLength > 20_000_000) return []
+    const buffer = Buffer.from(await response.arrayBuffer())
+    if (buffer.byteLength > 20_000_000) return []
+    const mimeType = response.headers.get("content-type") || "video/mp4"
+    return [{ type: mimeType.startsWith("image/") ? "image" : "video", data: buffer.toString("base64"), mime_type: mimeType }]
+  } catch {
+    return []
+  }
+}
+
+function extractResponseText(payload: unknown): string {
+  if (!payload || typeof payload !== "object") return ""
+  const record = payload as Record<string, unknown>
+  if (typeof record.output_text === "string") return record.output_text
+  const steps = Array.isArray(record.steps) ? record.steps : []
+  for (const step of steps.reverse()) {
+    const content = (step as Record<string, unknown>).content
+    if (!Array.isArray(content)) continue
+    const text = content.map((item) => (item as Record<string, unknown>).text).find((item) => typeof item === "string")
+    if (typeof text === "string") return text
+  }
+  return ""
+}
+
+export async function extractEvidenceClaims(post: SourcePost, products: Product[]): Promise<EvidenceClaim[]> {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured")
+
+  const media = await mediaInput(post)
+  const prompt = [
+    "Bạn là evidence analyst cho KOL/KOC beauty Việt Nam.",
+    "Chỉ trích xuất sản phẩm có bằng chứng trực tiếp trong nội dung. Không suy đoán từ comment hoặc đồ vật nền.",
+    "Phân biệt rõ sử dụng, review, recommend, unbox, quảng cáo/tài trợ và live bán hàng.",
+    "Một review hoặc affiliate link không tự động là đang dùng. Cầm hộp không tự động là used.",
+    "Mọi claim phải có quote/caption/frame/timestamp cụ thể. Nếu không chắc variant, gắn ambiguous_variant.",
+    `Nguồn: ${post.source_platform} ${post.source_url}`,
+    `Tiêu đề: ${post.title}`,
+    `Caption: ${post.caption}`,
+    `Catalogue: ${JSON.stringify(catalogueForPrompt(products))}`,
+  ].join("\n")
+
+  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+    method: "POST",
+    headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
+    body: JSON.stringify({
+      model: EVIDENCE_MODEL,
+      input: [...media, { type: "text", text: prompt }],
+      response_format: { type: "text", mime_type: "application/json", schema: responseSchema() },
+      generation_config: { temperature: 0 },
+    }),
+    signal: AbortSignal.timeout(120_000),
+  })
+  if (!response.ok) throw new Error(`Gemini evidence extraction failed (${response.status}): ${await response.text()}`)
+
+  const text = extractResponseText(await response.json())
+  if (!text) throw new Error("Gemini returned no structured evidence output")
+  const parsed = JSON.parse(text) as Array<Record<string, unknown>>
+  if (!Array.isArray(parsed)) throw new Error("Gemini evidence output is not an array")
+
+  return parsed.map((raw) => {
+    const identity = clampScore(raw.product_identity_score, 40)
+    const action = clampScore(raw.action_evidence_score, 35)
+    const source = clampScore(raw.source_authenticity_score, 15)
+    const localization = clampScore(raw.evidence_localization_score, 10)
+    const claim = {
+      ...raw,
+      product_name: String(raw.product_name || ""),
+      brand: String(raw.brand || ""),
+      variant: typeof raw.variant === "string" ? raw.variant : null,
+      matched_product_id: null,
+      event_type: EVENT_TYPES.includes(raw.event_type as typeof EVENT_TYPES[number]) ? raw.event_type : "mentioned",
+      sentiment: ["positive", "mixed", "negative", "neutral"].includes(String(raw.sentiment)) ? raw.sentiment : "neutral",
+      disclosure: ["organic", "pr", "sponsored", "affiliate", "unknown"].includes(String(raw.disclosure)) ? raw.disclosure : "unknown",
+      usage_context: typeof raw.usage_context === "string" ? raw.usage_context : null,
+      evidence_spans: Array.isArray(raw.evidence_spans) ? raw.evidence_spans : [],
+      product_identity_score: identity,
+      action_evidence_score: action,
+      source_authenticity_score: source,
+      evidence_localization_score: localization,
+      confidence_score: identity + action + source + localization,
+      risk_flags: Array.isArray(raw.risk_flags)
+        ? raw.risk_flags.filter((flag): flag is EvidenceRiskFlag => RISK_FLAGS.includes(flag as EvidenceRiskFlag))
+        : [],
+    } as EvidenceClaim
+    claim.matched_product_id = matchClaimToProduct(claim, products)
+    if (!claim.matched_product_id && !claim.risk_flags.includes("product_not_in_catalogue")) {
+      claim.risk_flags.push("product_not_in_catalogue")
+    }
+    if (claim.disclosure === "unknown" && !claim.risk_flags.includes("disclosure_unknown")) {
+      claim.risk_flags.push("disclosure_unknown")
+    }
+    return claim
+  })
+}
+
+export function requiresHumanReview(claim: EvidenceClaim, goldenSampleCount: number) {
+  if (goldenSampleCount < 500) return true
+  return claim.confidence_score < 92 || claim.risk_flags.length > 0
+}

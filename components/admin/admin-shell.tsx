@@ -8,6 +8,7 @@ import {
   ClipboardList,
   FileText,
   Gauge,
+  Radar,
   LayoutDashboard,
   MessageSquare,
   Package,
@@ -41,6 +42,7 @@ const NAV_GROUPS = [
   {
     label: "Creator Data",
     items: [
+      { href: "/admin/monitoring", label: "Evidence Radar", icon: Radar },
       { href: "/admin/evidence", label: "Evidence inbox", icon: ClipboardList },
       { href: "/admin/timeline", label: "Timeline", icon: CalendarClock },
       { href: "/admin/kols", label: "KOL/KOC", icon: Users },

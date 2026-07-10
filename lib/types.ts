@@ -136,12 +136,16 @@ export interface CommunityReview {
 
 export type CreatorProductEventType =
   | "first_seen"
+  | "mentioned"
+  | "unboxed"
   | "used"
   | "reviewed"
   | "recommended"
   | "disliked"
   | "emptied"
   | "repurchased"
+  | "switched_to"
+  | "stopped_using"
   | "live_sold"
   | "sponsored"
 
@@ -166,6 +170,17 @@ export interface CreatorEvidenceItem {
   candidate_product_ids: string[]
   candidate_product_names: string[]
   researcher_note: string | null
+  source_post_ref?: string | null
+  extracted_claims?: EvidenceClaim[]
+  confidence_score?: number | null
+  model_name?: string | null
+  prompt_version?: string | null
+  evidence_spans?: EvidenceSpan[]
+  risk_flags?: EvidenceRiskFlag[]
+  requires_human_review?: boolean
+  review_reason?: string | null
+  reviewed_by?: string | null
+  reviewed_at?: string | null
   created_at?: string
   updated_at?: string
 }
@@ -189,6 +204,110 @@ export interface CreatorProductEvent {
   usage_context: string | null
   evidence_note: string
   confidence: CreatorProductConfidence
+  confidence_score?: number | null
+  verification_status?: "pending" | "verified" | "rejected"
+  verified_by?: string | null
+  verified_at?: string | null
+  valid_until?: string | null
+}
+
+export type CreatorAccountPriority = "a" | "b" | "c"
+
+export interface CreatorAccount {
+  id: string
+  creator_id: string
+  platform: string
+  profile_url: string
+  external_account_id: string | null
+  priority_tier: CreatorAccountPriority
+  crawl_interval_minutes: number
+  cursor: string | null
+  last_polled_at: string | null
+  next_poll_at: string
+  last_error: string | null
+  active: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export type SourcePostAnalysisStatus = "pending" | "queued" | "processing" | "ready" | "failed" | "ignored"
+
+export interface SourcePost {
+  id: string
+  creator_account_id: string
+  creator_id: string
+  source_platform: string
+  external_post_id: string | null
+  source_url: string
+  published_at: string | null
+  observed_at: string
+  title: string
+  caption: string
+  media_url: string | null
+  media_metadata: Record<string, unknown>
+  raw_payload: Record<string, unknown>
+  content_hash: string
+  analysis_status: SourcePostAnalysisStatus
+  analysis_attempts: number
+  last_error: string | null
+  raw_media_expires_at: string
+  created_at?: string
+  updated_at?: string
+}
+
+export type EvidenceRiskFlag =
+  | "ocr_only"
+  | "ambiguous_variant"
+  | "disclosure_unknown"
+  | "repost"
+  | "multi_product_bundle"
+  | "source_unavailable"
+  | "product_not_in_catalogue"
+  | "contradictory_claim"
+
+export interface EvidenceSpan {
+  kind: "quote" | "timestamp" | "frame" | "caption"
+  value: string
+  timestamp_seconds?: number | null
+}
+
+export interface EvidenceClaim {
+  product_name: string
+  brand: string
+  variant: string | null
+  matched_product_id: string | null
+  event_type: CreatorProductEventType
+  sentiment: CreatorProductSentiment
+  disclosure: CreatorProductDisclosure
+  usage_context: string | null
+  evidence_spans: EvidenceSpan[]
+  product_identity_score: number
+  action_evidence_score: number
+  source_authenticity_score: number
+  evidence_localization_score: number
+  confidence_score: number
+  risk_flags: EvidenceRiskFlag[]
+}
+
+export type CreatorProductStateValue =
+  | "current"
+  | "recently_used"
+  | "past"
+  | "reviewed_only"
+  | "promoted_only"
+  | "disliked"
+  | "unknown"
+
+export interface CreatorProductState {
+  creator_id: string
+  product_id: string
+  state: CreatorProductStateValue
+  state_confidence: number
+  last_confirmed_at: string | null
+  expires_at: string | null
+  evidence_count: number
+  last_event_id: string | null
+  computed_at: string
 }
 
 export interface Post {

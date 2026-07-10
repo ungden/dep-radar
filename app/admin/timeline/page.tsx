@@ -19,12 +19,16 @@ type ProductReference = (typeof SAMPLE_PRODUCT_REFERENCES)[number]
 
 const EVENT_TYPES: { value: CreatorProductEventType; label: string }[] = [
   { value: "first_seen", label: "Bắt đầu theo dõi" },
+  { value: "mentioned", label: "Chỉ được nhắc" },
+  { value: "unboxed", label: "Mở hộp" },
   { value: "used", label: "Đã dùng" },
   { value: "reviewed", label: "Đã review" },
   { value: "recommended", label: "Recommend" },
   { value: "disliked", label: "Không hợp" },
   { value: "emptied", label: "Dùng hết" },
   { value: "repurchased", label: "Mua lại" },
+  { value: "switched_to", label: "Chuyển sang dùng" },
+  { value: "stopped_using", label: "Ngừng dùng" },
   { value: "live_sold", label: "Live bán" },
   { value: "sponsored", label: "Tài trợ" },
 ]
@@ -162,6 +166,9 @@ export default function AdminTimelinePage() {
       usage_context: form.usage_context || null,
       evidence_note: form.evidence_note || "Nhập thủ công từ admin timeline.",
       confidence: form.confidence,
+      confidence_score: form.confidence === "high" ? 92 : form.confidence === "medium" ? 75 : 50,
+      verification_status: "verified",
+      verified_at: new Date().toISOString(),
     }
 
     const { error: insertError } = await supabase.from("creator_product_events").insert(payload)
