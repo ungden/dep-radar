@@ -15,6 +15,7 @@
     "check:content-graph": "tsx scripts/check-content-graph.ts",
     "check:daily": "tsx scripts/check-daily-briefing.ts",
     "check:evidence-radar": "tsx scripts/check-evidence-radar.ts",
+    "analyze:tiktok-pilot": "tsx scripts/analyze-tiktok-manifests.ts",
     "check:seo": "tsx scripts/check-seo.ts",
     "check:data-integrity": "tsx scripts/check-data-integrity.ts",
     "check:rls": "tsx scripts/check-supabase-rls.ts",

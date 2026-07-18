@@ -5,6 +5,7 @@ import fs from "node:fs"
 
 import { SYNTHETIC_GOLDEN_CASES } from "../lib/evidence-radar/golden-cases"
 import { deriveCreatorProductState, isPublicEvidenceEvent } from "../lib/evidence-radar/state-engine"
+import { normalizeTikTokCollectorBatch, TIKTOK_COLLECTOR_MAX_POSTS } from "../lib/evidence-radar/tiktok-collector"
 import type { CreatorProductEvent, CreatorProductEventType } from "../lib/types"
 
 const NOW = new Date("2026-07-10T12:00:00Z")
@@ -47,6 +48,39 @@ for (const scenario of ["explicit-current-routine", "review-only", "sponsored", 
   assert.ok(SYNTHETIC_GOLDEN_CASES.some((item) => item.scenario === scenario), `Missing scenario ${scenario}`)
 }
 
+const collectorBatch = normalizeTikTokCollectorBatch({
+  schema_version: "360dep.tiktok-manifest.v1",
+  collector: "downloadtiktok",
+  batch_id: "dt-contract-test-123",
+  creator_id: "creator-1",
+  profile_url: "https://www.tiktok.com/@creator.beauty",
+  collected_at: NOW.toISOString(),
+  posts: [
+    {
+      id: "7663466714054659349",
+      url: "https://www.tiktok.com/@creator.beauty/video/7663466714054659349",
+      title: "Routine có serum",
+      timestamp: "2026-07-10T10:00:00Z",
+      cover: "https://p16-common-sign.tiktokcdn.com/cover.jpg",
+    },
+    {
+      id: "7663466714054659350",
+      url: "https://www.tiktok.com/@another.creator/video/7663466714054659350",
+      title: "Cross creator",
+      timestamp: "2026-07-10T10:00:00Z",
+    },
+  ],
+}, {
+  creator_id: "creator-1",
+  platform: "TikTok",
+  profile_url: "https://www.tiktok.com/@creator.beauty",
+}, NOW)
+assert.equal(TIKTOK_COLLECTOR_MAX_POSTS, 200)
+assert.equal(collectorBatch.posts.length, 1)
+assert.equal(collectorBatch.rejected[0]?.reason, "creator_profile_mismatch")
+assert.equal(collectorBatch.posts[0].media_metadata.collector, "downloadtiktok")
+assert.ok(collectorBatch.posts[0].raw_media_expires_at < "2026-07-11T00:00:00.000Z")
+
 const migration = fs.readFileSync("supabase/migrations/20260710092855_evidence_radar_foundation.sql", "utf8")
 const queueMigration = fs.readFileSync("supabase/migrations/20260710093313_evidence_radar_service_queue_rpc.sql", "utf8")
 for (const required of [
@@ -70,5 +104,7 @@ console.log(JSON.stringify({
   stateEngineCases: 10,
   syntheticGoldenCases: SYNTHETIC_GOLDEN_CASES.length,
   syntheticCreators: new Set(SYNTHETIC_GOLDEN_CASES.map((item) => item.creatorId)).size,
+  tiktokCollectorAccepted: collectorBatch.posts.length,
+  tiktokCollectorRejected: collectorBatch.rejected.length,
   note: "Synthetic cases protect contracts and do not unlock the real auto-publish gate.",
 }, null, 2))
