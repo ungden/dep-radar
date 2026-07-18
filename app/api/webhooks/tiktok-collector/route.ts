@@ -79,16 +79,36 @@ export async function POST(request: NextRequest) {
   if (existingError) return NextResponse.json({ ok: false, error: existingError.message }, { status: 500 })
   const existingUrls = new Set((existingRows ?? []).map((row) => row.source_url))
 
-  const rows = normalized.posts.map((post) => ({
+  const commonRow = (post: typeof normalized.posts[number]) => ({
     creator_account_id: account.id,
     creator_id: account.creator_id,
     source_platform: "TikTok",
-    ...post,
-  }))
-  const { error: upsertError } = await supabase
-    .from("source_posts")
-    .upsert(rows, { onConflict: "source_url" })
-  if (upsertError) return NextResponse.json({ ok: false, error: upsertError.message }, { status: 500 })
+    external_post_id: post.external_post_id,
+    source_url: post.source_url,
+    published_at: post.published_at,
+    title: post.title,
+    caption: post.caption,
+    media_metadata: post.media_metadata,
+    raw_payload: post.raw_payload,
+    content_hash: post.content_hash,
+  })
+  const metadataRows = normalized.posts
+    .filter((post) => !post.media_url)
+    .map((post) => commonRow(post))
+  const mediaRowsToUpsert = normalized.posts
+    .filter((post) => post.media_url)
+    .map((post) => ({
+      ...commonRow(post),
+      media_url: post.media_url,
+      raw_media_expires_at: post.raw_media_expires_at,
+    }))
+  for (const batch of [metadataRows, mediaRowsToUpsert]) {
+    if (!batch.length) continue
+    const { error: upsertError } = await supabase
+      .from("source_posts")
+      .upsert(batch, { onConflict: "source_url" })
+    if (upsertError) return NextResponse.json({ ok: false, error: upsertError.message }, { status: 500 })
+  }
 
   const mediaSourceUrls = normalized.posts.filter((post) => post.media_url).map((post) => post.source_url)
   let queuedForPrivateAnalysis = 0

@@ -81,6 +81,7 @@ assert.equal(collectorBatch.posts.length, 1)
 assert.equal(collectorBatch.rejected[0]?.reason, "creator_profile_mismatch")
 assert.equal(collectorBatch.posts[0].media_metadata.collector, "downloadtiktok")
 assert.equal(collectorBatch.posts[0].media_metadata.media_resolved, true)
+assert.ok(collectorBatch.posts[0].media_url?.includes("tiktokcdn-us.com"))
 assert.ok(collectorBatch.posts[0].raw_media_expires_at < "2026-07-11T00:00:00.000Z")
 
 const migration = fs.readFileSync("supabase/migrations/20260710092855_evidence_radar_foundation.sql", "utf8")
