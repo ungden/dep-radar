@@ -93,8 +93,8 @@ function isAllowedMediaUrl(value: string) {
     const url = new URL(value)
     if (url.protocol !== "https:") return false
     const host = url.hostname.toLowerCase()
+    if (/^(?:[a-z0-9-]+\.)*tiktokcdn(?:-[a-z0-9-]+)?\.com$/.test(host)) return true
     return [
-      "tiktokcdn.com",
       "tiktokv.com",
       "byteoversea.com",
       "ibytedtos.com",
