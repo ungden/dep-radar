@@ -86,6 +86,7 @@ assert.ok(collectorBatch.posts[0].raw_media_expires_at < "2026-07-11T00:00:00.00
 const migration = fs.readFileSync("supabase/migrations/20260710092855_evidence_radar_foundation.sql", "utf8")
 const queueMigration = fs.readFileSync("supabase/migrations/20260710093313_evidence_radar_service_queue_rpc.sql", "utf8")
 const collectorQueueMigration = fs.readFileSync("supabase/migrations/20260718114106_tiktok_collector_media_queue.sql", "utf8")
+const queueGrantMigration = fs.readFileSync("supabase/migrations/20260718115329_evidence_queue_service_send_grant.sql", "utf8")
 for (const required of [
   "creator_accounts", "source_posts", "creator_product_states", "evidence_audit_log",
   "pgmq.create('creator_monitor')", "pgmq.create('evidence_analysis')",
@@ -105,6 +106,9 @@ assert.ok(collectorQueueMigration.includes("when (new.media_url is not null)"))
 assert.ok(collectorQueueMigration.includes("evidence_radar_enqueue_source_posts"))
 assert.ok(collectorQueueMigration.includes("security invoker"))
 assert.ok(!collectorQueueMigration.includes("to anon"))
+assert.ok(queueGrantMigration.includes("grant insert on table pgmq.q_evidence_analysis to service_role"))
+assert.ok(!queueGrantMigration.includes("to anon"))
+assert.ok(!queueGrantMigration.includes("to authenticated"))
 
 console.log(JSON.stringify({
   ok: true,
