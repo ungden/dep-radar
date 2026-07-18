@@ -16,6 +16,7 @@ export type PublicAnalyticsEvent =
   | "evidence_opened"
   | "verified_offer_clicked"
   | "review_submitted"
+  | "web_vital"
 
 type AnalyticsValue = string | number | boolean | null | undefined
 export type AnalyticsParams = Record<string, AnalyticsValue>

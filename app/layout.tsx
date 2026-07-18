@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 
 import { GoogleAnalytics } from '@/components/analytics/google-analytics';
+import { WebVitals } from '@/components/analytics/web-vitals';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { PageTransition } from '@/components/layout/page-transition';
@@ -78,6 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="vi" className={`${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-50 antialiased flex flex-col" suppressHydrationWarning>
         <GoogleAnalytics />
+        <WebVitals />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

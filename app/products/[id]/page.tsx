@@ -15,6 +15,7 @@ import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
 import { getProductCategoryLabel, getProductSubcategoryLabel } from "@/lib/product-taxonomy"
 import { AffiliateButton } from "@/components/affiliate-button"
 import { TrackProductView } from "@/components/analytics/public-events"
+import { TrackedEvidenceLink } from "@/components/analytics/tracked-evidence-link"
 import { SocialShare } from "@/components/social-share"
 import { WishlistButton } from "@/components/wishlist-button"
 import { ProductCommunityModules } from "@/components/product-community-modules"
@@ -443,9 +444,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                             <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">Ngữ cảnh: {event.usage_context}</p>
                           )}
                           {event.source_url && (
-                            <a href={event.source_url} target={event.source_url.startsWith("/") ? undefined : "_blank"} rel={event.source_url.startsWith("/") ? undefined : "noopener noreferrer"} className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-300">
+                            <TrackedEvidenceLink href={event.source_url} creatorId={event.creator_id} productId={event.product_id} className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-300">
                               Xem nguồn <ExternalLink className="h-3 w-3" />
-                            </a>
+                            </TrackedEvidenceLink>
                           )}
                         </div>
                       </div>

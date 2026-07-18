@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
 import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
+import { trackEvent } from "@/lib/analytics"
 import type { CommunityReview, Kol } from "@/lib/types"
 
 interface RealReviewPanelProps {
@@ -124,6 +125,7 @@ export function RealReviewPanel({ productId, productName, initialReviews, kols }
       setError(submitError.message)
     } else {
       setStatusMessage("Đã gửi review thật. Review sẽ public sau khi admin duyệt để chống spam/fake review.")
+      trackEvent("review_submitted", { product_id: productId, rating })
     }
     setSubmitting(false)
   }
