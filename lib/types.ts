@@ -85,6 +85,11 @@ export interface Kol {
   trustscore: number
   categories: string[]
   verified: boolean
+  directory_status?: "active" | "watchlist" | "legacy" | "excluded"
+  tiktok_profile_url?: string | null
+  tiktok_followers?: number | null
+  tiktok_last_post_at?: string | null
+  tiktok_audited_at?: string | null
 
   // ----- Hồ sơ chi tiết (tất cả optional) -----
   /** Giới thiệu dài, nhiều đoạn (ngăn cách bằng \n\n). */

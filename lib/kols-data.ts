@@ -1,7 +1,7 @@
 import type { Kol } from "@/lib/types"
 
 /**
- * Hồ sơ KOL/KOC làm đẹp Việt Nam — research từ YouTube, TikTok, Instagram, Facebook (06/2026).
+ * Hồ sơ KOL/KOC làm đẹp Việt Nam — research từ YouTube, TikTok, Instagram, Facebook; TikTok roster audit 07/2026.
  * Mỗi người là MỘT hồ sơ: gộp tất cả nền tảng (socials), bio chi tiết, chuyên môn, dấu ấn nổi bật,
  * phong cách review, thương hiệu riêng và review tiêu biểu khi kiểm chứng được.
  * - Follower là snapshot thời điểm research, mang tính tham khảo.
@@ -100,8 +100,8 @@ export const REAL_KOLS: Kol[] = [
     "avatar": "/images/kol-ru.png",
     "cover": "/images/cover-ru.png",
     "platform": "Tiktok",
-    "handle": "@goccuaru",
-    "followers": "850K",
+    "handle": "@goc.cua.ru",
+    "followers": "976.4K",
     "recentreview": "Kem nền Maybelline Fit Me",
     "trustscore": 84,
     "categories": [
@@ -115,7 +115,8 @@ export const REAL_KOLS: Kol[] = [
       {
         "platform": "Tiktok",
         "handle": "@goc.cua.ru",
-        "followers": "950K"
+        "followers": "976.4K",
+        "url": "https://www.tiktok.com/@goc.cua.ru"
       }
     ],
     "realName": "Bùi Xuân Thảo",
@@ -3926,5 +3927,73 @@ export const REAL_KOLS: Kol[] = [
         "followers": "40K"
       }
     ]
+  },
+  {
+    "id": "101",
+    "name": "Emlyy",
+    "avatar": "",
+    "cover": "",
+    "platform": "Tiktok",
+    "handle": "@emlyreview",
+    "followers": "563.4K",
+    "recentreview": "Skincare, makeup test và rating sản phẩm",
+    "trustscore": 82,
+    "categories": ["Skincare", "Makeup", "Haircare"],
+    "verified": true,
+    "bio": "Emlyy là beauty creator tập trung vào review sản phẩm, skin prep, makeup test và chăm sóc tóc. Live audit 07/2026 ghi nhận 9/10 video gần nhất có tín hiệu beauty-product.",
+    "socials": [{"platform": "Tiktok", "handle": "@emlyreview", "followers": "563.4K", "url": "https://www.tiktok.com/@emlyreview"}],
+    "specialties": ["Review mỹ phẩm", "Makeup test", "Skincare routine"],
+    "contentStyle": "Video ngắn có sản phẩm cụ thể, test cách dùng và nêu khả năng mua lại."
+  },
+  {
+    "id": "102",
+    "name": "Hà Giang",
+    "avatar": "",
+    "cover": "",
+    "platform": "Tiktok",
+    "handle": "@ciaramakeup2003",
+    "followers": "1.3M",
+    "recentreview": "Makeup tutorial, cushion và makeup look",
+    "trustscore": 88,
+    "categories": ["Makeup"],
+    "verified": true,
+    "bio": "Hà Giang là makeup creator có nội dung tutorial và sản phẩm xuất hiện dày. Live audit 07/2026 ghi nhận 10/10 video gần nhất thuộc makeup/beauty.",
+    "socials": [{"platform": "Tiktok", "handle": "@ciaramakeup2003", "followers": "1.3M", "url": "https://www.tiktok.com/@ciaramakeup2003"}],
+    "specialties": ["Makeup tutorial", "Makeup transformation", "Cushion và base makeup"],
+    "contentStyle": "Tutorial và biến hình, thường cho thấy sản phẩm hoặc kỹ thuật makeup cụ thể."
+  },
+  {
+    "id": "103",
+    "name": "Hoàng Minh Ngọc",
+    "avatar": "",
+    "cover": "",
+    "platform": "Tiktok",
+    "handle": "@hoangminhngoc21",
+    "followers": "1.1M",
+    "recentreview": "Beauty education và kỹ thuật makeup",
+    "trustscore": 86,
+    "categories": ["Makeup", "Skincare"],
+    "verified": true,
+    "bio": "Hoàng Minh Ngọc là beauty creator được đề cử Beauty Creator of the Year tại TikTok Awards Việt Nam 2025. Kênh vẫn hoạt động trong live audit 07/2026.",
+    "socials": [{"platform": "Tiktok", "handle": "@hoangminhngoc21", "followers": "1.1M", "url": "https://www.tiktok.com/@hoangminhngoc21"}],
+    "specialties": ["Beauty education", "Makeup technique", "Makeup transformation"],
+    "contentStyle": "Kết hợp beauty education, kỹ thuật thợ makeup và nội dung biến hình."
+  },
+  {
+    "id": "104",
+    "name": "Quỳnh Alee",
+    "avatar": "",
+    "cover": "",
+    "platform": "Tiktok",
+    "handle": "@quynhalee",
+    "followers": "5M",
+    "recentreview": "Haircare, skincare và beauty campaign",
+    "trustscore": 92,
+    "categories": ["Skincare", "Haircare", "Makeup", "Lifestyle"],
+    "verified": true,
+    "bio": "Quỳnh Alee là creator được đề cử Beauty Creator of the Year tại TikTok Awards Việt Nam 2025. Live audit 07/2026 ghi nhận kênh hoạt động, có haircare, skincare và beauty campaign trong 10 video gần nhất.",
+    "socials": [{"platform": "Tiktok", "handle": "@quynhalee", "followers": "5M", "url": "https://www.tiktok.com/@quynhalee"}],
+    "specialties": ["Haircare", "Skincare", "Beauty campaign"],
+    "contentStyle": "Nội dung lifestyle quy mô lớn, xen kẽ haircare, skincare và campaign có sản phẩm."
   }
 ]

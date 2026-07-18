@@ -2,13 +2,15 @@ import { isEvidenceRadarSchemaReady, isSupabaseSchemaReady, supabase } from "@/l
 import { getPublishedEditorialPost, getPublishedEditorialPosts } from "@/lib/editorial"
 import { deriveCreatorProductState, isPublicEvidenceEvent } from "@/lib/evidence-radar/state-engine"
 import { REAL_KOLS } from "@/lib/kols-data"
+import { isActivePublicCreator } from "@/lib/creator-roster"
 import { productsWithTaxonomy, productWithTaxonomy } from "@/lib/product-taxonomy"
 import { RESEARCHED_PRODUCTS } from "@/lib/product-research"
 import { isPublicCreatorEvent, isPublicOffer, summarizeApprovedRatings } from "@/lib/public-trust"
 import type { CommunityReview, CreatorEvidenceItem, CreatorProductEvent, CreatorProductState, Kol, Post, Product, ProductOffer, Review } from "@/lib/types"
 
-// Toàn bộ hồ sơ KOL/KOC đã xác minh nằm trong REAL_KOLS; hồ sơ mơ hồ bị loại khỏi public registry.
-export const SAMPLE_KOLS: Kol[] = REAL_KOLS
+// Historical profiles stay in REAL_KOLS for editorial review. Public fallback
+// contains only creators that passed the latest TikTok roster gate.
+export const SAMPLE_KOLS: Kol[] = REAL_KOLS.filter(isActivePublicCreator)
 
 export const EDITORIAL_AUTHOR_NAME = "360dep.vn Beauty Desk"
 export const EDITORIAL_AUTHOR_AVATAR = "/brand/icon-192.png"
@@ -386,18 +388,24 @@ export async function getPostProductRecommendations(post: Post, limit = 3) {
 }
 
 export async function getKols() {
-  return fromSupabase<Kol[]>(
-    supabase.from("kols").select("*").order("trustscore", { ascending: false }),
+  const rows = await fromSupabase<Kol[]>(
+    supabase.from("kols").select("*").eq("directory_status", "active").order("trustscore", { ascending: false }),
     SAMPLE_KOLS
   )
+  return rows.map((row) => {
+    const researched = REAL_KOLS.find((creator) => creator.id === row.id)
+    return researched ? { ...researched, ...row, socials: researched.socials } : row
+  })
 }
 
 export async function getKol(id: string) {
   const fallback = SAMPLE_KOLS.find((kol) => kol.id === id) ?? null
-  return fromSupabase<Kol | null>(
-    supabase.from("kols").select("*").eq("id", id).maybeSingle(),
+  const row = await fromSupabase<Kol | null>(
+    supabase.from("kols").select("*").eq("id", id).eq("directory_status", "active").maybeSingle(),
     fallback
   )
+  const researched = REAL_KOLS.find((creator) => creator.id === id)
+  return row && researched ? { ...researched, ...row, socials: researched.socials } : row
 }
 
 export async function getReviews(filters: { productId?: string; kolId?: string } = {}) {

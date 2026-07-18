@@ -1,0 +1,1649 @@
+{
+  "generated_at": "2026-07-18T12:11:42.595Z",
+  "source_count": 100,
+  "tiktok_count": 76,
+  "live_audit_count": 73,
+  "accounts": [
+    {
+      "creator_id": "1",
+      "name": "Hà Linh Official",
+      "profile_url": "https://www.tiktok.com/@halinhofficial"
+    },
+    {
+      "creator_id": "2",
+      "name": "Góc Của Rư",
+      "profile_url": "https://www.tiktok.com/@goc.cua.ru"
+    },
+    {
+      "creator_id": "4",
+      "name": "Call Me Duy",
+      "profile_url": "https://www.tiktok.com/@justvuduy16"
+    },
+    {
+      "creator_id": "6",
+      "name": "Chloe Nguyen",
+      "profile_url": "https://www.tiktok.com/@bychloenguyen"
+    },
+    {
+      "creator_id": "7",
+      "name": "Đan Thy",
+      "profile_url": "https://www.tiktok.com/@thybui.__"
+    },
+    {
+      "creator_id": "8",
+      "name": "Lê Bống",
+      "profile_url": "https://www.tiktok.com/@lebong95"
+    },
+    {
+      "creator_id": "9",
+      "name": "Lê Thị Khánh Huyền",
+      "profile_url": "https://www.tiktok.com/@lethikhanhhuyen2004"
+    },
+    {
+      "creator_id": "10",
+      "name": "Yên Đan",
+      "profile_url": "https://www.tiktok.com/@yendan7"
+    },
+    {
+      "creator_id": "12",
+      "name": "Ty Lê",
+      "profile_url": "https://www.tiktok.com/@tyle.makeup"
+    },
+    {
+      "creator_id": "14",
+      "name": "Quỳnh Anh Shyn",
+      "profile_url": "https://www.tiktok.com/@quynhanhshyn_"
+    },
+    {
+      "creator_id": "15",
+      "name": "Phạm Thoại",
+      "profile_url": "https://www.tiktok.com/@phamthoai.real"
+    },
+    {
+      "creator_id": "17",
+      "name": "Hunilovebeauty",
+      "profile_url": "https://www.tiktok.com/@hunilovebeauty"
+    },
+    {
+      "creator_id": "18",
+      "name": "Lê Đại Phát",
+      "profile_url": "https://www.tiktok.com/@phatnail"
+    },
+    {
+      "creator_id": "21",
+      "name": "Đinh Phát",
+      "profile_url": "https://www.tiktok.com/@dinhphatmakeup"
+    },
+    {
+      "creator_id": "22",
+      "name": "Quỳnh Nhi Trần",
+      "profile_url": "https://www.tiktok.com/@quynhnhitran"
+    },
+    {
+      "creator_id": "23",
+      "name": "Blingbabi",
+      "profile_url": "https://www.tiktok.com/@blingbabi_"
+    },
+    {
+      "creator_id": "24",
+      "name": "Hannah Olala",
+      "profile_url": "https://www.tiktok.com/@hannaholala"
+    },
+    {
+      "creator_id": "26",
+      "name": "Thuỷ Sophia",
+      "profile_url": "https://www.tiktok.com/@sophia.beauty99"
+    },
+    {
+      "creator_id": "28",
+      "name": "Hoàng Thạch",
+      "profile_url": "https://www.tiktok.com/@hoangthachhh"
+    },
+    {
+      "creator_id": "30",
+      "name": "Lucie Nguyễn",
+      "profile_url": "https://www.tiktok.com/@lucienguyenlove"
+    },
+    {
+      "creator_id": "31",
+      "name": "Lê Lý Lan Hương",
+      "profile_url": "https://www.tiktok.com/@actress.lanhuong"
+    },
+    {
+      "creator_id": "32",
+      "name": "Tama",
+      "profile_url": "https://www.tiktok.com/@jjhahehi"
+    },
+    {
+      "creator_id": "33",
+      "name": "Happi Phạm",
+      "profile_url": "https://www.tiktok.com/@happipham"
+    },
+    {
+      "creator_id": "34",
+      "name": "Vũ Thái Bình",
+      "profile_url": "https://www.tiktok.com/@bbskincare1"
+    },
+    {
+      "creator_id": "35",
+      "name": "Vân Miu",
+      "profile_url": "https://www.tiktok.com/@vanmiu.makeup"
+    },
+    {
+      "creator_id": "36",
+      "name": "Quách Ánh",
+      "profile_url": "https://www.tiktok.com/@quachanhmakeupstudio"
+    },
+    {
+      "creator_id": "37",
+      "name": "Kim Chung Phan",
+      "profile_url": "https://www.tiktok.com/@kimchungphan20"
+    },
+    {
+      "creator_id": "38",
+      "name": "Minh Thái",
+      "profile_url": "https://www.tiktok.com/@thethailyfe"
+    },
+    {
+      "creator_id": "39",
+      "name": "Yến Jii",
+      "profile_url": "https://www.tiktok.com/@yenjiivu"
+    },
+    {
+      "creator_id": "40",
+      "name": "Minaash",
+      "profile_url": "https://www.tiktok.com/@minaashmi"
+    },
+    {
+      "creator_id": "41",
+      "name": "Thuý Kiều",
+      "profile_url": "https://www.tiktok.com/@thuykieu773"
+    },
+    {
+      "creator_id": "42",
+      "name": "Diệp Lê",
+      "profile_url": "https://www.tiktok.com/@diep.lez"
+    },
+    {
+      "creator_id": "45",
+      "name": "Tee 8 Phun Xăm",
+      "profile_url": "https://www.tiktok.com/@tee8eyebrows"
+    },
+    {
+      "creator_id": "46",
+      "name": "Hà Trúc",
+      "profile_url": "https://www.tiktok.com/@hatruc"
+    },
+    {
+      "creator_id": "48",
+      "name": "Lou Lê",
+      "profile_url": "https://www.tiktok.com/@lou.le"
+    },
+    {
+      "creator_id": "49",
+      "name": "TS.BS Lã Thanh Hà",
+      "profile_url": "https://www.tiktok.com/@bacsilaha"
+    },
+    {
+      "creator_id": "50",
+      "name": "Chou Lười Makeup",
+      "profile_url": "https://www.tiktok.com/@chouchinchan"
+    },
+    {
+      "creator_id": "51",
+      "name": "Hiwon",
+      "profile_url": "https://www.tiktok.com/@hiwon91"
+    },
+    {
+      "creator_id": "52",
+      "name": "Skincare Đúng Cách by Sơn",
+      "profile_url": "https://www.tiktok.com/@skincaredungcach.byson"
+    },
+    {
+      "creator_id": "53",
+      "name": "Tina Lê",
+      "profile_url": "https://www.tiktok.com/@tinalemakeup"
+    },
+    {
+      "creator_id": "55",
+      "name": "Kỳ Kỳ",
+      "profile_url": "https://www.tiktok.com/@unofficiallykyky"
+    },
+    {
+      "creator_id": "56",
+      "name": "Hoàng XXIV",
+      "profile_url": "https://www.tiktok.com/@hoangxxiv"
+    },
+    {
+      "creator_id": "58",
+      "name": "An Phương",
+      "profile_url": "https://www.tiktok.com/@anphuong.beauty"
+    },
+    {
+      "creator_id": "59",
+      "name": "Mai Vân Trang",
+      "profile_url": "https://www.tiktok.com/@maivantrang"
+    },
+    {
+      "creator_id": "60",
+      "name": "Bống Bee",
+      "profile_url": "https://www.tiktok.com/@bongbee1301"
+    },
+    {
+      "creator_id": "62",
+      "name": "Bác sĩ Đỗ Quốc Tuấn",
+      "profile_url": "https://www.tiktok.com/@drdotuan"
+    },
+    {
+      "creator_id": "63",
+      "name": "Trần Lâm (Bimm)",
+      "profile_url": "https://www.tiktok.com/@tran_lam18"
+    },
+    {
+      "creator_id": "64",
+      "name": "Trần Thiên Lý",
+      "profile_url": "https://www.tiktok.com/@tranthienly.com"
+    },
+    {
+      "creator_id": "65",
+      "name": "Primmy Trương",
+      "profile_url": "https://www.tiktok.com/@primmytruong"
+    },
+    {
+      "creator_id": "66",
+      "name": "Emmi Hoàng",
+      "profile_url": "https://www.tiktok.com/@emmihoang"
+    },
+    {
+      "creator_id": "68",
+      "name": "Quin",
+      "profile_url": "https://www.tiktok.com/@quin"
+    },
+    {
+      "creator_id": "70",
+      "name": "Khánh The MUA",
+      "profile_url": "https://www.tiktok.com/@khanhtq_makeup"
+    },
+    {
+      "creator_id": "71",
+      "name": "Dr Hiếu - Bác sĩ da liễu",
+      "profile_url": "https://www.tiktok.com/@bacsi.hieu.official"
+    },
+    {
+      "creator_id": "73",
+      "name": "Thuý Hiền Makeup",
+      "profile_url": "https://www.tiktok.com/@thuyhienmakeup"
+    },
+    {
+      "creator_id": "74",
+      "name": "Bác sĩ Khổng Hạnh Nguyên",
+      "profile_url": "https://www.tiktok.com/@drkhonghanhnguyen"
+    },
+    {
+      "creator_id": "77",
+      "name": "Hồng Beauty",
+      "profile_url": "https://www.tiktok.com/@hongbeauty"
+    },
+    {
+      "creator_id": "78",
+      "name": "Bác sĩ Hoàng Văn Tâm",
+      "profile_url": "https://www.tiktok.com/@bacsitamdalieu"
+    },
+    {
+      "creator_id": "79",
+      "name": "Bác sĩ Nam Võ",
+      "profile_url": "https://www.tiktok.com/@drnamvo.dalieu"
+    },
+    {
+      "creator_id": "80",
+      "name": "Chung Thành",
+      "profile_url": "https://www.tiktok.com/@chungthanh_"
+    },
+    {
+      "creator_id": "81",
+      "name": "Bích Uyên",
+      "profile_url": "https://www.tiktok.com/@bubutranxoxo"
+    },
+    {
+      "creator_id": "82",
+      "name": "Thời Toki",
+      "profile_url": "https://www.tiktok.com/@thoitoki_perfume"
+    },
+    {
+      "creator_id": "83",
+      "name": "Bác sĩ Minh Điềm",
+      "profile_url": "https://www.tiktok.com/@drdiemdalieu.medici"
+    },
+    {
+      "creator_id": "84",
+      "name": "Bác sĩ Hằng Trần",
+      "profile_url": "https://www.tiktok.com/@bshangtrandalieu.medici"
+    },
+    {
+      "creator_id": "86",
+      "name": "Phương thích makeup",
+      "profile_url": "https://www.tiktok.com/@hinhthucphuong"
+    },
+    {
+      "creator_id": "87",
+      "name": "Tôm (Tomskincare)",
+      "profile_url": "https://www.tiktok.com/@tomskincare"
+    },
+    {
+      "creator_id": "88",
+      "name": "Misoa Kim Anh",
+      "profile_url": "https://www.tiktok.com/@misoa.kimanh"
+    },
+    {
+      "creator_id": "89",
+      "name": "Trần Kiều Loan",
+      "profile_url": "https://www.tiktok.com/@loan_rose0810"
+    },
+    {
+      "creator_id": "92",
+      "name": "Motrang hít hà",
+      "profile_url": "https://www.tiktok.com/@motrang_"
+    },
+    {
+      "creator_id": "94",
+      "name": "Huỳnh Thi Makeup",
+      "profile_url": "https://www.tiktok.com/@makeuphuynhthi"
+    },
+    {
+      "creator_id": "95",
+      "name": "Lương Lee",
+      "profile_url": "https://www.tiktok.com/@luonglee1404"
+    },
+    {
+      "creator_id": "96",
+      "name": "Kiên Fragrance",
+      "profile_url": "https://www.tiktok.com/@kienfragranceca"
+    },
+    {
+      "creator_id": "98",
+      "name": "Nga nèe",
+      "profile_url": "https://www.tiktok.com/@thuyngareview"
+    },
+    {
+      "creator_id": "99",
+      "name": "Jena",
+      "profile_url": "https://www.tiktok.com/@nuochoa.jena"
+    }
+  ],
+  "audit": [
+    {
+      "creator_id": "1",
+      "name": "Hà Linh Official",
+      "profile_url": "https://www.tiktok.com/@halinhofficial",
+      "stored_followers": "4.1M",
+      "categories": [
+        "Skincare",
+        "Makeup",
+        "Treatment"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "2",
+      "name": "Góc Của Rư",
+      "profile_url": "https://www.tiktok.com/@goc.cua.ru",
+      "stored_followers": "950K",
+      "categories": [
+        "Makeup",
+        "Bodycare",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "3",
+      "name": "Trinh Phạm",
+      "profile_url": "https://www.tiktok.com/@yendan7",
+      "stored_followers": "500K",
+      "categories": [
+        "Skincare",
+        "Lifestyle",
+        "Makeup",
+        "High-end Makeup"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "duplicate_tiktok_handle:3,10",
+        "wrong_tiktok_identity_duplicate_of_creator_10"
+      ]
+    },
+    {
+      "creator_id": "4",
+      "name": "Call Me Duy",
+      "profile_url": "https://www.tiktok.com/@justvuduy16",
+      "stored_followers": "1.2M",
+      "categories": [
+        "Skincare",
+        "Treatment",
+        "Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "5",
+      "name": "Bác sĩ Đặng Thị Minh Châu",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Treatment",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "6",
+      "name": "Chloe Nguyen",
+      "profile_url": "https://www.tiktok.com/@bychloenguyen",
+      "stored_followers": "250K",
+      "categories": [
+        "High-end Makeup",
+        "Perfume",
+        "Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "7",
+      "name": "Đan Thy",
+      "profile_url": "https://www.tiktok.com/@thybui.__",
+      "stored_followers": "15M",
+      "categories": [
+        "Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "8",
+      "name": "Lê Bống",
+      "profile_url": "https://www.tiktok.com/@lebong95",
+      "stored_followers": "10M",
+      "categories": [
+        "Lifestyle",
+        "Bodycare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "9",
+      "name": "Lê Thị Khánh Huyền",
+      "profile_url": "https://www.tiktok.com/@lethikhanhhuyen2004",
+      "stored_followers": "7.5M",
+      "categories": [
+        "Skincare",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "10",
+      "name": "Yên Đan",
+      "profile_url": "https://www.tiktok.com/@yendan7",
+      "stored_followers": "989.4K",
+      "categories": [
+        "Makeup",
+        "Skincare",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": [
+        "duplicate_tiktok_handle:3,10"
+      ]
+    },
+    {
+      "creator_id": "11",
+      "name": "Chi Pu",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Lifestyle",
+        "Makeup"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "12",
+      "name": "Ty Lê",
+      "profile_url": "https://www.tiktok.com/@tyle.makeup",
+      "stored_followers": "4M",
+      "categories": [
+        "Makeup",
+        "High-end Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "13",
+      "name": "Sinh Anh",
+      "profile_url": "https://www.tiktok.com/@sinhanh.hair",
+      "stored_followers": "3.8M",
+      "categories": [
+        "Haircare"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "salon_haircut_content_not_beauty_product_evidence"
+      ]
+    },
+    {
+      "creator_id": "14",
+      "name": "Quỳnh Anh Shyn",
+      "profile_url": "https://www.tiktok.com/@quynhanhshyn_",
+      "stored_followers": "1.4M",
+      "categories": [
+        "Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "15",
+      "name": "Phạm Thoại",
+      "profile_url": "https://www.tiktok.com/@phamthoai.real",
+      "stored_followers": "3M",
+      "categories": [
+        "Lifestyle",
+        "Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "16",
+      "name": "Nguyễn Thu Trang Beauty",
+      "profile_url": "https://www.tiktok.com/@nguyenthutrang.beauty",
+      "stored_followers": "2.4M",
+      "categories": [
+        "Makeup"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "user_rejected_low_reach_and_invalid_profile"
+      ]
+    },
+    {
+      "creator_id": "17",
+      "name": "Hunilovebeauty",
+      "profile_url": "https://www.tiktok.com/@hunilovebeauty",
+      "stored_followers": "2.3M",
+      "categories": [
+        "Skincare",
+        "Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "18",
+      "name": "Lê Đại Phát",
+      "profile_url": "https://www.tiktok.com/@phatnail",
+      "stored_followers": "2.2M",
+      "categories": [
+        "Nail"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "19",
+      "name": "Michelle Phan",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "High-end Makeup",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "20",
+      "name": "Salim (Hoàng Kim Ngân)",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Lifestyle",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "21",
+      "name": "Đinh Phát",
+      "profile_url": "https://www.tiktok.com/@dinhphatmakeup",
+      "stored_followers": "2M",
+      "categories": [
+        "Makeup",
+        "High-end Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "22",
+      "name": "Quỳnh Nhi Trần",
+      "profile_url": "https://www.tiktok.com/@quynhnhitran",
+      "stored_followers": "1.9M",
+      "categories": [
+        "Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "23",
+      "name": "Blingbabi",
+      "profile_url": "https://www.tiktok.com/@blingbabi_",
+      "stored_followers": "1.7M",
+      "categories": [
+        "Makeup",
+        "High-end Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "24",
+      "name": "Hannah Olala",
+      "profile_url": "https://www.tiktok.com/@hannaholala",
+      "stored_followers": "1.5M",
+      "categories": [
+        "Skincare",
+        "Bodycare",
+        "Treatment",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "25",
+      "name": "Giang Ơi",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Lifestyle",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "26",
+      "name": "Thuỷ Sophia",
+      "profile_url": "https://www.tiktok.com/@sophia.beauty99",
+      "stored_followers": "1.5M",
+      "categories": [
+        "Skincare",
+        "Bodycare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "27",
+      "name": "Khả Ngân",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Lifestyle",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "28",
+      "name": "Hoàng Thạch",
+      "profile_url": "https://www.tiktok.com/@hoangthachhh",
+      "stored_followers": "1.3M",
+      "categories": [
+        "Makeup",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "29",
+      "name": "Changmakeup",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Makeup",
+        "High-end Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "30",
+      "name": "Lucie Nguyễn",
+      "profile_url": "https://www.tiktok.com/@lucienguyenlove",
+      "stored_followers": "1.2M",
+      "categories": [
+        "Lifestyle",
+        "Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "31",
+      "name": "Lê Lý Lan Hương",
+      "profile_url": "https://www.tiktok.com/@actress.lanhuong",
+      "stored_followers": "1.2M",
+      "categories": [
+        "Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "32",
+      "name": "Tama",
+      "profile_url": "https://www.tiktok.com/@jjhahehi",
+      "stored_followers": "1.2M",
+      "categories": [
+        "Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "33",
+      "name": "Happi Phạm",
+      "profile_url": "https://www.tiktok.com/@happipham",
+      "stored_followers": "1.2M",
+      "categories": [
+        "Haircare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "34",
+      "name": "Vũ Thái Bình",
+      "profile_url": "https://www.tiktok.com/@bbskincare1",
+      "stored_followers": "1.2M",
+      "categories": [
+        "Bodycare",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "35",
+      "name": "Vân Miu",
+      "profile_url": "https://www.tiktok.com/@vanmiu.makeup",
+      "stored_followers": "1.1M",
+      "categories": [
+        "Makeup",
+        "High-end Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "36",
+      "name": "Quách Ánh",
+      "profile_url": "https://www.tiktok.com/@quachanhmakeupstudio",
+      "stored_followers": "1M",
+      "categories": [
+        "Makeup",
+        "High-end Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "37",
+      "name": "Kim Chung Phan",
+      "profile_url": "https://www.tiktok.com/@kimchungphan20",
+      "stored_followers": "2.1M",
+      "categories": [
+        "Makeup",
+        "Lifestyle",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "38",
+      "name": "Minh Thái",
+      "profile_url": "https://www.tiktok.com/@thethailyfe",
+      "stored_followers": "1M",
+      "categories": [
+        "Nail"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "39",
+      "name": "Yến Jii",
+      "profile_url": "https://www.tiktok.com/@yenjiivu",
+      "stored_followers": "918K",
+      "categories": [
+        "Makeup",
+        "High-end Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "40",
+      "name": "Minaash",
+      "profile_url": "https://www.tiktok.com/@minaashmi",
+      "stored_followers": "916K",
+      "categories": [
+        "Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "41",
+      "name": "Thuý Kiều",
+      "profile_url": "https://www.tiktok.com/@thuykieu773",
+      "stored_followers": "906.1K",
+      "categories": [
+        "Makeup",
+        "Lifestyle",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "42",
+      "name": "Diệp Lê",
+      "profile_url": "https://www.tiktok.com/@diep.lez",
+      "stored_followers": "726K",
+      "categories": [
+        "Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "43",
+      "name": "Helly Tống",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Lifestyle",
+        "Bodycare"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "44",
+      "name": "Hà Trang (Meichan)",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "45",
+      "name": "Tee 8 Phun Xăm",
+      "profile_url": "https://www.tiktok.com/@tee8eyebrows",
+      "stored_followers": "475.7K",
+      "categories": [
+        "Makeup",
+        "Treatment"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "46",
+      "name": "Hà Trúc",
+      "profile_url": "https://www.tiktok.com/@hatruc",
+      "stored_followers": "400K",
+      "categories": [
+        "Skincare",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "47",
+      "name": "Hana Giang Anh",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Skincare",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "48",
+      "name": "Lou Lê",
+      "profile_url": "https://www.tiktok.com/@lou.le",
+      "stored_followers": "600K",
+      "categories": [
+        "Haircare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "49",
+      "name": "TS.BS Lã Thanh Hà",
+      "profile_url": "https://www.tiktok.com/@bacsilaha",
+      "stored_followers": "588K",
+      "categories": [
+        "Treatment",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "50",
+      "name": "Chou Lười Makeup",
+      "profile_url": "https://www.tiktok.com/@chouchinchan",
+      "stored_followers": "578K",
+      "categories": [
+        "Makeup",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "51",
+      "name": "Hiwon",
+      "profile_url": "https://www.tiktok.com/@hiwon91",
+      "stored_followers": "555K",
+      "categories": [
+        "Makeup",
+        "High-end Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "52",
+      "name": "Skincare Đúng Cách by Sơn",
+      "profile_url": "https://www.tiktok.com/@skincaredungcach.byson",
+      "stored_followers": "550K",
+      "categories": [
+        "Skincare",
+        "Treatment"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "53",
+      "name": "Tina Lê",
+      "profile_url": "https://www.tiktok.com/@tinalemakeup",
+      "stored_followers": "500K",
+      "categories": [
+        "Makeup",
+        "High-end Makeup",
+        "Treatment"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "54",
+      "name": "Sun HT (Sunnie)",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Lifestyle",
+        "Makeup"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "55",
+      "name": "Kỳ Kỳ",
+      "profile_url": "https://www.tiktok.com/@unofficiallykyky",
+      "stored_followers": "465K",
+      "categories": [
+        "Skincare",
+        "Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "56",
+      "name": "Hoàng XXIV",
+      "profile_url": "https://www.tiktok.com/@hoangxxiv",
+      "stored_followers": "457K",
+      "categories": [
+        "Perfume"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "57",
+      "name": "Cô Em Trendy",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Lifestyle",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "58",
+      "name": "An Phương",
+      "profile_url": "https://www.tiktok.com/@anphuong.beauty",
+      "stored_followers": "300K",
+      "categories": [
+        "Skincare",
+        "Makeup",
+        "Treatment"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "59",
+      "name": "Mai Vân Trang",
+      "profile_url": "https://www.tiktok.com/@maivantrang",
+      "stored_followers": "400K",
+      "categories": [
+        "Makeup",
+        "Lifestyle",
+        "Skincare",
+        "Treatment"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "60",
+      "name": "Bống Bee",
+      "profile_url": "https://www.tiktok.com/@bongbee1301",
+      "stored_followers": "400K",
+      "categories": [
+        "Haircare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "61",
+      "name": "Đỗ Thị Hà",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Skincare",
+        "Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "62",
+      "name": "Bác sĩ Đỗ Quốc Tuấn",
+      "profile_url": "https://www.tiktok.com/@drdotuan",
+      "stored_followers": "388K",
+      "categories": [
+        "Treatment",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "63",
+      "name": "Trần Lâm (Bimm)",
+      "profile_url": "https://www.tiktok.com/@tran_lam18",
+      "stored_followers": "380K",
+      "categories": [
+        "Skincare",
+        "Treatment"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "64",
+      "name": "Trần Thiên Lý",
+      "profile_url": "https://www.tiktok.com/@tranthienly.com",
+      "stored_followers": "180.7K",
+      "categories": [
+        "Makeup",
+        "High-end Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "65",
+      "name": "Primmy Trương",
+      "profile_url": "https://www.tiktok.com/@primmytruong",
+      "stored_followers": "300K",
+      "categories": [
+        "Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "66",
+      "name": "Emmi Hoàng",
+      "profile_url": "https://www.tiktok.com/@emmihoang",
+      "stored_followers": "300K",
+      "categories": [
+        "Skincare",
+        "Haircare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "67",
+      "name": "Sunhuyn",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Skincare",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "68",
+      "name": "Quin",
+      "profile_url": "https://www.tiktok.com/@quin",
+      "stored_followers": "62K",
+      "categories": [
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": [
+        "stored_tiktok_followers_below_100k"
+      ]
+    },
+    {
+      "creator_id": "69",
+      "name": "Linh Jace",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Makeup",
+        "High-end Makeup"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "70",
+      "name": "Khánh The MUA",
+      "profile_url": "https://www.tiktok.com/@khanhtq_makeup",
+      "stored_followers": "200K",
+      "categories": [
+        "Makeup",
+        "High-end Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "71",
+      "name": "Dr Hiếu - Bác sĩ da liễu",
+      "profile_url": "https://www.tiktok.com/@bacsi.hieu.official",
+      "stored_followers": "850K",
+      "categories": [
+        "Treatment",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "72",
+      "name": "Đào Bá Lộc",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Skincare",
+        "Makeup"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "73",
+      "name": "Thuý Hiền Makeup",
+      "profile_url": "https://www.tiktok.com/@thuyhienmakeup",
+      "stored_followers": "180K",
+      "categories": [
+        "Makeup",
+        "High-end Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "74",
+      "name": "Bác sĩ Khổng Hạnh Nguyên",
+      "profile_url": "https://www.tiktok.com/@drkhonghanhnguyen",
+      "stored_followers": "179K",
+      "categories": [
+        "Treatment",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "75",
+      "name": "Linh Trương",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Makeup",
+        "High-end Makeup"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "76",
+      "name": "Phương Ly (Pretty Much Channel)",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Skincare",
+        "Makeup"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "77",
+      "name": "Hồng Beauty",
+      "profile_url": "https://www.tiktok.com/@hongbeauty",
+      "stored_followers": "164K",
+      "categories": [
+        "Haircare",
+        "Skincare",
+        "Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "78",
+      "name": "Bác sĩ Hoàng Văn Tâm",
+      "profile_url": "https://www.tiktok.com/@bacsitamdalieu",
+      "stored_followers": "161K",
+      "categories": [
+        "Treatment",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "79",
+      "name": "Bác sĩ Nam Võ",
+      "profile_url": "https://www.tiktok.com/@drnamvo.dalieu",
+      "stored_followers": "140K",
+      "categories": [
+        "Treatment",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "80",
+      "name": "Chung Thành",
+      "profile_url": "https://www.tiktok.com/@chungthanh_",
+      "stored_followers": "138K",
+      "categories": [
+        "Perfume"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "81",
+      "name": "Bích Uyên",
+      "profile_url": "https://www.tiktok.com/@bubutranxoxo",
+      "stored_followers": "131K",
+      "categories": [
+        "Makeup",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "82",
+      "name": "Thời Toki",
+      "profile_url": "https://www.tiktok.com/@thoitoki_perfume",
+      "stored_followers": "129K",
+      "categories": [
+        "Perfume"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "83",
+      "name": "Bác sĩ Minh Điềm",
+      "profile_url": "https://www.tiktok.com/@drdiemdalieu.medici",
+      "stored_followers": "183K",
+      "categories": [
+        "Treatment",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "84",
+      "name": "Bác sĩ Hằng Trần",
+      "profile_url": "https://www.tiktok.com/@bshangtrandalieu.medici",
+      "stored_followers": "174K",
+      "categories": [
+        "Treatment",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "85",
+      "name": "Hạnh Mai (Mailovesbeauty)",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Skincare",
+        "Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "86",
+      "name": "Phương thích makeup",
+      "profile_url": "https://www.tiktok.com/@hinhthucphuong",
+      "stored_followers": "114K",
+      "categories": [
+        "Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "87",
+      "name": "Tôm (Tomskincare)",
+      "profile_url": "https://www.tiktok.com/@tomskincare",
+      "stored_followers": "113K",
+      "categories": [
+        "Skincare",
+        "Treatment"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "88",
+      "name": "Misoa Kim Anh",
+      "profile_url": "https://www.tiktok.com/@misoa.kimanh",
+      "stored_followers": "200K",
+      "categories": [
+        "Makeup",
+        "Skincare",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "89",
+      "name": "Trần Kiều Loan",
+      "profile_url": "https://www.tiktok.com/@loan_rose0810",
+      "stored_followers": "168.7K",
+      "categories": [
+        "Makeup",
+        "Lifestyle",
+        "Skincare"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "90",
+      "name": "Ryan Perfume",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Perfume"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "91",
+      "name": "Quân Nguyễn",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "High-end Makeup",
+        "Makeup"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "92",
+      "name": "Motrang hít hà",
+      "profile_url": "https://www.tiktok.com/@motrang_",
+      "stored_followers": "90K",
+      "categories": [
+        "Perfume"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": [
+        "stored_tiktok_followers_below_100k"
+      ]
+    },
+    {
+      "creator_id": "93",
+      "name": "Pang Mỹ Nguyên",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Nail"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "94",
+      "name": "Huỳnh Thi Makeup",
+      "profile_url": "https://www.tiktok.com/@makeuphuynhthi",
+      "stored_followers": "80K",
+      "categories": [
+        "Makeup"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": [
+        "stored_tiktok_followers_below_100k"
+      ]
+    },
+    {
+      "creator_id": "95",
+      "name": "Lương Lee",
+      "profile_url": "https://www.tiktok.com/@luonglee1404",
+      "stored_followers": "86.5K",
+      "categories": [
+        "Skincare",
+        "Treatment"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": [
+        "stored_tiktok_followers_below_100k"
+      ]
+    },
+    {
+      "creator_id": "96",
+      "name": "Kiên Fragrance",
+      "profile_url": "https://www.tiktok.com/@kienfragranceca",
+      "stored_followers": "66K",
+      "categories": [
+        "Perfume"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": [
+        "stored_tiktok_followers_below_100k"
+      ]
+    },
+    {
+      "creator_id": "97",
+      "name": "Óng Ánh",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Skincare",
+        "Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    },
+    {
+      "creator_id": "98",
+      "name": "Nga nèe",
+      "profile_url": "https://www.tiktok.com/@thuyngareview",
+      "stored_followers": "111.9K",
+      "categories": [
+        "Skincare",
+        "Treatment",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": []
+    },
+    {
+      "creator_id": "99",
+      "name": "Jena",
+      "profile_url": "https://www.tiktok.com/@nuochoa.jena",
+      "stored_followers": "47K",
+      "categories": [
+        "Perfume"
+      ],
+      "eligible_for_live_audit": true,
+      "issues": [
+        "stored_tiktok_followers_below_100k"
+      ]
+    },
+    {
+      "creator_id": "100",
+      "name": "Trân Mèeo",
+      "profile_url": null,
+      "stored_followers": null,
+      "categories": [
+        "Makeup",
+        "Lifestyle"
+      ],
+      "eligible_for_live_audit": false,
+      "issues": [
+        "missing_tiktok"
+      ]
+    }
+  ]
+}

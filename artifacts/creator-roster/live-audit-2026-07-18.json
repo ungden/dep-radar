@@ -1,0 +1,1810 @@
+{
+  "schema_version": "360dep.creator-roster-audit.v1",
+  "generated_at": "2026-07-18T12:14:06.782866Z",
+  "source": "public_tiktok_profile_and_recent_posts",
+  "account_count": 73,
+  "status_counts": {
+    "manual_content_review": 27,
+    "eligible": 19,
+    "unreachable": 11,
+    "watchlist": 13,
+    "collector_blocked": 3
+  },
+  "accounts": [
+    {
+      "creator_id": "1",
+      "name": "Hà Linh Official",
+      "profile_url": "https://www.tiktok.com/@halinhofficial",
+      "username": "halinhofficial",
+      "actual_username": "halinhofficial",
+      "nickname": "Ha Linh Official",
+      "verified": true,
+      "followers": 5658498,
+      "likes": 143802744,
+      "video_count": 719,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 1700000,
+      "latest_post_at": "2026-07-17T09:27:52Z",
+      "freshness_days": 1,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Ôi tự hào lắm hai tiếng: Việt Nam! #traitimchoem #halinhofficial",
+        "Mẹ là Bọ Cạp ồn ào mạnh mẽ, con là Thiên Bình dịu dàng mít ướt :))))",
+        "Dậy sớm để thành công :)))",
+        "Thành quả này không phải của cá nhân, mà là của cả một tập thể!!!",
+        "Chị em, lên!"
+      ]
+    },
+    {
+      "creator_id": "2",
+      "name": "Góc Của Rư",
+      "profile_url": "https://www.tiktok.com/@goc.cua.ru",
+      "username": "goc.cua.ru",
+      "actual_username": "goc.cua.ru",
+      "nickname": "Góc Của Rư",
+      "verified": false,
+      "followers": 976384,
+      "likes": 17561278,
+      "video_count": 424,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 574700,
+      "latest_post_at": "2026-07-13T04:06:04Z",
+      "freshness_days": 5,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "Review sữa chống nắng Simple  #goccuarupartner #kemchongnang #simplev...",
+        "Review serum AHC #goccuarupartner #AHCVietnam #serumvikim #AHCPoreEra...",
+        "Review kem dưỡng Dr.G #goccuarupartner #kemduong #DrG #HợpTácCùngDrG",
+        "Review Olay Super SPF50+  #goccuarupartner #OlaySuperSPF50 #HoptaccungPG",
+        "Review xịt dưỡng tóc Pantene #goccuarupartner #xitduongtoc #Pantene #..."
+      ]
+    },
+    {
+      "creator_id": "4",
+      "name": "Call Me Duy",
+      "profile_url": "https://www.tiktok.com/@justvuduy16",
+      "username": "justvuduy16",
+      "actual_username": "justvuduy16",
+      "nickname": "Call me Duy",
+      "verified": true,
+      "followers": 1219413,
+      "likes": 83269893,
+      "video_count": 6109,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 47000,
+      "latest_post_at": "2026-07-18T11:44:41Z",
+      "freshness_days": 0,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "Mặt nạ thảo dược nội địa 🇨🇳  #CHANDOHimalayaVietnam #Duongtrangda #Ge...",
+        "Em serum nhà @Tolpa Vietnam giúp làn da Duy luôn mịn màng trong chuyế...",
+        "Dành cho người theo dõi của Duy ở Taiwan 🇹🇼❤️ #nguoivietnamtaidailoan...",
+        "Taipei 🇹🇼✊❤️",
+        "Bão mà còn ra biển 🤣🇹🇼"
+      ]
+    },
+    {
+      "creator_id": "6",
+      "name": "Chloe Nguyen",
+      "profile_url": "https://www.tiktok.com/@bychloenguyen",
+      "username": "bychloenguyen",
+      "actual_username": "bychloenguyen",
+      "nickname": "Chloe Nguyen",
+      "verified": true,
+      "followers": 248207,
+      "likes": 7608437,
+      "video_count": 616,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 155600,
+      "latest_post_at": "2026-07-14T12:50:52Z",
+      "freshness_days": 3,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Khi bạn cứ nghĩ mãi về 1 bức tranh suốt 2 tháng thì có lẽ bạn nên mua...",
+        "+1 khung cảnh quá đỗi thơ mộng vào kỉ niệm mùa hè châu Âu của cổ🪻🇫🇷✨ ...",
+        "Bây giờ mới kể về thử thách cô ấy tự tạo ra ngay trước giờ đi gặp Lis...",
+        "Gọi là cô nàng thư giãn nhưng chưa có chuyến bay nào là thư giãn cả 🤓...",
+        "Hôm nay Chloe dành tặng 4 \"em bé\" trong team mỗi người 1 phiếu bé ngo..."
+      ]
+    },
+    {
+      "creator_id": "7",
+      "name": "Đan Thy",
+      "profile_url": "https://www.tiktok.com/@thybui.__",
+      "username": "thybui.__",
+      "actual_username": "thybui.__",
+      "nickname": "Đan Thy",
+      "verified": false,
+      "followers": 15308269,
+      "likes": 632209716,
+      "video_count": 577,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 9100000,
+      "latest_post_at": "2026-07-17T10:31:26Z",
+      "freshness_days": 1,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "nhảy là vô tư 👌🏻",
+        "miss my transitions yet? 😗",
+        "HAHAHAHAHA @Reese Witherfork",
+        "i miss these twins already 🥺",
+        "pls don’t leave me babyy @RAEINHYER 💚"
+      ]
+    },
+    {
+      "creator_id": "8",
+      "name": "Lê Bống",
+      "profile_url": "https://www.tiktok.com/@lebong95",
+      "username": "lebong95",
+      "actual_username": "lebong95",
+      "nickname": "Le bong",
+      "verified": true,
+      "followers": 10061581,
+      "likes": 291701798,
+      "video_count": 1059,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 2400000,
+      "latest_post_at": "2026-07-14T12:37:26Z",
+      "freshness_days": 3,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "🪷",
+        "🌻 Hạnh phúc khi là “ Chú ong vàng” đóng góp yêu thương 🐝! #Hienmau #H...",
+        "Tò He 🇻🇳",
+        "📖🤓",
+        "💙"
+      ]
+    },
+    {
+      "creator_id": "9",
+      "name": "Lê Thị Khánh Huyền",
+      "profile_url": "https://www.tiktok.com/@lethikhanhhuyen2004",
+      "username": "lethikhanhhuyen2004",
+      "actual_username": "lethikhanhhuyen2004",
+      "nickname": "Lê Thị Khánh Huyền",
+      "verified": true,
+      "followers": 7414748,
+      "likes": 129692387,
+      "video_count": 501,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 476400,
+      "latest_post_at": "2026-07-15T10:18:19Z",
+      "freshness_days": 3,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "#lethikhanhhuyen #gym #bali #cangu",
+        "Video 7661174003666537749",
+        "Bèo đã trở lại",
+        "Body routine sau ngày đầu học bơi #lethikhanhhuyen #HợptáccùngVaselin...",
+        "@SWANS HAIR SALON #lethikhanhhuyen #hairstyle"
+      ]
+    },
+    {
+      "creator_id": "10",
+      "name": "Yên Đan",
+      "profile_url": "https://www.tiktok.com/@yendan7",
+      "username": "yendan7",
+      "actual_username": "yendan7",
+      "nickname": "Yên Đan 🤍",
+      "verified": true,
+      "followers": 987440,
+      "likes": 39930958,
+      "video_count": 607,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 364900,
+      "latest_post_at": "2026-07-17T05:51:39Z",
+      "freshness_days": 1,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "Phong cách uốn dẻo #yendan",
+        "Những sự thật về mái tóc nổi loạnnn 😹🥹🥹🥹🥹🥹🥹 May mà đã có Xịt dưỡng tă...",
+        "Trả lời @Mẫn Nhii tutorial đây nhaaaaaa còn muốn hỏi chi tiết cmt đi ...",
+        "Style Wet Look - tên Việt hoá là set đồ bánh tráng dừa hihi 🥥🌴 EM CÓ ...",
+        "Wasian makeup chưa ha 💋 #yendan #beautybyDan"
+      ]
+    },
+    {
+      "creator_id": "12",
+      "name": "Ty Lê",
+      "profile_url": "https://www.tiktok.com/@tyle.makeup",
+      "username": "tyle.makeup",
+      "status": "unreachable",
+      "issues": [
+        "RuntimeError: Tikwm profile lookup failed: unique_id is invalid"
+      ]
+    },
+    {
+      "creator_id": "14",
+      "name": "Quỳnh Anh Shyn",
+      "profile_url": "https://www.tiktok.com/@quynhanhshyn_",
+      "username": "quynhanhshyn_",
+      "actual_username": "quynhanhshyn_",
+      "nickname": "Quynh Anh Shyn",
+      "verified": true,
+      "followers": 1429538,
+      "likes": 42762850,
+      "video_count": 1112,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 104200,
+      "latest_post_at": "2026-07-14T08:19:42Z",
+      "freshness_days": 4,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Vì tụi tui là con gái mahh 🥰 #quynhanhshyn #liugrace #DieuCanDen #EPG...",
+        "@Orange Official 🍊 @yeolan__",
+        "Đi chợ là quá dễ với tôiii 😎 #JoMaloneLondon #VeggieScents",
+        "Giải cứu Điều Cần Đến với ạ 🥺 #quynhanhshyn #liugrace #DieuCanDen #EP...",
+        "Everything I do I go All in 💅 Điều cần đến ft @liu grace OUT NOW !!! ..."
+      ]
+    },
+    {
+      "creator_id": "15",
+      "name": "Phạm Thoại",
+      "profile_url": "https://www.tiktok.com/@phamthoai.real",
+      "username": "phamthoai.real",
+      "status": "unreachable",
+      "issues": [
+        "RuntimeError: Tikwm profile lookup failed: unique_id is invalid"
+      ]
+    },
+    {
+      "creator_id": "17",
+      "name": "Hunilovebeauty",
+      "profile_url": "https://www.tiktok.com/@hunilovebeauty",
+      "username": "hunilovebeauty",
+      "actual_username": "hunilovebeauty",
+      "nickname": "Hunilovebeauty 💄",
+      "verified": true,
+      "followers": 2140196,
+      "likes": 33350500,
+      "video_count": 1039,
+      "sample_posts": 5,
+      "beauty_signal_posts": 2,
+      "median_sample_views": 2054,
+      "latest_post_at": "2025-09-27T12:46:06Z",
+      "freshness_days": 293,
+      "status": "watchlist",
+      "issues": [
+        "stale_over_90_days"
+      ],
+      "sample_captions": [
+        "Son bóng 2 đầu của nhà Mistine 😚 #xuhuong #sonbong #tieusam #beautyti...",
+        "Mặt nạ Dr Wonjin mấy bà đã thử chưaa 😗 #beautytips #tieusam #xuhuong ...",
+        "Kem chống nắng quốc dân dành cho da dầu mụn mấy ní ơiii 😚 quẹo lựa lẹ...",
+        "Son bóng dưỡng môi lâu trôi của nhà @CHIOTURE VN cứ phải gọi là siêu ...",
+        "x1000 độ xinh ^^ #xuhuong #reviewlamdep #makeuptutorial #quynhanhdaily"
+      ]
+    },
+    {
+      "creator_id": "18",
+      "name": "Lê Đại Phát",
+      "profile_url": "https://www.tiktok.com/@phatnail",
+      "username": "phatnail",
+      "actual_username": "phatnail",
+      "nickname": "Lê Đại Phát 🥑",
+      "verified": true,
+      "followers": 2199201,
+      "likes": 52830681,
+      "video_count": 468,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 741400,
+      "latest_post_at": "2026-07-14T13:15:46Z",
+      "freshness_days": 3,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Tính treo lên nhưng lại phải gỡ xuống 😕",
+        "Bự quá cũng ko tốt 🙂 #phatnail #nails #ledaiphat #vulaci",
+        "Em xin lỗi chị Tú 🙂‍↕️ #phatnail #ledaiphat",
+        "Khách Tây nói tiếng Việt khó hiểu lắm 😂 #phatnail #vulaci #ledaiphat ...",
+        "M đc lắm học viên 🙂 #phatnail #ledaiphat"
+      ]
+    },
+    {
+      "creator_id": "21",
+      "name": "Đinh Phát",
+      "profile_url": "https://www.tiktok.com/@dinhphatmakeup",
+      "username": "dinhphatmakeup",
+      "actual_username": "dinhphatmakeup",
+      "nickname": "Đinh Phát",
+      "verified": false,
+      "followers": 2235022,
+      "likes": 111265816,
+      "video_count": 1879,
+      "sample_posts": 5,
+      "beauty_signal_posts": 5,
+      "median_sample_views": 733000,
+      "latest_post_at": "2026-07-18T11:12:54Z",
+      "freshness_days": 0,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "Make up thay đầu cùng thầy Phát nào 🔥#viral #makeup #bienhinh #đinhph...",
+        "Thầy Phát mua gái không thành 💄#viral #makeup #bienhinh #đinhphatacad...",
+        "Thay đầu girl u80 🔥#makeup #viral #bienhinh #đinhphatacademy #xuhuong",
+        "Hello girl U80 💄#makeup #viral #bienhinh #đinhphatacademy #xuhuong",
+        "Thầy Phát tán gái cao bồi 💄#makeup #viral #bienhinh #đinhphatacademy ..."
+      ]
+    },
+    {
+      "creator_id": "22",
+      "name": "Quỳnh Nhi Trần",
+      "profile_url": "https://www.tiktok.com/@quynhnhitran",
+      "username": "quynhnhitran",
+      "status": "unreachable",
+      "issues": [
+        "RuntimeError: Tikwm profile lookup failed: unique_id is invalid"
+      ]
+    },
+    {
+      "creator_id": "23",
+      "name": "Blingbabi",
+      "profile_url": "https://www.tiktok.com/@blingbabi_",
+      "username": "blingbabi_",
+      "actual_username": "blingbabi_",
+      "nickname": "Blingbabi",
+      "verified": true,
+      "followers": 2148325,
+      "likes": 86593310,
+      "video_count": 1216,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 55000,
+      "latest_post_at": "2026-07-12T13:25:02Z",
+      "freshness_days": 5,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "#mermaids #summer #beach",
+        "Cảm nhận của mình về em phấn phủ trong suốt Fit Me 🫪 #HợpTácCùngMaybe...",
+        "Học bí kíp của Jennie để da sáng mịn like Jennie 🧖🏻‍♀️🧖🏻‍♀️ #Hợptáccù...",
+        "Work-life balance 🤪",
+        "Try on các mẫu mũ len của sốp @Chắt Chiu Một Chút 😋🧶"
+      ]
+    },
+    {
+      "creator_id": "24",
+      "name": "Hannah Olala",
+      "profile_url": "https://www.tiktok.com/@hannaholala",
+      "username": "hannaholala",
+      "actual_username": "hannaholala",
+      "nickname": "HannahOlala",
+      "verified": true,
+      "followers": 2066280,
+      "likes": 45691976,
+      "video_count": 1340,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 404400,
+      "latest_post_at": "2026-07-18T08:20:36Z",
+      "freshness_days": 0,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Về nhà cha mẹ #hannaholala",
+        "Hôm nay Na đưa em bé Minh đi công viên. #hannaholala",
+        "Hái mận ở nhà chị Na. #hannaholala",
+        "Đây là lý do tui thích hoa nè. #hannaholala",
+        "Lần đầu tiên thấy cái máy cơm này #hannahola"
+      ]
+    },
+    {
+      "creator_id": "26",
+      "name": "Thuỷ Sophia",
+      "profile_url": "https://www.tiktok.com/@sophia.beauty99",
+      "username": "sophia.beauty99",
+      "actual_username": "sophia.beauty99",
+      "nickname": "Thuỷ Sophia",
+      "verified": false,
+      "followers": 1683353,
+      "likes": 81962515,
+      "video_count": 1221,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 71000,
+      "latest_post_at": "2026-07-18T04:44:06Z",
+      "freshness_days": 0,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Nổ rồiiii 👙",
+        "Tập 5: Cách giảm bết tóc từ giấm...!!! các em gái không lo hôm nay gộ...",
+        "Luỵ bộ ảnh này quá 100000000 điểm… Florence lãng mạn",
+        "Tập 4: Dẫn 2 em gái đi làm tóc 🔥✨thay đổi 50% diện mạo 😉 #xuhuong #tr...",
+        "Để 2 nhỏ em gái ở nhà đi chơi vui kh nổi"
+      ]
+    },
+    {
+      "creator_id": "28",
+      "name": "Hoàng Thạch",
+      "profile_url": "https://www.tiktok.com/@hoangthachhh",
+      "username": "hoangthachhh",
+      "actual_username": "hoangthachhh",
+      "nickname": "Hoàng Thạch",
+      "verified": false,
+      "followers": 1242945,
+      "likes": 42452392,
+      "video_count": 1030,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 1100000,
+      "latest_post_at": "2026-07-08T10:52:15Z",
+      "freshness_days": 10,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "2 cháu iu ❤️ #hoangthachhh @su @mi",
+        "#ghép nối với @Pé Thanh đang trùng tu nhan sắc mấy má ui =)))",
+        "Nên rửa hằng ngày nhe mn ơiii #hoangthachhh #noimi #nuocruamat #novotane",
+        "Rất là xinh rất là thích lun nhé ! #hoangthachhh #Lizzies #SummerDiary",
+        "Bao tiện lun nhé #hoangthachhh #tirtir #halago"
+      ]
+    },
+    {
+      "creator_id": "30",
+      "name": "Lucie Nguyễn",
+      "profile_url": "https://www.tiktok.com/@lucienguyenlove",
+      "username": "lucienguyenlove",
+      "actual_username": "lucienguyenlove",
+      "nickname": "Lucie nguyen",
+      "verified": true,
+      "followers": 1346186,
+      "likes": 54782351,
+      "video_count": 837,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 895900,
+      "latest_post_at": "2026-07-15T07:41:24Z",
+      "freshness_days": 3,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Tài khoản nhảy số tinh tinh thì vui thật, chứ nhìn lại cái \"giao diện...",
+        "Vô lụm ngay cẩm nang dưỡng nhan thần thánh để biến hình thành phiên b...",
+        "Chị em nước mình vất vả, ban ngày lo đối nội đối ngoại, ban đêm quay ...",
+        "Hong thể bỏ lỡ combo này nha các chị ơiii, deal siêu hời luôn á 😝💕 #l...",
+        "Sướng nhất các mom iu luôn, vừa được tư vấn từ bác sĩ chuyên môn vừa ..."
+      ]
+    },
+    {
+      "creator_id": "31",
+      "name": "Lê Lý Lan Hương",
+      "profile_url": "https://www.tiktok.com/@actress.lanhuong",
+      "username": "actress.lanhuong",
+      "actual_username": "actress.lanhuong",
+      "nickname": "Lê Lý Lan Hương",
+      "verified": true,
+      "followers": 1162311,
+      "likes": 42706150,
+      "video_count": 889,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 258100,
+      "latest_post_at": "2026-07-15T12:04:58Z",
+      "freshness_days": 3,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Make up chỉ bằng một thỏi Blurring Pot Time Phoria ❤️ #lanhuong #time...",
+        "Che khuyết điểm với má hồng hay là tạo khối? #lanhuong",
+        "Cách tui tận dụng triệt để mỗi miếng mặt nạ... #lanhuong",
+        "Bữa nay giỡn tới cái tường luôn rồi đó... #lanhuong #timephoriavn #bl...",
+        "Make up tone đỏ bằng một thỏi son 💄 #lanhuong"
+      ]
+    },
+    {
+      "creator_id": "32",
+      "name": "Tama",
+      "profile_url": "https://www.tiktok.com/@jjhahehi",
+      "username": "jjhahehi",
+      "actual_username": "jjhahehi",
+      "nickname": "Tama",
+      "verified": false,
+      "followers": 1137618,
+      "likes": 76937407,
+      "video_count": 661,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 74100,
+      "latest_post_at": "2026-07-10T08:05:08Z",
+      "freshness_days": 8,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Nhạc nghe từ bé #tama",
+        "Một mình chưa bao giờ là vấn đề #tama",
+        "Video 7658568065424117010",
+        "Nay get ready đi chơi nè #Tama",
+        "#Tama"
+      ]
+    },
+    {
+      "creator_id": "33",
+      "name": "Happi Phạm",
+      "profile_url": "https://www.tiktok.com/@happipham",
+      "username": "happipham",
+      "actual_username": "happipham",
+      "nickname": "Happi Pham",
+      "verified": true,
+      "followers": 1236545,
+      "likes": 62131312,
+      "video_count": 1146,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 97900,
+      "latest_post_at": "2026-07-18T04:13:38Z",
+      "freshness_days": 0,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "Video 7663716358521195794",
+        "Phải che chắn thật kỹ nha #happipham #nutribullet",
+        "Da nâu chăm thành da trắng hồng #happipham",
+        "Sao tóc chỉ đẹp ở ngoài salon thôi vại?",
+        "Dưỡng da trắng, lão hoá. Mắc nhưng đáng mua #happipham #duongda #duon..."
+      ]
+    },
+    {
+      "creator_id": "34",
+      "name": "Vũ Thái Bình",
+      "profile_url": "https://www.tiktok.com/@bbskincare1",
+      "username": "bbskincare1",
+      "actual_username": "bbskincare1",
+      "nickname": "Vũ Thái Bình",
+      "verified": true,
+      "followers": 1170571,
+      "likes": 36709065,
+      "video_count": 1169,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 171900,
+      "latest_post_at": "2026-07-18T11:18:35Z",
+      "freshness_days": 0,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Ủ trắng da mặt mà mình yêu thích. Hiệu quả dưỡng sáng da tốt mà lành ...",
+        "Đây là bản mình cực thích vì hiệu quả làm sáng tốt mà ráo mịn nhanh, ...",
+        "E này phải Viral cho tui #vuthaibinh #SuachongnangvocosenHauGiang",
+        "Hàng Việt chất lượng cao thì đây là 1 trong những hãng Việt mình ấn t...",
+        "Review tất tần tật body của nhà Vaseline. Đâu là chân ái của mấy bạn ..."
+      ]
+    },
+    {
+      "creator_id": "35",
+      "name": "Vân Miu",
+      "profile_url": "https://www.tiktok.com/@vanmiu.makeup",
+      "username": "vanmiu.makeup",
+      "status": "unreachable",
+      "issues": [
+        "RuntimeError: Tikwm profile lookup failed: unique_id is invalid"
+      ]
+    },
+    {
+      "creator_id": "36",
+      "name": "Quách Ánh",
+      "profile_url": "https://www.tiktok.com/@quachanhmakeupstudio",
+      "username": "quachanhmakeupstudio",
+      "actual_username": "quachanhmakeupstudio",
+      "nickname": "user33311968831",
+      "verified": false,
+      "followers": 220,
+      "likes": 1574,
+      "video_count": 113,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 727,
+      "latest_post_at": "2024-11-26T13:08:11Z",
+      "freshness_days": 598,
+      "status": "watchlist",
+      "issues": [
+        "stale_over_90_days",
+        "followers_below_100k"
+      ],
+      "sample_captions": [
+        "Sự hài lòng của các cô dâu chính là niềm hạnh phúc to lớn của Quách Á...",
+        "Với nhiều năm kinh nghiệm, đội ngũ makeup artist và hairstylist của Q...",
+        "Đôi môi trầm ấm, má ửng hây hây, ngọt ngào như một buổi chiều thu 🍂 Đ...",
+        "Niềm vui và sự hài lòng hiện rõ trên khuôn mặt chị học viên sau khóa ...",
+        "Hãy luôn tin bản thân có thể tỏa sáng mọi lúc mọi nơi nhé các cô gái ..."
+      ]
+    },
+    {
+      "creator_id": "37",
+      "name": "Kim Chung Phan",
+      "profile_url": "https://www.tiktok.com/@kimchungphan20",
+      "username": "kimchungphan20",
+      "actual_username": "kimchungphan20",
+      "nickname": "Kim Chung Phan",
+      "verified": true,
+      "followers": 2143600,
+      "likes": 88633378,
+      "video_count": 886,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 1200000,
+      "latest_post_at": "2026-07-13T10:42:51Z",
+      "freshness_days": 5,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "Đúng khum các môm 🥹 #fyp #beplain #sunmuse",
+        "Nạii nà vê nốc #fyp #fullresist #xitnganrungtoc #haircare #hợptáccùng...",
+        "Mê lắm chứ zìiii #fyp #serummelasylhong #hợptáccùngLOrealParis #skinc...",
+        "Đòi gì được nấyy 😤 #fyp #melomeli #nuoctaytrangmelomeli #melomeliviet...",
+        "Thế mà hayy #fyp #lagom #kemchongnanglagom #lagomtoneupsun"
+      ]
+    },
+    {
+      "creator_id": "38",
+      "name": "Minh Thái",
+      "profile_url": "https://www.tiktok.com/@thethailyfe",
+      "username": "thethailyfe",
+      "actual_username": "thethailyfe",
+      "nickname": "The Thai Lyfe",
+      "verified": false,
+      "followers": 1472658,
+      "likes": 91731234,
+      "video_count": 3254,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 4729,
+      "latest_post_at": "2026-07-18T03:49:46Z",
+      "freshness_days": 0,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "I take pride in massaging using my Foot Cream by @Beyond The Cream be...",
+        "Nail salon is not a place where you bring your kid to sit around! #fo...",
+        "Picking polish color can be stressful for clients and nail tech, but ...",
+        "I always get excited when I cook something good for my family! Chicke...",
+        "This scene makes me sad. We don’t make that much money as a nail tech..."
+      ]
+    },
+    {
+      "creator_id": "39",
+      "name": "Yến Jii",
+      "profile_url": "https://www.tiktok.com/@yenjiivu",
+      "username": "yenjiivu",
+      "actual_username": "yenjiivu",
+      "nickname": "YenJii/Cô Gái Đam Mê Makeup",
+      "verified": false,
+      "followers": 917210,
+      "likes": 28343040,
+      "video_count": 1062,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 81700,
+      "latest_post_at": "2026-07-14T13:30:25Z",
+      "freshness_days": 3,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "Turning into Rhaenyra from House of the Dragon🔥  #HBOMaxPartner #yenj...",
+        "Che mắt vô và có rất nhiều thắc mắc lạ lùng 🫪@antiantiart.official  #...",
+        ":)) love u @Phương Vũ",
+        "Porcelain Reverie with Sea Makeup🪻 #yenjiimakeup #seamakeup #settings...",
+        "Mất 2 năm mới edit được chiếc clip / BTS making MCK Head's Mold  Prod..."
+      ]
+    },
+    {
+      "creator_id": "40",
+      "name": "Minaash",
+      "profile_url": "https://www.tiktok.com/@minaashmi",
+      "username": "minaashmi",
+      "actual_username": "minaashmi",
+      "nickname": "minaash",
+      "verified": false,
+      "followers": 915107,
+      "likes": 56708388,
+      "video_count": 1325,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 28000,
+      "latest_post_at": "2026-07-17T06:49:42Z",
+      "freshness_days": 1,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "chịu làm móng r",
+        "lâu roi khum film",
+        "Video 7663026964390759701",
+        "Video 7662776891241221397",
+        "Video 7662776197465558292"
+      ]
+    },
+    {
+      "creator_id": "41",
+      "name": "Thuý Kiều",
+      "profile_url": "https://www.tiktok.com/@thuykieu773",
+      "username": "thuykieu773",
+      "actual_username": "thuykieu773",
+      "nickname": "Thuý Kiều",
+      "verified": false,
+      "followers": 913068,
+      "likes": 34047757,
+      "video_count": 1085,
+      "sample_posts": 5,
+      "beauty_signal_posts": 2,
+      "median_sample_views": 406000,
+      "latest_post_at": "2026-07-18T09:05:54Z",
+      "freshness_days": 0,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "Giỏi quá @Con là Cá",
+        "Book makeup sinh Nhật 🥳",
+        "Nhiều chuyện quá à cô chú @Con là Cá",
+        "Luỵ cái makeup ngày hôm ấy , không lens không kích mí quay cam thường...",
+        "Video 7661271732019318023"
+      ]
+    },
+    {
+      "creator_id": "42",
+      "name": "Diệp Lê",
+      "profile_url": "https://www.tiktok.com/@diep.lez",
+      "username": "diep.lez",
+      "actual_username": "diep.lez",
+      "nickname": "✧ Diệp Lê ✧",
+      "verified": true,
+      "followers": 717968,
+      "likes": 18401962,
+      "video_count": 1156,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 10500,
+      "latest_post_at": "2026-07-18T11:27:35Z",
+      "freshness_days": 0,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "Megalive cuối tháng săn deal cùng Diệp nha! Tặng trước tại đây 5 vouc...",
+        "Trả lời @Mình là Thỷ Thỷ tiếp nối câu chuyện từ clip săn túi vintage ...",
+        "Tưởng mỹ phẩm minisize không đó, nhìn dễ thương quá @Diệp Lê líu lo ♫",
+        "Điều mình thích nhất khi làm những dự án như thế này… Là được thật sự...",
+        "“Show thời trang” Shopee Style sắp bắt đầu rồi ✨ Outfit cực trend, de..."
+      ]
+    },
+    {
+      "creator_id": "45",
+      "name": "Tee 8 Phun Xăm",
+      "profile_url": "https://www.tiktok.com/@tee8eyebrows",
+      "username": "tee8eyebrows",
+      "actual_username": "tee8eyebrows",
+      "nickname": "Tee 8 Phun Xăm",
+      "verified": false,
+      "followers": 482820,
+      "likes": 4922566,
+      "video_count": 428,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 571800,
+      "latest_post_at": "2026-07-13T23:29:00Z",
+      "freshness_days": 4,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "và người cực sẽ là sếp bạn",
+        "Giờ hoàng đạo là siêu nhưn gao biến hình liền",
+        "Ảo giác, tất cả chỉ là ảo giác",
+        "Tâm nghỉ việc chứ thân vừa rủa vừa làm",
+        "Sáng làm bệnh diện, chiều ra bến xe @Tee Tám"
+      ]
+    },
+    {
+      "creator_id": "46",
+      "name": "Hà Trúc",
+      "profile_url": "https://www.tiktok.com/@hatruc",
+      "username": "hatruc",
+      "actual_username": "hatruc",
+      "nickname": "hàtrúc",
+      "verified": false,
+      "followers": 163,
+      "likes": 11,
+      "video_count": 1,
+      "sample_posts": 1,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 44,
+      "latest_post_at": "2024-05-14T14:53:06Z",
+      "freshness_days": 794,
+      "status": "watchlist",
+      "issues": [
+        "stale_over_90_days",
+        "followers_below_100k",
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Video 7368868442025266440"
+      ]
+    },
+    {
+      "creator_id": "48",
+      "name": "Lou Lê",
+      "profile_url": "https://www.tiktok.com/@lou.le",
+      "username": "lou.le",
+      "actual_username": "lou.le",
+      "nickname": "Lou Lê",
+      "verified": false,
+      "followers": 689087,
+      "likes": 33184702,
+      "video_count": 1077,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 11300,
+      "latest_post_at": "2026-07-18T04:55:08Z",
+      "freshness_days": 0,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "sống trọn cả 2 vai 🦦 #LouLe#CapCut",
+        "📸 mê",
+        "còn thiếu gì hông ta 🧐 #LouLe",
+        "Nến Mlem nha cả nhà, quên add hình IG của bả 🐥 Ai ăn cơm tấm sườn hem...",
+        "Là thiệt đó hả trời ?! 🕯️ À còn ly cà phê sữa quên quay, chờ tui 😬. @..."
+      ]
+    },
+    {
+      "creator_id": "49",
+      "name": "TS.BS Lã Thanh Hà",
+      "profile_url": "https://www.tiktok.com/@bacsilaha",
+      "username": "bacsilaha",
+      "actual_username": "bacsilaha",
+      "nickname": "Bacsilaha",
+      "verified": true,
+      "followers": 518100,
+      "likes": 11462051,
+      "video_count": 366,
+      "sample_posts": 5,
+      "beauty_signal_posts": 3,
+      "median_sample_views": 25300,
+      "latest_post_at": "2026-02-04T13:23:38Z",
+      "freshness_days": 163,
+      "status": "watchlist",
+      "issues": [
+        "stale_over_90_days"
+      ],
+      "sample_captions": [
+        "Có ai đoán được đúng tuổi bác Hà không 😆 team bất ngờ luôn #tsbslaha ...",
+        "Bác sĩ Lã Hà on VTV: Vì sao mang bầu da xấu đi #tsbslaha #lahaclinic ...",
+        "VTV thành tâm muốn biết bác sĩ Hà sẵn sàng trả lời: Tại sao vẫn bị mụ...",
+        "Khi gương mặt U50 được “reset” về phiên bản U40 #lahaclinic #tsbslaha...",
+        "Không phải cứ nọng là đánh nọng, mặt to là gọt hàm, mà bí quyết là......"
+      ]
+    },
+    {
+      "creator_id": "50",
+      "name": "Chou Lười Makeup",
+      "profile_url": "https://www.tiktok.com/@chouchinchan",
+      "username": "chouchinchan",
+      "actual_username": "chouchinchan",
+      "nickname": "Chou Lười Makeup",
+      "verified": false,
+      "followers": 615594,
+      "likes": 22640325,
+      "video_count": 822,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 248800,
+      "latest_post_at": "2026-07-18T05:28:18Z",
+      "freshness_days": 0,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Last day rồiiiiiii sợ quáaaaa",
+        "Kem nâng tone dạng xịt này êm nhaaa @Koai VietNam  #chouchinchan",
+        "Trả lời @💛 giải phương trình còn quên làm sao giải được lòng emmm🤣🤣🤣",
+        "CLIP DÀI 1 TIẾNG LÀM CÔ DÂU VỚI CHOU NHAAAAA #chouchinchan",
+        "Đã nói là không có rảnh swatch full, thực sự hông rảnh #chouchinchan"
+      ]
+    },
+    {
+      "creator_id": "51",
+      "name": "Hiwon",
+      "profile_url": "https://www.tiktok.com/@hiwon91",
+      "username": "hiwon91",
+      "actual_username": "hiwon91",
+      "nickname": "Hiwon Makeup & Academy",
+      "verified": false,
+      "followers": 554524,
+      "likes": 21493047,
+      "video_count": 1265,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 449500,
+      "latest_post_at": "2026-07-16T10:48:14Z",
+      "freshness_days": 2,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "@Đoàn Thiên Ân  ơi người ta nói vậy đúng ko ta",
+        "công chúa nay hoá tiên cá",
+        "@Sĩ Thanh  chị ơi nay chị làm công chúa lọ lem đi đâu vậy ta #torride...",
+        "Nay makeup cho bé bầu @🐍  Jimin Young 🐍 thành nữ sinh Hàn Quốc #tooco...",
+        "Một trong những nước tẩy trang mà Hiwon luôn yên tâm giới thiệu đến h..."
+      ]
+    },
+    {
+      "creator_id": "52",
+      "name": "Skincare Đúng Cách by Sơn",
+      "profile_url": "https://www.tiktok.com/@skincaredungcach.byson",
+      "username": "skincaredungcach.byson",
+      "actual_username": "skincaredungcach.byson",
+      "nickname": "Skincare Đúng Cách",
+      "verified": false,
+      "followers": 625486,
+      "likes": 9443184,
+      "video_count": 657,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 148100,
+      "latest_post_at": "2026-07-17T11:55:42Z",
+      "freshness_days": 1,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "TOP những thứ mà tui thấy đáng tiền cho công cuộc có được 1 làn da sạ...",
+        "Sữa chống nắng Vô cơ Sen Hậu Giang của Cocoon dùng thích lắm mọi ngườ...",
+        "Đã chống nắng lại còn sáng da thì chắc chắn chỉ có OLAY SUPER SPF50+ ...",
+        "Lại review kem chống nắng đây lần này là siêu phẩm Biore Aqua Rich Ai...",
+        "Nó nâng tone da đẹp thì thôi nhé luôn ôi mướt mát như tình đầu luôn á..."
+      ]
+    },
+    {
+      "creator_id": "53",
+      "name": "Tina Lê",
+      "profile_url": "https://www.tiktok.com/@tinalemakeup",
+      "username": "tinalemakeup",
+      "actual_username": "tinalemakeup",
+      "nickname": "TINA LÊ MAKE UP",
+      "verified": false,
+      "followers": 511682,
+      "likes": 6853831,
+      "video_count": 2015,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 1517,
+      "latest_post_at": "2026-07-16T16:04:31Z",
+      "freshness_days": 1,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "Video 7663157380108127508",
+        "Buổi học đặc biệt giữa học viên Myanmar và Việt Nam – nơi không còn k...",
+        "🌍 BÀI TRAINING TẠI KHÓA NÂNG CAO QUỐC TẾ | INTERNATIONAL ADVANCED MAS...",
+        "Life Style ❤️  #tinale2026 #Tinalemakeup",
+        "MỖI TÁC PHẨM ĐẸP ĐỀU BẮT ĐẦU TỪ MỘT QUÁ TRÌNH TRAINING CHỈN CHU. Tại ..."
+      ]
+    },
+    {
+      "creator_id": "55",
+      "name": "Kỳ Kỳ",
+      "profile_url": "https://www.tiktok.com/@unofficiallykyky",
+      "username": "unofficiallykyky",
+      "actual_username": "unofficiallykyky",
+      "nickname": "Kỳ Kỳ",
+      "verified": false,
+      "followers": 361150,
+      "likes": 6769296,
+      "video_count": 258,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 427200,
+      "latest_post_at": "2026-07-13T12:36:24Z",
+      "freshness_days": 4,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Thử thách đi sự kiện không make up 😉 #hoptaccungCocoon #SuaChongNangV...",
+        "Cách giảm tiết dầu trong ngày KHÔNG TỐN TIỀN 🥰 #goclamdep #reviewlamdep",
+        "Đừng chỉ bôi trét, mà hãy: 1.Tìm môn thể thao yêu thích để đổ mồ hôi ...",
+        "Đừng bào da thực tại chỉ vì một làn da không lão hóa trong tương lai ...",
+        "Các brand và giới mộ điệu sẽ không thích clip này 🥰🙏"
+      ]
+    },
+    {
+      "creator_id": "56",
+      "name": "Hoàng XXIV",
+      "profile_url": "https://www.tiktok.com/@hoangxxiv",
+      "username": "hoangxxiv",
+      "actual_username": "hoangxxiv",
+      "nickname": "Hoàng.XXIV",
+      "verified": true,
+      "followers": 453786,
+      "likes": 4798927,
+      "video_count": 1108,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 14600,
+      "latest_post_at": "2026-07-16T13:07:42Z",
+      "freshness_days": 1,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Mùi đàn hương vừa ngon vừa dễ dùng mà ít người biết: Peau Santal #hoa...",
+        "Mùi hương quyến rũ cho mùa hè: Call me iris #hoangxxiv #learnontiktok...",
+        "Chi tiết khiến nhiều anh em mất điểm khi đi chơi thể thao #hoangxxiv ...",
+        "Nếu bạn đang tìm một mùi hương 'sạch', không ngọt gắt, không nồng, th...",
+        "Một brand mình thấy cực hợp với thị trường Việt Nam vì tính nghệ thuậ..."
+      ]
+    },
+    {
+      "creator_id": "58",
+      "name": "An Phương",
+      "profile_url": "https://www.tiktok.com/@anphuong.beauty",
+      "username": "anphuong.beauty",
+      "status": "unreachable",
+      "issues": [
+        "RuntimeError: Tikwm profile lookup failed: unique_id is invalid"
+      ]
+    },
+    {
+      "creator_id": "59",
+      "name": "Mai Vân Trang",
+      "profile_url": "https://www.tiktok.com/@maivantrang",
+      "username": "maivantrang",
+      "actual_username": "maivantrang",
+      "nickname": "Mai Van Trang",
+      "verified": false,
+      "followers": 67,
+      "likes": 0,
+      "video_count": 0,
+      "sample_posts": 0,
+      "beauty_signal_posts": 0,
+      "median_sample_views": null,
+      "latest_post_at": null,
+      "freshness_days": null,
+      "status": "collector_blocked",
+      "issues": [
+        "collector_blocked:RuntimeError: Không quét được @maivantrang. Mọi layer đều fail:\n  yt-dlp @maivantrang: ERROR: [tiktok:user] maivantrang: Unable to extract secondary user ID. If you are able to get the channel_id from a video posted by this user, try using \"tiktokuser:channel_id\" as the input URL (replacing `channel_id` with its actual value)\n\nSet SCRAPECREATORS_KEY hoặc TIKTOK_MS_TOKEN env var để fix.",
+        "followers_below_100k"
+      ],
+      "sample_captions": []
+    },
+    {
+      "creator_id": "60",
+      "name": "Bống Bee",
+      "profile_url": "https://www.tiktok.com/@bongbee1301",
+      "username": "bongbee1301",
+      "actual_username": "bongbee1301",
+      "nickname": "Bống Bee ✅",
+      "verified": false,
+      "followers": 354684,
+      "likes": 3363791,
+      "video_count": 214,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 3673,
+      "latest_post_at": "2026-05-02T06:24:30Z",
+      "freshness_days": 77,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "❤️",
+        "Lần đầu làm chuyện ấy của chồng tui 😆 #babythreev3mini #bongbee",
+        "Kiểu tóc siêu hợp dịp Noel - Làm xoăn hippie đơn giản vô cùng 🎄 #blue...",
+        "Ở nhà dưỡng thương cũng không yên với vợ 😆 #bongbee",
+        "Tóc phồng tự nhiên siêu dễ, ai cũng làm đc  😚 #bongbee"
+      ]
+    },
+    {
+      "creator_id": "62",
+      "name": "Bác sĩ Đỗ Quốc Tuấn",
+      "profile_url": "https://www.tiktok.com/@drdotuan",
+      "username": "drdotuan",
+      "actual_username": "drdotuan",
+      "nickname": "Bác sĩ Tuấn",
+      "verified": false,
+      "followers": 313151,
+      "likes": 5483760,
+      "video_count": 452,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 66300,
+      "latest_post_at": "2024-12-31T15:56:24Z",
+      "freshness_days": 563,
+      "status": "watchlist",
+      "issues": [
+        "stale_over_90_days",
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Goodbye 2024, see you 2025",
+        "Một thành phần dưỡng sáng tối ưu được khuyên dùng bởi 99% các bác sĩ,...",
+        "Glow Exfo của MD Care có những gì đặc biệt? Hãy cùng bác sĩ tìm hiểu ...",
+        "Cùng bác sĩ Tuấn tìm hiểu về Melasyl - một trong số những hoạt chất l...",
+        "Một hoạt chất chống lão hóa mới ở trên da, bạn đã thử chưa? #PondsVie..."
+      ]
+    },
+    {
+      "creator_id": "63",
+      "name": "Trần Lâm (Bimm)",
+      "profile_url": "https://www.tiktok.com/@tran_lam18",
+      "username": "tran_lam18",
+      "actual_username": "tran_lam18",
+      "nickname": "Trần Lâm (With Bimm)",
+      "verified": true,
+      "followers": 376907,
+      "likes": 13299168,
+      "video_count": 1796,
+      "sample_posts": 5,
+      "beauty_signal_posts": 5,
+      "median_sample_views": 935,
+      "latest_post_at": "2026-07-18T04:30:01Z",
+      "freshness_days": 0,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "Đây là 2 em serum Đồng Peptide rất xịn mình đã dùng liên tục trong th...",
+        "Trả lời @Thuyduongloveyou serum, ampoule và kem dưỡng Bichup The Whoo...",
+        "Trả lời @Băng Nhi mụn đầu đen dùng serum vi kim được hay không? #seru...",
+        "Trả lời @Trinh Brows dùng serum vi kim mới của AHC có bị bong da khôn...",
+        "Vì sao dùng serum xịt mọc tóc lại không mọc tóc? 🤔 #xitmoctoc #serumm..."
+      ]
+    },
+    {
+      "creator_id": "64",
+      "name": "Trần Thiên Lý",
+      "profile_url": "https://www.tiktok.com/@tranthienly.com",
+      "username": "tranthienly.com",
+      "actual_username": "tranthienly.com",
+      "nickname": "Trần Thiên Lý",
+      "verified": false,
+      "followers": 180501,
+      "likes": 1847697,
+      "video_count": 29,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 66500,
+      "latest_post_at": "2025-07-15T06:46:00Z",
+      "freshness_days": 368,
+      "status": "watchlist",
+      "issues": [
+        "stale_over_90_days",
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "#CapCut",
+        "Video 7442700718881983752",
+        "Bố Vợ Con Rể ( P18- tập 2) gặp Cao Tăng để ủ mưu phản đòn @thangchias...",
+        "Bố Vợ Con Rể ( P18 ). Sự thật kinh hoàng. Tăm đã đến gặp cao nhân @th...",
+        "Bố vợ và con rể tương lai . ( Phần 17 ) .. Tình đã hết ..Níu kéo cũng..."
+      ]
+    },
+    {
+      "creator_id": "65",
+      "name": "Primmy Trương",
+      "profile_url": "https://www.tiktok.com/@primmytruong",
+      "username": "primmytruong",
+      "actual_username": "primmytruong",
+      "nickname": "Thao Truong 💙",
+      "verified": false,
+      "followers": 1155,
+      "likes": 2556,
+      "video_count": 0,
+      "sample_posts": 0,
+      "beauty_signal_posts": 0,
+      "median_sample_views": null,
+      "latest_post_at": null,
+      "freshness_days": null,
+      "status": "collector_blocked",
+      "issues": [
+        "collector_blocked:RuntimeError: Không quét được @primmytruong. Channel này yt-dlp không parse được (chắc do TikTok serve HTML khác cho user này). Đa số channel khác vẫn quét bình thường — nếu muốn cứu channel này thì set 1 trong 2 env var:\n  • SCRAPECREATORS_KEY (~30đ/clip, reliable)\n  • TIKTOK_MS_TOKEN (free, lấy từ DevTools → Cookies → tiktok.com → msToken, refresh mỗi tuần)\n\nLayers tried:\n  yt-dlp @primmytruong: ERROR: [tiktok:user] primmytruong: Unable to extract secondary user ID. If you are able to get the channel_id from a video posted by this user, try using \"tiktokuser:channel_id\" as the input URL (replacing `channel_id` with its actual value)\n  yt-dlp tiktokuser:MS4wLjABAAAA…: ERROR: This user's account is likely either private or all of their videos are private. Log into an account that has access. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookie",
+        "followers_below_100k"
+      ],
+      "sample_captions": []
+    },
+    {
+      "creator_id": "66",
+      "name": "Emmi Hoàng",
+      "profile_url": "https://www.tiktok.com/@emmihoang",
+      "username": "emmihoang",
+      "actual_username": "emmihoang",
+      "nickname": "emmihoang",
+      "verified": false,
+      "followers": 0,
+      "likes": 26,
+      "video_count": 0,
+      "sample_posts": 0,
+      "beauty_signal_posts": 0,
+      "median_sample_views": null,
+      "latest_post_at": null,
+      "freshness_days": null,
+      "status": "collector_blocked",
+      "issues": [
+        "collector_blocked:RuntimeError: Không quét được @emmihoang. Mọi layer đều fail:\n  yt-dlp @emmihoang: ERROR: [tiktok:user] emmihoang: Unable to extract secondary user ID. If you are able to get the channel_id from a video posted by this user, try using \"tiktokuser:channel_id\" as the input URL (replacing `channel_id` with its actual value)\n\nSet SCRAPECREATORS_KEY hoặc TIKTOK_MS_TOKEN env var để fix.",
+        "followers_below_100k"
+      ],
+      "sample_captions": []
+    },
+    {
+      "creator_id": "68",
+      "name": "Quin",
+      "profile_url": "https://www.tiktok.com/@quin",
+      "username": "quin",
+      "actual_username": "quin",
+      "nickname": "Quinn",
+      "verified": false,
+      "followers": 124,
+      "likes": 156,
+      "video_count": 1,
+      "sample_posts": 1,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 2068,
+      "latest_post_at": "2024-06-07T04:46:49Z",
+      "freshness_days": 771,
+      "status": "watchlist",
+      "issues": [
+        "stale_over_90_days",
+        "followers_below_100k",
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "drums r cool #drums #music #musicians #guitar #bass #piano #keys #voc..."
+      ]
+    },
+    {
+      "creator_id": "70",
+      "name": "Khánh The MUA",
+      "profile_url": "https://www.tiktok.com/@khanhtq_makeup",
+      "username": "khanhtq_makeup",
+      "actual_username": "khanhtq_makeup",
+      "nickname": "TRAN KHANH Makeup",
+      "verified": false,
+      "followers": 13999,
+      "likes": 448508,
+      "video_count": 247,
+      "sample_posts": 5,
+      "beauty_signal_posts": 4,
+      "median_sample_views": 1503,
+      "latest_post_at": "2026-07-18T12:06:48Z",
+      "freshness_days": 0,
+      "status": "watchlist",
+      "issues": [
+        "followers_below_100k"
+      ],
+      "sample_captions": [
+        "mệt cô dâu nha @Chou Lười Makeup  tới CR t khóc gấp đôi nữa :))))",
+        "Cô dâu xinh đẹp nhất hôm nay @Chou Lười Makeup #makeupcodau #makeupco...",
+        "Mới làm được 1 layout mê quáaaa, mi thiệt nhé cả nhà ơi #makeupnangca...",
+        "Cảm ơn mọi người đã xuất hiện và giúp đỡ Khánhhhh",
+        "Makeup ứng dụng thực tế đi làm khách là đâyyy! @LYNH CI #makeupungdun..."
+      ]
+    },
+    {
+      "creator_id": "71",
+      "name": "Dr Hiếu - Bác sĩ da liễu",
+      "profile_url": "https://www.tiktok.com/@bacsi.hieu.official",
+      "username": "bacsi.hieu.official",
+      "actual_username": "bacsi.hieu.official",
+      "nickname": "Dr Hiếu",
+      "verified": true,
+      "followers": 287819,
+      "likes": 1896854,
+      "video_count": 773,
+      "sample_posts": 5,
+      "beauty_signal_posts": 2,
+      "median_sample_views": 430,
+      "latest_post_at": "2026-07-18T11:30:00Z",
+      "freshness_days": 0,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "Việc không thể thiếu để giúp da căng bóng láng mịn #Lươ...",
+        "Muốn da sáng bật tone toàn thân thì dùng gì #LươngTrungHiếu...",
+        "Combo khuyến mãi kem chống nắng #LươngTrungHiếu #skincare #sức...",
+        "Muốn da căng bóng giảm nhăn thì cần phải làm gì #LươngTru...",
+        "Để trẻ lâu thì thoa gì? #LươngTrungHiếu #skincare #sứckhỏe #sốn..."
+      ]
+    },
+    {
+      "creator_id": "73",
+      "name": "Thuý Hiền Makeup",
+      "profile_url": "https://www.tiktok.com/@thuyhienmakeup",
+      "username": "thuyhienmakeup",
+      "actual_username": "thuyhienmakeup",
+      "nickname": "Thuý Hiền 𝙈𝙖𝙠𝙚𝙪𝙥🎐",
+      "verified": false,
+      "followers": 44953,
+      "likes": 1604390,
+      "video_count": 576,
+      "sample_posts": 5,
+      "beauty_signal_posts": 4,
+      "median_sample_views": 4251,
+      "latest_post_at": "2026-07-16T12:39:59Z",
+      "freshness_days": 1,
+      "status": "watchlist",
+      "issues": [
+        "followers_below_100k"
+      ],
+      "sample_captions": [
+        "Tặng ngay 1 cây và đi vìaaaaa 🧏🏻‍♀️ #thuyhienmakeup #makeup #quangtha...",
+        "Bản DUPE của H u d a 🧏🏻‍♀️ tin được khum vậy nèee!? #thuyhienmakeup #...",
+        "—————————————————— 𝙼𝚊𝚔𝚎𝚞𝚙 & 𝙷𝚊𝚒𝚛: Thuý Hiền 𝙈𝙖𝙠𝙚𝙪𝙥🎐 #thuyhienmakeup #...",
+        "Giờ anh đã biết gỡ rối sợi dây tơ hồng 🧏🏻‍♀️ Layout này đi biển lại q...",
+        "Đặt tên cho chiếc Layout này đii mấy nàng 🧏🏻‍♀️ #thuyhienmakeup #bien..."
+      ]
+    },
+    {
+      "creator_id": "74",
+      "name": "Bác sĩ Khổng Hạnh Nguyên",
+      "profile_url": "https://www.tiktok.com/@drkhonghanhnguyen",
+      "username": "drkhonghanhnguyen",
+      "actual_username": "drkhonghanhnguyen",
+      "nickname": "Khổng Hạnh Nguyên",
+      "verified": true,
+      "followers": 611623,
+      "likes": 9456302,
+      "video_count": 697,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 152400,
+      "latest_post_at": "2026-07-16T14:03:27Z",
+      "freshness_days": 1,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Top 5 thứ đáng tiền mà tôi đã mua, siêu recommend số 5 mọi người nhé ...",
+        "1 ngày di chuyển thần tốc của tôi là như này đây #bskhonghanhnguyen #...",
+        "Có bạn nào thích mặc vest và blazer giống tui hong, trải nghiệm thử m...",
+        "Trả lời @Thái Hoàng Lân Học viên quân y sao lại được đi nước ngoài, t...",
+        "Ai cũng có thể áp dụng chỉ cần đủ quyết tâm, cố lênn #bskhonghanhnguy..."
+      ]
+    },
+    {
+      "creator_id": "77",
+      "name": "Hồng Beauty",
+      "profile_url": "https://www.tiktok.com/@hongbeauty",
+      "username": "hongbeauty",
+      "actual_username": "hongbeauty",
+      "nickname": "Hồng Beauty",
+      "verified": false,
+      "followers": 1264304,
+      "likes": 34167746,
+      "video_count": 354,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 31600,
+      "latest_post_at": "2026-03-15T11:58:55Z",
+      "freshness_days": 125,
+      "status": "watchlist",
+      "issues": [
+        "stale_over_90_days"
+      ],
+      "sample_captions": [
+        "Routine giảm rụng tóc của tui nè mấy bà. Tập trung chăm da đầu trước ...",
+        "3-4 ngày chưa bết mà tóc vẫn phồng là có bí kíp cả đó #chamsoctoc #ha...",
+        "Cách kẹp tóc đuôi ngựa cao phồng #hongbeauty #hairhack #hairstyle #po...",
+        "Tips tết tóc phồng xinh hơn cực đơn giản 🥰 #hongbeauty #hairstyle #ha...",
+        "Unboxing 🐇💖 @Flower Knows Makeup #FlowerKnows #LiveYourFairytales #Bu..."
+      ]
+    },
+    {
+      "creator_id": "78",
+      "name": "Bác sĩ Hoàng Văn Tâm",
+      "profile_url": "https://www.tiktok.com/@bacsitamdalieu",
+      "username": "bacsitamdalieu",
+      "actual_username": "bacsitamdalieu",
+      "nickname": "Bác sĩ Tâm da liễu",
+      "verified": false,
+      "followers": 162974,
+      "likes": 1174320,
+      "video_count": 626,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 1499,
+      "latest_post_at": "2026-07-16T13:44:39Z",
+      "freshness_days": 1,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Trong suốt hơn 2 năm thực hiện dự án Xoá \"Bớt\" Cho Em, mình và ekip đ...",
+        "Bắn nốt ruồi bằng laser nhưng không cải thiện? #bacsidalieu #bstam #d...",
+        "Theo mọi người, đây có phải buổi làm quen \"vất vả\" nhất từ trước đến ...",
+        "Nhận biết dấu hiệu mắc bớt rượu vang ở trẻ  #bacsidalieu #bstam #pema...",
+        "Mong mỗi bệnh nhân đang mắc bạch biến thể đầu cực đều sẽ kiên trì điề..."
+      ]
+    },
+    {
+      "creator_id": "79",
+      "name": "Bác sĩ Nam Võ",
+      "profile_url": "https://www.tiktok.com/@drnamvo.dalieu",
+      "username": "drnamvo.dalieu",
+      "actual_username": "drnamvo.dalieu",
+      "nickname": "Võ Công Nam",
+      "verified": false,
+      "followers": 151349,
+      "likes": 3740430,
+      "video_count": 1152,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 19500,
+      "latest_post_at": "2026-07-17T14:47:00Z",
+      "freshness_days": 0,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Tình trạng da này có phải bị mụn hay không?  #drnamvo #lamdep #dalieu...",
+        "Da d.ầu m.ụn nên chọn KCN ntn?  #drnamvo #lamdep  #dalieu  #trending ...",
+        "M.ụn không nhân thì xử lý ntn?  #drnamvo #lamdep #dalieu #trending #s...",
+        "Thâm mụn, da yếu sau mụn nên cải thiện như thế nào? #drnamvo #lamdep ...",
+        "Niacina.mide + ADAP như thế nào?  #drnamvo #lamdep #dalieu #trending ..."
+      ]
+    },
+    {
+      "creator_id": "80",
+      "name": "Chung Thành",
+      "profile_url": "https://www.tiktok.com/@chungthanh_",
+      "username": "chungthanh_",
+      "actual_username": "chungthanh_",
+      "nickname": "Chung Thành",
+      "verified": true,
+      "followers": 187347,
+      "likes": 4624807,
+      "video_count": 344,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 50900,
+      "latest_post_at": "2026-07-07T13:15:00Z",
+      "freshness_days": 10,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Trả lời @HOANG TUNG - Mr PIZZA SOLUS đã thay đổi nhận diện theo góp ý...",
+        "Trả lời @Bảy shops Thành hay bại chưa biết, nhưng ít nhất mình cũng đ...",
+        "Trả lời @Khánh Linh ơi đừng flop nữa 🥹 Tổng chi phí mình đã đầu tư ch...",
+        "Trả lời @abucoffee.chill Đơn hàng lớn đầu tiên của SOLUS 😍 #LALUZ #SOLUS",
+        "Trả lời @SonnyTran Hệ quầy bar tại SOLUS 🫶🏻 #LALUZ #SOLUS"
+      ]
+    },
+    {
+      "creator_id": "81",
+      "name": "Bích Uyên",
+      "profile_url": "https://www.tiktok.com/@bubutranxoxo",
+      "username": "bubutranxoxo",
+      "actual_username": "bubutranxoxo",
+      "nickname": "bubutranxoxo",
+      "verified": false,
+      "followers": 175704,
+      "likes": 11473700,
+      "video_count": 1001,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 16300,
+      "latest_post_at": "2026-07-18T09:14:27Z",
+      "freshness_days": 0,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "@imyourBen ٠࣪⭑ chuẩn bị làm gì đấy",
+        "Hôm nay làm thuyền viên với các chị đẹp và Neutrogena kakakakaka :>>>...",
+        "Rần rần em phấn phủ filter Fit Me cà mịn da của MBL =)))) Nhấn mạnh l...",
+        "Bí quyết của hội nền bê tông ở đâuuuuuuuuu =)))))))))) k bit nhưng mà...",
+        "Unboxing collection mới 3CE kết hợp cùng Mikshimai hehehhe.  Nội dung..."
+      ]
+    },
+    {
+      "creator_id": "82",
+      "name": "Thời Toki",
+      "profile_url": "https://www.tiktok.com/@thoitoki_perfume",
+      "username": "thoitoki_perfume",
+      "status": "unreachable",
+      "issues": [
+        "RuntimeError: Tikwm profile lookup failed: unique_id is invalid"
+      ]
+    },
+    {
+      "creator_id": "83",
+      "name": "Bác sĩ Minh Điềm",
+      "profile_url": "https://www.tiktok.com/@drdiemdalieu.medici",
+      "username": "drdiemdalieu.medici",
+      "status": "unreachable",
+      "issues": [
+        "RuntimeError: Tikwm profile lookup failed: unique_id is invalid"
+      ]
+    },
+    {
+      "creator_id": "84",
+      "name": "Bác sĩ Hằng Trần",
+      "profile_url": "https://www.tiktok.com/@bshangtrandalieu.medici",
+      "username": "bshangtrandalieu.medici",
+      "status": "unreachable",
+      "issues": [
+        "RuntimeError: Tikwm profile lookup failed: unique_id is invalid"
+      ]
+    },
+    {
+      "creator_id": "86",
+      "name": "Phương thích makeup",
+      "profile_url": "https://www.tiktok.com/@hinhthucphuong",
+      "username": "hinhthucphuong",
+      "actual_username": "hinhthucphuong",
+      "nickname": "Phương thích makeup",
+      "verified": false,
+      "followers": 115519,
+      "likes": 6762254,
+      "video_count": 898,
+      "sample_posts": 5,
+      "beauty_signal_posts": 1,
+      "median_sample_views": 25400,
+      "latest_post_at": "2026-07-16T10:31:44Z",
+      "freshness_days": 2,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "Để xem trong vali này có gì đâyyyy 🤔 #thucphuonghinh #schannel #3CExM...",
+        "+1 photobooth chụp với bạn thân 🤣 #thucphuonghinh #schannel #photobooth",
+        "Lâu lâu lên lại tutorial tone hồng cho mấy bà nhaaa #thucphuonghinh #...",
+        "Giờ nhắc tới tóc ngắn là nghĩ tới bài này 🤣 (cre @𝐌𝐈𝐒𝐒 𝐃𝐈𝐕𝐀 𝐁𝐎𝐁 ) #th...",
+        "Unbox những combo son mà tui có 💕 #thucphuonghinh #schannel #makeupre..."
+      ]
+    },
+    {
+      "creator_id": "87",
+      "name": "Tôm (Tomskincare)",
+      "profile_url": "https://www.tiktok.com/@tomskincare",
+      "username": "tomskincare",
+      "actual_username": "tomskincare",
+      "nickname": "tomskincare",
+      "verified": false,
+      "followers": 629085,
+      "likes": 9693203,
+      "video_count": 330,
+      "sample_posts": 5,
+      "beauty_signal_posts": 2,
+      "median_sample_views": 7208,
+      "latest_post_at": "2026-07-17T15:21:57Z",
+      "freshness_days": 0,
+      "status": "eligible",
+      "issues": [],
+      "sample_captions": [
+        "nếu muốn đạt được 1 thứ j đó mat mãi ko thể hành động... xem vid này",
+        "THỜI TỚI THÁNG 07 SKINCARE Od nha mn",
+        "CHẤM ĐIỂM SKINCARE NÀO ĐÁNG ĐỂ ĐẦU TUE VÀ NGƯỢC LẠI 😂😂😂 #tomskincare ...",
+        "KO PHÍ TIỀN :))) On repeat...  Results guaranteed ✅  #notsponsored #t...",
+        "Cảm thấy vid này rất quan trọng :) Dù khó mn cũng nên làm... Cái j kh..."
+      ]
+    },
+    {
+      "creator_id": "88",
+      "name": "Misoa Kim Anh",
+      "profile_url": "https://www.tiktok.com/@misoa.kimanh",
+      "username": "misoa.kimanh",
+      "status": "unreachable",
+      "issues": [
+        "RuntimeError: Tikwm profile lookup failed: unique_id is invalid"
+      ]
+    },
+    {
+      "creator_id": "89",
+      "name": "Trần Kiều Loan",
+      "profile_url": "https://www.tiktok.com/@loan_rose0810",
+      "username": "loan_rose0810",
+      "actual_username": "loan_rose0810",
+      "nickname": "Trần Kiều Loan 💋",
+      "verified": false,
+      "followers": 168340,
+      "likes": 2439847,
+      "video_count": 729,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 12000,
+      "latest_post_at": "2026-07-17T04:32:01Z",
+      "freshness_days": 1,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Truy Tìm kho báu tại Even Lattafa 🔥 #lattafa #lattafavietnam #hisconf...",
+        "Cảnh báo có nhiều nụ cười 😝 Trải nghiệm bộ siêu tập mới nhà Lattafa c...",
+        "Chăm da nhưng có thật sự thấu hiểu làn da cần gì 🤔….. cùng@DERMAFIRM_...",
+        "Đi theo anh nào các vợ để có một bờ néc sạch thâm, sáng mịn, trắng sá...",
+        "Review Ốc Mượn Hồn có gì hottt 🫣.        #OcMuonHonMovie #OcMuonHon #..."
+      ]
+    },
+    {
+      "creator_id": "92",
+      "name": "Motrang hít hà",
+      "profile_url": "https://www.tiktok.com/@motrang_",
+      "username": "motrang_",
+      "actual_username": "motrang_",
+      "nickname": "motrang hít hà 😝",
+      "verified": false,
+      "followers": 40585,
+      "likes": 710050,
+      "video_count": 457,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 1059,
+      "latest_post_at": "2026-07-16T13:59:46Z",
+      "freshness_days": 1,
+      "status": "watchlist",
+      "issues": [
+        "followers_below_100k",
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "set mini Guerlain Extrait 6 x10ml quá là xinh yêu thế này❤️😍 #motrang...",
+        "ôi cảm giác này❤️😍 #motrang #motrangperfume #nướchoa #guerlain #fyp G...",
+        "đẹp quá lun #motrang #motrangperfume #nướchoa #guerlain Guerlain son ...",
+        "18.5🍠 quá xứng đáng luôn 😍 vừa đẹp vừa thơm vừa sang. Set Guerlain Ex...",
+        "kem tay Guerlain hơn 1🍠 mà cỡ này quà á #motrang #motrangperfume #nướ..."
+      ]
+    },
+    {
+      "creator_id": "94",
+      "name": "Huỳnh Thi Makeup",
+      "profile_url": "https://www.tiktok.com/@makeuphuynhthi",
+      "username": "makeuphuynhthi",
+      "actual_username": "makeuphuynhthi",
+      "nickname": "Huỳnh Thi Makeup",
+      "verified": false,
+      "followers": 21281,
+      "likes": 277351,
+      "video_count": 1437,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 641,
+      "latest_post_at": "2026-07-17T14:36:09Z",
+      "freshness_days": 0,
+      "status": "watchlist",
+      "issues": [
+        "followers_below_100k",
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "𝙇𝙖𝙮𝙤𝙪𝙩 𝙢𝙖𝙠𝙚𝙪𝙥 𝙩𝙞́𝙢 𝙠𝙝𝙤́𝙞 𝙘𝙝𝙤 𝙡𝙤̛́𝙥 𝙢𝙖𝙠𝙚𝙪𝙥 𝙘𝙝𝙪𝙮𝙚̂𝙣 𝙣𝙜𝙝𝙞ệ𝙥 𝙩𝙖̣𝙞 𝙃𝙪ỳ𝙣𝙝 𝙏...",
+        "• 𝗠ộ𝘁 𝗹𝗮𝘆𝗼𝘂𝘁 𝗰𝗵ỉ𝗻𝗵 𝗰𝗵𝘂 𝘀ẽ 𝗴𝗶ú𝗽 𝗯ạ𝗻 𝘁ự 𝘁𝗶𝗻 𝘁𝗿𝗼𝗻𝗴 𝗺ọ𝗶 𝗸𝗵𝗼ả𝗻𝗵 𝗸𝗵ắ𝗰. 🍂 •Đ...",
+        "Không phải lúc nào cũng rực rỡ, nhưng luôn cố gắng tử tế ! #tiktok #t...",
+        "Video 7655664483678899476",
+        "Lên bia 🍻 #tiktok #tuong_tac #follow #ilovetiktok #khongsaykhongve😜"
+      ]
+    },
+    {
+      "creator_id": "95",
+      "name": "Lương Lee",
+      "profile_url": "https://www.tiktok.com/@luonglee1404",
+      "username": "luonglee1404",
+      "actual_username": "luonglee1404",
+      "nickname": "Lương Lee",
+      "verified": false,
+      "followers": 86202,
+      "likes": 852802,
+      "video_count": 796,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 16300,
+      "latest_post_at": "2026-07-17T05:04:39Z",
+      "freshness_days": 1,
+      "status": "watchlist",
+      "issues": [
+        "followers_below_100k",
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Lộn xộn những thứ Lương thấy đáng tiền nhất từng mua không phải skinc...",
+        "U40 rồi nên có công nghệ thì cứ tận dụng thôi. 😆 Nhưng sau nhiều năm ...",
+        "📢 17/07 | 20:00–22:00 – Hẹn gặp mọi người tại livestream The Whoo trê...",
+        "Hẹn mọi người trên kênh mình lúc 12:00–14:00 ngày 15/07 nhé! #reviews...",
+        "hè này bạn nhất định phải có 1 tuýp KCN đẹp tập 2 : nay thử KCN Elixi..."
+      ]
+    },
+    {
+      "creator_id": "96",
+      "name": "Kiên Fragrance",
+      "profile_url": "https://www.tiktok.com/@kienfragranceca",
+      "username": "kienfragranceca",
+      "status": "unreachable",
+      "issues": [
+        "RuntimeError: Tikwm profile lookup failed: unique_id is invalid"
+      ]
+    },
+    {
+      "creator_id": "98",
+      "name": "Nga nèe",
+      "profile_url": "https://www.tiktok.com/@thuyngareview",
+      "username": "thuyngareview",
+      "actual_username": "thuyngareview",
+      "nickname": "Nga nèe",
+      "verified": false,
+      "followers": 111644,
+      "likes": 4593644,
+      "video_count": 970,
+      "sample_posts": 5,
+      "beauty_signal_posts": 0,
+      "median_sample_views": 20100,
+      "latest_post_at": "2026-07-16T09:15:58Z",
+      "freshness_days": 2,
+      "status": "manual_content_review",
+      "issues": [
+        "no_beauty_terms_in_sample"
+      ],
+      "sample_captions": [
+        "Trả lời @ngoc.anh.2809 còn 1 cmt khác cần giải thích bằng kiến thức s...",
+        "Tiếp thu thêm kiến thức về CO2, mấy bà nghe luôn cho vui #nganeee",
+        "Diếm đồ Biotrade xài trong âm thầm thì tiếc tiếc mà review ra thì thấ...",
+        "Sữa chống nắng vô cơ Cocoon nâng tone siêu nhẹ nhàng, nhẹ mặt, bảo vệ...",
+        "Trả lời @Tamil 🧚🏻‍♀️ ngẫu hứng chiều tối review 5 hãng mặt nạ hay đắp..."
+      ]
+    },
+    {
+      "creator_id": "99",
+      "name": "Jena",
+      "profile_url": "https://www.tiktok.com/@nuochoa.jena",
+      "username": "nuochoa.jena",
+      "status": "unreachable",
+      "issues": [
+        "RuntimeError: Tikwm profile lookup failed: unique_id is invalid"
+      ]
+    }
+  ]
+}

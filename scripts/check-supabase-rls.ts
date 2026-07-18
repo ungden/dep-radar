@@ -13,15 +13,17 @@ const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
 
 async function main() {
 
-const [anonOffers, anonEvents, anonStates, rawOffers, rawEvents] = await Promise.all([
+const [anonOffers, anonEvents, anonStates, anonCreators, rawOffers, rawEvents, rawCreators] = await Promise.all([
   anon.from("product_offers").select("*"),
   anon.from("creator_product_events").select("*"),
   anon.from("creator_product_states").select("*"),
+  anon.from("kols").select("id,directory_status"),
   admin.from("product_offers").select("id"),
   admin.from("creator_product_events").select("id"),
+  admin.from("kols").select("id,directory_status"),
 ])
 
-for (const result of [anonOffers, anonEvents, anonStates, rawOffers, rawEvents]) {
+for (const result of [anonOffers, anonEvents, anonStates, anonCreators, rawOffers, rawEvents, rawCreators]) {
   if (result.error) throw result.error
 }
 
@@ -30,9 +32,12 @@ const invalidEvent = (anonEvents.data ?? []).find((event) => event.verification_
 if (invalidOffer) throw new Error(`RLS leaked unqualified offer ${invalidOffer.id}`)
 if (invalidEvent) throw new Error(`RLS leaked unqualified creator event ${invalidEvent.id}`)
 if ((anonStates.data?.length ?? 0) > (anonEvents.data?.length ?? 0)) throw new Error("RLS leaked a creator state without a readable audited event")
+if ((anonCreators.data ?? []).some((creator) => creator.directory_status !== "active")) throw new Error("RLS leaked a non-active creator profile")
+if ((anonCreators.data ?? []).some((creator) => ["3", "13", "16"].includes(creator.id))) throw new Error("RLS leaked an explicitly excluded creator profile")
+if ((rawCreators.data?.length ?? 0) <= (anonCreators.data?.length ?? 0)) throw new Error("Admin cannot see historical creator remediation rows")
 if ((rawOffers.data?.length ?? 0) === 0 && (rawEvents.data?.length ?? 0) === 0) throw new Error("Admin/service role could not read remediation rows")
 
-console.log(`RLS passed: anon sees ${anonOffers.data?.length ?? 0} offers, ${anonEvents.data?.length ?? 0} events, ${anonStates.data?.length ?? 0} states; admin sees raw rows.`)
+console.log(`RLS passed: anon sees ${anonOffers.data?.length ?? 0} offers, ${anonEvents.data?.length ?? 0} events, ${anonStates.data?.length ?? 0} states and ${anonCreators.data?.length ?? 0} active creators; admin sees ${rawCreators.data?.length ?? 0} total creator rows.`)
 }
 
 main().catch((error) => {

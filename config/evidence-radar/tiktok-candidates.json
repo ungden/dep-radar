@@ -1,0 +1,29 @@
+{
+  "accounts": [
+    {
+      "creator_id": "candidate-emlyy",
+      "name": "Emlyy",
+      "profile_url": "https://www.tiktok.com/@emlyreview"
+    },
+    {
+      "creator_id": "candidate-ha-giang",
+      "name": "Hà Giang",
+      "profile_url": "https://www.tiktok.com/@ciaramakeup2003"
+    },
+    {
+      "creator_id": "candidate-hoang-minh-ngoc",
+      "name": "Hoàng Minh Ngọc",
+      "profile_url": "https://www.tiktok.com/@hoangminhngoc21"
+    },
+    {
+      "creator_id": "candidate-quynh-alee",
+      "name": "Quỳnh Alee",
+      "profile_url": "https://www.tiktok.com/@quynhalee"
+    },
+    {
+      "creator_id": "candidate-son-me-review",
+      "name": "Sơn Mê Review",
+      "profile_url": "https://www.tiktok.com/@sonmereview"
+    }
+  ]
+}
