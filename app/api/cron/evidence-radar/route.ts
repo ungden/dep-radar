@@ -16,53 +16,61 @@ async function runWorker(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })
   }
 
-  if (process.env.EVIDENCE_RADAR_COLLECTION_ENABLED !== "true") {
+  const collectionEnabled = process.env.EVIDENCE_RADAR_COLLECTION_ENABLED === "true"
+  const analysisEnabled = process.env.EVIDENCE_RADAR_ANALYSIS_ENABLED === "true"
+  if (!collectionEnabled && !analysisEnabled) {
     return NextResponse.json({
       ok: true,
       worker: "evidence-radar",
       paused: true,
-      reason: "Collection kill-switch is off until provider and Gemini credentials are verified.",
+      reason: "Collection and analysis kill-switches are off.",
     })
   }
 
   const results: Array<Record<string, unknown>> = []
   const errors: Array<Record<string, unknown>> = []
 
-  const monitorMessages = await readQueue<CreatorMonitorMessage>("creator_monitor", 2)
-  for (const queueMessage of monitorMessages) {
-    try {
-      const result = await collectCreatorAccount(queueMessage.message.creator_account_id)
-      await deleteQueueMessage("creator_monitor", queueMessage.msg_id)
-      results.push({ kind: "collection", accountId: queueMessage.message.creator_account_id, ...result })
-    } catch (error) {
-      errors.push({
-        kind: "collection",
-        accountId: queueMessage.message.creator_account_id,
-        attempt: queueMessage.read_ct,
-        error: error instanceof Error ? error.message : String(error),
-      })
+  if (collectionEnabled) {
+    const monitorMessages = await readQueue<CreatorMonitorMessage>("creator_monitor", 2)
+    for (const queueMessage of monitorMessages) {
+      try {
+        const result = await collectCreatorAccount(queueMessage.message.creator_account_id)
+        await deleteQueueMessage("creator_monitor", queueMessage.msg_id)
+        results.push({ kind: "collection", accountId: queueMessage.message.creator_account_id, ...result })
+      } catch (error) {
+        errors.push({
+          kind: "collection",
+          accountId: queueMessage.message.creator_account_id,
+          attempt: queueMessage.read_ct,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
     }
   }
 
-  const analysisMessages = await readQueue<EvidenceAnalysisMessage>("evidence_analysis", 2, 600)
-  for (const queueMessage of analysisMessages) {
-    try {
-      const result = await analyzeSourcePost(queueMessage.message.source_post_id)
-      await deleteQueueMessage("evidence_analysis", queueMessage.msg_id)
-      results.push({ kind: "analysis", sourcePostId: queueMessage.message.source_post_id, ...result })
-    } catch (error) {
-      errors.push({
-        kind: "analysis",
-        sourcePostId: queueMessage.message.source_post_id,
-        attempt: queueMessage.read_ct,
-        error: error instanceof Error ? error.message : String(error),
-      })
+  if (analysisEnabled) {
+    const analysisMessages = await readQueue<EvidenceAnalysisMessage>("evidence_analysis", 2, 600)
+    for (const queueMessage of analysisMessages) {
+      try {
+        const result = await analyzeSourcePost(queueMessage.message.source_post_id)
+        await deleteQueueMessage("evidence_analysis", queueMessage.msg_id)
+        results.push({ kind: "analysis", sourcePostId: queueMessage.message.source_post_id, ...result })
+      } catch (error) {
+        errors.push({
+          kind: "analysis",
+          sourcePostId: queueMessage.message.source_post_id,
+          attempt: queueMessage.read_ct,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
     }
   }
 
   return NextResponse.json({
     ok: errors.length === 0,
     worker: "evidence-radar",
+    collectionEnabled,
+    analysisEnabled,
     processed: results.length,
     results,
     errors,

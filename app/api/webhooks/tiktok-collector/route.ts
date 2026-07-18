@@ -90,6 +90,26 @@ export async function POST(request: NextRequest) {
     .upsert(rows, { onConflict: "source_url" })
   if (upsertError) return NextResponse.json({ ok: false, error: upsertError.message }, { status: 500 })
 
+  const mediaSourceUrls = normalized.posts.filter((post) => post.media_url).map((post) => post.source_url)
+  let queuedForPrivateAnalysis = 0
+  if (mediaSourceUrls.length) {
+    const { data: mediaRows, error: mediaRowsError } = await supabase
+      .from("source_posts")
+      .select("id,analysis_status")
+      .in("source_url", mediaSourceUrls)
+    if (mediaRowsError) return NextResponse.json({ ok: false, error: mediaRowsError.message }, { status: 500 })
+    const pendingIds = (mediaRows ?? [])
+      .filter((row) => row.analysis_status !== "queued" && row.analysis_status !== "processing")
+      .map((row) => row.id)
+    if (pendingIds.length) {
+      const { error: queueError } = await supabase.rpc("evidence_radar_enqueue_source_posts", {
+        source_post_ids: pendingIds,
+      })
+      if (queueError) return NextResponse.json({ ok: false, error: queueError.message }, { status: 500 })
+    }
+    queuedForPrivateAnalysis = mediaRows?.length ?? 0
+  }
+
   const inserted = normalized.posts.filter((post) => !existingUrls.has(post.source_url)).length
   const updated = normalized.posts.length - inserted
   const errors = normalized.rejected.map((item) => `post[${item.index}]: ${item.reason}`)
@@ -127,7 +147,7 @@ export async function POST(request: NextRequest) {
     inserted,
     updated,
     rejected: normalized.rejected,
-    queuedForPrivateAnalysis: inserted,
+    queuedForPrivateAnalysis,
     publicPublishEnabled: false,
   }, { status: errors.length ? 207 : 200 })
 }

@@ -28,6 +28,7 @@ The database queues due accounts every five minutes and invokes the authenticate
 
 - Keep `EVIDENCE_RADAR_AUTO_PUBLISH=false` and `EVIDENCE_RADAR_GOLDEN_SAMPLE_COUNT=0` while labeling the first 500 posts.
 - Keep `EVIDENCE_RADAR_COLLECTION_ENABLED=false` until Bright Data, YouTube and Gemini credentials have each passed a live request. Then activate the desired creator accounts and turn this flag on.
+- `EVIDENCE_RADAR_ANALYSIS_ENABLED` is independent: it may process manually ingested posts with resolved media while account collection remains off.
 - Only set the golden count to `500` after the checked-in evaluation reaches product-match precision `>=98%` and current-use precision `>=95%`.
 - Auto-publish additionally requires confidence `>=92` and zero risk flags. Every other claim remains in Evidence Inbox.
 
@@ -37,8 +38,8 @@ The database queues due accounts every five minutes and invokes the authenticate
 
 Use two passes so a 100-video scan does not become a multi-gigabyte archive by default:
 
-1. Scan metadata/captions for 100 recent posts per pilot creator.
-2. Resolve media for at most 10 likely-useful posts, analyse them promptly, then let the short media URL expire.
+1. Scan metadata/captions for 100 recent posts per pilot creator. Metadata-only rows remain `pending` and do not enter the model queue.
+2. Resolve media for at most 10 likely-useful posts. Only those rows enter the analysis queue; analyse them promptly, then let the short media URL expire.
 3. Review extracted products, action type, disclosure and timestamp/frame evidence in Evidence Inbox.
 4. Expand to 200 posts only after measuring scan success, product-match precision, media cost and review throughput.
 
