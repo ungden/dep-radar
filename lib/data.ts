@@ -4,7 +4,7 @@ import { deriveCreatorProductState, isPublicEvidenceEvent } from "@/lib/evidence
 import { REAL_KOLS } from "@/lib/kols-data"
 import { productsWithTaxonomy, productWithTaxonomy } from "@/lib/product-taxonomy"
 import { RESEARCHED_PRODUCTS } from "@/lib/product-research"
-import { SAMPLE_CREATOR_PRODUCT_EVENTS, SAMPLE_PRODUCT_OFFERS } from "@/lib/timeline-data"
+import { isPublicCreatorEvent, isPublicOffer, summarizeApprovedRatings } from "@/lib/public-trust"
 import type { CommunityReview, CreatorEvidenceItem, CreatorProductEvent, CreatorProductState, Kol, Post, Product, ProductOffer, Review } from "@/lib/types"
 
 // Toàn bộ hồ sơ KOL/KOC đã xác minh nằm trong REAL_KOLS; hồ sơ mơ hồ bị loại khỏi public registry.
@@ -26,28 +26,7 @@ export const SAMPLE_PRODUCTS: Product[] = productsWithTaxonomy([
 ])
 
 const CURATED_LEGACY_PRODUCTS = new Map(SAMPLE_PRODUCTS.slice(0, 8).map((product) => [product.id, product]))
-const PUBLIC_AFFILIATE_PRODUCT_IDS = new Set(
-  SAMPLE_PRODUCT_OFFERS
-    .filter((offer) => isPublicAffiliateUrl(offer.affiliate_url))
-    .map((offer) => offer.product_id)
-)
-
-function isPublicAffiliateUrl(url?: string | null) {
-  return Boolean(url?.startsWith("https://s.shopee.vn/"))
-}
-
-function hasPublicAffiliate(product: Product) {
-  return isPublicAffiliateUrl(product.affiliate_url) || PUBLIC_AFFILIATE_PRODUCT_IDS.has(product.id)
-}
-
-function isPublicCreatorEvidenceEvent(event: CreatorProductEvent) {
-  const sourcePlatform = event.source_platform.toLowerCase()
-  return !sourcePlatform.includes("seed") && !sourcePlatform.includes("internal") && !event.source_url?.startsWith("/blog/")
-}
-
-const PUBLIC_CREATOR_PRODUCT_EVENTS = SAMPLE_CREATOR_PRODUCT_EVENTS
-  .filter(isPublicCreatorEvidenceEvent)
-  .filter(isPublicEvidenceEvent)
+const PUBLIC_CREATOR_PRODUCT_EVENTS: CreatorProductEvent[] = []
 
 export const SAMPLE_CREATOR_EVIDENCE_ITEMS: CreatorEvidenceItem[] = PUBLIC_CREATOR_PRODUCT_EVENTS.slice(0, 4).map((event) => ({
   id: `evidence-${event.id}`,
@@ -69,26 +48,10 @@ export const SAMPLE_CREATOR_EVIDENCE_ITEMS: CreatorEvidenceItem[] = PUBLIC_CREAT
 
 export const SAMPLE_REVIEWS: Review[] = []
 
-function legacyAffiliateOffer(product: Product): ProductOffer | null {
-  if (!product.affiliate_url) return null
-  return {
-    id: `legacy-affiliate-${product.id}`,
-    product_id: product.id,
-    marketplace: "shopee",
-    shop_name: "Shopee affiliate",
-    seller_url: null,
-    affiliate_url: product.affiliate_url,
-    price_snapshot: product.price,
-    stock_status: "unknown",
-    is_preferred: true,
-    last_checked_at: "2026-06-30T00:00:00Z",
-  }
-}
-
-function mergeOffers(offers: ProductOffer[], products: Product[] = SAMPLE_PRODUCTS) {
-  const legacyOffers = products.map(legacyAffiliateOffer).filter((offer): offer is ProductOffer => Boolean(offer))
+function mergeOffers(offers: ProductOffer[]) {
   const seen = new Set<string>()
-  return [...offers, ...legacyOffers]
+  return offers
+    .filter(isPublicOffer)
     .filter((offer) => {
       if (seen.has(offer.id)) return false
       seen.add(offer.id)
@@ -265,32 +228,36 @@ async function fromSupabase<T>(query: PromiseLike<{ data: T | null; error: unkno
   }
 }
 
-export async function getProducts() {
-  const products = await fromSupabase<Product[]>(
-    supabase.from("radar_products").select("*").order("name"),
-    SAMPLE_PRODUCTS
-  )
+export async function getProducts(): Promise<Product[]> {
+  const [products, approvedRatings] = await Promise.all([
+    fromSupabase<Product[]>(supabase.from("radar_products").select("*").order("name"), SAMPLE_PRODUCTS),
+    fromSupabase<Array<{ product_id: string; rating: number }>>(
+      supabase.from("user_ratings").select("product_id,rating").eq("status", "approved"),
+      []
+    ),
+  ])
+  const ratingsByProduct = new Map<string, Array<{ rating: number }>>()
+  for (const rating of approvedRatings) {
+    ratingsByProduct.set(rating.product_id, [...(ratingsByProduct.get(rating.product_id) ?? []), rating])
+  }
   return productsWithTaxonomy(mergeProducts(products, SAMPLE_PRODUCTS))
     .map((product) => CURATED_LEGACY_PRODUCTS.get(product.id) ?? product)
     .filter((product) => product.status !== "pending" && product.status !== "archived")
-    .filter(hasPublicAffiliate)
+    .map((product) => {
+      const summary = summarizeApprovedRatings(ratingsByProduct.get(product.id) ?? [])
+      return { ...product, rating: summary.average ?? 0, reviews: summary.count, affiliate_url: null }
+    })
 }
 
 export async function getProductOffers(filters: { productId?: string } = {}) {
-  const products = filters.productId
-    ? SAMPLE_PRODUCTS.filter((product) => product.id === filters.productId)
-    : SAMPLE_PRODUCTS
-  const fallback = mergeOffers(
-    SAMPLE_PRODUCT_OFFERS.filter((offer) => !filters.productId || offer.product_id === filters.productId),
-    products
-  )
+  const fallback: ProductOffer[] = []
 
   if (!isSupabaseSchemaReady) return fallback
 
   let query = supabase.from("product_offers").select("*")
   if (filters.productId) query = query.eq("product_id", filters.productId)
   const offers = await fromSupabase<ProductOffer[]>(query, fallback)
-  return mergeOffers(offers, products)
+  return mergeOffers(offers)
 }
 
 export async function getPreferredProductOffer(product: Product) {
@@ -299,16 +266,17 @@ export async function getPreferredProductOffer(product: Product) {
     ?? offers.find((offer) => offer.affiliate_url)
     ?? offers.find((offer) => offer.is_preferred)
     ?? offers[0]
-    ?? legacyAffiliateOffer(product)
     ?? null
 }
 
-export async function getProduct(id: string) {
+export async function getProduct(id: string): Promise<Product | null> {
   const fallback = SAMPLE_PRODUCTS.find((product) => product.id === id) ?? null
   const curatedLegacyProduct = fallback ? CURATED_LEGACY_PRODUCTS.get(fallback.id) : null
   if (curatedLegacyProduct) {
     const publicLegacyProduct = productWithTaxonomy(curatedLegacyProduct)
-    return hasPublicAffiliate(publicLegacyProduct) ? publicLegacyProduct : null
+    const reviews = await getCommunityReviews({ productId: id })
+    const summary = summarizeApprovedRatings(reviews)
+    return { ...publicLegacyProduct, rating: summary.average ?? 0, reviews: summary.count, affiliate_url: null }
   }
 
   const product = await fromSupabase<Product | null>(
@@ -316,7 +284,10 @@ export async function getProduct(id: string) {
     fallback
   )
   const publicProduct = product ? productWithTaxonomy(CURATED_LEGACY_PRODUCTS.get(product.id) ?? product) : null
-  return publicProduct && hasPublicAffiliate(publicProduct) ? publicProduct : null
+  if (!publicProduct || publicProduct.status === "pending" || publicProduct.status === "archived") return null
+  const reviews = await getCommunityReviews({ productId: id })
+  const summary = summarizeApprovedRatings(reviews)
+  return { ...publicProduct, rating: summary.average ?? 0, reviews: summary.count, affiliate_url: null }
 }
 
 export async function getCreatorEvidenceItems(filters: { creatorId?: string; status?: string } = {}) {
@@ -475,7 +446,7 @@ export async function getCreatorProductEvents(filters: { productId?: string; cre
   if (filters.productId) query = query.eq("product_id", filters.productId)
   if (filters.creatorId) query = query.eq("creator_id", filters.creatorId)
   const events = await fromSupabase<CreatorProductEvent[]>(query, fallback)
-  return mergeTimelineEvents(events).filter(isPublicEvidenceEvent)
+  return mergeTimelineEvents(events).filter(isPublicEvidenceEvent).filter(isPublicCreatorEvent)
 }
 
 export async function getCreatorProductStates(filters: { productId?: string; creatorId?: string } = {}) {

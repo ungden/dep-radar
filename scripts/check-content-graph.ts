@@ -1,3 +1,5 @@
+import "./load-local-env"
+
 import { buildContentGraphCoverage, buildDailyEditorialPlan, buildRelatedArticles } from "../lib/content-graph"
 import { getCreatorProductEvents, getKols, getPosts, getProducts } from "../lib/data"
 

@@ -1,3 +1,5 @@
+import "./load-local-env"
+
 import fs from "node:fs"
 import path from "node:path"
 import crypto from "node:crypto"
@@ -55,7 +57,8 @@ for (const offer of SAMPLE_PRODUCT_OFFERS) {
 console.log(JSON.stringify({
   products: SAMPLE_PRODUCTS.length,
   researchedProducts: sourceProductIds.size,
-  sourceBackedOffers: offerProductIds.size,
+  localResearchReferences: offerProductIds.size,
+  publicOfferReadiness: "validated separately by check:data-integrity and check:rls",
   categories: [...new Set(SAMPLE_PRODUCTS.map((product) => product.category_key))].sort(),
 }, null, 2))
 

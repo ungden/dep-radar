@@ -3,7 +3,7 @@ import { trackEvent } from '@/lib/analytics'
 
 export async function trackAffiliateClick(productId: string, offerId?: string) {
   const referrer = typeof window !== 'undefined' ? window.location.pathname : null
-  trackEvent('affiliate_click', {
+  trackEvent('verified_offer_clicked', {
     product_id: productId,
     offer_id: offerId,
     referrer,

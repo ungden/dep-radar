@@ -11,6 +11,11 @@ export type PublicAnalyticsEvent =
   | "select_catalogue"
   | "read_article"
   | "evidence_source_click"
+  | "concern_started"
+  | "shortlist_viewed"
+  | "evidence_opened"
+  | "verified_offer_clicked"
+  | "review_submitted"
 
 type AnalyticsValue = string | number | boolean | null | undefined
 export type AnalyticsParams = Record<string, AnalyticsValue>

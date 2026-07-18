@@ -66,7 +66,7 @@ export function KolRadar({ creatorUpdates }: { creatorUpdates: HomeCreatorUpdate
                         <h3 className="truncate text-base font-extrabold text-slate-900 transition-colors group-hover:text-rose-600 dark:text-slate-50 dark:group-hover:text-rose-400">
                           {update.creator.name}
                         </h3>
-                        {update.creator.verified && <CircleCheck className="h-4 w-4 shrink-0 text-blue-500" />}
+                        {update.creator.verified && <CircleCheck aria-label="Kênh public đã được đối chiếu" className="h-4 w-4 shrink-0 text-blue-500" />}
                         <PlatformBadge platform={update.creator.platform} />
                       </div>
                       <div className="flex items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400">

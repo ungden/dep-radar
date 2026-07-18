@@ -1,3 +1,5 @@
+import "./load-local-env"
+
 import assert from "node:assert/strict"
 import fs from "node:fs"
 

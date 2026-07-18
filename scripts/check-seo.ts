@@ -1,3 +1,5 @@
+import "./load-local-env"
+
 import { buildSeoAuditReport } from "../lib/seo-audit"
 
 async function main() {

@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Facebook, Instagram, Twitter, Youtube } from "lucide-react"
 import { BrandLogo } from "@/components/brand-logo"
 import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 
@@ -19,8 +18,8 @@ export function Footer() {
     setErrorMsg("")
 
     if (!isSupabaseSchemaReady) {
-      setStatus("success")
-      setEmail("")
+      setStatus("error")
+      setErrorMsg("Newsletter đang tạm dừng để kiểm tra hệ thống.")
       return
     }
 
@@ -49,20 +48,7 @@ export function Footer() {
           <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
             360dep.vn - nền tảng catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.
           </p>
-          <div className="flex gap-4">
-            <Link href="#" className="text-slate-400 hover:text-white transition-colors">
-              <Facebook className="h-5 w-5" />
-            </Link>
-            <Link href="#" className="text-slate-400 hover:text-white transition-colors">
-              <Instagram className="h-5 w-5" />
-            </Link>
-            <Link href="#" className="text-slate-400 hover:text-white transition-colors">
-              <Youtube className="h-5 w-5" />
-            </Link>
-            <Link href="#" className="text-slate-400 hover:text-white transition-colors">
-              <Twitter className="h-5 w-5" />
-            </Link>
-          </div>
+          <p className="text-xs leading-relaxed text-slate-500">Claim về creator và offer chỉ được public sau khi có nguồn, người xác minh và thời điểm kiểm tra.</p>
         </div>
 
         <div className="space-y-6">
@@ -99,24 +85,16 @@ export function Footer() {
           </h4>
           <ul className="space-y-3 text-sm font-medium">
             <li>
-              <Link href="#" className="hover:text-rose-500 transition-colors">
-                Về chúng tôi
-              </Link>
+              <Link href="/catalogue" className="hover:text-rose-500 transition-colors">Phương pháp catalogue</Link>
             </li>
             <li>
-              <Link href="#" className="hover:text-rose-500 transition-colors">
-                Liên hệ quảng cáo
-              </Link>
+              <Link href="/koc-tracker" className="hover:text-rose-500 transition-colors">Cách đọc hồ sơ creator</Link>
             </li>
             <li>
-              <Link href="#" className="hover:text-rose-500 transition-colors">
-                Chính sách bảo mật
-              </Link>
+              <Link href="/community" className="hover:text-rose-500 transition-colors">Nguyên tắc cộng đồng</Link>
             </li>
             <li>
-              <Link href="#" className="hover:text-rose-500 transition-colors">
-                Điều khoản sử dụng
-              </Link>
+              <Link href="/blog" className="hover:text-rose-500 transition-colors">Biên tập và nguồn</Link>
             </li>
           </ul>
         </div>
@@ -155,11 +133,7 @@ export function Footer() {
       </div>
       <div className="container mx-auto px-4 md:px-6 mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium uppercase tracking-wider text-slate-500">
         <div>&copy; {new Date().getFullYear()} 360dep.vn. All rights reserved.</div>
-        <div className="flex gap-6">
-          <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
-          <Link href="#" className="hover:text-white transition-colors">Terms</Link>
-          <Link href="#" className="hover:text-white transition-colors">Cookies</Link>
-        </div>
+        <div>Dữ liệu public qua quality gate</div>
       </div>
     </footer>
   )

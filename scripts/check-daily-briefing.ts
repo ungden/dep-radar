@@ -1,3 +1,5 @@
+import "./load-local-env"
+
 import fs from "node:fs"
 
 import { buildDailyBriefingSnapshot } from "../lib/daily-briefing-publisher"

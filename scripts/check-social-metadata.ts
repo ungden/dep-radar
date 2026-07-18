@@ -1,3 +1,5 @@
+import "./load-local-env"
+
 import { existsSync } from "node:fs"
 import type { Metadata } from "next"
 

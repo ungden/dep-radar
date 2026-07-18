@@ -109,9 +109,9 @@ function recencyLabel(date: string) {
 
   const now = Date.now()
   const days = Math.floor((now - timestamp) / 86_400_000)
-  if (days <= 1) return "Mới hôm nay"
+  if (days <= 1) return "Cập nhật trong 24 giờ"
   if (days <= 7) return "Trong 7 ngày qua"
-  return "Đang được đọc lại"
+  return `Cập nhật ${new Intl.DateTimeFormat("vi-VN").format(new Date(timestamp))}`
 }
 
 function buildProductSignals(products: Product[], timelineEvents: CreatorProductEvent[], creatorMap: Map<string, Kol>) {
@@ -144,6 +144,7 @@ function buildProductSignals(products: Product[], timelineEvents: CreatorProduct
         categoryLabel: product.category_key ? product.category : product.category,
       }
     })
+    .filter((signal) => signal.mentions > 0 && Boolean(signal.latestDate))
     .sort((a, b) => (
       b.mentions - a.mentions ||
       b.latestDate.localeCompare(a.latestDate) ||

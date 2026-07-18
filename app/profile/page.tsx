@@ -430,7 +430,7 @@ function ProductCard({ product }: { product?: Product | null }) {
               <div className="flex items-center gap-1">
                 <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                 <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                  {product.rating}
+                  {product.reviews > 0 ? product.rating : "Chưa có đánh giá"}
                 </span>
               </div>
               <span className="text-sm font-bold text-slate-900 dark:text-slate-50">

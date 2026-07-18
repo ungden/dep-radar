@@ -52,10 +52,14 @@ export function ArticleProductRecommendations({ products }: ArticleProductRecomm
             <div className="flex flex-1 flex-col p-4">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-xs font-black uppercase tracking-wide text-rose-500">{product.brand}</p>
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
-                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                  {product.rating}
-                </span>
+                {product.reviews > 0 ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
+                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                    {product.rating}
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Chưa có đánh giá</span>
+                )}
               </div>
 
               <Link

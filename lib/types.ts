@@ -45,6 +45,17 @@ export interface ProductOffer {
   stock_status: "in_stock" | "out_of_stock" | "unknown"
   is_preferred: boolean
   last_checked_at: string
+  verification_status?: "pending" | "verified" | "rejected"
+  match_status?: "unreviewed" | "exact" | "mismatch"
+  verified_by?: string | null
+  verified_at?: string | null
+  is_active?: boolean
+  valid_until?: string | null
+}
+
+export interface UserRatingSummary {
+  average: number | null
+  count: number
 }
 
 export interface KolSocial {

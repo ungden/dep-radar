@@ -355,7 +355,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900 dark:text-slate-50">{kol.name}</h1>
-                {kol.verified && <ShieldCheck className="h-8 w-8 text-blue-500" />}
+                {kol.verified && <ShieldCheck aria-label="Kênh public đã được đối chiếu" className="h-8 w-8 text-blue-500" />}
               </div>
               <Badge variant="outline" className={`mb-3 rounded-full border px-3 py-1 ${credibilityToneClass(credibility.tier)}`}>
                 {credibility.label}
@@ -393,7 +393,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                     <Award className="h-6 w-6" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Độ tin cậy</div>
+                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Phân loại hồ sơ</div>
                     <div className="text-xl font-bold text-slate-900 dark:text-slate-50">{credibility.credibilityScore}/100</div>
                   </div>
                 </div>
@@ -639,7 +639,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                               <span>{product.price}</span>
                               <span>&bull;</span>
-                              <span>{product.rating}/5</span>
+                              <span>{product.reviews > 0 ? `${product.rating}/5` : "Chưa có đánh giá"}</span>
                               {event && (
                                 <>
                                   <span>&bull;</span>
@@ -866,7 +866,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
             <aside className="space-y-6">
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
-                  <Award className="h-4 w-4" /> Độ tin cậy
+                  <Award className="h-4 w-4" /> Cách đọc hồ sơ
                 </h3>
                 <div className="mb-3 flex items-end gap-2">
                   <span className="font-display text-4xl font-black text-slate-900 dark:text-slate-50">{credibility.credibilityScore}</span>

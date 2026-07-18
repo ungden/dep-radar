@@ -16,6 +16,9 @@
     "check:daily": "tsx scripts/check-daily-briefing.ts",
     "check:evidence-radar": "tsx scripts/check-evidence-radar.ts",
     "check:seo": "tsx scripts/check-seo.ts",
+    "check:data-integrity": "tsx scripts/check-data-integrity.ts",
+    "check:rls": "tsx scripts/check-supabase-rls.ts",
+    "test:e2e": "playwright test",
     "seed:db": "tsx seed-db.ts",
     "clean": "next clean"
   },
@@ -43,6 +46,7 @@
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "4.1.11",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^20",

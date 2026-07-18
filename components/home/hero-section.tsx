@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import { getHomeRecencyLabel, type HomeBriefingItem, type HomeDailyBriefing } from "@/lib/home-briefing"
+import { trackEvent } from "@/lib/analytics"
 
 type HeroSectionProps = {
   briefing: HomeDailyBriefing
@@ -32,14 +33,6 @@ const itemIcons: Record<HomeBriefingItem["kind"], LucideIcon> = {
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("vi-VN", {
-    day: "numeric",
-    month: "long",
-  })
-}
-
-function todayLabel() {
-  return new Date().toLocaleDateString("vi-VN", {
-    weekday: "long",
     day: "numeric",
     month: "long",
   })
@@ -62,19 +55,32 @@ export function HeroSection({ briefing }: HeroSectionProps) {
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-rose-600 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
                 <Radio className="h-3.5 w-3.5" />
-                Daily beauty briefing
+                Beauty decision engine
               </div>
               <h1 className="font-display text-3xl font-black leading-tight tracking-normal text-slate-950 dark:text-slate-50 md:text-5xl">
-                Hôm nay trong beauty
+                Bạn đang muốn giải quyết vấn đề gì?
               </h1>
               <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-400 md:text-lg">
-                Tin mới, động thái từ KOL/KOC và sản phẩm đang được bàn luận, gom lại như một bản tin beauty để mở mỗi ngày là có chuyện mới đáng đọc.
+                Bắt đầu từ nhu cầu thật để đi đến shortlist có lý do, cảnh báo và offer đã xác minh. Nội dung creator chỉ xuất hiện khi có nguồn public đạt chuẩn.
               </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {[
+                  ["Da mụn", "tri-mun"],
+                  ["Da nhạy cảm", "da-nhay-cam"],
+                  ["Cấp ẩm", "cap-am"],
+                  ["Tóc khô xơ", "toc-kho-xo"],
+                  ["Chống nắng", "chong-nang"],
+                ].map(([label, need]) => (
+                  <Link key={need} href={`/products?need=${need}`} onClick={() => trackEvent("concern_started", { concern: need })} className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition-colors hover:border-rose-300 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                    {label} <ChevronRight className="ml-1 h-4 w-4" />
+                  </Link>
+                ))}
+              </div>
             </div>
             <div className="grid grid-cols-3 gap-2 rounded-lg border border-slate-100 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900">
-              <MiniStat label="Tin mới" value={dailyUpdates.filter((item) => item.kind === "article").length} />
-              <MiniStat label="KOL/KOC" value={creatorUpdates.length} />
-              <MiniStat label="Tín hiệu" value={productSignals.filter((item) => item.mentions > 0).length} />
+              <MiniStat label="Bài đã xuất bản" value={dailyUpdates.filter((item) => item.kind === "article").length} />
+              <MiniStat label="Nguồn creator đạt chuẩn" value={creatorUpdates.length} />
+              <MiniStat label="Tín hiệu mới" value={productSignals.length} />
             </div>
           </motion.div>
 
@@ -85,10 +91,10 @@ export function HeroSection({ briefing }: HeroSectionProps) {
             <motion.div variants={itemVariants} className="rounded-lg border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <SectionHeader
                 icon={Newspaper}
-                title="Bài đáng đọc hôm nay"
+                title="Bài phân tích mới nhất"
                 href="/blog"
                 action="Xem blog"
-                meta={todayLabel()}
+                meta={formatDate(leadStory.date)}
               />
               <div className="p-4 pt-0">
                 <Link href={leadStory.href} className="group grid gap-4 sm:grid-cols-[168px_minmax(0,1fr)]">
@@ -130,13 +136,18 @@ export function HeroSection({ briefing }: HeroSectionProps) {
             <motion.div variants={itemVariants} className="rounded-lg border border-slate-100 bg-slate-950 text-white shadow-sm dark:border-slate-800">
               <SectionHeader
                 icon={UsersRound}
-                title="Mới cập nhật"
+                title={creatorUpdates.length ? "Tín hiệu creator mới" : "Chưa có tín hiệu creator mới"}
                 href="/koc-tracker"
                 action="Đọc tin"
-                meta="Tin, KOL và sản phẩm"
+                meta={creatorUpdates.length ? `${creatorUpdates.length} nguồn creator đạt chuẩn` : "Đang chờ nguồn public được xác minh"}
                 inverse
               />
               <div className="space-y-3 p-4 pt-0">
+                {creatorUpdates.length === 0 && (
+                  <p className="rounded-lg border border-white/10 bg-white/5 p-4 text-sm leading-relaxed text-slate-300">
+                    Chưa có nguồn creator public nào vượt qua kiểm tra provenance và xác minh thủ công. Các bài bên dưới là nội dung biên tập, không phải tín hiệu creator.
+                  </p>
+                )}
                 {mixedUpdates.slice(0, 5).map((item) => (
                   <BriefingCard key={`${item.kind}-${item.href}-${item.title}`} item={item} inverse />
                 ))}
@@ -152,6 +163,11 @@ export function HeroSection({ briefing }: HeroSectionProps) {
                 meta="Tín hiệu đã ghi nhận"
               />
               <div className="space-y-3 p-4 pt-0">
+                {topProductSignals.length === 0 && (
+                  <p className="rounded-lg border border-slate-200 bg-white p-4 text-sm leading-relaxed text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+                    Chưa có tín hiệu sản phẩm mới từ nguồn creator đạt chuẩn.
+                  </p>
+                )}
                 {topProductSignals.map((signal) => (
                   <Link
                     key={signal.product.id}

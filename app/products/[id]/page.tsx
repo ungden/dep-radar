@@ -5,7 +5,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Star, ShieldCheck, ThumbsUp, MessageSquare, ArrowLeft, ShoppingCart, BookOpen, ArrowRight, CalendarDays, ExternalLink, Store, CheckCircle2, Layers3, Users } from "lucide-react"
-import * as motion from "motion/react-client"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -17,10 +16,8 @@ import { getProductCategoryLabel, getProductSubcategoryLabel } from "@/lib/produ
 import { AffiliateButton } from "@/components/affiliate-button"
 import { TrackProductView } from "@/components/analytics/public-events"
 import { SocialShare } from "@/components/social-share"
-import { RelatedProducts } from "@/components/related-products"
-import { CommentSection } from "@/components/comment-section"
 import { WishlistButton } from "@/components/wishlist-button"
-import { RealReviewPanel } from "@/components/real-review-panel"
+import { ProductCommunityModules } from "@/components/product-community-modules"
 import { absoluteUrl } from "@/lib/seo"
 import type { CreatorProductEvent, Kol, Post, ProductOffer } from "@/lib/types"
 
@@ -46,11 +43,13 @@ function buildProductJsonLd(product: Awaited<ReturnType<typeof getProduct>>, sit
       "@type": "Brand",
       name: product.brand,
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: product.rating,
-      reviewCount: product.reviews,
-    },
+    aggregateRating: product.reviews > 0
+      ? {
+          "@type": "AggregateRating",
+          ratingValue: product.rating,
+          reviewCount: product.reviews,
+        }
+      : undefined,
     offers: numericPrice
       ? {
           "@type": "Offer",
@@ -193,11 +192,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       {productJsonLd && <JsonLd data={productJsonLd} />}
       <TrackProductView productId={product.id} brand={product.brand} category={product.category_key ?? product.category} />
       <div className="container mx-auto px-4 md:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div>
           <Link href="/products" className="inline-flex items-center text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 mb-6 transition-colors">
             <ArrowLeft className="h-4 w-4 mr-2" /> Quay lại danh sách
           </Link>
@@ -226,12 +221,20 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   {product.name}
                 </h1>
                 
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/30 px-3 py-1 rounded-lg text-amber-700 dark:text-amber-500 font-bold">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    {product.rating}
-                  </div>
-                  <span className="text-slate-500 dark:text-slate-400 font-medium">{product.reviews.toLocaleString()} đánh giá</span>
+                <div className="flex flex-wrap items-center gap-4 mb-6">
+                  {product.reviews > 0 ? (
+                    <>
+                      <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/30 px-3 py-1 rounded-lg text-amber-700 dark:text-amber-500 font-bold">
+                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        {product.rating}
+                      </div>
+                      <span className="text-slate-500 dark:text-slate-400 font-medium">{product.reviews.toLocaleString()} đánh giá cộng đồng đã duyệt</span>
+                    </>
+                  ) : (
+                    <span className="rounded-lg bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                      Chưa có đánh giá cộng đồng
+                    </span>
+                  )}
                   <span className="text-slate-300 dark:text-slate-700">&bull;</span>
                   <span className="text-slate-500 dark:text-slate-400 font-medium">{product.sold} đã bán</span>
                 </div>
@@ -287,7 +290,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                       </div>
                     ) : (
                       <Button className="flex-1 h-14 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-lg shadow-lg shadow-rose-200 dark:shadow-rose-900/20" disabled>
-                        <ShoppingCart className="h-5 w-5 mr-2" /> Sắp có link mua
+                        <ShoppingCart className="h-5 w-5 mr-2" /> Chưa có offer đã xác minh
                       </Button>
                     )}
                     <WishlistButton productId={product.id} />
@@ -520,20 +523,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             )}
           </div>
 
-          <div className="mt-8">
-            <RealReviewPanel productId={product.id} productName={product.name} initialReviews={communityReviews} kols={KOLS} />
-          </div>
-
-          {/* Comment Section */}
-          <div className="mt-8">
-            <CommentSection productId={product.id} />
-          </div>
-
-          {/* Related Products */}
-          <div className="mt-8">
-            <RelatedProducts category={product.category} currentProductId={product.id} />
-          </div>
-        </motion.div>
+          <ProductCommunityModules
+            productId={product.id}
+            productName={product.name}
+            category={product.category}
+            initialReviews={communityReviews}
+            kols={KOLS}
+          />
+        </div>
       </div>
     </div>
   )

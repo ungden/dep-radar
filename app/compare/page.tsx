@@ -150,7 +150,7 @@ function CompareContent() {
       label: "Đánh giá",
       key: "rating",
       render: (p) => (
-        <div
+        p.reviews > 0 ? <div
           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-sm ${
             bestValue.rating?.has(p.id)
               ? highlightClass
@@ -159,7 +159,7 @@ function CompareContent() {
         >
           <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
           <span className="font-bold">{p.rating}</span>
-        </div>
+        </div> : <span className="text-sm text-slate-500 dark:text-slate-400">Chưa có đánh giá</span>
       ),
     },
     {
@@ -171,7 +171,7 @@ function CompareContent() {
             bestValue.reviews?.has(p.id) ? highlightClass + " px-2 py-0.5 rounded-md" : "text-slate-600 dark:text-slate-400"
           }`}
         >
-          {p.reviews.toLocaleString()} đánh giá
+          {p.reviews > 0 ? `${p.reviews.toLocaleString()} đánh giá` : "Chưa có đánh giá"}
         </span>
       ),
     },

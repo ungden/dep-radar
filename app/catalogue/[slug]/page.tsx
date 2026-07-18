@@ -163,14 +163,17 @@ export default async function CatalogueDetailPage({ params }: { params: Promise<
               </p>
             </div>
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {section.branches.map((branch) => (
-                <BranchCard
-                  key={branch.title}
-                  branch={branch}
-                  sectionTitle={section.shortTitle}
-                  articleSlug={branch.articleTitle ? postsByTitle.get(branch.articleTitle) : undefined}
-                />
-              ))}
+              {section.branches.flatMap((branch) => {
+                const articleSlug = branch.articleTitle ? postsByTitle.get(branch.articleTitle) : undefined
+                return articleSlug ? [
+                  <BranchCard
+                    key={branch.title}
+                    branch={branch}
+                    sectionTitle={section.shortTitle}
+                    articleSlug={articleSlug}
+                  />,
+                ] : []
+              })}
             </div>
           </section>
         )}
@@ -335,12 +338,16 @@ function ResearchMatrixSection({ matrix, items }: { matrix: ContentMatrix; items
   const itemsByStage = matrix.stageOrder
     .map((stage) => ({
       stage,
-      items: items.filter((item) => item.node.stage === stage),
+      items: items.filter((item) => item.node.stage === stage && Boolean(item.post)),
     }))
     .filter((group) => group.items.length > 0)
 
   return (
-    <section className="mb-8 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
+    <details className="group mb-8 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
+      <summary className="cursor-pointer list-none font-display text-xl font-black text-slate-900 marker:hidden dark:text-slate-50">
+        Mở bản đồ nghiên cứu chuyên sâu
+        <span className="ml-2 text-sm font-semibold text-slate-500 group-open:hidden dark:text-slate-400">({items.length} chủ đề)</span>
+      </summary>
       <div className="mb-7 grid gap-4 lg:grid-cols-[1fr_0.7fr]">
         <div>
           <Badge className="mb-3 bg-cyan-100 text-cyan-700 hover:bg-cyan-100 dark:bg-cyan-950/30 dark:text-cyan-300">
@@ -383,7 +390,7 @@ function ResearchMatrixSection({ matrix, items }: { matrix: ContentMatrix; items
           </div>
         ))}
       </div>
-    </section>
+    </details>
   )
 }
 
@@ -408,16 +415,14 @@ function ResearchMatrixCard({ item }: { item: MatrixItem }) {
         </div>
 
         <div className="grid gap-3">
-          <MatrixInfoBlock label="Đọc bài chính">
-            {post ? (
+          {post && (
+            <MatrixInfoBlock label="Đọc bài chính">
               <Link href={`/blog/${post.slug}`} className="group inline-flex items-center gap-2 font-bold text-slate-900 hover:text-rose-600 dark:text-slate-50 dark:hover:text-rose-300">
                 {post.title}
                 <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-rose-500" />
               </Link>
-            ) : (
-              <span className="font-semibold text-slate-500 dark:text-slate-400">Đang viết hướng dẫn</span>
-            )}
-          </MatrixInfoBlock>
+            </MatrixInfoBlock>
+          )}
 
           {nextPosts.length > 0 && (
             <MatrixInfoBlock label="Đọc tiếp">
@@ -564,11 +569,7 @@ function BranchCard({
               Đọc hướng dẫn phù hợp
               <ArrowRight className="h-4 w-4" />
             </Link>
-          ) : (
-            <div className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-100 px-4 text-sm font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-              Đang viết hướng dẫn
-            </div>
-          )}
+          ) : null}
           <div className="mt-3 flex flex-wrap gap-2">
             {branch.keywords.slice(0, 3).map((keyword) => (
               <Link key={keyword} href={searchHref(sectionTitle, keyword)} className="text-xs font-bold text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-300">

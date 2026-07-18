@@ -85,8 +85,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           disableTransitionOnChange
         >
           <AuthProvider>
+            <a href="#main-content" className="sr-only z-[100] rounded-md bg-white px-4 py-3 font-bold text-slate-900 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
+              Bỏ qua điều hướng
+            </a>
             <Navbar />
-            <main className="flex-1 flex flex-col">
+            <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col outline-none">
               <PageTransition>{children}</PageTransition>
             </main>
             <Footer />
