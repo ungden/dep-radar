@@ -106,6 +106,7 @@ function responseSchema() {
 }
 
 async function mediaInput(post: SourcePost) {
+  if (post.transcription_status === "ready" && post.transcript_text?.trim()) return []
   if (!post.media_url) return []
   if (post.source_platform.toLowerCase().includes("youtube")) {
     return [{ type: "video", uri: post.source_url }]
@@ -153,6 +154,7 @@ export async function extractEvidenceClaims(post: SourcePost, products: Product[
     `Nguồn: ${post.source_platform} ${post.source_url}`,
     `Tiêu đề: ${post.title}`,
     `Caption: ${post.caption}`,
+    `Transcript lời nói: ${post.transcript_text?.trim() || "(không có transcript; chỉ dùng caption/media nếu khả dụng)"}`,
     `Catalogue: ${JSON.stringify(catalogueForPrompt(products))}`,
   ].join("\n")
 

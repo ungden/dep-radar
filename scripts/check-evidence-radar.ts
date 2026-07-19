@@ -49,7 +49,7 @@ for (const scenario of ["explicit-current-routine", "review-only", "sponsored", 
 }
 
 const collectorBatch = normalizeTikTokCollectorBatch({
-  schema_version: "360dep.tiktok-manifest.v1",
+  schema_version: "360dep.tiktok-manifest.v2",
   collector: "downloadtiktok",
   batch_id: "dt-contract-test-123",
   creator_id: "creator-1",
@@ -63,6 +63,16 @@ const collectorBatch = normalizeTikTokCollectorBatch({
       timestamp: "2026-07-10T10:00:00Z",
       cover: "https://p16-common-sign.tiktokcdn.com/cover.jpg",
       media_url: "https://v16m-default.tiktokcdn-us.com/video.mp4",
+      transcription_status: "ready",
+      transcript_text: "Hôm nay mình dùng serum này trong routine buổi sáng.",
+      transcript_language: "vi",
+      transcript_segments: [{ start: 0.2, end: 3.8, text: "Hôm nay mình dùng serum này." }],
+      transcription_provider: "mlx-whisper",
+      transcription_model: "mlx-community/whisper-large-v3-turbo",
+      archive_video_path: "evidence-radar/tiktok/creator.beauty/7663466714054659349/source.mp4",
+      archive_audio_path: "evidence-radar/tiktok/creator.beauty/7663466714054659349/audio.mp3",
+      media_sha256: "a".repeat(64),
+      audio_sha256: "b".repeat(64),
     },
     {
       id: "7663466714054659350",
@@ -83,11 +93,15 @@ assert.equal(collectorBatch.posts[0].media_metadata.collector, "downloadtiktok")
 assert.equal(collectorBatch.posts[0].media_metadata.media_resolved, true)
 assert.ok(collectorBatch.posts[0].media_url?.includes("tiktokcdn-us.com"))
 assert.ok(collectorBatch.posts[0].raw_media_expires_at < "2026-07-11T00:00:00.000Z")
+assert.equal(collectorBatch.posts[0].transcription_status, "ready")
+assert.ok(collectorBatch.posts[0].transcript_text?.includes("routine buổi sáng"))
+assert.equal(collectorBatch.posts[0].vision_fallback_required, false)
 
 const migration = fs.readFileSync("supabase/migrations/20260710092855_evidence_radar_foundation.sql", "utf8")
 const queueMigration = fs.readFileSync("supabase/migrations/20260710093313_evidence_radar_service_queue_rpc.sql", "utf8")
 const collectorQueueMigration = fs.readFileSync("supabase/migrations/20260718114106_tiktok_collector_media_queue.sql", "utf8")
 const queueGrantMigration = fs.readFileSync("supabase/migrations/20260718115329_evidence_queue_service_send_grant.sql", "utf8")
+const audioMigration = fs.readFileSync("supabase/migrations/20260719113242_evidence_audio_transcripts.sql", "utf8")
 for (const required of [
   "creator_accounts", "source_posts", "creator_product_states", "evidence_audit_log",
   "pgmq.create('creator_monitor')", "pgmq.create('evidence_analysis')",
@@ -110,6 +124,11 @@ assert.ok(!collectorQueueMigration.includes("to anon"))
 assert.ok(queueGrantMigration.includes("grant insert on table pgmq.q_evidence_analysis to service_role"))
 assert.ok(!queueGrantMigration.includes("to anon"))
 assert.ok(!queueGrantMigration.includes("to authenticated"))
+assert.ok(audioMigration.includes("transcript_text"))
+assert.ok(audioMigration.includes("archive_video_path"))
+assert.ok(audioMigration.includes("transcription_status = 'ready'"))
+assert.ok(audioMigration.includes("enable row level security") || migration.includes("alter table public.source_posts enable row level security"))
+assert.ok(!audioMigration.includes("to anon"))
 
 console.log(JSON.stringify({
   ok: true,

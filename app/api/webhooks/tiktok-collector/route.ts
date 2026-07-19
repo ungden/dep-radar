@@ -91,6 +91,18 @@ export async function POST(request: NextRequest) {
     media_metadata: post.media_metadata,
     raw_payload: post.raw_payload,
     content_hash: post.content_hash,
+    transcription_status: post.transcription_status,
+    transcript_text: post.transcript_text,
+    transcript_language: post.transcript_language,
+    transcript_segments: post.transcript_segments,
+    transcription_provider: post.transcription_provider,
+    transcription_model: post.transcription_model,
+    transcribed_at: post.transcribed_at,
+    archive_video_path: post.archive_video_path,
+    archive_audio_path: post.archive_audio_path,
+    media_sha256: post.media_sha256,
+    audio_sha256: post.audio_sha256,
+    vision_fallback_required: post.vision_fallback_required,
   })
   const metadataRows = normalized.posts
     .filter((post) => !post.media_url)
@@ -110,7 +122,9 @@ export async function POST(request: NextRequest) {
     if (upsertError) return NextResponse.json({ ok: false, error: upsertError.message }, { status: 500 })
   }
 
-  const mediaSourceUrls = normalized.posts.filter((post) => post.media_url).map((post) => post.source_url)
+  const mediaSourceUrls = normalized.posts
+    .filter((post) => post.media_url || post.transcription_status === "ready")
+    .map((post) => post.source_url)
   let queuedForPrivateAnalysis = 0
   if (mediaSourceUrls.length) {
     const { data: mediaRows, error: mediaRowsError } = await supabase

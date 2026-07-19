@@ -59,6 +59,109 @@
       "creator_id": "102",
       "name": "Hà Giang",
       "profile_url": "https://www.tiktok.com/@ciaramakeup2003"
+    },
+    {
+      "creator_id": "12",
+      "name": "Ty Lê",
+      "profile_url": "https://www.tiktok.com/@tyle1994"
+    },
+    {
+      "creator_id": "15",
+      "name": "Phạm Thoại",
+      "profile_url": "https://www.tiktok.com/@norinpham_m4",
+      "video_limit": 50,
+      "audit_status": "manual_content_review"
+    },
+    {
+      "creator_id": "22",
+      "name": "Quỳnh Nhi Trần",
+      "profile_url": "https://www.tiktok.com/@quynhitraan"
+    },
+    {
+      "creator_id": "35",
+      "name": "Vân Miu",
+      "profile_url": "https://www.tiktok.com/@vanmiu_beauty"
+    },
+    {
+      "creator_id": "58",
+      "name": "An Phương",
+      "profile_url": "https://www.tiktok.com/@anphuongtruong"
+    },
+    {
+      "creator_id": "83",
+      "name": "Bác sĩ Minh Điềm",
+      "profile_url": "https://www.tiktok.com/@bacsidiemdalieu"
+    },
+    {
+      "creator_id": "84",
+      "name": "Bác sĩ Hằng Trần",
+      "profile_url": "https://www.tiktok.com/@bshangdalieu"
+    },
+    {
+      "creator_id": "88",
+      "name": "Misoa Kim Anh",
+      "profile_url": "https://www.tiktok.com/@misoamisoa",
+      "video_limit": 30,
+      "audit_status": "watchlist_below_100k"
+    },
+    {
+      "creator_id": "105",
+      "name": "Lương Thục Hiền",
+      "profile_url": "https://www.tiktok.com/@luongthuchien6868"
+    },
+    {
+      "creator_id": "106",
+      "name": "Sĩ Thanh",
+      "profile_url": "https://www.tiktok.com/@sithanh",
+      "video_limit": 50,
+      "audit_status": "manual_content_review"
+    },
+    {
+      "creator_id": "107",
+      "name": "Jolie Bận Xinh",
+      "profile_url": "https://www.tiktok.com/@joliehtt25"
+    },
+    {
+      "creator_id": "108",
+      "name": "Dr Chun",
+      "profile_url": "https://www.tiktok.com/@drchunmd",
+      "video_limit": 50,
+      "audit_status": "manual_content_review"
+    },
+    {
+      "creator_id": "109",
+      "name": "Xoài Non",
+      "profile_url": "https://www.tiktok.com/@xoainon.official",
+      "video_limit": 50,
+      "audit_status": "manual_content_review"
+    },
+    {
+      "creator_id": "110",
+      "name": "Gigi Ngọc Ngân",
+      "profile_url": "https://www.tiktok.com/@gigi.ngocngan",
+      "video_limit": 30,
+      "audit_status": "watchlist_below_100k"
+    },
+    {
+      "creator_id": "111",
+      "name": "Kê (Skinlosophy)",
+      "profile_url": "https://www.tiktok.com/@ketalk",
+      "video_limit": 30,
+      "audit_status": "watchlist_below_100k"
+    },
+    {
+      "creator_id": "112",
+      "name": "Doãn Hải My",
+      "profile_url": "https://www.tiktok.com/@_doanhaimy",
+      "video_limit": 50,
+      "audit_status": "manual_content_review"
+    },
+    {
+      "creator_id": "74",
+      "name": "Bác sĩ Khổng Hạnh Nguyên",
+      "profile_url": "https://www.tiktok.com/@drkhonghanhnguyen",
+      "video_limit": 50,
+      "audit_status": "manual_content_review"
     }
   ]
 }

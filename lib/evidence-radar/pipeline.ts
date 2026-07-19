@@ -131,7 +131,8 @@ export async function analyzeSourcePost(sourcePostId: string) {
         ? "needs_product_match"
         : "ready_to_publish"
     const evidenceId = evidenceIdForSource(sourcePostId)
-    const excerpt = claims[0] ? excerptForClaim(claims[0]) : post.caption.slice(0, 500) || "Không phát hiện claim sản phẩm."
+    const evidenceText = post.transcript_text?.trim() || post.caption
+    const excerpt = claims[0] ? excerptForClaim(claims[0]) : evidenceText.slice(0, 500) || "Không phát hiện claim sản phẩm."
 
     const { error: evidenceError } = await supabase.from("creator_evidence_items").upsert({
       id: evidenceId,
@@ -144,7 +145,7 @@ export async function analyzeSourcePost(sourcePostId: string) {
       observed_at: post.observed_at,
       source_title: post.title,
       source_excerpt: excerpt,
-      raw_text: post.caption,
+      raw_text: evidenceText,
       media_url: post.media_url,
       status,
       candidate_product_ids: candidateProductIds,

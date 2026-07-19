@@ -247,6 +247,7 @@ export interface CreatorAccount {
 }
 
 export type SourcePostAnalysisStatus = "pending" | "queued" | "processing" | "ready" | "failed" | "ignored"
+export type SourcePostTranscriptionStatus = "pending" | "processing" | "ready" | "no_speech" | "failed" | "skipped"
 
 export interface SourcePost {
   id: string
@@ -267,6 +268,18 @@ export interface SourcePost {
   analysis_attempts: number
   last_error: string | null
   raw_media_expires_at: string
+  transcription_status: SourcePostTranscriptionStatus
+  transcript_text: string | null
+  transcript_language: string | null
+  transcript_segments: Array<{ start: number; end: number; text: string }>
+  transcription_provider: string | null
+  transcription_model: string | null
+  transcribed_at: string | null
+  archive_video_path: string | null
+  archive_audio_path: string | null
+  media_sha256: string | null
+  audio_sha256: string | null
+  vision_fallback_required: boolean
   created_at?: string
   updated_at?: string
 }
