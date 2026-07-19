@@ -122,6 +122,17 @@ export async function POST(request: NextRequest) {
     if (upsertError) return NextResponse.json({ ok: false, error: upsertError.message }, { status: 500 })
   }
 
+  const noSpeechSourceUrls = normalized.posts
+    .filter((post) => post.transcription_status === "no_speech" && !post.media_url)
+    .map((post) => post.source_url)
+  if (noSpeechSourceUrls.length) {
+    const { error: noSpeechError } = await supabase
+      .from("source_posts")
+      .update({ analysis_status: "ignored", last_error: null, updated_at: new Date().toISOString() })
+      .in("source_url", noSpeechSourceUrls)
+    if (noSpeechError) return NextResponse.json({ ok: false, error: noSpeechError.message }, { status: 500 })
+  }
+
   const mediaSourceUrls = normalized.posts
     .filter((post) => post.media_url || post.transcription_status === "ready")
     .map((post) => post.source_url)
