@@ -2,13 +2,13 @@ import { expect, test } from "@playwright/test"
 
 test("homepage starts from a concern and shows fresh verified creator data", async ({ page }) => {
   await page.goto("/")
-  await expect(page.getByRole("heading", { name: "Bạn đang muốn giải quyết vấn đề gì?" })).toBeVisible()
-  await expect(page.getByText("Tín hiệu creator mới", { exact: true })).toBeVisible()
-  await expect(page.getByText(/nguồn creator đạt chuẩn/)).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Tìm đúng kiến thức cho tình trạng của bạn." })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Tin mới từ KOL/KOC" })).toBeVisible()
   await page.waitForLoadState("networkidle")
-  await page.locator('a[href="/products?need=tri-mun"]').click()
-  await expect(page).toHaveURL(/\/products\?need=tri-mun/)
-  await expect(page.getByRole("heading", { name: /sản phẩm phù hợp/i })).toBeVisible()
+  await page.getByRole("button", { name: "Trị mụn" }).click()
+  await page.getByRole("link", { name: /Xem lộ trình phù hợp/ }).click()
+  await expect(page).toHaveURL(/\/catalogue\/tri-mun/)
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
 })
 
 test("Bioderma has no legacy score and no mismatched Loreal offer", async ({ page }) => {
