@@ -193,9 +193,24 @@ const ALL_FALLBACK_POSTS: Post[] = [...EDITORIAL_PUBLISHED_POSTS, ...SAMPLE_POST
 function normalizeEditorialPost(post: Post): Post {
   return {
     ...post,
+    hubSlug: post.hubSlug ?? inferLegacyPostHub(post),
     author_name: EDITORIAL_AUTHOR_NAME,
     author_avatar: EDITORIAL_AUTHOR_AVATAR,
   }
+}
+
+function inferLegacyPostHub(post: Post) {
+  const category = normalizeText(post.category ?? "")
+  const tags = normalizeText((post.tags ?? []).join(" "))
+
+  if (category.includes("nuoc hoa") || category.includes("fragrance") || category.includes("perfume")) {
+    return "mui-huong"
+  }
+  if (tags.includes("son moi") || tags.includes("lip") || tags.includes("matte") || tags.includes("glossy")) {
+    return "makeup"
+  }
+
+  return undefined
 }
 
 function mergePosts(primary: Post[], fallback: Post[]) {
@@ -394,7 +409,15 @@ export async function getKols() {
   )
   return rows.map((row) => {
     const researched = REAL_KOLS.find((creator) => creator.id === row.id)
-    return researched ? { ...researched, ...row, socials: researched.socials } : row
+    return researched
+      ? {
+          ...researched,
+          ...row,
+          avatar: row.avatar || researched.avatar,
+          cover: row.cover || researched.cover,
+          socials: researched.socials,
+        }
+      : row
   })
 }
 
@@ -405,7 +428,15 @@ export async function getKol(id: string) {
     fallback
   )
   const researched = REAL_KOLS.find((creator) => creator.id === id)
-  return row && researched ? { ...researched, ...row, socials: researched.socials } : row
+  return row && researched
+    ? {
+        ...researched,
+        ...row,
+        avatar: row.avatar || researched.avatar,
+        cover: row.cover || researched.cover,
+        socials: researched.socials,
+      }
+    : row
 }
 
 export async function getReviews(filters: { productId?: string; kolId?: string } = {}) {

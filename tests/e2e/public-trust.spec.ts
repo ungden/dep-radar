@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test"
 
-test("homepage starts from a concern and reports empty creator data honestly", async ({ page }) => {
+test("homepage starts from a concern and shows fresh verified creator data", async ({ page }) => {
   await page.goto("/")
   await expect(page.getByRole("heading", { name: "Bạn đang muốn giải quyết vấn đề gì?" })).toBeVisible()
-  await expect(page.getByText("Chưa có tín hiệu creator mới")).toBeVisible()
+  await expect(page.getByText("Tín hiệu creator mới", { exact: true })).toBeVisible()
+  await expect(page.getByText(/nguồn creator đạt chuẩn/)).toBeVisible()
   await page.waitForLoadState("networkidle")
   await page.locator('a[href="/products?need=tri-mun"]').click()
   await expect(page).toHaveURL(/\/products\?need=tri-mun/)

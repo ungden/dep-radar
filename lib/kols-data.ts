@@ -3931,7 +3931,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "101",
     "name": "Emlyy",
-    "avatar": "",
+    "avatar": "/images/kol/emlyy.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@emlyreview",
@@ -3948,7 +3948,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "102",
     "name": "Hà Giang",
-    "avatar": "",
+    "avatar": "/images/kol/ha-giang-ciara.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@ciaramakeup2003",
@@ -3965,7 +3965,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "103",
     "name": "Hoàng Minh Ngọc",
-    "avatar": "",
+    "avatar": "/images/kol/hoang-minh-ngoc.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@hoangminhngoc21",
@@ -3982,7 +3982,7 @@ export const REAL_KOLS: Kol[] = [
   {
     "id": "104",
     "name": "Quỳnh Alee",
-    "avatar": "",
+    "avatar": "/images/kol/quynh-alee.jpg",
     "cover": "",
     "platform": "Tiktok",
     "handle": "@quynhalee",

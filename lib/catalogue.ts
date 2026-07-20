@@ -1,6 +1,7 @@
 import type { Post, Product } from "@/lib/types"
 
 export interface CatalogueBranch {
+  slug?: string
   title: string
   description: string
   keywords: string[]
@@ -8,6 +9,14 @@ export interface CatalogueBranch {
   nextStep?: string
   articleTitle?: string
   productTypes?: string[]
+}
+
+export type CatalogueGroupSlug = "skin-treatment" | "hair-body" | "makeup-fragrance" | "lifestyle-services-tech"
+
+export interface CatalogueFilterDefinition {
+  key: "condition" | "skin" | "audience" | "budget"
+  label: string
+  options: { slug: string; label: string }[]
 }
 
 export interface CatalogueSection {
@@ -21,6 +30,11 @@ export interface CatalogueSection {
   productTypes: string[]
   featuredQueries: string[]
   topMenu?: boolean
+  group?: CatalogueGroupSlug
+  entryPriority?: number
+  goals?: { slug: string; label: string }[]
+  conditions?: { slug: string; label: string; description: string }[]
+  filterDefinitions?: CatalogueFilterDefinition[]
 }
 
 export const catalogueSections: CatalogueSection[] = [
@@ -356,6 +370,92 @@ export const secondaryFilterGroups = {
   budget: ["Tất cả giá", "Dưới 200k", "200-500k", "Luxury"],
 }
 
+export const catalogueGroups: { slug: CatalogueGroupSlug; title: string; description: string; sectionSlugs: string[] }[] = [
+  {
+    slug: "skin-treatment",
+    title: "Da & treatment",
+    description: "Đi từ tình trạng da, thành phần đến quyết định chọn routine và sản phẩm.",
+    sectionSlugs: ["da-mat", "tri-mun", "sang-da-chong-nang", "ingredient-radar", "product-radar"],
+  },
+  {
+    slug: "hair-body",
+    title: "Tóc & cơ thể",
+    description: "Chăm sóc tóc, da đầu, body và grooming theo nhu cầu thực tế.",
+    sectionSlugs: ["toc-da-dau", "bodycare", "nam-gioi"],
+  },
+  {
+    slug: "makeup-fragrance",
+    title: "Makeup & mùi hương",
+    description: "Chọn makeup, nước hoa, nail, mi và mày theo dịp dùng và mức an toàn.",
+    sectionSlugs: ["makeup", "mui-huong", "nails-mi-long-may"],
+  },
+  {
+    slug: "lifestyle-services-tech",
+    title: "Lifestyle, dịch vụ & công nghệ",
+    description: "Hiểu giới hạn của lifestyle, clinic và thiết bị trước khi chi tiền.",
+    sectionSlugs: ["beauty-lifestyle", "clinic-treatment", "beauty-tech"],
+  },
+]
+
+export function normalizeCatalogueToken(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+}
+
+const filterOptions = {
+  skin: secondaryFilterGroups.skinType.slice(1).map((label) => ({ slug: normalizeCatalogueToken(label), label })),
+  audience: secondaryFilterGroups.audience.slice(1).map((label) => ({ slug: normalizeCatalogueToken(label), label })),
+  budget: secondaryFilterGroups.budget.slice(1).map((label) => ({ slug: normalizeCatalogueToken(label), label })),
+}
+
+const groupBySectionSlug = new Map(catalogueGroups.flatMap((group) => group.sectionSlugs.map((slug) => [slug, group.slug] as const)))
+
+for (const [index, section] of catalogueSections.entries()) {
+  section.group = groupBySectionSlug.get(section.slug)
+  section.entryPriority = index + 1
+  section.goals = section.featuredQueries.map((label) => ({ slug: normalizeCatalogueToken(label), label }))
+  section.conditions = section.branches.map((branch) => ({
+    slug: branch.slug ?? normalizeCatalogueToken(branch.title),
+    label: branch.title,
+    description: branch.description,
+  }))
+  section.filterDefinitions = [
+    { key: "condition", label: "Tình trạng", options: section.conditions.map(({ slug, label }) => ({ slug, label })) },
+    { key: "skin", label: "Loại da", options: filterOptions.skin },
+    { key: "audience", label: "Bối cảnh", options: filterOptions.audience },
+    { key: "budget", label: "Ngân sách", options: filterOptions.budget },
+  ]
+}
+
+export const catalogueLenses = {
+  skin: filterOptions.skin,
+  audience: filterOptions.audience,
+  budget: filterOptions.budget,
+}
+
+export function getCatalogueSectionsByGroup(groupSlug: CatalogueGroupSlug) {
+  return catalogueSections
+    .filter((section) => section.group === groupSlug)
+    .sort((a, b) => (a.entryPriority ?? 99) - (b.entryPriority ?? 99))
+}
+
+export function buildCatalogueHref(
+  hubSlug: string,
+  filters: { condition?: string; skin?: string; audience?: string; budget?: string } = {}
+) {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(filters)) {
+    if (value) params.set(key, value)
+  }
+  const query = params.toString()
+  return `/catalogue/${hubSlug}${query ? `?${query}` : ""}`
+}
+
 export function getCatalogueSection(slug: string) {
   return catalogueSections.find((section) => section.slug === slug)
 }
@@ -381,6 +481,8 @@ export function productMatchesNeed(product: Product, needSlug: string) {
 }
 
 export function postMatchesCatalogue(post: Post, section: CatalogueSection) {
+  if (post.hubSlug) return post.hubSlug === section.slug
+
   const keywords = section.branches.flatMap((branch) => branch.keywords)
   const haystack = [
     post.title,
@@ -393,17 +495,46 @@ export function postMatchesCatalogue(post: Post, section: CatalogueSection) {
   return textMatchesKeywords(haystack, keywords)
 }
 
+const CATEGORY_CATALOGUE_MAP: Record<NonNullable<Product["category_key"]>, string[]> = {
+  skincare: ["da-mat"],
+  haircare: ["toc-da-dau"],
+  makeup: ["makeup"],
+  fragrance: ["mui-huong"],
+  bodycare: ["bodycare"],
+  beauty_tools_tech: ["beauty-tech"],
+  clinic_treatment: ["clinic-treatment"],
+  nails_lash_brow: ["nails-mi-long-may"],
+  men_grooming: ["nam-gioi"],
+}
+
+const ACNE_CONDITIONS = new Set(["mun", "tri-mun", "mun-an", "mun-viem", "mun-noi-tiet", "bit-tac", "acne"])
+const BRIGHTENING_CONDITIONS = new Set(["sang-da", "deu-mau", "tham-mun", "pih", "nam", "tan-nhang", "chong-nang"])
+
+export function getProductCatalogueSlugs(product: Product) {
+  const explicit = product.catalogue_slugs?.filter((slug) => Boolean(getCatalogueSection(slug))) ?? []
+  if (explicit.length > 0) return Array.from(new Set(explicit))
+
+  const categoryKey = product.category_key
+  if (!categoryKey) return []
+
+  const slugs = [...(CATEGORY_CATALOGUE_MAP[categoryKey] ?? [])]
+  const structuredConditions = [...(product.condition_tags ?? []), ...(product.concern_tags ?? [])]
+    .map(normalizeCatalogueToken)
+
+  if (categoryKey === "skincare" && structuredConditions.some((tag) => ACNE_CONDITIONS.has(tag))) slugs.push("tri-mun")
+  if (categoryKey === "skincare" && structuredConditions.some((tag) => BRIGHTENING_CONDITIONS.has(tag))) slugs.push("sang-da-chong-nang")
+  if ((product.ingredient_tags?.length ?? 0) > 0 && categoryKey === "skincare") slugs.push("ingredient-radar")
+  if (slugs.length > 0) slugs.push("product-radar")
+
+  return Array.from(new Set(slugs))
+}
+
+export function getProductCatalogueMappingStatus(product: Product) {
+  if (product.catalogue_mapping_status) return product.catalogue_mapping_status
+  return getProductCatalogueSlugs(product).length > 0 ? "mapped" : "unmapped"
+}
+
 export function productMatchesCatalogue(product: Product, section: CatalogueSection) {
-  if (section.slug === "product-radar") return true
-
-  const keywords = section.branches.flatMap((branch) => branch.keywords)
-  const haystack = [
-    product.name,
-    product.brand,
-    product.category,
-    product.description,
-    ...product.tags,
-  ].join(" ")
-
-  return textMatchesKeywords(haystack, keywords)
+  if (getProductCatalogueMappingStatus(product) !== "mapped") return false
+  return getProductCatalogueSlugs(product).includes(section.slug)
 }

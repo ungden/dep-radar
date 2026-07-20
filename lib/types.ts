@@ -19,9 +19,15 @@ export interface Product {
   ingredient_tags?: string[]
   aliases?: string[]
   status?: ProductStatus | null
+  catalogue_slugs?: string[]
+  condition_tags?: string[]
+  audience_tags?: string[]
+  safety_flags?: string[]
+  catalogue_mapping_status?: ProductCatalogueMappingStatus | null
 }
 
 export type ProductStatus = "published" | "pending" | "archived"
+export type ProductCatalogueMappingStatus = "mapped" | "unmapped" | "needs_review"
 
 export type ProductCategoryKey =
   | "skincare"
@@ -355,6 +361,8 @@ export interface Post {
   created_at: string
   product_ids: string[]
   hubSlug?: string
+  intent?: "pillar" | "problem-solving" | "decision" | "safety" | "comparison" | "how-to"
+  conditionSlugs?: string[]
   status?: "planned" | "draft" | "published"
   takeaways?: string[]
   faq?: { question: string; answer: string }[]

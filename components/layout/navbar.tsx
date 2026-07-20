@@ -9,7 +9,7 @@ import { BrandLogo } from "@/components/brand-logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ModeToggle } from "@/components/mode-toggle"
-import { topCatalogueNavigation } from "@/lib/catalogue"
+import { catalogueGroups, getCatalogueSectionsByGroup } from "@/lib/catalogue"
 import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 import { useAuth } from "@/lib/auth-context"
 
@@ -17,7 +17,7 @@ const primaryNavItems = [
   { href: "/catalogue", label: "Catalogue" },
   { href: "/products", label: "Sản phẩm" },
   { href: "/koc-tracker", label: "KOL/KOC" },
-  { href: "/blog", label: "Blog" },
+  { href: "/blog", label: "Kiến thức" },
 ]
 
 export function Navbar() {
@@ -219,15 +219,20 @@ export function Navbar() {
       </div>
 
       <div className="hidden border-t border-slate-100 bg-white/90 dark:border-slate-800 dark:bg-slate-950/90 md:block">
-        <nav className="container mx-auto flex items-center gap-4 overflow-x-auto px-4 py-3 md:px-6 xl:justify-center">
-          {topCatalogueNavigation.map((item) => (
-            <Link
-              key={item.slug}
-              href={`/catalogue/${item.slug}`}
-              className="shrink-0 text-xs font-bold uppercase tracking-wider text-slate-500 transition-colors hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-300"
-            >
-              {item.shortTitle}
-            </Link>
+        <nav aria-label="Nhóm catalogue" className="container mx-auto flex items-center justify-center gap-2 px-4 py-2 md:px-6">
+          {catalogueGroups.map((group) => (
+            <details key={group.slug} className="group relative">
+              <summary className="flex min-h-10 cursor-pointer list-none items-center rounded-lg px-3 text-xs font-bold uppercase tracking-wider text-slate-500 transition-colors hover:bg-slate-50 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-rose-300">
+                {group.title}
+              </summary>
+              <div className="absolute left-1/2 top-full z-50 mt-2 w-80 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+                {getCatalogueSectionsByGroup(group.slug).map((section) => (
+                  <Link key={section.slug} href={`/catalogue/${section.slug}`} className="flex min-h-11 items-center justify-between rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-rose-50 hover:text-rose-700 dark:text-slate-200 dark:hover:bg-rose-950/30 dark:hover:text-rose-300">
+                    {section.shortTitle}<span className="text-xs font-medium text-slate-400">→</span>
+                  </Link>
+                ))}
+              </div>
+            </details>
           ))}
         </nav>
       </div>
@@ -259,7 +264,7 @@ export function Navbar() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-xl absolute w-full left-0 top-[65px]">
+        <div className="absolute left-0 top-[65px] max-h-[calc(100dvh-65px)] w-full overflow-y-auto border-t border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-950 md:hidden">
           <nav className="flex flex-col gap-6">
             <Link
               href="/catalogue"
@@ -287,7 +292,7 @@ export function Navbar() {
               className="text-lg font-bold uppercase tracking-wider text-slate-900 dark:text-slate-50 hover:text-rose-600 dark:hover:text-rose-400"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Blog
+              Kiến thức
             </Link>
             <Link
               href="/community"
@@ -305,16 +310,23 @@ export function Navbar() {
                 Admin Panel
               </Link>
             )}
-            <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-5 dark:border-slate-800">
-              {topCatalogueNavigation.map((item) => (
-                <Link
-                  key={item.slug}
-                  href={`/catalogue/${item.slug}`}
-                  className="rounded-xl bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.shortTitle}
-                </Link>
+            <div className="space-y-5 border-t border-slate-100 pt-5 dark:border-slate-800">
+              {catalogueGroups.map((group) => (
+                <section key={group.slug} aria-labelledby={`mobile-${group.slug}`}>
+                  <h2 id={`mobile-${group.slug}`} className="mb-2 text-xs font-black uppercase tracking-[0.16em] text-rose-600 dark:text-rose-300">{group.title}</h2>
+                  <div className="grid grid-cols-2 gap-2">
+                    {getCatalogueSectionsByGroup(group.slug).map((item) => (
+                      <Link
+                        key={item.slug}
+                        href={`/catalogue/${item.slug}`}
+                        className="flex min-h-11 items-center rounded-xl bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {item.shortTitle}
+                      </Link>
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
             <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
