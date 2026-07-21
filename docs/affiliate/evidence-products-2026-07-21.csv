@@ -2,8 +2,10 @@ product_id,brand,product_name,category,independent_creators,support_score,commer
 cocoon-hau-giang-lotus-mineral-sunscreen-50ml,Cocoon,Sữa chống nắng vô cơ Sen Hậu Giang 50ml - Tone-up Beige,Skincare,3,50,33,2026-07-17,,pending
 olay-super-spf50-fluid-moisturiser,Olay,Super SPF50+ Fluid Moisturiser PA++++,Skincare,3,46,33,2026-06-29,,pending
 loreal-revitalift-melasyl-dark-spot-creamy-serum,L'Oréal Paris,Revitalift Melasyl Dark Spot Creamy-Serum,Skincare,2,54,50,2026-07-09,,pending
+loreal-revitalift-triple-power-tri-peptides-age-defying-serum,L’Oréal Paris,RevitaLift Triple Power Tri-Peptides Age-Defying Serum,Skincare,2,45,0,2026-03-15,,pending
 allies-of-skin-multi-peptides-gf-advanced-lifting-serum,Allies of Skin,Multi Peptides & GF Advanced Lifting Serum,Skincare,1,86,0,2026-07-20,,pending
 lagom-brightening-tone-up-sun,LAGOM,Brightening Tone Up Sun SPF50+ PA++++,Skincare,1,57,0,2026-07-03,,pending
+biotrade-keratolin-hydro-body-lotion-8-urea,Biotrade,Keratolin Hydro Body Lotion 8% Urea,Bodycare,1,51,0,2026-05-30,,pending
 ahc-masters-tone-up-sun-serum,AHC,Masters Tone-Up Sun Serum SPF50+ PA++++ 50ml,Skincare,1,50,0,2026-06-03,,pending
 benzac-ac-moderate-strength-5-acne-gel,Benzac,Benzac AC Moderate Strength 5% Acne Gel,Skincare,1,50,0,2026-06-27,,pending
 biore-uv-aqua-rich-airy-hold-cream,Bioré,UV Aqua Rich Airy Hold Cream SPF50+ PA++++,Skincare,1,47,100,2026-06-11,,pending
@@ -21,6 +23,9 @@ ahc-pro-shot-pore-eraser-serum,AHC,Pro Shot Pore Eraser Serum,Skincare,1,39,100,
 simple-mattifying-uv-fluid-spf50,Simple,Mattifying UV Fluid SPF50 PA++++,Skincare,1,39,100,2026-07-13,,pending
 biore-uv-aqua-rich-mild-essence,Bioré,UV Aqua Rich Mild Essence SPF50+ PA++++,Skincare,1,38,100,2026-06-26,,pending
 skinoxy-pro-b3-aha-concentrate-body-serum,SKINOXY,Pro B3 AHA Concentrate Body Serum,Bodycare,1,36,100,2026-07-05,,pending
+simple-repair-plus-replenishing-cream-cleanser,Simple,Repair+ Replenishing Cream Cleanser,Skincare,1,36,100,2026-03-24,,pending
+simple-repair-plus-rich-face-cream,Simple,Repair+ Pro-Ceramides + Cica Rich Face Cream,Skincare,1,36,100,2026-03-24,,pending
+geek-gorgeous-stress-less,Geek & Gorgeous,Stress Less 0.2% Beta-Glucan + 0.3% Madecassoside Serum,Skincare,1,33,100,2026-05-22,,pending
 1,GoodnDoc,Tinh chất phục hồi da B5 GoodnDoc,Skincare,0,0,0,,,pending
 2,Maybelline,Kem nền Maybelline Fit Me Matte + Poreless,Makeup,0,0,0,,,pending
 3,L'Oreal,Nước tẩy trang L'Oreal Micellar Water 3-in-1,Skincare,0,0,0,,,pending

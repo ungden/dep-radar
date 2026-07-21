@@ -6,7 +6,8 @@ import { assertCronSecret, deleteQueueMessage, readQueue } from "@/lib/evidence-
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
-const WORKER_VERSION = "evidence-radar-trust-first-v4"
+const WORKER_VERSION = "evidence-radar-trust-first-v5"
+const PRIORITY_BATCH_SIZE = 8
 
 type CreatorMonitorMessage = { creator_account_id: string }
 type EvidenceAnalysisMessage = { source_post_id: string }
@@ -55,7 +56,7 @@ async function runWorker(request: NextRequest) {
     let priorityResults: Array<Record<string, unknown>> = []
     try {
       await assertEvidenceProviderReady()
-      priorityResults = await analyzePriorityBatch(6)
+      priorityResults = await analyzePriorityBatch(PRIORITY_BATCH_SIZE)
       for (const result of priorityResults) {
         if (result.error) errors.push({ kind: "priority_analysis", ...result })
         else results.push({ kind: "priority_analysis", ...result })
