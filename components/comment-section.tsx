@@ -53,6 +53,7 @@ export function CommentSection({ postId, productId }: CommentSectionProps) {
   const [loading, setLoading] = React.useState(true)
   const [content, setContent] = React.useState("")
   const [submitting, setSubmitting] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   const fetchComments = React.useCallback(async () => {
     if (!isSupabaseSchemaReady) {
@@ -83,21 +84,9 @@ export function CommentSection({ postId, productId }: CommentSectionProps) {
     if (!user || !content.trim() || submitting) return
 
     setSubmitting(true)
+    setError(null)
     if (!isSupabaseSchemaReady) {
-      const optimisticComment: Comment = {
-        id: `local-${Date.now()}`,
-        user_id: user.id,
-        content: content.trim(),
-        created_at: new Date().toISOString(),
-        post_id: postId ?? null,
-        product_id: productId ?? null,
-        parent_id: null,
-        profile: {
-          full_name: user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Bạn",
-        },
-      }
-      setComments((items) => [optimisticComment, ...items])
-      setContent("")
+      setError("Kênh bình luận chưa được bật trên môi trường này. Không có dữ liệu nào được gửi.")
       setSubmitting(false)
       return
     }
@@ -113,6 +102,8 @@ export function CommentSection({ postId, productId }: CommentSectionProps) {
     if (!error) {
       setContent("")
       await fetchComments()
+    } else {
+      setError("Không thể lưu bình luận. Vui lòng thử lại sau.")
     }
     setSubmitting(false)
   }
@@ -124,7 +115,11 @@ export function CommentSection({ postId, productId }: CommentSectionProps) {
       </h3>
 
       {/* Comment input */}
-      {user ? (
+      {!isSupabaseSchemaReady ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-200">
+          Bình luận đang tạm khóa vì backend lưu trữ chưa sẵn sàng. Trang sẽ không tạo bình luận cục bộ giả.
+        </div>
+      ) : user ? (
         <form onSubmit={handleSubmit} className="flex gap-3 items-start">
           <Avatar className="h-9 w-9 shrink-0 border border-slate-200 dark:border-slate-700">
             <AvatarFallback className="bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-sm font-bold">
@@ -164,6 +159,7 @@ export function CommentSection({ postId, productId }: CommentSectionProps) {
           </p>
         </div>
       )}
+      {error && <p className="text-sm font-semibold text-rose-600 dark:text-rose-300">{error}</p>}
 
       {/* Comments list */}
       {loading ? (

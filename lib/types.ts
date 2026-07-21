@@ -24,6 +24,11 @@ export interface Product {
   audience_tags?: string[]
   safety_flags?: string[]
   catalogue_mapping_status?: ProductCatalogueMappingStatus | null
+  source_label?: string | null
+  source_url?: string | null
+  source_type?: "official" | "brand-retail" | "retailer" | null
+  /** Seed prices are editorial references, not live offers. */
+  price_status?: "verified" | "reference" | "unverified" | null
 }
 
 export type ProductStatus = "published" | "pending" | "archived"
@@ -227,6 +232,13 @@ export interface CreatorProductEvent {
   evidence_note: string
   confidence: CreatorProductConfidence
   confidence_score?: number | null
+  evidence_spans?: EvidenceSpan[]
+  risk_flags?: EvidenceRiskFlag[]
+  product_identity_score?: number | null
+  action_evidence_score?: number | null
+  source_authenticity_score?: number | null
+  evidence_localization_score?: number | null
+  exact_sku_verified?: boolean
   verification_status?: "pending" | "verified" | "rejected"
   verified_by?: string | null
   verified_at?: string | null
@@ -324,6 +336,30 @@ export interface EvidenceClaim {
   risk_flags: EvidenceRiskFlag[]
 }
 
+export interface CreatorEvidenceMetrics {
+  identityVerified: boolean
+  expertiseScore: number
+  evidenceCompleteness: number
+  commercialTransparency: number
+  verifiedEventCount: number
+  exactProductCount: number
+  knownDisclosureRate: number
+  commercialShare: number
+}
+
+export type ProductEvidenceStatus = "no_evidence" | "one_source" | "cross_checked" | "broadly_validated"
+
+export interface ProductDecisionSignal {
+  supportScore: number
+  independentCreatorCount: number
+  supportCount: number
+  cautionCount: number
+  commercialShare: number
+  evidenceStatus: ProductEvidenceStatus
+  commercialBuzz: boolean
+  latestEvidenceAt: string | null
+}
+
 export type CreatorProductStateValue =
   | "current"
   | "recently_used"
@@ -361,7 +397,8 @@ export interface Post {
   created_at: string
   product_ids: string[]
   hubSlug?: string
-  intent?: "pillar" | "problem-solving" | "decision" | "safety" | "comparison" | "how-to"
+  intent?: "pillar" | "problem-solving" | "decision" | "safety"
+  contentFormat?: "guide" | "checklist" | "comparison" | "explainer" | "review"
   conditionSlugs?: string[]
   status?: "planned" | "draft" | "published"
   takeaways?: string[]

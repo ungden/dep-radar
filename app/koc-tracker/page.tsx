@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
 
 import { CreatorDirectory } from "@/components/creator-directory"
-import { getKols } from "@/lib/data"
+import { getCreatorProductEvents, getKols } from "@/lib/data"
 
 export const metadata: Metadata = {
-  title: "Danh bạ creator beauty | 360dep.vn",
+  title: "Danh bạ creator beauty",
   description: "Tra cứu creator theo kênh, chuyên môn và độ đầy đủ hồ sơ public.",
 }
 
@@ -17,6 +17,6 @@ export default async function KocTrackerPage({
   const initialFilters = Object.fromEntries(
     Object.entries(rawFilters).flatMap(([key, value]) => typeof value === "string" ? [[key, value]] : [])
   )
-  const kols = await getKols()
-  return <CreatorDirectory initialKols={kols} initialFilters={initialFilters} />
+  const [kols, events] = await Promise.all([getKols(), getCreatorProductEvents()])
+  return <CreatorDirectory initialKols={kols} initialEvents={events} initialFilters={initialFilters} />
 }

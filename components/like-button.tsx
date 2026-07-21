@@ -29,21 +29,23 @@ export function LikeButton({ postId, productId, commentId, initialCount }: LikeB
     if (!isSupabaseSchemaReady) return
 
     const checkLiked = async () => {
-      let query = supabase
+      let ownQuery = supabase
         .from("likes")
         .select("id")
         .eq("user_id", user.id)
+      let countQuery = supabase.from("likes").select("id", { count: "exact", head: true })
 
-      if (postId) query = query.eq("post_id", postId)
-      if (productId) query = query.eq("product_id", productId)
-      if (commentId) query = query.eq("comment_id", commentId)
+      if (postId) { ownQuery = ownQuery.eq("post_id", postId); countQuery = countQuery.eq("post_id", postId) }
+      if (productId) { ownQuery = ownQuery.eq("product_id", productId); countQuery = countQuery.eq("product_id", productId) }
+      if (commentId) { ownQuery = ownQuery.eq("comment_id", commentId); countQuery = countQuery.eq("comment_id", commentId) }
 
-      const { data } = await query.maybeSingle()
+      const [{ data }, { count: persistedCount }] = await Promise.all([ownQuery.maybeSingle(), countQuery])
       setLiked(!!data)
+      setCount(persistedCount ?? initialCount)
     }
 
     checkLiked()
-  }, [user, postId, productId, commentId])
+  }, [user, postId, productId, commentId, initialCount])
 
   const handleClick = async () => {
     if (!user) {
@@ -52,6 +54,7 @@ export function LikeButton({ postId, productId, commentId, initialCount }: LikeB
     }
 
     if (loading) return
+    if (!isSupabaseSchemaReady) return
     setLoading(true)
 
     // Optimistic update
@@ -59,11 +62,6 @@ export function LikeButton({ postId, productId, commentId, initialCount }: LikeB
     const prevCount = count
     setLiked(!wasLiked)
     setCount(wasLiked ? prevCount - 1 : prevCount + 1)
-
-    if (!isSupabaseSchemaReady) {
-      setLoading(false)
-      return
-    }
 
     try {
       if (wasLiked) {
@@ -99,9 +97,10 @@ export function LikeButton({ postId, productId, commentId, initialCount }: LikeB
   return (
     <button
       onClick={handleClick}
-      disabled={loading}
+      disabled={loading || !isSupabaseSchemaReady}
+      title={!isSupabaseSchemaReady ? "Lượt thích chưa khả dụng trên môi trường này" : undefined}
       className={cn(
-        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200",
+        "inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200",
         "border border-slate-200 dark:border-slate-700",
         "hover:scale-105 active:scale-95",
         "disabled:opacity-50 disabled:cursor-not-allowed",

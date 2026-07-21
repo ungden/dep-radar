@@ -4,7 +4,8 @@ import { deriveCreatorProductState, isPublicEvidenceEvent } from "@/lib/evidence
 import { REAL_KOLS } from "@/lib/kols-data"
 import { isActivePublicCreator } from "@/lib/creator-roster"
 import { productsWithTaxonomy, productWithTaxonomy } from "@/lib/product-taxonomy"
-import { RESEARCHED_PRODUCTS } from "@/lib/product-research"
+import { RESEARCHED_PRODUCTS, RESEARCHED_PRODUCT_SOURCES } from "@/lib/product-research"
+import { catalogueSections, getProductCatalogueMappingStatus, getProductCatalogueSlugs } from "@/lib/catalogue"
 import { isPublicCreatorEvent, isPublicOffer, summarizeApprovedRatings } from "@/lib/public-trust"
 import type { CommunityReview, CreatorEvidenceItem, CreatorProductEvent, CreatorProductState, Kol, Post, Product, ProductOffer, Review } from "@/lib/types"
 
@@ -15,7 +16,7 @@ export const SAMPLE_KOLS: Kol[] = REAL_KOLS.filter(isActivePublicCreator)
 export const EDITORIAL_AUTHOR_NAME = "360dep.vn Beauty Desk"
 export const EDITORIAL_AUTHOR_AVATAR = "/brand/icon-192.png"
 
-export const SAMPLE_PRODUCTS: Product[] = productsWithTaxonomy([
+const RAW_SAMPLE_PRODUCTS: Product[] = productsWithTaxonomy([
   { id: "1", name: "Hyaluronic Acid 2% + B5 Serum", brand: "The Ordinary", image: "/images/products/the-ordinary-hyaluronic-acid-2-b5.jpg", rating: 4.7, reviews: 0, sold: "Đang cập nhật", price: "300.000đ", category: "Skincare", category_key: "skincare", subcategory_key: "serum", concern_tags: ["da thiếu nước", "phục hồi", "da khô"], ingredient_tags: ["hyaluronic acid", "panthenol", "ceramides"], aliases: ["The Ordinary Hyaluronic Acid", "TO HA B5"], tags: ["HA", "B5", "Cấp ẩm"], affiliate_url: null, description: "Serum cấp ẩm có hyaluronic acid và B5, hợp routine phục hồi khi da thiếu nước hoặc cần lớp serum tối giản trước kem dưỡng." },
   { id: "2", name: "Fit Me Matte + Poreless Foundation", brand: "Maybelline New York", image: "/images/products/maybelline-fit-me-matte-poreless-foundation.jpg", rating: 4.5, reviews: 0, sold: "Đang cập nhật", price: "180.000đ", category: "Makeup", category_key: "makeup", subcategory_key: "foundation", concern_tags: ["nền", "da dầu", "lỗ chân lông"], ingredient_tags: ["oil-free"], aliases: ["Maybelline Fit Me"], tags: ["Foundation", "Drugstore", "Da dầu"], affiliate_url: null, description: "Kem nền drugstore finish matte tự nhiên, phù hợp da thường đến dầu và ngân sách học sinh sinh viên." },
   { id: "3", name: "Sensibio H2O Micellar Water", brand: "Bioderma", image: "/images/products/bioderma-sensibio-h2o-micellar-water.jpg", rating: 4.8, reviews: 0, sold: "Đang cập nhật", price: "320.000đ", category: "Skincare", category_key: "skincare", subcategory_key: "cleanser", concern_tags: ["làm sạch", "da nhạy cảm", "tẩy trang"], ingredient_tags: ["micellar technology"], aliases: ["Bioderma Sensibio", "Sensibio H2O"], tags: ["Micellar", "Da nhạy cảm", "Không cần rửa lại"], affiliate_url: null, description: "Nước tẩy trang micellar cho da nhạy cảm, dùng để làm sạch makeup, bụi mịn và kem chống nắng nhẹ trong routine tối giản." },
@@ -26,6 +27,25 @@ export const SAMPLE_PRODUCTS: Product[] = productsWithTaxonomy([
   { id: "8", name: "Gluta-Hya Serum Burst Lotion Dewy Radiance", brand: "Vaseline", image: "/images/products/vaseline-gluta-hya-dewy-radiance-lotion.jpg", rating: 4.5, reviews: 0, sold: "Đang cập nhật", price: "140.000đ", category: "Bodycare", category_key: "bodycare", subcategory_key: "body_lotion", concern_tags: ["body sáng da", "da khô", "bodycare"], ingredient_tags: ["glutaglow", "hyaluron", "niacinamide"], aliases: ["Vaseline Gluta-Hya Dewy"], tags: ["Body lotion", "Gluta-Hya", "Dewy"], affiliate_url: null, description: "Sữa dưỡng thể dạng serum burst, thấm nhanh, hỗ trợ da body ẩm mượt và nhìn sáng khỏe hơn trong routine hằng ngày." },
   ...RESEARCHED_PRODUCTS,
 ])
+
+const PRODUCT_SOURCE_BY_ID = new Map(RESEARCHED_PRODUCT_SOURCES.map((source) => [source.productId, source]))
+const RESEARCHED_ID_BY_NAME = new Map(RESEARCHED_PRODUCTS.map((product) => [`${product.brand}|${product.name}`, product.id]))
+const LEGACY_SOURCE_ALIAS: Record<string, string> = { "1": "the-ordinary-hyaluronic-acid-2-b5" }
+
+export const SAMPLE_PRODUCTS: Product[] = RAW_SAMPLE_PRODUCTS.map((product) => {
+  const researchedId = RESEARCHED_ID_BY_NAME.get(`${product.brand}|${product.name}`)
+  const source = PRODUCT_SOURCE_BY_ID.get(product.id)
+    ?? PRODUCT_SOURCE_BY_ID.get(LEGACY_SOURCE_ALIAS[product.id])
+    ?? (researchedId ? PRODUCT_SOURCE_BY_ID.get(researchedId) : undefined)
+  return {
+    ...product,
+    price: product.price === "Đang cập nhật" ? "Chưa xác minh giá" : product.price,
+    price_status: product.price === "Đang cập nhật" ? "unverified" : "reference",
+    source_label: source?.label ?? null,
+    source_url: source?.url ?? null,
+    source_type: source?.sourceType ?? null,
+  }
+})
 
 const CURATED_LEGACY_PRODUCTS = new Map(SAMPLE_PRODUCTS.slice(0, 8).map((product) => [product.id, product]))
 const PUBLIC_CREATOR_PRODUCT_EVENTS: CreatorProductEvent[] = []
@@ -188,21 +208,76 @@ export const SAMPLE_POSTS: Post[] = [
 ]
 
 const EDITORIAL_PUBLISHED_POSTS = getPublishedEditorialPosts()
-const ALL_FALLBACK_POSTS: Post[] = [...EDITORIAL_PUBLISHED_POSTS, ...SAMPLE_POSTS]
+const CANONICAL_EDITORIAL_SLUGS = new Set(EDITORIAL_PUBLISHED_POSTS.map((post) => post.slug))
+const LEGACY_POST_ALIASES: Record<string, string> = {
+  p1: "cach-tinh-gia-tri-that-cua-mot-serum",
+  "top-5-serum-phuc-hoi-da-2026": "cach-tinh-gia-tri-that-cua-mot-serum",
+  p2: "pillar-sang-da-va-chong-nang-an-toan",
+  "huong-dan-chon-kem-chong-nang": "pillar-sang-da-va-chong-nang-an-toan",
+  p3: "pillar-makeup-theo-nen-da-va-dip-dung",
+  "drugstore-makeup-haul-duoi-500k": "pillar-makeup-theo-nen-da-va-dip-dung",
+  p4: "routine-da-mun-nhay-cam",
+  "skincare-routine-da-dau-mun": "routine-da-mun-nhay-cam",
+  p5: "pillar-cham-toc-va-da-dau-theo-van-de",
+  "giai-cuu-toc-hu-ton-sau-tay-nhuom": "pillar-cham-toc-va-da-dau-theo-van-de",
+  p6: "pillar-bodycare-theo-tung-vung-co-the",
+  "so-sanh-sua-duong-the-trang-da": "pillar-bodycare-theo-tung-vung-co-the",
+  p7: "pillar-chon-mui-huong-theo-dip-va-mua",
+  "nuoc-hoa-nu-mua-he-tuoi-mat": "pillar-chon-mui-huong-theo-dip-va-mua",
+  p8: "pillar-makeup-theo-nen-da-va-dip-dung",
+  "xu-huong-son-moi-2026": "pillar-makeup-theo-nen-da-va-dip-dung",
+}
 
-function normalizeEditorialPost(post: Post): Post {
+export function getCanonicalPostSlug(idOrSlug: string) {
+  return LEGACY_POST_ALIASES[idOrSlug] ?? null
+}
+// SAMPLE_POSTS is retained only as a legacy migration reference. Public
+// knowledge surfaces use the sourced editorial registry exclusively.
+const ALL_FALLBACK_POSTS: Post[] = EDITORIAL_PUBLISHED_POSTS
+
+function normalizeEditorialPost(post: Post & {
+  hub_slug?: string
+  research_stage?: Post["researchStage"]
+  condition_slugs?: string[]
+  next_article_slugs?: string[]
+  medical_disclaimer_level?: Post["medicalDisclaimerLevel"]
+  content_format?: Post["contentFormat"]
+}): Post {
   return {
     ...post,
-    hubSlug: post.hubSlug ?? inferLegacyPostHub(post),
+    hubSlug: post.hubSlug ?? post.hub_slug ?? inferLegacyPostHub(post),
+    intent: post.intent ?? "problem-solving",
+    researchStage: post.researchStage ?? post.research_stage ?? inferLegacyResearchStage(post),
+    conditionSlugs: post.conditionSlugs ?? post.condition_slugs ?? (post.tags ?? []).map(normalizeSlugToken),
+    nextArticleSlugs: post.nextArticleSlugs ?? post.next_article_slugs ?? [],
+    medicalDisclaimerLevel: post.medicalDisclaimerLevel ?? post.medical_disclaimer_level ?? "none",
+    contentFormat: post.contentFormat ?? post.content_format,
     author_name: EDITORIAL_AUTHOR_NAME,
     author_avatar: EDITORIAL_AUTHOR_AVATAR,
   }
+}
+
+function inferLegacyResearchStage(post: Post): Post["researchStage"] {
+  const text = normalizeText(`${post.category} ${post.title}`)
+  if (text.includes("review") || text.includes("so sanh")) return "product"
+  if (text.includes("routine") || text.includes("huong dan")) return "routine"
+  return "problem"
+}
+
+function normalizeSlugToken(value: string) {
+  return normalizeText(value).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
 }
 
 function inferLegacyPostHub(post: Post) {
   const category = normalizeText(post.category ?? "")
   const tags = normalizeText((post.tags ?? []).join(" "))
 
+  if (category.includes("review san pham")) return "product-radar"
+  if (category.includes("cham soc da") && tags.includes("chong nang")) return "sang-da-chong-nang"
+  if (category.includes("trang diem") || tags.includes("makeup")) return "makeup"
+  if (category.includes("skincare routine") && tags.includes("mun")) return "tri-mun"
+  if (category.includes("cham soc toc") || tags.includes("toc hu ton")) return "toc-da-dau"
+  if (tags.includes("body lotion") || tags.includes("duong the")) return "bodycare"
   if (category.includes("nuoc hoa") || category.includes("fragrance") || category.includes("perfume")) {
     return "mui-huong"
   }
@@ -234,6 +309,46 @@ function mergeProducts(primary: Product[], fallback: Product[]) {
   })
 }
 
+function normalizeProductCatalogueMapping<T extends Product>(product: T): T {
+  return {
+    ...product,
+    catalogue_slugs: getProductCatalogueSlugs(product),
+    condition_tags: product.condition_tags ?? product.concern_tags ?? [],
+    audience_tags: product.audience_tags ?? [],
+    safety_flags: product.safety_flags ?? [],
+    catalogue_mapping_status: getProductCatalogueMappingStatus(product),
+  }
+}
+
+function applyCuratedPublicProduct<T extends Product>(product: T): T {
+  const curated = SAMPLE_PRODUCTS.find((item) => item.id === product.id)
+  if (!curated) return product
+  return {
+    ...product,
+    name: curated.name,
+    brand: curated.brand,
+    image: curated.image,
+    description: curated.description,
+    price: curated.price,
+    price_status: curated.price_status,
+    category: curated.category,
+    category_key: curated.category_key,
+    subcategory_key: curated.subcategory_key,
+    tags: curated.tags,
+    concern_tags: curated.concern_tags,
+    ingredient_tags: curated.ingredient_tags,
+    aliases: curated.aliases,
+    catalogue_slugs: curated.catalogue_slugs,
+    condition_tags: curated.condition_tags,
+    audience_tags: curated.audience_tags,
+    safety_flags: curated.safety_flags,
+    catalogue_mapping_status: curated.catalogue_mapping_status,
+    source_label: curated.source_label,
+    source_url: curated.source_url,
+    source_type: curated.source_type,
+  }
+}
+
 async function fromSupabase<T>(query: PromiseLike<{ data: T | null; error: unknown }>, fallback: T): Promise<T> {
   if (!isSupabaseSchemaReady) return fallback
   try {
@@ -257,8 +372,9 @@ export async function getProducts(): Promise<Product[]> {
   for (const rating of approvedRatings) {
     ratingsByProduct.set(rating.product_id, [...(ratingsByProduct.get(rating.product_id) ?? []), rating])
   }
-  return productsWithTaxonomy(mergeProducts(products, SAMPLE_PRODUCTS))
+  return productsWithTaxonomy(mergeProducts(products, SAMPLE_PRODUCTS).map(applyCuratedPublicProduct))
     .map((product) => CURATED_LEGACY_PRODUCTS.get(product.id) ?? product)
+    .map(normalizeProductCatalogueMapping)
     .filter((product) => product.status !== "pending" && product.status !== "archived")
     .map((product) => {
       const summary = summarizeApprovedRatings(ratingsByProduct.get(product.id) ?? [])
@@ -290,7 +406,7 @@ export async function getProduct(id: string): Promise<Product | null> {
   const fallback = SAMPLE_PRODUCTS.find((product) => product.id === id) ?? null
   const curatedLegacyProduct = fallback ? CURATED_LEGACY_PRODUCTS.get(fallback.id) : null
   if (curatedLegacyProduct) {
-    const publicLegacyProduct = productWithTaxonomy(curatedLegacyProduct)
+    const publicLegacyProduct = normalizeProductCatalogueMapping(productWithTaxonomy(curatedLegacyProduct))
     const reviews = await getCommunityReviews({ productId: id })
     const summary = summarizeApprovedRatings(reviews)
     return { ...publicLegacyProduct, rating: summary.average ?? 0, reviews: summary.count, affiliate_url: null }
@@ -300,7 +416,7 @@ export async function getProduct(id: string): Promise<Product | null> {
     supabase.from("radar_products").select("*").eq("id", id).maybeSingle(),
     fallback
   )
-  const publicProduct = product ? productWithTaxonomy(CURATED_LEGACY_PRODUCTS.get(product.id) ?? product) : null
+  const publicProduct = product ? normalizeProductCatalogueMapping(productWithTaxonomy(applyCuratedPublicProduct(CURATED_LEGACY_PRODUCTS.get(product.id) ?? product))) : null
   if (!publicProduct || publicProduct.status === "pending" || publicProduct.status === "archived") return null
   const reviews = await getCommunityReviews({ productId: id })
   const summary = summarizeApprovedRatings(reviews)
@@ -322,23 +438,6 @@ export async function getCreatorEvidenceItems(filters: { creatorId?: string; sta
   return fromSupabase<CreatorEvidenceItem[]>(query, fallback)
 }
 
-const HUB_PRODUCT_CATEGORIES: Record<string, string[]> = {
-  "da-mat": ["Skincare"],
-  "tri-mun": ["Skincare"],
-  "sang-da-chong-nang": ["Skincare", "Bodycare"],
-  "ingredient-radar": ["Skincare"],
-  "product-radar": ["Skincare", "Makeup", "Bodycare", "Haircare", "Perfume"],
-  bodycare: ["Bodycare"],
-  "toc-da-dau": ["Haircare"],
-  makeup: ["Makeup"],
-  "mui-huong": ["Perfume", "Bodycare"],
-  "nam-gioi": ["Skincare", "Haircare"],
-  "clinic-treatment": ["Skincare"],
-  "beauty-lifestyle": ["Skincare", "Bodycare"],
-  "nails-mi-long-may": ["Makeup"],
-  "beauty-tech": ["Skincare", "Haircare"],
-}
-
 function normalizeText(text: string) {
   return text
     .toLowerCase()
@@ -348,42 +447,32 @@ function normalizeText(text: string) {
 }
 
 function scoreProductForPost(product: Product, post: Post, explicitRank: number | null) {
-  const postText = normalizeText([
-    post.title,
-    post.excerpt,
-    post.content,
-    post.category,
-    post.hubSlug,
-    ...(post.tags ?? []),
-  ].join(" "))
-  const productText = normalizeText([
-    product.name,
-    product.brand,
-    product.category,
-    product.description,
+  if (explicitRank != null) return 1000 - explicitRank
+  if (!post.hubSlug || post.intent === "safety") return -1
+
+  const productHubs = new Set(getProductCatalogueSlugs(product))
+  if (!productHubs.has(post.hubSlug)) return -1
+
+  const postTags = new Set([...(post.tags ?? []), ...(post.conditionSlugs ?? [])].map(normalizeCatalogueMatchToken))
+  const productTags = [
     ...(product.tags ?? []),
-  ].join(" "))
-  const hubCategories = post.hubSlug ? HUB_PRODUCT_CATEGORIES[post.hubSlug] ?? [] : []
-  let score = explicitRank == null ? 0 : 1000 - explicitRank
+    ...(product.condition_tags ?? []),
+    ...(product.concern_tags ?? []),
+    ...(product.ingredient_tags ?? []),
+    ...(product.audience_tags ?? []),
+  ].map(normalizeCatalogueMatchToken)
+  const exactTagMatches = productTags.filter((tag) => postTags.has(tag)).length
+  let score = 100 + exactTagMatches * 25
 
-  if (hubCategories.some((category) => normalizeText(category) === normalizeText(product.category))) score += 80
-  if (normalizeText(post.category) === normalizeText(product.category)) score += 70
-  if (postText.includes(normalizeText(product.category))) score += 30
-  if (postText.includes(normalizeText(product.brand))) score += 12
-
-  for (const tag of product.tags ?? []) {
-    const normalizedTag = normalizeText(tag)
-    if (postText.includes(normalizedTag)) score += 24
-  }
-
-  for (const tag of post.tags ?? []) {
-    const normalizedTag = normalizeText(tag)
-    if (productText.includes(normalizedTag)) score += 18
-  }
-
+  // Ratings are approved community data only; they act as a tie-breaker and
+  // never make an out-of-hub product eligible.
   score += Math.min(product.rating, 5)
   score += Math.min(product.reviews / 1000, 5)
   return score
+}
+
+function normalizeCatalogueMatchToken(value: string) {
+  return normalizeText(value).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
 }
 
 export async function getPostProductRecommendations(post: Post, limit = 3) {
@@ -409,7 +498,7 @@ export async function getKols() {
   )
   return rows.map((row) => {
     const researched = REAL_KOLS.find((creator) => creator.id === row.id)
-    return researched
+    const merged = researched
       ? {
           ...researched,
           ...row,
@@ -418,7 +507,17 @@ export async function getKols() {
           socials: researched.socials,
         }
       : row
+    return normalizePublicKol(merged)
   })
+}
+
+function normalizePublicKol(kol: Kol): Kol {
+  const categoryList = kol.categories.filter(Boolean).join(", ") || "làm đẹp"
+  return {
+    ...kol,
+    bio: kol.bio?.trim() || `${kol.name} là hồ sơ creator đang được theo dõi trong nhóm ${categoryList}. Thông tin public hiện dựa trên kênh ${kol.platform} ${kol.handle}; 360dep.vn chưa bổ sung tiểu sử biên tập khi chưa có nguồn đủ rõ.`,
+    transparencyNote: kol.transparencyNote?.trim() || "Chưa có đủ dữ liệu công khai đã kiểm chứng để kết luận cách disclosure PR, tài trợ hoặc affiliate. Hãy đọc từng bằng chứng nguồn thay vì suy diễn từ hồ sơ chung.",
+  }
 }
 
 export async function getKol(id: string) {
@@ -428,7 +527,7 @@ export async function getKol(id: string) {
     fallback
   )
   const researched = REAL_KOLS.find((creator) => creator.id === id)
-  return row && researched
+  const merged = row && researched
     ? {
         ...researched,
         ...row,
@@ -437,6 +536,7 @@ export async function getKol(id: string) {
         socials: researched.socials,
       }
     : row
+  return merged ? normalizePublicKol(merged) : null
 }
 
 export async function getReviews(filters: { productId?: string; kolId?: string } = {}) {
@@ -525,9 +625,15 @@ export async function getPosts() {
     ALL_FALLBACK_POSTS
   )
   return mergePosts(posts, EDITORIAL_PUBLISHED_POSTS)
+    .filter((post) => CANONICAL_EDITORIAL_SLUGS.has(post.slug))
 }
 
 export async function getPost(id: string) {
+  const aliasSlug = LEGACY_POST_ALIASES[id]
+  if (aliasSlug) {
+    const canonical = getPublishedEditorialPost(aliasSlug)
+    return canonical ? normalizeEditorialPost(canonical) : null
+  }
   const fallback = ALL_FALLBACK_POSTS.find((post) => post.id === id || post.slug === id) ?? getPublishedEditorialPost(id)
   if (!isSupabaseSchemaReady) return fallback ? normalizeEditorialPost(fallback) : null
 
@@ -558,34 +664,33 @@ export async function getRelatedPosts(category: string, currentId: string, limit
       .limit(limit),
     fallback
   )
-  return posts.map(normalizeEditorialPost)
+  return posts.map(normalizeEditorialPost).filter((post) => CANONICAL_EDITORIAL_SLUGS.has(post.slug))
 }
 
 export async function searchAll(query: string) {
-  const normalized = query.trim().toLowerCase()
-  if (!normalized) return { products: [], posts: [], kols: [] }
+  const tokens = searchTokens(query)
+  if (tokens.length === 0) return { products: [], posts: [], kols: [] }
 
   const fallback = {
-    products: SAMPLE_PRODUCTS.filter((product) =>
-      [product.name, product.brand, product.category, ...product.tags].some((field) =>
-        field.toLowerCase().includes(normalized)
-      )
-    ),
-    posts: ALL_FALLBACK_POSTS.filter((post) =>
-      [post.title, post.excerpt, post.author_name, post.category, ...post.tags].some((field) =>
-        field.toLowerCase().includes(normalized)
-      )
-    ),
-    kols: SAMPLE_KOLS.filter((kol) =>
-      [kol.name, kol.handle, kol.platform, ...kol.categories].some((field) =>
-        field.toLowerCase().includes(normalized)
-      )
-    ),
+    products: rankSearch(SAMPLE_PRODUCTS, tokens, (product) => [
+      [product.name, 10], [product.brand, 7], [product.category, 5],
+      [[...product.tags, ...(product.concern_tags ?? []), ...(product.ingredient_tags ?? []), ...(product.aliases ?? [])].join(" "), 5],
+      [product.description, 1],
+    ]).slice(0, 12),
+    posts: rankSearch(ALL_FALLBACK_POSTS, tokens, (post) => [
+      [post.title, 10], [[...post.tags, ...(post.conditionSlugs ?? [])].join(" "), 6],
+      [catalogueSections.find((section) => section.slug === post.hubSlug)?.title ?? post.category, 5],
+      [post.excerpt, 3], [post.content, 1],
+    ]).slice(0, 12),
+    kols: rankSearch(SAMPLE_KOLS, tokens, (kol) => [
+      [kol.name, 10], [kol.handle, 8], [kol.categories.join(" "), 5], [kol.platform, 2],
+    ]).slice(0, 12),
   }
 
   if (!isSupabaseSchemaReady) return fallback
 
-  const pattern = `%${query}%`
+  const safeQuery = query.replace(/[,()%]/g, " ").trim()
+  const pattern = `%${safeQuery}%`
   try {
     const [productsRes, postsRes, kolsRes] = await Promise.all([
       supabase.from("radar_products").select("*").or(`name.ilike.${pattern},brand.ilike.${pattern},category.ilike.${pattern}`).limit(12),
@@ -594,11 +699,33 @@ export async function searchAll(query: string) {
     ])
 
     return {
-      products: (productsRes.data as Product[] | null) ?? fallback.products,
-      posts: mergePosts((postsRes.data as Post[] | null) ?? [], fallback.posts).slice(0, 12),
-      kols: (kolsRes.data as Kol[] | null) ?? fallback.kols,
+      products: rankSearch(mergeProducts((productsRes.data as Product[] | null) ?? [], fallback.products), tokens, (product) => [
+        [product.name, 10], [product.brand, 7], [[...product.tags, ...(product.concern_tags ?? [])].join(" "), 5], [product.description, 1],
+      ]).slice(0, 12),
+      posts: rankSearch(mergePosts((postsRes.data as Post[] | null) ?? [], fallback.posts).filter((post) => CANONICAL_EDITORIAL_SLUGS.has(post.slug)), tokens, (post) => [
+        [post.title, 10], [post.tags.join(" "), 6], [post.excerpt, 3], [post.content, 1],
+      ]).slice(0, 12),
+      kols: rankSearch([...((kolsRes.data as Kol[] | null) ?? []), ...fallback.kols].filter((kol, index, items) => items.findIndex((item) => item.id === kol.id) === index), tokens, (kol) => [
+        [kol.name, 10], [kol.handle, 8], [kol.categories.join(" "), 5],
+      ]).slice(0, 12),
     }
   } catch {
     return fallback
   }
+}
+
+function normalizeSearchText(value: string) {
+  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/[^a-z0-9]+/g, " ").trim()
+}
+
+function searchTokens(query: string) {
+  return Array.from(new Set(normalizeSearchText(query).split(/\s+/).filter((token) => token.length > 1)))
+}
+
+function rankSearch<T>(items: T[], tokens: string[], fields: (item: T) => Array<[string, number]>) {
+  return items
+    .map((item) => ({ item, score: fields(item).reduce((total, [value, weight]) => total + tokens.reduce((sum, token) => sum + (normalizeSearchText(value).includes(token) ? weight : 0), 0), 0) }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(({ item }) => item)
 }

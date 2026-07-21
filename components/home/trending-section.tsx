@@ -27,14 +27,14 @@ export function TrendingSection({ productSignals }: { productSignals: HomeProduc
             Đang được bàn luận
           </div>
           <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">
-            Sản phẩm nổi lên từ tín hiệu thật
+            Sản phẩm nổi lên từ nguồn công khai
           </h2>
           <p className="mt-2 text-slate-500 dark:text-slate-400">
-            Xếp theo số lần được creator nhắc và độ mới của timeline, không đặt giá hay deal lên trước.
+            Xếp theo số lần được người sáng tạo nhắc và độ mới của nguồn, không đặt giá hay khuyến mãi lên trước.
           </p>
         </div>
         <Link href="/products" className="hidden shrink-0 text-sm font-bold text-rose-500 hover:text-rose-600 sm:inline-flex">
-          Xem catalogue <span aria-hidden="true" className="ml-1">&rarr;</span>
+          Xem tất cả sản phẩm <span aria-hidden="true" className="ml-1">&rarr;</span>
         </Link>
       </div>
 

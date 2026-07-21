@@ -35,13 +35,11 @@ export function KolRadar({ creatorUpdates }: { creatorUpdates: HomeCreatorUpdate
               Tin mới từ KOL/KOC
             </h2>
             <p className="mt-3 text-base leading-relaxed text-slate-600 dark:text-slate-400 md:text-lg">
-              Video review, routine mới, sản phẩm được nhắc và các nguồn công khai đáng chú ý trong ngày.
+              Video đánh giá, quy trình chăm sóc mới, sản phẩm được nhắc và các nguồn công khai đáng chú ý trong ngày.
             </p>
           </div>
-          <Link href="/koc-tracker" className="shrink-0">
-            <span className="flex items-center gap-2 font-semibold text-rose-500 hover:text-rose-600 dark:hover:text-rose-400">
+          <Link href="/koc-tracker" className="inline-flex min-h-11 shrink-0 items-center gap-2 font-semibold text-rose-500 hover:text-rose-600 dark:hover:text-rose-400">
               Xem dòng tin KOL/KOC <span aria-hidden="true">&rarr;</span>
-            </span>
           </Link>
         </div>
 

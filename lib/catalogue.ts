@@ -168,9 +168,9 @@ export const catalogueSections: CatalogueSection[] = [
   },
   {
     slug: "ingredient-radar",
-    title: "Ingredient Radar",
-    shortTitle: "Ingredient Radar",
-    description: "Bản đồ thành phần theo công dụng, rủi ro kích ứng, cách phối routine và đối tượng nên tránh.",
+    title: "Thành phần mỹ phẩm",
+    shortTitle: "Thành phần",
+    description: "Hiểu thành phần theo công dụng, nguy cơ kích ứng, cách phối trong quy trình chăm sóc và đối tượng nên tránh.",
     audience: "Người đọc label, so sánh hoạt chất, muốn hiểu vì sao sản phẩm phù hợp hoặc không phù hợp.",
     filters: ["Công dụng", "Độ kích ứng", "Nồng độ", "Có dùng treatment", "Pregnancy-safe"],
     productTypes: ["BHA", "Vitamin C", "Niacinamide", "Retinol", "Ceramide", "Zinc oxide"],
@@ -202,8 +202,8 @@ export const catalogueSections: CatalogueSection[] = [
   },
   {
     slug: "bodycare",
-    title: "Bodycare / Chăm sóc cơ thể",
-    shortTitle: "Bodycare",
+    title: "Chăm sóc cơ thể",
+    shortTitle: "Chăm sóc cơ thể",
     description: "Skincare cho toàn thân: mụn lưng, da sần, body sáng da, mùi cơ thể, chống nắng body, tẩy lông.",
     audience: "Người đã quen skincare mặt và bắt đầu xử lý vấn đề body rõ ràng hơn.",
     filters: ["Vùng body", "Mồ hôi/mùi", "Da sần", "Đi biển/thể thao", "Ngân sách"],
@@ -236,8 +236,8 @@ export const catalogueSections: CatalogueSection[] = [
   },
   {
     slug: "makeup",
-    title: "Makeup / Trang điểm",
-    shortTitle: "Makeup",
+    title: "Trang điểm",
+    shortTitle: "Trang điểm",
     description: "Makeup theo tình huống và sản phẩm: base, đi học/đi làm, đi tiệc, mắt, môi, má, makeup nam và dụng cụ.",
     audience: "Gen Z, người mới makeup, người cần look nhanh theo dịp hoặc sản phẩm đáng mua.",
     filters: ["Dịp dùng", "Tone da", "Da dầu/khô", "Ngân sách", "Nam/nữ/unisex"],
@@ -286,9 +286,9 @@ export const catalogueSections: CatalogueSection[] = [
   },
   {
     slug: "clinic-treatment",
-    title: "Clinic / Treatment / Spa Radar",
-    shortTitle: "Clinic & Treatment",
-    description: "Thủ thuật da liễu thẩm mỹ, checklist chọn clinic, cảnh báo rủi ro và câu hỏi cần hỏi bác sĩ.",
+    title: "Phòng khám & liệu trình",
+    shortTitle: "Phòng khám & liệu trình",
+    description: "Hiểu thủ thuật thẩm mỹ, cách chọn nơi thực hiện, rủi ro và những câu cần hỏi bác sĩ trước khi quyết định.",
     audience: "Người cân nhắc peel, laser, trị sẹo, nám, botox/filler, triệt lông hoặc facial chuyên sâu.",
     filters: ["Vấn đề da", "Mức xâm lấn", "Downtime", "Ngân sách", "Rủi ro", "Bác sĩ/clinic"],
     productTypes: ["Peel", "Laser", "RF microneedling", "TCA cross", "Botox", "Filler", "Hydrafacial"],
@@ -303,8 +303,8 @@ export const catalogueSections: CatalogueSection[] = [
   },
   {
     slug: "beauty-lifestyle",
-    title: "Beauty Lifestyle / Làm đẹp từ lối sống",
-    shortTitle: "Beauty Lifestyle",
+    title: "Lối sống & làm đẹp",
+    shortTitle: "Lối sống & làm đẹp",
     description: "Ăn uống, giấc ngủ, stress, hormone, chu kỳ, sau sinh, fitness và tư duy làm đẹp an toàn.",
     audience: "Người muốn nhìn làn da trong bối cảnh sinh hoạt, không chỉ đổi sản phẩm.",
     filters: ["Tuổi", "Chu kỳ", "Mang thai/sau sinh", "Stress", "Fitness", "Claim an toàn"],
@@ -319,8 +319,8 @@ export const catalogueSections: CatalogueSection[] = [
   },
   {
     slug: "nails-mi-long-may",
-    title: "Nails / Lông mày / Mi",
-    shortTitle: "Nails & Mi",
+    title: "Móng, mi & lông mày",
+    shortTitle: "Móng, mi & mày",
     description: "Mảng local search và dịch vụ: mẫu nail, chăm móng, nối/uốn mi, serum dưỡng mi, phun/điêu khắc mày.",
     audience: "Người tìm ý tưởng dịch vụ làm đẹp và checklist an toàn vệ sinh.",
     filters: ["Dịp dùng", "Phong cách", "Dịch vụ", "Rủi ro dị ứng", "Vệ sinh dụng cụ"],
@@ -335,9 +335,9 @@ export const catalogueSections: CatalogueSection[] = [
   },
   {
     slug: "beauty-tech",
-    title: "Beauty Tech / Tools",
-    shortTitle: "Beauty Tech",
-    description: "Radar cho máy rửa mặt, LED mask, IPL tại nhà, máy sấy/tạo kiểu, AI skin analysis và gadget đáng mua.",
+    title: "Công nghệ làm đẹp",
+    shortTitle: "Công nghệ làm đẹp",
+    description: "Đánh giá máy rửa mặt, mặt nạ LED, IPL tại nhà, máy tạo kiểu và công cụ phân tích da trước khi bạn chi tiền.",
     audience: "Người thích công nghệ làm đẹp nhưng cần review có đáng tiền không.",
     filters: ["Giá", "Bằng chứng", "Rủi ro", "Tần suất dùng", "Bảo hành"],
     productTypes: ["Máy rửa mặt", "LED mask", "IPL", "Máy sấy", "AI skin analysis"],
@@ -365,16 +365,16 @@ export const beautyNeedFilters = [
 ]
 
 export const secondaryFilterGroups = {
-  audience: ["Tất cả", "Nam", "Nữ", "Unisex", "Pregnancy-safe"],
-  skinType: ["Mọi loại da", "Da dầu", "Da khô", "Da nhạy cảm", "Da treatment"],
-  budget: ["Tất cả giá", "Dưới 200k", "200-500k", "Luxury"],
+  audience: ["Tất cả", "Nam", "Nữ", "Dùng chung", "Đang mang thai/cho con bú"],
+  skinType: ["Mọi loại da", "Da dầu", "Da khô", "Da nhạy cảm", "Da đang dùng treatment"],
+  budget: ["Tất cả giá", "Dưới 200k", "200-500k", "Trên 500k"],
 }
 
 export const catalogueGroups: { slug: CatalogueGroupSlug; title: string; description: string; sectionSlugs: string[] }[] = [
   {
     slug: "skin-treatment",
-    title: "Da & treatment",
-    description: "Đi từ tình trạng da, thành phần đến quyết định chọn routine và sản phẩm.",
+    title: "Da & chăm sóc chuyên sâu",
+    description: "Đi từ tình trạng da và thành phần đến cách chăm sóc, sản phẩm và lúc cần gặp bác sĩ.",
     sectionSlugs: ["da-mat", "tri-mun", "sang-da-chong-nang", "ingredient-radar", "product-radar"],
   },
   {
@@ -385,14 +385,14 @@ export const catalogueGroups: { slug: CatalogueGroupSlug; title: string; descrip
   },
   {
     slug: "makeup-fragrance",
-    title: "Makeup & mùi hương",
-    description: "Chọn makeup, nước hoa, nail, mi và mày theo dịp dùng và mức an toàn.",
+    title: "Trang điểm & mùi hương",
+    description: "Chọn trang điểm, nước hoa, móng, mi và mày theo dịp dùng và mức an toàn.",
     sectionSlugs: ["makeup", "mui-huong", "nails-mi-long-may"],
   },
   {
     slug: "lifestyle-services-tech",
-    title: "Lifestyle, dịch vụ & công nghệ",
-    description: "Hiểu giới hạn của lifestyle, clinic và thiết bị trước khi chi tiền.",
+    title: "Lối sống, dịch vụ & công nghệ",
+    description: "Hiểu giới hạn của lối sống, dịch vụ thẩm mỹ và thiết bị trước khi chi tiền.",
     sectionSlugs: ["beauty-lifestyle", "clinic-treatment", "beauty-tech"],
   },
 ]
@@ -408,9 +408,23 @@ export function normalizeCatalogueToken(value: string) {
 }
 
 const filterOptions = {
-  skin: secondaryFilterGroups.skinType.slice(1).map((label) => ({ slug: normalizeCatalogueToken(label), label })),
-  audience: secondaryFilterGroups.audience.slice(1).map((label) => ({ slug: normalizeCatalogueToken(label), label })),
-  budget: secondaryFilterGroups.budget.slice(1).map((label) => ({ slug: normalizeCatalogueToken(label), label })),
+  skin: [
+    { slug: "da-dau", label: "Da dầu" },
+    { slug: "da-kho", label: "Da khô" },
+    { slug: "da-nhay-cam", label: "Da nhạy cảm" },
+    { slug: "da-treatment", label: "Da đang dùng treatment" },
+  ],
+  audience: [
+    { slug: "nam", label: "Nam" },
+    { slug: "nu", label: "Nữ" },
+    { slug: "unisex", label: "Dùng chung" },
+    { slug: "pregnancy-safe", label: "Đang mang thai/cho con bú" },
+  ],
+  budget: [
+    { slug: "duoi-200k", label: "Dưới 200k" },
+    { slug: "200-500k", label: "200-500k" },
+    { slug: "luxury", label: "Trên 500k" },
+  ],
 }
 
 const groupBySectionSlug = new Map(catalogueGroups.flatMap((group) => group.sectionSlugs.map((slug) => [slug, group.slug] as const)))

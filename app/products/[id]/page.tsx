@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getCommunityReviews, getCreatorProductEvents, getKols, getPost, getProduct, getProductOffers, getReviews } from "@/lib/data"
 import { getMatrixNodesByProductId, getMatrixProductGroups, researchStageLabels } from "@/lib/content-matrix"
-import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
+import { buildCreatorEvidenceMetrics, buildProductDecisionSignal, productEvidenceStatusLabel } from "@/lib/product-decision-signal"
 import { getProductCategoryLabel, getProductSubcategoryLabel } from "@/lib/product-taxonomy"
 import { AffiliateButton } from "@/components/affiliate-button"
 import { TrackProductView } from "@/components/analytics/public-events"
@@ -33,7 +33,7 @@ function JsonLd({ data }: { data: Record<string, unknown> }) {
 
 function buildProductJsonLd(product: Awaited<ReturnType<typeof getProduct>>, siteUrl: string, preferredOffer?: ProductOffer | null) {
   if (!product) return null
-  const numericPrice = (preferredOffer?.price_snapshot ?? product.price).replace(/[^\d]/g, "")
+  const numericPrice = preferredOffer?.price_snapshot?.replace(/[^\d]/g, "") ?? ""
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -113,7 +113,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const product = await getProduct(id)
 
   if (!product) {
-    return { title: 'Sản phẩm không tồn tại | 360dep.vn' }
+    return { title: 'Sản phẩm không tồn tại' }
   }
 
   const description = product.description?.length > 160
@@ -172,7 +172,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const affiliateHref = preferredOffer?.affiliate_url ?? preferredOffer?.seller_url ?? product.affiliate_url
   const matrixNodes = getMatrixNodesByProductId(product.id)
   const graphKolIds = new Set(matrixNodes.flatMap((node) => node.kolIds))
-  const sortedReviews = [...reviews].sort((a, b) => Number(graphKolIds.has(b.kolid)) - Number(graphKolIds.has(a.kolid)))
+  const auditedReviews = reviews.filter((review) => timelineEvents.some((event) => event.creator_id === review.kolid && event.product_id === review.productid))
+  const sortedReviews = [...auditedReviews].sort((a, b) => Number(graphKolIds.has(b.kolid)) - Number(graphKolIds.has(a.kolid)))
   const graphPostSlugs = unique(matrixNodes.flatMap((node) => [node.articleSlug, ...node.nextArticleSlugs])).slice(0, 4)
   const graphPosts = (await Promise.all(graphPostSlugs.map((slug) => getPost(slug)))).filter((post): post is Post => Boolean(post))
   const matrixProductGroups = getMatrixProductGroups(unique(matrixNodes.flatMap((node) => node.productGroupKeys))).filter((group) => [
@@ -180,10 +181,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     ...group.comparisonProductIds,
   ].includes(product.id))
   const researchStages = unique(matrixNodes.map((node) => researchStageLabels[node.stage])).slice(0, 3)
-  const signalCreatorIds = unique([...timelineEvents.map((event) => event.creator_id), ...reviews.map((review) => review.kolid)])
+  const signalCreatorIds = unique([...timelineEvents.map((event) => event.creator_id), ...auditedReviews.map((review) => review.kolid)])
   const signalCreators = signalCreatorIds.map((creatorId) => KOLS.find((kol) => kol.id === creatorId)).filter((kol): kol is Kol => Boolean(kol)).slice(0, 4)
-  const positiveSignals = timelineEvents.filter((event) => event.sentiment === "positive").length
-  const cautionSignals = timelineEvents.filter((event) => event.sentiment === "mixed" || event.sentiment === "negative" || event.disclosure !== "organic").length
+  const decisionSignal = buildProductDecisionSignal(timelineEvents)
   const leadGroup = matrixProductGroups[0]
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://360dep.vn"
   const productJsonLd = buildProductJsonLd(product, siteUrl, preferredOffer)
@@ -236,17 +236,33 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                       Chưa có đánh giá cộng đồng
                     </span>
                   )}
-                  <span className="text-slate-300 dark:text-slate-700">&bull;</span>
-                  <span className="text-slate-500 dark:text-slate-400 font-medium">{product.sold} đã bán</span>
+                  {product.sold && product.sold !== "Đang cập nhật" && (
+                    <><span className="text-slate-300 dark:text-slate-700">&bull;</span><span className="text-slate-500 dark:text-slate-400 font-medium">{product.sold} đã bán</span></>
+                  )}
+                  <Badge variant="outline" className="border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-900/50 dark:bg-cyan-950/30 dark:text-cyan-300">
+                    {productEvidenceStatusLabel(decisionSignal.evidenceStatus)}
+                  </Badge>
+                  {decisionSignal.commercialBuzz && (
+                    <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
+                      Độ phủ thương mại cao
+                    </Badge>
+                  )}
                 </div>
 
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-slate-50 mb-6">
-                  {product.price}
+                <div className="mb-6">
+                  <div className="text-3xl font-extrabold text-slate-900 dark:text-slate-50">{preferredOffer?.price_snapshot ?? product.price}</div>
+                  <div className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">{preferredOffer ? `Giá ghi nhận gần nhất từ ${preferredOffer.shop_name}` : "Giá tham khảo, chưa phải giá bán đã được kiểm tra"}</div>
                 </div>
 
                 <p className="text-slate-600 dark:text-slate-300 mb-8 leading-relaxed">
                   {product.description}
                 </p>
+
+                {product.source_url && (
+                  <a href={product.source_url} target="_blank" rel="noopener noreferrer" className="mb-8 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-700 hover:border-rose-200 hover:text-rose-600 dark:border-slate-700 dark:text-slate-200 dark:hover:text-rose-300">
+                    Nguồn dữ liệu: {product.source_label || "Trang sản phẩm"} <ExternalLink className="h-4 w-4" />
+                  </a>
+                )}
 
                 <div className="flex flex-wrap gap-2 mb-8">
                   <Badge className="bg-slate-900 text-white hover:bg-slate-900 dark:bg-slate-50 dark:text-slate-900">
@@ -261,13 +277,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 </div>
 
                 <div className="mb-8 grid gap-3 sm:grid-cols-2">
-                  <DecisionMetric icon={<Users className="h-4 w-4" />} label="Tín hiệu KOL/KOC" value={`${timelineEvents.length}`} detail={signalCreators.length ? signalCreators.map((kol) => kol.name).join(", ") : "Đang gom nguồn"} />
-                  <DecisionMetric icon={<MessageSquare className="h-4 w-4" />} label="Review đối chiếu" value={`${reviews.length + communityReviews.length}`} detail={`${reviews.length} KOL/KOC, ${communityReviews.length} cộng đồng`} />
-                  <DecisionMetric icon={<Layers3 className="h-4 w-4" />} label="Research graph" value={`${matrixNodes.length}`} detail={researchStages.length ? researchStages.join(" / ") : "Chưa map node"} />
-                  <DecisionMetric icon={<Store className="h-4 w-4" />} label="Offer" value={preferredOffer ? "Sẵn sàng" : "Chưa có"} detail={preferredOffer?.shop_name ?? "Chưa có link shop public"} />
+                  <DecisionMetric icon={<Users className="h-4 w-4" />} label="Nguồn creator độc lập" value={`${decisionSignal.independentCreatorCount}`} detail={signalCreators.length ? signalCreators.map((kol) => kol.name).join(", ") : "Chưa có nguồn creator đã duyệt"} />
+                  <DecisionMetric icon={<ShieldCheck className="h-4 w-4" />} label="Mức độ bằng chứng" value={`${decisionSignal.supportScore}/100`} detail={`${decisionSignal.supportCount} tín hiệu ủng hộ · ${decisionSignal.cautionCount} điểm cần lưu ý`} />
+                  <DecisionMetric icon={<Store className="h-4 w-4" />} label="Nội dung thương mại" value={`${decisionSignal.commercialShare}%`} detail="Tỷ lệ nguồn có PR, tài trợ hoặc liên kết tiếp thị" />
+                  <DecisionMetric icon={<MessageSquare className="h-4 w-4" />} label="Đánh giá đã đối chiếu" value={`${auditedReviews.length + communityReviews.length}`} detail={`${auditedReviews.length} từ creator · ${communityReviews.length} từ cộng đồng`} />
+                  <DecisionMetric icon={<Layers3 className="h-4 w-4" />} label="Bài hướng dẫn liên quan" value={`${matrixNodes.length}`} detail={researchStages.length ? researchStages.join(" / ") : "Chưa có bài hướng dẫn phù hợp"} />
+                  <DecisionMetric icon={<Store className="h-4 w-4" />} label="Nơi mua đã kiểm tra" value={preferredOffer ? "Đã có" : "Chưa có"} detail={preferredOffer?.shop_name ?? "Chưa có đường dẫn mua đã được kiểm tra"} />
                 </div>
 
-                {(leadGroup || positiveSignals > 0 || cautionSignals > 0) && (
+                {(leadGroup || decisionSignal.supportCount > 0 || decisionSignal.cautionCount > 0) && (
                   <div className="mb-8 rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
                     <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-50">
                       <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -276,8 +294,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     <div className="space-y-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                       {leadGroup && <p><span className="font-bold text-slate-900 dark:text-slate-50">Nên cân nhắc:</span> {leadGroup.whenToConsider}</p>}
                       {leadGroup && <p><span className="font-bold text-slate-900 dark:text-slate-50">Tránh khi:</span> {leadGroup.whenToAvoid}</p>}
-                      {(positiveSignals > 0 || cautionSignals > 0) && (
-                        <p><span className="font-bold text-slate-900 dark:text-slate-50">Tín hiệu:</span> {positiveSignals} tích cực, {cautionSignals} cần đọc kèm bối cảnh PR/affiliate/mixed.</p>
+                      {(decisionSignal.supportCount > 0 || decisionSignal.cautionCount > 0) && (
+                        <p><span className="font-bold text-slate-900 dark:text-slate-50">Nguồn đã đối chiếu:</span> {decisionSignal.supportCount} tín hiệu ủng hộ, {decisionSignal.cautionCount} điểm cần đọc kèm bối cảnh; {decisionSignal.commercialShare}% nguồn có yếu tố thương mại.</p>
                       )}
                     </div>
                   </div>
@@ -290,8 +308,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                         <AffiliateButton href={affiliateHref} productId={product.id} offerId={preferredOffer?.id} />
                       </div>
                     ) : (
-                      <Button className="flex-1 h-14 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-lg shadow-lg shadow-rose-200 dark:shadow-rose-900/20" disabled>
-                        <ShoppingCart className="h-5 w-5 mr-2" /> Chưa có offer đã xác minh
+                      <Button className="flex-1 h-14 rounded-xl bg-slate-200 text-slate-600 font-bold text-base shadow-none disabled:opacity-100 dark:bg-slate-800 dark:text-slate-300" disabled>
+                        <ShoppingCart className="h-5 w-5 mr-2" /> Chưa có nơi mua đã kiểm tra
                       </Button>
                     )}
                     <WishlistButton productId={product.id} />
@@ -312,9 +330,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                         </Badge>
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                        <span>Snapshot: {preferredOffer.price_snapshot ?? product.price}</span>
+                        <span>Giá ghi nhận: {preferredOffer.price_snapshot ?? product.price}</span>
                         <span>&bull;</span>
-                        <span>{preferredOffer.affiliate_url ? "Đã có affiliate URL" : "Đang chờ affiliate URL thật"}</span>
+                        <span>{preferredOffer.affiliate_url ? "Liên kết tiếp thị; giá mua không đổi" : "Liên kết trực tiếp từ cửa hàng"}</span>
                         {preferredOffer.seller_url && (
                           <>
                             <span>&bull;</span>
@@ -366,10 +384,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 <div>
                   <div className="mb-2 flex items-center gap-2">
                     <Layers3 className="h-5 w-5 text-emerald-500" />
-                    <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">Nhóm quyết định mua</h2>
+                    <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">Có phù hợp với bạn không?</h2>
                   </div>
                   <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                    Đặt sản phẩm vào đúng nhóm nhu cầu để đọc tiêu chí trước khi bấm mua.
+                    Đối chiếu nhu cầu và dấu hiệu nên tránh trước khi tìm nơi mua.
                   </p>
                 </div>
                 <Badge variant="secondary" className="w-fit bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -384,7 +402,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     <div className="mt-4 grid gap-3">
                       <DecisionNote label="Nên cân nhắc" value={group.whenToConsider} tone="good" />
                       <DecisionNote label="Tránh khi" value={group.whenToAvoid} tone="caution" />
-                      <DecisionNote label="Affiliate note" value={group.affiliateDisclosure} tone="neutral" />
                     </div>
                   </div>
                 ))}
@@ -432,7 +449,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                               {disclosureLabel(event)}
                             </Badge>
                             <Badge variant="secondary" className="bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-300">
-                              {event.confidence} confidence
+                              Độ tin cậy {event.confidence}/100
                             </Badge>
                           </div>
                           <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -463,14 +480,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
           {/* Reviews Section */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100 dark:border-slate-800">
-            <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-slate-50 mb-8">Đánh giá từ KOL/KOC</h2>
+            <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-slate-50 mb-8">Đánh giá creator có nguồn</h2>
             
             {sortedReviews.length > 0 ? (
               <div className="space-y-6">
                 {sortedReviews.map((review) => {
                   const kol = KOLS.find(k => k.id === review.kolid);
                   if (!kol) return null;
-                  const credibility = getKolCredibility(kol);
+                  const creatorMetrics = buildCreatorEvidenceMetrics(kol, timelineEvents.filter((event) => event.creator_id === kol.id));
+                  const reviewEvidence = timelineEvents.find((event) => event.creator_id === review.kolid && event.product_id === review.productid);
                   
                   return (
                     <div key={review.id} className="flex gap-4 p-6 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
@@ -487,8 +505,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                               {kol.name}
                             </Link>
                             {kol.verified && <ShieldCheck className="h-4 w-4 text-blue-500" />}
-                            <Badge variant="outline" className={`rounded-full border text-[10px] ${credibilityToneClass(credibility.tier)}`}>
-                              {credibility.shortLabel}
+                            <Badge variant="outline" className="rounded-full border-slate-200 bg-white text-[10px] text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                              Mức đủ nguồn {creatorMetrics.evidenceCompleteness}/100
                             </Badge>
                           </div>
                           <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{review.timeago}</span>
@@ -499,10 +517,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                               <Star key={i} className={`h-3 w-3 ${i < review.rating ? "fill-amber-400 text-amber-400" : "fill-slate-200 dark:fill-slate-700 text-slate-200 dark:text-slate-700"}`} />
                             ))}
                           </div>
-                          {review.ispr ? (
-                            <Badge variant="secondary" className="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-[10px] uppercase tracking-wider px-2 py-0.5">Tài trợ / PR</Badge>
-                          ) : (
-                            <Badge className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-medium text-[10px] uppercase tracking-wider px-2 py-0.5">Tự mua</Badge>
+                          {reviewEvidence && (
+                            <Badge variant="secondary" className="bg-slate-200 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                              {disclosureLabel(reviewEvidence)}
+                            </Badge>
                           )}
                         </div>
                         <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4 italic">

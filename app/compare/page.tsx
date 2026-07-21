@@ -66,8 +66,11 @@ function CompareContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
-        <div className="animate-pulse text-slate-500 dark:text-slate-400 text-lg">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-3 px-4 text-center">
+        <h1 className="font-display text-3xl font-black text-slate-950 dark:text-white">
+          So sánh sản phẩm
+        </h1>
+        <div className="animate-pulse text-slate-500 dark:text-slate-400 text-lg" role="status">
           Đang tải dữ liệu...
         </div>
       </div>
@@ -77,6 +80,7 @@ function CompareContent() {
   if (products.length === 0) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-4">
+        <h1 className="font-display text-3xl font-black text-slate-950 dark:text-white">So sánh sản phẩm</h1>
         <p className="text-slate-500 dark:text-slate-400 text-lg">
           Không có sản phẩm nào để so sánh.
         </p>
@@ -176,11 +180,11 @@ function CompareContent() {
       ),
     },
     {
-      label: "Đã bán",
+      label: "Lượt bán",
       key: "sold",
       render: (p) => (
         <span className="text-sm text-slate-600 dark:text-slate-400">
-          {p.sold}
+          {p.sold && p.sold !== "Đang cập nhật" ? p.sold : "Chưa có dữ liệu xác minh"}
         </span>
       ),
     },
@@ -323,8 +327,11 @@ export default function ComparePage() {
   return (
     <React.Suspense
       fallback={
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
-          <div className="animate-pulse text-slate-500 dark:text-slate-400 text-lg">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-3 px-4 text-center">
+          <h1 className="font-display text-3xl font-black text-slate-950 dark:text-white">
+            So sánh sản phẩm
+          </h1>
+          <div className="animate-pulse text-slate-500 dark:text-slate-400 text-lg" role="status">
             Đang tải...
           </div>
         </div>

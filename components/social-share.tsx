@@ -38,7 +38,7 @@ export function SocialShare({ url, title }: SocialShareProps) {
       <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Chia sẻ:</span>
       <button
         onClick={handleCopy}
-        className="inline-flex items-center justify-center h-9 w-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors relative"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 relative"
         title="Sao chép link"
       >
         <Link2 className="h-4 w-4" />
@@ -50,14 +50,14 @@ export function SocialShare({ url, title }: SocialShareProps) {
       </button>
       <button
         onClick={handleFacebook}
-        className="inline-flex items-center justify-center h-9 w-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-colors hover:bg-blue-100 hover:text-blue-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-blue-900/30 dark:hover:text-blue-400"
         title="Chia sẻ lên Facebook"
       >
         <Facebook className="h-4 w-4" />
       </button>
       <button
         onClick={handleZalo}
-        className="inline-flex items-center justify-center h-9 w-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-colors hover:bg-blue-100 hover:text-blue-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-blue-900/30 dark:hover:text-blue-400"
         title="Chia sẻ qua Zalo"
       >
         <Share2 className="h-4 w-4" />

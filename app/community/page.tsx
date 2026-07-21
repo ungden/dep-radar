@@ -1,294 +1,105 @@
-"use client"
-
-import * as React from "react"
-import Image from "next/image"
 import Link from "next/link"
-import { MessageSquare, Heart, Share2, TrendingUp, Search, Image as ImageIcon } from "lucide-react"
-import { motion } from "motion/react"
+import { ArrowRight, BookOpenCheck, MessageSquareQuote, ShieldCheck, Star } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { getPosts } from "@/lib/data"
-import { containerVariants, itemVariants } from "@/lib/animations"
-import type { Post } from "@/lib/types"
+import { Card, CardContent } from "@/components/ui/card"
+import { getCommunityReviews, getKols, getProducts } from "@/lib/data"
 
-function formatRelative(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const hours = Math.floor(diff / 3600000)
-  if (hours < 1) return "Vừa xong"
-  if (hours < 24) return `${hours} giờ trước`
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `${days} ngày trước`
-  return new Date(dateStr).toLocaleDateString("vi-VN", { day: "numeric", month: "long" })
-}
+export const dynamic = "force-dynamic"
 
-export default function CommunityPage() {
-  const [posts, setPosts] = React.useState<Post[]>([])
-  const [searchQuery, setSearchQuery] = React.useState("")
-  const [composerText, setComposerText] = React.useState("")
-  const [selectedTopic, setSelectedTopic] = React.useState<string | null>(null)
-
-  React.useEffect(() => {
-    getPosts().then(setPosts)
-  }, [])
-
-  const topics = ["SkincareRoutine", "ReviewMyPham", "DaDauMun", "GocLamDep", "SaleHunting"]
-
-  const filteredPosts = React.useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
-    return posts.filter((post) => {
-      const matchesQuery =
-        !query ||
-        [post.title, post.excerpt, post.author_name, post.category, ...post.tags].some((field) =>
-          field.toLowerCase().includes(query)
-        )
-      const matchesTopic = selectedTopic
-        ? post.tags.some((tag) =>
-            tag.toLowerCase().replace(/\s/g, "").includes(selectedTopic.toLowerCase())
-          )
-        : true
-
-      return matchesQuery && matchesTopic
-    })
-  }, [posts, searchQuery, selectedTopic])
-
-  function handleCreatePost() {
-    const content = composerText.trim()
-    if (!content) return
-
-    const createdAt = new Date().toISOString()
-    const optimisticPost: Post = {
-      id: `local-${Date.now()}`,
-      title: content.length > 72 ? `${content.slice(0, 69)}...` : content,
-      slug: `local-${Date.now()}`,
-      excerpt: content,
-      content,
-      author_name: "Bạn",
-      author_avatar: "",
-      category: "Cộng đồng",
-      tags: selectedTopic ? [selectedTopic] : ["Góc làm đẹp"],
-      image: "",
-      likes: 0,
-      comments: 0,
-      created_at: createdAt,
-      product_ids: [],
-    }
-
-    setPosts((items) => [optimisticPost, ...items])
-    setComposerText("")
-  }
+export default async function CommunityPage() {
+  const [reviews, products, kols] = await Promise.all([
+    getCommunityReviews(),
+    getProducts(),
+    getKols(),
+  ])
+  const productsById = new Map(products.map((product) => [product.id, product]))
+  const kolsById = new Map(kols.map((kol) => [kol.id, kol]))
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
+    <main className="min-h-screen bg-slate-50 py-10 dark:bg-slate-950">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="flex flex-col md:flex-row gap-8">
+        <section className="rounded-3xl bg-slate-950 p-7 text-white md:p-10 dark:bg-slate-900">
+          <div className="max-w-3xl">
+            <Badge className="border-white/10 bg-white/10 text-white hover:bg-white/10">Dữ liệu đã duyệt</Badge>
+            <h1 className="mt-4 font-display text-4xl font-black tracking-tight md:text-5xl">Review cộng đồng có ngữ cảnh</h1>
+            <p className="mt-4 text-base leading-relaxed text-slate-300 md:text-lg">
+              Trang này chỉ hiển thị review được lưu thật và đã qua duyệt. Bài của Beauty Desk nằm ở mục Kiến thức; chúng tôi không gắn nhãn nội dung biên tập thành bài của người dùng.
+            </p>
+          </div>
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            <TrustMetric value={reviews.length} label="review đã duyệt" />
+            <TrustMetric value={new Set(reviews.map((review) => review.product_id)).size} label="sản phẩm có review" />
+            <TrustMetric value={reviews.filter((review) => review.proof_url).length} label="review có nguồn đối chiếu" />
+          </div>
+        </section>
 
-          {/* Main Feed */}
-          <div className="flex-1">
-            <motion.div
-              className="mb-8"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900 dark:text-slate-50 mb-2">
-                Cộng đồng 360dep.vn
-              </h1>
-              <p className="text-slate-600 dark:text-slate-400">
-                Nơi chia sẻ kinh nghiệm, hỏi đáp và thảo luận về mọi thứ liên quan đến làm đẹp.
-              </p>
-            </motion.div>
-
-            {/* Create Post */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <Card className="border-none shadow-sm mb-8 rounded-3xl overflow-hidden bg-white dark:bg-slate-900">
-                <CardContent className="p-6">
-                  <div className="flex gap-4">
-                    <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-800 shadow-sm">
-                      <AvatarFallback>ME</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Bạn muốn chia sẻ điều gì về làm đẹp hôm nay?"
-                        value={composerText}
-                        onChange={(event) => setComposerText(event.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border-transparent focus-visible:ring-rose-500 rounded-xl h-12 mb-4"
-                      />
-                      <div className="flex justify-between items-center">
-                        <Button variant="ghost" className="text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg">
-                          <ImageIcon className="h-5 w-5 mr-2" /> Thêm ảnh
-                        </Button>
-                        <Button
-                          onClick={handleCreatePost}
-                          disabled={!composerText.trim()}
-                          className="bg-slate-900 dark:bg-slate-50 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl px-6 font-bold"
-                        >
-                          Đăng bài
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Posts */}
-            <motion.div
-              className="space-y-6"
-              variants={containerVariants}
-              initial="hidden"
-              animate="show"
-            >
-              {filteredPosts.map((post) => (
-                <motion.div key={post.id} variants={itemVariants}>
-                  <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white dark:bg-slate-900 hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={post.author_avatar} />
-                          <AvatarFallback>{post.author_name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-bold text-slate-900 dark:text-slate-50">{post.author_name}</div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">{formatRelative(post.created_at)} &bull; {post.category}</div>
-                        </div>
-                      </div>
-
-                      <Link href={`/community/${post.id}`} className="block group">
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-2 group-hover:text-rose-500 transition-colors">
-                          {post.title}
-                        </h3>
-                        <p className="text-slate-700 dark:text-slate-300 mb-4 leading-relaxed line-clamp-3">
-                          {post.excerpt}
-                        </p>
-
-                        {post.image && (
-                          <div className="relative h-64 w-full rounded-2xl overflow-hidden mb-4 bg-slate-100 dark:bg-slate-800">
-                            <Image src={post.image} alt={post.title} fill sizes="(min-width: 768px) calc(100vw - 24rem), 100vw" className="object-cover" />
-                          </div>
-                        )}
-                      </Link>
-
-                      {post.tags && post.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {post.tags.slice(0, 3).map((tag) => (
-                            <Badge key={tag} variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-normal text-xs">
-                              #{tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium">
-                        <button className="flex items-center gap-2 hover:text-rose-600 dark:hover:text-rose-400 transition-colors">
-                          <Heart className="h-5 w-5" /> {post.likes}
-                        </button>
-                        <button className="flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                          <MessageSquare className="h-5 w-5" /> {post.comments} Bình luận
-                        </button>
-                        <button className="flex items-center gap-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors ml-auto">
-                          <Share2 className="h-5 w-5" /> Chia sẻ
-                        </button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {filteredPosts.length === 0 && (
-              <motion.div
-                className="text-center py-24 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-              >
-                <p className="text-slate-500 dark:text-slate-400 text-lg">
-                  {posts.length === 0 ? "Chưa có bài viết nào trong cộng đồng." : "Không tìm thấy bài viết phù hợp."}
-                </p>
-              </motion.div>
-            )}
+        <section className="py-10" aria-labelledby="approved-reviews-title">
+          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="text-xs font-black uppercase tracking-[0.16em] text-rose-600 dark:text-rose-300">Cộng đồng</div>
+              <h2 id="approved-reviews-title" className="mt-2 font-display text-3xl font-black text-slate-950 dark:text-white">Review đã được công khai</h2>
+            </div>
+            <Link href="/products" className="inline-flex min-h-11 items-center gap-2 font-bold text-rose-600 hover:text-rose-700 dark:text-rose-300">
+              Chọn sản phẩm để gửi review <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
 
-          {/* Sidebar */}
-          <motion.div
-            className="w-full md:w-80 shrink-0 space-y-6"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
-              <Input
-                type="search"
-                placeholder="Tìm kiếm bài viết..."
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                className="w-full pl-10 bg-white dark:bg-slate-900 border-none shadow-sm focus-visible:ring-rose-500 rounded-xl h-12"
-              />
-            </div>
-
-            <Card className="border-none shadow-sm rounded-3xl bg-white dark:bg-slate-900">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-rose-500" /> Chủ đề nổi bật
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {topics.map((tag) => (
-                    <button key={tag} type="button" onClick={() => setSelectedTopic(selectedTopic === tag ? null : tag)}>
-                      <Badge
-                        variant="secondary"
-                        className={
-                          selectedTopic === tag
-                            ? "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 cursor-pointer px-3 py-1"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer px-3 py-1"
-                        }
-                      >
-                        #{tag}
-                      </Badge>
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-none shadow-sm rounded-3xl bg-white dark:bg-slate-900">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-slate-900 dark:text-slate-50 mb-4">Thành viên tích cực</h3>
-                <div className="space-y-4">
-                  {[
-                    { name: "Hà Linh Official", avatar: "/images/kol/vo-ha-linh-tiktok.jpg", posts: 142 },
-                    { name: "Trinh Phạm", avatar: "/images/kol/trinh-pham-tiktok.jpg", posts: 98 },
-                    { name: "Call Me Duy", avatar: "/images/kol-duy.png", posts: 76 },
-                  ].map((user) => (
-                    <div key={user.name} className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={user.avatar} />
-                        <AvatarFallback>{user.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold text-slate-900 dark:text-slate-50 text-sm truncate">{user.name}</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">{user.posts} bài viết</div>
+          {reviews.length > 0 ? (
+            <div className="grid gap-5 lg:grid-cols-2">
+              {reviews.map((review) => {
+                const product = productsById.get(review.product_id)
+                const linkedKol = review.linked_kol_id ? kolsById.get(review.linked_kol_id) : undefined
+                return (
+                  <Card key={review.id} className="border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardContent className="p-6">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <div className="font-bold text-slate-950 dark:text-white">{review.reviewer_alias || "Người dùng 360dep.vn"}</div>
+                          <div className="mt-1 flex items-center gap-1" aria-label={`${review.rating} trên 5 sao`}>
+                            {Array.from({ length: 5 }).map((_, index) => <Star key={index} className={`h-4 w-4 ${index < review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200 dark:text-slate-700"}`} />)}
+                          </div>
+                        </div>
+                        <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300"><ShieldCheck className="mr-1 h-3.5 w-3.5" /> Đã duyệt</Badge>
                       </div>
-                      <Button variant="outline" size="sm" className="rounded-full text-xs h-8 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
-                        Theo dõi
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-        </div>
+                      <p className="mt-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">“{review.review}”</p>
+                      <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-400">
+                        {review.skin_type && <Badge variant="secondary">{review.skin_type}</Badge>}
+                        {review.usage_duration && <Badge variant="secondary">{review.usage_duration}</Badge>}
+                        {review.purchase_source && <Badge variant="secondary">{review.purchase_source}</Badge>}
+                        {linkedKol && <Badge variant="secondary">Đối chiếu: {linkedKol.name}</Badge>}
+                      </div>
+                      {product ? (
+                        <Link href={`/products/${product.id}`} className="mt-5 inline-flex min-h-11 items-center gap-2 font-bold text-rose-600 hover:text-rose-700 dark:text-rose-300">
+                          {product.brand} {product.name} <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      ) : (
+                        <p className="mt-5 text-xs font-medium text-slate-400">Sản phẩm liên quan hiện không còn public.</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900 md:p-12">
+              <MessageSquareQuote className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600" />
+              <h3 className="mt-4 font-display text-2xl font-black text-slate-950 dark:text-white">Chưa có review nào đã qua duyệt</h3>
+              <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                Đây là trạng thái dữ liệu thật, không phải feed mẫu. Review được gửi từ trang sản phẩm và chỉ xuất hiện ở đây sau khi được kiểm tra chống spam và gắn đúng sản phẩm.
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <Link href="/products" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-950 px-5 font-bold text-white dark:bg-white dark:text-slate-950">Chọn sản phẩm <ArrowRight className="h-4 w-4" /></Link>
+                <Link href="/blog" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-5 font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200"><BookOpenCheck className="h-4 w-4" /> Đọc kiến thức đã biên tập</Link>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
-    </div>
+    </main>
   )
+}
+
+function TrustMetric({ value, label }: { value: number; label: string }) {
+  return <div className="rounded-2xl border border-white/10 bg-white/5 p-4"><div className="font-display text-3xl font-black">{value}</div><div className="mt-1 text-xs font-bold uppercase tracking-wider text-slate-400">{label}</div></div>
 }

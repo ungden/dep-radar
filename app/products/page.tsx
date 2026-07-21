@@ -4,8 +4,8 @@ import { ProductsExplorer } from "@/components/products-explorer"
 import { getCreatorProductEvents, getProductOffers, getProducts } from "@/lib/data"
 
 export const metadata: Metadata = {
-  title: "Khám phá sản phẩm theo nhu cầu | 360dep.vn",
-  description: "Bắt đầu từ vấn đề, lọc sản phẩm và chỉ mở offer đã được xác minh.",
+  title: "Khám phá sản phẩm theo nhu cầu",
+  description: "Bắt đầu từ vấn đề, lọc sản phẩm và chỉ mở nơi mua đã được kiểm tra.",
 }
 
 export default async function ProductsPage({

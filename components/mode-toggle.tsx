@@ -7,15 +7,22 @@ import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 
 export function ModeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme()
+  const mounted = React.useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  )
+
+  const activeTheme = resolvedTheme ?? "light"
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="h-11 w-11 rounded-full"
-      aria-label={theme === "light" ? "Bật giao diện tối" : "Bật giao diện sáng"}
+      onClick={() => setTheme(activeTheme === "light" ? "dark" : "light")}
+      className="h-[46px] w-[46px] min-h-[46px] min-w-[46px] rounded-full"
+      aria-label={mounted ? (activeTheme === "light" ? "Bật giao diện tối" : "Bật giao diện sáng") : "Đổi giao diện sáng tối"}
     >
       <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
       <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

@@ -14,10 +14,10 @@ export function CatalogueRadar({ posts, products }: { posts: Post[]; products: P
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="text-xs font-black uppercase tracking-[0.18em] text-rose-600 dark:text-rose-300">Thư viện chính</div>
-          <h2 className="mt-2 font-display text-3xl font-black text-slate-950 dark:text-white">Toàn bộ catalogue kiến thức</h2>
-          <p className="mt-2 text-slate-500 dark:text-slate-400">14 hub được nhóm theo cách bạn ra quyết định, không xếp thành một danh sách phẳng.</p>
+          <h2 className="mt-2 font-display text-3xl font-black text-slate-950 dark:text-white">Khám phá theo chủ đề</h2>
+          <p className="mt-2 text-slate-500 dark:text-slate-400">Chọn nơi gần với vấn đề của bạn nhất; mỗi chủ đề đều có bài bắt đầu, lộ trình và sản phẩm đã được phân loại.</p>
         </div>
-        <Link href="/catalogue" className="inline-flex min-h-11 items-center gap-2 text-sm font-black text-rose-600 hover:text-rose-700">Xem trang catalogue <ArrowRight className="h-4 w-4" /></Link>
+        <Link href="/catalogue" className="inline-flex min-h-11 items-center gap-2 text-sm font-black text-rose-600 hover:text-rose-700">Xem tất cả chủ đề <ArrowRight className="h-4 w-4" /></Link>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         {catalogueGroups.map((group) => (

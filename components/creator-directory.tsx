@@ -12,25 +12,26 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PlatformBadge } from "@/components/platform-badge"
 import { parseFollowers } from "@/lib/kols-data"
-import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
 import { containerVariants, itemVariants } from "@/lib/animations"
-import type { Kol } from "@/lib/types"
+import { buildCreatorEvidenceMetrics } from "@/lib/product-decision-signal"
+import type { CreatorProductEvent, Kol } from "@/lib/types"
 
-type SortMode = "influence" | "credibility" | "balanced" | "name"
+type SortMode = "influence" | "evidence" | "balanced" | "name"
 type CredibilityFilter = "all" | "expert" | "trusted" | "commercial"
 type ReachFilter = "all" | "mega" | "macro" | "mid" | "micro"
 type VerificationFilter = "all" | "verified" | "unverified"
 
 const INITIAL_VISIBLE_COUNT = 24
 
-export function CreatorDirectory({ initialKols, initialFilters = {} }: { initialKols: Kol[]; initialFilters?: Record<string, string> }) {
+export function CreatorDirectory({ initialKols, initialEvents, initialFilters = {} }: { initialKols: Kol[]; initialEvents: CreatorProductEvent[]; initialFilters?: Record<string, string> }) {
   const [searchQuery, setSearchQuery] = React.useState(initialFilters.q ?? "")
   const [selectedPlatform, setSelectedPlatform] = React.useState<string | null>(initialFilters.platform ?? null)
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(initialFilters.category ?? null)
   const [credibilityFilter, setCredibilityFilter] = React.useState<CredibilityFilter>((initialFilters.credibility as CredibilityFilter) ?? "all")
   const [reachFilter, setReachFilter] = React.useState<ReachFilter>((initialFilters.reach as ReachFilter) ?? "all")
   const [verificationFilter, setVerificationFilter] = React.useState<VerificationFilter>((initialFilters.verification as VerificationFilter) ?? "all")
-  const [sortMode, setSortMode] = React.useState<SortMode>((initialFilters.sort as SortMode) ?? "influence")
+  const requestedSort = initialFilters.sort === "credibility" ? "evidence" : initialFilters.sort
+  const [sortMode, setSortMode] = React.useState<SortMode>((requestedSort as SortMode) ?? "influence")
   const [visibleCount, setVisibleCount] = React.useState(INITIAL_VISIBLE_COUNT)
   const kols = initialKols
 
@@ -66,11 +67,11 @@ export function CreatorDirectory({ initialKols, initialFilters = {} }: { initial
     () => kols
       .map((kol) => ({
         kol,
-        credibility: getKolCredibility(kol),
+        metrics: buildCreatorEvidenceMetrics(kol, initialEvents.filter((event) => event.creator_id === kol.id)),
         reach: getTotalReach(kol),
       }))
       .sort((a, b) => sortRankedKols(a, b, "influence")),
-    [kols]
+    [kols, initialEvents]
   )
 
   const totalReach = React.useMemo(() => rankedKols.reduce((sum, item) => sum + item.reach, 0), [rankedKols])
@@ -78,9 +79,9 @@ export function CreatorDirectory({ initialKols, initialFilters = {} }: { initial
   const filteredKols = React.useMemo(() =>
     kols.map((kol) => ({
       kol,
-      credibility: getKolCredibility(kol),
+      metrics: buildCreatorEvidenceMetrics(kol, initialEvents.filter((event) => event.creator_id === kol.id)),
       reach: getTotalReach(kol),
-    })).filter(({ kol, credibility, reach }) => {
+    })).filter(({ kol, metrics, reach }) => {
       const query = searchQuery.toLowerCase()
       const matchesSearch = !query ||
                             kol.name.toLowerCase().includes(query) ||
@@ -100,13 +101,13 @@ export function CreatorDirectory({ initialKols, initialFilters = {} }: { initial
       const matchesCredibility = credibilityFilter === "all"
         ? true
         : credibilityFilter === "expert"
-          ? credibility.tier === "expert"
+          ? metrics.expertiseScore >= 85
           : credibilityFilter === "trusted"
-            ? ["expert", "trusted_reviewer", "cross_check"].includes(credibility.tier)
-            : credibility.tier === "commercial_koc"
+            ? metrics.verifiedEventCount > 0 && metrics.evidenceCompleteness >= 70
+            : metrics.verifiedEventCount > 0 && metrics.commercialShare >= 75
       return matchesSearch && matchesPlatform && matchesCategory && matchesReach && matchesVerification && matchesCredibility
     }).sort((a, b) => sortRankedKols(a, b, sortMode)),
-    [kols, searchQuery, selectedPlatform, selectedCategory, credibilityFilter, reachFilter, verificationFilter, sortMode, kolPlatforms]
+    [kols, initialEvents, searchQuery, selectedPlatform, selectedCategory, credibilityFilter, reachFilter, verificationFilter, sortMode, kolPlatforms]
   )
 
   React.useEffect(() => {
@@ -127,10 +128,10 @@ export function CreatorDirectory({ initialKols, initialFilters = {} }: { initial
           transition={{ duration: 0.5 }}
         >
           <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900 dark:text-slate-50 mb-4">
-            Danh bạ creator beauty
+            Danh bạ người sáng tạo nội dung làm đẹp
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400 max-w-3xl">
-            Tra cứu kênh, phạm vi nội dung và mức độ đầy đủ hồ sơ. “Xác minh” ở đây chỉ nói về danh tính/kênh public, không phải bảo chứng cho mọi claim hay sản phẩm.
+            Tra cứu kênh, phạm vi nội dung và mức độ đầy đủ hồ sơ. “Xác minh” ở đây chỉ nói về danh tính và kênh công khai, không bảo chứng cho mọi nhận định hay sản phẩm.
           </p>
         </motion.div>
 
@@ -140,8 +141,8 @@ export function CreatorDirectory({ initialKols, initialFilters = {} }: { initial
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.05 }}
         >
-          <MetricCard icon={UsersRound} label="Hồ sơ public" value={kols.length || "..."} />
-          <MetricCard icon={Sparkles} label="Tổng reach snapshot" value={kols.length ? formatReach(totalReach) : "..."} />
+          <MetricCard icon={UsersRound} label="Hồ sơ đang hiển thị" value={kols.length || "..."} />
+          <MetricCard icon={Sparkles} label="Tổng độ phủ ước tính" value={kols.length ? formatReach(totalReach) : "..."} />
           <MetricCard icon={ShieldCheck} label="Kênh đã đối chiếu" value={kols.filter((kol) => kol.verified).length} />
         </motion.div>
 
@@ -169,8 +170,8 @@ export function CreatorDirectory({ initialKols, initialFilters = {} }: { initial
               onChange={(value) => setSortMode(value as SortMode)}
             >
               <option value="influence">Sức ảnh hưởng</option>
-              <option value="balanced">Độ phủ + hồ sơ</option>
-              <option value="credibility">Mức đầy đủ hồ sơ</option>
+              <option value="balanced">Độ phủ + nguồn đã duyệt</option>
+              <option value="evidence">Nguồn đầy đủ</option>
               <option value="name">Tên A-Z</option>
             </FilterSelect>
             <FilterSelect
@@ -191,9 +192,9 @@ export function CreatorDirectory({ initialKols, initialFilters = {} }: { initial
               onChange={(value) => setCredibilityFilter(value as CredibilityFilter)}
             >
               <option value="all">Tất cả loại hồ sơ</option>
-              <option value="expert">Rất đáng tin/chuyên gia</option>
-              <option value="trusted">Có thể tham khảo</option>
-              <option value="commercial">KOC thương mại</option>
+              <option value="expert">Chuyên môn cao</option>
+              <option value="trusted">Nguồn đầy đủ</option>
+              <option value="commercial">Thương mại cao</option>
             </FilterSelect>
             <FilterSelect
               icon={UsersRound}
@@ -271,7 +272,7 @@ export function CreatorDirectory({ initialKols, initialFilters = {} }: { initial
             initial="hidden"
             animate="show"
           >
-            {visibleKols.map(({ kol, credibility, reach }, index) => {
+            {visibleKols.map(({ kol, metrics }, index) => {
               return (
                 <motion.div key={kol.id} variants={itemVariants}>
                   <Link href={`/koc-tracker/${kol.id}`}>
@@ -297,26 +298,30 @@ export function CreatorDirectory({ initialKols, initialFilters = {} }: { initial
                               </h3>
                               {kol.verified && <ShieldCheck aria-label="Kênh public đã được đối chiếu" className="h-5 w-5 text-blue-500 shrink-0" />}
                             </div>
-                            <Badge variant="outline" className={`mb-3 rounded-full border ${credibilityToneClass(credibility.tier)}`}>
-                              {credibility.shortLabel}
+                            <Badge variant="outline" className="mb-3 rounded-full border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                              {metrics.verifiedEventCount > 0 ? `${metrics.verifiedEventCount} nguồn sản phẩm đã duyệt` : "Chưa có nguồn sản phẩm đã duyệt"}
                             </Badge>
                             <div className="mb-3 flex flex-wrap gap-1.5">
                               {Array.from(new Set(kol.socials?.length ? kol.socials.map(s => s.platform) : [kol.platform])).map((p) => (
                                 <PlatformBadge key={p} platform={p} />
                               ))}
                             </div>
-                            <div className="grid grid-cols-3 gap-3 text-sm">
+                            <div className="grid grid-cols-2 gap-3 text-sm">
                               <div className="flex flex-col">
-                                <span className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Reach</span>
-                                <span className="font-bold text-slate-900 dark:text-slate-50">{formatReach(reach)}</span>
+                                <span className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Danh tính</span>
+                                <span className="font-bold text-slate-900 dark:text-slate-50">{metrics.identityVerified ? "Đã đối chiếu" : "Chưa đối chiếu"}</span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Tin cậy</span>
-                                <span className="font-bold text-emerald-600 dark:text-emerald-400">{credibility.credibilityScore}/100</span>
+                                <span className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Chuyên môn</span>
+                                <span className="font-bold text-slate-900 dark:text-slate-50">{metrics.expertiseScore}/100</span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Độ phủ</span>
-                                <span className="font-bold text-slate-900 dark:text-slate-50">{credibility.influenceScore}/100</span>
+                                <span className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Mức đủ nguồn</span>
+                                <span className="font-bold text-emerald-600 dark:text-emerald-400">{metrics.evidenceCompleteness}/100</span>
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Minh bạch</span>
+                                <span className="font-bold text-slate-900 dark:text-slate-50">{metrics.commercialTransparency}/100</span>
                               </div>
                             </div>
                           </div>
@@ -398,7 +403,7 @@ export function CreatorDirectory({ initialKols, initialFilters = {} }: { initial
 
 type RankedKol = {
   kol: Kol
-  credibility: ReturnType<typeof getKolCredibility>
+  metrics: ReturnType<typeof buildCreatorEvidenceMetrics>
   reach: number
 }
 
@@ -412,20 +417,20 @@ function influenceScore(item: RankedKol) {
   const reachScore = Math.min(100, Math.round(Math.log10(Math.max(item.reach, 1)) * 15))
   const platformScore = Math.min(15, (item.kol.socials?.length ?? 1) * 3)
   const verifiedScore = item.kol.verified ? 8 : 0
-  return reachScore + platformScore + verifiedScore + item.credibility.influenceScore * 0.35
+  return reachScore + platformScore + verifiedScore + item.kol.trustscore * 0.35
 }
 
 function sortRankedKols(a: RankedKol, b: RankedKol, mode: SortMode) {
   if (mode === "name") return a.kol.name.localeCompare(b.kol.name, "vi")
-  if (mode === "credibility") {
-    return b.credibility.credibilityScore - a.credibility.credibilityScore || influenceScore(b) - influenceScore(a)
+  if (mode === "evidence") {
+    return b.metrics.evidenceCompleteness - a.metrics.evidenceCompleteness || b.metrics.commercialTransparency - a.metrics.commercialTransparency || influenceScore(b) - influenceScore(a)
   }
   if (mode === "balanced") {
-    const aScore = influenceScore(a) * 0.55 + a.credibility.credibilityScore * 0.45
-    const bScore = influenceScore(b) * 0.55 + b.credibility.credibilityScore * 0.45
+    const aScore = influenceScore(a) * 0.55 + a.metrics.evidenceCompleteness * 0.3 + a.metrics.commercialTransparency * 0.15
+    const bScore = influenceScore(b) * 0.55 + b.metrics.evidenceCompleteness * 0.3 + b.metrics.commercialTransparency * 0.15
     return bScore - aScore || b.reach - a.reach
   }
-  return influenceScore(b) - influenceScore(a) || b.reach - a.reach || b.credibility.credibilityScore - a.credibility.credibilityScore
+  return influenceScore(b) - influenceScore(a) || b.reach - a.reach || b.metrics.evidenceCompleteness - a.metrics.evidenceCompleteness
 }
 
 function reachMatchesFilter(reach: number, filter: ReachFilter) {
@@ -445,7 +450,7 @@ function formatReach(value: number) {
 function sortModeLabel(mode: SortMode) {
   return {
     influence: "Sức ảnh hưởng",
-    credibility: "Tin cậy",
+    evidence: "Nguồn đầy đủ",
     balanced: "Cân bằng",
     name: "A-Z",
   }[mode]

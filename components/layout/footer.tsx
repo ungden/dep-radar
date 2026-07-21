@@ -46,16 +46,16 @@ export function Footer() {
         <div className="space-y-6">
           <BrandLogo variant="dark" />
           <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
-            360dep.vn - nền tảng catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.
+            360dep.vn - thư viện chủ đề, đánh giá mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.
           </p>
-          <p className="text-xs leading-relaxed text-slate-500">Claim về creator và offer chỉ được public sau khi có nguồn, người xác minh và thời điểm kiểm tra.</p>
+          <p className="text-xs leading-relaxed text-slate-500">Thông tin từ người sáng tạo và nơi mua chỉ hiển thị sau khi có nguồn, người xác minh và thời điểm kiểm tra.</p>
         </div>
 
         <div className="space-y-6">
           <h4 className="text-sm font-bold text-white uppercase tracking-widest">
             Chuyên mục
           </h4>
-          <ul className="space-y-3 text-sm font-medium">
+          <ul className="space-y-1 text-sm font-medium [&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center">
             <li>
               <Link href="/catalogue/da-mat" className="hover:text-rose-500 transition-colors">
                 Da mặt / Skincare
@@ -83,12 +83,12 @@ export function Footer() {
           <h4 className="text-sm font-bold text-white uppercase tracking-widest">
             Thông tin
           </h4>
-          <ul className="space-y-3 text-sm font-medium">
+          <ul className="space-y-1 text-sm font-medium [&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center">
             <li>
-              <Link href="/catalogue" className="hover:text-rose-500 transition-colors">Phương pháp catalogue</Link>
+              <Link href="/catalogue" className="hover:text-rose-500 transition-colors">Phương pháp biên tập</Link>
             </li>
             <li>
-              <Link href="/koc-tracker" className="hover:text-rose-500 transition-colors">Cách đọc hồ sơ creator</Link>
+              <Link href="/koc-tracker" className="hover:text-rose-500 transition-colors">Cách đọc hồ sơ người sáng tạo</Link>
             </li>
             <li>
               <Link href="/community" className="hover:text-rose-500 transition-colors">Nguyên tắc cộng đồng</Link>
@@ -101,7 +101,7 @@ export function Footer() {
 
         <div className="space-y-6">
           <h4 className="text-sm font-bold text-white uppercase tracking-widest">
-            Newsletter
+            Nhận bài mới
           </h4>
           <p className="text-sm text-slate-400">
             Đăng ký để nhận những bài viết mới nhất và xu hướng làm đẹp mỗi tuần.
@@ -133,7 +133,7 @@ export function Footer() {
       </div>
       <div className="container mx-auto px-4 md:px-6 mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium uppercase tracking-wider text-slate-500">
         <div>&copy; {new Date().getFullYear()} 360dep.vn. All rights reserved.</div>
-        <div>Dữ liệu public qua quality gate</div>
+        <div>Nội dung chỉ xuất bản sau khi kiểm tra</div>
       </div>
     </footer>
   )

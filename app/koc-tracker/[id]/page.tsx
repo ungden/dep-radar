@@ -18,8 +18,8 @@ import { PlatformBadge } from "@/components/platform-badge"
 import { TrackKolProfileView } from "@/components/analytics/public-events"
 import { getCreatorProductEvents, getCreatorProductStates, getKol, getPost, getProductOffers, getProducts, getReviews } from "@/lib/data"
 import { getMatrixNodesByKolId, getMatrixProductGroups } from "@/lib/content-matrix"
-import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
 import { parseFollowers } from "@/lib/kols-data"
+import { buildCreatorEvidenceMetrics } from "@/lib/product-decision-signal"
 import { getProductCategoryLabel, productWithTaxonomy } from "@/lib/product-taxonomy"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import { absoluteUrl } from "@/lib/seo"
@@ -30,13 +30,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const kol = await getKol(id)
 
   if (!kol) {
-    return { title: 'KOL/KOC không tồn tại | 360dep.vn' }
+    return { title: 'KOL/KOC không tồn tại' }
   }
 
   const description = kol.bio
     ? kol.bio.replace(/\s+/g, " ").slice(0, 200)
     : `Hồ sơ ${kol.name} trên ${kol.platform}. ${kol.followers} followers. Xem đánh giá sản phẩm làm đẹp từ ${kol.name} tại 360dep.vn.`
-  const title = `${kol.name} - Hồ sơ KOL/KOC làm đẹp | 360dep.vn`
+  const title = `${kol.name} - Hồ sơ KOL/KOC làm đẹp`
   const url = absoluteUrl(`/koc-tracker/${kol.id}`)
   const image = absoluteUrl(kol.cover || kol.avatar)
 
@@ -314,7 +314,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
   const totalReach = formatReach(socials.reduce((sum, s) => sum + parseFollowers(s.followers), 0))
   const bioParagraphs = kol.bio ? kol.bio.split(/\n\n+/).map(p => p.trim()).filter(Boolean) : []
   const primaryUrl = buildSocialUrl(socials[0])
-  const credibility = getKolCredibility(kol)
+  const creatorMetrics = buildCreatorEvidenceMetrics(kol, timelineEvents)
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://360dep.vn"
   // Cover: real banner (6 originals) > blurred avatar (when we have a photo) > brand gradient.
   const realCover = kol.cover && kol.cover.startsWith("/") && !kol.cover.includes("picsum") ? kol.cover : null
@@ -357,8 +357,8 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                 <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900 dark:text-slate-50">{kol.name}</h1>
                 {kol.verified && <ShieldCheck aria-label="Kênh public đã được đối chiếu" className="h-8 w-8 text-blue-500" />}
               </div>
-              <Badge variant="outline" className={`mb-3 rounded-full border px-3 py-1 ${credibilityToneClass(credibility.tier)}`}>
-                {credibility.label}
+              <Badge variant="outline" className="mb-3 rounded-full border-slate-200 bg-slate-50 px-3 py-1 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                {creatorMetrics.verifiedEventCount > 0 ? `${creatorMetrics.verifiedEventCount} nguồn sản phẩm đã duyệt` : "Chưa có nguồn sản phẩm đã duyệt"}
               </Badge>
               {kol.realName && kol.realName !== kol.name && (
                 <p className="text-slate-500 dark:text-slate-400 mb-3">Tên thật: {kol.realName}</p>
@@ -393,8 +393,8 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                     <Award className="h-6 w-6" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Phân loại hồ sơ</div>
-                    <div className="text-xl font-bold text-slate-900 dark:text-slate-50">{credibility.credibilityScore}/100</div>
+                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mức đủ nguồn</div>
+                    <div className="text-xl font-bold text-slate-900 dark:text-slate-50">{creatorMetrics.evidenceCompleteness}/100</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -402,8 +402,8 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                     <ShieldQuestion className="h-6 w-6" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Độ phủ</div>
-                    <div className="text-xl font-bold text-slate-900 dark:text-slate-50">{credibility.influenceScore}/100</div>
+                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Minh bạch thương mại</div>
+                    <div className="text-xl font-bold text-slate-900 dark:text-slate-50">{creatorMetrics.commercialTransparency}/100</div>
                   </div>
                 </div>
                 {kol.activeSince && (
@@ -421,12 +421,9 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
             </div>
 
             <div className="w-full md:w-auto flex flex-col gap-3">
-              <Button className="w-full md:w-48 h-12 rounded-xl bg-slate-900 dark:bg-slate-50 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold">
-                Theo dõi
-              </Button>
-              <Button asChild variant="outline" className="w-full md:w-48 h-12 rounded-xl border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+              <Button asChild className="w-full md:w-48 h-12 rounded-xl bg-slate-900 dark:bg-slate-50 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold">
                 <a href={primaryUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-2" /> Kênh chính thức
+                  <ExternalLink className="h-4 w-4 mr-2" /> Mở kênh chính thức
                 </a>
               </Button>
             </div>
@@ -584,7 +581,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                                 <div className="text-xs font-bold uppercase tracking-wider text-slate-400">{product.brand}</div>
                                 <div className="mt-1 line-clamp-2 text-sm font-bold">{product.name}</div>
                                 <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                  Xác nhận {state.last_confirmed_at ? formatTimelineDate(state.last_confirmed_at) : "chưa rõ ngày"} · {state.evidence_count} bằng chứng · {state.state_confidence}/100
+                                  Xác nhận {state.last_confirmed_at ? formatTimelineDate(state.last_confirmed_at) : "chưa rõ ngày"} · {state.evidence_count} nguồn · độ tin cậy {state.state_confidence}/100
                                 </div>
                               </Link>
                             ))}
@@ -866,36 +863,17 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
             <aside className="space-y-6">
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
-                  <Award className="h-4 w-4" /> Cách đọc hồ sơ
+                  <Award className="h-4 w-4" /> Bốn chiều dữ liệu
                 </h3>
-                <div className="mb-3 flex items-end gap-2">
-                  <span className="font-display text-4xl font-black text-slate-900 dark:text-slate-50">{credibility.credibilityScore}</span>
-                  <span className="pb-1 text-sm font-bold text-slate-400">/100</span>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                  <ProfileMetric label="Danh tính/kênh" value={creatorMetrics.identityVerified ? "Đã đối chiếu" : "Chưa đối chiếu"} />
+                  <ProfileMetric label="Chuyên môn phù hợp" value={`${creatorMetrics.expertiseScore}/100`} />
+                  <ProfileMetric label="Mức đầy đủ của nguồn" value={`${creatorMetrics.evidenceCompleteness}/100`} detail={`${creatorMetrics.exactProductCount} sản phẩm cụ thể · ${creatorMetrics.verifiedEventCount} nguồn`} />
+                  <ProfileMetric label="Minh bạch thương mại" value={`${creatorMetrics.commercialTransparency}/100`} detail={`${creatorMetrics.commercialShare}% nguồn có PR, tài trợ hoặc liên kết tiếp thị`} />
                 </div>
-                <Badge variant="outline" className={`mb-4 rounded-full border ${credibilityToneClass(credibility.tier)}`}>
-                  {credibility.label}
-                </Badge>
-                <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{credibility.summary}</p>
-                {credibility.strengths.length > 0 && (
-                  <div className="mt-4">
-                    <div className="mb-2 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Điểm cộng</div>
-                    <ul className="space-y-2">
-                      {credibility.strengths.map((item) => (
-                        <li key={item} className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {credibility.cautions.length > 0 && (
-                  <div className="mt-4">
-                    <div className="mb-2 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-300">Cần đọc kèm bối cảnh</div>
-                    <ul className="space-y-2">
-                      {credibility.cautions.map((item) => (
-                        <li key={item} className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                  Các chỉ số này không được cộng thành một điểm “tin cậy”. Hãy đọc từng nguồn, hành vi và disclosure trước khi dùng làm quyết định mua.
+                </p>
               </div>
 
               {/* Quick facts */}
@@ -996,6 +974,16 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
 
 function BookOpenIcon() {
   return <Layers className="h-5 w-5 text-cyan-500" />
+}
+
+function ProfileMetric({ label, value, detail }: { label: string; value: string; detail?: string }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+      <div className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</div>
+      <div className="mt-1 font-display text-xl font-black text-slate-900 dark:text-slate-50">{value}</div>
+      {detail && <div className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{detail}</div>}
+    </div>
+  )
 }
 
 function unique(items: string[]) {

@@ -3,14 +3,14 @@ export const dynamic = "force-dynamic"
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { notFound } from "next/navigation"
-import { AlertCircle, ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock, ExternalLink, MessageSquare, Tag } from "lucide-react"
+import { notFound, redirect } from "next/navigation"
+import { AlertCircle, ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock, MessageSquare, Tag } from "lucide-react"
 import * as motion from "motion/react-client"
 
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { TrackArticleRead } from "@/components/analytics/public-events"
-import { EDITORIAL_AUTHOR_AVATAR, EDITORIAL_AUTHOR_NAME, getPost, getPostProductRecommendations, getPosts, getProducts } from "@/lib/data"
+import { EDITORIAL_AUTHOR_AVATAR, EDITORIAL_AUTHOR_NAME, getCanonicalPostSlug, getPost, getPostProductRecommendations, getPosts, getProducts } from "@/lib/data"
 import { LikeButton } from "@/components/like-button"
 import { SocialShare } from "@/components/social-share"
 import { CommentSection } from "@/components/comment-section"
@@ -179,6 +179,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const canonicalAlias = getCanonicalPostSlug(id)
+  if (canonicalAlias) redirect(`/blog/${canonicalAlias}`)
 
   const post = await getPost(id)
   if (!post) return notFound()
@@ -242,7 +244,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
             href="/blog"
             className="inline-flex items-center text-sm font-medium text-white/80 hover:text-white mb-6 transition-colors drop-shadow-md"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" /> Quay lại Blog
+            <ArrowLeft className="h-4 w-4 mr-2" /> Quay lại Kiến thức
           </Link>
 
           {/* Article Card */}
@@ -253,7 +255,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
                 {matrixNode && (
                   <div className="mb-5 flex flex-wrap items-center gap-2 text-sm font-bold text-slate-500 dark:text-slate-400">
                     <Link href={`/catalogue/${matrixNode.hubSlug}`} className="hover:text-rose-600 dark:hover:text-rose-300">
-                      Ma trận {matrixSection?.shortTitle ?? matrixNode.hubSlug}
+                      Chủ đề {matrixSection?.shortTitle ?? matrixNode.hubSlug}
                     </Link>
                     <span>/</span>
                     <span>{researchStageLabels[matrixNode.stage]}</span>
@@ -426,7 +428,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
           {relatedArticles.length > 0 && (
             <div className="mt-12">
               <h3 className="text-2xl font-display font-bold text-slate-900 dark:text-slate-50 mb-6">
-                Đọc tiếp theo graph
+                Đọc tiếp theo nhu cầu
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {relatedArticles.map(({ post: related, href, reasons }) => (
@@ -486,11 +488,11 @@ function ArticleJourney({
             Đọc tiếp theo lộ trình
           </div>
           <h2 className="font-display text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50">
-            Đừng dừng ở một bài rời rạc
+            Bước tiếp theo nên đọc gì?
           </h2>
           {currentQuestion && (
             <p className="mt-2 text-sm font-semibold leading-relaxed text-slate-600 dark:text-slate-300">
-              Câu hỏi đang xử lý: {currentQuestion}
+              Bài này giúp bạn trả lời: {currentQuestion}
             </p>
           )}
         </div>
@@ -525,14 +527,7 @@ function ArticleJourney({
                 <div className="mt-3 space-y-2 text-xs font-semibold leading-relaxed text-slate-500 dark:text-slate-400">
                   <p><span className="font-black text-emerald-700 dark:text-emerald-300">Nên xem:</span> {group.whenToConsider}</p>
                   <p><span className="font-black text-amber-700 dark:text-amber-300">Tránh vội:</span> {group.whenToAvoid}</p>
-                  <p className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-3 py-1 dark:bg-slate-950">
-                    <ExternalLink className="h-3 w-3" />
-                    Shopee query sau này: {group.shopeeQuery}
-                  </p>
                 </div>
-                <p className="mt-3 border-t border-slate-100 pt-3 text-xs font-semibold leading-relaxed text-slate-500 dark:border-slate-800 dark:text-slate-400">
-                  {group.affiliateDisclosure}
-                </p>
               </article>
             ))}
           </div>
@@ -555,7 +550,7 @@ function ArticleJourney({
                 </h3>
                 <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{product.description}</p>
                 <div className="mt-3 inline-flex items-center gap-1 text-xs font-black text-rose-500">
-                  Xem product detail
+                  Xem thông tin sản phẩm
                   <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </Link>

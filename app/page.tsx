@@ -31,9 +31,9 @@ export default async function HomePage() {
     <div className="flex flex-col gap-10 pb-16 md:gap-14">
       <HeroSection briefing={briefing} />
       <CatalogueRadar posts={publishedPosts} products={products} prompts={briefing.cataloguePrompts} />
-      <TrendingSection productSignals={briefing.productSignals} />
-      <KolRadar creatorUpdates={briefing.creatorUpdates} />
-      <CommunityHighlights posts={latestPosts} dailyUpdates={briefing.dailyUpdates} />
+      {briefing.productSignals.length > 0 && <TrendingSection productSignals={briefing.productSignals} />}
+      {briefing.creatorUpdates.length > 0 && <KolRadar creatorUpdates={briefing.creatorUpdates} />}
+      {briefing.dailyUpdates.length > 0 && <CommunityHighlights posts={latestPosts} dailyUpdates={briefing.dailyUpdates} />}
     </div>
   )
 }

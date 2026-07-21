@@ -13,6 +13,8 @@
     "check:social": "tsx scripts/check-social-metadata.ts",
     "fetch:product-images": "tsx scripts/fetch-product-images.ts",
     "check:content-graph": "tsx scripts/check-content-graph.ts",
+    "check:catalogue": "tsx scripts/check-catalogue-first.ts",
+    "check:content-completeness": "tsx scripts/check-content-completeness.ts",
     "check:daily": "tsx scripts/check-daily-briefing.ts",
     "check:evidence-radar": "tsx scripts/check-evidence-radar.ts",
     "audit:creator-roster": "tsx scripts/export-tiktok-creator-roster.ts",

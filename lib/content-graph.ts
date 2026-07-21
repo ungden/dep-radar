@@ -39,6 +39,8 @@ export interface ContentGraphCoverage {
   matrixNodes: number
   postsWithNextReads: number
   postsWithProductGroups: number
+  postsWithSources: number
+  postsWithCanonicalMetadata: number
   coverageScore: number
 }
 
@@ -71,7 +73,9 @@ export function articleHref(post: Pick<Post, "id" | "slug">) {
 }
 
 export function getGraphNodeForPost(post: Post) {
-  return getMatrixNodeByArticleSlug(post.slug) ?? (post.hubSlug ? getContentMatrix(post.hubSlug)?.nodes[0] : undefined)
+  // Never attach an arbitrary hub node to a different article. A graph edge
+  // may carry products, safety context and next reads, so it must be exact.
+  return getMatrixNodeByArticleSlug(post.slug)
 }
 
 export function buildRelatedArticles({
@@ -224,13 +228,15 @@ export function buildDailyEditorialPlan({
 
 export function buildContentGraphCoverage(posts: Post[]): ContentGraphCoverage[] {
   return catalogueSections.map((hub) => {
-    const hubPosts = posts.filter((post) => post.hubSlug === hub.slug || post.category === hub.title)
+    const hubPosts = posts.filter((post) => post.hubSlug ? post.hubSlug === hub.slug : post.category === hub.title)
     const matrix = getContentMatrix(hub.slug)
     const postsWithNextReads = hubPosts.filter((post) => getGraphNodeForPost(post)?.nextArticleSlugs.length || post.nextArticleSlugs?.length).length
     const postsWithProductGroups = hubPosts.filter((post) => getGraphNodeForPost(post)?.productGroupKeys.length || post.productGroupKeys?.length).length
+    const postsWithSources = hubPosts.filter((post) => post.sourceNotes?.length).length
+    const postsWithCanonicalMetadata = hubPosts.filter((post) => post.hubSlug && post.intent && post.researchStage && post.conditionSlugs && post.nextArticleSlugs).length
     const coverageScore = hubPosts.length === 0
       ? 0
-      : Math.round(((postsWithNextReads + postsWithProductGroups) / (hubPosts.length * 2)) * 100)
+      : Math.round(((postsWithNextReads + postsWithSources + postsWithCanonicalMetadata) / (hubPosts.length * 3)) * 100)
 
     return {
       hubSlug: hub.slug,
@@ -239,6 +245,8 @@ export function buildContentGraphCoverage(posts: Post[]): ContentGraphCoverage[]
       matrixNodes: matrix?.nodes.length ?? 0,
       postsWithNextReads,
       postsWithProductGroups,
+      postsWithSources,
+      postsWithCanonicalMetadata,
       coverageScore,
     }
   })

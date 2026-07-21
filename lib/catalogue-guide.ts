@@ -36,7 +36,7 @@ export const catalogueGuides: Record<string, CatalogueGuide> = {
   "tri-mun": {
     updated: "Cập nhật 06/2026",
     snapshot:
-      "Acne care đang bớt kiểu 'đánh mạnh cho nhanh' và chuyển sang phối treatment có kiểm soát với phục hồi barrier để giảm kích ứng, thâm và sẹo.",
+      "Chăm sóc da mụn hiệu quả bắt đầu bằng việc nhận đúng loại mụn, giữ hàng rào bảo vệ da ổn định và chỉ thêm từng hoạt chất một để giảm kích ứng, thâm và sẹo.",
     startHere: [
       "Phân loại trước: mụn ẩn/bít tắc, mụn viêm, mụn đầu đen, mụn nội tiết hay mụn body.",
       "Bắt đầu bằng một hoạt chất chính, không thêm BHA, retinoid và benzoyl peroxide cùng lúc nếu da chưa quen.",
@@ -61,7 +61,7 @@ export const catalogueGuides: Record<string, CatalogueGuide> = {
   "sang-da-chong-nang": {
     updated: "Cập nhật 06/2026",
     snapshot:
-      "Chống nắng là nền của mọi mục tiêu sáng da. Tin mới đáng chú ý: FDA đã công nhận bemotrizinol là hoạt chất chống nắng GRASE cho người lớn và trẻ từ 6 tháng, mở thêm lựa chọn broad-spectrum ở thị trường Mỹ từ sau 09/08/2026.",
+      "Chống nắng là nền của mọi mục tiêu sáng da. Tháng 06/2026, FDA ban hành final order xác định bemotrizinol là GRASE trong các điều kiện nêu trong lệnh; lệnh dự kiến có hiệu lực ngày 09/08/2026 nếu không bị tranh chấp. Thời điểm sản phẩm xuất hiện trên kệ do nhà sản xuất quyết định.",
     startHere: [
       "Chọn kem chống nắng dùng được hằng ngày trước khi mua serum sáng da.",
       "Với thâm mụn, đặt kỳ vọng theo tuần/tháng, không theo vài ngày.",
@@ -161,7 +161,7 @@ export const catalogueGuides: Record<string, CatalogueGuide> = {
   "toc-da-dau": {
     updated: "Cập nhật 06/2026",
     snapshot:
-      "Tóc và da đầu được xem như phần mở rộng của skincare. AAD 2026 và các báo cáo ngành đều nhấn mạnh scalp care, hair density và chăm da đầu như một category lớn.",
+      "Tóc và da đầu cần được tách thành hai lớp vấn đề: tình trạng da đầu như gàu, ngứa, viêm và tình trạng sợi tóc như khô xơ, gãy, chẻ ngọn. Rụng tóc kéo dài hoặc thành mảng cần được đánh giá y khoa thay vì chỉ đổi dầu gội.",
     startHere: [
       "Tách vấn đề da đầu khỏi vấn đề sợi tóc: gàu/ngứa/dầu khác với khô xơ/chẻ ngọn.",
       "Theo dõi rụng tóc theo thời gian, vùng rụng và yếu tố stress/sau sinh/thuốc.",

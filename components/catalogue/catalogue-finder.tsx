@@ -16,9 +16,17 @@ type FinderState = {
 }
 
 export function CatalogueFinder({ compact = false }: { compact?: boolean }) {
+  const [hydrated, setHydrated] = React.useState(false)
   const [selection, setSelection] = React.useState<FinderState>({})
   const selectedHub = catalogueSections.find((section) => section.slug === selection.hub)
-  const resultHref = selectedHub ? buildCatalogueHref(selectedHub.slug, selection) : "/catalogue"
+  const resultHref = selectedHub ? buildCatalogueHref(selectedHub.slug, {
+    condition: selection.condition,
+    skin: selection.skin,
+    audience: selection.audience,
+    budget: selection.budget,
+  }) : "/catalogue"
+
+  React.useEffect(() => setHydrated(true), [])
 
   function choose(key: keyof FinderState, value: string) {
     const firstChoice = !selection.hub && key === "hub"
@@ -35,7 +43,7 @@ export function CatalogueFinder({ compact = false }: { compact?: boolean }) {
         <div>
           <div className="text-xs font-black uppercase tracking-[0.18em] text-rose-600 dark:text-rose-300">Tìm theo tình trạng / mong muốn</div>
           <h2 className="mt-2 font-display text-xl font-black text-slate-950 dark:text-white md:text-2xl">Bắt đầu từ điều bạn muốn giải quyết</h2>
-          <p className="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">Không cần hoàn thành hết. Chọn đến đâu, mở catalogue phù hợp đến đó.</p>
+          <p className="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">Không cần chọn hết. Trả lời những gì bạn biết để nhận hướng dẫn gần với mình hơn.</p>
         </div>
         {selection.hub && (
           <button
@@ -53,18 +61,18 @@ export function CatalogueFinder({ compact = false }: { compact?: boolean }) {
         {catalogueSections
           .filter((section) => !compact || (section.entryPriority ?? 99) <= 8)
           .map((section) => (
-            <Choice key={section.slug} active={selection.hub === section.slug} onClick={() => choose("hub", section.slug)}>
+            <Choice key={section.slug} active={selection.hub === section.slug} disabled={!hydrated} onClick={() => choose("hub", section.slug)}>
               {section.shortTitle}
             </Choice>
           ))}
-        {compact && <Link href="/catalogue" className="inline-flex min-h-11 items-center rounded-full border border-dashed border-slate-300 px-4 text-sm font-bold text-slate-600 hover:border-rose-300 hover:text-rose-600 dark:border-slate-700 dark:text-slate-300">+ 6 catalogue khác</Link>}
+        {compact && <Link href="/catalogue" className="inline-flex min-h-11 items-center rounded-full border border-dashed border-slate-300 px-4 text-sm font-bold text-slate-600 hover:border-rose-300 hover:text-rose-600 dark:border-slate-700 dark:text-slate-300">+ 6 chủ đề khác</Link>}
       </FinderStep>
 
       {selectedHub && (
         <>
           <FinderStep number={2} title="Tình trạng cụ thể">
             {selectedHub.conditions?.map((condition) => (
-              <Choice key={condition.slug} active={selection.condition === condition.slug} onClick={() => choose("condition", condition.slug)}>
+              <Choice key={condition.slug} active={selection.condition === condition.slug} disabled={!hydrated} onClick={() => choose("condition", condition.slug)}>
                 {condition.label}
               </Choice>
             ))}
@@ -73,24 +81,24 @@ export function CatalogueFinder({ compact = false }: { compact?: boolean }) {
           <FinderStep number={3} title="Bối cảnh cá nhân">
             {[...catalogueLenses.skin, ...catalogueLenses.audience].map((option) => {
               const key = catalogueLenses.skin.some((item) => item.slug === option.slug) ? "skin" : "audience"
-              return <Choice key={`${key}-${option.slug}`} active={selection[key] === option.slug} onClick={() => choose(key, option.slug)}>{option.label}</Choice>
+              return <Choice key={`${key}-${option.slug}`} active={selection[key] === option.slug} disabled={!hydrated} onClick={() => choose(key, option.slug)}>{option.label}</Choice>
             })}
           </FinderStep>
 
           <FinderStep number={4} title="Ngân sách">
             {catalogueLenses.budget.map((option) => (
-              <Choice key={option.slug} active={selection.budget === option.slug} onClick={() => choose("budget", option.slug)}>{option.label}</Choice>
+              <Choice key={option.slug} active={selection.budget === option.slug} disabled={!hydrated} onClick={() => choose("budget", option.slug)}>{option.label}</Choice>
             ))}
           </FinderStep>
 
           <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-slate-500 dark:text-slate-400">Kết quả sẽ mở trong <strong className="text-slate-900 dark:text-white">{selectedHub.title}</strong>, không chuyển sang tìm kiếm chung.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Bạn sẽ nhận bài nên đọc trước, dấu hiệu cần thận trọng và sản phẩm phù hợp trong <strong className="text-slate-900 dark:text-white">{selectedHub.title}</strong>.</p>
             <Link
               href={resultHref}
               onClick={() => trackEvent("finder_complete", { hub: selectedHub.slug, condition: selection.condition, skin: selection.skin, audience: selection.audience, budget: selection.budget })}
               className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-black text-white hover:bg-rose-600 dark:bg-white dark:text-slate-950 dark:hover:bg-rose-200"
             >
-              Xem lộ trình phù hợp <ArrowRight className="h-4 w-4" />
+              Xem hướng dẫn dành cho tôi <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </>
@@ -111,13 +119,14 @@ function FinderStep({ number, title, children }: { number: number; title: string
   )
 }
 
-function Choice({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function Choice({ active, disabled, onClick, children }: { active: boolean; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
       aria-pressed={active}
+      disabled={disabled}
       onClick={onClick}
-      className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-bold transition-colors ${active ? "border-slate-950 bg-slate-950 text-white dark:border-white dark:bg-white dark:text-slate-950" : "border-slate-200 bg-white text-slate-700 hover:border-rose-300 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"}`}
+      className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-bold transition-colors disabled:cursor-wait disabled:opacity-60 ${active ? "border-slate-950 bg-slate-950 text-white dark:border-white dark:bg-white dark:text-slate-950" : "border-slate-200 bg-white text-slate-700 hover:border-rose-300 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"}`}
     >
       {active && <Check className="h-4 w-4" />}
       {children}

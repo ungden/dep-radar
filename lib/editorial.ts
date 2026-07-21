@@ -2,6 +2,7 @@ import { catalogueSections } from "@/lib/catalogue"
 import { catalogueGuides } from "@/lib/catalogue-guide"
 import { CATALOGUE_READ_POSTS } from "@/lib/catalogue-read-posts"
 import { getMatrixNodeByArticleSlug, type ResearchStage } from "@/lib/content-matrix"
+import { EDITORIAL_HUB_FOUNDATIONS, EDITORIAL_TOPIC_GUIDANCE } from "@/lib/editorial-topic-guidance"
 import type { Post } from "@/lib/types"
 
 export type ArticleStatus = "planned" | "draft" | "published"
@@ -82,6 +83,14 @@ const HUB_SOURCE_NOTES: Record<string, { label: string; url: string }[]> = {
     { label: "AAD: Pregnancy skin care", url: "https://www.aad.org/public/everyday-care/skin-care-secrets/routine/pregnancy-skin-care" },
     { label: "AAD: Acne guideline highlights", url: "https://www.aad.org/member/clinical-quality/guidelines/acne" },
   ],
+  "product-radar": [
+    { label: "FTC: Disclosures for social media influencers", url: "https://www.ftc.gov/business-guidance/resources/disclosures-101-social-media-influencers" },
+    { label: "FDA: Cosmetic ingredient names and labeling", url: "https://www.fda.gov/cosmetics/cosmetics-labeling/cosmetic-ingredient-names" },
+  ],
+  bodycare: [
+    { label: "AAD: Folliculitis overview", url: "https://www.aad.org/public/diseases/a-z/folliculitis" },
+    { label: "AAD: Choosing the right sunscreen", url: "https://www.aad.org/public/everyday-care/sun-protection/shade-clothing-sunscreen/choosing-right-sunscreen" },
+  ],
   "clinic-treatment": [
     { label: "AAD: Cosmetic treatments", url: "https://www.aad.org/public/cosmetic" },
     { label: "AAD: Acne scars treatment", url: "https://www.aad.org/public/diseases/acne/derm-treat/scars/treatment" },
@@ -92,15 +101,25 @@ const HUB_SOURCE_NOTES: Record<string, { label: string; url: string }[]> = {
   makeup: [
     { label: "FDA: Eye cosmetic safety", url: "https://www.fda.gov/cosmetics/cosmetic-products/eye-cosmetic-safety" },
   ],
+  "mui-huong": [
+    { label: "FDA: Allergens in cosmetics", url: "https://www.fda.gov/cosmetics/cosmetic-ingredients/allergens-cosmetics" },
+    { label: "FDA: Using cosmetics safely", url: "https://www.fda.gov/cosmetics/resources-consumers-cosmetics/using-cosmetics-safely" },
+  ],
+  "nam-gioi": [
+    { label: "AAD: Healthy-looking skin basics", url: "https://www.aad.org/public/everyday-care/skin-care-secrets/routine/healthier-looking-skin" },
+    { label: "AAD: Folliculitis overview", url: "https://www.aad.org/public/diseases/a-z/folliculitis" },
+  ],
   "nails-mi-long-may": [
     { label: "AAD: Manicure and pedicure safety", url: "https://www.aad.org/public/everyday-care/nail-care-secrets/basics/pedicures/manicure-pedicure-safety" },
     { label: "FDA: Eye cosmetic safety", url: "https://www.fda.gov/cosmetics/cosmetic-products/eye-cosmetic-safety" },
   ],
   "beauty-tech": [
-    { label: "FDA: Using cosmetics safely", url: "https://www.fda.gov/cosmetics/resources-consumers-cosmetics/using-cosmetics-safely" },
+    { label: "FDA: Risks from certain RF microneedling uses", url: "https://www.fda.gov/medical-devices/safety-communications/potential-risks-certain-uses-radiofrequency-rf-microneedling-fda-safety-communication" },
+    { label: "FDA: Radiation-emitting products", url: "https://www.fda.gov/consumers/consumer-updates/radiation-emitting-products" },
   ],
   "beauty-lifestyle": [
     { label: "AAD: Pregnancy skin care", url: "https://www.aad.org/public/everyday-care/skin-care-secrets/routine/pregnancy-skin-care" },
+    { label: "AAD: Supplements for skin", url: "https://www.aad.org/public/everyday-care/skin-care-secrets/routine/supplements-for-your-skin" },
   ],
 }
 
@@ -192,73 +211,87 @@ function categoryForHub(hubSlug: string) {
   return catalogueSections.find((section) => section.slug === hubSlug)?.title ?? "360dep.vn Beauty Desk"
 }
 
-function buildGeneratedContent(seed: PlannedSeed, hubSlug: string): ArticleContent {
+function researchStageForIntent(intent: ArticleIntent): ResearchStage {
+  if (intent === "pillar") return "start"
+  if (intent === "decision") return "product"
+  if (intent === "safety") return "safety"
+  return "problem"
+}
+
+function contentFormatForIntent(intent: ArticleIntent): Post["contentFormat"] {
+  if (intent === "pillar") return "guide"
+  if (intent === "decision") return "comparison"
+  if (intent === "safety") return "checklist"
+  return "explainer"
+}
+
+function buildGeneratedContent(seed: EditorialSeed, hubSlug: string): ArticleContent {
   const hubTitle = categoryForHub(hubSlug)
+  const slug = slugify(seed.title)
+  const guidance = EDITORIAL_TOPIC_GUIDANCE[slug]
+  const foundation = EDITORIAL_HUB_FOUNDATIONS[hubSlug]
   const isSafety = seed.intent === "safety"
   const isDecision = seed.intent === "decision"
   const isPillar = seed.intent === "pillar"
   const medicalLevel: MedicalDisclaimerLevel = MEDICAL_HUBS.has(hubSlug) || isSafety ? "medical" : "light"
-  const keywordLine = seed.keywords.join(", ")
+
+  if (!guidance || !foundation) {
+    throw new Error(`Missing topic-specific editorial guidance for ${hubSlug}/${slug}`)
+  }
 
   const sections: ArticleContent["sections"] = [
     {
-      title: isPillar ? `Nền tảng cần nắm trong ${hubTitle}` : `Vấn đề thật phía sau: ${seed.title}`,
+      title: isPillar ? `Nền tảng cần nắm trong ${hubTitle}` : `Đọc đúng vấn đề: ${seed.title}`,
       body: [
-        `${seed.summary} Điểm quan trọng là đừng đọc chủ đề này như một mẹo mua nhanh. Hãy xem nó như một khung ra quyết định: da/cơ thể đang gặp vấn đề gì, mức độ nặng nhẹ ra sao, routine hiện tại có đang làm vấn đề rõ hơn hay rối hơn, và có dấu hiệu nào cần chuyên gia hay không.`,
-        `Với nhóm từ khóa ${keywordLine}, 360dep.vn ưu tiên cách giải thích theo bối cảnh người dùng Việt: khí hậu nóng ẩm, thói quen chống nắng chưa đều, sản phẩm dễ mua nhưng claim rất nhiều, và nhu cầu routine ít bước nhưng theo dõi được phản ứng.`,
+        `${seed.summary} ${foundation}`,
+        guidance.explain,
       ],
     },
     {
-      title: isDecision ? "Cách quyết định có nên mua hoặc làm không" : "Cách tự đọc tình trạng trước khi đổi sản phẩm",
+      title: isDecision ? "Khung quyết định trước khi mua hoặc làm" : "Cách kiểm tra trên chính bối cảnh của bạn",
       body: [
-        "- [ ] Xác định vấn đề chính trong 2-4 tuần gần nhất, không gộp mọi thứ thành một chữ chung.\n- [ ] Ghi lại sản phẩm đang dùng, tần suất, vùng bị ảnh hưởng và thời điểm bắt đầu.\n- [ ] Giữ routine nền ổn định trước khi thêm hoạt chất/dịch vụ mới.\n- [ ] Chọn một thay đổi chính mỗi lần để biết da hoặc cơ thể phản ứng với điều gì.",
-        isDecision
-          ? "Một quyết định tốt không chỉ dựa vào sản phẩm hay dịch vụ có nổi tiếng không. Nó cần trả lời được: công dụng chính có khớp vấn đề không, bằng chứng/kỳ vọng có thực tế không, rủi ro nằm ở đâu, và nếu không hợp thì có phương án dừng hay phục hồi không."
-          : "Nếu tình trạng thay đổi theo chu kỳ, thời tiết, stress, giấc ngủ hoặc sau một sản phẩm mới, đừng vội kết luận chỉ từ một ngày. Ghi chú ngắn nhưng đều sẽ giúp bạn tránh vòng lặp mua thêm sản phẩm mà không biết sản phẩm nào gây lợi hoặc hại.",
+        "- [ ] Ghi vấn đề chính, vùng xuất hiện và mốc bắt đầu.\n- [ ] Liệt kê sản phẩm, thuốc, thủ thuật hoặc thay đổi lối sống gần đây.\n- [ ] Chọn một thay đổi có mục tiêu và mốc đánh giá rõ.\n- [ ] Lưu ảnh trong cùng ánh sáng thay vì dựa vào cảm giác một ngày.",
+        guidance.plan,
       ],
     },
     {
-      title: "Routine hoặc flow thực hành gợi ý",
+      title: "Cách triển khai mà vẫn đọc được phản ứng",
       body: [
         isPillar
-          ? "Flow nền nên đi từ làm sạch dịu, dưỡng/giữ hàng rào bảo vệ, chống nắng hoặc bảo vệ phù hợp, rồi mới đến hoạt chất, thiết bị hoặc dịch vụ. Thứ tự này giúp bạn có một nền ổn định để đo hiệu quả thật."
-          : "Flow tối giản là: giảm biến số, giữ bước nền, thêm đúng một giải pháp chính, theo dõi 2-4 tuần, rồi mới tăng tần suất hoặc đổi hướng. Khi có dấu hiệu kích ứng, ưu tiên phục hồi thay vì tăng lực xử lý.",
-        "- Sáng: ưu tiên bước bảo vệ và trải nghiệm dễ duy trì.\n- Tối: ưu tiên làm sạch đủ, phục hồi và treatment theo lịch nếu da/cơ thể chịu được.\n- Hàng tuần: chụp ảnh/ghi chú cùng ánh sáng, cùng vị trí, tránh đánh giá bằng cảm giác sau một lần dùng.",
+          ? "Đi từ bước ít rủi ro và dễ duy trì đến treatment có mục tiêu. Mỗi bước mới phải trả lời được nó giải quyết vấn đề nào và tiêu chí nào cho biết nên giữ, giảm hay dừng."
+          : "Giữ các bước nền ổn định, thêm đúng một thay đổi và theo dõi đủ lâu nếu không có phản ứng bất thường. Như vậy mới phân biệt được hiệu quả thật với dao động tự nhiên hoặc hiệu ứng tức thời.",
+        isDecision
+          ? "Trước khi trả tiền, kiểm tra ba câu: lựa chọn này có đúng mục tiêu không, dữ liệu nào áp dụng cho đúng sản phẩm/dịch vụ này, và nếu không hợp thì chi phí dừng hoặc phục hồi là gì."
+          : "Đánh giá bằng xu hướng: mức khó chịu, số tổn thương mới, độ dễ duy trì và ảnh chuẩn. Không dùng một ảnh before/after khác ánh sáng làm tiêu chí duy nhất.",
       ],
     },
     {
-      title: isSafety ? "Khi nên dừng tự xử lý và đi chuyên gia" : "Dấu hiệu đang đi đúng hướng",
+      title: isSafety ? "Ranh giới cần dừng hoặc đi khám" : "Sai lầm thường gặp và ranh giới an toàn",
       body: [
-        isSafety
-          ? "Nên dừng tự xử lý khi có đau tăng, đỏ nóng lan rộng, sưng, mủ, chảy dịch, sốt, khó chịu vùng mắt, sẹo mới, rụng tóc thành mảng, nám/đốm tăng nhanh hoặc kích ứng kéo dài dù đã giảm sản phẩm. Đây là ranh giới mà mua thêm mỹ phẩm thường không giải quyết được gốc vấn đề."
-          : "Dấu hiệu tốt là vấn đề giảm từ từ, da/cơ thể ít khó chịu hơn, routine dễ duy trì, không cần che giấu tác dụng phụ, và bạn hiểu rõ sản phẩm/dịch vụ nào đang đóng vai trò chính. Kết quả bền thường đến từ nhịp ổn định hơn là đổi liên tục.",
-        "Nếu đang mang thai, cho con bú, có bệnh nền, đang dùng thuốc, từng dị ứng nặng hoặc chuẩn bị làm thủ thuật, hãy hỏi bác sĩ/dược sĩ trước khi dùng hoạt chất mạnh, thiết bị tại nhà hoặc dịch vụ clinic.",
+        guidance.boundary,
+        "Nếu đang mang thai, cho con bú, có bệnh nền, đang dùng thuốc, từng dị ứng nặng hoặc chuẩn bị làm thủ thuật, hãy kiểm tra hướng dẫn với bác sĩ/dược sĩ thay vì suy rộng từ trải nghiệm của người khác.",
       ],
     },
   ]
 
   return {
     sections,
-    takeaways: [
-      "Đọc vấn đề theo bối cảnh và mức độ trước khi mua thêm sản phẩm.",
-      "Giữ routine ít bước để theo dõi phản ứng thật, đặc biệt khi da nhạy cảm hoặc đang treatment.",
-      isSafety ? "Có dấu hiệu đau, sưng, mủ, lan nhanh hoặc ảnh hưởng mắt thì nên gặp chuyên gia." : "Tăng lực xử lý chậm hơn cảm giác nôn nóng; da ổn định mới là nền để treatment hiệu quả.",
-    ],
+    takeaways: [guidance.explain, guidance.plan, guidance.boundary],
     faq: [
       {
-        question: "Bao lâu thì biết hướng này có hợp không?",
-        answer: "Với chăm sóc tại nhà, thường nên theo dõi tối thiểu 2-4 tuần nếu không có kích ứng. Với vấn đề viêm nặng, đau, sẹo hoặc sau thủ thuật, không nên chờ quá lâu trước khi hỏi chuyên gia.",
+        question: `Điểm quan trọng nhất khi đọc “${seed.title}” là gì?`,
+        answer: guidance.explain,
       },
       {
-        question: "Có cần mua đủ bộ sản phẩm không?",
-        answer: "Không. 360dep.vn ưu tiên routine đủ ít bước để bạn dùng đều và hiểu phản ứng. Một sản phẩm đúng vấn đề thường hữu ích hơn nhiều sản phẩm trùng công dụng.",
+        question: "Nên bắt đầu từ đâu?",
+        answer: guidance.plan,
       },
       {
-        question: "Bài này có thay thế tư vấn bác sĩ không?",
-        answer: "Không. Bài viết dùng để giúp bạn hiểu nền tảng, chuẩn bị câu hỏi và nhận biết ranh giới an toàn; chẩn đoán và điều trị cá nhân vẫn cần chuyên gia phù hợp.",
+        question: "Khi nào không nên tiếp tục tự thử?",
+        answer: guidance.boundary,
       },
     ],
-    sourceNotes: sourceNotesForHub(hubSlug),
+    sourceNotes: guidance.sources ?? sourceNotesForHub(hubSlug),
     medicalDisclaimerLevel: medicalLevel,
   }
 }
@@ -289,19 +322,22 @@ function generatedPostFromBrief(article: ArticleBrief): Post {
     category: categoryForHub(article.hubSlug),
     tags: article.targetKeywords,
     image: article.image.assetPath,
-    likes: 180 + article.priority * 37,
-    comments: 12 + article.priority * 7,
-    created_at: "2026-06-28T08:00:00Z",
+    likes: 0,
+    comments: 0,
+    created_at: "2026-07-21T08:00:00Z",
     product_ids: article.relatedProducts,
     hubSlug: article.hubSlug,
+    intent: article.intent,
+    contentFormat: contentFormatForIntent(article.intent),
+    conditionSlugs: article.targetKeywords.map(slugify),
     status: "published",
     takeaways: content.takeaways,
     faq: content.faq,
     sourceNotes: matrixNode?.sourceRefs ?? content.sourceNotes,
     medicalDisclaimerLevel: matrixNode?.safetyLevel ?? content.medicalDisclaimerLevel,
-    researchStage: matrixNode?.stage ?? article.researchStage,
-    userQuestion: matrixNode?.userQuestion ?? article.userQuestion,
-    nextArticleSlugs: matrixNode?.nextArticleSlugs ?? article.nextArticleSlugs,
+    researchStage: matrixNode?.stage ?? article.researchStage ?? researchStageForIntent(article.intent),
+    userQuestion: matrixNode?.userQuestion ?? article.userQuestion ?? article.title,
+    nextArticleSlugs: matrixNode?.nextArticleSlugs ?? article.nextArticleSlugs ?? [],
     productGroupKeys: matrixNode?.productGroupKeys ?? article.productGroupKeys,
     matrixProductIds: matrixNode?.productIds ?? article.matrixProductIds,
     kolIds: matrixNode?.kolIds ?? article.kolIds,
@@ -350,7 +386,7 @@ function publishedBriefFromPost(post: Post): ArticleBrief {
   }
 }
 
-type PlannedSeed = {
+type EditorialSeed = {
   title: string
   intent: ArticleIntent
   priority?: 1 | 2 | 3
@@ -360,7 +396,7 @@ type PlannedSeed = {
   status?: ArticleStatus
 }
 
-const PLANNED_BY_HUB: Record<string, PlannedSeed[]> = {
+const COMPLETED_ROADMAP_BY_HUB: Record<string, EditorialSeed[]> = {
   "da-mat": [
     { title: "Hướng dẫn nền skincare cho người mới", intent: "pillar", priority: 1, summary: "Pillar guide về loại da, tình trạng da, routine sáng/tối và thứ tự thêm treatment.", keywords: ["skincare cơ bản", "routine người mới"], imagePolicy: "generate" },
     { title: "Da nhạy cảm nên xây routine như thế nào", intent: "problem-solving", summary: "Cách giảm biến số, chọn cleanser/dưỡng/chống nắng và đọc dấu hiệu kích ứng.", keywords: ["da nhạy cảm", "routine dịu nhẹ"] },
@@ -461,7 +497,14 @@ const PLANNED_BY_HUB: Record<string, PlannedSeed[]> = {
   ],
 }
 
-function plannedBrief(hubSlug: string, seed: PlannedSeed): ArticleBrief {
+function nextRoadmapArticleSlugs(hubSlug: string, currentSlug: string) {
+  const slugs = (COMPLETED_ROADMAP_BY_HUB[hubSlug] ?? []).map((seed) => slugify(seed.title))
+  const index = slugs.indexOf(currentSlug)
+  if (index < 0 || slugs.length < 2) return []
+  return [slugs[(index + 1) % slugs.length]]
+}
+
+function completedBrief(hubSlug: string, seed: EditorialSeed): ArticleBrief {
   const content = buildGeneratedContent(seed, hubSlug)
   const slug = slugify(seed.title)
   const matrixNode = getMatrixNodeByArticleSlug(slug)
@@ -473,13 +516,15 @@ function plannedBrief(hubSlug: string, seed: PlannedSeed): ArticleBrief {
     intent: seed.intent,
     audience: catalogueSections.find((section) => section.slug === hubSlug)?.audience ?? "Người đọc 360dep.vn",
     priority: seed.priority ?? 2,
+    // Every roadmap item below has topic-specific guidance, reviewed source
+    // notes and a real editorial image, so it is safe to publish by default.
     status: seed.status ?? "published",
     summary: seed.summary,
     targetKeywords: seed.keywords,
     relatedProducts: [],
-    researchStage: matrixNode?.stage,
-    userQuestion: matrixNode?.userQuestion,
-    nextArticleSlugs: matrixNode?.nextArticleSlugs,
+    researchStage: matrixNode?.stage ?? researchStageForIntent(seed.intent),
+    userQuestion: matrixNode?.userQuestion ?? seed.title,
+    nextArticleSlugs: matrixNode?.nextArticleSlugs ?? nextRoadmapArticleSlugs(hubSlug, slug),
     productGroupKeys: matrixNode?.productGroupKeys,
     matrixProductIds: matrixNode?.productIds,
     kolIds: matrixNode?.kolIds,
@@ -497,7 +542,7 @@ function plannedBrief(hubSlug: string, seed: PlannedSeed): ArticleBrief {
 
 export const EDITORIAL_ARTICLE_REGISTRY: ArticleBrief[] = [
   ...CATALOGUE_READ_POSTS.map(publishedBriefFromPost),
-  ...Object.entries(PLANNED_BY_HUB).flatMap(([hubSlug, seeds]) => seeds.map((seed) => plannedBrief(hubSlug, seed))),
+  ...Object.entries(COMPLETED_ROADMAP_BY_HUB).flatMap(([hubSlug, seeds]) => seeds.map((seed) => completedBrief(hubSlug, seed))),
 ]
 
 export const PUBLISHED_EDITORIAL_BRIEFS = EDITORIAL_ARTICLE_REGISTRY.filter((article) => article.status === "published")
