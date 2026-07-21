@@ -45,9 +45,9 @@ export default function CataloguePage() {
           {catalogueGroups.map((group) => {
             const sections = getCatalogueSectionsByGroup(group.slug)
             return (
-              <section key={group.slug} aria-labelledby={`group-${group.slug}`}>
+              <section id={`group-${group.slug}`} key={group.slug} aria-labelledby={`group-title-${group.slug}`} className="scroll-mt-36">
                 <div className="mb-5 max-w-3xl">
-                  <h2 id={`group-${group.slug}`} className="font-display text-2xl font-black text-slate-950 dark:text-white md:text-3xl">{group.title}</h2>
+                  <h2 id={`group-title-${group.slug}`} className="font-display text-2xl font-black text-slate-950 dark:text-white md:text-3xl">{group.title}</h2>
                   <p className="mt-1 text-slate-500 dark:text-slate-400">{group.description}</p>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

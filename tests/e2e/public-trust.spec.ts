@@ -2,12 +2,12 @@ import { expect, test } from "@playwright/test"
 
 test("homepage starts from a concern and only shows creator modules when data exists", async ({ page }) => {
   await page.goto("/")
-  await expect(page.getByRole("heading", { name: "Tìm đúng kiến thức cho tình trạng của bạn." })).toBeVisible()
-  const creatorModule = page.getByRole("heading", { name: "Tin mới từ KOL/KOC" })
+  await expect(page.getByRole("heading", { name: "Hôm nay bạn muốn hiểu điều gì về làn da và cơ thể?" })).toBeVisible()
+  const creatorModule = page.getByRole("heading", { name: "Review mới đã có nguồn đối chiếu" })
   if (await creatorModule.count()) await expect(creatorModule).toBeVisible()
   await page.waitForLoadState("networkidle")
-  await page.getByRole("button", { name: "Trị mụn" }).click()
-  await page.getByRole("link", { name: /Xem hướng dẫn dành cho tôi/ }).click()
+  await page.getByRole("button", { name: "Mụn" }).click()
+  await page.getByRole("link", { name: /Tiếp tục khám phá/ }).click()
   await expect(page).toHaveURL(/\/catalogue\/tri-mun/)
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
 })
