@@ -27,9 +27,11 @@ export interface TikTokCollectorPost {
   transcribed_at: string | null
   archive_video_path: string | null
   archive_audio_path: string | null
+  archive_frame_paths: string[]
   media_sha256: string | null
   audio_sha256: string | null
   vision_fallback_required: boolean
+  vision_sample_timestamps: number[]
 }
 
 export interface NormalizedTikTokCollectorBatch {
@@ -87,7 +89,7 @@ function parsePostUrl(value: string) {
   try {
     const url = new URL(value)
     if (url.protocol !== "https:" || !isTikTokHost(url.hostname)) return null
-    const match = url.pathname.match(/^\/@([^/]+)\/video\/(\d{8,30})\/?$/)
+    const match = url.pathname.match(/^\/@([^/]+)\/(?:video|photo)\/(\d{8,30})\/?$/)
     if (!match) return null
     url.hash = ""
     url.search = ""
@@ -130,6 +132,14 @@ function archivePath(value: unknown, kind: "source.mp4" | "audio.mp3") {
   if (!path) return null
   return /^evidence-radar\/tiktok\/[a-zA-Z0-9._-]+\/\d{8,30}\/(source\.mp4|audio\.mp3)$/.test(path)
     && path.endsWith(kind) ? path : null
+}
+
+function archiveFramePaths(value: unknown) {
+  if (!Array.isArray(value)) return []
+  return value.slice(0, 3).flatMap((item) => {
+    const path = asString(item, 1_000)
+    return /^evidence-radar\/tiktok\/[a-zA-Z0-9._-]+\/\d{8,30}\/frames\/frame-\d{2}\.jpg$/.test(path) ? [path] : []
+  })
 }
 
 function sha256(value: unknown) {
@@ -200,6 +210,13 @@ function normalizePost(
       : "pending"
   const archiveVideoPath = archivePath(row.archive_video_path, "source.mp4")
   const archiveAudioPath = archivePath(row.archive_audio_path, "audio.mp3")
+  const archiveFrames = archiveFramePaths(row.archive_frame_paths)
+  const visionSampleTimestamps = Array.isArray(row.vision_sample_timestamps)
+    ? row.vision_sample_timestamps.slice(0, archiveFrames.length).flatMap((value) => {
+        const timestamp = finiteNumber(value)
+        return timestamp !== null && timestamp >= 0 ? [timestamp] : []
+      })
+    : []
 
   return {
     post: {
@@ -236,9 +253,11 @@ function normalizePost(
       transcribed_at: transcriptText ? (parseDate(row.transcribed_at) ?? collectedAt).toISOString() : null,
       archive_video_path: archiveVideoPath,
       archive_audio_path: archiveAudioPath,
+      archive_frame_paths: archiveFrames,
       media_sha256: archiveVideoPath ? sha256(row.media_sha256) : null,
       audio_sha256: archiveAudioPath ? sha256(row.audio_sha256) : null,
       vision_fallback_required: !transcriptText && requestedTranscriptionStatus === "no_speech",
+      vision_sample_timestamps: visionSampleTimestamps,
     },
   }
 }

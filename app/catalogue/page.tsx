@@ -4,10 +4,24 @@ import { ArrowRight, Layers3 } from "lucide-react"
 
 import { CatalogueFinder } from "@/components/catalogue/catalogue-finder"
 import { catalogueGroups, getCatalogueSectionsByGroup } from "@/lib/catalogue"
+import { absoluteUrl } from "@/lib/seo"
 
 export const metadata: Metadata = {
   title: "Chủ đề kiến thức làm đẹp",
   description: "Tìm kiến thức, lộ trình đọc và sản phẩm theo tình trạng, mong muốn và bối cảnh cá nhân.",
+  alternates: { canonical: absoluteUrl("/catalogue") },
+  openGraph: {
+    title: "Chủ đề kiến thức làm đẹp",
+    description: "Tìm kiến thức, lộ trình đọc và sản phẩm theo tình trạng, mong muốn và bối cảnh cá nhân.",
+    url: absoluteUrl("/catalogue"),
+    images: [absoluteUrl("/brand/social-share.jpg")],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Chủ đề kiến thức làm đẹp",
+    description: "Tìm kiến thức, lộ trình đọc và sản phẩm theo tình trạng, mong muốn và bối cảnh cá nhân.",
+    images: [absoluteUrl("/brand/social-share.jpg")],
+  },
 }
 
 export default function CataloguePage() {

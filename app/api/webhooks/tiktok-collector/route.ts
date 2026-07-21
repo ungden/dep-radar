@@ -100,9 +100,11 @@ export async function POST(request: NextRequest) {
     transcribed_at: post.transcribed_at,
     archive_video_path: post.archive_video_path,
     archive_audio_path: post.archive_audio_path,
+    archive_frame_paths: post.archive_frame_paths,
     media_sha256: post.media_sha256,
     audio_sha256: post.audio_sha256,
     vision_fallback_required: post.vision_fallback_required,
+    vision_sample_timestamps: post.vision_sample_timestamps,
   })
   const metadataRows = normalized.posts
     .filter((post) => !post.media_url)
@@ -123,7 +125,7 @@ export async function POST(request: NextRequest) {
   }
 
   const noSpeechSourceUrls = normalized.posts
-    .filter((post) => post.transcription_status === "no_speech" && !post.media_url)
+    .filter((post) => post.transcription_status === "no_speech" && !post.media_url && post.archive_frame_paths.length === 0)
     .map((post) => post.source_url)
   if (noSpeechSourceUrls.length) {
     const { error: noSpeechError } = await supabase
@@ -134,7 +136,7 @@ export async function POST(request: NextRequest) {
   }
 
   const mediaSourceUrls = normalized.posts
-    .filter((post) => post.media_url || post.transcription_status === "ready")
+    .filter((post) => post.media_url || post.transcription_status === "ready" || post.archive_frame_paths.length > 0)
     .map((post) => post.source_url)
   let queuedForPrivateAnalysis = 0
   if (mediaSourceUrls.length) {

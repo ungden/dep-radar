@@ -20,6 +20,23 @@ test("Bioderma has no legacy score and no mismatched Loreal offer", async ({ pag
   await expect(page.locator('a[href*="loreal" i], a[href*="L%27Oreal" i]')).toHaveCount(0)
 })
 
+test("reviewed exact-SKU evidence is visible while an unverified offer stays disabled", async ({ page }) => {
+  await page.goto("/products/benzac-ac-mild-strength-2-5-acne-gel")
+  await expect(page.getByRole("heading", { name: "Benzac AC Mild Strength 2.5% Acne Gel" })).toBeVisible()
+  await expect(page.getByText("Một nguồn", { exact: true })).toBeVisible()
+  await expect(page.getByText(/Benzac 2\.5% giảm sưng đáng kể/)).toBeVisible()
+  await expect(page.getByRole("button", { name: /Chưa có nơi mua đã kiểm tra/ })).toBeDisabled()
+})
+
+test("creator evidence links back to the reviewed public source", async ({ page }) => {
+  await page.goto("/koc-tracker/2")
+  await expect(page.getByRole("heading", { name: "Góc Của Rư", exact: true })).toBeVisible()
+  await expect(page.locator('a[href="/products/benzac-ac-mild-strength-2-5-acne-gel"]').first()).toBeVisible()
+  const reviewedSource = page.locator('a[href="https://www.tiktok.com/@goc.cua.ru/video/7655905148123876616"]')
+  await expect(reviewedSource.first()).toBeVisible()
+  await expect(reviewedSource.first()).toHaveAttribute("target", "_blank")
+})
+
 test("products and creator directory render real counts in first response", async ({ request, page }) => {
   const productsResponse = await request.get("/products")
   const productsHtml = await productsResponse.text()

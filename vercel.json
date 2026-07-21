@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/daily-briefing",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/evidence-radar",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

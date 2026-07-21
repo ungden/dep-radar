@@ -26,6 +26,11 @@ function event(overrides: Partial<CreatorProductEvent> & { event_type: CreatorPr
     evidence_note: "Golden check",
     confidence: "high",
     confidence_score: 95,
+    exact_sku_verified: true,
+    verified_by: "00000000-0000-0000-0000-000000000001",
+    verified_at: NOW.toISOString(),
+    evidence_spans: [{ kind: "quote", value: "Direct public evidence" }],
+    risk_flags: [],
     verification_status: "verified",
     ...overrides,
   }
@@ -38,7 +43,7 @@ assert.equal(deriveCreatorProductState([event({ event_type: "sponsored", event_d
 assert.equal(deriveCreatorProductState([event({ event_type: "stopped_using", event_date: "2026-07-01" })], NOW).state, "past")
 assert.equal(deriveCreatorProductState([event({ event_type: "used", event_date: "2026-02-01" })], NOW).state, "recently_used")
 assert.equal(deriveCreatorProductState([event({ event_type: "used", event_date: "2025-12-01" })], NOW).state, "past")
-assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01", confidence_score: 69 })), false)
+assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01", confidence_score: 89 })), false)
 assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01", source_url: null })), false)
 assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01" })), true)
 
@@ -80,6 +85,15 @@ const collectorBatch = normalizeTikTokCollectorBatch({
       title: "Cross creator",
       timestamp: "2026-07-10T10:00:00Z",
     },
+    {
+      id: "7663466714054659351",
+      url: "https://www.tiktok.com/@creator.beauty/photo/7663466714054659351",
+      title: "Photo carousel sản phẩm",
+      timestamp: "2026-07-10T10:00:00Z",
+      transcription_status: "no_speech",
+      archive_frame_paths: ["evidence-radar/tiktok/creator.beauty/7663466714054659351/frames/frame-01.jpg"],
+      vision_sample_timestamps: [0],
+    },
   ],
 }, {
   creator_id: "creator-1",
@@ -87,7 +101,7 @@ const collectorBatch = normalizeTikTokCollectorBatch({
   profile_url: "https://www.tiktok.com/@creator.beauty",
 }, NOW)
 assert.equal(TIKTOK_COLLECTOR_MAX_POSTS, 200)
-assert.equal(collectorBatch.posts.length, 1)
+assert.equal(collectorBatch.posts.length, 2)
 assert.equal(collectorBatch.rejected[0]?.reason, "creator_profile_mismatch")
 assert.equal(collectorBatch.posts[0].media_metadata.collector, "downloadtiktok")
 assert.equal(collectorBatch.posts[0].media_metadata.media_resolved, true)
@@ -96,6 +110,8 @@ assert.ok(collectorBatch.posts[0].raw_media_expires_at < "2026-07-11T00:00:00.00
 assert.equal(collectorBatch.posts[0].transcription_status, "ready")
 assert.ok(collectorBatch.posts[0].transcript_text?.includes("routine buổi sáng"))
 assert.equal(collectorBatch.posts[0].vision_fallback_required, false)
+assert.equal(collectorBatch.posts[1].vision_fallback_required, true)
+assert.equal(collectorBatch.posts[1].archive_frame_paths.length, 1)
 
 const migration = fs.readFileSync("supabase/migrations/20260710092855_evidence_radar_foundation.sql", "utf8")
 const queueMigration = fs.readFileSync("supabase/migrations/20260710093313_evidence_radar_service_queue_rpc.sql", "utf8")

@@ -2,9 +2,17 @@ import "server-only"
 
 import { createHash } from "node:crypto"
 
-import { extractEvidenceClaims, EVIDENCE_MODEL, EVIDENCE_PROMPT_VERSION, requiresHumanReview } from "@/lib/evidence-radar/gemini"
+import { findBeautyBrand, normalizeBrandName } from "@/lib/brand-registry"
+import {
+  assertEvidenceProviderReady,
+  extractEvidenceClaims,
+  EVIDENCE_MODEL,
+  EVIDENCE_PROMPT_VERSION,
+  requiresHumanReview,
+} from "@/lib/evidence-radar/gemini"
 import { getEvidenceSourceProvider } from "@/lib/evidence-radar/providers"
 import { getSupabaseAdmin } from "@/lib/evidence-radar/server"
+import { triageSourcePost } from "@/lib/evidence-radar/triage"
 import type { CreatorAccount, CreatorProductEvent, EvidenceClaim, Product, SourcePost } from "@/lib/types"
 
 function evidenceIdForSource(sourcePostId: string) {
@@ -28,6 +36,70 @@ function validUntil(eventType: CreatorProductEvent["event_type"], eventDate: str
 
 function excerptForClaim(claim: EvidenceClaim) {
   return claim.evidence_spans[0]?.value?.slice(0, 500) || `${claim.brand} ${claim.product_name}`.trim()
+}
+
+function candidateKey(claim: EvidenceClaim) {
+  return [claim.brand, claim.product_name, claim.variant ?? ""]
+    .map(normalizeBrandName)
+    .filter(Boolean)
+    .join("|")
+}
+
+async function upsertProductCandidates(
+  post: SourcePost,
+  evidenceId: string,
+  claims: EvidenceClaim[]
+) {
+  const supabase = getSupabaseAdmin()
+
+  for (const claim of claims) {
+    const canonicalKey = candidateKey(claim)
+    if (!canonicalKey || !claim.brand.trim() || !claim.product_name.trim()) continue
+    const registeredBrand = findBeautyBrand(claim.brand)
+    const canonicalBrand = registeredBrand?.name ?? claim.brand.trim()
+    const alias = `${claim.brand} ${claim.product_name}${claim.variant ? ` ${claim.variant}` : ""}`.trim()
+    const { data: existing } = await supabase
+      .from("product_candidates")
+      .select("id,aliases,matched_product_id,status")
+      .eq("canonical_key", canonicalKey)
+      .maybeSingle()
+
+    const candidatePayload = {
+      canonical_key: canonicalKey,
+      brand: canonicalBrand,
+      product_name: claim.product_name.trim(),
+      variant: claim.variant?.trim() || null,
+      aliases: Array.from(new Set([...(existing?.aliases ?? []), alias])),
+      identity_confidence: claim.confidence_score,
+      matched_product_id: existing?.matched_product_id ?? claim.matched_product_id,
+      status: existing?.status ?? (claim.risk_flags.includes("ambiguous_variant") ? "needs_identity" : "new"),
+      updated_at: new Date().toISOString(),
+    }
+    const { data: candidate, error: candidateError } = await supabase
+      .from("product_candidates")
+      .upsert(candidatePayload, { onConflict: "canonical_key" })
+      .select("id")
+      .single()
+    if (candidateError) throw new Error(candidateError.message)
+
+    const { error: sourceError } = await supabase.from("product_candidate_sources").upsert({
+      candidate_id: candidate.id,
+      source_post_id: post.id,
+      creator_id: post.creator_id,
+      evidence_id: evidenceId,
+      event_type: claim.event_type,
+      disclosure: claim.disclosure,
+      evidence_spans: claim.evidence_spans,
+      risk_flags: claim.risk_flags,
+      product_identity_score: claim.product_identity_score,
+      action_evidence_score: claim.action_evidence_score,
+      source_authenticity_score: claim.source_authenticity_score,
+      evidence_localization_score: claim.evidence_localization_score,
+      confidence_score: claim.confidence_score,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "candidate_id,source_post_id" })
+    if (sourceError) throw new Error(sourceError.message)
+  }
 }
 
 export async function collectCreatorAccount(accountId: string) {
@@ -104,12 +176,24 @@ export async function analyzeSourcePost(sourcePostId: string) {
   if (sourceError || !sourcePost) throw new Error(sourceError?.message || `Source post ${sourcePostId} not found`)
 
   const post = sourcePost as SourcePost
+  if (["ready", "ignored"].includes(post.analysis_status)) {
+    return { evidenceId: null, claims: 0, maxConfidence: 0, humanReview: false, skipped: true }
+  }
+  const triage = triageSourcePost(post)
   await supabase.from("source_posts").update({
-    analysis_status: "processing",
+    analysis_status: triage.shouldAnalyze ? "processing" : "ignored",
     analysis_attempts: post.analysis_attempts + 1,
+    content_lane: triage.lane,
+    priority_score: triage.priorityScore,
+    triage_reason: triage.reason,
+    triaged_at: new Date().toISOString(),
     last_error: null,
     updated_at: new Date().toISOString(),
   }).eq("id", sourcePostId)
+
+  if (!triage.shouldAnalyze) {
+    return { evidenceId: null, claims: 0, maxConfidence: 0, humanReview: false, ignored: true }
+  }
 
   const { data: productsData, error: productsError } = await supabase
     .from("radar_products")
@@ -162,6 +246,8 @@ export async function analyzeSourcePost(sourcePostId: string) {
     }, { onConflict: "id" })
     if (evidenceError) throw new Error(evidenceError.message)
 
+    await upsertProductCandidates(post, evidenceId, claims)
+
     await supabase.from("evidence_audit_log").insert({
       evidence_id: evidenceId,
       actor_type: "model",
@@ -170,10 +256,11 @@ export async function analyzeSourcePost(sourcePostId: string) {
       after_data: { claim_count: claims.length, max_confidence: maxConfidence, risk_flags: riskFlags },
     })
 
-    const autoPublish = process.env.EVIDENCE_RADAR_AUTO_PUBLISH === "true" && goldenSampleCount >= 500
+    const systemReviewerId = process.env.EVIDENCE_RADAR_SYSTEM_REVIEWER_ID
+    const autoPublish = process.env.EVIDENCE_RADAR_AUTO_PUBLISH === "true" && goldenSampleCount >= 500 && Boolean(systemReviewerId)
     if (autoPublish) {
       for (const claim of claims.filter((item) => !requiresHumanReview(item, goldenSampleCount) && item.matched_product_id)) {
-        await publishVerifiedClaim(evidenceId, post, claim, "system")
+        await publishVerifiedClaim(evidenceId, post, claim, "system", systemReviewerId!)
       }
     }
 
@@ -194,11 +281,43 @@ export async function analyzeSourcePost(sourcePostId: string) {
   }
 }
 
+export async function analyzePriorityBatch(limit = 6) {
+  // Validate the provider before claiming rows so a revoked key cannot burn through
+  // the retry budget of every queued post.
+  await assertEvidenceProviderReady()
+  const supabase = getSupabaseAdmin()
+  const boundedLimit = Math.max(1, Math.min(8, Math.floor(limit)))
+  const { data, error } = await supabase
+    .from("source_posts")
+    .select("id")
+    .in("analysis_status", ["pending", "queued", "failed"])
+    .in("transcription_status", ["ready", "no_speech"])
+    .is("duplicate_of_source_post_id", null)
+    .neq("content_lane", "lifestyle")
+    .neq("content_lane", "vision_required")
+    .lt("analysis_attempts", 3)
+    .order("priority_score", { ascending: false })
+    .order("published_at", { ascending: false })
+    .limit(boundedLimit)
+  if (error) throw new Error(error.message)
+
+  const results: Array<Record<string, unknown>> = []
+  for (const row of data ?? []) {
+    try {
+      results.push({ sourcePostId: row.id, ...(await analyzeSourcePost(row.id)) })
+    } catch (analysisError) {
+      results.push({ sourcePostId: row.id, error: analysisError instanceof Error ? analysisError.message : String(analysisError) })
+    }
+  }
+  return results
+}
+
 async function publishVerifiedClaim(
   evidenceId: string,
   post: SourcePost,
   claim: EvidenceClaim,
-  actorType: "system" | "admin"
+  actorType: "system" | "admin",
+  reviewerId: string
 ) {
   if (!claim.matched_product_id) throw new Error("Cannot publish an unmatched product claim")
   const supabase = getSupabaseAdmin()
@@ -224,7 +343,15 @@ async function publishVerifiedClaim(
     evidence_note: `Verified ${actorType} claim from ${EVIDENCE_PROMPT_VERSION}.`,
     confidence: claim.confidence_score >= 92 ? "high" : claim.confidence_score >= 70 ? "medium" : "low",
     confidence_score: claim.confidence_score,
+    evidence_spans: claim.evidence_spans,
+    risk_flags: claim.risk_flags,
+    product_identity_score: claim.product_identity_score,
+    action_evidence_score: claim.action_evidence_score,
+    source_authenticity_score: claim.source_authenticity_score,
+    evidence_localization_score: claim.evidence_localization_score,
+    exact_sku_verified: true,
     verification_status: "verified",
+    verified_by: reviewerId,
     verified_at: new Date().toISOString(),
     valid_until: validUntil(claim.event_type, eventDate),
   }
@@ -235,11 +362,13 @@ async function publishVerifiedClaim(
   await supabase.from("creator_evidence_items").update({
     status: "published",
     requires_human_review: false,
+    reviewed_by: reviewerId,
     reviewed_at: new Date().toISOString(),
   }).eq("id", evidenceId)
   await supabase.from("evidence_audit_log").insert({
     evidence_id: evidenceId,
     event_id: eventId,
+    actor_id: reviewerId,
     actor_type: actorType,
     decision: actorType === "system" ? "auto_published" : "published",
     after_data: payload,

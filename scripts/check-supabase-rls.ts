@@ -13,22 +13,36 @@ const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
 
 async function main() {
 
-const [anonOffers, anonEvents, anonStates, anonCreators, rawOffers, rawEvents, rawCreators] = await Promise.all([
+const [anonOffers, anonEvents, anonStates, anonCreators, anonCandidates, anonCandidateSources, rawOffers, rawEvents, rawCreators, rawCandidates] = await Promise.all([
   anon.from("product_offers").select("*"),
   anon.from("creator_product_events").select("*"),
   anon.from("creator_product_states").select("*"),
   anon.from("kols").select("id,directory_status"),
+  anon.from("product_candidates").select("id"),
+  anon.from("product_candidate_sources").select("candidate_id"),
   admin.from("product_offers").select("id"),
   admin.from("creator_product_events").select("id"),
   admin.from("kols").select("id,directory_status"),
+  admin.from("product_candidates").select("id"),
 ])
 
-for (const result of [anonOffers, anonEvents, anonStates, anonCreators, rawOffers, rawEvents, rawCreators]) {
+for (const result of [anonOffers, anonEvents, anonStates, anonCreators, rawOffers, rawEvents, rawCreators, rawCandidates]) {
   if (result.error) throw result.error
 }
 
+function assertPrivateTable(result: { data: unknown[] | null; error: { code?: string; message?: string } | null }, table: string) {
+  if (result.error) {
+    if (!["42501", "PGRST301"].includes(result.error.code ?? "")) throw result.error
+    return
+  }
+  if ((result.data?.length ?? 0) > 0) throw new Error(`RLS leaked private ${table} rows`)
+}
+
+assertPrivateTable(anonCandidates, "product_candidates")
+assertPrivateTable(anonCandidateSources, "product_candidate_sources")
+
 const invalidOffer = (anonOffers.data ?? []).find((offer) => offer.verification_status !== "verified" || offer.match_status !== "exact" || offer.is_active !== true || !offer.verified_by || !offer.verified_at)
-const invalidEvent = (anonEvents.data ?? []).find((event) => event.verification_status !== "verified" || !event.verified_by || !event.verified_at || !event.evidence_id)
+const invalidEvent = (anonEvents.data ?? []).find((event) => event.verification_status !== "verified" || !event.verified_by || !event.verified_at || !event.evidence_id || event.exact_sku_verified !== true || Number(event.confidence_score) < 90 || !Array.isArray(event.evidence_spans) || event.evidence_spans.length === 0)
 if (invalidOffer) throw new Error(`RLS leaked unqualified offer ${invalidOffer.id}`)
 if (invalidEvent) throw new Error(`RLS leaked unqualified creator event ${invalidEvent.id}`)
 if ((anonStates.data?.length ?? 0) > (anonEvents.data?.length ?? 0)) throw new Error("RLS leaked a creator state without a readable audited event")

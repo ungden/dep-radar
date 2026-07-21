@@ -1,9 +1,17 @@
 import "server-only"
 
+import { findBeautyBrand } from "@/lib/brand-registry"
 import type { EvidenceClaim, EvidenceRiskFlag, Product, SourcePost } from "@/lib/types"
 
-export const EVIDENCE_PROMPT_VERSION = "evidence-radar-v1"
+export const EVIDENCE_PROMPT_VERSION = "evidence-radar-v2-trust-first"
 export const EVIDENCE_MODEL = process.env.EVIDENCE_RADAR_GEMINI_MODEL || "gemini-3.5-flash"
+
+export class EvidenceProviderConfigurationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "EvidenceProviderConfigurationError"
+  }
+}
 
 const EVENT_TYPES = [
   "mentioned", "unboxed", "used", "reviewed", "recommended", "disliked", "emptied",
@@ -30,25 +38,69 @@ function clampScore(value: unknown, max: number) {
   return Number.isFinite(number) ? Math.max(0, Math.min(max, Math.round(number))) : 0
 }
 
+function providerErrorMessage(rawBody: string) {
+  try {
+    const parsed = JSON.parse(rawBody) as {
+      error?: { message?: string; status?: string; details?: Array<{ reason?: string }> }
+    }
+    const reason = parsed.error?.details?.find((detail) => detail.reason)?.reason
+    return [parsed.error?.status, reason, parsed.error?.message].filter(Boolean).join(": ")
+  } catch {
+    return rawBody.slice(0, 500)
+  }
+}
+
+export async function assertEvidenceProviderReady() {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) throw new EvidenceProviderConfigurationError("GEMINI_API_KEY is not configured")
+  const model = EVIDENCE_MODEL.replace(/^models\//, "")
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      method: "POST",
+      headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: "Reply with ok." }] }],
+        generationConfig: { maxOutputTokens: 2, temperature: 0 },
+        store: false,
+      }),
+      signal: AbortSignal.timeout(20_000),
+    },
+  )
+  if (!response.ok) {
+    const detail = providerErrorMessage(await response.text())
+    throw new EvidenceProviderConfigurationError(
+      `Gemini provider is not ready (${response.status})${detail ? `: ${detail}` : ""}`,
+    )
+  }
+}
+
 function matchClaimToProduct(claim: EvidenceClaim, products: Product[]) {
-  const needle = normalize([claim.brand, claim.product_name, claim.variant ?? ""].join(" "))
+  const registeredClaimBrand = findBeautyBrand(claim.brand)?.name ?? claim.brand
+  const normalizedClaimBrand = normalize(registeredClaimBrand)
+  const claimName = normalize([claim.product_name, claim.variant ?? ""].join(" "))
+  const needle = normalize([registeredClaimBrand, claim.product_name, claim.variant ?? ""].join(" "))
   const ranked = products
     .map((product) => {
-      const names = [product.name, `${product.brand} ${product.name}`, ...(product.aliases ?? [])]
+      const registeredProductBrand = findBeautyBrand(product.brand)?.name ?? product.brand
+      const productBrand = normalize(registeredProductBrand)
+      if (!normalizedClaimBrand || normalizedClaimBrand !== productBrand) return { product, score: 0 }
+      const names = [product.name, ...(product.aliases ?? [])]
       const score = names.reduce((best, candidate) => {
         const normalizedCandidate = normalize(candidate)
         if (!normalizedCandidate) return best
-        if (needle === normalizedCandidate) return Math.max(best, 100)
-        if (needle.includes(normalizedCandidate) || normalizedCandidate.includes(needle)) return Math.max(best, 80)
+        const combinedCandidate = normalize(`${registeredProductBrand} ${candidate}`)
+        if (needle === combinedCandidate || claimName === normalizedCandidate) return Math.max(best, 100)
+        if (claimName.includes(normalizedCandidate) || normalizedCandidate.includes(claimName)) return Math.max(best, 88)
         const tokens = normalizedCandidate.split(" ").filter((token) => token.length > 2)
         const overlap = tokens.filter((token) => needle.includes(token)).length
-        return Math.max(best, tokens.length ? Math.round(overlap / tokens.length * 60) : 0)
+        return Math.max(best, tokens.length ? Math.round(overlap / tokens.length * 70) : 0)
       }, 0)
       return { product, score }
     })
     .sort((a, b) => b.score - a.score)
 
-  if (!ranked[0] || ranked[0].score < 55 || ranked[0].score === ranked[1]?.score) return null
+  if (!ranked[0] || ranked[0].score < 85 || ranked[0].score === ranked[1]?.score) return null
   return ranked[0].product.id
 }
 
@@ -63,43 +115,50 @@ function catalogueForPrompt(products: Product[]) {
 
 function responseSchema() {
   return {
-    type: "array",
-    maxItems: 30,
-    items: {
-      type: "object",
-      additionalProperties: false,
-      required: [
-        "product_name", "brand", "variant", "event_type", "sentiment", "disclosure",
-        "usage_context", "evidence_spans", "product_identity_score", "action_evidence_score",
-        "source_authenticity_score", "evidence_localization_score", "risk_flags",
-      ],
-      properties: {
-        product_name: { type: "string" },
-        brand: { type: "string" },
-        variant: { type: ["string", "null"] },
-        event_type: { type: "string", enum: [...EVENT_TYPES] },
-        sentiment: { type: "string", enum: ["positive", "mixed", "negative", "neutral"] },
-        disclosure: { type: "string", enum: ["organic", "pr", "sponsored", "affiliate", "unknown"] },
-        usage_context: { type: ["string", "null"] },
-        evidence_spans: {
-          type: "array",
-          minItems: 1,
-          maxItems: 6,
-          items: {
-            type: "object",
-            required: ["kind", "value", "timestamp_seconds"],
-            properties: {
-              kind: { type: "string", enum: ["quote", "timestamp", "frame", "caption"] },
-              value: { type: "string" },
-              timestamp_seconds: { type: ["number", "null"] },
+    type: "object",
+    additionalProperties: false,
+    required: ["claims"],
+    properties: {
+      claims: {
+        type: "array",
+        maxItems: 30,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: [
+            "product_name", "brand", "variant", "event_type", "sentiment", "disclosure",
+            "usage_context", "evidence_spans", "product_identity_score", "action_evidence_score",
+            "source_authenticity_score", "evidence_localization_score", "risk_flags",
+          ],
+          properties: {
+            product_name: { type: "string" },
+            brand: { type: "string" },
+            variant: { type: ["string", "null"] },
+            event_type: { type: "string", enum: [...EVENT_TYPES] },
+            sentiment: { type: "string", enum: ["positive", "mixed", "negative", "neutral"] },
+            disclosure: { type: "string", enum: ["organic", "pr", "sponsored", "affiliate", "unknown"] },
+            usage_context: { type: ["string", "null"] },
+            evidence_spans: {
+              type: "array",
+              minItems: 1,
+              maxItems: 6,
+              items: {
+                type: "object",
+                required: ["kind", "value", "timestamp_seconds"],
+                properties: {
+                  kind: { type: "string", enum: ["quote", "timestamp", "frame", "caption"] },
+                  value: { type: "string" },
+                  timestamp_seconds: { type: ["number", "null"] },
+                },
+              },
             },
+            product_identity_score: { type: "integer", minimum: 0, maximum: 40 },
+            action_evidence_score: { type: "integer", minimum: 0, maximum: 35 },
+            source_authenticity_score: { type: "integer", minimum: 0, maximum: 15 },
+            evidence_localization_score: { type: "integer", minimum: 0, maximum: 10 },
+            risk_flags: { type: "array", items: { type: "string", enum: RISK_FLAGS } },
           },
         },
-        product_identity_score: { type: "integer", minimum: 0, maximum: 40 },
-        action_evidence_score: { type: "integer", minimum: 0, maximum: 35 },
-        source_authenticity_score: { type: "integer", minimum: 0, maximum: 15 },
-        evidence_localization_score: { type: "integer", minimum: 0, maximum: 10 },
-        risk_flags: { type: "array", items: { type: "string", enum: RISK_FLAGS } },
       },
     },
   }
@@ -140,6 +199,70 @@ function extractResponseText(payload: unknown): string {
   return ""
 }
 
+function extractGenerateContentText(payload: unknown): string {
+  if (!payload || typeof payload !== "object") return ""
+  const candidates = (payload as Record<string, unknown>).candidates
+  if (!Array.isArray(candidates)) return ""
+  for (const candidate of candidates) {
+    const content = (candidate as Record<string, unknown>).content
+    if (!content || typeof content !== "object") continue
+    const parts = (content as Record<string, unknown>).parts
+    if (!Array.isArray(parts)) continue
+    const text = parts
+      .map((part) => (part as Record<string, unknown>).text)
+      .filter((value): value is string => typeof value === "string")
+      .join("")
+    if (text) return text
+  }
+  return ""
+}
+
+async function generateContentFallback(
+  apiKey: string,
+  prompt: string,
+  media: Array<Record<string, string>>,
+) {
+  const model = EVIDENCE_MODEL.replace(/^models\//, "")
+  const parts: Array<Record<string, unknown>> = media.map((item) => {
+    if (item.data) {
+      return {
+        inlineData: {
+          mimeType: item.mime_type || "application/octet-stream",
+          data: item.data,
+        },
+      }
+    }
+    return {
+      fileData: {
+        mimeType: item.type === "image" ? "image/jpeg" : "video/mp4",
+        fileUri: item.uri,
+      },
+    }
+  })
+  parts.push({ text: prompt })
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      method: "POST",
+      headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts }],
+        generationConfig: {
+          temperature: 0,
+          responseMimeType: "application/json",
+        },
+        store: false,
+      }),
+      signal: AbortSignal.timeout(120_000),
+    },
+  )
+  if (!response.ok) {
+    throw new Error(`Gemini generateContent fallback failed (${response.status}): ${await response.text()}`)
+  }
+  return extractGenerateContentText(await response.json())
+}
+
 export async function extractEvidenceClaims(post: SourcePost, products: Product[]): Promise<EvidenceClaim[]> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) throw new Error("GEMINI_API_KEY is not configured")
@@ -150,7 +273,12 @@ export async function extractEvidenceClaims(post: SourcePost, products: Product[
     "Chỉ trích xuất sản phẩm có bằng chứng trực tiếp trong nội dung. Không suy đoán từ comment hoặc đồ vật nền.",
     "Phân biệt rõ sử dụng, review, recommend, unbox, quảng cáo/tài trợ và live bán hàng.",
     "Một review hoặc affiliate link không tự động là đang dùng. Cầm hộp không tự động là used.",
+    "Không suy ra organic. Chỉ chọn organic khi creator nói rõ tự mua/không booking hoặc có bằng chứng tương đương; còn lại chọn unknown.",
+    "Tên dòng sản phẩm chưa đủ để khẳng định variant, dung tích, màu hoặc nồng độ. Nếu thiếu chi tiết exact SKU phải gắn ambiguous_variant.",
+    "Nội dung bác sĩ về hoạt chất/phác đồ không phải recommendation sản phẩm nếu không có hành vi trực tiếp với exact SKU.",
     "Mọi claim phải có quote/caption/frame/timestamp cụ thể. Nếu không chắc variant, gắn ambiguous_variant.",
+    "Chỉ trả về một JSON object có key claims. Không thêm markdown hoặc giải thích ngoài JSON.",
+    `JSON contract bắt buộc: ${JSON.stringify(responseSchema())}`,
     `Nguồn: ${post.source_platform} ${post.source_url}`,
     `Tiêu đề: ${post.title}`,
     `Caption: ${post.caption}`,
@@ -163,18 +291,34 @@ export async function extractEvidenceClaims(post: SourcePost, products: Product[
     headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
     body: JSON.stringify({
       model: EVIDENCE_MODEL,
-      input: [...media, { type: "text", text: prompt }],
+      input: media.length ? [...media, { type: "text", text: prompt }] : prompt,
       response_format: { type: "text", mime_type: "application/json", schema: responseSchema() },
       generation_config: { temperature: 0 },
+      store: false,
     }),
     signal: AbortSignal.timeout(120_000),
   })
-  if (!response.ok) throw new Error(`Gemini evidence extraction failed (${response.status}): ${await response.text()}`)
-
-  const text = extractResponseText(await response.json())
+  let text = ""
+  if (response.ok) {
+    text = extractResponseText(await response.json())
+  } else {
+    const interactionError = await response.text()
+    if (response.status !== 400) {
+      throw new Error(`Gemini evidence extraction failed (${response.status}): ${interactionError}`)
+    }
+    try {
+      text = await generateContentFallback(apiKey, prompt, media)
+    } catch (fallbackError) {
+      const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
+      throw new Error(
+        `Gemini evidence extraction failed (${response.status}): ${interactionError}; ${fallbackMessage}`,
+      )
+    }
+  }
   if (!text) throw new Error("Gemini returned no structured evidence output")
-  const parsed = JSON.parse(text) as Array<Record<string, unknown>>
-  if (!Array.isArray(parsed)) throw new Error("Gemini evidence output is not an array")
+  const envelope = JSON.parse(text) as { claims?: Array<Record<string, unknown>> }
+  const parsed = envelope.claims
+  if (!Array.isArray(parsed)) throw new Error("Gemini evidence output has no claims array")
 
   return parsed.map((raw) => {
     const identity = clampScore(raw.product_identity_score, 40)
@@ -214,5 +358,5 @@ export async function extractEvidenceClaims(post: SourcePost, products: Product[
 
 export function requiresHumanReview(claim: EvidenceClaim, goldenSampleCount: number) {
   if (goldenSampleCount < 500) return true
-  return claim.confidence_score < 92 || claim.risk_flags.length > 0
+  return claim.confidence_score < 90 || claim.risk_flags.length > 0
 }

@@ -104,7 +104,11 @@ export function deriveCreatorProductState(
 export function isPublicEvidenceEvent(event: CreatorProductEvent) {
   return (
     (event.verification_status ?? "verified") === "verified" &&
-    eventConfidence(event) >= 70 &&
-    Boolean(event.source_url)
+    eventConfidence(event) >= 90 &&
+    event.exact_sku_verified === true &&
+    Boolean(event.verified_by && event.verified_at) &&
+    Boolean(event.source_url?.startsWith("https://")) &&
+    (event.evidence_spans?.length ?? 0) > 0 &&
+    !(event.risk_flags ?? []).some((flag) => ["ambiguous_variant", "multi_product_bundle", "product_not_in_catalogue"].includes(flag))
   )
 }

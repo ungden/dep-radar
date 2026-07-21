@@ -266,6 +266,7 @@ export interface CreatorAccount {
 
 export type SourcePostAnalysisStatus = "pending" | "queued" | "processing" | "ready" | "failed" | "ignored"
 export type SourcePostTranscriptionStatus = "pending" | "processing" | "ready" | "no_speech" | "failed" | "skipped"
+export type SourcePostContentLane = "unclassified" | "product_review" | "expert_education" | "commercial_trend" | "lifestyle" | "vision_required"
 
 export interface SourcePost {
   id: string
@@ -295,9 +296,16 @@ export interface SourcePost {
   transcribed_at: string | null
   archive_video_path: string | null
   archive_audio_path: string | null
+  archive_frame_paths?: string[]
   media_sha256: string | null
   audio_sha256: string | null
   vision_fallback_required: boolean
+  content_lane?: SourcePostContentLane
+  priority_score?: number
+  triage_reason?: string | null
+  triaged_at?: string | null
+  duplicate_of_source_post_id?: string | null
+  vision_sample_timestamps?: number[]
   created_at?: string
   updated_at?: string
 }
@@ -334,6 +342,47 @@ export interface EvidenceClaim {
   evidence_localization_score: number
   confidence_score: number
   risk_flags: EvidenceRiskFlag[]
+}
+
+export type ProductCandidateStatus = "new" | "needs_identity" | "ready_to_create" | "merged" | "rejected"
+
+export interface ProductCandidate {
+  id: string
+  canonical_key: string
+  brand: string
+  product_name: string
+  variant: string | null
+  aliases: string[]
+  source_post_count: number
+  creator_count: number
+  identity_confidence: number
+  official_product_url: string | null
+  image_source_url: string | null
+  status: ProductCandidateStatus
+  matched_product_id: string | null
+  review_note: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ProductCandidateSource {
+  candidate_id: string
+  source_post_id: string
+  creator_id: string
+  evidence_id: string | null
+  event_type: CreatorProductEventType
+  disclosure: CreatorProductDisclosure
+  evidence_spans: EvidenceSpan[]
+  risk_flags: EvidenceRiskFlag[]
+  product_identity_score: number
+  action_evidence_score: number
+  source_authenticity_score: number
+  evidence_localization_score: number
+  confidence_score: number
+  created_at: string
+  updated_at: string
 }
 
 export interface CreatorEvidenceMetrics {
