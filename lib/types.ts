@@ -387,25 +387,25 @@ export interface ProductCandidateSource {
 
 export interface CreatorEvidenceMetrics {
   identityVerified: boolean
-  expertiseScore: number
-  evidenceCompleteness: number
-  commercialTransparency: number
   verifiedEventCount: number
   exactProductCount: number
-  knownDisclosureRate: number
+  knownDisclosureCount: number
+  unknownDisclosureCount: number
+  commercialEventCount: number
   commercialShare: number
 }
 
-export type ProductEvidenceStatus = "no_evidence" | "one_source" | "cross_checked" | "broadly_validated"
+export type ProductObservationStatus = "no_records" | "one_creator" | "multiple_creators" | "broad_coverage"
 
-export interface ProductDecisionSignal {
-  supportScore: number
+export interface ProductObservationSummary {
   independentCreatorCount: number
-  supportCount: number
-  cautionCount: number
+  verifiedClipCount: number
+  directUseCount: number
+  reviewOrRecommendationCount: number
+  commercialClipCount: number
   commercialShare: number
-  evidenceStatus: ProductEvidenceStatus
-  commercialBuzz: boolean
+  observationStatus: ProductObservationStatus
+  hasMostlyCommercialSources: boolean
   latestEvidenceAt: string | null
 }
 

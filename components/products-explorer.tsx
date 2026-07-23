@@ -529,7 +529,7 @@ function ScientificProductCard({
           )}
           {eventStats && eventStats.count > 0 && (
             <Badge variant="secondary" className="bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-300">
-              {eventStats.count} lượt nhắc
+              {eventStats.count} clip đã đối chiếu
             </Badge>
           )}
           {preferredOffer && (

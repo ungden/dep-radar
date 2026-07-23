@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test"
 test("homepage starts from a concern and only shows creator modules when data exists", async ({ page }) => {
   await page.goto("/")
   await expect(page.getByRole("heading", { name: "Hôm nay bạn muốn hiểu điều gì về làn da và cơ thể?" })).toBeVisible()
-  const creatorModule = page.getByRole("heading", { name: "Review mới đã có nguồn đối chiếu" })
+  const creatorModule = page.getByRole("heading", { name: "Clip sản phẩm mới đã đối chiếu" })
   if (await creatorModule.count()) await expect(creatorModule).toBeVisible()
   await page.waitForLoadState("networkidle")
   await page.getByRole("button", { name: "Mụn" }).click()
@@ -23,8 +23,11 @@ test("Bioderma has no legacy score and no mismatched Loreal offer", async ({ pag
 test("reviewed exact-SKU evidence is visible while an unverified offer stays disabled", async ({ page }) => {
   await page.goto("/products/benzac-ac-mild-strength-2-5-acne-gel")
   await expect(page.getByRole("heading", { name: "Benzac AC Mild Strength 2.5% Acne Gel" })).toBeVisible()
-  await expect(page.getByText("Một nguồn", { exact: true })).toBeVisible()
+  await expect(page.getByText("1 creator được ghi nhận", { exact: true })).toBeVisible()
   await expect(page.getByText(/Benzac 2\.5% giảm sưng đáng kể/)).toBeVisible()
+  await expect(page.getByText(/360dep không xác nhận hiệu quả/)).toBeVisible()
+  await expect(page.getByText("Mức độ bằng chứng", { exact: true })).toHaveCount(0)
+  await expect(page.getByText(/tín hiệu ủng hộ/i)).toHaveCount(0)
   await expect(page.getByRole("button", { name: /Chưa có nơi mua đã kiểm tra/ })).toBeDisabled()
 })
 
@@ -35,12 +38,14 @@ test("creator evidence links back to the reviewed public source", async ({ page 
   const reviewedSource = page.locator('a[href="https://www.tiktok.com/@goc.cua.ru/video/7655905148123876616"]')
   await expect(reviewedSource.first()).toBeVisible()
   await expect(reviewedSource.first()).toHaveAttribute("target", "_blank")
+  await expect(page.getByRole("heading", { name: "Clip sản phẩm theo thời gian" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Sản phẩm đã đánh giá" })).toHaveCount(0)
 })
 
 test("product evidence preserves creator, exact SKU and original TikTok clip", async ({ page }) => {
   await page.goto("/products/cocoon-winter-melon-micellar-water-1000ml")
   await expect(page.getByRole("heading", { name: "Nước tẩy trang bí đao 1000ml" })).toBeVisible()
-  await expect(page.getByText("Đã đối chiếu", { exact: true })).toBeVisible()
+  await expect(page.getByText("Nhiều creator được ghi nhận", { exact: true })).toBeVisible()
   await expect(page.getByText("Vân Miu", { exact: true })).toBeVisible()
   await expect(page.getByText("Skincare Đúng Cách by Sơn", { exact: true })).toBeVisible()
 

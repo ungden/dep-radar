@@ -4,14 +4,14 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Star, ShieldCheck, ThumbsUp, MessageSquare, ArrowLeft, ShoppingCart, BookOpen, ArrowRight, CalendarDays, ExternalLink, Store, CheckCircle2, Layers3, Users } from "lucide-react"
+import { Star, ShieldCheck, MessageSquare, ArrowLeft, ShoppingCart, BookOpen, ArrowRight, CalendarDays, ExternalLink, Store, Layers3, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { getCommunityReviews, getCreatorProductEvents, getKols, getPost, getProduct, getProductOffers, getReviews } from "@/lib/data"
-import { getMatrixNodesByProductId, getMatrixProductGroups, researchStageLabels } from "@/lib/content-matrix"
-import { buildCreatorEvidenceMetrics, buildProductDecisionSignal, productEvidenceStatusLabel } from "@/lib/product-decision-signal"
+import { getCommunityReviews, getCreatorProductEvents, getKols, getPost, getProduct, getProductOffers } from "@/lib/data"
+import { getMatrixNodesByProductId, getMatrixProductGroups } from "@/lib/content-matrix"
+import { buildProductObservationSummary, productObservationStatusLabel } from "@/lib/product-observation"
 import { getProductCategoryLabel, getProductSubcategoryLabel } from "@/lib/product-taxonomy"
 import { AffiliateButton } from "@/components/affiliate-button"
 import { TrackProductView } from "@/components/analytics/public-events"
@@ -75,7 +75,7 @@ function eventTypeLabel(event: CreatorProductEvent) {
     unboxed: "Mở hộp",
     used: "Đã dùng",
     reviewed: "Đã review",
-    recommended: "Recommend",
+    recommended: "Creator khuyên dùng",
     disliked: "Không hợp",
     emptied: "Dùng hết",
     repurchased: "Mua lại",
@@ -96,13 +96,6 @@ function disclosureLabel(event: CreatorProductEvent) {
     unknown: "Chưa rõ",
   }
   return labels[event.disclosure]
-}
-
-function sentimentClass(event: CreatorProductEvent) {
-  if (event.sentiment === "positive") return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-  if (event.sentiment === "negative") return "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300"
-  if (event.sentiment === "mixed") return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-  return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
 }
 
 function kolForEvent(event: CreatorProductEvent, kols: Kol[]) {
@@ -158,9 +151,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const product = await getProduct(id);
   if (!product) return notFound();
 
-  const [KOLS, reviews, communityReviews, productOffers, timelineEvents] = await Promise.all([
+  const [KOLS, communityReviews, productOffers, timelineEvents] = await Promise.all([
     getKols(),
-    getReviews({ productId: id }),
     getCommunityReviews({ productId: id }),
     getProductOffers({ productId: id }),
     getCreatorProductEvents({ productId: id }),
@@ -172,20 +164,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     ?? null
   const affiliateHref = preferredOffer?.affiliate_url ?? preferredOffer?.seller_url ?? product.affiliate_url
   const matrixNodes = getMatrixNodesByProductId(product.id)
-  const graphKolIds = new Set(matrixNodes.flatMap((node) => node.kolIds))
-  const auditedReviews = reviews.filter((review) => timelineEvents.some((event) => event.creator_id === review.kolid && event.product_id === review.productid))
-  const sortedReviews = [...auditedReviews].sort((a, b) => Number(graphKolIds.has(b.kolid)) - Number(graphKolIds.has(a.kolid)))
   const graphPostSlugs = unique(matrixNodes.flatMap((node) => [node.articleSlug, ...node.nextArticleSlugs])).slice(0, 4)
   const graphPosts = (await Promise.all(graphPostSlugs.map((slug) => getPost(slug)))).filter((post): post is Post => Boolean(post))
   const matrixProductGroups = getMatrixProductGroups(unique(matrixNodes.flatMap((node) => node.productGroupKeys))).filter((group) => [
     ...group.productIds,
     ...group.comparisonProductIds,
   ].includes(product.id))
-  const researchStages = unique(matrixNodes.map((node) => researchStageLabels[node.stage])).slice(0, 3)
-  const signalCreatorIds = unique([...timelineEvents.map((event) => event.creator_id), ...auditedReviews.map((review) => review.kolid)])
+  const signalCreatorIds = unique(timelineEvents.map((event) => event.creator_id))
   const signalCreators = signalCreatorIds.map((creatorId) => KOLS.find((kol) => kol.id === creatorId)).filter((kol): kol is Kol => Boolean(kol)).slice(0, 4)
-  const decisionSignal = buildProductDecisionSignal(timelineEvents)
-  const leadGroup = matrixProductGroups[0]
+  const observation = buildProductObservationSummary(timelineEvents)
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://360dep.vn"
   const productJsonLd = buildProductJsonLd(product, siteUrl, preferredOffer)
   
@@ -241,11 +228,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     <><span className="text-slate-300 dark:text-slate-700">&bull;</span><span className="text-slate-500 dark:text-slate-400 font-medium">{product.sold} đã bán</span></>
                   )}
                   <Badge variant="outline" className="border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-900/50 dark:bg-cyan-950/30 dark:text-cyan-300">
-                    {productEvidenceStatusLabel(decisionSignal.evidenceStatus)}
+                    {productObservationStatusLabel(observation.observationStatus)}
                   </Badge>
-                  {decisionSignal.commercialBuzz && (
+                  {observation.hasMostlyCommercialSources && (
                     <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
-                      Độ phủ thương mại cao
+                      Phần lớn clip có yếu tố thương mại
                     </Badge>
                   )}
                 </div>
@@ -258,6 +245,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 <p className="text-slate-600 dark:text-slate-300 mb-8 leading-relaxed">
                   {product.description}
                 </p>
+
+                <div className="mb-8 rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4 text-sm leading-relaxed text-cyan-950 dark:border-cyan-900/50 dark:bg-cyan-950/20 dark:text-cyan-100">
+                  <span className="font-bold">Phạm vi của 360dep:</span> chúng tôi chỉ đối chiếu đúng creator, đúng sản phẩm và đúng clip công khai. Nhận xét, trải nghiệm và lời khuyên là phát ngôn của creator; 360dep không xác nhận hiệu quả và không dùng số lần xuất hiện để kết luận sản phẩm tốt hay đáng mua.
+                </div>
 
                 {product.source_url && (
                   <a href={product.source_url} target="_blank" rel="noopener noreferrer" className="mb-8 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-700 hover:border-rose-200 hover:text-rose-600 dark:border-slate-700 dark:text-slate-200 dark:hover:text-rose-300">
@@ -278,29 +269,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 </div>
 
                 <div className="mb-8 grid gap-3 sm:grid-cols-2">
-                  <DecisionMetric icon={<Users className="h-4 w-4" />} label="Nguồn creator độc lập" value={`${decisionSignal.independentCreatorCount}`} detail={signalCreators.length ? signalCreators.map((kol) => kol.name).join(", ") : "Chưa có nguồn creator đã duyệt"} />
-                  <DecisionMetric icon={<ShieldCheck className="h-4 w-4" />} label="Mức độ bằng chứng" value={`${decisionSignal.supportScore}/100`} detail={`${decisionSignal.supportCount} tín hiệu ủng hộ · ${decisionSignal.cautionCount} điểm cần lưu ý`} />
-                  <DecisionMetric icon={<Store className="h-4 w-4" />} label="Nội dung thương mại" value={`${decisionSignal.commercialShare}%`} detail="Tỷ lệ nguồn có PR, tài trợ hoặc liên kết tiếp thị" />
-                  <DecisionMetric icon={<MessageSquare className="h-4 w-4" />} label="Đánh giá đã đối chiếu" value={`${auditedReviews.length + communityReviews.length}`} detail={`${auditedReviews.length} từ creator · ${communityReviews.length} từ cộng đồng`} />
-                  <DecisionMetric icon={<Layers3 className="h-4 w-4" />} label="Bài hướng dẫn liên quan" value={`${matrixNodes.length}`} detail={researchStages.length ? researchStages.join(" / ") : "Chưa có bài hướng dẫn phù hợp"} />
+                  <DecisionMetric icon={<Users className="h-4 w-4" />} label="Creator được ghi nhận" value={`${observation.independentCreatorCount}`} detail={signalCreators.length ? signalCreators.map((kol) => kol.name).join(", ") : "Chưa có creator với clip đã duyệt"} />
+                  <DecisionMetric icon={<ShieldCheck className="h-4 w-4" />} label="Clip đã đối chiếu SKU" value={`${observation.verifiedClipCount}`} detail="Đếm clip đúng creator, đúng sản phẩm và có URL gốc" />
+                  <DecisionMetric icon={<CalendarDays className="h-4 w-4" />} label="Clip có hành vi sử dụng" value={`${observation.directUseCount}`} detail="Dùng, dùng hết, mua lại, chuyển sang hoặc ngừng dùng" />
+                  <DecisionMetric icon={<Store className="h-4 w-4" />} label="Clip có yếu tố thương mại" value={`${observation.commercialClipCount}/${observation.verifiedClipCount}`} detail={`${observation.commercialShare}% clip có PR, tài trợ hoặc liên kết tiếp thị`} />
+                  <DecisionMetric icon={<MessageSquare className="h-4 w-4" />} label="Đánh giá cộng đồng" value={`${communityReviews.length}`} detail="Tách riêng với phát ngôn của creator" />
                   <DecisionMetric icon={<Store className="h-4 w-4" />} label="Nơi mua đã kiểm tra" value={preferredOffer ? "Đã có" : "Chưa có"} detail={preferredOffer?.shop_name ?? "Chưa có đường dẫn mua đã được kiểm tra"} />
                 </div>
-
-                {(leadGroup || decisionSignal.supportCount > 0 || decisionSignal.cautionCount > 0) && (
-                  <div className="mb-8 rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
-                    <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-50">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                      Tóm tắt trước khi mua
-                    </div>
-                    <div className="space-y-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                      {leadGroup && <p><span className="font-bold text-slate-900 dark:text-slate-50">Nên cân nhắc:</span> {leadGroup.whenToConsider}</p>}
-                      {leadGroup && <p><span className="font-bold text-slate-900 dark:text-slate-50">Tránh khi:</span> {leadGroup.whenToAvoid}</p>}
-                      {(decisionSignal.supportCount > 0 || decisionSignal.cautionCount > 0) && (
-                        <p><span className="font-bold text-slate-900 dark:text-slate-50">Nguồn đã đối chiếu:</span> {decisionSignal.supportCount} tín hiệu ủng hộ, {decisionSignal.cautionCount} điểm cần đọc kèm bối cảnh; {decisionSignal.commercialShare}% nguồn có yếu tố thương mại.</p>
-                      )}
-                    </div>
-                  </div>
-                )}
 
                 <div className="mt-auto space-y-4">
                   <div className="flex gap-4">
@@ -415,14 +390,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <CalendarDays className="h-5 w-5 text-indigo-500" />
-                  <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">Dòng thời gian KOL/KOC</h2>
+                  <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">Ai đã dùng hoặc nhắc sản phẩm này?</h2>
                 </div>
                 <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                  Các lần sản phẩm xuất hiện trong review, routine, livestream hoặc tin công khai đã ghi nhận.
+                  Danh sách quan sát theo clip công khai. Việc xuất hiện nhiều lần không đồng nghĩa sản phẩm hiệu quả hơn.
                 </p>
               </div>
               <Badge variant="secondary" className="w-fit bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                {timelineEvents.length} tín hiệu
+                {timelineEvents.length} clip đã duyệt
               </Badge>
             </div>
 
@@ -432,6 +407,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   const kol = kolForEvent(event, KOLS)
                   if (!kol) return null
                   const sourcePostId = event.source_post_id ?? getTikTokPostId(event.source_url)
+                  const directQuote = event.evidence_spans?.find((span) => span.kind === "quote" || span.kind === "caption")
                   return (
                     <div key={event.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
                       <div className="flex gap-4">
@@ -446,19 +422,23 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                             <Link href={`/koc-tracker/${kol.id}`} className="font-bold text-slate-900 transition-colors hover:text-rose-600 dark:text-slate-50 dark:hover:text-rose-300">
                               {kol.name}
                             </Link>
-                            <Badge className={sentimentClass(event)}>{event.sentiment}</Badge>
                             <Badge variant="secondary" className="bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300">
                               {disclosureLabel(event)}
                             </Badge>
                             <Badge variant="secondary" className="bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-300">
-                              Độ tin cậy {event.confidence}/100
+                              Khớp SKU/clip {event.confidence_score ?? "đã duyệt"}{event.confidence_score != null ? "%" : ""}
                             </Badge>
                           </div>
                           <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
                             {formatTimelineDate(event.event_date)} &bull; {eventTypeLabel(event)} &bull; {event.source_platform}
                           </div>
                           <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">{event.source_title}</p>
-                          <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{event.source_excerpt}</p>
+                          <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300"><span className="font-bold">360dep ghi nhận:</span> {event.source_excerpt}</p>
+                          {directQuote && (
+                            <blockquote className="mt-2 border-l-2 border-rose-300 pl-3 text-sm italic leading-relaxed text-slate-700 dark:border-rose-800 dark:text-slate-200">
+                              “{directQuote.value}”
+                            </blockquote>
+                          )}
                           {event.usage_context && (
                             <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">Ngữ cảnh: {event.usage_context}</p>
                           )}
@@ -475,74 +455,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               </div>
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 py-10 text-center dark:border-slate-800 dark:bg-slate-950">
-                <p className="font-medium text-slate-500 dark:text-slate-400">Chưa có tín hiệu lịch sử cho sản phẩm này.</p>
+                <p className="font-medium text-slate-500 dark:text-slate-400">Chưa có clip công khai đã đối chiếu cho sản phẩm này.</p>
               </div>
             )}
           </section>
-
-          {/* Reviews Section */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100 dark:border-slate-800">
-            <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-slate-50 mb-8">Đánh giá creator có nguồn</h2>
-            
-            {sortedReviews.length > 0 ? (
-              <div className="space-y-6">
-                {sortedReviews.map((review) => {
-                  const kol = KOLS.find(k => k.id === review.kolid);
-                  if (!kol) return null;
-                  const creatorMetrics = buildCreatorEvidenceMetrics(kol, timelineEvents.filter((event) => event.creator_id === kol.id));
-                  const reviewEvidence = timelineEvents.find((event) => event.creator_id === review.kolid && event.product_id === review.productid);
-                  
-                  return (
-                    <div key={review.id} className="flex gap-4 p-6 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
-                      <Link href={`/koc-tracker/${kol.id}`}>
-                        <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-800 shadow-sm hover:ring-2 hover:ring-rose-200 dark:hover:ring-rose-900 transition-all">
-                          <AvatarImage src={kol.avatar} />
-                          <AvatarFallback>{kol.name[0]}</AvatarFallback>
-                        </Avatar>
-                      </Link>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
-                            <Link href={`/koc-tracker/${kol.id}`} className="font-bold text-slate-900 dark:text-slate-50 hover:text-rose-600 dark:hover:text-rose-400 transition-colors">
-                              {kol.name}
-                            </Link>
-                            {kol.verified && <ShieldCheck className="h-4 w-4 text-blue-500" />}
-                            <Badge variant="outline" className="rounded-full border-slate-200 bg-white text-[10px] text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                              Mức đủ nguồn {creatorMetrics.evidenceCompleteness}/100
-                            </Badge>
-                          </div>
-                          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{review.timeago}</span>
-                        </div>
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star key={i} className={`h-3 w-3 ${i < review.rating ? "fill-amber-400 text-amber-400" : "fill-slate-200 dark:fill-slate-700 text-slate-200 dark:text-slate-700"}`} />
-                            ))}
-                          </div>
-                          {reviewEvidence && (
-                            <Badge variant="secondary" className="bg-slate-200 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                              {disclosureLabel(reviewEvidence)}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4 italic">
-                          &quot;{review.content}&quot;
-                        </p>
-                        <div className="flex gap-4 text-sm font-medium text-slate-500 dark:text-slate-400">
-                          <button className="flex items-center gap-1 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"><ThumbsUp className="h-4 w-4" /> Hữu ích ({review.likes})</button>
-                          <button className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-slate-50 transition-colors"><MessageSquare className="h-4 w-4" /> Thảo luận ({review.comments})</button>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-12 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 border-dashed">
-                <p className="text-slate-500 dark:text-slate-400 font-medium">Chưa có đánh giá nào từ KOL/KOC cho sản phẩm này.</p>
-              </div>
-            )}
-          </div>
 
           <ProductCommunityModules
             productId={product.id}

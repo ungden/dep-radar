@@ -14,7 +14,7 @@ export function TrendingSection({ productSignals }: { productSignals: HomeProduc
           <div className="max-w-2xl">
             <p className="text-[11px] font-black uppercase tracking-[0.22em] text-rose-600 dark:text-rose-300">Từ nguồn công khai</p>
             <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.03em] text-slate-950 dark:text-white md:text-4xl">Sản phẩm đang được nhắc đến</h2>
-            <p className="mt-3 text-[15px] leading-7 text-slate-600 dark:text-slate-300">Tín hiệu tham khảo, không phải bảng xếp hạng mua hàng.</p>
+            <p className="mt-3 text-[15px] leading-7 text-slate-600 dark:text-slate-300">Sắp theo số clip và ngày ghi nhận; không phải bảng xếp hạng chất lượng sản phẩm.</p>
           </div>
           <Link href="/products" className="inline-flex min-h-11 items-center gap-2 self-start text-sm font-black text-rose-600 hover:text-rose-700 sm:self-auto">
             Xem thư viện sản phẩm <ArrowRight className="h-4 w-4" />
@@ -38,7 +38,7 @@ export function TrendingSection({ productSignals }: { productSignals: HomeProduc
               <p className="mt-4 text-[10px] font-black uppercase tracking-[0.16em] text-rose-600 dark:text-rose-300">{signal.product.brand}</p>
               <h3 className="mt-1 line-clamp-2 text-sm font-black leading-5 text-slate-900 transition-colors group-hover:text-rose-600 dark:text-white md:text-base">{signal.product.name}</h3>
               <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                {signal.mentions} lượt nhắc{signal.latestDate ? ` · ${getHomeRecencyLabel(signal.latestDate)}` : ""}
+                {signal.clipCount} clip đã đối chiếu{signal.latestDate ? ` · ${getHomeRecencyLabel(signal.latestDate)}` : ""}
               </p>
             </Link>
           ))}

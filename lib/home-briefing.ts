@@ -18,7 +18,7 @@ export interface HomeBriefingItem {
 
 export interface HomeProductSignal {
   product: Product
-  mentions: number
+  clipCount: number
   latestDate: string
   creatorNames: string[]
   categoryLabel: string
@@ -33,7 +33,6 @@ export interface HomeCreatorUpdate {
   href: string
   product?: Pick<Product, "id" | "name" | "brand" | "image" | "category">
   sourceName: string
-  toneLabel: string
   disclosureLabel: string
 }
 
@@ -48,7 +47,7 @@ export interface HomeDailyBriefing {
 }
 
 type ProductSignalStats = {
-  mentions: number
+  clipCount: number
   latestDate: string
   creatorIds: Set<string>
 }
@@ -72,7 +71,7 @@ function eventLabel(type: CreatorProductEvent["event_type"]) {
     unboxed: "Mở hộp",
     used: "Đang dùng",
     reviewed: "Vừa review",
-    recommended: "Có gợi ý",
+    recommended: "Creator gợi ý",
     disliked: "Có điểm chê",
     emptied: "Dùng hết",
     repurchased: "Mua lại",
@@ -82,15 +81,6 @@ function eventLabel(type: CreatorProductEvent["event_type"]) {
     sponsored: "Nội dung tài trợ",
   }
   return labels[type]
-}
-
-function sentimentLabel(sentiment: CreatorProductEvent["sentiment"]) {
-  return {
-    positive: "Tín hiệu tích cực",
-    mixed: "Có khen có chê",
-    negative: "Không hợp",
-    neutral: "Tin trung lập",
-  }[sentiment]
 }
 
 function disclosureLabel(disclosure: CreatorProductEvent["disclosure"]) {
@@ -119,11 +109,11 @@ function buildProductSignals(products: Product[], timelineEvents: CreatorProduct
 
   for (const event of timelineEvents) {
     const current = stats.get(event.product_id) ?? {
-      mentions: 0,
+      clipCount: 0,
       latestDate: "",
       creatorIds: new Set<string>(),
     }
-    current.mentions += 1
+    current.clipCount += 1
     current.latestDate = event.event_date > current.latestDate ? event.event_date : current.latestDate
     current.creatorIds.add(event.creator_id)
     stats.set(event.product_id, current)
@@ -131,22 +121,22 @@ function buildProductSignals(products: Product[], timelineEvents: CreatorProduct
 
   return products
     .map((product): HomeProductSignal => {
-      const productStats = stats.get(product.id) ?? { mentions: 0, latestDate: "", creatorIds: new Set<string>() }
+      const productStats = stats.get(product.id) ?? { clipCount: 0, latestDate: "", creatorIds: new Set<string>() }
       const creatorNames = [...productStats.creatorIds]
         .map((id) => creatorMap.get(id)?.name)
         .filter((name): name is string => Boolean(name))
 
       return {
         product,
-        mentions: productStats.mentions,
+        clipCount: productStats.clipCount,
         latestDate: productStats.latestDate,
         creatorNames,
         categoryLabel: product.category_key ? product.category : product.category,
       }
     })
-    .filter((signal) => signal.mentions > 0 && Boolean(signal.latestDate))
+    .filter((signal) => signal.clipCount > 0 && Boolean(signal.latestDate))
     .sort((a, b) => (
-      b.mentions - a.mentions ||
+      b.clipCount - a.clipCount ||
       b.latestDate.localeCompare(a.latestDate) ||
       b.product.rating - a.product.rating ||
       b.product.reviews - a.product.reviews
@@ -175,7 +165,6 @@ function buildCreatorUpdates(
         href: creatorHref(creator),
         product,
         sourceName: event.source_platform,
-        toneLabel: sentimentLabel(event.sentiment),
         disclosureLabel: disclosureLabel(event.disclosure),
       }
     })
@@ -228,12 +217,12 @@ function buildDailyUpdates(
     kind: "product",
     title: signal.product.name,
     excerpt: signal.creatorNames.length
-      ? `${signal.creatorNames.slice(0, 2).join(", ")} đang tạo tín hiệu cho sản phẩm này.`
-      : "Sản phẩm vừa xuất hiện trong dòng tin beauty và sẽ được cập nhật thêm khi có nguồn mới.",
+      ? `${signal.creatorNames.slice(0, 2).join(", ")} đã nhắc hoặc dùng sản phẩm này trong clip công khai.`
+      : "Sản phẩm vừa xuất hiện trong clip công khai và sẽ được cập nhật thêm khi có nguồn mới.",
     href: productHref(signal.product),
     date: signal.latestDate,
     image: signal.product.image,
-    label: `${signal.mentions || 1} lượt nhắc`,
+    label: `${signal.clipCount || 1} clip đã đối chiếu`,
     sourceName: signal.product.brand,
   }))
 
@@ -260,7 +249,7 @@ function buildStaleCreatorList(kols: Kol[], timelineEvents: CreatorProductEvent[
     .sort((a, b) => {
       const aLatest = latestByCreator.get(a.id) ?? ""
       const bLatest = latestByCreator.get(b.id) ?? ""
-      return aLatest.localeCompare(bLatest) || b.trustscore - a.trustscore
+      return aLatest.localeCompare(bLatest) || a.name.localeCompare(b.name, "vi")
     })
     .slice(0, 8)
     .map(({ id, name, avatar, platform }) => ({ id, name, avatar, platform }))

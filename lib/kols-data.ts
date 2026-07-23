@@ -5,8 +5,8 @@ import type { Kol } from "@/lib/types"
  * Mỗi người là MỘT hồ sơ: gộp tất cả nền tảng (socials), bio chi tiết, chuyên môn, dấu ấn nổi bật,
  * phong cách review, thương hiệu riêng và review tiêu biểu khi kiểm chứng được.
  * - Follower là snapshot thời điểm research, mang tính tham khảo.
- * - trustscore là legacy influence score (follower + độ phủ + verified), KHÔNG phải độ tin cậy.
- *   Độ tin cậy public được tính trong lib/kol-credibility.ts từ danh tính, chuyên môn, bằng chứng và minh bạch.
+ * - trustscore là legacy influence score dành cho admin và thứ tự dữ liệu cũ, KHÔNG phải độ tin cậy.
+ *   Public chỉ hiển thị các số đếm thực tế: kênh, exact SKU, clip gốc và disclosure.
  * - avatar tải về /public/images/kol khi lấy được ảnh công khai; hồ sơ không xác định được bị loại khỏi registry.
  */
 

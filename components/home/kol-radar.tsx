@@ -17,7 +17,7 @@ export function KolRadar({ creatorUpdates }: { creatorUpdates: HomeCreatorUpdate
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
             <p className="text-[11px] font-black uppercase tracking-[0.22em] text-rose-600 dark:text-rose-300">Radar người sáng tạo</p>
-            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.03em] text-slate-950 dark:text-white md:text-4xl">Review mới đã có nguồn đối chiếu</h2>
+            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.03em] text-slate-950 dark:text-white md:text-4xl">Clip sản phẩm mới đã đối chiếu</h2>
           </div>
           <Link href="/koc-tracker" className="inline-flex min-h-11 items-center gap-2 self-start text-sm font-black text-rose-600 hover:text-rose-700 sm:self-auto">
             Xem toàn bộ radar <ArrowRight className="h-4 w-4" />

@@ -5,7 +5,7 @@ import path from "node:path"
 
 import { createClient } from "@supabase/supabase-js"
 
-import { buildProductDecisionSignal } from "@/lib/product-decision-signal"
+import { buildProductObservationSummary } from "@/lib/product-observation"
 import type { CreatorProductEvent, Product } from "@/lib/types"
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -40,15 +40,15 @@ async function main() {
   const rows = ((products ?? []) as Product[])
     .filter((product) => !verifiedOfferProducts.has(product.id))
     .map((product) => {
-      const signal = buildProductDecisionSignal(eventsByProduct.get(product.id) ?? [])
-      return [product.id, product.brand, product.name, product.category, signal.independentCreatorCount, signal.supportScore, signal.commercialShare, signal.latestEvidenceAt ?? "", "", "pending"]
+      const observation = buildProductObservationSummary(eventsByProduct.get(product.id) ?? [])
+      return [product.id, product.brand, product.name, product.category, observation.independentCreatorCount, observation.verifiedClipCount, observation.directUseCount, observation.commercialShare, observation.latestEvidenceAt ?? "", "", "pending"]
     })
     .sort((a, b) => Number(b[4]) - Number(a[4]) || Number(b[5]) - Number(a[5]))
 
   const outputArg = process.argv.find((arg) => arg.startsWith("--output="))?.slice("--output=".length)
   const output = path.resolve(outputArg || `docs/affiliate/evidence-products-${new Date().toISOString().slice(0, 10)}.csv`)
   await mkdir(path.dirname(output), { recursive: true })
-  const header = ["product_id", "brand", "product_name", "category", "independent_creators", "support_score", "commercial_share_pct", "latest_evidence_at", "affiliate_url", "offer_status"]
+  const header = ["product_id", "brand", "product_name", "category", "independent_creators", "verified_clips", "direct_use_clips", "commercial_share_pct", "latest_evidence_at", "affiliate_url", "offer_status"]
   await writeFile(output, [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\n") + "\n", "utf8")
   console.log(`Exported ${rows.length} products without verified exact-SKU offers to ${output}`)
 }
