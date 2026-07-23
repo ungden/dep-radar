@@ -23,6 +23,7 @@ import { buildCreatorEvidenceMetrics } from "@/lib/product-decision-signal"
 import { getProductCategoryLabel, productWithTaxonomy } from "@/lib/product-taxonomy"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import { absoluteUrl } from "@/lib/seo"
+import { getTikTokPostId } from "@/lib/evidence-source"
 import type { CreatorProductEvent, CreatorProductState, CreatorProductStateValue, Kol, KolSocial, Post, Product, ProductOffer, Review } from "@/lib/types"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -615,6 +616,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                     {creatorProductSpotlights.map(({ product, event, review, offer, signalCount }) => {
                       const buyHref = offerHref(offer)
                       const sourceHref = event?.source_url ?? null
+                      const sourcePostId = event?.source_post_id ?? getTikTokPostId(sourceHref)
                       const reviewText = review?.content ?? event?.source_excerpt ?? product.description
                       return (
                         <article key={product.id} className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
@@ -679,7 +681,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                               </Link>
                               {sourceHref && (
                                 <a href={sourceHref} target={sourceTarget(sourceHref)} rel={sourceRel(sourceHref)} className="inline-flex items-center gap-1 rounded-full bg-white px-4 py-2 text-xs font-bold text-slate-700 transition-colors hover:text-rose-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:text-rose-300">
-                                  Xem nguồn <ExternalLink className="h-3 w-3" />
+                                  Mở clip TikTok{sourcePostId ? ` · ID ${sourcePostId}` : ""} <ExternalLink className="h-3 w-3" />
                                 </a>
                               )}
                               {buyHref && (
@@ -737,6 +739,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                       if (!product) return null
                       const offer = preferredOfferForProduct(offersByProductId.get(product.id) ?? [], product)
                       const buyHref = offerHref(offer)
+                      const sourcePostId = event.source_post_id ?? getTikTokPostId(event.source_url)
                       return (
                         <div key={event.id} className="relative pl-10">
                           <span className="absolute left-2 top-5 h-4 w-4 rounded-full border-4 border-white bg-rose-500 shadow-sm dark:border-slate-900" />
@@ -772,7 +775,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                                   </Link>
                                   {event.source_url && (
                                     <a href={event.source_url} target={sourceTarget(event.source_url)} rel={sourceRel(event.source_url)} className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-rose-600 transition-colors hover:text-rose-700 dark:bg-slate-900 dark:text-rose-300">
-                                      Xem nguồn <ExternalLink className="h-3 w-3" />
+                                      Mở clip TikTok{sourcePostId ? ` · ID ${sourcePostId}` : ""} <ExternalLink className="h-3 w-3" />
                                     </a>
                                   )}
                                   {buyHref && (

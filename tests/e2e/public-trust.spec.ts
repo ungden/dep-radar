@@ -37,6 +37,21 @@ test("creator evidence links back to the reviewed public source", async ({ page 
   await expect(reviewedSource.first()).toHaveAttribute("target", "_blank")
 })
 
+test("product evidence preserves creator, exact SKU and original TikTok clip", async ({ page }) => {
+  await page.goto("/products/cocoon-winter-melon-micellar-water-1000ml")
+  await expect(page.getByRole("heading", { name: "Nước tẩy trang bí đao 1000ml" })).toBeVisible()
+  await expect(page.getByText("Đã đối chiếu", { exact: true })).toBeVisible()
+  await expect(page.getByText("Vân Miu", { exact: true })).toBeVisible()
+  await expect(page.getByText("Skincare Đúng Cách by Sơn", { exact: true })).toBeVisible()
+
+  const vanMiuClip = page.locator('a[href="https://www.tiktok.com/@vanmiu_beauty/video/7644185590895840533"]')
+  const sonClip = page.locator('a[href="https://www.tiktok.com/@skincaredungcach.byson/video/7599940752742927623"]')
+  await expect(vanMiuClip).toContainText("ID 7644185590895840533")
+  await expect(sonClip).toContainText("ID 7599940752742927623")
+  await expect(vanMiuClip).toHaveAttribute("target", "_blank")
+  await expect(sonClip).toHaveAttribute("target", "_blank")
+})
+
 test("products and creator directory render real counts in first response", async ({ request, page }) => {
   const productsResponse = await request.get("/products")
   const productsHtml = await productsResponse.text()

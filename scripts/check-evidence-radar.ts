@@ -6,6 +6,7 @@ import fs from "node:fs"
 import { SYNTHETIC_GOLDEN_CASES } from "../lib/evidence-radar/golden-cases"
 import { deriveCreatorProductState, isPublicEvidenceEvent } from "../lib/evidence-radar/state-engine"
 import { normalizeTikTokCollectorBatch, TIKTOK_COLLECTOR_MAX_POSTS } from "../lib/evidence-radar/tiktok-collector"
+import { isDirectCreatorEvidenceSource, isDirectTikTokPostUrl } from "../lib/evidence-source"
 import type { CreatorProductEvent, CreatorProductEventType } from "../lib/types"
 
 const NOW = new Date("2026-07-10T12:00:00Z")
@@ -17,7 +18,8 @@ function event(overrides: Partial<CreatorProductEvent> & { event_type: CreatorPr
     product_id: "product-1",
     observed_at: `${overrides.event_date}T12:00:00Z`,
     source_platform: "TikTok",
-    source_url: "https://www.tiktok.com/@creator/video/1",
+    source_url: "https://www.tiktok.com/@creator/video/7663466714054659349",
+    source_post_id: "7663466714054659349",
     source_title: "Evidence",
     source_excerpt: "Direct public evidence",
     sentiment: "neutral",
@@ -45,7 +47,12 @@ assert.equal(deriveCreatorProductState([event({ event_type: "used", event_date: 
 assert.equal(deriveCreatorProductState([event({ event_type: "used", event_date: "2025-12-01" })], NOW).state, "past")
 assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01", confidence_score: 89 })), false)
 assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01", source_url: null })), false)
+assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01", source_url: "https://www.tiktok.com/@creator" })), false)
+assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01", source_post_id: "2" })), false)
 assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01" })), true)
+assert.equal(isDirectTikTokPostUrl("https://www.tiktok.com/@creator/video/7663466714054659349", "7663466714054659349"), true)
+assert.equal(isDirectTikTokPostUrl("https://www.tiktok.com/@creator", "7663466714054659349"), false)
+assert.equal(isDirectCreatorEvidenceSource("TikTok", "https://www.tiktok.com/@creator/video/7663466714054659349", "different"), false)
 
 assert.equal(SYNTHETIC_GOLDEN_CASES.length, 500)
 assert.equal(new Set(SYNTHETIC_GOLDEN_CASES.map((item) => item.creatorId)).size, 50)

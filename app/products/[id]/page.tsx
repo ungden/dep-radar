@@ -20,6 +20,7 @@ import { SocialShare } from "@/components/social-share"
 import { WishlistButton } from "@/components/wishlist-button"
 import { ProductCommunityModules } from "@/components/product-community-modules"
 import { absoluteUrl } from "@/lib/seo"
+import { getTikTokPostId } from "@/lib/evidence-source"
 import type { CreatorProductEvent, Kol, Post, ProductOffer } from "@/lib/types"
 
 function JsonLd({ data }: { data: Record<string, unknown> }) {
@@ -430,6 +431,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 {timelineEvents.map((event) => {
                   const kol = kolForEvent(event, KOLS)
                   if (!kol) return null
+                  const sourcePostId = event.source_post_id ?? getTikTokPostId(event.source_url)
                   return (
                     <div key={event.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
                       <div className="flex gap-4">
@@ -462,7 +464,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                           )}
                           {event.source_url && (
                             <TrackedEvidenceLink href={event.source_url} creatorId={event.creator_id} productId={event.product_id} className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-300">
-                              Xem nguồn <ExternalLink className="h-3 w-3" />
+                              Mở clip TikTok gốc{sourcePostId ? ` · ID ${sourcePostId}` : ""} <ExternalLink className="h-3 w-3" />
                             </TrackedEvidenceLink>
                           )}
                         </div>
