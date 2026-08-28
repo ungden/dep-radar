@@ -41,7 +41,7 @@ export async function seedEvidenceSignals() {
     supabase.from("creator_product_events").select("*")
       .eq("verification_status", "verified").eq("exact_sku_verified", true)
       .gte("confidence_score", 80).order("event_date", { ascending: false }).limit(50),
-    supabase.from("radar_products").select("id,name,brand,description,category,source_url,source_label,source_type,category_key,catalogue_slugs,status"),
+    supabase.from("radar_products").select("id,name,brand,description,category,source_url,source_label,source_type,category_key,status"),
     supabase.from("kols").select("id,name,trustscore,source_quality").limit(200),
   ])
   if (eventsResult.error) throw new Error(`Cannot read verified creator evidence: ${eventsResult.error.message}`)
@@ -55,7 +55,7 @@ export async function seedEvidenceSignals() {
     const product = products.get(event.product_id)
     const creator = creators.get(event.creator_id) as { name?: string; trustscore?: number; source_quality?: string } | undefined
     if (!product || product.status === "archived" || !event.source_url) continue
-    const hub = product.catalogue_slugs?.[0] ?? HUB_BY_CATEGORY[product.category_key ?? ""] ?? "product-radar"
+    const hub = HUB_BY_CATEGORY[product.category_key ?? ""] ?? "product-radar"
     const title = `${product.name}: đọc đúng bằng chứng từ ${creator?.name ?? "creator"}`
     const sources = [
       { url: event.source_url, title: event.source_title || title, publisher: creator?.name ?? event.source_platform, sourceType: "creator_evidence", excerpt: event.source_excerpt },

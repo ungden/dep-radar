@@ -3,7 +3,7 @@ import { createHash } from "node:crypto"
 import { createClient } from "@supabase/supabase-js"
 import dotenv from "dotenv"
 
-import { getCanonicalPostSlug } from "../lib/data"
+import { getCanonicalPostSlug, SAMPLE_PRODUCTS } from "../lib/data"
 import { getPublishedEditorialPosts } from "../lib/editorial"
 
 dotenv.config({ path: ".env.local" })
@@ -41,6 +41,23 @@ const existingResult = await db.from("posts").select("*")
 if (existingResult.error) throw new Error(`Cannot load existing posts: ${existingResult.error.message}`)
 const existing = existingResult.data ?? []
 const bySlug = new Map(existing.map((post) => [post.slug as string, post]))
+
+const liveProducts = await db.from("radar_products").select("id")
+if (liveProducts.error) throw new Error(`Cannot load live products: ${liveProducts.error.message}`)
+const sourcedProducts = new Map(SAMPLE_PRODUCTS.filter((product) => product.source_url).map((product) => [product.id, product]))
+let productSourcesUpdated = 0
+for (const row of liveProducts.data ?? []) {
+  const product = sourcedProducts.get(String(row.id))
+  if (!product?.source_url) continue
+  const update = await db.from("radar_products").update({
+    source_label: product.source_label,
+    source_url: product.source_url,
+    source_type: product.source_type,
+    source_last_verified_at: new Date().toISOString(),
+  }).eq("id", row.id)
+  if (update.error) throw new Error(`Cannot import source for product ${row.id}: ${update.error.message}`)
+  productSourcesUpdated += 1
+}
 
 const legacyAliases = existing.filter((post) => getCanonicalPostSlug(String(post.slug)) || getCanonicalPostSlug(String(post.id)))
 if (legacyAliases.length > 0) {
@@ -168,7 +185,7 @@ if ((verification.data ?? []).length !== posts.length) throw new Error(`Backfill
 if (finalHubs.size !== hubs.size) throw new Error(`Hub count mismatch: expected ${hubs.size}, received ${finalHubs.size}`)
 if ((verification.data ?? []).some((post) => !post.current_version_id)) throw new Error("At least one imported post has no published version")
 
-console.log(JSON.stringify({ imported: verification.data?.length, archivedAliases: legacyAliases.length, hubs: finalHubs.size, ok: true }, null, 2))
+console.log(JSON.stringify({ imported: verification.data?.length, archivedAliases: legacyAliases.length, productSourcesUpdated, hubs: finalHubs.size, ok: true }, null, 2))
 }
 
 main().catch((error) => {
