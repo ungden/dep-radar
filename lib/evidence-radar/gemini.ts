@@ -62,7 +62,6 @@ export async function assertEvidenceProviderReady() {
       body: JSON.stringify({
         contents: [{ parts: [{ text: "Reply with ok." }] }],
         generationConfig: { maxOutputTokens: 2, temperature: 0 },
-        store: false,
       }),
       signal: AbortSignal.timeout(20_000),
     },
@@ -185,20 +184,6 @@ async function mediaInput(post: SourcePost) {
   }
 }
 
-function extractResponseText(payload: unknown): string {
-  if (!payload || typeof payload !== "object") return ""
-  const record = payload as Record<string, unknown>
-  if (typeof record.output_text === "string") return record.output_text
-  const steps = Array.isArray(record.steps) ? record.steps : []
-  for (const step of steps.reverse()) {
-    const content = (step as Record<string, unknown>).content
-    if (!Array.isArray(content)) continue
-    const text = content.map((item) => (item as Record<string, unknown>).text).find((item) => typeof item === "string")
-    if (typeof text === "string") return text
-  }
-  return ""
-}
-
 function extractGenerateContentText(payload: unknown): string {
   if (!payload || typeof payload !== "object") return ""
   const candidates = (payload as Record<string, unknown>).candidates
@@ -217,7 +202,7 @@ function extractGenerateContentText(payload: unknown): string {
   return ""
 }
 
-async function generateContentFallback(
+async function generateStructuredContent(
   apiKey: string,
   prompt: string,
   media: Array<Record<string, string>>,
@@ -250,15 +235,22 @@ async function generateContentFallback(
         contents: [{ role: "user", parts }],
         generationConfig: {
           temperature: 0,
-          responseMimeType: "application/json",
+          responseFormat: {
+            text: {
+              mimeType: "application/json",
+              schema: responseSchema(),
+            },
+          },
         },
-        store: false,
       }),
       signal: AbortSignal.timeout(120_000),
     },
   )
   if (!response.ok) {
-    throw new Error(`Gemini generateContent fallback failed (${response.status}): ${await response.text()}`)
+    const detail = providerErrorMessage(await response.text())
+    throw new Error(
+      `Gemini evidence extraction failed (${response.status})${detail ? `: ${detail}` : ""}`,
+    )
   }
   return extractGenerateContentText(await response.json())
 }
@@ -286,35 +278,7 @@ export async function extractEvidenceClaims(post: SourcePost, products: Product[
     `Catalogue: ${JSON.stringify(catalogueForPrompt(products))}`,
   ].join("\n")
 
-  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
-    method: "POST",
-    headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
-    body: JSON.stringify({
-      model: EVIDENCE_MODEL,
-      input: media.length ? [...media, { type: "text", text: prompt }] : prompt,
-      response_format: { type: "text", mime_type: "application/json", schema: responseSchema() },
-      generation_config: { temperature: 0 },
-      store: false,
-    }),
-    signal: AbortSignal.timeout(120_000),
-  })
-  let text = ""
-  if (response.ok) {
-    text = extractResponseText(await response.json())
-  } else {
-    const interactionError = await response.text()
-    if (response.status !== 400) {
-      throw new Error(`Gemini evidence extraction failed (${response.status}): ${interactionError}`)
-    }
-    try {
-      text = await generateContentFallback(apiKey, prompt, media)
-    } catch (fallbackError) {
-      const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
-      throw new Error(
-        `Gemini evidence extraction failed (${response.status}): ${interactionError}; ${fallbackMessage}`,
-      )
-    }
-  }
+  const text = await generateStructuredContent(apiKey, prompt, media)
   if (!text) throw new Error("Gemini returned no structured evidence output")
   const envelope = JSON.parse(text) as { claims?: Array<Record<string, unknown>> }
   const parsed = envelope.claims

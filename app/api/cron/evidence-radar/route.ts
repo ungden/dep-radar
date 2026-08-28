@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-import { assertEvidenceProviderReady } from "@/lib/evidence-radar/gemini"
 import { analyzePriorityBatch, analyzeSourcePost, collectCreatorAccount } from "@/lib/evidence-radar/pipeline"
 import { assertCronSecret, deleteQueueMessage, readQueue } from "@/lib/evidence-radar/server"
 
@@ -55,7 +54,6 @@ async function runWorker(request: NextRequest) {
   if (analysisEnabled) {
     let priorityResults: Array<Record<string, unknown>> = []
     try {
-      await assertEvidenceProviderReady()
       priorityResults = await analyzePriorityBatch(PRIORITY_BATCH_SIZE)
       for (const result of priorityResults) {
         if (result.error) errors.push({ kind: "priority_analysis", ...result })

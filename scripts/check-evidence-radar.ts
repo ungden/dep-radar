@@ -125,6 +125,7 @@ const queueMigration = fs.readFileSync("supabase/migrations/20260710093313_evide
 const collectorQueueMigration = fs.readFileSync("supabase/migrations/20260718114106_tiktok_collector_media_queue.sql", "utf8")
 const queueGrantMigration = fs.readFileSync("supabase/migrations/20260718115329_evidence_queue_service_send_grant.sql", "utf8")
 const audioMigration = fs.readFileSync("supabase/migrations/20260719113242_evidence_audio_transcripts.sql", "utf8")
+const geminiSource = fs.readFileSync("lib/evidence-radar/gemini.ts", "utf8")
 for (const required of [
   "creator_accounts", "source_posts", "creator_product_states", "evidence_audit_log",
   "pgmq.create('creator_monitor')", "pgmq.create('evidence_analysis')",
@@ -152,6 +153,10 @@ assert.ok(audioMigration.includes("archive_video_path"))
 assert.ok(audioMigration.includes("transcription_status = 'ready'"))
 assert.ok(audioMigration.includes("enable row level security") || migration.includes("alter table public.source_posts enable row level security"))
 assert.ok(!audioMigration.includes("to anon"))
+assert.ok(!geminiSource.includes("/v1beta/interactions"), "Evidence extraction must not send doomed Interactions API requests")
+assert.ok(!geminiSource.includes("store: false"), "GenerateContent payload must not include unsupported store")
+assert.ok(geminiSource.includes("responseFormat:"), "Evidence extraction must request structured JSON output")
+assert.ok(geminiSource.includes("schema: responseSchema()"), "Evidence extraction must enforce its JSON schema")
 
 console.log(JSON.stringify({
   ok: true,

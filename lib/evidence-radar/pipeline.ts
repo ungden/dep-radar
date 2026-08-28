@@ -282,9 +282,6 @@ export async function analyzeSourcePost(sourcePostId: string) {
 }
 
 export async function analyzePriorityBatch(limit = 6) {
-  // Validate the provider before claiming rows so a revoked key cannot burn through
-  // the retry budget of every queued post.
-  await assertEvidenceProviderReady()
   const supabase = getSupabaseAdmin()
   const boundedLimit = Math.max(1, Math.min(8, Math.floor(limit)))
   const { data, error } = await supabase
@@ -300,6 +297,10 @@ export async function analyzePriorityBatch(limit = 6) {
     .order("published_at", { ascending: false })
     .limit(boundedLimit)
   if (error) throw new Error(error.message)
+
+  // Avoid a provider preflight when there is no work. When rows exist, validate
+  // once before processing the batch so a revoked key cannot burn every retry.
+  if ((data ?? []).length > 0) await assertEvidenceProviderReady()
 
   const results: Array<Record<string, unknown>> = []
   for (const row of data ?? []) {
