@@ -7,7 +7,7 @@
     },
     {
       "path": "/api/cron/evidence-radar",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 * * * *"
     }
   ]
 }

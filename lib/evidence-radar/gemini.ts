@@ -3,7 +3,7 @@ import "server-only"
 import { findBeautyBrand } from "@/lib/brand-registry"
 import type { EvidenceClaim, EvidenceRiskFlag, Product, SourcePost } from "@/lib/types"
 
-export const EVIDENCE_PROMPT_VERSION = "evidence-radar-v2-trust-first"
+export const EVIDENCE_PROMPT_VERSION = "evidence-radar-v3-cost-aware-trust-first"
 export const EVIDENCE_MODEL = process.env.EVIDENCE_RADAR_GEMINI_MODEL || "gemini-3.5-flash"
 
 export class EvidenceProviderConfigurationError extends Error {
@@ -55,14 +55,10 @@ export async function assertEvidenceProviderReady() {
   if (!apiKey) throw new EvidenceProviderConfigurationError("GEMINI_API_KEY is not configured")
   const model = EVIDENCE_MODEL.replace(/^models\//, "")
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}`,
     {
-      method: "POST",
-      headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: "Reply with ok." }] }],
-        generationConfig: { maxOutputTokens: 2, temperature: 0 },
-      }),
+      method: "GET",
+      headers: { "x-goog-api-key": apiKey },
       signal: AbortSignal.timeout(20_000),
     },
   )
@@ -103,13 +99,33 @@ function matchClaimToProduct(claim: EvidenceClaim, products: Product[]) {
   return ranked[0].product.id
 }
 
-function catalogueForPrompt(products: Product[]) {
-  return products.map((product) => ({
+function catalogueForPrompt(post: SourcePost, products: Product[]) {
+  const sourceText = normalize([post.title, post.caption, post.transcript_text ?? ""].join(" "))
+  if (!sourceText) return []
+
+  return products.map((product) => {
+    const registeredBrand = findBeautyBrand(product.brand)?.name ?? product.brand
+    const brand = normalize(registeredBrand)
+    const names = [product.name, ...(product.aliases ?? [])]
+    const exactNameMatches = names
+      .map(normalize)
+      .filter((name) => name.length > 3 && sourceText.includes(name))
+      .length
+    const brandMatch = Boolean(brand && sourceText.includes(brand))
+    return {
+      product,
+      score: (brandMatch ? 100 : 0) + exactNameMatches * 10,
+    }
+  })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 12)
+    .map(({ product }) => ({
     id: product.id,
     brand: product.brand,
     name: product.name,
     aliases: product.aliases ?? [],
-  }))
+    }))
 }
 
 function responseSchema() {
@@ -271,7 +287,8 @@ export async function extractEvidenceClaims(post: SourcePost, products: Product[
     `Tiêu đề: ${post.title}`,
     `Caption: ${post.caption}`,
     `Transcript lời nói: ${post.transcript_text?.trim() || "(không có transcript; chỉ dùng caption/media nếu khả dụng)"}`,
-    `Catalogue: ${JSON.stringify(catalogueForPrompt(products))}`,
+    "Catalogue candidates là shortlist có thể không đầy đủ. Vẫn trích xuất mọi exact SKU có bằng chứng trực tiếp; hệ thống sẽ match lại sau.",
+    `Catalogue candidates: ${JSON.stringify(catalogueForPrompt(post, products))}`,
   ].join("\n")
 
   const text = await generateStructuredContent(apiKey, prompt, media)

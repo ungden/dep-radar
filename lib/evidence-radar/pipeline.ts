@@ -231,7 +231,19 @@ export async function analyzeSourcePost(sourcePostId: string) {
   if (productsError) throw new Error(productsError.message)
 
   try {
-    const claims = await extractEvidenceClaims(post, (productsData ?? []) as Product[])
+    const evidenceId = evidenceIdForSource(sourcePostId)
+    const { data: checkpoint, error: checkpointError } = await supabase
+      .from("creator_evidence_items")
+      .select("extracted_claims,model_name,prompt_version")
+      .eq("id", evidenceId)
+      .maybeSingle()
+    if (checkpointError) throw new Error(`Evidence checkpoint lookup failed: ${checkpointError.message}`)
+    const canReuseCheckpoint = checkpoint?.model_name === EVIDENCE_MODEL
+      && checkpoint.prompt_version === EVIDENCE_PROMPT_VERSION
+      && Array.isArray(checkpoint.extracted_claims)
+    const claims = canReuseCheckpoint
+      ? checkpoint.extracted_claims as EvidenceClaim[]
+      : await extractEvidenceClaims(post, (productsData ?? []) as Product[])
     const maxConfidence = claims.reduce((max, claim) => Math.max(max, claim.confidence_score), 0)
     const candidateProductIds = Array.from(new Set(claims.map((claim) => claim.matched_product_id).filter(Boolean)))
     const candidateProductNames = Array.from(new Set(claims.map((claim) => `${claim.brand} ${claim.product_name}`.trim())))
@@ -243,7 +255,6 @@ export async function analyzeSourcePost(sourcePostId: string) {
       : candidateProductIds.length < claims.length
         ? "needs_product_match"
         : "ready_to_publish"
-    const evidenceId = evidenceIdForSource(sourcePostId)
     const evidenceText = post.transcript_text?.trim() || post.caption
     const excerpt = claims[0] ? excerptForClaim(claims[0]) : evidenceText.slice(0, 500) || "Không phát hiện claim sản phẩm."
 
