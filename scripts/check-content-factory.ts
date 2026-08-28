@@ -13,6 +13,7 @@ import { getPublishedEditorialPosts } from "../lib/editorial"
 import type { BudgetStatus, FactorySource, StructuredDraft, VerificationResult } from "../lib/content-factory/types"
 
 const migration = fs.readFileSync("supabase/migrations/20260828095919_content_factory_foundation.sql", "utf8")
+const collectorPilotMigration = fs.readFileSync("supabase/migrations/20260828102613_activate_cost_safe_collector_pilot.sql", "utf8")
 const pipeline = fs.readFileSync("lib/content-factory/pipeline.ts", "utf8")
 const gemini = fs.readFileSync("lib/content-factory/gemini.ts", "utf8")
 const route = fs.readFileSync("app/api/cron/content-factory/route.ts", "utf8")
@@ -31,6 +32,10 @@ assert.ok(migration.includes("for select to anon, authenticated using (status = 
 assert.ok(!migration.includes("grant execute on all functions in schema pgmq"))
 assert.ok(migration.includes("revoke all on function public.content_factory_queue_read"))
 assert.ok(migration.includes("grant execute on function public.content_factory_queue_read(integer, integer) to service_role"))
+assert.ok(collectorPilotMigration.includes("collection_mode = 'webhook'"))
+assert.ok(collectorPilotMigration.includes("collection_mode in ('youtube_api', 'paid_provider')"))
+assert.ok(!collectorPilotMigration.includes("collection_mode in ('webhook', 'paid_provider')"))
+assert.ok(collectorPilotMigration.includes("ranked.pilot_rank <= 20"))
 
 assert.equal(classifyRisk("Son dưỡng dùng hằng ngày"), "low")
 assert.equal(classifyRisk("So sánh retinol cho da mụn"), "medium")
