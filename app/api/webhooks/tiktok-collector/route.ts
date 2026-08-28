@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
   const inserted = normalized.posts.filter((post) => !existingUrls.has(post.source_url)).length
   const updated = normalized.posts.length - inserted
   const errors = normalized.rejected.map((item) => `post[${item.index}]: ${item.reason}`)
-  await Promise.all([
+  const [accountUpdate, runInsert] = await Promise.all([
     supabase.from("creator_accounts").update({
       cursor: normalized.posts.slice(0, 100).map((post) => post.external_post_id).join(","),
       last_polled_at: normalized.collectedAt,
@@ -185,6 +185,10 @@ export async function POST(request: NextRequest) {
       finished_at: new Date().toISOString(),
     }),
   ])
+  const persistenceError = accountUpdate.error?.message || runInsert.error?.message
+  if (persistenceError) {
+    return NextResponse.json({ ok: false, error: `Collector run persistence failed: ${persistenceError}` }, { status: 500 })
+  }
 
   return NextResponse.json({
     ok: errors.length === 0,

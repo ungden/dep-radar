@@ -125,7 +125,9 @@ const queueMigration = fs.readFileSync("supabase/migrations/20260710093313_evide
 const collectorQueueMigration = fs.readFileSync("supabase/migrations/20260718114106_tiktok_collector_media_queue.sql", "utf8")
 const queueGrantMigration = fs.readFileSync("supabase/migrations/20260718115329_evidence_queue_service_send_grant.sql", "utf8")
 const audioMigration = fs.readFileSync("supabase/migrations/20260719113242_evidence_audio_transcripts.sql", "utf8")
+const schedulerMigration = fs.readFileSync("supabase/migrations/20260828085915_disable_duplicate_evidence_worker_cron.sql", "utf8")
 const geminiSource = fs.readFileSync("lib/evidence-radar/gemini.ts", "utf8")
+const pipelineSource = fs.readFileSync("lib/evidence-radar/pipeline.ts", "utf8")
 for (const required of [
   "creator_accounts", "source_posts", "creator_product_states", "evidence_audit_log",
   "pgmq.create('creator_monitor')", "pgmq.create('evidence_analysis')",
@@ -155,8 +157,11 @@ assert.ok(audioMigration.includes("enable row level security") || migration.incl
 assert.ok(!audioMigration.includes("to anon"))
 assert.ok(!geminiSource.includes("/v1beta/interactions"), "Evidence extraction must not send doomed Interactions API requests")
 assert.ok(!geminiSource.includes("store: false"), "GenerateContent payload must not include unsupported store")
-assert.ok(geminiSource.includes("responseFormat:"), "Evidence extraction must request structured JSON output")
-assert.ok(geminiSource.includes("schema: responseSchema()"), "Evidence extraction must enforce its JSON schema")
+assert.ok(geminiSource.includes('responseMimeType: "application/json"'), "Evidence extraction must request JSON output")
+assert.ok(geminiSource.includes("responseJsonSchema: responseSchema()"), "Evidence extraction must enforce its JSON schema")
+assert.ok(pipelineSource.includes("post.analysis_attempts >= MAX_ANALYSIS_ATTEMPTS"), "Queue analysis must stop exhausted retries")
+assert.ok(pipelineSource.includes("reviewed_by: existing?.reviewed_by ?? null"), "Reviewed candidates must preserve reviewer metadata")
+assert.ok(schedulerMigration.includes("cron.unschedule('evidence-radar-run-worker')"), "Supabase must not duplicate the Vercel worker cron")
 
 console.log(JSON.stringify({
   ok: true,

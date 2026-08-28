@@ -15,6 +15,8 @@ import { getSupabaseAdmin } from "@/lib/evidence-radar/server"
 import { triageSourcePost } from "@/lib/evidence-radar/triage"
 import type { CreatorAccount, CreatorProductEvent, EvidenceClaim, Product, SourcePost } from "@/lib/types"
 
+export const MAX_ANALYSIS_ATTEMPTS = 3
+
 function evidenceIdForSource(sourcePostId: string) {
   return `evidence-${sourcePostId}`
 }
@@ -58,11 +60,12 @@ async function upsertProductCandidates(
     const registeredBrand = findBeautyBrand(claim.brand)
     const canonicalBrand = registeredBrand?.name ?? claim.brand.trim()
     const alias = `${claim.brand} ${claim.product_name}${claim.variant ? ` ${claim.variant}` : ""}`.trim()
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from("product_candidates")
-      .select("id,aliases,matched_product_id,status")
+      .select("id,aliases,matched_product_id,status,reviewed_by,reviewed_at")
       .eq("canonical_key", canonicalKey)
       .maybeSingle()
+    if (existingError) throw new Error(`Product candidate lookup failed: ${existingError.message}`)
 
     const candidatePayload = {
       canonical_key: canonicalKey,
@@ -73,6 +76,8 @@ async function upsertProductCandidates(
       identity_confidence: claim.confidence_score,
       matched_product_id: existing?.matched_product_id ?? claim.matched_product_id,
       status: existing?.status ?? (claim.risk_flags.includes("ambiguous_variant") ? "needs_identity" : "new"),
+      reviewed_by: existing?.reviewed_by ?? null,
+      reviewed_at: existing?.reviewed_at ?? null,
       updated_at: new Date().toISOString(),
     }
     const { data: candidate, error: candidateError } = await supabase
@@ -143,25 +148,29 @@ export async function collectCreatorAccount(accountId: string) {
     }
 
     const cursor = posts.map((post) => post.external_post_id).filter(Boolean).slice(0, 100).join(",") || typedAccount.cursor
-    await supabase.from("creator_accounts").update({
+    const { error: accountUpdateError } = await supabase.from("creator_accounts").update({
       cursor,
       last_polled_at: new Date().toISOString(),
       last_error: null,
       updated_at: new Date().toISOString(),
     }).eq("id", accountId)
-    await supabase.from("evidence_radar_runs").update({
+    if (accountUpdateError) throw new Error(`Creator account update failed: ${accountUpdateError.message}`)
+    const { error: runUpdateError } = await supabase.from("evidence_radar_runs").update({
       status: "completed",
       records_seen: posts.length,
       records_inserted: inserted,
       finished_at: new Date().toISOString(),
     }).eq("id", run.id)
+    if (runUpdateError) throw new Error(`Collection run update failed: ${runUpdateError.message}`)
     return { provider: provider.name, seen: posts.length, inserted }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    await Promise.all([
+    const [accountFailure, runFailure] = await Promise.all([
       supabase.from("creator_accounts").update({ last_error: message, updated_at: new Date().toISOString() }).eq("id", accountId),
       supabase.from("evidence_radar_runs").update({ status: "failed", error_summary: message, finished_at: new Date().toISOString() }).eq("id", run.id),
     ])
+    const persistenceError = accountFailure.error?.message || runFailure.error?.message
+    if (persistenceError) throw new Error(`${message}; failure state persistence failed: ${persistenceError}`)
     throw error
   }
 }
@@ -177,10 +186,21 @@ export async function analyzeSourcePost(sourcePostId: string) {
 
   const post = sourcePost as SourcePost
   if (["ready", "ignored"].includes(post.analysis_status)) {
-    return { evidenceId: null, claims: 0, maxConfidence: 0, humanReview: false, skipped: true }
+    return { evidenceId: null, claims: 0, maxConfidence: 0, humanReview: false, skipped: true, terminal: true }
+  }
+  if (post.analysis_attempts >= MAX_ANALYSIS_ATTEMPTS) {
+    return {
+      evidenceId: null,
+      claims: 0,
+      maxConfidence: 0,
+      humanReview: false,
+      skipped: true,
+      exhausted: true,
+      attempts: post.analysis_attempts,
+    }
   }
   const triage = triageSourcePost(post)
-  await supabase.from("source_posts").update({
+  const { data: claimedPost, error: claimError } = await supabase.from("source_posts").update({
     analysis_status: triage.shouldAnalyze ? "processing" : "ignored",
     analysis_attempts: post.analysis_attempts + 1,
     content_lane: triage.lane,
@@ -189,7 +209,16 @@ export async function analyzeSourcePost(sourcePostId: string) {
     triaged_at: new Date().toISOString(),
     last_error: null,
     updated_at: new Date().toISOString(),
-  }).eq("id", sourcePostId)
+  })
+    .eq("id", sourcePostId)
+    .eq("analysis_attempts", post.analysis_attempts)
+    .eq("analysis_status", post.analysis_status)
+    .select("id")
+    .maybeSingle()
+  if (claimError) throw new Error(`Source post claim failed: ${claimError.message}`)
+  if (!claimedPost) {
+    return { evidenceId: null, claims: 0, maxConfidence: 0, humanReview: false, skipped: true, concurrent: true }
+  }
 
   if (!triage.shouldAnalyze) {
     return { evidenceId: null, claims: 0, maxConfidence: 0, humanReview: false, ignored: true }
@@ -248,13 +277,14 @@ export async function analyzeSourcePost(sourcePostId: string) {
 
     await upsertProductCandidates(post, evidenceId, claims)
 
-    await supabase.from("evidence_audit_log").insert({
+    const { error: auditError } = await supabase.from("evidence_audit_log").insert({
       evidence_id: evidenceId,
       actor_type: "model",
       decision: claims.length ? (humanReview ? "queued_for_review" : "extracted") : "rejected",
       reason: humanReview ? "Human review gate active." : "Structured extraction completed.",
       after_data: { claim_count: claims.length, max_confidence: maxConfidence, risk_flags: riskFlags },
     })
+    if (auditError) throw new Error(`Evidence audit insert failed: ${auditError.message}`)
 
     const systemReviewerId = process.env.EVIDENCE_RADAR_SYSTEM_REVIEWER_ID
     const autoPublish = process.env.EVIDENCE_RADAR_AUTO_PUBLISH === "true" && goldenSampleCount >= 500 && Boolean(systemReviewerId)
@@ -264,19 +294,23 @@ export async function analyzeSourcePost(sourcePostId: string) {
       }
     }
 
-    await supabase.from("source_posts").update({
+    const { error: readyUpdateError } = await supabase.from("source_posts").update({
       analysis_status: "ready",
       updated_at: new Date().toISOString(),
       raw_payload: {},
     }).eq("id", sourcePostId)
+    if (readyUpdateError) throw new Error(`Source post completion failed: ${readyUpdateError.message}`)
     return { evidenceId, claims: claims.length, maxConfidence, humanReview }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    await supabase.from("source_posts").update({
+    const { error: failedUpdateError } = await supabase.from("source_posts").update({
       analysis_status: "failed",
       last_error: message,
       updated_at: new Date().toISOString(),
     }).eq("id", sourcePostId)
+    if (failedUpdateError) {
+      throw new Error(`${message}; failure state persistence failed: ${failedUpdateError.message}`)
+    }
     throw error
   }
 }
@@ -292,7 +326,7 @@ export async function analyzePriorityBatch(limit = 6) {
     .is("duplicate_of_source_post_id", null)
     .neq("content_lane", "lifestyle")
     .neq("content_lane", "vision_required")
-    .lt("analysis_attempts", 3)
+    .lt("analysis_attempts", MAX_ANALYSIS_ATTEMPTS)
     .order("priority_score", { ascending: false })
     .order("published_at", { ascending: false })
     .limit(boundedLimit)
@@ -360,13 +394,14 @@ async function publishVerifiedClaim(
     onConflict: "evidence_id,product_id,event_type",
   })
   if (error) throw new Error(error.message)
-  await supabase.from("creator_evidence_items").update({
+  const { error: evidenceUpdateError } = await supabase.from("creator_evidence_items").update({
     status: "published",
     requires_human_review: false,
     reviewed_by: reviewerId,
     reviewed_at: new Date().toISOString(),
   }).eq("id", evidenceId)
-  await supabase.from("evidence_audit_log").insert({
+  if (evidenceUpdateError) throw new Error(`Evidence publish update failed: ${evidenceUpdateError.message}`)
+  const { error: auditInsertError } = await supabase.from("evidence_audit_log").insert({
     evidence_id: evidenceId,
     event_id: eventId,
     actor_id: reviewerId,
@@ -374,4 +409,5 @@ async function publishVerifiedClaim(
     decision: actorType === "system" ? "auto_published" : "published",
     after_data: payload,
   })
+  if (auditInsertError) throw new Error(`Evidence publish audit failed: ${auditInsertError.message}`)
 }

@@ -177,7 +177,7 @@ async function mediaInput(post: SourcePost) {
     if (contentLength > 20_000_000) return []
     const buffer = Buffer.from(await response.arrayBuffer())
     if (buffer.byteLength > 20_000_000) return []
-    const mimeType = response.headers.get("content-type") || "video/mp4"
+    const mimeType = (response.headers.get("content-type") || "video/mp4").split(";", 1)[0].trim()
     return [{ type: mimeType.startsWith("image/") ? "image" : "video", data: buffer.toString("base64"), mime_type: mimeType }]
   } catch {
     return []
@@ -235,12 +235,8 @@ async function generateStructuredContent(
         contents: [{ role: "user", parts }],
         generationConfig: {
           temperature: 0,
-          responseFormat: {
-            text: {
-              mimeType: "application/json",
-              schema: responseSchema(),
-            },
-          },
+          responseMimeType: "application/json",
+          responseJsonSchema: responseSchema(),
         },
       }),
       signal: AbortSignal.timeout(120_000),
@@ -257,7 +253,7 @@ async function generateStructuredContent(
 
 export async function extractEvidenceClaims(post: SourcePost, products: Product[]): Promise<EvidenceClaim[]> {
   const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured")
+  if (!apiKey) throw new EvidenceProviderConfigurationError("GEMINI_API_KEY is not configured")
 
   const media = await mediaInput(post)
   const prompt = [
