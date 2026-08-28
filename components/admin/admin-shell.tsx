@@ -8,6 +8,7 @@ import {
   ClipboardList,
   ClipboardCheck,
   FileText,
+  Factory,
   Gauge,
   Radar,
   LayoutDashboard,
@@ -31,6 +32,7 @@ const NAV_GROUPS = [
     label: "Content",
     items: [
       { href: "/admin/posts", label: "Bài viết", icon: FileText },
+      { href: "/admin/content", label: "Content Operations", icon: Factory },
       { href: "/admin/reviews", label: "Đánh giá", icon: MessageSquare },
     ],
   },

@@ -31,14 +31,16 @@ export default function LoginPage() {
       return
     }
 
-    router.push("/")
+    const next = new URLSearchParams(window.location.search).get("next")
+    router.push(next?.startsWith("/") ? next : "/")
+    router.refresh()
   }
 
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: `${window.location.origin}${new URLSearchParams(window.location.search).get("next") || "/"}`,
       },
     })
 

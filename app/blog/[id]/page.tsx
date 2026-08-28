@@ -38,7 +38,8 @@ function buildBlogJsonLd(post: Post, nextPosts: Post[], products: Product[], sit
       headline: post.title,
       description: post.excerpt,
       image: post.image ? [`${siteUrl}${post.image.startsWith("/") ? post.image : `/${post.image}`}`] : [],
-      datePublished: post.created_at,
+      datePublished: post.publishedAt || post.created_at,
+      dateModified: post.refreshedAt || post.lastVerifiedAt || post.publishedAt || post.created_at,
       author: {
         "@type": "Organization",
         name: EDITORIAL_AUTHOR_NAME,
@@ -267,7 +268,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
                   </Badge>
                   <span className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5" />
-                    {formatDate(post.created_at)}
+                    {formatDate(post.refreshedAt || post.publishedAt || post.created_at)}
                   </span>
                 </div>
 

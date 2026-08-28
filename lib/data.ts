@@ -208,7 +208,6 @@ export const SAMPLE_POSTS: Post[] = [
 ]
 
 const EDITORIAL_PUBLISHED_POSTS = getPublishedEditorialPosts()
-const CANONICAL_EDITORIAL_SLUGS = new Set(EDITORIAL_PUBLISHED_POSTS.map((post) => post.slug))
 const LEGACY_POST_ALIASES: Record<string, string> = {
   p1: "cach-tinh-gia-tri-that-cua-mot-serum",
   "top-5-serum-phuc-hoi-da-2026": "cach-tinh-gia-tri-that-cua-mot-serum",
@@ -231,6 +230,12 @@ const LEGACY_POST_ALIASES: Record<string, string> = {
 export function getCanonicalPostSlug(idOrSlug: string) {
   return LEGACY_POST_ALIASES[idOrSlug] ?? null
 }
+
+function isCanonicalPublicPost(post: Post) {
+  return (post.status === undefined || post.status === "published")
+    && !LEGACY_POST_ALIASES[post.id]
+    && !LEGACY_POST_ALIASES[post.slug]
+}
 // SAMPLE_POSTS is retained only as a legacy migration reference. Public
 // knowledge surfaces use the sourced editorial registry exclusively.
 const ALL_FALLBACK_POSTS: Post[] = EDITORIAL_PUBLISHED_POSTS
@@ -242,6 +247,21 @@ function normalizeEditorialPost(post: Post & {
   next_article_slugs?: string[]
   medical_disclaimer_level?: Post["medicalDisclaimerLevel"]
   content_format?: Post["contentFormat"]
+  risk_level?: Post["riskLevel"]
+  structured_content?: Post["structuredContent"]
+  generation_method?: Post["generationMethod"]
+  quality_score?: number | null
+  verifier_score?: number | null
+  published_at?: string | null
+  refreshed_at?: string | null
+  last_verified_at?: string | null
+  refresh_due_at?: string | null
+  source_notes?: Post["sourceNotes"]
+  product_group_keys?: string[]
+  matrix_product_ids?: string[]
+  kol_ids?: string[]
+  kol_reasons?: Record<string, string>
+  related_node_keys?: string[]
 }): Post {
   return {
     ...post,
@@ -252,6 +272,21 @@ function normalizeEditorialPost(post: Post & {
     nextArticleSlugs: post.nextArticleSlugs ?? post.next_article_slugs ?? [],
     medicalDisclaimerLevel: post.medicalDisclaimerLevel ?? post.medical_disclaimer_level ?? "none",
     contentFormat: post.contentFormat ?? post.content_format,
+    riskLevel: post.riskLevel ?? post.risk_level ?? "low",
+    structuredContent: post.structuredContent ?? post.structured_content ?? {},
+    generationMethod: post.generationMethod ?? post.generation_method ?? "legacy_registry",
+    qualityScore: post.qualityScore ?? post.quality_score ?? null,
+    verifierScore: post.verifierScore ?? post.verifier_score ?? null,
+    publishedAt: post.publishedAt ?? post.published_at ?? post.created_at,
+    refreshedAt: post.refreshedAt ?? post.refreshed_at ?? null,
+    lastVerifiedAt: post.lastVerifiedAt ?? post.last_verified_at ?? null,
+    refreshDueAt: post.refreshDueAt ?? post.refresh_due_at ?? null,
+    sourceNotes: post.sourceNotes ?? post.source_notes ?? [],
+    productGroupKeys: post.productGroupKeys ?? post.product_group_keys ?? [],
+    matrixProductIds: post.matrixProductIds ?? post.matrix_product_ids ?? [],
+    kolIds: post.kolIds ?? post.kol_ids ?? [],
+    kolReasons: post.kolReasons ?? post.kol_reasons ?? {},
+    relatedNodeKeys: post.relatedNodeKeys ?? post.related_node_keys ?? [],
     author_name: EDITORIAL_AUTHOR_NAME,
     author_avatar: EDITORIAL_AUTHOR_AVATAR,
   }
@@ -625,7 +660,7 @@ export async function getPosts() {
     ALL_FALLBACK_POSTS
   )
   return mergePosts(posts, EDITORIAL_PUBLISHED_POSTS)
-    .filter((post) => CANONICAL_EDITORIAL_SLUGS.has(post.slug))
+    .filter(isCanonicalPublicPost)
 }
 
 export async function getPost(id: string) {
@@ -664,7 +699,7 @@ export async function getRelatedPosts(category: string, currentId: string, limit
       .limit(limit),
     fallback
   )
-  return posts.map(normalizeEditorialPost).filter((post) => CANONICAL_EDITORIAL_SLUGS.has(post.slug))
+  return posts.map(normalizeEditorialPost).filter(isCanonicalPublicPost)
 }
 
 export async function searchAll(query: string) {
@@ -702,7 +737,7 @@ export async function searchAll(query: string) {
       products: rankSearch(mergeProducts((productsRes.data as Product[] | null) ?? [], fallback.products), tokens, (product) => [
         [product.name, 10], [product.brand, 7], [[...product.tags, ...(product.concern_tags ?? [])].join(" "), 5], [product.description, 1],
       ]).slice(0, 12),
-      posts: rankSearch(mergePosts((postsRes.data as Post[] | null) ?? [], fallback.posts).filter((post) => CANONICAL_EDITORIAL_SLUGS.has(post.slug)), tokens, (post) => [
+      posts: rankSearch(mergePosts((postsRes.data as Post[] | null) ?? [], fallback.posts).filter(isCanonicalPublicPost), tokens, (post) => [
         [post.title, 10], [post.tags.join(" "), 6], [post.excerpt, 3], [post.content, 1],
       ]).slice(0, 12),
       kols: rankSearch([...((kolsRes.data as Kol[] | null) ?? []), ...fallback.kols].filter((kol, index, items) => items.findIndex((item) => item.id === kol.id) === index), tokens, (kol) => [

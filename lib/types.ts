@@ -449,7 +449,17 @@ export interface Post {
   intent?: "pillar" | "problem-solving" | "decision" | "safety"
   contentFormat?: "guide" | "checklist" | "comparison" | "explainer" | "review"
   conditionSlugs?: string[]
-  status?: "planned" | "draft" | "published"
+  status?: "planned" | "draft" | "verifying" | "publishable" | "policy_blocked" | "published" | "archived"
+  riskLevel?: "low" | "medium" | "high"
+  structuredContent?: Record<string, unknown>
+  generationMethod?: "legacy_registry" | "content_factory" | "manual"
+  provenance?: Record<string, unknown>
+  qualityScore?: number | null
+  verifierScore?: number | null
+  publishedAt?: string | null
+  refreshedAt?: string | null
+  lastVerifiedAt?: string | null
+  refreshDueAt?: string | null
   takeaways?: string[]
   faq?: { question: string; answer: string }[]
   sourceNotes?: { label: string; url: string }[]

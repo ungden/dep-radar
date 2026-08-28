@@ -11,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getPosts(),
     getKols(),
   ])
-  const publishedPosts = posts.filter((post) => post.status !== 'draft' && post.status !== 'planned')
+  const publishedPosts = posts.filter((post) => post.status === undefined || post.status === 'published')
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
@@ -31,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const postPages: MetadataRoute.Sitemap = publishedPosts.map((post) => ({
     url: `${baseUrl}${postPath(post)}`,
-    lastModified: dateOrNow(post.created_at),
+    lastModified: dateOrNow(post.refreshedAt || post.lastVerifiedAt || post.publishedAt || post.created_at),
     changeFrequency: 'weekly' as const,
     priority: 0.7,
   }))
