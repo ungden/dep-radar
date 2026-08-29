@@ -27,7 +27,7 @@ The database queues due accounts every five minutes and invokes the authenticate
 ## Pilot gate
 
 - Keep `EVIDENCE_RADAR_AUTO_PUBLISH=false` and `EVIDENCE_RADAR_GOLDEN_SAMPLE_COUNT=0` while labeling the first 500 posts.
-- Keep `EVIDENCE_RADAR_COLLECTION_ENABLED=false` until Bright Data, YouTube and Gemini credentials have each passed a live request. Then activate the desired creator accounts and turn this flag on.
+- Keep `EVIDENCE_RADAR_COLLECTION_ENABLED=false` until the signed TikTok collector and Gemini credentials have each passed a live request. The default source focus is TikTok KOL/KOC only; Bright Data, YouTube, Facebook and Instagram remain paused and cannot collect unless deliberately re-enabled in code and environment.
 - `EVIDENCE_RADAR_ANALYSIS_ENABLED` is independent: it may process manually ingested posts with resolved media while account collection remains off.
 - Only set the golden count to `500` after the checked-in evaluation reaches product-match precision `>=98%` and current-use precision `>=95%`.
 - Auto-publish additionally requires confidence `>=92` and zero risk flags. Every other claim remains in Evidence Inbox.

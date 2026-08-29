@@ -246,6 +246,7 @@ export interface CreatorProductEvent {
 }
 
 export type CreatorAccountPriority = "a" | "b" | "c"
+export type CreatorCollectionMode = "disabled" | "webhook" | "youtube_api" | "paid_provider"
 
 export interface CreatorAccount {
   id: string
@@ -260,6 +261,8 @@ export interface CreatorAccount {
   next_poll_at: string
   last_error: string | null
   active: boolean
+  collection_mode: CreatorCollectionMode
+  source_quality_score?: number
   created_at?: string
   updated_at?: string
 }

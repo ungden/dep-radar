@@ -3,6 +3,7 @@ import { timingSafeEqual } from "node:crypto"
 import { NextResponse, type NextRequest } from "next/server"
 
 import { normalizeTikTokCollectorBatch } from "@/lib/evidence-radar/tiktok-collector"
+import { isTikTokWebhookPilot } from "@/lib/evidence-radar/focus"
 import { getSupabaseAdmin } from "@/lib/evidence-radar/server"
 import type { CreatorAccount } from "@/lib/types"
 
@@ -56,6 +57,12 @@ export async function POST(request: NextRequest) {
     .maybeSingle()
   if (accountError || !account) {
     return NextResponse.json({ ok: false, error: "TikTok creator account not found" }, { status: 404 })
+  }
+  if (!isTikTokWebhookPilot(account as CreatorAccount)) {
+    return NextResponse.json({
+      ok: false,
+      error: "Creator account is not in the active TikTok KOL/KOC webhook pilot",
+    }, { status: 403 })
   }
 
   let normalized

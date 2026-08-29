@@ -15,6 +15,12 @@ function authorized(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   if (!authorized(request)) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })
+  if (process.env.EVIDENCE_RADAR_BRIGHT_DATA_ENABLED !== "true") {
+    return NextResponse.json({
+      ok: false,
+      error: "Bright Data intake is paused while 360dep focuses on the signed TikTok KOL/KOC collector.",
+    }, { status: 410 })
+  }
   const accountId = request.nextUrl.searchParams.get("accountId")
   if (!accountId) return NextResponse.json({ ok: false, error: "Missing accountId" }, { status: 400 })
 

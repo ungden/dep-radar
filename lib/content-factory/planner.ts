@@ -37,13 +37,20 @@ export function contentSlotFor(now: Date): ContentSlotType | null {
 
 export async function seedEvidenceSignals() {
   const supabase = getSupabaseAdmin()
-  const [eventsResult, productsResult, creatorsResult] = await Promise.all([
-    supabase.from("creator_product_events").select("*")
-      .eq("verification_status", "verified").eq("exact_sku_verified", true)
-      .gte("confidence_score", 80).order("event_date", { ascending: false }).limit(50),
+  const [pilotAccountsResult, productsResult, creatorsResult] = await Promise.all([
+    supabase.from("creator_accounts").select("creator_id")
+      .eq("active", true).eq("collection_mode", "webhook").ilike("platform", "%tiktok%"),
     supabase.from("radar_products").select("id,name,brand,description,category,source_url,source_label,source_type,category_key,status"),
     supabase.from("kols").select("id,name,trustscore,source_quality").limit(200),
   ])
+  if (pilotAccountsResult.error) throw new Error(`Cannot read TikTok pilot roster: ${pilotAccountsResult.error.message}`)
+  const pilotCreatorIds = (pilotAccountsResult.data ?? []).map((account) => account.creator_id)
+  if (pilotCreatorIds.length === 0) return 0
+
+  const eventsResult = await supabase.from("creator_product_events").select("*")
+    .eq("verification_status", "verified").eq("exact_sku_verified", true)
+    .gte("confidence_score", 80).ilike("source_platform", "%tiktok%")
+    .in("creator_id", pilotCreatorIds).order("event_date", { ascending: false }).limit(50)
   if (eventsResult.error) throw new Error(`Cannot read verified creator evidence: ${eventsResult.error.message}`)
   if (productsResult.error) throw new Error(`Cannot read products for content signals: ${productsResult.error.message}`)
 
@@ -109,10 +116,11 @@ async function chooseRefreshPost() {
 async function chooseSignal(slot: ContentSlotType) {
   const signalTypes = slot === "evidence" ? ["creator_evidence", "product_evidence"] : ["evergreen", "content_gap", "search_console"]
   const now = new Date().toISOString()
-  const result = await getSupabaseAdmin().from("content_signals").select("*")
+  let query = getSupabaseAdmin().from("content_signals").select("*")
     .eq("status", "pending").in("signal_type", signalTypes)
     .or(`expires_at.is.null,expires_at.gt.${now}`)
-    .order("total_score", { ascending: false }).order("observed_at", { ascending: false }).limit(1).maybeSingle()
+  if (slot === "evidence") query = query.ilike("source_type", "%tiktok%")
+  const result = await query.order("total_score", { ascending: false }).order("observed_at", { ascending: false }).limit(1).maybeSingle()
   if (result.error) throw new Error(`Cannot choose content signal: ${result.error.message}`)
   return result.data as ContentSignalRecord | null
 }

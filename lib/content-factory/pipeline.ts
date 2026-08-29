@@ -143,6 +143,11 @@ function allowedProductIds(post: Record<string, unknown>, signal: ContentSignalR
   return new Set([...postIds, ...signalIds])
 }
 
+function isPausedSocialSignal(signal: ContentSignalRecord | null) {
+  if (!signal || signal.signal_type !== "creator_evidence") return false
+  return /(?:youtube|facebook|instagram)/iu.test(signal.source_type)
+}
+
 function sanitizeDraft(params: {
   draft: StructuredDraft
   job: ContentJobRecord
@@ -326,6 +331,11 @@ async function processMessage(message: Awaited<ReturnType<typeof readContentJobs
     if (postResult.error) throw new Error(`Content job post is missing: ${postResult.error.message}`)
     const post = postResult.data as Record<string, unknown>
     const signal = signalResult.data as ContentSignalRecord | null
+    if (isPausedSocialSignal(signal)) {
+      await blockJob(job, ["social_source_paused_tiktok_focus"])
+      await deleteContentJobMessage(message.msg_id)
+      return { processedJobId: job.id, status: "policy_blocked" as const }
+    }
     const sources = await Promise.all(sourceInputs(post, signal).map(researchSource))
 
     if (!minimumSourcesSatisfied(job, sources)) {

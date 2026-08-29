@@ -2,6 +2,7 @@ import "server-only"
 
 import { createHash } from "node:crypto"
 
+import { canonicalEvidencePlatform } from "@/lib/evidence-radar/focus"
 import type { CreatorAccount } from "@/lib/types"
 
 export interface DiscoveredSourcePost {
@@ -37,15 +38,6 @@ function hashPost(platform: string, id: string | null, url: string, caption: str
   return createHash("sha256")
     .update([platform.toLowerCase(), id ?? "", url, caption].join("|"))
     .digest("hex")
-}
-
-function canonicalPlatform(platform: string) {
-  const normalized = platform.toLowerCase()
-  if (normalized.includes("youtube")) return "youtube"
-  if (normalized.includes("instagram")) return "instagram"
-  if (normalized.includes("facebook")) return "facebook"
-  if (normalized.includes("tiktok")) return "tiktok"
-  return normalized
 }
 
 export function normalizeBrightDataPost(platform: string, value: unknown): DiscoveredSourcePost | null {
@@ -221,10 +213,15 @@ async function resolveYouTubeChannelId(profileUrl: string, apiKey: string) {
 }
 
 export function getEvidenceSourceProvider(account: CreatorAccount): EvidenceSourceProvider {
-  const platform = canonicalPlatform(account.platform)
-  if (platform === "youtube") return new YouTubeProvider()
-  if (platform === "tiktok" || platform === "instagram" || platform === "facebook") {
-    return new BrightDataProvider(platform)
+  const platform = canonicalEvidencePlatform(account.platform)
+  if (platform !== "tiktok") {
+    throw new Error(`Evidence collection is paused for ${platform}; TikTok KOL/KOC is the only active source focus.`)
   }
-  throw new Error(`Unsupported Evidence Radar platform: ${account.platform}`)
+  if (account.collection_mode === "webhook") {
+    throw new Error("TikTok webhook accounts are push-only and must not be polled.")
+  }
+  if (process.env.EVIDENCE_RADAR_ALLOW_PAID_TIKTOK_COLLECTION !== "true") {
+    throw new Error("Paid TikTok collection is disabled; use the signed TikTok collector webhook.")
+  }
+  return new BrightDataProvider("tiktok")
 }

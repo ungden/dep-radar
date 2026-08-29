@@ -10,6 +10,7 @@ import {
   EVIDENCE_PROMPT_VERSION,
   requiresHumanReview,
 } from "@/lib/evidence-radar/gemini"
+import { collectionFocusBlockReason } from "@/lib/evidence-radar/focus"
 import { getEvidenceSourceProvider } from "@/lib/evidence-radar/providers"
 import { getSupabaseAdmin } from "@/lib/evidence-radar/server"
 import { triageSourcePost } from "@/lib/evidence-radar/triage"
@@ -117,6 +118,15 @@ export async function collectCreatorAccount(accountId: string) {
   if (accountError || !account) throw new Error(accountError?.message || `Creator account ${accountId} not found`)
 
   const typedAccount = account as CreatorAccount
+  const blockedReason = collectionFocusBlockReason(typedAccount)
+  if (blockedReason) {
+    return { provider: "disabled", seen: 0, inserted: 0, skipped: true, reason: blockedReason }
+  }
+  // The active TikTok pilot is signed, inbound, and push-only. A queue message
+  // can be safely discarded without touching a paid provider.
+  if (typedAccount.collection_mode === "webhook") {
+    return { provider: "tiktok-collector-webhook", seen: 0, inserted: 0, skipped: true, reason: "push_only_webhook" }
+  }
   const provider = getEvidenceSourceProvider(typedAccount)
   const { data: run, error: runError } = await supabase
     .from("evidence_radar_runs")

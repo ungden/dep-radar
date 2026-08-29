@@ -4,6 +4,7 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 
 import { SYNTHETIC_GOLDEN_CASES } from "../lib/evidence-radar/golden-cases"
+import { collectionFocusBlockReason, isTikTokWebhookPilot } from "../lib/evidence-radar/focus"
 import { deriveCreatorProductState, isPublicEvidenceEvent } from "../lib/evidence-radar/state-engine"
 import { normalizeTikTokCollectorBatch, TIKTOK_COLLECTOR_MAX_POSTS } from "../lib/evidence-radar/tiktok-collector"
 import { isDirectCreatorEvidenceSource, isDirectTikTokPostUrl } from "../lib/evidence-source"
@@ -53,6 +54,9 @@ assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026
 assert.equal(isDirectTikTokPostUrl("https://www.tiktok.com/@creator/video/7663466714054659349", "7663466714054659349"), true)
 assert.equal(isDirectTikTokPostUrl("https://www.tiktok.com/@creator", "7663466714054659349"), false)
 assert.equal(isDirectCreatorEvidenceSource("TikTok", "https://www.tiktok.com/@creator/video/7663466714054659349", "different"), false)
+assert.equal(isTikTokWebhookPilot({ platform: "TikTok", active: true, collection_mode: "webhook" }), true)
+assert.equal(isTikTokWebhookPilot({ platform: "YouTube", active: true, collection_mode: "youtube_api" }), false)
+assert.match(collectionFocusBlockReason({ platform: "Facebook", active: false, collection_mode: "disabled" }) ?? "", /paused/i)
 
 assert.equal(SYNTHETIC_GOLDEN_CASES.length, 500)
 assert.equal(new Set(SYNTHETIC_GOLDEN_CASES.map((item) => item.creatorId)).size, 50)
@@ -127,8 +131,12 @@ const queueGrantMigration = fs.readFileSync("supabase/migrations/20260718115329_
 const audioMigration = fs.readFileSync("supabase/migrations/20260719113242_evidence_audio_transcripts.sql", "utf8")
 const schedulerMigration = fs.readFileSync("supabase/migrations/20260828085915_disable_duplicate_evidence_worker_cron.sql", "utf8")
 const cadenceMigration = fs.readFileSync("supabase/migrations/20260828091550_optimize_evidence_radar_cadence.sql", "utf8")
+const tiktokOnlyMigration = fs.readFileSync("supabase/migrations/20260829110409_enforce_tiktok_only_collection_focus.sql", "utf8")
 const geminiSource = fs.readFileSync("lib/evidence-radar/gemini.ts", "utf8")
 const pipelineSource = fs.readFileSync("lib/evidence-radar/pipeline.ts", "utf8")
+const providerSource = fs.readFileSync("lib/evidence-radar/providers.ts", "utf8")
+const tiktokWebhookSource = fs.readFileSync("app/api/webhooks/tiktok-collector/route.ts", "utf8")
+const brightDataWebhookSource = fs.readFileSync("app/api/webhooks/bright-data/route.ts", "utf8")
 for (const required of [
   "creator_accounts", "source_posts", "creator_product_states", "evidence_audit_log",
   "pgmq.create('creator_monitor')", "pgmq.create('evidence_analysis')",
@@ -166,6 +174,11 @@ assert.ok(pipelineSource.includes("canReuseCheckpoint"), "Queue retries must reu
 assert.ok(pipelineSource.includes("reviewed_by: existing?.reviewed_by ?? null"), "Reviewed candidates must preserve reviewer metadata")
 assert.ok(schedulerMigration.includes("cron.unschedule('evidence-radar-run-worker')"), "Supabase must not duplicate the Vercel worker cron")
 assert.ok(cadenceMigration.includes("'0 * * * *'"), "Empty collection polling must be limited to once per hour")
+assert.ok(tiktokOnlyMigration.includes("collection_mode = 'disabled'"), "Paused social accounts must stay disabled")
+assert.ok(providerSource.includes("TikTok KOL/KOC is the only active source focus"), "Provider routing must fail closed outside TikTok")
+assert.ok(pipelineSource.includes("push_only_webhook"), "Queued collection must not poll signed TikTok webhook accounts")
+assert.ok(tiktokWebhookSource.includes("isTikTokWebhookPilot"), "TikTok intake must be limited to the active pilot roster")
+assert.ok(brightDataWebhookSource.includes("EVIDENCE_RADAR_BRIGHT_DATA_ENABLED"), "Bright Data intake must be explicitly enabled")
 
 console.log(JSON.stringify({
   ok: true,

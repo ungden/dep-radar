@@ -78,6 +78,8 @@ export default function EvidenceRadarAdminPage() {
     const { error: insertError } = await supabase.from("creator_accounts").insert({
       ...form,
       crawl_interval_minutes: INTERVALS[form.priority_tier],
+      collection_mode: "webhook",
+      active: false,
     })
     if (insertError) setError(insertError.message)
     else {
@@ -100,7 +102,7 @@ export default function EvidenceRadarAdminPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-black text-slate-900 dark:text-slate-50"><Radar className="h-6 w-6 text-rose-500" /> Evidence Radar</h1>
-            <p className="mt-1 text-slate-500 dark:text-slate-400">Theo dõi nguồn public, freshness, lỗi provider và các lần chạy collector.</p>
+            <p className="mt-1 text-slate-500 dark:text-slate-400">Pilot hiện chỉ nhận TikTok KOL/KOC qua signed webhook; YouTube, Facebook và Instagram đang được giữ ở chế độ audit-only.</p>
           </div>
           <Button variant="outline" onClick={loadData} className="gap-2"><RefreshCcw className="h-4 w-4" /> Làm mới</Button>
         </div>
@@ -124,9 +126,7 @@ export default function EvidenceRadarAdminPage() {
                 </Select>
               </Field>
               <Field label="Platform">
-                <Select value={form.platform} onChange={(event) => setForm((value) => ({ ...value, platform: event.target.value }))}>
-                  {['TikTok', 'Instagram', 'Youtube', 'Facebook'].map((platform) => <option key={platform}>{platform}</option>)}
-                </Select>
+                <Select value={form.platform} disabled><option>TikTok</option></Select>
               </Field>
               <Field label="Profile URL"><Input value={form.profile_url} onChange={(event) => setForm((value) => ({ ...value, profile_url: event.target.value }))} placeholder="https://..." /></Field>
               <Field label="Tier">
