@@ -4,8 +4,9 @@ import { createHash } from "node:crypto"
 
 import { getProductCategory } from "@/lib/product-taxonomy"
 import { getBudgetStatus } from "@/lib/content-factory/budget"
+import { publishVerifiedClaim } from "@/lib/evidence-radar/publisher"
 import { getSupabaseAdmin } from "@/lib/evidence-radar/server"
-import type { ProductCandidate } from "@/lib/types"
+import type { EvidenceClaim, ProductCandidate, SourcePost } from "@/lib/types"
 
 const MAX_ATTEMPTS = 3
 
@@ -152,6 +153,54 @@ function autoPublishEnabled() {
     && Boolean(process.env.EVIDENCE_RADAR_SYSTEM_REVIEWER_ID)
 }
 
+function matchesCandidate(claim: EvidenceClaim, candidate: Pick<ProductCandidate, "brand" | "product_name" | "variant">) {
+  return normalized(claim.brand) === normalized(candidate.brand)
+    && normalized(claim.product_name) === normalized(candidate.product_name)
+    && normalized(claim.variant ?? "") === normalized(candidate.variant ?? "")
+}
+
+async function publishCandidateEvidence(candidate: ProductCandidate, productId: string) {
+  const reviewerId = process.env.EVIDENCE_RADAR_SYSTEM_REVIEWER_ID
+  if (!reviewerId) return 0
+  const supabase = getSupabaseAdmin()
+  const { data: sources, error: sourcesError } = await supabase
+    .from("product_candidate_sources")
+    .select("evidence_id,source_post_id")
+    .eq("candidate_id", candidate.id)
+    .not("evidence_id", "is", null)
+  if (sourcesError) throw new Error(`Cannot read candidate evidence: ${sourcesError.message}`)
+
+  let published = 0
+  for (const source of sources ?? []) {
+    if (!source.evidence_id || !source.source_post_id) continue
+    const [{ data: evidence, error: evidenceError }, { data: post, error: postError }] = await Promise.all([
+      supabase.from("creator_evidence_items").select("extracted_claims").eq("id", source.evidence_id).maybeSingle(),
+      supabase.from("source_posts").select("*").eq("id", source.source_post_id).maybeSingle(),
+    ])
+    if (evidenceError || postError) throw new Error(evidenceError?.message || postError?.message || "Cannot load candidate source")
+    const claims = Array.isArray(evidence?.extracted_claims) ? evidence.extracted_claims as EvidenceClaim[] : []
+    const matchingClaims = claims.filter((claim) => matchesCandidate(claim, candidate))
+    if (!post || matchingClaims.length === 0) continue
+    // Do not change a shared evidence record while it still contains another
+    // unresolved candidate. The resolved product can be requeued later.
+    if (claims.some((claim) => !matchesCandidate(claim, candidate) && !claim.matched_product_id)) continue
+    const enrichedClaims = claims.map((claim) => matchesCandidate(claim, candidate)
+      ? { ...claim, matched_product_id: productId, risk_flags: claim.risk_flags.filter((flag) => flag !== "product_not_in_catalogue") }
+      : claim)
+    const { error: evidenceUpdateError } = await supabase.from("creator_evidence_items").update({
+      extracted_claims: enrichedClaims,
+      candidate_product_ids: Array.from(new Set(enrichedClaims.map((claim) => claim.matched_product_id).filter(Boolean))),
+      candidate_product_names: Array.from(new Set(enrichedClaims.map((claim) => `${claim.brand} ${claim.product_name}`.trim()))),
+    }).eq("id", source.evidence_id)
+    if (evidenceUpdateError) throw new Error(`Cannot update enriched evidence: ${evidenceUpdateError.message}`)
+    for (const claim of enrichedClaims.filter((item) => matchesCandidate(item, candidate))) {
+      await publishVerifiedClaim(source.evidence_id, post as SourcePost, claim, "system", reviewerId)
+      published += 1
+    }
+  }
+  return published
+}
+
 async function materializeVerifiedProduct(candidate: ProductCandidate, job: Record<string, unknown>) {
   if (!autoPublishEnabled() || !candidate.official_product_url || !candidate.image_source_url) return null
   const supabase = getSupabaseAdmin()
@@ -201,6 +250,7 @@ async function materializeVerifiedProduct(candidate: ProductCandidate, job: Reco
   if (provenanceError) throw new Error(`Cannot store product provenance: ${provenanceError.message}`)
   const { error: candidateError } = await supabase.from("product_candidates").update({ matched_product_id: productId, updated_at: new Date().toISOString() }).eq("id", candidate.id)
   if (candidateError) throw new Error(candidateError.message)
+  await publishCandidateEvidence(candidate, productId)
   return productId
 }
 
