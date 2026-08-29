@@ -51,10 +51,14 @@ function providerMessage(body: string) {
 
 let providerPreflight: Promise<void> | null = null
 
+export function isContentProviderConfigured() {
+  return Boolean(process.env.GEMINI_API_KEY?.trim())
+}
+
 export async function assertContentProviderReady(model = CONTENT_MODEL_LITE) {
   if (providerPreflight) return providerPreflight
   providerPreflight = (async () => {
-    const apiKey = process.env.GEMINI_API_KEY
+    const apiKey = process.env.GEMINI_API_KEY?.trim()
     if (!apiKey) throw new ContentProviderConfigurationError("GEMINI_API_KEY is not configured")
     const normalizedModel = model.replace(/^models\//, "")
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(normalizedModel)}`, {
@@ -124,7 +128,7 @@ async function invokeModel<T>(params: {
 
   try {
     await assertContentProviderReady(params.model)
-    const apiKey = process.env.GEMINI_API_KEY as string
+    const apiKey = process.env.GEMINI_API_KEY?.trim() as string
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(params.model.replace(/^models\//, ""))}:generateContent`, {
       method: "POST",
       headers: { "content-type": "application/json", "x-goog-api-key": apiKey },

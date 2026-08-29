@@ -18,6 +18,10 @@ const HUB_BY_CATEGORY: Record<string, string> = {
   men_grooming: "nam-gioi",
 }
 
+function hasProductProvenance(product: Product) {
+  return Boolean(product.source_url && product.source_label && product.source_type)
+}
+
 function vnParts(now: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Ho_Chi_Minh",
@@ -61,7 +65,7 @@ export async function seedEvidenceSignals() {
   for (const event of (eventsResult.data ?? []) as CreatorProductEvent[]) {
     const product = products.get(event.product_id)
     const creator = creators.get(event.creator_id) as { name?: string; trustscore?: number; source_quality?: string } | undefined
-    if (!product || product.status === "archived" || !event.source_url) continue
+    if (!product || product.status === "archived" || !event.source_url || !hasProductProvenance(product)) continue
     const hub = HUB_BY_CATEGORY[product.category_key ?? ""] ?? "product-radar"
     const title = `${product.name}: đọc đúng bằng chứng từ ${creator?.name ?? "creator"}`
     const sources = [

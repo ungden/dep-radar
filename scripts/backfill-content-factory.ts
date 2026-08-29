@@ -45,9 +45,12 @@ const bySlug = new Map(existing.map((post) => [post.slug as string, post]))
 const liveProducts = await db.from("radar_products").select("id")
 if (liveProducts.error) throw new Error(`Cannot load live products: ${liveProducts.error.message}`)
 const sourcedProducts = new Map(SAMPLE_PRODUCTS.filter((product) => product.source_url).map((product) => [product.id, product]))
+const PRODUCT_SOURCE_ALIASES: Record<string, string> = {
+  "paulas-choice-skin-perfecting-2-bha-liquid-exfoliant-118ml": "paulas-choice-skin-perfecting-2-bha-liquid-exfoliant",
+}
 let productSourcesUpdated = 0
 for (const row of liveProducts.data ?? []) {
-  const product = sourcedProducts.get(String(row.id))
+  const product = sourcedProducts.get(PRODUCT_SOURCE_ALIASES[String(row.id)] ?? String(row.id))
   if (!product?.source_url) continue
   const update = await db.from("radar_products").update({
     source_label: product.source_label,

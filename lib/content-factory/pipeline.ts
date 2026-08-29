@@ -2,7 +2,7 @@ import "server-only"
 
 import { getSupabaseAdmin } from "@/lib/evidence-radar/server"
 import { getBudgetStatus } from "@/lib/content-factory/budget"
-import { ContentProviderConfigurationError, generateDraft, verifyDraft } from "@/lib/content-factory/gemini"
+import { ContentProviderConfigurationError, generateDraft, isContentProviderConfigured, verifyDraft } from "@/lib/content-factory/gemini"
 import { planSlot, seedEvidenceSignals } from "@/lib/content-factory/planner"
 import {
   deterministicQuality,
@@ -444,6 +444,9 @@ export async function runContentFactory(now = new Date()): Promise<ContentFactor
   if (!enabled) return { paused: true, reason: "CONTENT_FACTORY_ENABLED is off", seededSignals: 0, warnings }
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { paused: true, reason: "Supabase service credentials are missing", seededSignals: 0, warnings }
+  }
+  if (!isContentProviderConfigured()) {
+    return { paused: true, reason: "GEMINI_API_KEY is not configured", seededSignals: 0, warnings }
   }
 
   const budget = await getBudgetStatus(now)
