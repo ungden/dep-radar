@@ -50,3 +50,7 @@ export async function deleteQueueMessage(queueName: string, messageId: number) {
   })
   if (error) throw new Error(`Queue ${queueName} delete failed: ${error.message}`)
 }
+
+export async function readProductEnrichmentJobs(count = 2, visibilitySeconds = 600) {
+  return readQueue<{ job_id: string; idempotency_key: string }>("product_enrichment", count, visibilitySeconds)
+}

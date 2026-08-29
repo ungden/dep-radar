@@ -36,12 +36,12 @@ The database queues due accounts every five minutes and invokes the authenticate
 
 `downloadtiktok` is the private collector for recent TikTok history. It does not write directly to Supabase and it cannot publish evidence. It sends a versioned manifest to `/api/webhooks/tiktok-collector`, where the creator/profile/post relationship is checked again before service-role ingestion.
 
-Use two passes so a 100-video scan does not become a multi-gigabyte archive by default:
+Use two passes so a daily scan does not become a multi-gigabyte archive by default:
 
-1. Scan metadata/captions for 100 recent posts per pilot creator. Metadata-only rows remain `pending` and do not enter the model queue.
-2. Resolve media for at most 10 likely-useful posts. Only those rows enter the analysis queue; analyse them promptly, then let the short media URL expire.
-3. Review extracted products, action type, disclosure and timestamp/frame evidence in Evidence Inbox.
-4. Expand to 200 posts only after measuring scan success, product-match precision, media cost and review throughput.
+1. At 02:15 Asia/Ho_Chi_Minh, the private collector fetches the signed active TikTok roster and scans only post IDs absent from its cursor.
+2. Every new post is scored from caption, cover OCR and deterministic beauty terms. Only high-score posts plus a bounded negative sample resolve media; media is not selected by position in the feed.
+3. The manifest carries an automation cohort. 360dep analyses only the configured cohort, so historical rows and stale queue messages cannot consume the shadow budget.
+4. Transcript and sampled video evidence are sent together. A product candidate needs an exact official page and official image before it can be materialized; otherwise it stays private as `needs_official_source`.
 
 Dry-run the ten-creator pilot from the `downloadtiktok` repository:
 
@@ -53,7 +53,7 @@ Dry-run the ten-creator pilot from the `downloadtiktok` repository:
   --dry-run
 ```
 
-For ingestion, set `TIKTOK_COLLECTOR_WEBHOOK_URL` and the same server-only `TIKTOK_COLLECTOR_WEBHOOK_SECRET` on the collector and 360dep. Start with `--resolve-media 10`. Never place the secret in the JSON manifest or browser code.
+For ingestion, set `TIKTOK_COLLECTOR_WEBHOOK_URL`, `TIKTOK_COLLECTOR_ROSTER_URL` and the same server-only `TIKTOK_COLLECTOR_WEBHOOK_SECRET` on the collector and 360dep. The Railway scheduler remains disabled until `EVIDENCE_RADAR_DAILY_COLLECTOR_ENABLED=true`; start with two resolved clips per creator. Never place the secret in the JSON manifest or browser code.
 
 The collector contract rejects cross-creator URLs, URL/post-ID mismatches, duplicate IDs, future timestamps, non-HTTPS media and unapproved media hosts. Accepted rows remain private while `EVIDENCE_RADAR_AUTO_PUBLISH=false`.
 

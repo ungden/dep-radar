@@ -12,6 +12,7 @@ import {
 } from "@/lib/evidence-radar/gemini"
 import { collectionFocusBlockReason } from "@/lib/evidence-radar/focus"
 import { getEvidenceSourceProvider } from "@/lib/evidence-radar/providers"
+import { enqueueProductEnrichment } from "@/lib/evidence-radar/product-enrichment"
 import { getSupabaseAdmin } from "@/lib/evidence-radar/server"
 import { triageSourcePost } from "@/lib/evidence-radar/triage"
 import type { CreatorAccount, CreatorProductEvent, EvidenceClaim, Product, SourcePost } from "@/lib/types"
@@ -105,6 +106,10 @@ async function upsertProductCandidates(
       updated_at: new Date().toISOString(),
     }, { onConflict: "candidate_id,source_post_id" })
     if (sourceError) throw new Error(sourceError.message)
+    const onlyMissingCatalogueRisk = claim.risk_flags.every((flag) => flag === "product_not_in_catalogue")
+    if (!claim.matched_product_id && claim.confidence_score >= 90 && onlyMissingCatalogueRisk) {
+      await enqueueProductEnrichment(candidate.id, post.id, `${evidenceId}:${claim.confidence_score}`)
+    }
   }
 }
 
@@ -195,6 +200,10 @@ export async function analyzeSourcePost(sourcePostId: string) {
   if (sourceError || !sourcePost) throw new Error(sourceError?.message || `Source post ${sourcePostId} not found`)
 
   const post = sourcePost as SourcePost
+  const automationCohort = process.env.EVIDENCE_RADAR_AUTOMATION_COHORT
+  if (!automationCohort || post.automation_cohort !== automationCohort) {
+    return { evidenceId: null, claims: 0, maxConfidence: 0, humanReview: false, skipped: true, reason: "outside_active_automation_cohort" }
+  }
   if (["ready", "ignored"].includes(post.analysis_status)) {
     return { evidenceId: null, claims: 0, maxConfidence: 0, humanReview: false, skipped: true, terminal: true }
   }
@@ -317,6 +326,7 @@ export async function analyzeSourcePost(sourcePostId: string) {
 
     const { error: readyUpdateError } = await supabase.from("source_posts").update({
       analysis_status: "ready",
+      visual_verified_at: post.media_url ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
       raw_payload: {},
     }).eq("id", sourcePostId)
@@ -339,14 +349,16 @@ export async function analyzeSourcePost(sourcePostId: string) {
 export async function analyzePriorityBatch(limit = 6) {
   const supabase = getSupabaseAdmin()
   const boundedLimit = Math.max(1, Math.min(8, Math.floor(limit)))
+  const automationCohort = process.env.EVIDENCE_RADAR_AUTOMATION_COHORT
+  if (!automationCohort) return []
   const { data, error } = await supabase
     .from("source_posts")
     .select("id")
     .in("analysis_status", ["pending", "queued", "failed"])
     .in("transcription_status", ["ready", "no_speech"])
     .is("duplicate_of_source_post_id", null)
+    .eq("automation_cohort", automationCohort)
     .neq("content_lane", "lifestyle")
-    .neq("content_lane", "vision_required")
     .lt("analysis_attempts", MAX_ANALYSIS_ATTEMPTS)
     .order("priority_score", { ascending: false })
     .order("published_at", { ascending: false })

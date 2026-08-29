@@ -54,7 +54,7 @@ export async function seedEvidenceSignals() {
   const eventsResult = await supabase.from("creator_product_events").select("*")
     .eq("verification_status", "verified").eq("exact_sku_verified", true)
     .gte("confidence_score", 80).ilike("source_platform", "%tiktok%")
-    .in("creator_id", pilotCreatorIds).order("event_date", { ascending: false }).limit(50)
+    .in("creator_id", pilotCreatorIds).order("event_date", { ascending: false }).limit(300)
   if (eventsResult.error) throw new Error(`Cannot read verified creator evidence: ${eventsResult.error.message}`)
   if (productsResult.error) throw new Error(`Cannot read products for content signals: ${productsResult.error.message}`)
 
@@ -62,41 +62,50 @@ export async function seedEvidenceSignals() {
   const creators = new Map((creatorsResult.data ?? []).map((creator) => [creator.id, creator]))
   let inserted = 0
 
+  const eventsByProduct = new Map<string, CreatorProductEvent[]>()
   for (const event of (eventsResult.data ?? []) as CreatorProductEvent[]) {
-    const product = products.get(event.product_id)
-    const creator = creators.get(event.creator_id) as { name?: string; trustscore?: number; source_quality?: string } | undefined
-    if (!product || product.status === "archived" || !event.source_url || !hasProductProvenance(product)) continue
+    eventsByProduct.set(event.product_id, [...(eventsByProduct.get(event.product_id) ?? []), event])
+  }
+  for (const [productId, allEvents] of eventsByProduct) {
+    const product = products.get(productId)
+    const events = Array.from(new Map(allEvents.filter((event) => Boolean(event.source_url)).map((event) => [event.creator_id, event])).values())
+    if (!product || product.status !== "published" || !hasProductProvenance(product) || events.length < 2) continue
+    const creatorIds = events.map((event) => event.creator_id).sort()
+    const latest = events[0]
+    const creatorNames = events.map((event) => (creators.get(event.creator_id) as { name?: string } | undefined)?.name ?? "creator")
     const hub = HUB_BY_CATEGORY[product.category_key ?? ""] ?? "product-radar"
-    const title = `${product.name}: đọc đúng bằng chứng từ ${creator?.name ?? "creator"}`
+    const title = `${product.name}: bằng chứng TikTok từ ${creatorNames.slice(0, 2).join(" và ")}`
     const sources = [
-      { url: event.source_url, title: event.source_title || title, publisher: creator?.name ?? event.source_platform, sourceType: "creator_evidence", excerpt: event.source_excerpt },
+      ...events.slice(0, 3).map((event) => {
+        const creator = creators.get(event.creator_id) as { name?: string } | undefined
+        return { url: event.source_url!, title: event.source_title || title, publisher: creator?.name ?? event.source_platform, sourceType: "creator_evidence", excerpt: event.source_excerpt }
+      }),
       ...(product.source_url ? [{ url: product.source_url, title: product.source_label ?? `${product.brand} ${product.name}`, publisher: product.brand, sourceType: product.source_type ?? "official_product", excerpt: product.description }] : []),
     ]
     const payload = {
-      productIds: [product.id], creatorIds: [event.creator_id], eventId: event.id,
-      eventType: event.event_type, disclosure: event.disclosure, evidenceNote: event.evidence_note,
-      ownData: { product: { id: product.id, brand: product.brand, name: product.name, description: product.description }, creator: { id: event.creator_id, name: creator?.name }, event },
+      productIds: [product.id], creatorIds, eventIds: events.map((event) => event.id),
+      ownData: { product: { id: product.id, brand: product.brand, name: product.name, description: product.description }, events },
       sources,
     }
-    const dedupeHash = stableHash({ type: "creator_evidence", event: event.id, product: product.id })
+    const dedupeHash = stableHash({ type: "product_evidence", product: product.id, creators: creatorIds })
     const { data, error } = await supabase.from("content_signals").upsert({
-      signal_type: "creator_evidence",
-      source_type: event.source_platform,
-      external_key: event.id,
+      signal_type: "product_evidence",
+      source_type: "tiktok_product_cluster",
+      external_key: `${product.id}:${creatorIds.join(",")}`,
       title,
-      summary: event.source_excerpt || event.evidence_note || "Verified creator-product observation",
-      source_url: event.source_url,
+      summary: latest.source_excerpt || latest.evidence_note || "Verified multi-creator product observation",
+      source_url: latest.source_url,
       hub_slug: hub,
       intent: "decision",
-      risk_level: classifyRisk(`${product.name} ${product.category} ${event.source_excerpt}`),
+      risk_level: classifyRisk(`${product.name} ${product.category} ${events.map((event) => event.source_excerpt).join(" ")}`),
       payload,
-      evidence_score: Math.min(100, Number(event.confidence_score ?? 80)),
+      evidence_score: Math.min(100, Math.round(events.reduce((sum, event) => sum + Number(event.confidence_score ?? 80), 0) / events.length)),
       freshness_score: 70,
       opportunity_score: 60,
       status: "pending",
       dedupe_hash: dedupeHash,
-      observed_at: event.observed_at,
-      expires_at: event.valid_until,
+      observed_at: latest.observed_at,
+      expires_at: latest.valid_until,
     }, { onConflict: "dedupe_hash", ignoreDuplicates: true }).select("id")
     if (error) throw new Error(`Cannot seed content signal: ${error.message}`)
     inserted += data?.length ?? 0
@@ -124,9 +133,12 @@ async function chooseSignal(slot: ContentSlotType) {
     .eq("status", "pending").in("signal_type", signalTypes)
     .or(`expires_at.is.null,expires_at.gt.${now}`)
   if (slot === "evidence") query = query.ilike("source_type", "%tiktok%")
-  const result = await query.order("total_score", { ascending: false }).order("observed_at", { ascending: false }).limit(1).maybeSingle()
+  const result = await query.order("total_score", { ascending: false }).order("observed_at", { ascending: false }).limit(30)
   if (result.error) throw new Error(`Cannot choose content signal: ${result.error.message}`)
-  return result.data as ContentSignalRecord | null
+  const signals = (result.data ?? []) as ContentSignalRecord[]
+  if (slot !== "evidence") return signals[0] ?? null
+  return signals.find((signal) => signal.signal_type !== "creator_evidence"
+    || Array.isArray(signal.payload?.creatorIds) && signal.payload.creatorIds.length >= 2) ?? null
 }
 
 export async function planSlot(now: Date, budget: BudgetStatus, shadowMode: boolean) {

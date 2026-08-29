@@ -92,6 +92,8 @@ export async function POST(request: NextRequest) {
     source_platform: "TikTok",
     external_post_id: post.external_post_id,
     source_url: post.source_url,
+    collector_batch_id: normalized.batchId,
+    automation_cohort: normalized.automationCohort,
     published_at: post.published_at,
     title: post.title,
     caption: post.caption,
@@ -112,6 +114,8 @@ export async function POST(request: NextRequest) {
     audio_sha256: post.audio_sha256,
     vision_fallback_required: post.vision_fallback_required,
     vision_sample_timestamps: post.vision_sample_timestamps,
+    cover_ocr_text: post.cover_ocr_text,
+    triage_sampled: post.triage_sampled,
   })
   const metadataRows = normalized.posts
     .filter((post) => !post.media_url)
@@ -186,6 +190,7 @@ export async function POST(request: NextRequest) {
         account_id: account.id,
         creator_id: account.creator_id,
         batch_id: normalized.batchId,
+        automation_cohort: normalized.automationCohort,
         updated,
         public_publish_enabled: false,
       },

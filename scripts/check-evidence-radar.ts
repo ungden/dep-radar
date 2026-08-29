@@ -132,6 +132,7 @@ const audioMigration = fs.readFileSync("supabase/migrations/20260719113242_evide
 const schedulerMigration = fs.readFileSync("supabase/migrations/20260828085915_disable_duplicate_evidence_worker_cron.sql", "utf8")
 const cadenceMigration = fs.readFileSync("supabase/migrations/20260828091550_optimize_evidence_radar_cadence.sql", "utf8")
 const tiktokOnlyMigration = fs.readFileSync("supabase/migrations/20260829110409_enforce_tiktok_only_collection_focus.sql", "utf8")
+const factoryMigration = fs.readFileSync("supabase/migrations/20260829115406_tiktok_evidence_catalogue_factory.sql", "utf8")
 const geminiSource = fs.readFileSync("lib/evidence-radar/gemini.ts", "utf8")
 const pipelineSource = fs.readFileSync("lib/evidence-radar/pipeline.ts", "utf8")
 const providerSource = fs.readFileSync("lib/evidence-radar/providers.ts", "utf8")
@@ -167,6 +168,7 @@ assert.ok(!audioMigration.includes("to anon"))
 assert.ok(!geminiSource.includes("/v1beta/interactions"), "Evidence extraction must not send doomed Interactions API requests")
 assert.ok(!geminiSource.includes("store: false"), "GenerateContent payload must not include unsupported store")
 assert.ok(!geminiSource.includes("Reply with ok."), "Provider preflight must not spend generation tokens")
+assert.ok(!geminiSource.includes('if (post.transcription_status === "ready" && post.transcript_text?.trim()) return []'), "Visual evidence must not be skipped merely because ASR is available")
 assert.ok(geminiSource.includes('responseMimeType: "application/json"'), "Evidence extraction must request JSON output")
 assert.ok(geminiSource.includes("responseJsonSchema: responseSchema()"), "Evidence extraction must enforce its JSON schema")
 assert.ok(pipelineSource.includes("post.analysis_attempts >= MAX_ANALYSIS_ATTEMPTS"), "Queue analysis must stop exhausted retries")
@@ -179,6 +181,13 @@ assert.ok(providerSource.includes("TikTok KOL/KOC is the only active source focu
 assert.ok(pipelineSource.includes("push_only_webhook"), "Queued collection must not poll signed TikTok webhook accounts")
 assert.ok(tiktokWebhookSource.includes("isTikTokWebhookPilot"), "TikTok intake must be limited to the active pilot roster")
 assert.ok(brightDataWebhookSource.includes("EVIDENCE_RADAR_BRIGHT_DATA_ENABLED"), "Bright Data intake must be explicitly enabled")
+for (const table of ["product_enrichment_jobs", "product_source_provenance"]) {
+  assert.ok(factoryMigration.includes(`create table if not exists public.${table}`), `${table} must be created`)
+  assert.ok(factoryMigration.includes(`alter table public.${table} enable row level security`), `${table} must have RLS`)
+}
+assert.ok(factoryMigration.includes("pgmq.create('product_enrichment')"), "Product enrichment must use a private queue")
+assert.ok(factoryMigration.includes("automation_cohort"), "New automation must be isolated from legacy backlog")
+assert.ok(pipelineSource.includes("outside_active_automation_cohort"), "Legacy queue messages must fail closed")
 
 console.log(JSON.stringify({
   ok: true,

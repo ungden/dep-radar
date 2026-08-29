@@ -30,8 +30,8 @@ export interface SourcePostTriage {
   shouldAnalyze: boolean
 }
 
-export function triageSourcePost(post: Pick<SourcePost, "caption" | "title" | "transcript_text" | "transcription_status" | "vision_fallback_required">): SourcePostTriage {
-  const text = normalize([post.title, post.caption, post.transcript_text].filter(Boolean).join(" "))
+export function triageSourcePost(post: Pick<SourcePost, "caption" | "title" | "transcript_text" | "cover_ocr_text" | "transcription_status" | "vision_fallback_required">): SourcePostTriage {
+  const text = normalize([post.title, post.caption, post.transcript_text, post.cover_ocr_text].filter(Boolean).join(" "))
   const brandHits = BRAND_TERMS.reduce((count, brand) => count + Number(text.includes(brand)), 0)
   const productHits = hits(text, PRODUCT_TERMS)
   const reviewHits = hits(text, REVIEW_TERMS)

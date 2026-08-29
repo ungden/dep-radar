@@ -27,6 +27,7 @@ export interface Product {
   source_label?: string | null
   source_url?: string | null
   source_type?: "official" | "brand-retail" | "retailer" | null
+  provenance?: Record<string, unknown>
   /** Seed prices are editorial references, not live offers. */
   price_status?: "verified" | "reference" | "unverified" | null
 }
@@ -309,6 +310,11 @@ export interface SourcePost {
   triaged_at?: string | null
   duplicate_of_source_post_id?: string | null
   vision_sample_timestamps?: number[]
+  collector_batch_id?: string | null
+  automation_cohort?: string
+  cover_ocr_text?: string | null
+  triage_sampled?: boolean
+  visual_verified_at?: string | null
   created_at?: string
   updated_at?: string
 }
@@ -348,6 +354,7 @@ export interface EvidenceClaim {
 }
 
 export type ProductCandidateStatus = "new" | "needs_identity" | "ready_to_create" | "merged" | "rejected"
+  | "extracting" | "enriching" | "verified" | "needs_official_source" | "policy_blocked" | "failed"
 
 export interface ProductCandidate {
   id: string
@@ -366,6 +373,9 @@ export interface ProductCandidate {
   review_note: string | null
   reviewed_by: string | null
   reviewed_at: string | null
+  verification_metadata?: Record<string, unknown>
+  system_verified_at?: string | null
+  last_enrichment_error?: string | null
   created_at: string
   updated_at: string
 }

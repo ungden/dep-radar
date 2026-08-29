@@ -180,7 +180,6 @@ function responseSchema() {
 }
 
 async function mediaInput(post: SourcePost) {
-  if (post.transcription_status === "ready" && post.transcript_text?.trim()) return []
   if (!post.media_url) return []
   if (post.source_platform.toLowerCase().includes("youtube")) {
     return [{ type: "video", uri: post.source_url }]
@@ -190,6 +189,8 @@ async function mediaInput(post: SourcePost) {
     const response = await fetch(post.media_url, { signal: AbortSignal.timeout(20_000) })
     if (!response.ok) return []
     const contentLength = Number(response.headers.get("content-length") || 0)
+    // Transcript is not a substitute for visual SKU evidence. Keep the
+    // payload bounded and let the collector send sampled media only.
     if (contentLength > 20_000_000) return []
     const buffer = Buffer.from(await response.arrayBuffer())
     if (buffer.byteLength > 20_000_000) return []
@@ -281,6 +282,7 @@ export async function extractEvidenceClaims(post: SourcePost, products: Product[
     "Tên dòng sản phẩm chưa đủ để khẳng định variant, dung tích, màu hoặc nồng độ. Nếu thiếu chi tiết exact SKU phải gắn ambiguous_variant.",
     "Nội dung bác sĩ về hoạt chất/phác đồ không phải recommendation sản phẩm nếu không có hành vi trực tiếp với exact SKU.",
     "Mọi claim phải có quote/caption/frame/timestamp cụ thể. Nếu không chắc variant, gắn ambiguous_variant.",
+    "Nếu có video hoặc frame kèm theo, hãy đối chiếu nhãn/bao bì với transcript; transcript không đủ để suy ra variant khi hình ảnh mâu thuẫn.",
     "Chỉ trả về một JSON object có key claims. Không thêm markdown hoặc giải thích ngoài JSON.",
     `JSON contract bắt buộc: ${JSON.stringify(responseSchema())}`,
     `Nguồn: ${post.source_platform} ${post.source_url}`,

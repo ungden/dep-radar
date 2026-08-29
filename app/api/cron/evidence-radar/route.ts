@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 import { analyzePriorityBatch, analyzeSourcePost, collectCreatorAccount } from "@/lib/evidence-radar/pipeline"
-import { assertCronSecret, deleteQueueMessage, readQueue } from "@/lib/evidence-radar/server"
+import { assertCronSecret, deleteQueueMessage, readProductEnrichmentJobs, readQueue } from "@/lib/evidence-radar/server"
+import { processProductEnrichment } from "@/lib/evidence-radar/product-enrichment"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
@@ -81,6 +82,19 @@ async function runWorker(request: NextRequest) {
             attempt: queueMessage.read_ct,
             error: error instanceof Error ? error.message : String(error),
           })
+        }
+      }
+    }
+
+    if (process.env.PRODUCT_ENRICHMENT_ENABLED === "true") {
+      const enrichmentMessages = await readProductEnrichmentJobs(2, 600)
+      for (const queueMessage of enrichmentMessages) {
+        try {
+          const result = await processProductEnrichment(queueMessage.message.job_id)
+          await deleteQueueMessage("product_enrichment", queueMessage.msg_id)
+          results.push({ kind: "product_enrichment", jobId: queueMessage.message.job_id, ...result })
+        } catch (error) {
+          errors.push({ kind: "product_enrichment", jobId: queueMessage.message.job_id, attempt: queueMessage.read_ct, error: error instanceof Error ? error.message : String(error) })
         }
       }
     }
