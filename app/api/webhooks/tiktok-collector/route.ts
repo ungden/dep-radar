@@ -117,10 +117,14 @@ export async function POST(request: NextRequest) {
     cover_ocr_text: post.cover_ocr_text,
     triage_sampled: post.triage_sampled,
   })
-  const metadataRows = normalized.posts
+  // A re-delivered manifest can include historic URLs. Insert only new URLs:
+  // an ordinary upsert would relabel a legacy post as the active cohort and
+  // make pre-existing evidence look like fresh shadow output.
+  const newPosts = normalized.posts.filter((post) => !existingUrls.has(post.source_url))
+  const metadataRows = newPosts
     .filter((post) => !post.media_url)
     .map((post) => commonRow(post))
-  const mediaRowsToUpsert = normalized.posts
+  const mediaRowsToUpsert = newPosts
     .filter((post) => post.media_url)
     .map((post) => ({
       ...commonRow(post),
@@ -131,7 +135,7 @@ export async function POST(request: NextRequest) {
     if (!batch.length) continue
     const { error: upsertError } = await supabase
       .from("source_posts")
-      .upsert(batch, { onConflict: "source_url" })
+      .upsert(batch, { onConflict: "source_url", ignoreDuplicates: true })
     if (upsertError) return NextResponse.json({ ok: false, error: upsertError.message }, { status: 500 })
   }
 
@@ -146,7 +150,7 @@ export async function POST(request: NextRequest) {
     if (noSpeechError) return NextResponse.json({ ok: false, error: noSpeechError.message }, { status: 500 })
   }
 
-  const mediaSourceUrls = normalized.posts
+  const mediaSourceUrls = newPosts
     .filter((post) => post.media_url || post.transcription_status === "ready" || post.archive_frame_paths.length > 0)
     .map((post) => post.source_url)
   let queuedForPrivateAnalysis = 0
@@ -168,8 +172,8 @@ export async function POST(request: NextRequest) {
     queuedForPrivateAnalysis = mediaRows?.length ?? 0
   }
 
-  const inserted = normalized.posts.filter((post) => !existingUrls.has(post.source_url)).length
-  const updated = normalized.posts.length - inserted
+  const inserted = newPosts.length
+  const duplicates = normalized.posts.length - inserted
   const errors = normalized.rejected.map((item) => `post[${item.index}]: ${item.reason}`)
   const [accountUpdate, runInsert] = await Promise.all([
     supabase.from("creator_accounts").update({
@@ -191,7 +195,7 @@ export async function POST(request: NextRequest) {
         creator_id: account.creator_id,
         batch_id: normalized.batchId,
         automation_cohort: normalized.automationCohort,
-        updated,
+        duplicates,
         public_publish_enabled: false,
       },
       finished_at: new Date().toISOString(),
@@ -208,7 +212,7 @@ export async function POST(request: NextRequest) {
     seen: normalized.recordsSeen,
     accepted: normalized.posts.length,
     inserted,
-    updated,
+    duplicates,
     rejected: normalized.rejected,
     queuedForPrivateAnalysis,
     publicPublishEnabled: false,
