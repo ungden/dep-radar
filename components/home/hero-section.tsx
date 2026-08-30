@@ -1,43 +1,125 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, BookOpen, Layers3, ShieldCheck } from "lucide-react"
+import { ArrowRight, Check } from "lucide-react"
+import * as React from "react"
 
-import { CatalogueFinder } from "@/components/catalogue/catalogue-finder"
-import type { HomeDailyBriefing } from "@/lib/home-briefing"
+import { trackEvent } from "@/lib/analytics"
+import { buildCatalogueHref } from "@/lib/catalogue"
 
-export function HeroSection({ briefing }: { briefing: HomeDailyBriefing }) {
-  const articleCount = briefing.dailyUpdates.filter((item) => item.kind === "article").length
+const concernChoices = [
+  {
+    slug: "tri-mun",
+    label: "Mụn",
+    image: "/images/editorial/ban-do-tri-mun-tu-mun-an-den-mun-nang.jpg",
+    href: buildCatalogueHref("tri-mun"),
+  },
+  {
+    slug: "da-nhay-cam",
+    label: "Da nhạy cảm",
+    image: "/images/editorial/da-nhay-cam-nen-xay-routine-nhu-the-nao.jpg",
+    href: buildCatalogueHref("da-mat", { skin: "da-nhay-cam" }),
+  },
+  {
+    slug: "chong-nang",
+    label: "Chống nắng",
+    image: "/images/editorial/kem-chong-nang-da-dau-khong-bi.jpg",
+    href: buildCatalogueHref("sang-da-chong-nang", { condition: "chong-nang-da-dau" }),
+  },
+  {
+    slug: "toc-da-dau",
+    label: "Tóc & da đầu",
+    image: "/images/editorial/gau-dau-hay-da-dau-kho.jpg",
+    href: buildCatalogueHref("toc-da-dau"),
+  },
+  {
+    slug: "makeup",
+    label: "Trang điểm",
+    image: "/images/editorial/pillar-makeup-theo-nen-da-va-dip-dung.jpg",
+    href: buildCatalogueHref("makeup"),
+  },
+  {
+    slug: "mui-huong",
+    label: "Mùi hương",
+    image: "/images/editorial/pillar-chon-mui-huong-theo-dip-va-mua.jpg",
+    href: buildCatalogueHref("mui-huong"),
+  },
+] as const
+
+export function HeroSection() {
+  const [selectedSlug, setSelectedSlug] = React.useState<(typeof concernChoices)[number]["slug"]>("tri-mun")
+  const selected = concernChoices.find((choice) => choice.slug === selectedSlug) ?? concernChoices[0]
 
   return (
-    <section className="border-b border-slate-100 bg-gradient-to-b from-white to-slate-50 py-8 dark:border-slate-800 dark:from-slate-950 dark:to-slate-950 md:py-12">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,0.72fr)_minmax(640px,1.28fr)] xl:items-start">
-          <div className="pt-2">
-            <div className="inline-flex min-h-8 items-center gap-2 rounded-full bg-rose-50 px-3 text-xs font-black uppercase tracking-[0.18em] text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
-              <Layers3 className="h-4 w-4" /> Catalogue kiến thức làm đẹp
-            </div>
-            <h1 className="mt-5 font-display text-4xl font-black leading-[1.05] tracking-tight text-slate-950 dark:text-white md:text-6xl">
-              Tìm đúng kiến thức cho tình trạng của bạn.
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-300 md:text-lg">
-              Chọn một nhu cầu, thu hẹp theo tình trạng và bối cảnh cá nhân, rồi đi theo lộ trình đọc trước khi cân nhắc sản phẩm.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a href="#finder" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-rose-600 px-5 text-sm font-black text-white hover:bg-rose-700">
-                Tìm theo tình trạng <ArrowRight className="h-4 w-4" />
-              </a>
-              <Link href="/catalogue" className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-black text-slate-900 hover:border-rose-300 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
-                Xem toàn bộ catalogue
-              </Link>
-            </div>
-            <div className="mt-7 grid gap-2 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-3 xl:grid-cols-1">
-              <div className="flex min-h-11 items-center gap-2"><BookOpen className="h-4 w-4 text-rose-500" /> {articleCount} bài mới trong briefing</div>
-              <div className="flex min-h-11 items-center gap-2"><Layers3 className="h-4 w-4 text-rose-500" /> 14 catalogue có lộ trình</div>
-              <div className="flex min-h-11 items-center gap-2"><ShieldCheck className="h-4 w-4 text-rose-500" /> Kiến thức trước sản phẩm</div>
-            </div>
-          </div>
-          <div id="finder" className="scroll-mt-40"><CatalogueFinder compact /></div>
+    <section className="relative isolate overflow-hidden border-b border-stone-200 bg-[#fbf8f7] dark:border-slate-800 dark:bg-slate-950">
+      <Image
+        src="/images/home/beauty-desk-hero.png"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="-z-20 object-cover object-center dark:opacity-20"
+      />
+      <div className="absolute inset-0 -z-10 bg-white/34 dark:bg-slate-950/48" aria-hidden="true" />
+
+      <div className="container mx-auto px-4 py-9 md:px-6 md:pb-6 md:pt-14 lg:pb-4 lg:pt-16">
+        <div className="mx-auto max-w-4xl text-center">
+          <h1 className="mx-auto max-w-3xl font-display text-[2.15rem] font-black leading-[1.08] tracking-[-0.035em] text-slate-950 dark:text-white sm:text-5xl lg:max-w-[620px] lg:text-5xl">
+            Hôm nay bạn muốn hiểu điều gì về làn da và cơ thể?
+          </h1>
+          <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300 md:text-base">
+            Chọn một vấn đề đang quan tâm để nhận lộ trình đọc rõ ràng, an toàn và phù hợp hơn.
+          </p>
+        </div>
+
+        <div
+          role="group"
+          aria-label="Chọn mối quan tâm"
+          className="mx-auto mt-6 grid max-w-5xl grid-cols-3 gap-2 sm:gap-2.5 lg:grid-cols-6 lg:gap-3"
+        >
+          {concernChoices.map((choice) => {
+            const active = choice.slug === selectedSlug
+            return (
+              <button
+                key={choice.slug}
+                type="button"
+                aria-pressed={active}
+                onClick={() => {
+                  setSelectedSlug(choice.slug)
+                  trackEvent("finder_start", { hub: choice.slug, source: "homepage_visual" })
+                }}
+                className={`group relative overflow-hidden rounded-2xl border bg-white text-left transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 dark:bg-slate-900 ${active ? "border-rose-500 shadow-[0_8px_28px_rgba(225,29,72,0.14)]" : "border-white/80 shadow-sm hover:-translate-y-0.5 hover:border-rose-200 dark:border-slate-700"}`}
+              >
+                <span className="relative block aspect-[4/3] overflow-hidden bg-stone-100 dark:bg-slate-800">
+                  <Image
+                    src={choice.image}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1024px) 160px, (min-width: 640px) 30vw, 50vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                </span>
+                <span className="flex min-h-12 items-center justify-between gap-1 px-2 py-2 text-xs font-bold leading-4 text-slate-900 dark:text-white sm:gap-2 sm:px-3 sm:text-sm">
+                  {choice.label}
+                  {active && <Check className="h-4 w-4 shrink-0 text-rose-600" />}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-4">
+          <Link
+            href={selected.href}
+            onClick={() => trackEvent("finder_complete", { hub: selected.slug, source: "homepage_visual" })}
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-rose-600 px-6 text-sm font-black text-white transition hover:bg-rose-700 sm:w-auto"
+          >
+            Tiếp tục khám phá <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link href="/catalogue" className="inline-flex min-h-11 items-center px-3 text-sm font-bold text-slate-700 transition hover:text-rose-600 dark:text-slate-200">
+            Hoặc xem toàn bộ 14 chủ đề
+          </Link>
         </div>
       </div>
     </section>

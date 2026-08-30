@@ -613,7 +613,7 @@ const catalogueArticleDetails: Record<string, Omit<CatalogueArticleContent, "dec
       title: "Sáng da an toàn là kiểm soát ánh sáng, viêm và sắc tố",
       paragraphs: [
         "Nếu không chống nắng đều, mọi kế hoạch làm sáng đều bị kéo lùi. UV và ánh sáng nhìn thấy có thể làm thâm, nám và tăng sắc tố sau viêm dai hơn. Vì vậy, sản phẩm quan trọng nhất trong routine sáng da thường không phải serum, mà là kem chống nắng bạn dùng đủ lượng và thoa lại được.",
-        "Cập nhật đáng chú ý trong năm 2026 là FDA đã thêm bemotrizinol vào lựa chọn hoạt chất chống nắng được phép dùng tại Mỹ, mở rộng nhóm màng lọc broad-spectrum. Điều này không làm thay đổi nguyên tắc nền: chọn SPF 30 trở lên, broad-spectrum, water-resistant khi cần, kết hợp mũ, kính và tránh nắng.",
+        "Cập nhật đáng chú ý trong năm 2026 là FDA đã ban hành final order cho bemotrizinol; lệnh dự kiến có hiệu lực ngày 09/08/2026 nếu không bị tranh chấp, và sản phẩm có mặt khi nào còn tùy nhà sản xuất. Điều này không làm thay đổi nguyên tắc nền: chọn SPF 30 trở lên, broad-spectrum, water-resistant khi cần, kết hợp mũ, kính và tránh nắng.",
       ],
       cues: [
         "Thâm mụn nằm đúng vị trí mụn cũ và thường đậm hơn khi nắng nhiều.",

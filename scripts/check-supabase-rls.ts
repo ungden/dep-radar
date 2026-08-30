@@ -1,6 +1,7 @@
 import "./load-local-env"
 
 import { createClient } from "@supabase/supabase-js"
+import { isDirectCreatorEvidenceSource } from "../lib/evidence-source"
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -13,22 +14,57 @@ const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
 
 async function main() {
 
-const [anonOffers, anonEvents, anonStates, anonCreators, rawOffers, rawEvents, rawCreators] = await Promise.all([
+const [anonOffers, anonEvents, anonStates, anonCreators, anonCandidates, anonCandidateSources, rawOffers, rawEvents, rawCreators, rawCandidates,
+  anonPosts, anonContentSignals, anonContentJobs, anonContentVersions, anonContentSources, anonContentClaims, anonContentRuns, anonContentPerformance, anonContentBudget,
+  adminContentJobs, adminContentVersions] = await Promise.all([
   anon.from("product_offers").select("*"),
   anon.from("creator_product_events").select("*"),
   anon.from("creator_product_states").select("*"),
   anon.from("kols").select("id,directory_status"),
+  anon.from("product_candidates").select("id"),
+  anon.from("product_candidate_sources").select("candidate_id"),
   admin.from("product_offers").select("id"),
   admin.from("creator_product_events").select("id"),
   admin.from("kols").select("id,directory_status"),
+  admin.from("product_candidates").select("id"),
+  anon.from("posts").select("id,status"),
+  anon.from("content_signals").select("id"),
+  anon.from("content_jobs").select("id"),
+  anon.from("content_versions").select("id"),
+  anon.from("content_sources").select("id"),
+  anon.from("content_claims").select("id"),
+  anon.from("content_runs").select("id"),
+  anon.from("content_performance_daily").select("post_id"),
+  anon.from("content_budget_config").select("id"),
+  admin.from("content_jobs").select("id"),
+  admin.from("content_versions").select("id"),
 ])
 
-for (const result of [anonOffers, anonEvents, anonStates, anonCreators, rawOffers, rawEvents, rawCreators]) {
+for (const result of [anonOffers, anonEvents, anonStates, anonCreators, rawOffers, rawEvents, rawCreators, rawCandidates, anonPosts, adminContentJobs, adminContentVersions]) {
   if (result.error) throw result.error
 }
 
+function assertPrivateTable(result: { data: unknown[] | null; error: { code?: string; message?: string } | null }, table: string) {
+  if (result.error) {
+    if (!["42501", "PGRST301"].includes(result.error.code ?? "")) throw result.error
+    return
+  }
+  if ((result.data?.length ?? 0) > 0) throw new Error(`RLS leaked private ${table} rows`)
+}
+
+assertPrivateTable(anonCandidates, "product_candidates")
+assertPrivateTable(anonCandidateSources, "product_candidate_sources")
+assertPrivateTable(anonContentSignals, "content_signals")
+assertPrivateTable(anonContentJobs, "content_jobs")
+assertPrivateTable(anonContentVersions, "content_versions")
+assertPrivateTable(anonContentSources, "content_sources")
+assertPrivateTable(anonContentClaims, "content_claims")
+assertPrivateTable(anonContentRuns, "content_runs")
+assertPrivateTable(anonContentPerformance, "content_performance_daily")
+assertPrivateTable(anonContentBudget, "content_budget_config")
+
 const invalidOffer = (anonOffers.data ?? []).find((offer) => offer.verification_status !== "verified" || offer.match_status !== "exact" || offer.is_active !== true || !offer.verified_by || !offer.verified_at)
-const invalidEvent = (anonEvents.data ?? []).find((event) => event.verification_status !== "verified" || !event.verified_by || !event.verified_at || !event.evidence_id)
+const invalidEvent = (anonEvents.data ?? []).find((event) => event.verification_status !== "verified" || !event.verified_by || !event.verified_at || !event.evidence_id || event.exact_sku_verified !== true || Number(event.confidence_score) < 90 || !Array.isArray(event.evidence_spans) || event.evidence_spans.length === 0 || !isDirectCreatorEvidenceSource(event.source_platform, event.source_url, event.source_post_id))
 if (invalidOffer) throw new Error(`RLS leaked unqualified offer ${invalidOffer.id}`)
 if (invalidEvent) throw new Error(`RLS leaked unqualified creator event ${invalidEvent.id}`)
 if ((anonStates.data?.length ?? 0) > (anonEvents.data?.length ?? 0)) throw new Error("RLS leaked a creator state without a readable audited event")
@@ -36,6 +72,7 @@ if ((anonCreators.data ?? []).some((creator) => creator.directory_status !== "ac
 if ((anonCreators.data ?? []).some((creator) => ["3", "13", "16"].includes(creator.id))) throw new Error("RLS leaked an explicitly excluded creator profile")
 if ((rawCreators.data?.length ?? 0) <= (anonCreators.data?.length ?? 0)) throw new Error("Admin cannot see historical creator remediation rows")
 if ((rawOffers.data?.length ?? 0) === 0 && (rawEvents.data?.length ?? 0) === 0) throw new Error("Admin/service role could not read remediation rows")
+if ((anonPosts.data ?? []).some((post) => post.status !== "published")) throw new Error("RLS leaked a non-published content post")
 
 console.log(`RLS passed: anon sees ${anonOffers.data?.length ?? 0} offers, ${anonEvents.data?.length ?? 0} events, ${anonStates.data?.length ?? 0} states and ${anonCreators.data?.length ?? 0} active creators; admin sees ${rawCreators.data?.length ?? 0} total creator rows.`)
 }

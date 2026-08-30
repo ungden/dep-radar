@@ -11,11 +11,9 @@ import { Label } from "@/components/ui/label"
 import { Select } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { supabase } from "@/lib/supabase"
-import { REAL_KOLS } from "@/lib/kols-data"
-import { SAMPLE_CREATOR_PRODUCT_EVENTS, SAMPLE_PRODUCT_REFERENCES } from "@/lib/timeline-data"
 import type { CreatorProductDisclosure, CreatorProductEvent, CreatorProductEventType, CreatorProductSentiment, Kol } from "@/lib/types"
 
-type ProductReference = (typeof SAMPLE_PRODUCT_REFERENCES)[number]
+type ProductReference = { id: string; name: string; brand: string }
 
 const EVENT_TYPES: { value: CreatorProductEventType; label: string }[] = [
   { value: "first_seen", label: "Bắt đầu theo dõi" },
@@ -126,10 +124,10 @@ export default function AdminTimelinePage() {
     ])
 
     if (kolsRes.error || productsRes.error || eventsRes.error) {
-      setError("Chưa đọc được đủ bảng Supabase kịp thời. Đang hiển thị seed fallback; vẫn cần Supabase để lưu event mới.")
-      setKols(REAL_KOLS)
-      setProducts(SAMPLE_PRODUCT_REFERENCES)
-      setEvents(SAMPLE_CREATOR_PRODUCT_EVENTS)
+      setError("Chưa đọc được đủ bảng Supabase kịp thời. Không hiển thị seed mẫu để tránh nhầm với dữ liệu đã lưu.")
+      setKols([])
+      setProducts([])
+      setEvents([])
       setLoading(false)
       return
     }

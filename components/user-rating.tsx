@@ -21,6 +21,7 @@ export function UserRating({ productId }: UserRatingProps) {
   const [submitting, setSubmitting] = React.useState(false)
   const [submitted, setSubmitted] = React.useState(false)
   const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     if (!user) {
@@ -56,7 +57,7 @@ export function UserRating({ productId }: UserRatingProps) {
 
     setSubmitting(true)
     if (!isSupabaseSchemaReady) {
-      setSubmitted(true)
+      setError("Hệ thống đánh giá chưa sẵn sàng. Không có dữ liệu nào được lưu.")
       setSubmitting(false)
       return
     }
@@ -75,6 +76,8 @@ export function UserRating({ productId }: UserRatingProps) {
 
     if (!error) {
       setSubmitted(true)
+    } else {
+      setError("Không thể lưu đánh giá. Vui lòng thử lại sau.")
     }
     setSubmitting(false)
   }
@@ -102,6 +105,10 @@ export function UserRating({ productId }: UserRatingProps) {
         </p>
       </div>
     )
+  }
+
+  if (!isSupabaseSchemaReady) {
+    return <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-200">Hệ thống đánh giá chưa được bật trên môi trường này.</div>
   }
 
   return (
@@ -169,6 +176,7 @@ export function UserRating({ productId }: UserRatingProps) {
           Đã lưu đánh giá của bạn
         </p>
       )}
+      {error && <p className="text-xs font-semibold text-rose-600 dark:text-rose-300">{error}</p>}
     </div>
   )
 }

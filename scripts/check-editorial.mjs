@@ -6,6 +6,7 @@ const readPosts = fs.readFileSync("lib/catalogue-read-posts.ts", "utf8")
 const editorial = fs.readFileSync("lib/editorial.ts", "utf8")
 const cataloguePage = fs.readFileSync("app/catalogue/[slug]/page.tsx", "utf8")
 const data = fs.readFileSync("lib/data.ts", "utf8")
+const realReviewPanel = fs.readFileSync("components/real-review-panel.tsx", "utf8")
 const contentMatrix = fs.existsSync("lib/content-matrix.ts") ? fs.readFileSync("lib/content-matrix.ts", "utf8") : ""
 
 const nextReads = [...guide.matchAll(/nextReads:\s*\[([\s\S]*?)\]/g)].flatMap((match) =>
@@ -15,7 +16,7 @@ const publishedTitles = [...readPosts.matchAll(/makePost\(\{\s*title:\s*"([^"]+)
 const publishedSlugs = [...readPosts.matchAll(/makePost\(\{\s*title:\s*"[^"]+"[\s\S]*?slug:\s*"([^"]+)"/g)].map((item) => item[1])
 const missing = nextReads.filter((title) => !publishedTitles.includes(title))
 
-const plannedBlock = editorial.match(/const PLANNED_BY_HUB:[\s\S]*?\n}\n\nfunction plannedBrief/)
+const plannedBlock = editorial.match(/const COMPLETED_ROADMAP_BY_HUB:[\s\S]*?\n}\n\nfunction nextRoadmapArticleSlugs/)
 const plannedCount = plannedBlock ? (plannedBlock[0].match(/title: "/g) ?? []).length : 0
 const plannedSlugs = plannedBlock
   ? [...plannedBlock[0].matchAll(/title:\s*"([^"]+)"/g)].map((item) => slugify(item[1]))
@@ -24,8 +25,11 @@ const allArticleSlugs = [...new Set([...publishedSlugs, ...plannedSlugs])]
 const missingImages = allArticleSlugs.filter((slug) => !fs.existsSync(path.join("public/images/editorial", `${slug}.jpg`)))
 const hasRegistry = editorial.includes("EDITORIAL_ARTICLE_REGISTRY")
 const hasPublishedFilter = editorial.includes('article.status === "published"')
-const publishesPlannedContent = editorial.includes('status: seed.status ?? "published"')
+const defaultsCompletedRoadmapToPublished = editorial.includes('status: seed.status ?? "published"')
 const hasGeneratedContentBuilder = editorial.includes("function buildGeneratedContent")
+const hasTopicSpecificGuidance = editorial.includes("EDITORIAL_TOPIC_GUIDANCE")
+const publishesLegacySamples = data.includes("[...EDITORIAL_PUBLISHED_POSTS, ...SAMPLE_POSTS]")
+const hasDemoReviewSuccess = realReviewPanel.includes("Đã nhận review ở chế độ demo")
 const nextReadUsesBlog = cataloguePage.includes('href={`/blog/${slug}`}')
 const nextReadFunction = cataloguePage.match(/function NextReadLink[\s\S]*?\n}\n\nfunction /)?.[0] ?? ""
 const nextReadHasSearchFallback = /\/search\?q=/.test(nextReadFunction)
@@ -72,13 +76,16 @@ const medicalNodesWithoutSources = medicalMatrixBlocks
 
 const errors = [
   missing.length > 0 ? `Missing published article(s) for nextReads: ${missing.join(", ")}` : null,
-  plannedCount < 60 ? `Expected at least 60 planned article briefs, found ${plannedCount}` : null,
+  plannedCount !== 70 ? `Expected 70 completed roadmap articles, found ${plannedCount}` : null,
   missingImages.length > 0 ? `Missing editorial image(s): ${missingImages.join(", ")}` : null,
   allArticleSlugs.length < 100 ? `Expected at least 100 editorial articles, found ${allArticleSlugs.length}` : null,
   !hasRegistry ? "Missing EDITORIAL_ARTICLE_REGISTRY" : null,
   !hasPublishedFilter ? "Editorial registry is not filtering published articles" : null,
-  !publishesPlannedContent ? "Planned roadmap briefs are not published into public posts" : null,
+  !defaultsCompletedRoadmapToPublished ? "Completed roadmap articles are not explicitly published" : null,
   !hasGeneratedContentBuilder ? "Missing generated full-content builder for roadmap briefs" : null,
+  !hasTopicSpecificGuidance ? "Missing topic-specific guidance for completed roadmap articles" : null,
+  publishesLegacySamples ? "Legacy sample posts are still published on public knowledge surfaces" : null,
+  hasDemoReviewSuccess ? "Review form still reports fake demo submission success" : null,
   !nextReadUsesBlog ? "NextReadLink must link directly to /blog/${slug}" : null,
   nextReadHasSearchFallback ? "NextReadLink still contains a /search?q= fallback" : null,
   matrixCardHasSearchFallback ? "ResearchMatrixCard still contains a /search?q= fallback for primary graph links" : null,
@@ -103,7 +110,8 @@ console.log(
       publishedReadPosts: publishedTitles.length,
       totalEditorialArticles: allArticleSlugs.length,
       editorialImages: allArticleSlugs.length - missingImages.length,
-      plannedBriefs: plannedCount,
+      completedRoadmapArticles: plannedCount,
+      expectedPublishedArticles: allArticleSlugs.length,
       matrixNodes: matrixArticleSlugs.length,
       matrixProductGroups: productGroupKeys.length,
       matrixProductLinks: matrixProductIds.length,

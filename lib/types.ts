@@ -24,6 +24,12 @@ export interface Product {
   audience_tags?: string[]
   safety_flags?: string[]
   catalogue_mapping_status?: ProductCatalogueMappingStatus | null
+  source_label?: string | null
+  source_url?: string | null
+  source_type?: "official" | "brand-retail" | "retailer" | null
+  provenance?: Record<string, unknown>
+  /** Seed prices are editorial references, not live offers. */
+  price_status?: "verified" | "reference" | "unverified" | null
 }
 
 export type ProductStatus = "published" | "pending" | "archived"
@@ -227,6 +233,13 @@ export interface CreatorProductEvent {
   evidence_note: string
   confidence: CreatorProductConfidence
   confidence_score?: number | null
+  evidence_spans?: EvidenceSpan[]
+  risk_flags?: EvidenceRiskFlag[]
+  product_identity_score?: number | null
+  action_evidence_score?: number | null
+  source_authenticity_score?: number | null
+  evidence_localization_score?: number | null
+  exact_sku_verified?: boolean
   verification_status?: "pending" | "verified" | "rejected"
   verified_by?: string | null
   verified_at?: string | null
@@ -234,6 +247,7 @@ export interface CreatorProductEvent {
 }
 
 export type CreatorAccountPriority = "a" | "b" | "c"
+export type CreatorCollectionMode = "disabled" | "webhook" | "youtube_api" | "paid_provider"
 
 export interface CreatorAccount {
   id: string
@@ -248,12 +262,15 @@ export interface CreatorAccount {
   next_poll_at: string
   last_error: string | null
   active: boolean
+  collection_mode: CreatorCollectionMode
+  source_quality_score?: number
   created_at?: string
   updated_at?: string
 }
 
 export type SourcePostAnalysisStatus = "pending" | "queued" | "processing" | "ready" | "failed" | "ignored"
 export type SourcePostTranscriptionStatus = "pending" | "processing" | "ready" | "no_speech" | "failed" | "skipped"
+export type SourcePostContentLane = "unclassified" | "product_review" | "expert_education" | "commercial_trend" | "lifestyle" | "vision_required"
 
 export interface SourcePost {
   id: string
@@ -283,9 +300,21 @@ export interface SourcePost {
   transcribed_at: string | null
   archive_video_path: string | null
   archive_audio_path: string | null
+  archive_frame_paths?: string[]
   media_sha256: string | null
   audio_sha256: string | null
   vision_fallback_required: boolean
+  content_lane?: SourcePostContentLane
+  priority_score?: number
+  triage_reason?: string | null
+  triaged_at?: string | null
+  duplicate_of_source_post_id?: string | null
+  vision_sample_timestamps?: number[]
+  collector_batch_id?: string | null
+  automation_cohort?: string
+  cover_ocr_text?: string | null
+  triage_sampled?: boolean
+  visual_verified_at?: string | null
   created_at?: string
   updated_at?: string
 }
@@ -322,6 +351,75 @@ export interface EvidenceClaim {
   evidence_localization_score: number
   confidence_score: number
   risk_flags: EvidenceRiskFlag[]
+}
+
+export type ProductCandidateStatus = "new" | "needs_identity" | "ready_to_create" | "merged" | "rejected"
+  | "extracting" | "enriching" | "verified" | "needs_official_source" | "policy_blocked" | "failed"
+
+export interface ProductCandidate {
+  id: string
+  canonical_key: string
+  brand: string
+  product_name: string
+  variant: string | null
+  aliases: string[]
+  source_post_count: number
+  creator_count: number
+  identity_confidence: number
+  official_product_url: string | null
+  image_source_url: string | null
+  status: ProductCandidateStatus
+  matched_product_id: string | null
+  review_note: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
+  verification_metadata?: Record<string, unknown>
+  system_verified_at?: string | null
+  last_enrichment_error?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ProductCandidateSource {
+  candidate_id: string
+  source_post_id: string
+  creator_id: string
+  evidence_id: string | null
+  event_type: CreatorProductEventType
+  disclosure: CreatorProductDisclosure
+  evidence_spans: EvidenceSpan[]
+  risk_flags: EvidenceRiskFlag[]
+  product_identity_score: number
+  action_evidence_score: number
+  source_authenticity_score: number
+  evidence_localization_score: number
+  confidence_score: number
+  created_at: string
+  updated_at: string
+}
+
+export interface CreatorEvidenceMetrics {
+  identityVerified: boolean
+  verifiedEventCount: number
+  exactProductCount: number
+  knownDisclosureCount: number
+  unknownDisclosureCount: number
+  commercialEventCount: number
+  commercialShare: number
+}
+
+export type ProductObservationStatus = "no_records" | "one_creator" | "multiple_creators" | "broad_coverage"
+
+export interface ProductObservationSummary {
+  independentCreatorCount: number
+  verifiedClipCount: number
+  directUseCount: number
+  reviewOrRecommendationCount: number
+  commercialClipCount: number
+  commercialShare: number
+  observationStatus: ProductObservationStatus
+  hasMostlyCommercialSources: boolean
+  latestEvidenceAt: string | null
 }
 
 export type CreatorProductStateValue =
@@ -361,9 +459,20 @@ export interface Post {
   created_at: string
   product_ids: string[]
   hubSlug?: string
-  intent?: "pillar" | "problem-solving" | "decision" | "safety" | "comparison" | "how-to"
+  intent?: "pillar" | "problem-solving" | "decision" | "safety"
+  contentFormat?: "guide" | "checklist" | "comparison" | "explainer" | "review"
   conditionSlugs?: string[]
-  status?: "planned" | "draft" | "published"
+  status?: "planned" | "draft" | "verifying" | "publishable" | "policy_blocked" | "published" | "archived"
+  riskLevel?: "low" | "medium" | "high"
+  structuredContent?: Record<string, unknown>
+  generationMethod?: "legacy_registry" | "content_factory" | "manual"
+  provenance?: Record<string, unknown>
+  qualityScore?: number | null
+  verifierScore?: number | null
+  publishedAt?: string | null
+  refreshedAt?: string | null
+  lastVerifiedAt?: string | null
+  refreshDueAt?: string | null
   takeaways?: string[]
   faq?: { question: string; answer: string }[]
   sourceNotes?: { label: string; url: string }[]

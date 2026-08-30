@@ -1,10 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-import { analyzeSourcePost, collectCreatorAccount } from "@/lib/evidence-radar/pipeline"
-import { assertCronSecret, deleteQueueMessage, readQueue } from "@/lib/evidence-radar/server"
+import { analyzePriorityBatch, analyzeSourcePost, collectCreatorAccount } from "@/lib/evidence-radar/pipeline"
+import { assertCronSecret, deleteQueueMessage, readProductEnrichmentJobs, readQueue } from "@/lib/evidence-radar/server"
+import { processProductEnrichment } from "@/lib/evidence-radar/product-enrichment"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
+const WORKER_VERSION = "evidence-radar-trust-first-v5"
+const PRIORITY_BATCH_SIZE = 8
 
 type CreatorMonitorMessage = { creator_account_id: string }
 type EvidenceAnalysisMessage = { source_post_id: string }
@@ -22,6 +25,7 @@ async function runWorker(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       worker: "evidence-radar",
+      workerVersion: WORKER_VERSION,
       paused: true,
       reason: "Collection and analysis kill-switches are off.",
     })
@@ -49,32 +53,71 @@ async function runWorker(request: NextRequest) {
   }
 
   if (analysisEnabled) {
-    const analysisMessages = await readQueue<EvidenceAnalysisMessage>("evidence_analysis", 2, 600)
-    for (const queueMessage of analysisMessages) {
-      try {
-        const result = await analyzeSourcePost(queueMessage.message.source_post_id)
-        await deleteQueueMessage("evidence_analysis", queueMessage.msg_id)
-        results.push({ kind: "analysis", sourcePostId: queueMessage.message.source_post_id, ...result })
-      } catch (error) {
-        errors.push({
-          kind: "analysis",
-          sourcePostId: queueMessage.message.source_post_id,
-          attempt: queueMessage.read_ct,
-          error: error instanceof Error ? error.message : String(error),
-        })
+    let priorityResults: Array<Record<string, unknown>> = []
+    try {
+      priorityResults = await analyzePriorityBatch(PRIORITY_BATCH_SIZE)
+      for (const result of priorityResults) {
+        if (result.error) errors.push({ kind: "priority_analysis", ...result })
+        else results.push({ kind: "priority_analysis", ...result })
+      }
+    } catch (error) {
+      errors.push({
+        kind: "analysis_provider",
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+
+    // Once the priority pool is empty, drain stale queue messages idempotently.
+    if (priorityResults.length === 0 && !errors.some((error) => error.kind === "analysis_provider")) {
+      const analysisMessages = await readQueue<EvidenceAnalysisMessage>("evidence_analysis", 6, 600)
+      for (const queueMessage of analysisMessages) {
+        try {
+          const result = await analyzeSourcePost(queueMessage.message.source_post_id)
+          await deleteQueueMessage("evidence_analysis", queueMessage.msg_id)
+          results.push({ kind: "analysis_queue", sourcePostId: queueMessage.message.source_post_id, ...result })
+        } catch (error) {
+          errors.push({
+            kind: "analysis_queue",
+            sourcePostId: queueMessage.message.source_post_id,
+            attempt: queueMessage.read_ct,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
+    }
+
+    if (process.env.PRODUCT_ENRICHMENT_ENABLED === "true") {
+      const enrichmentMessages = await readProductEnrichmentJobs(2, 600)
+      for (const queueMessage of enrichmentMessages) {
+        try {
+          const result = await processProductEnrichment(queueMessage.message.job_id)
+          await deleteQueueMessage("product_enrichment", queueMessage.msg_id)
+          results.push({ kind: "product_enrichment", jobId: queueMessage.message.job_id, ...result })
+        } catch (error) {
+          errors.push({ kind: "product_enrichment", jobId: queueMessage.message.job_id, attempt: queueMessage.read_ct, error: error instanceof Error ? error.message : String(error) })
+        }
       }
     }
   }
 
-  return NextResponse.json({
+  const responseBody = {
     ok: errors.length === 0,
     worker: "evidence-radar",
+    workerVersion: WORKER_VERSION,
     collectionEnabled,
     analysisEnabled,
     processed: results.length,
     results,
     errors,
-  }, { status: errors.length ? 207 : 200 })
+  }
+  console.info("evidence-radar-run", JSON.stringify({
+    collectionEnabled,
+    analysisEnabled,
+    processed: results.length,
+    errorCount: errors.length,
+    errors: errors.map((error) => ({ kind: error.kind, error: error.error })),
+  }))
+  return NextResponse.json(responseBody, { status: errors.length ? 207 : 200 })
 }
 
 export async function GET(request: NextRequest) {

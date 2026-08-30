@@ -51,9 +51,10 @@ function collectImageUrls(images: SocialImage[] | undefined): string[] {
     .filter(Boolean)
 }
 
-function assertAbsolute(name: string, value: string, errors: string[]) {
-  if (!value.startsWith(`${siteUrl}/`) && value !== siteUrl) {
-    errors.push(`${name} must be an absolute ${siteUrl} URL, got: ${value || "(empty)"}`)
+function assertAbsolute(name: string, value: string | undefined, errors: string[]) {
+  const normalized = value ?? ""
+  if (!normalized.startsWith(`${siteUrl}/`) && normalized !== siteUrl) {
+    errors.push(`${name} must be an absolute ${siteUrl} URL, got: ${normalized || "(empty)"}`)
   }
 }
 

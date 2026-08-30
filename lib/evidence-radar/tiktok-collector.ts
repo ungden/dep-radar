@@ -2,7 +2,8 @@ import { createHash } from "node:crypto"
 
 import type { CreatorAccount } from "@/lib/types"
 
-export const TIKTOK_COLLECTOR_SCHEMA = "360dep.tiktok-manifest.v2"
+export const TIKTOK_COLLECTOR_SCHEMA = "360dep.tiktok-manifest.v3"
+const PREVIOUS_TIKTOK_COLLECTOR_SCHEMA = "360dep.tiktok-manifest.v2"
 const LEGACY_TIKTOK_COLLECTOR_SCHEMA = "360dep.tiktok-manifest.v1"
 export const TIKTOK_COLLECTOR_NAME = "downloadtiktok"
 export const TIKTOK_COLLECTOR_MAX_POSTS = 200
@@ -27,9 +28,13 @@ export interface TikTokCollectorPost {
   transcribed_at: string | null
   archive_video_path: string | null
   archive_audio_path: string | null
+  archive_frame_paths: string[]
   media_sha256: string | null
   audio_sha256: string | null
   vision_fallback_required: boolean
+  vision_sample_timestamps: number[]
+  cover_ocr_text: string | null
+  triage_sampled: boolean
 }
 
 export interface NormalizedTikTokCollectorBatch {
@@ -38,6 +43,7 @@ export interface NormalizedTikTokCollectorBatch {
   posts: TikTokCollectorPost[]
   rejected: Array<{ index: number; reason: string }>
   recordsSeen: number
+  automationCohort: string
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -87,7 +93,7 @@ function parsePostUrl(value: string) {
   try {
     const url = new URL(value)
     if (url.protocol !== "https:" || !isTikTokHost(url.hostname)) return null
-    const match = url.pathname.match(/^\/@([^/]+)\/video\/(\d{8,30})\/?$/)
+    const match = url.pathname.match(/^\/@([^/]+)\/(?:video|photo)\/(\d{8,30})\/?$/)
     if (!match) return null
     url.hash = ""
     url.search = ""
@@ -130,6 +136,14 @@ function archivePath(value: unknown, kind: "source.mp4" | "audio.mp3") {
   if (!path) return null
   return /^evidence-radar\/tiktok\/[a-zA-Z0-9._-]+\/\d{8,30}\/(source\.mp4|audio\.mp3)$/.test(path)
     && path.endsWith(kind) ? path : null
+}
+
+function archiveFramePaths(value: unknown) {
+  if (!Array.isArray(value)) return []
+  return value.slice(0, 8).flatMap((item) => {
+    const path = asString(item, 1_000)
+    return /^evidence-radar\/tiktok\/[a-zA-Z0-9._-]+\/\d{8,30}\/frames\/frame-\d{2}\.jpg$/.test(path) ? [path] : []
+  })
 }
 
 function sha256(value: unknown) {
@@ -192,6 +206,8 @@ function normalizePost(
   const likeCount = finiteNumber(row.like_count ?? metrics.like_count)
   const commentCount = finiteNumber(row.comment_count ?? metrics.comment_count)
   const transcriptText = asString(row.transcript_text, 100_000) || null
+  const coverOcrText = asString(row.cover_ocr_text, 5_000) || null
+  const triageScore = finiteNumber(row.triage_score)
   const requestedTranscriptionStatus = asString(row.transcription_status, 20)
   const transcriptionStatus = transcriptText
     ? "ready"
@@ -200,6 +216,13 @@ function normalizePost(
       : "pending"
   const archiveVideoPath = archivePath(row.archive_video_path, "source.mp4")
   const archiveAudioPath = archivePath(row.archive_audio_path, "audio.mp3")
+  const archiveFrames = archiveFramePaths(row.archive_frame_paths)
+  const visionSampleTimestamps = Array.isArray(row.vision_sample_timestamps)
+    ? row.vision_sample_timestamps.slice(0, archiveFrames.length).flatMap((value) => {
+        const timestamp = finiteNumber(value)
+        return timestamp !== null && timestamp >= 0 ? [timestamp] : []
+      })
+    : []
 
   return {
     post: {
@@ -219,6 +242,7 @@ function normalizePost(
         like_count: likeCount,
         comment_count: commentCount,
         media_resolved: Boolean(mediaUrl),
+        collector_triage_score: triageScore === null ? null : Math.max(0, Math.min(100, Math.round(triageScore))),
       },
       raw_payload: {
         collector: TIKTOK_COLLECTOR_NAME,
@@ -236,9 +260,13 @@ function normalizePost(
       transcribed_at: transcriptText ? (parseDate(row.transcribed_at) ?? collectedAt).toISOString() : null,
       archive_video_path: archiveVideoPath,
       archive_audio_path: archiveAudioPath,
+      archive_frame_paths: archiveFrames,
       media_sha256: archiveVideoPath ? sha256(row.media_sha256) : null,
       audio_sha256: archiveAudioPath ? sha256(row.audio_sha256) : null,
       vision_fallback_required: !transcriptText && requestedTranscriptionStatus === "no_speech",
+      vision_sample_timestamps: visionSampleTimestamps,
+      cover_ocr_text: coverOcrText,
+      triage_sampled: row.triage_sampled === true,
     },
   }
 }
@@ -249,7 +277,7 @@ export function normalizeTikTokCollectorBatch(
   now = new Date(),
 ): NormalizedTikTokCollectorBatch {
   const body = asRecord(value)
-  if (![TIKTOK_COLLECTOR_SCHEMA, LEGACY_TIKTOK_COLLECTOR_SCHEMA].includes(asString(body.schema_version, 100))) {
+  if (![TIKTOK_COLLECTOR_SCHEMA, PREVIOUS_TIKTOK_COLLECTOR_SCHEMA, LEGACY_TIKTOK_COLLECTOR_SCHEMA].includes(asString(body.schema_version, 100))) {
     throw new Error("Unsupported collector schema")
   }
   if (body.collector !== TIKTOK_COLLECTOR_NAME) throw new Error("Unsupported collector")
@@ -288,5 +316,16 @@ export function normalizeTikTokCollectorBatch(
     posts.push(normalized.post)
   })
 
-  return { batchId, collectedAt: collectedAt.toISOString(), posts, rejected, recordsSeen: rows.length }
+  const automationCohort = asString(body.automation_cohort, 80)
+  if (automationCohort && !/^[a-zA-Z0-9._:-]{1,80}$/.test(automationCohort)) {
+    throw new Error("Invalid automation cohort")
+  }
+  return {
+    batchId,
+    collectedAt: collectedAt.toISOString(),
+    posts,
+    rejected,
+    recordsSeen: rows.length,
+    automationCohort: automationCohort || "legacy",
+  }
 }

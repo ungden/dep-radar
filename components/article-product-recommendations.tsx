@@ -84,7 +84,7 @@ export function ArticleProductRecommendations({ products }: ArticleProductRecomm
               <div className="mt-auto pt-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <span className="text-base font-black text-slate-900 dark:text-slate-50">{product.price}</span>
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{product.sold} đã bán</span>
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{product.price_status === "reference" ? "Giá tham khảo" : "Chưa có giá xác minh"}</span>
                 </div>
 
                 {product.affiliate_url ? (

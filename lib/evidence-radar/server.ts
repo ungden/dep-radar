@@ -20,8 +20,8 @@ export function getSupabaseAdmin() {
 }
 
 export function assertCronSecret(authorization: string | null) {
-  const secret = process.env.EVIDENCE_RADAR_CRON_SECRET || process.env.CRON_SECRET
-  if (!secret || authorization !== `Bearer ${secret}`) {
+  const acceptedSecrets = [process.env.EVIDENCE_RADAR_CRON_SECRET, process.env.CRON_SECRET].filter(Boolean)
+  if (!acceptedSecrets.some((secret) => authorization === `Bearer ${secret}`)) {
     throw new Error("Unauthorized")
   }
 }
@@ -49,4 +49,8 @@ export async function deleteQueueMessage(queueName: string, messageId: number) {
     message_id: messageId,
   })
   if (error) throw new Error(`Queue ${queueName} delete failed: ${error.message}`)
+}
+
+export async function readProductEnrichmentJobs(count = 2, visibilitySeconds = 600) {
+  return readQueue<{ job_id: string; idempotency_key: string }>("product_enrichment", count, visibilitySeconds)
 }

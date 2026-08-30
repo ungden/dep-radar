@@ -25,10 +25,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   applicationName: '360dep.vn',
   title: {
-    default: '360dep.vn | Catalogue, review mỹ phẩm và beauty radar',
+    default: '360dep.vn | Kiến thức và sản phẩm làm đẹp theo nhu cầu',
     template: '%s | 360dep.vn',
   },
-  description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
+  description: 'Chủ đề, đánh giá mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
   keywords: ['360dep.vn', '360dep', 'review mỹ phẩm', 'catalogue làm đẹp', 'beauty radar', 'skincare Việt Nam'],
   alternates: {
     canonical: getSiteUrl(),
@@ -55,8 +55,8 @@ export const metadata: Metadata = {
     locale: 'vi_VN',
     siteName: '360dep.vn',
     url: getSiteUrl(),
-    title: '360dep.vn | Catalogue, review mỹ phẩm và beauty radar',
-    description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
+    title: '360dep.vn | Kiến thức và sản phẩm làm đẹp theo nhu cầu',
+    description: 'Chủ đề, đánh giá mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
     images: [
       {
         url: absoluteUrl('/brand/social-share.jpg'),
@@ -68,8 +68,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '360dep.vn | Catalogue, review mỹ phẩm và beauty radar',
-    description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
+    title: '360dep.vn | Kiến thức và sản phẩm làm đẹp theo nhu cầu',
+    description: 'Chủ đề, đánh giá mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
     images: [absoluteUrl('/brand/social-share.jpg')],
   },
 };
@@ -77,7 +77,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" className={`${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
-      <body className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-50 antialiased flex flex-col" suppressHydrationWarning>
+      <body className="min-h-screen bg-white dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-50 antialiased flex flex-col" suppressHydrationWarning>
         <GoogleAnalytics />
         <WebVitals />
         <ThemeProvider
@@ -87,7 +87,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           disableTransitionOnChange
         >
           <AuthProvider>
-            <a href="#main-content" className="sr-only z-[100] rounded-md bg-white px-4 py-3 font-bold text-slate-900 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
+            <a href="#main-content" className="sr-only z-[100] min-h-11 items-center rounded-md bg-white px-4 py-3 font-bold text-slate-900 focus:fixed focus:left-4 focus:top-4 focus:inline-flex">
               Bỏ qua điều hướng
             </a>
             <Navbar />

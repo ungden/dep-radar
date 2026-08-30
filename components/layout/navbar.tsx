@@ -14,7 +14,7 @@ import { isSupabaseSchemaReady, supabase } from "@/lib/supabase"
 import { useAuth } from "@/lib/auth-context"
 
 const primaryNavItems = [
-  { href: "/catalogue", label: "Catalogue" },
+  { href: "/catalogue", label: "Chủ đề" },
   { href: "/products", label: "Sản phẩm" },
   { href: "/koc-tracker", label: "KOL/KOC" },
   { href: "/blog", label: "Kiến thức" },
@@ -67,35 +67,19 @@ export function Navbar() {
   }, [])
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm">
-      <div className="hidden border-b border-slate-100 text-xs font-medium uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:text-slate-400 md:block">
-        <div className="container mx-auto flex items-center justify-between gap-6 px-4 py-2 md:px-6">
-          <div className="min-w-0 truncate">
-            {new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-          </div>
-          <div className="flex shrink-0 items-center gap-5">
-            <Link href="/blog" className="transition-colors hover:text-rose-600 dark:hover:text-rose-400">
-              Beauty Desk
-            </Link>
-            <Link href="/community" className="transition-colors hover:text-rose-600 dark:hover:text-rose-400">
-              Gửi review
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto grid h-16 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 md:h-20 md:px-6 lg:gap-6">
+    <header className="sticky top-0 z-50 w-full border-b border-stone-200 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95">
+      <div className="container mx-auto grid h-16 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 md:h-[72px] md:px-6 lg:gap-6">
         <div className="flex min-w-0 items-center">
-          <BrandLogo markClassName="h-10 w-10 rounded-xl md:h-11 md:w-11 md:rounded-2xl" />
+          <BrandLogo markClassName="h-9 w-9 rounded-xl md:h-10 md:w-10" />
         </div>
 
         <div className="hidden min-w-0 justify-center lg:flex">
-          <nav className="flex min-w-0 items-center justify-center gap-4 xl:gap-6">
+          <nav className="flex min-w-0 items-center justify-center gap-5 xl:gap-7">
             {primaryNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="whitespace-nowrap text-sm font-bold uppercase tracking-wider text-slate-900 transition-colors hover:text-rose-600 dark:text-slate-50 dark:hover:text-rose-400"
+                className="inline-flex min-h-11 items-center whitespace-nowrap text-[13px] font-black text-slate-800 transition-colors hover:text-rose-600 dark:text-slate-100 dark:hover:text-rose-400"
               >
                 {item.label}
               </Link>
@@ -112,7 +96,7 @@ export function Navbar() {
         </div>
 
         <div className="hidden items-center justify-end gap-3 md:flex">
-          <form onSubmit={handleSearch} className="group relative hidden w-44 md:block xl:w-72">
+          <form onSubmit={handleSearch} className="group relative hidden w-44 md:block xl:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500 group-focus-within:text-rose-600 dark:group-focus-within:text-rose-400 transition-colors" />
             <Input
               type="search"
@@ -120,12 +104,12 @@ export function Navbar() {
               placeholder="Tìm sản phẩm, bài viết..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 w-full rounded-none border-slate-200 bg-slate-50 pl-10 pr-10 transition-colors focus-visible:border-rose-600 focus-visible:ring-0 dark:border-slate-800 dark:bg-slate-900 dark:focus-visible:border-rose-500"
+              className="h-10 w-full rounded-full border-stone-200 bg-stone-50 pl-10 pr-11 text-sm transition-colors focus-visible:border-rose-600 focus-visible:ring-0 dark:border-slate-800 dark:bg-slate-900 dark:focus-visible:border-rose-500"
             />
             <button
               type="submit"
               aria-label="Gửi tìm kiếm"
-              className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center text-slate-400 transition-colors hover:text-rose-600 dark:text-slate-500 dark:hover:text-rose-400"
+              className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-slate-400 transition-colors hover:text-rose-600 dark:text-slate-500 dark:hover:text-rose-400"
             >
               <Search className="h-4 w-4" />
             </button>
@@ -189,7 +173,7 @@ export function Navbar() {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-none"
+            className="h-[46px] w-[46px] min-h-[46px] min-w-[46px] rounded-none"
             aria-label="Tìm kiếm"
             aria-expanded={isMobileSearchOpen}
             onClick={() => { setIsMobileSearchOpen(!isMobileSearchOpen); setIsMobileMenuOpen(false) }}
@@ -200,7 +184,7 @@ export function Navbar() {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-none"
+            className="h-[46px] w-[46px] min-h-[46px] min-w-[46px] rounded-none"
             aria-label="Menu"
             aria-expanded={isMobileMenuOpen}
             onClick={() => {
@@ -218,11 +202,11 @@ export function Navbar() {
         </div>
       </div>
 
-      <div className="hidden border-t border-slate-100 bg-white/90 dark:border-slate-800 dark:bg-slate-950/90 md:block">
-        <nav aria-label="Nhóm catalogue" className="container mx-auto flex items-center justify-center gap-2 px-4 py-2 md:px-6">
+      <div className="hidden border-t border-stone-100 bg-white/90 dark:border-slate-800 dark:bg-slate-950/90 md:block">
+        <nav aria-label="Nhóm catalogue" className="container mx-auto flex h-11 items-center justify-center gap-1 px-4 md:px-6">
           {catalogueGroups.map((group) => (
             <details key={group.slug} className="group relative">
-              <summary className="flex min-h-10 cursor-pointer list-none items-center rounded-lg px-3 text-xs font-bold uppercase tracking-wider text-slate-500 transition-colors hover:bg-slate-50 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-rose-300">
+              <summary className="flex min-h-10 cursor-pointer list-none items-center rounded-full px-4 text-[11px] font-black tracking-wide text-slate-500 transition-colors hover:bg-stone-100 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-rose-300">
                 {group.title}
               </summary>
               <div className="absolute left-1/2 top-full z-50 mt-2 w-80 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-900">
@@ -254,7 +238,7 @@ export function Navbar() {
             <button
               type="submit"
               aria-label="Gửi tìm kiếm"
-              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center text-slate-400 transition-colors hover:text-rose-600 dark:text-slate-500 dark:hover:text-rose-400"
+              className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-slate-400 transition-colors hover:text-rose-600 dark:text-slate-500 dark:hover:text-rose-400"
             >
               <Search className="h-4 w-4" />
             </button>
@@ -268,10 +252,10 @@ export function Navbar() {
           <nav className="flex flex-col gap-6">
             <Link
               href="/catalogue"
-              className="text-lg font-bold uppercase tracking-wider text-slate-900 dark:text-slate-50 hover:text-rose-600 dark:hover:text-rose-400"
+              className="inline-flex min-h-11 items-center text-lg font-bold uppercase tracking-wider text-slate-900 hover:text-rose-600 dark:text-slate-50 dark:hover:text-rose-400"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Catalogue
+              Chủ đề
             </Link>
             <Link
               href="/products"

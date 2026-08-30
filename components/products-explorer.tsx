@@ -151,20 +151,20 @@ export function ProductsExplorer({
         <section className="mb-8">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-rose-600 dark:bg-rose-950/30 dark:text-rose-300">
             <Beaker className="h-3.5 w-3.5" />
-            Product Radar
+            Sản phẩm đã phân loại
           </div>
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
             <div>
               <h1 className="font-display text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50 md:text-5xl">
-                Sản phẩm theo catalogue khoa học.
+                Chọn sản phẩm theo đúng nhu cầu.
               </h1>
               <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-400 md:text-lg">
-                Đi từ vấn đề da, nhóm sản phẩm, hoạt chất và mức bằng chứng trước khi chọn link mua. Mỗi sản phẩm được đặt vào đúng ngữ cảnh routine thay vì chỉ xếp theo brand.
+                Đi từ vấn đề da, nhóm sản phẩm, hoạt chất và mức độ bằng chứng trước khi chọn nơi mua. Mỗi sản phẩm được đặt vào đúng quy trình chăm sóc thay vì chỉ xếp theo thương hiệu.
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2 rounded-2xl border border-slate-100 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <Metric label="Sản phẩm" value={products.length} />
-              <Metric label="Catalogue" value={catalogueBuckets.length} />
+              <Metric label="Chủ đề" value={catalogueBuckets.length} />
               <Metric label="Lượt nhắc" value={timelineEvents.length} />
             </div>
           </div>
@@ -172,19 +172,19 @@ export function ProductsExplorer({
 
         <details className="group mb-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
           <summary className="cursor-pointer list-none font-display text-lg font-bold text-slate-900 marker:hidden dark:text-slate-50">
-            Giải thích catalogue theo vấn đề
+            Vì sao sản phẩm được xếp vào từng chủ đề?
           </summary>
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">
-                Catalogue theo vấn đề
+                Chọn theo vấn đề
               </h2>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Dùng để bắt đầu từ nhu cầu thật: da mặt, trị mụn, bodycare, tóc, makeup, mùi hương.
+                Bắt đầu từ nhu cầu thật: da mặt, trị mụn, chăm sóc cơ thể, tóc, trang điểm hoặc mùi hương.
               </p>
             </div>
-            <Link href="/catalogue" className="inline-flex items-center gap-1 text-sm font-bold text-rose-600 hover:text-rose-700 dark:text-rose-300">
-              Xem bản đồ catalogue <ArrowRight className="h-4 w-4" />
+            <Link href="/catalogue" className="inline-flex min-h-11 items-center gap-1 text-sm font-bold text-rose-600 hover:text-rose-700 dark:text-rose-300">
+              Xem tất cả chủ đề <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -529,7 +529,7 @@ function ScientificProductCard({
           )}
           {eventStats && eventStats.count > 0 && (
             <Badge variant="secondary" className="bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-300">
-              {eventStats.count} lượt nhắc
+              {eventStats.count} clip đã đối chiếu
             </Badge>
           )}
           {preferredOffer && (
@@ -547,7 +547,7 @@ function ScientificProductCard({
 
         <div className="mt-auto border-t border-slate-100 pt-4 dark:border-slate-800">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="font-extrabold text-lg text-slate-900 dark:text-slate-50">{product.price}</div>
+            <div><div className="font-extrabold text-lg text-slate-900 dark:text-slate-50">{product.price}</div><div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{preferredOffer ? "Nơi mua đã kiểm tra" : "Giá tham khảo"}</div></div>
             {product.reviews > 0 ? (
               <div className="flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-sm font-bold text-amber-700 dark:bg-amber-950/30 dark:text-amber-500">
                 <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />

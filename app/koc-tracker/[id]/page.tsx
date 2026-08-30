@@ -5,38 +5,37 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import {
-  Star, ShieldCheck, ArrowLeft, ExternalLink, Users, Award,
+  ShieldCheck, ArrowLeft, ExternalLink, Users, Award,
   Layers, CalendarDays, Sparkles, MapPin, Building2, Tag, UserRound, ShieldQuestion, Quote, PackageCheck, ShoppingBag,
 } from "lucide-react"
 import * as motion from "motion/react-client"
 
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PlatformBadge } from "@/components/platform-badge"
 import { TrackKolProfileView } from "@/components/analytics/public-events"
-import { getCreatorProductEvents, getCreatorProductStates, getKol, getPost, getProductOffers, getProducts, getReviews } from "@/lib/data"
+import { getCreatorProductEvents, getCreatorProductStates, getKol, getPost, getProductOffers, getProducts } from "@/lib/data"
 import { getMatrixNodesByKolId, getMatrixProductGroups } from "@/lib/content-matrix"
-import { credibilityToneClass, getKolCredibility } from "@/lib/kol-credibility"
 import { parseFollowers } from "@/lib/kols-data"
+import { buildCreatorEvidenceMetrics } from "@/lib/product-observation"
 import { getProductCategoryLabel, productWithTaxonomy } from "@/lib/product-taxonomy"
-import { containerVariants, itemVariants } from "@/lib/animations"
 import { absoluteUrl } from "@/lib/seo"
-import type { CreatorProductEvent, CreatorProductState, CreatorProductStateValue, Kol, KolSocial, Post, Product, ProductOffer, Review } from "@/lib/types"
+import { getTikTokPostId } from "@/lib/evidence-source"
+import type { CreatorProductEvent, CreatorProductState, CreatorProductStateValue, Kol, KolSocial, Post, Product, ProductOffer } from "@/lib/types"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const kol = await getKol(id)
 
   if (!kol) {
-    return { title: 'KOL/KOC không tồn tại | 360dep.vn' }
+    return { title: 'KOL/KOC không tồn tại' }
   }
 
   const description = kol.bio
     ? kol.bio.replace(/\s+/g, " ").slice(0, 200)
-    : `Hồ sơ ${kol.name} trên ${kol.platform}. ${kol.followers} followers. Xem đánh giá sản phẩm làm đẹp từ ${kol.name} tại 360dep.vn.`
-  const title = `${kol.name} - Hồ sơ KOL/KOC làm đẹp | 360dep.vn`
+    : `Hồ sơ ${kol.name} trên ${kol.platform}. ${kol.followers} followers. Xem các sản phẩm và clip công khai được ghi nhận từ ${kol.name} tại 360dep.vn.`
+  const title = `${kol.name} - Hồ sơ KOL/KOC làm đẹp`
   const url = absoluteUrl(`/koc-tracker/${kol.id}`)
   const image = absoluteUrl(kol.cover || kol.avatar)
 
@@ -128,7 +127,7 @@ function eventTypeLabel(event: CreatorProductEvent) {
     unboxed: "Mở hộp",
     used: "Đã dùng",
     reviewed: "Đã review",
-    recommended: "Recommend",
+    recommended: "Creator khuyên dùng",
     disliked: "Không hợp",
     emptied: "Dùng hết",
     repurchased: "Mua lại",
@@ -173,13 +172,6 @@ function disclosureLabel(event: CreatorProductEvent) {
   return labels[event.disclosure]
 }
 
-function sentimentClass(event: CreatorProductEvent) {
-  if (event.sentiment === "positive") return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-  if (event.sentiment === "negative") return "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300"
-  if (event.sentiment === "mixed") return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-  return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-}
-
 function preferredOfferForProduct(offers: ProductOffer[], product: Product) {
   return offers.find((offer) => offer.is_preferred && offer.affiliate_url)
     ?? offers.find((offer) => offer.affiliate_url)
@@ -216,7 +208,6 @@ function sourceRel(href: string) {
 type CreatorProductSpotlight = {
   product: Product
   event: CreatorProductEvent | null
-  review: Review | null
   offer: ProductOffer | null
   signalCount: number
 }
@@ -224,16 +215,14 @@ type CreatorProductSpotlight = {
 function buildCreatorProductSpotlights({
   products,
   events,
-  reviews,
   offersByProductId,
 }: {
   products: Product[]
   events: CreatorProductEvent[]
-  reviews: Review[]
   offersByProductId: Map<string, ProductOffer[]>
 }) {
   const productMap = new Map(products.map((product) => [product.id, productWithTaxonomy(product)]))
-  const productIds = unique([...events.map((event) => event.product_id), ...reviews.map((review) => review.productid)])
+  const productIds = unique(events.map((event) => event.product_id))
 
   return productIds
     .map((productId): CreatorProductSpotlight | null => {
@@ -241,24 +230,21 @@ function buildCreatorProductSpotlights({
       if (!product) return null
 
       const productEvents = events.filter((event) => event.product_id === productId)
-      const productReviews = reviews.filter((review) => review.productid === productId)
       const latestEvent = productEvents[0] ?? null
-      const latestReview = productReviews[0] ?? null
       const offer = preferredOfferForProduct(offersByProductId.get(productId) ?? [], product)
 
       return {
         product,
         event: latestEvent,
-        review: latestReview,
         offer,
-        signalCount: productEvents.length + productReviews.length,
+        signalCount: productEvents.length,
       }
     })
     .filter((item): item is CreatorProductSpotlight => Boolean(item))
     .sort((a, b) => {
       const aDate = a.event?.event_date ?? ""
       const bDate = b.event?.event_date ?? ""
-      return bDate.localeCompare(aDate) || b.signalCount - a.signalCount || b.product.rating - a.product.rating
+      return bDate.localeCompare(aDate) || b.signalCount - a.signalCount || a.product.name.localeCompare(b.product.name, "vi")
     })
 }
 
@@ -268,9 +254,8 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
   const kol = await getKol(id)
   if (!kol) return notFound()
 
-  const [PRODUCTS, reviews, timelineEvents, productStates] = await Promise.all([
+  const [PRODUCTS, timelineEvents, productStates] = await Promise.all([
     getProducts(),
-    getReviews({ kolId: id }),
     getCreatorProductEvents({ creatorId: id }),
     getCreatorProductStates({ creatorId: id }),
   ])
@@ -297,7 +282,6 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
   const graphProducts = graphProductIds.map((productId) => PRODUCTS.find((product) => product.id === productId)).filter((product): product is Product => Boolean(product)).slice(0, 4)
   const productIdsNeedingOffers = unique([
     ...timelineEvents.map((event) => event.product_id),
-    ...reviews.map((review) => review.productid),
     ...graphProducts.map((product) => product.id),
   ])
   const productOfferEntries = await Promise.all(productIdsNeedingOffers.map(async (productId) => [productId, await getProductOffers({ productId })] as const))
@@ -305,7 +289,6 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
   const creatorProductSpotlights = buildCreatorProductSpotlights({
     products: PRODUCTS,
     events: timelineEvents,
-    reviews,
     offersByProductId,
   })
   const stateGroups = buildStateGroups(productStates, PRODUCTS)
@@ -314,7 +297,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
   const totalReach = formatReach(socials.reduce((sum, s) => sum + parseFollowers(s.followers), 0))
   const bioParagraphs = kol.bio ? kol.bio.split(/\n\n+/).map(p => p.trim()).filter(Boolean) : []
   const primaryUrl = buildSocialUrl(socials[0])
-  const credibility = getKolCredibility(kol)
+  const creatorMetrics = buildCreatorEvidenceMetrics(kol, timelineEvents)
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://360dep.vn"
   // Cover: real banner (6 originals) > blurred avatar (when we have a photo) > brand gradient.
   const realCover = kol.cover && kol.cover.startsWith("/") && !kol.cover.includes("picsum") ? kol.cover : null
@@ -357,8 +340,8 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                 <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900 dark:text-slate-50">{kol.name}</h1>
                 {kol.verified && <ShieldCheck aria-label="Kênh public đã được đối chiếu" className="h-8 w-8 text-blue-500" />}
               </div>
-              <Badge variant="outline" className={`mb-3 rounded-full border px-3 py-1 ${credibilityToneClass(credibility.tier)}`}>
-                {credibility.label}
+              <Badge variant="outline" className="mb-3 rounded-full border-slate-200 bg-slate-50 px-3 py-1 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                {creatorMetrics.verifiedEventCount > 0 ? `${creatorMetrics.verifiedEventCount} nguồn sản phẩm đã duyệt` : "Chưa có nguồn sản phẩm đã duyệt"}
               </Badge>
               {kol.realName && kol.realName !== kol.name && (
                 <p className="text-slate-500 dark:text-slate-400 mb-3">Tên thật: {kol.realName}</p>
@@ -393,8 +376,8 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                     <Award className="h-6 w-6" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Phân loại hồ sơ</div>
-                    <div className="text-xl font-bold text-slate-900 dark:text-slate-50">{credibility.credibilityScore}/100</div>
+                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Sản phẩm exact SKU</div>
+                    <div className="text-xl font-bold text-slate-900 dark:text-slate-50">{creatorMetrics.exactProductCount}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -402,8 +385,8 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                     <ShieldQuestion className="h-6 w-6" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Độ phủ</div>
-                    <div className="text-xl font-bold text-slate-900 dark:text-slate-50">{credibility.influenceScore}/100</div>
+                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Clip có nguồn</div>
+                    <div className="text-xl font-bold text-slate-900 dark:text-slate-50">{creatorMetrics.verifiedEventCount}</div>
                   </div>
                 </div>
                 {kol.activeSince && (
@@ -421,12 +404,9 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
             </div>
 
             <div className="w-full md:w-auto flex flex-col gap-3">
-              <Button className="w-full md:w-48 h-12 rounded-xl bg-slate-900 dark:bg-slate-50 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold">
-                Theo dõi
-              </Button>
-              <Button asChild variant="outline" className="w-full md:w-48 h-12 rounded-xl border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+              <Button asChild className="w-full md:w-48 h-12 rounded-xl bg-slate-900 dark:bg-slate-50 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold">
                 <a href={primaryUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-2" /> Kênh chính thức
+                  <ExternalLink className="h-4 w-4 mr-2" /> Mở kênh chính thức
                 </a>
               </Button>
             </div>
@@ -469,29 +449,6 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                     <Quote className="h-5 w-5 text-indigo-500" /> Phong cách nội dung
                   </h2>
                   <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{kol.contentStyle}</p>
-                </section>
-              )}
-
-              {kol.reviewHighlights && kol.reviewHighlights.length > 0 && (
-                <section className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 dark:border-slate-800">
-                  <h2 className="text-xl font-display font-bold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
-                    <Star className="h-5 w-5 text-amber-500" /> Review tiêu biểu
-                  </h2>
-                  <div className="space-y-3">
-                    {kol.reviewHighlights.map((r, i) => {
-                      const tone = r.sentiment === "negative"
-                        ? "border-rose-200 dark:border-rose-900/50"
-                        : r.sentiment === "mixed"
-                          ? "border-amber-200 dark:border-amber-900/50"
-                          : "border-emerald-200 dark:border-emerald-900/50"
-                      return (
-                        <div key={i} className={`rounded-2xl border ${tone} bg-slate-50 dark:bg-slate-800/40 p-4`}>
-                          <div className="font-bold text-slate-900 dark:text-slate-50 mb-1">{r.product}</div>
-                          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{r.verdict}</p>
-                        </div>
-                      )
-                    })}
-                  </div>
                 </section>
               )}
 
@@ -564,10 +521,10 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                 <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
                   <div className="mb-5">
                     <h2 className="flex items-center gap-2 font-display text-xl font-bold text-slate-900 dark:text-slate-50">
-                      <PackageCheck className="h-5 w-5 text-emerald-500" /> Trạng thái sản phẩm có bằng chứng
+                      <PackageCheck className="h-5 w-5 text-emerald-500" /> Hành vi sản phẩm đã ghi nhận
                     </h2>
                     <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                      Chỉ phản ánh bằng chứng công khai đã được xác minh. Review, affiliate hoặc live bán hàng không tự động được xem là đang sử dụng.
+                      Chỉ phân loại hành vi xuất hiện trong clip công khai. Review, affiliate hoặc live bán hàng không tự động được xem là đang sử dụng.
                     </p>
                   </div>
                   <div className="grid gap-4 lg:grid-cols-3">
@@ -584,7 +541,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                                 <div className="text-xs font-bold uppercase tracking-wider text-slate-400">{product.brand}</div>
                                 <div className="mt-1 line-clamp-2 text-sm font-bold">{product.name}</div>
                                 <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                  Xác nhận {state.last_confirmed_at ? formatTimelineDate(state.last_confirmed_at) : "chưa rõ ngày"} · {state.evidence_count} bằng chứng · {state.state_confidence}/100
+                                  Ghi nhận {state.last_confirmed_at ? formatTimelineDate(state.last_confirmed_at) : "chưa rõ ngày"} · {state.evidence_count} clip đã duyệt
                                 </div>
                               </Link>
                             ))}
@@ -606,7 +563,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                         <ShoppingBag className="h-5 w-5 text-rose-500" /> Sản phẩm {kol.name} đã nhắc tới
                       </h2>
                       <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                        Gom theo từng sản phẩm, kèm ảnh, nguồn, link mua và đoạn review/ghi chú nổi bật từ timeline của {kol.name}.
+                        Gom theo từng sản phẩm và clip gốc. 360dep không dùng số lần xuất hiện để kết luận sản phẩm tốt, hiệu quả hoặc đáng mua.
                       </p>
                     </div>
                     <Badge variant="secondary" className="w-fit bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -615,18 +572,19 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-2">
-                    {creatorProductSpotlights.map(({ product, event, review, offer, signalCount }) => {
+                    {creatorProductSpotlights.map(({ product, event, offer, signalCount }) => {
                       const buyHref = offerHref(offer)
                       const sourceHref = event?.source_url ?? null
-                      const reviewText = review?.content ?? event?.source_excerpt ?? product.description
+                      const sourcePostId = event?.source_post_id ?? getTikTokPostId(sourceHref)
+                      const observationText = event?.source_excerpt ?? product.description
+                      const directQuote = event?.evidence_spans?.find((span) => span.kind === "quote" || span.kind === "caption")
                       return (
                         <article key={product.id} className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
                           <Link href={`/products/${product.id}`} className="group relative block aspect-[4/3] overflow-hidden bg-white dark:bg-slate-900">
                             <Image src={product.image} alt={product.name} fill sizes="(min-width: 768px) 320px, 100vw" className="object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
                             <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-                              {event && <Badge className={sentimentClass(event)}>{event.sentiment}</Badge>}
                               <Badge variant="secondary" className="bg-white/90 text-slate-700 backdrop-blur dark:bg-slate-900/90 dark:text-slate-200">
-                                {signalCount} tín hiệu
+                                {signalCount} clip
                               </Badge>
                             </div>
                           </Link>
@@ -637,14 +595,8 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                               {product.name}
                             </Link>
                             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                              <span>{product.price}</span>
-                              <span>&bull;</span>
-                              <span>{product.reviews > 0 ? `${product.rating}/5` : "Chưa có đánh giá"}</span>
                               {event && (
-                                <>
-                                  <span>&bull;</span>
-                                  <span>{formatTimelineDate(event.event_date)}</span>
-                                </>
+                                <span>{formatTimelineDate(event.event_date)}</span>
                               )}
                             </div>
 
@@ -660,17 +612,11 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                                     </Badge>
                                   </>
                                 )}
-                                {review && (
-                                  <div className="flex items-center gap-1">
-                                    {Array.from({ length: 5 }).map((_, index) => (
-                                      <Star key={index} className={`h-3.5 w-3.5 ${index < review.rating ? "fill-amber-400 text-amber-400" : "fill-slate-200 text-slate-200 dark:fill-slate-700 dark:text-slate-700"}`} />
-                                    ))}
-                                  </div>
-                                )}
                               </div>
                               <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                                &quot;{reviewText}&quot;
+                                <span className="font-bold">360dep ghi nhận:</span> {observationText}
                               </p>
+                              {directQuote && <p className="mt-2 border-l-2 border-rose-300 pl-3 text-sm italic text-slate-700 dark:border-rose-800 dark:text-slate-200">“{directQuote.value}”</p>}
                               {event?.usage_context && (
                                 <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">Ngữ cảnh: {event.usage_context}</p>
                               )}
@@ -682,7 +628,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                               </Link>
                               {sourceHref && (
                                 <a href={sourceHref} target={sourceTarget(sourceHref)} rel={sourceRel(sourceHref)} className="inline-flex items-center gap-1 rounded-full bg-white px-4 py-2 text-xs font-bold text-slate-700 transition-colors hover:text-rose-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:text-rose-300">
-                                  Xem nguồn <ExternalLink className="h-3 w-3" />
+                                  Mở clip TikTok{sourcePostId ? ` · ID ${sourcePostId}` : ""} <ExternalLink className="h-3 w-3" />
                                 </a>
                               )}
                               {buyHref && (
@@ -703,14 +649,14 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                 <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <h2 className="text-xl font-display font-bold text-slate-900 dark:text-slate-50 flex items-center gap-2">
-                      <PackageCheck className="h-5 w-5 text-indigo-500" /> Dòng thời gian sản phẩm
+                      <PackageCheck className="h-5 w-5 text-indigo-500" /> Clip sản phẩm theo thời gian
                     </h2>
                     <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                      Các lần {kol.name} dùng, review, recommend hoặc được nhắc cùng một sản phẩm trong nguồn công khai.
+                      Các lần {kol.name} dùng, review, khuyên dùng, bán hoặc chỉ nhắc tới sản phẩm. Nội dung phát ngôn thuộc trách nhiệm của creator.
                     </p>
                   </div>
                   <Badge variant="secondary" className="w-fit bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                    {timelineEvents.length} tín hiệu
+                    {timelineEvents.length} clip đã duyệt
                   </Badge>
                 </div>
 
@@ -740,6 +686,8 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                       if (!product) return null
                       const offer = preferredOfferForProduct(offersByProductId.get(product.id) ?? [], product)
                       const buyHref = offerHref(offer)
+                      const sourcePostId = event.source_post_id ?? getTikTokPostId(event.source_url)
+                      const directQuote = event.evidence_spans?.find((span) => span.kind === "quote" || span.kind === "caption")
                       return (
                         <div key={event.id} className="relative pl-10">
                           <span className="absolute left-2 top-5 h-4 w-4 rounded-full border-4 border-white bg-rose-500 shadow-sm dark:border-slate-900" />
@@ -753,9 +701,11 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                                   <Badge variant="secondary" className="bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300">
                                     {formatTimelineDate(event.event_date)}
                                   </Badge>
-                                  <Badge className={sentimentClass(event)}>{event.sentiment}</Badge>
                                   <Badge variant="secondary" className="bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300">
                                     {disclosureLabel(event)}
+                                  </Badge>
+                                  <Badge variant="secondary" className="bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-300">
+                                    Khớp SKU/clip {event.confidence_score ?? "đã duyệt"}{event.confidence_score != null ? "%" : ""}
                                   </Badge>
                                 </div>
                                 <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -765,7 +715,8 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                                   {product.name}
                                 </Link>
                                 <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">{product.brand} &bull; {product.price}</p>
-                                <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">&quot;{event.source_excerpt}&quot;</p>
+                                <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"><span className="font-bold">360dep ghi nhận:</span> {event.source_excerpt}</p>
+                                {directQuote && <p className="mt-2 border-l-2 border-rose-300 pl-3 text-sm italic text-slate-700 dark:border-rose-800 dark:text-slate-200">“{directQuote.value}”</p>}
                                 {event.usage_context && (
                                   <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">Ngữ cảnh: {event.usage_context}</p>
                                 )}
@@ -775,7 +726,7 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                                   </Link>
                                   {event.source_url && (
                                     <a href={event.source_url} target={sourceTarget(event.source_url)} rel={sourceRel(event.source_url)} className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-rose-600 transition-colors hover:text-rose-700 dark:bg-slate-900 dark:text-rose-300">
-                                      Xem nguồn <ExternalLink className="h-3 w-3" />
+                                      Mở clip TikTok{sourcePostId ? ` · ID ${sourcePostId}` : ""} <ExternalLink className="h-3 w-3" />
                                     </a>
                                   )}
                                   {buyHref && (
@@ -798,104 +749,23 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
                 )}
               </section>
 
-              {/* Reviews on the platform */}
-              <section>
-                <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-slate-50 mb-6">Sản phẩm đã đánh giá</h2>
-                {reviews.length > 0 ? (
-                  <motion.div
-                    className="grid grid-cols-1 sm:grid-cols-2 gap-6"
-                    initial="hidden"
-                    animate="show"
-                    variants={containerVariants}
-                  >
-                    {reviews.map((review) => {
-                      const product = PRODUCTS.find(p => p.id === review.productid)
-                      if (!product) return null
-                      const offer = preferredOfferForProduct(offersByProductId.get(product.id) ?? [], product)
-                      const buyHref = offerHref(offer)
-                      return (
-                        <motion.div key={review.id} variants={itemVariants}>
-                          <Card className="overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl h-full flex flex-col">
-                            <CardContent className="p-5 flex-1 flex flex-col">
-                              <div className="flex gap-4 mb-4">
-                                <div className="relative h-20 w-20 shrink-0 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
-                                  <Image src={product.image} alt={product.name} fill sizes="80px" className="object-cover" referrerPolicy="no-referrer" />
-                                </div>
-                                <div className="flex flex-col justify-center">
-                                  <div className="text-xs font-bold text-rose-500 uppercase tracking-wider mb-1">{product.brand}</div>
-                                  <Link href={`/products/${product.id}`} className="font-bold text-slate-900 dark:text-slate-50 hover:text-rose-600 dark:hover:text-rose-400 line-clamp-2 transition-colors">
-                                    {product.name}
-                                  </Link>
-                                </div>
-                              </div>
-                              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800 mt-auto">
-                                <div className="flex items-center gap-1 mb-2">
-                                  {Array.from({ length: 5 }).map((_, i) => (
-                                    <Star key={i} className={`h-3.5 w-3.5 ${i < review.rating ? "fill-amber-400 text-amber-400" : "fill-slate-200 dark:fill-slate-700 text-slate-200 dark:text-slate-700"}`} />
-                                  ))}
-                                </div>
-                                <p className="text-sm text-slate-700 dark:text-slate-300 italic line-clamp-2">
-                                  &quot;{review.content}&quot;
-                                </p>
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                  <Link href={`/products/${product.id}`} className="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:text-rose-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:text-rose-300">
-                                    Xem sản phẩm
-                                  </Link>
-                                  {buyHref && (
-                                    <a href={buyHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-rose-700">
-                                      Link shop <ExternalLink className="h-3 w-3" />
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </motion.div>
-                      )
-                    })}
-                  </motion.div>
-                ) : (
-                  <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
-                    <p className="text-slate-500 dark:text-slate-400 font-medium">Chưa có bài đánh giá nào của {kol.name} trên hệ thống.</p>
-                  </div>
-                )}
-              </section>
             </div>
 
             {/* Sidebar */}
             <aside className="space-y-6">
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
-                  <Award className="h-4 w-4" /> Cách đọc hồ sơ
+                  <Award className="h-4 w-4" /> Dữ liệu đã ghi nhận
                 </h3>
-                <div className="mb-3 flex items-end gap-2">
-                  <span className="font-display text-4xl font-black text-slate-900 dark:text-slate-50">{credibility.credibilityScore}</span>
-                  <span className="pb-1 text-sm font-bold text-slate-400">/100</span>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                  <ProfileMetric label="Danh tính/kênh" value={creatorMetrics.identityVerified ? "Đã đối chiếu" : "Chưa đối chiếu"} />
+                  <ProfileMetric label="Sản phẩm exact SKU" value={String(creatorMetrics.exactProductCount)} />
+                  <ProfileMetric label="Clip có nguồn" value={String(creatorMetrics.verifiedEventCount)} detail={`${creatorMetrics.knownDisclosureCount} clip rõ disclosure · ${creatorMetrics.unknownDisclosureCount} clip chưa rõ`} />
+                  <ProfileMetric label="Clip thương mại" value={`${creatorMetrics.commercialEventCount}/${creatorMetrics.verifiedEventCount}`} detail={`${creatorMetrics.commercialShare}% clip có PR, tài trợ hoặc liên kết tiếp thị`} />
                 </div>
-                <Badge variant="outline" className={`mb-4 rounded-full border ${credibilityToneClass(credibility.tier)}`}>
-                  {credibility.label}
-                </Badge>
-                <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{credibility.summary}</p>
-                {credibility.strengths.length > 0 && (
-                  <div className="mt-4">
-                    <div className="mb-2 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Điểm cộng</div>
-                    <ul className="space-y-2">
-                      {credibility.strengths.map((item) => (
-                        <li key={item} className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {credibility.cautions.length > 0 && (
-                  <div className="mt-4">
-                    <div className="mb-2 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-300">Cần đọc kèm bối cảnh</div>
-                    <ul className="space-y-2">
-                      {credibility.cautions.map((item) => (
-                        <li key={item} className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                  360dep chỉ đối chiếu đúng creator, sản phẩm và clip công khai. Nhận xét, trải nghiệm và lời khuyên là phát ngôn của creator; các con số trên không phải điểm chất lượng hay lời bảo chứng sản phẩm.
+                </p>
               </div>
 
               {/* Quick facts */}
@@ -996,6 +866,16 @@ export default async function KocDetailPage({ params }: { params: Promise<{ id: 
 
 function BookOpenIcon() {
   return <Layers className="h-5 w-5 text-cyan-500" />
+}
+
+function ProfileMetric({ label, value, detail }: { label: string; value: string; detail?: string }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+      <div className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</div>
+      <div className="mt-1 font-display text-xl font-black text-slate-900 dark:text-slate-50">{value}</div>
+      {detail && <div className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{detail}</div>}
+    </div>
+  )
 }
 
 function unique(items: string[]) {

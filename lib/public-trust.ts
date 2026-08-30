@@ -1,7 +1,7 @@
 import type { CreatorProductEvent, ProductOffer, UserRatingSummary } from "@/lib/types"
+import { isDirectCreatorEvidenceSource } from "@/lib/evidence-source"
 
 const SEARCH_URL_PATTERN = /(?:\/search|search\?|keyword=|[?&](?:q|query)=)/i
-const INTERNAL_SOURCE_PATTERN = /^https:\/\/(?:www\.)?360dep\.vn(?:\/|$)/i
 const OFFER_FRESHNESS_MS = 30 * 24 * 60 * 60 * 1000
 
 function isFreshDate(value: string | null | undefined, maxAgeMs: number, now = Date.now()) {
@@ -22,8 +22,7 @@ export function isPublicOffer(offer: ProductOffer, now = Date.now()) {
 
 export function isPublicCreatorEvent(event: CreatorProductEvent, now = Date.now()) {
   const platform = event.source_platform.toLowerCase()
-  const sourceUrl = event.source_url
-  if (!sourceUrl?.startsWith("https://") || INTERNAL_SOURCE_PATTERN.test(sourceUrl)) return false
+  if (!isDirectCreatorEvidenceSource(event.source_platform, event.source_url, event.source_post_id)) return false
   if (platform.includes("seed") || platform.includes("internal")) return false
   if (event.verification_status !== "verified" || !event.evidence_id) return false
   if (!event.verified_by || !event.verified_at) return false

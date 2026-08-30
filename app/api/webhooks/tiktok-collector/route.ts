@@ -3,6 +3,7 @@ import { timingSafeEqual } from "node:crypto"
 import { NextResponse, type NextRequest } from "next/server"
 
 import { normalizeTikTokCollectorBatch } from "@/lib/evidence-radar/tiktok-collector"
+import { isTikTokWebhookPilot } from "@/lib/evidence-radar/focus"
 import { getSupabaseAdmin } from "@/lib/evidence-radar/server"
 import type { CreatorAccount } from "@/lib/types"
 
@@ -57,6 +58,12 @@ export async function POST(request: NextRequest) {
   if (accountError || !account) {
     return NextResponse.json({ ok: false, error: "TikTok creator account not found" }, { status: 404 })
   }
+  if (!isTikTokWebhookPilot(account as CreatorAccount)) {
+    return NextResponse.json({
+      ok: false,
+      error: "Creator account is not in the active TikTok KOL/KOC webhook pilot",
+    }, { status: 403 })
+  }
 
   let normalized
   try {
@@ -85,6 +92,8 @@ export async function POST(request: NextRequest) {
     source_platform: "TikTok",
     external_post_id: post.external_post_id,
     source_url: post.source_url,
+    collector_batch_id: normalized.batchId,
+    automation_cohort: normalized.automationCohort,
     published_at: post.published_at,
     title: post.title,
     caption: post.caption,
@@ -100,14 +109,22 @@ export async function POST(request: NextRequest) {
     transcribed_at: post.transcribed_at,
     archive_video_path: post.archive_video_path,
     archive_audio_path: post.archive_audio_path,
+    archive_frame_paths: post.archive_frame_paths,
     media_sha256: post.media_sha256,
     audio_sha256: post.audio_sha256,
     vision_fallback_required: post.vision_fallback_required,
+    vision_sample_timestamps: post.vision_sample_timestamps,
+    cover_ocr_text: post.cover_ocr_text,
+    triage_sampled: post.triage_sampled,
   })
-  const metadataRows = normalized.posts
+  // A re-delivered manifest can include historic URLs. Insert only new URLs:
+  // an ordinary upsert would relabel a legacy post as the active cohort and
+  // make pre-existing evidence look like fresh shadow output.
+  const newPosts = normalized.posts.filter((post) => !existingUrls.has(post.source_url))
+  const metadataRows = newPosts
     .filter((post) => !post.media_url)
     .map((post) => commonRow(post))
-  const mediaRowsToUpsert = normalized.posts
+  const mediaRowsToUpsert = newPosts
     .filter((post) => post.media_url)
     .map((post) => ({
       ...commonRow(post),
@@ -118,12 +135,12 @@ export async function POST(request: NextRequest) {
     if (!batch.length) continue
     const { error: upsertError } = await supabase
       .from("source_posts")
-      .upsert(batch, { onConflict: "source_url" })
+      .upsert(batch, { onConflict: "source_url", ignoreDuplicates: true })
     if (upsertError) return NextResponse.json({ ok: false, error: upsertError.message }, { status: 500 })
   }
 
   const noSpeechSourceUrls = normalized.posts
-    .filter((post) => post.transcription_status === "no_speech" && !post.media_url)
+    .filter((post) => post.transcription_status === "no_speech" && !post.media_url && post.archive_frame_paths.length === 0)
     .map((post) => post.source_url)
   if (noSpeechSourceUrls.length) {
     const { error: noSpeechError } = await supabase
@@ -133,8 +150,8 @@ export async function POST(request: NextRequest) {
     if (noSpeechError) return NextResponse.json({ ok: false, error: noSpeechError.message }, { status: 500 })
   }
 
-  const mediaSourceUrls = normalized.posts
-    .filter((post) => post.media_url || post.transcription_status === "ready")
+  const mediaSourceUrls = newPosts
+    .filter((post) => post.media_url || post.transcription_status === "ready" || post.archive_frame_paths.length > 0)
     .map((post) => post.source_url)
   let queuedForPrivateAnalysis = 0
   if (mediaSourceUrls.length) {
@@ -155,10 +172,10 @@ export async function POST(request: NextRequest) {
     queuedForPrivateAnalysis = mediaRows?.length ?? 0
   }
 
-  const inserted = normalized.posts.filter((post) => !existingUrls.has(post.source_url)).length
-  const updated = normalized.posts.length - inserted
+  const inserted = newPosts.length
+  const duplicates = normalized.posts.length - inserted
   const errors = normalized.rejected.map((item) => `post[${item.index}]: ${item.reason}`)
-  await Promise.all([
+  const [accountUpdate, runInsert] = await Promise.all([
     supabase.from("creator_accounts").update({
       cursor: normalized.posts.slice(0, 100).map((post) => post.external_post_id).join(","),
       last_polled_at: normalized.collectedAt,
@@ -177,12 +194,17 @@ export async function POST(request: NextRequest) {
         account_id: account.id,
         creator_id: account.creator_id,
         batch_id: normalized.batchId,
-        updated,
+        automation_cohort: normalized.automationCohort,
+        duplicates,
         public_publish_enabled: false,
       },
       finished_at: new Date().toISOString(),
     }),
   ])
+  const persistenceError = accountUpdate.error?.message || runInsert.error?.message
+  if (persistenceError) {
+    return NextResponse.json({ ok: false, error: `Collector run persistence failed: ${persistenceError}` }, { status: 500 })
+  }
 
   return NextResponse.json({
     ok: errors.length === 0,
@@ -190,7 +212,7 @@ export async function POST(request: NextRequest) {
     seen: normalized.recordsSeen,
     accepted: normalized.posts.length,
     inserted,
-    updated,
+    duplicates,
     rejected: normalized.rejected,
     queuedForPrivateAnalysis,
     publicPublishEnabled: false,

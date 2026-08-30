@@ -263,6 +263,7 @@ export default function AdminEvidencePage() {
     const reviewed = ["ready_to_publish", "published", "rejected"].includes(status)
     const { error: updateError } = await supabase.from("creator_evidence_items").update({
       status,
+      requires_human_review: status === "published" ? false : item.requires_human_review,
       reviewed_by: reviewed ? authData.user?.id ?? null : item.reviewed_by ?? null,
       reviewed_at: reviewed ? new Date().toISOString() : item.reviewed_at ?? null,
     }).eq("id", item.id)
@@ -329,6 +330,36 @@ export default function AdminEvidencePage() {
     setError(null)
     setMessage(null)
 
+    const { data: authData } = await supabase.auth.getUser()
+    if (!authData.user) {
+      setError("Cần đăng nhập admin để ghi nhận người xác minh.")
+      setSaving(false)
+      return
+    }
+    const exactMatchedClaim = selectedEvidence.extracted_claims?.find((claim) => claim.matched_product_id === publishForm.product_id)
+    const eligibleUnmatchedClaims = selectedEvidence.extracted_claims?.filter((claim) => !claim.matched_product_id && claim.confidence_score >= 90 && claim.evidence_spans.length > 0) ?? []
+    const selectedClaim = exactMatchedClaim ?? (eligibleUnmatchedClaims.length === 1 ? eligibleUnmatchedClaims[0] : undefined)
+    if (!selectedClaim || selectedClaim.confidence_score < 90 || selectedClaim.evidence_spans.length === 0) {
+      setError("Chỉ publish claim exact SKU từ 90 điểm và có evidence span. Claim còn mơ hồ phải xử lý trong Product candidates.")
+      setSaving(false)
+      return
+    }
+    if (!selectedEvidence.source_url?.startsWith("https://") || selectedEvidence.source_url.includes("360dep.vn")) {
+      setError("Nguồn creator phải là HTTPS bên ngoài 360dep.vn.")
+      setSaving(false)
+      return
+    }
+    const resolvedRiskFlags = selectedClaim.risk_flags.filter((flag) => {
+      if (flag === "ambiguous_variant" || flag === "product_not_in_catalogue") return false
+      if (flag === "disclosure_unknown" && publishForm.disclosure !== "unknown") return false
+      return true
+    })
+    if (resolvedRiskFlags.length > 0) {
+      setError(`Claim còn risk flag chưa xử lý: ${resolvedRiskFlags.join(", ")}`)
+      setSaving(false)
+      return
+    }
+
     const payload: CreatorProductEvent = {
       id: crypto.randomUUID(),
       creator_id: selectedEvidence.creator_id,
@@ -348,8 +379,16 @@ export default function AdminEvidencePage() {
       usage_context: publishForm.usage_context || null,
       evidence_note: selectedEvidence.researcher_note || "Published from Evidence Inbox.",
       confidence: publishForm.confidence,
-      confidence_score: selectedEvidence.confidence_score ?? (publishForm.confidence === "high" ? 92 : publishForm.confidence === "medium" ? 75 : 50),
+      confidence_score: selectedClaim.confidence_score,
+      evidence_spans: selectedClaim.evidence_spans,
+      risk_flags: resolvedRiskFlags,
+      product_identity_score: selectedClaim.product_identity_score,
+      action_evidence_score: selectedClaim.action_evidence_score,
+      source_authenticity_score: selectedClaim.source_authenticity_score,
+      evidence_localization_score: selectedClaim.evidence_localization_score,
+      exact_sku_verified: true,
       verification_status: "verified",
+      verified_by: authData.user.id,
       verified_at: new Date().toISOString(),
     }
 
@@ -357,7 +396,6 @@ export default function AdminEvidencePage() {
     if (insertError) {
       setError(insertError.message)
     } else {
-      const { data: authData } = await supabase.auth.getUser()
       await supabase.from("evidence_audit_log").insert({
         evidence_id: selectedEvidence.id,
         event_id: payload.id,

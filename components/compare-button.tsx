@@ -61,7 +61,7 @@ export function CompareButton({ productId, productName }: CompareButtonProps) {
       variant="outline"
       size="sm"
       onClick={toggle}
-      className={`gap-1.5 text-xs ${
+      className={`min-h-11 gap-1.5 text-xs ${
         isSelected
           ? "border-rose-400 bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/30 dark:border-rose-500 dark:text-rose-400 dark:hover:bg-rose-950/50"
           : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"

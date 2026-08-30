@@ -1,17 +1,36 @@
-priority,product_id,brand,product_name,creator,source_video,marketplace_target,affiliate_url,status,notes
-1,babe-stop-akn-purifying-cleansing-gel,Laboratorios BABÉ,Stop AKN Purifying Cleansing Gel,Góc Của Rư,https://www.tiktok.com/@goc.cua.ru/video/7648484506923437319,Shopee/Lazada/TikTok Shop,,needs_affiliate_link,Exact SKU verified
-2,biore-uv-aqua-rich-mild-essence,Bioré,UV Aqua Rich Mild Essence SPF50+ PA++++,Góc Của Rư,https://www.tiktok.com/@goc.cua.ru/video/7655538284537449736,Shopee/Lazada/TikTok Shop,,needs_affiliate_link,Use Mild Essence exact variant
-3,olay-super-spf50-fluid-moisturiser,Olay,Super SPF50+ Fluid Moisturiser PA++++,Góc Của Rư,https://www.tiktok.com/@goc.cua.ru/video/7656646581063585032,Shopee/Lazada/TikTok Shop,,needs_affiliate_link,Exact SKU verified
-4,dr-g-red-blemish-clear-soothing-cream,Dr.G,R.E.D Blemish Clear Soothing Cream,Góc Của Rư,https://www.tiktok.com/@goc.cua.ru/video/7661108096734924050,Shopee/Lazada/TikTok Shop,,needs_affiliate_link,Exact SKU verified
-5,ahc-pro-shot-pore-eraser-serum,AHC,Pro Shot Pore Eraser Serum,Góc Của Rư,https://www.tiktok.com/@goc.cua.ru/video/7661483735350594823,Shopee/Lazada/TikTok Shop,,needs_affiliate_link,Exact SKU verified
-6,simple-mattifying-uv-fluid-spf50,Simple,Mattifying UV Fluid SPF50 PA++++,Góc Của Rư,https://www.tiktok.com/@goc.cua.ru/video/7661858969455037714,Shopee/Lazada/TikTok Shop,,needs_affiliate_link,Do not substitute another Simple sunscreen
-7,lagom-brightening-tone-up-sun,LAGOM,Brightening Tone Up Sun SPF50+ PA++++,Kim Chung Phan,https://www.tiktok.com/@kimchungphan20/video/7658282321178627349,Shopee/Lazada/TikTok Shop,,needs_affiliate_link,Exact SKU verified
-8,loreal-revitalift-melasyl-dark-spot-creamy-serum,L'Oréal Paris,Revitalift Melasyl Dark Spot Creamy-Serum,Kim Chung Phan,https://www.tiktok.com/@kimchungphan20/video/7660480288514116884,Shopee/Lazada/TikTok Shop,,needs_affiliate_link,Use pink creamy-serum variant
-9,beplain-sunmuse-tone-up-correcting-sunscreen,beplain,Sunmuse Tone Up & Correcting Sunscreen SPF50+ PA++++,Kim Chung Phan,https://www.tiktok.com/@kimchungphan20/video/7661961242923273493,Shopee/Lazada/TikTok Shop,,needs_affiliate_link,Confirm exact color variant before activation
-10,skinoxy-pro-b3-aha-concentrate-body-serum,SKINOXY,Pro B3 AHA Concentrate Body Serum,Call Me Duy,https://www.tiktok.com/@justvuduy16/video/7658858840687037717,Shopee/Lazada/TikTok Shop,,needs_affiliate_link,Use pink 10% B3 2% lactic acid variant
-11,ekseption-hyaluronic-znpca-mixlab-serum,Ekseption,Hyaluronic ZnPCA Mixlab Serum,Call Me Duy,https://www.tiktok.com/@justvuduy16/video/7660125075487657237,Shopee/Lazada/TikTok Shop,,needs_affiliate_link,Exact SKU verified
-12,koai-dry-shampoo-spray,KOAI,Dry Shampoo Spray 150ml,Call Me Duy,https://www.tiktok.com/@justvuduy16/video/7663091389370060053,TikTok Shop/Shopee,,needs_affiliate_link,Confirm scent if merchant separates variants
-13,cocoon-hau-giang-lotus-mineral-sunscreen-50ml,Cocoon,Sữa chống nắng vô cơ Sen Hậu Giang 50ml - Tone-up Beige,"Vũ Thái Bình; Skincare Đúng Cách by Sơn",https://www.tiktok.com/@bbskincare1/video/7662360006066441493,Shopee/Lazada/TikTok Shop,,needs_affiliate_link,Use exact 50ml Tone-up Beige variant
-14,biore-uv-aqua-rich-airy-hold-cream,Bioré,UV Aqua Rich Airy Hold Cream SPF50+ PA++++,Skincare Đúng Cách by Sơn,https://www.tiktok.com/@skincaredungcach.byson/video/7650113216822938888,Shopee/Lazada/TikTok Shop,,needs_affiliate_link,Do not substitute Watery Essence or Mild Essence
-15,geek-gorgeous-c-glow,Geek & Gorgeous,C-Glow 15% Vitamin C Serum,Tôm (Tomskincare),https://www.tiktok.com/@tomskincare/video/7664591318059977992,Shopee/Lazada,,needs_affiliate_link,Exact 30ml C-Glow 15% Vitamin C
-16,geek-gorgeous-power-peptides,Geek & Gorgeous,Power Peptides Pro-Collagen Multi-Peptide Serum,Tôm (Tomskincare),https://www.tiktok.com/@tomskincare/video/7664591318059977992,Shopee/Lazada,,needs_affiliate_link,Exact 30ml Power Peptides serum
+product_id,brand,product_name,category,independent_creators,support_score,commercial_share_pct,latest_evidence_at,affiliate_url,offer_status
+cocoon-hau-giang-lotus-mineral-sunscreen-50ml,Cocoon,Sữa chống nắng vô cơ Sen Hậu Giang 50ml - Tone-up Beige,Skincare,3,50,33,2026-07-17,,pending
+olay-super-spf50-fluid-moisturiser,Olay,Super SPF50+ Fluid Moisturiser PA++++,Skincare,3,46,33,2026-06-29,,pending
+loreal-revitalift-melasyl-dark-spot-creamy-serum,L'Oréal Paris,Revitalift Melasyl Dark Spot Creamy-Serum,Skincare,2,54,50,2026-07-09,,pending
+loreal-revitalift-triple-power-tri-peptides-age-defying-serum,L’Oréal Paris,RevitaLift Triple Power Tri-Peptides Age-Defying Serum,Skincare,2,45,0,2026-03-15,,pending
+allies-of-skin-multi-peptides-gf-advanced-lifting-serum,Allies of Skin,Multi Peptides & GF Advanced Lifting Serum,Skincare,1,86,0,2026-07-20,,pending
+lagom-brightening-tone-up-sun,LAGOM,Brightening Tone Up Sun SPF50+ PA++++,Skincare,1,57,0,2026-07-03,,pending
+biotrade-keratolin-hydro-body-lotion-8-urea,Biotrade,Keratolin Hydro Body Lotion 8% Urea,Bodycare,1,51,0,2026-05-30,,pending
+ahc-masters-tone-up-sun-serum,AHC,Masters Tone-Up Sun Serum SPF50+ PA++++ 50ml,Skincare,1,50,0,2026-06-03,,pending
+benzac-ac-moderate-strength-5-acne-gel,Benzac,Benzac AC Moderate Strength 5% Acne Gel,Skincare,1,50,0,2026-06-27,,pending
+biore-uv-aqua-rich-airy-hold-cream,Bioré,UV Aqua Rich Airy Hold Cream SPF50+ PA++++,Skincare,1,47,100,2026-06-11,,pending
+celimax-vita-a-retinal-shot-tightening-booster,Celimax,The Vita-A Retinal Shot Tightening Booster 15ml,Skincare,1,47,0,2026-07-20,,pending
+martiderm-dsp-intense-booster,MartiDerm,DSP-Intense Booster 30ml,Skincare,1,47,0,2026-06-06,,pending
+benzac-ac-mild-strength-2-5-acne-gel,Benzac,Benzac AC Mild Strength 2.5% Acne Gel,Skincare,1,47,0,2026-06-27,,pending
+beplain-sunmuse-tone-up-correcting-sunscreen,beplain,Sunmuse Tone Up & Correcting Sunscreen SPF50+ PA++++,Skincare,1,44,100,2026-07-13,,pending
+geek-gorgeous-c-glow,Geek & Gorgeous,C-Glow 15% Vitamin C Serum,Skincare,1,44,100,2026-07-20,,pending
+geek-gorgeous-power-peptides,Geek & Gorgeous,Power Peptides Pro-Collagen Multi-Peptide Serum,Skincare,1,44,100,2026-07-20,,pending
+ekseption-hyaluronic-znpca-mixlab-serum,Ekseption,Hyaluronic ZnPCA Mixlab Serum,Skincare,1,43,100,2026-07-08,,pending
+koai-dry-shampoo-spray,KOAI,Dry Shampoo Spray 150ml,Haircare,1,42,100,2026-07-16,,pending
+babe-stop-akn-purifying-cleansing-gel,Laboratorios BABÉ,Stop AKN Purifying Cleansing Gel,Skincare,1,39,100,2026-06-07,,pending
+dr-g-red-blemish-clear-soothing-cream,Dr.G,R.E.D Blemish Clear Soothing Cream,Skincare,1,39,100,2026-07-11,,pending
+ahc-pro-shot-pore-eraser-serum,AHC,Pro Shot Pore Eraser Serum,Skincare,1,39,100,2026-07-12,,pending
+simple-mattifying-uv-fluid-spf50,Simple,Mattifying UV Fluid SPF50 PA++++,Skincare,1,39,100,2026-07-13,,pending
+biore-uv-aqua-rich-mild-essence,Bioré,UV Aqua Rich Mild Essence SPF50+ PA++++,Skincare,1,38,100,2026-06-26,,pending
+skinoxy-pro-b3-aha-concentrate-body-serum,SKINOXY,Pro B3 AHA Concentrate Body Serum,Bodycare,1,36,100,2026-07-05,,pending
+simple-repair-plus-replenishing-cream-cleanser,Simple,Repair+ Replenishing Cream Cleanser,Skincare,1,36,100,2026-03-24,,pending
+simple-repair-plus-rich-face-cream,Simple,Repair+ Pro-Ceramides + Cica Rich Face Cream,Skincare,1,36,100,2026-03-24,,pending
+geek-gorgeous-stress-less,Geek & Gorgeous,Stress Less 0.2% Beta-Glucan + 0.3% Madecassoside Serum,Skincare,1,33,100,2026-05-22,,pending
+1,GoodnDoc,Tinh chất phục hồi da B5 GoodnDoc,Skincare,0,0,0,,,pending
+2,Maybelline,Kem nền Maybelline Fit Me Matte + Poreless,Makeup,0,0,0,,,pending
+3,L'Oreal,Nước tẩy trang L'Oreal Micellar Water 3-in-1,Skincare,0,0,0,,,pending
+4,MAC,Son kem lì MAC Powder Kiss Liquid Lipcolour,Makeup,0,0,0,,,pending
+5,Batiste,Dầu gội khô Batiste Dry Shampoo,Haircare,0,0,0,,,pending
+6,Cerave,Sữa rửa mặt Cerave Hydrating Cleanser,Skincare,0,0,0,,,pending
+7,Narciso Rodriguez,Nước hoa nữ Narciso Rodriguez For Her EDP,Perfume,0,0,0,,,pending
+8,Vaseline,Sữa dưỡng thể Vaseline Gluta-Hya,Bodycare,0,0,0,,,pending

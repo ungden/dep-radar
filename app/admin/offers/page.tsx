@@ -11,11 +11,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select } from "@/components/ui/select"
 import { supabase } from "@/lib/supabase"
-import { SAMPLE_PRODUCT_OFFERS, SAMPLE_PRODUCT_REFERENCES } from "@/lib/timeline-data"
 import type { ProductOffer } from "@/lib/types"
 
 type OfferForm = Omit<ProductOffer, "id" | "last_checked_at"> & { last_checked_at?: string }
-type ProductReference = (typeof SAMPLE_PRODUCT_REFERENCES)[number]
+type ProductReference = { id: string; name: string; brand: string }
 
 const emptyForm: OfferForm = {
   product_id: "",
@@ -90,9 +89,9 @@ export default function AdminOffersPage() {
     ])
 
     if (productsRes.error || offersRes.error) {
-      setError("Chưa đọc được đủ bảng Supabase kịp thời. Đang hiển thị seed fallback; vẫn cần Supabase để lưu thay đổi.")
-      setProducts(SAMPLE_PRODUCT_REFERENCES)
-      setOffers(SAMPLE_PRODUCT_OFFERS)
+      setError("Chưa đọc được đủ bảng Supabase kịp thời. Không hiển thị offer mẫu để tránh nhầm với dữ liệu đã lưu.")
+      setProducts([])
+      setOffers([])
       setLoading(false)
       return
     }

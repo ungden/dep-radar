@@ -15,14 +15,26 @@ function authorized(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   if (!authorized(request)) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })
+  if (process.env.EVIDENCE_RADAR_BRIGHT_DATA_ENABLED !== "true") {
+    return NextResponse.json({
+      ok: false,
+      error: "Bright Data intake is paused while 360dep focuses on the signed TikTok KOL/KOC collector.",
+    }, { status: 410 })
+  }
   const accountId = request.nextUrl.searchParams.get("accountId")
   if (!accountId) return NextResponse.json({ ok: false, error: "Missing accountId" }, { status: 400 })
 
   const supabase = getSupabaseAdmin()
   const { data: account, error: accountError } = await supabase.from("creator_accounts").select("*").eq("id", accountId).single()
-  if (accountError || !account) return NextResponse.json({ ok: false, error: "Creator account not found" }, { status: 404 })
+  if (accountError) return NextResponse.json({ ok: false, error: accountError.message }, { status: 500 })
+  if (!account) return NextResponse.json({ ok: false, error: "Creator account not found" }, { status: 404 })
 
-  const body: unknown = await request.json()
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ ok: false, error: "Invalid JSON" }, { status: 400 })
+  }
   const records = Array.isArray(body)
     ? body
     : body && typeof body === "object" && Array.isArray((body as Record<string, unknown>).records)
@@ -58,7 +70,7 @@ export async function POST(request: NextRequest) {
     else if (!error) inserted += 1
   }
 
-  await supabase.from("evidence_radar_runs").insert({
+  const { error: runError } = await supabase.from("evidence_radar_runs").insert({
     run_type: "collection",
     provider: "bright-data-webhook",
     status: errors.length ? "partial" : "completed",
@@ -69,6 +81,9 @@ export async function POST(request: NextRequest) {
     metadata: { account_id: accountId },
     finished_at: new Date().toISOString(),
   })
+  if (runError) {
+    return NextResponse.json({ ok: false, error: `Collection run insert failed: ${runError.message}` }, { status: 500 })
+  }
 
   return NextResponse.json({ ok: errors.length === 0, seen: records.length, normalized: posts.length, inserted, errors }, { status: errors.length ? 207 : 200 })
 }

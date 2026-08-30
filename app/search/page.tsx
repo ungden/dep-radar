@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { searchAll } from "@/lib/data"
 import { trackEvent } from "@/lib/analytics"
+import { catalogueSections, normalizeCatalogueToken } from "@/lib/catalogue"
 import type { Product, Post, Kol } from "@/lib/types"
 
 function SearchResults() {
@@ -43,6 +44,9 @@ function SearchResults() {
         search_term: query,
         result_count: results.products.length + results.posts.length + results.kols.length,
       })
+      if (results.products.length + results.posts.length + results.kols.length === 0) {
+        trackEvent("zero_result", { search_term: query })
+      }
       setLoading(false)
     }
 
@@ -54,6 +58,14 @@ function SearchResults() {
 
   const totalResults = products.length + posts.length + kols.length
   const hasQuery = query.trim().length > 0
+  const catalogueSuggestions = catalogueSections
+    .map((section) => {
+      const queryTokens = normalizeCatalogueToken(query).split("-").filter(Boolean)
+      const haystack = normalizeCatalogueToken([section.title, section.description, ...section.featuredQueries].join(" "))
+      return { section, score: queryTokens.filter((token) => haystack.includes(token)).length }
+    })
+    .sort((a, b) => b.score - a.score || (a.section.entryPriority ?? 99) - (b.section.entryPriority ?? 99))
+    .slice(0, 3)
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 md:py-12">
@@ -83,8 +95,15 @@ function SearchResults() {
               Không tìm thấy kết quả cho &ldquo;{query}&rdquo;
             </p>
             <p className="text-sm text-slate-400 dark:text-slate-500 mt-2">
-              Thử tìm kiếm với từ khóa khác
+              Thử một chủ đề gần với nhu cầu của bạn:
             </p>
+            <div className="mx-auto mt-5 flex max-w-2xl flex-wrap justify-center gap-2">
+              {catalogueSuggestions.map(({ section }) => (
+                <Link key={section.slug} href={`/catalogue/${section.slug}`} className="inline-flex min-h-11 items-center rounded-full border border-slate-200 px-4 text-sm font-bold text-slate-700 hover:border-rose-300 hover:text-rose-600 dark:border-slate-700 dark:text-slate-200">
+                  {section.shortTitle}
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 

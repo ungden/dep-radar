@@ -30,13 +30,11 @@ export function CommunityHighlights({ posts, dailyUpdates = [] }: { posts: Post[
             Mới cập nhật từ Beauty Desk
           </h2>
           <p className="text-lg text-slate-600 dark:text-slate-400">
-            Nhiều bài hơn trên trang chủ: routine, ingredient, clinic, makeup, bodycare và beauty tech.
+            Đọc thêm về quy trình chăm sóc, thành phần, phòng khám, trang điểm, cơ thể và công nghệ làm đẹp.
           </p>
         </div>
-        <Link href="/blog" className="shrink-0">
-          <span className="text-rose-500 font-semibold hover:text-rose-600 dark:hover:text-rose-400 flex items-center gap-2">
+        <Link href="/blog" className="inline-flex min-h-11 shrink-0 items-center gap-2 font-semibold text-rose-500 hover:text-rose-600 dark:hover:text-rose-400">
             Xem tất cả bài viết <span aria-hidden="true">&rarr;</span>
-          </span>
         </Link>
       </div>
 
@@ -112,7 +110,7 @@ export function CommunityHighlights({ posts, dailyUpdates = [] }: { posts: Post[
                     </Badge>
                   ))}
                 </div>
-                <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 pt-4 border-t border-slate-100 dark:border-slate-800">
+                {(post.likes > 0 || post.comments > 0) && <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-1.5 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors">
                     <ThumbsUp className="h-4 w-4" />
                     <span>{post.likes}</span>
@@ -121,7 +119,7 @@ export function CommunityHighlights({ posts, dailyUpdates = [] }: { posts: Post[
                     <MessageSquare className="h-4 w-4" />
                     <span>{post.comments}</span>
                   </div>
-                </div>
+                </div>}
               </CardContent>
             </Card>
           </motion.div>

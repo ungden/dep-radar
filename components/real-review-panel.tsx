@@ -97,7 +97,7 @@ export function RealReviewPanel({ productId, productName, initialReviews, kols }
     setStatusMessage(null)
 
     if (!isSupabaseSchemaReady) {
-      setStatusMessage("Đã nhận review ở chế độ demo. Khi Supabase bật schema, review sẽ được lưu để duyệt.")
+      setError("Hệ thống nhận review chưa được bật trên môi trường này. Không có dữ liệu nào được gửi.")
       setSubmitting(false)
       return
     }
@@ -171,7 +171,14 @@ export function RealReviewPanel({ productId, productName, initialReviews, kols }
               </p>
             </div>
 
-            {authLoading ? (
+            {!isSupabaseSchemaReady ? (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/50 dark:bg-amber-950/20">
+                <p className="text-sm font-bold text-amber-900 dark:text-amber-200">Kênh nhận review hiện chưa sẵn sàng</p>
+                <p className="mt-2 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+                  Form được khóa để tránh tạo cảm giác đã gửi khi backend chưa thể lưu và chuyển review vào hàng duyệt.
+                </p>
+              </div>
+            ) : authLoading ? (
               <div className="h-24 animate-pulse rounded-2xl bg-white dark:bg-slate-900" />
             ) : !user ? (
               <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-5 text-center dark:border-slate-800 dark:bg-slate-900">

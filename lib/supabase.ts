@@ -1,3 +1,4 @@
+import { createBrowserClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
@@ -15,4 +16,6 @@ export const isSupabaseSchemaReady =
 export const isEvidenceRadarSchemaReady =
   isSupabaseSchemaReady && process.env.NEXT_PUBLIC_EVIDENCE_RADAR_READY === 'true';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = typeof window === "undefined"
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : createBrowserClient(supabaseUrl, supabaseAnonKey);

@@ -36,8 +36,10 @@ function makePost(seed: ReadPostSeed): Post {
     category: seed.category,
     tags: seed.tags,
     image: seed.image,
-    likes: seed.likes,
-    comments: seed.comments,
+    // Social proof is populated only from persisted, approved interactions.
+    // Editorial seed numbers are not public evidence.
+    likes: 0,
+    comments: 0,
     created_at: seed.createdAt,
     product_ids: [],
   }

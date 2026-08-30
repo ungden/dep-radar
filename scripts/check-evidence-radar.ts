@@ -4,8 +4,10 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 
 import { SYNTHETIC_GOLDEN_CASES } from "../lib/evidence-radar/golden-cases"
+import { collectionFocusBlockReason, isTikTokWebhookPilot } from "../lib/evidence-radar/focus"
 import { deriveCreatorProductState, isPublicEvidenceEvent } from "../lib/evidence-radar/state-engine"
 import { normalizeTikTokCollectorBatch, TIKTOK_COLLECTOR_MAX_POSTS } from "../lib/evidence-radar/tiktok-collector"
+import { isDirectCreatorEvidenceSource, isDirectTikTokPostUrl } from "../lib/evidence-source"
 import type { CreatorProductEvent, CreatorProductEventType } from "../lib/types"
 
 const NOW = new Date("2026-07-10T12:00:00Z")
@@ -17,7 +19,8 @@ function event(overrides: Partial<CreatorProductEvent> & { event_type: CreatorPr
     product_id: "product-1",
     observed_at: `${overrides.event_date}T12:00:00Z`,
     source_platform: "TikTok",
-    source_url: "https://www.tiktok.com/@creator/video/1",
+    source_url: "https://www.tiktok.com/@creator/video/7663466714054659349",
+    source_post_id: "7663466714054659349",
     source_title: "Evidence",
     source_excerpt: "Direct public evidence",
     sentiment: "neutral",
@@ -26,6 +29,11 @@ function event(overrides: Partial<CreatorProductEvent> & { event_type: CreatorPr
     evidence_note: "Golden check",
     confidence: "high",
     confidence_score: 95,
+    exact_sku_verified: true,
+    verified_by: "00000000-0000-0000-0000-000000000001",
+    verified_at: NOW.toISOString(),
+    evidence_spans: [{ kind: "quote", value: "Direct public evidence" }],
+    risk_flags: [],
     verification_status: "verified",
     ...overrides,
   }
@@ -38,9 +46,17 @@ assert.equal(deriveCreatorProductState([event({ event_type: "sponsored", event_d
 assert.equal(deriveCreatorProductState([event({ event_type: "stopped_using", event_date: "2026-07-01" })], NOW).state, "past")
 assert.equal(deriveCreatorProductState([event({ event_type: "used", event_date: "2026-02-01" })], NOW).state, "recently_used")
 assert.equal(deriveCreatorProductState([event({ event_type: "used", event_date: "2025-12-01" })], NOW).state, "past")
-assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01", confidence_score: 69 })), false)
+assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01", confidence_score: 89 })), false)
 assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01", source_url: null })), false)
+assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01", source_url: "https://www.tiktok.com/@creator" })), false)
+assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01", source_post_id: "2" })), false)
 assert.equal(isPublicEvidenceEvent(event({ event_type: "used", event_date: "2026-07-01" })), true)
+assert.equal(isDirectTikTokPostUrl("https://www.tiktok.com/@creator/video/7663466714054659349", "7663466714054659349"), true)
+assert.equal(isDirectTikTokPostUrl("https://www.tiktok.com/@creator", "7663466714054659349"), false)
+assert.equal(isDirectCreatorEvidenceSource("TikTok", "https://www.tiktok.com/@creator/video/7663466714054659349", "different"), false)
+assert.equal(isTikTokWebhookPilot({ platform: "TikTok", active: true, collection_mode: "webhook" }), true)
+assert.equal(isTikTokWebhookPilot({ platform: "YouTube", active: true, collection_mode: "youtube_api" }), false)
+assert.match(collectionFocusBlockReason({ platform: "Facebook", active: false, collection_mode: "disabled" }) ?? "", /paused/i)
 
 assert.equal(SYNTHETIC_GOLDEN_CASES.length, 500)
 assert.equal(new Set(SYNTHETIC_GOLDEN_CASES.map((item) => item.creatorId)).size, 50)
@@ -80,6 +96,15 @@ const collectorBatch = normalizeTikTokCollectorBatch({
       title: "Cross creator",
       timestamp: "2026-07-10T10:00:00Z",
     },
+    {
+      id: "7663466714054659351",
+      url: "https://www.tiktok.com/@creator.beauty/photo/7663466714054659351",
+      title: "Photo carousel sản phẩm",
+      timestamp: "2026-07-10T10:00:00Z",
+      transcription_status: "no_speech",
+      archive_frame_paths: ["evidence-radar/tiktok/creator.beauty/7663466714054659351/frames/frame-01.jpg"],
+      vision_sample_timestamps: [0],
+    },
   ],
 }, {
   creator_id: "creator-1",
@@ -87,7 +112,7 @@ const collectorBatch = normalizeTikTokCollectorBatch({
   profile_url: "https://www.tiktok.com/@creator.beauty",
 }, NOW)
 assert.equal(TIKTOK_COLLECTOR_MAX_POSTS, 200)
-assert.equal(collectorBatch.posts.length, 1)
+assert.equal(collectorBatch.posts.length, 2)
 assert.equal(collectorBatch.rejected[0]?.reason, "creator_profile_mismatch")
 assert.equal(collectorBatch.posts[0].media_metadata.collector, "downloadtiktok")
 assert.equal(collectorBatch.posts[0].media_metadata.media_resolved, true)
@@ -96,12 +121,23 @@ assert.ok(collectorBatch.posts[0].raw_media_expires_at < "2026-07-11T00:00:00.00
 assert.equal(collectorBatch.posts[0].transcription_status, "ready")
 assert.ok(collectorBatch.posts[0].transcript_text?.includes("routine buổi sáng"))
 assert.equal(collectorBatch.posts[0].vision_fallback_required, false)
+assert.equal(collectorBatch.posts[1].vision_fallback_required, true)
+assert.equal(collectorBatch.posts[1].archive_frame_paths.length, 1)
 
 const migration = fs.readFileSync("supabase/migrations/20260710092855_evidence_radar_foundation.sql", "utf8")
 const queueMigration = fs.readFileSync("supabase/migrations/20260710093313_evidence_radar_service_queue_rpc.sql", "utf8")
 const collectorQueueMigration = fs.readFileSync("supabase/migrations/20260718114106_tiktok_collector_media_queue.sql", "utf8")
 const queueGrantMigration = fs.readFileSync("supabase/migrations/20260718115329_evidence_queue_service_send_grant.sql", "utf8")
 const audioMigration = fs.readFileSync("supabase/migrations/20260719113242_evidence_audio_transcripts.sql", "utf8")
+const schedulerMigration = fs.readFileSync("supabase/migrations/20260828085915_disable_duplicate_evidence_worker_cron.sql", "utf8")
+const cadenceMigration = fs.readFileSync("supabase/migrations/20260828091550_optimize_evidence_radar_cadence.sql", "utf8")
+const tiktokOnlyMigration = fs.readFileSync("supabase/migrations/20260829110409_enforce_tiktok_only_collection_focus.sql", "utf8")
+const factoryMigration = fs.readFileSync("supabase/migrations/20260829115406_tiktok_evidence_catalogue_factory.sql", "utf8")
+const geminiSource = fs.readFileSync("lib/evidence-radar/gemini.ts", "utf8")
+const pipelineSource = fs.readFileSync("lib/evidence-radar/pipeline.ts", "utf8")
+const providerSource = fs.readFileSync("lib/evidence-radar/providers.ts", "utf8")
+const tiktokWebhookSource = fs.readFileSync("app/api/webhooks/tiktok-collector/route.ts", "utf8")
+const brightDataWebhookSource = fs.readFileSync("app/api/webhooks/bright-data/route.ts", "utf8")
 for (const required of [
   "creator_accounts", "source_posts", "creator_product_states", "evidence_audit_log",
   "pgmq.create('creator_monitor')", "pgmq.create('evidence_analysis')",
@@ -129,6 +165,29 @@ assert.ok(audioMigration.includes("archive_video_path"))
 assert.ok(audioMigration.includes("transcription_status = 'ready'"))
 assert.ok(audioMigration.includes("enable row level security") || migration.includes("alter table public.source_posts enable row level security"))
 assert.ok(!audioMigration.includes("to anon"))
+assert.ok(!geminiSource.includes("/v1beta/interactions"), "Evidence extraction must not send doomed Interactions API requests")
+assert.ok(!geminiSource.includes("store: false"), "GenerateContent payload must not include unsupported store")
+assert.ok(!geminiSource.includes("Reply with ok."), "Provider preflight must not spend generation tokens")
+assert.ok(!geminiSource.includes('if (post.transcription_status === "ready" && post.transcript_text?.trim()) return []'), "Visual evidence must not be skipped merely because ASR is available")
+assert.ok(geminiSource.includes('responseMimeType: "application/json"'), "Evidence extraction must request JSON output")
+assert.ok(geminiSource.includes("responseJsonSchema: responseSchema()"), "Evidence extraction must enforce its JSON schema")
+assert.ok(pipelineSource.includes("post.analysis_attempts >= MAX_ANALYSIS_ATTEMPTS"), "Queue analysis must stop exhausted retries")
+assert.ok(pipelineSource.includes("canReuseCheckpoint"), "Queue retries must reuse a compatible extraction checkpoint")
+assert.ok(pipelineSource.includes("reviewed_by: existing?.reviewed_by ?? null"), "Reviewed candidates must preserve reviewer metadata")
+assert.ok(schedulerMigration.includes("cron.unschedule('evidence-radar-run-worker')"), "Supabase must not duplicate the Vercel worker cron")
+assert.ok(cadenceMigration.includes("'0 * * * *'"), "Empty collection polling must be limited to once per hour")
+assert.ok(tiktokOnlyMigration.includes("collection_mode = 'disabled'"), "Paused social accounts must stay disabled")
+assert.ok(providerSource.includes("TikTok KOL/KOC is the only active source focus"), "Provider routing must fail closed outside TikTok")
+assert.ok(pipelineSource.includes("push_only_webhook"), "Queued collection must not poll signed TikTok webhook accounts")
+assert.ok(tiktokWebhookSource.includes("isTikTokWebhookPilot"), "TikTok intake must be limited to the active pilot roster")
+assert.ok(brightDataWebhookSource.includes("EVIDENCE_RADAR_BRIGHT_DATA_ENABLED"), "Bright Data intake must be explicitly enabled")
+for (const table of ["product_enrichment_jobs", "product_source_provenance"]) {
+  assert.ok(factoryMigration.includes(`create table if not exists public.${table}`), `${table} must be created`)
+  assert.ok(factoryMigration.includes(`alter table public.${table} enable row level security`), `${table} must have RLS`)
+}
+assert.ok(factoryMigration.includes("pgmq.create('product_enrichment')"), "Product enrichment must use a private queue")
+assert.ok(factoryMigration.includes("automation_cohort"), "New automation must be isolated from legacy backlog")
+assert.ok(pipelineSource.includes("outside_active_automation_cohort"), "Legacy queue messages must fail closed")
 
 console.log(JSON.stringify({
   ok: true,
