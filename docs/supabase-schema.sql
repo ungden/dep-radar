@@ -6,8 +6,8 @@
 --  * Freelancers list catalogue services only, pricing each option inside its band.
 --  * Customers pay no platform fee. dep360 takes a flat commission on the service
 --    price only; travel and urgent fees go 100% to the freelancer.
---  * Identity verification (CCCD + selfie via an eKYC provider) is optional; verified
---    freelancers get a badge and a ranking boost. Images are deleted after the check.
+--  * Identity verification (CCCD + selfie read by a vision AI) is optional; verified
+--    freelancers get a badge and a ranking boost. Images are not stored.
 --  * Quotes are computed and snapshotted server-side at booking time.
 --  * No deposit. Customers pay the full amount online, or pay the freelancer directly
 --    after the service; cash-job commission becomes freelancer debt netted weekly.
@@ -110,16 +110,16 @@ create table public.dep360_identity_checks (
   id uuid primary key default gen_random_uuid(),
   pro_id uuid not null references public.dep360_pros (id) on delete cascade,
   status public.dep360_verification_status not null default 'pending',
-  provider text not null,              -- e.g. 'vnpt-ekyc', 'fpt-ai'
-  provider_request_id text,
+  model text not null,                 -- e.g. 'gemini-3.5-flash'
+  name_on_card text,
   name_matches boolean,
-  face_match_score numeric(4, 3),
-  liveness_passed boolean,
+  same_person text check (same_person in ('yes', 'no', 'uncertain')),
+  confidence numeric(4, 3),
   reject_reason text,
   consent_at timestamptz not null,     -- explicit consent (Decree 13/2023)
   created_at timestamptz not null default now(),
   decided_at timestamptz
-  -- No image columns: CCCD and selfie images are sent to the provider and not stored.
+  -- No image columns: CCCD and selfie images are sent to the AI and not stored.
 );
 
 -- Listings ----------------------------------------------------------------------

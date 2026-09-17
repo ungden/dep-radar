@@ -77,9 +77,9 @@ export default function PolicyPage() {
 
         <Section title="7. Xác minh danh tính (tự nguyện)">
           <ul className="list-disc space-y-1 pl-5">
-            <li>Freelancer chụp CCCD 2 mặt và 1 ảnh selfie. Hệ thống eKYC đối chiếu khuôn mặt và thông tin trên CCCD.</li>
+            <li>Freelancer chụp CCCD 2 mặt và 1 ảnh selfie. AI đọc CCCD và đối chiếu ảnh chân dung trên thẻ với ảnh selfie.</li>
             <li>Đã xác minh: dấu tick cạnh tên, huy hiệu “Đã xác minh danh tính” và được xếp trước hồ sơ chưa xác minh.</li>
-            <li>Ảnh CCCD và selfie chỉ dùng để xác minh, được xoá sau khi có kết quả. Khách không thấy thông tin CCCD.</li>
+            <li>Ảnh CCCD và selfie chỉ dùng để xác minh, dep360 không lưu lại. Khách không thấy thông tin CCCD.</li>
           </ul>
         </Section>
 

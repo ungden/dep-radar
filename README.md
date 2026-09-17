@@ -17,7 +17,7 @@ Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 | Hoa hồng | Một mức 15% trên giá dịch vụ, thu từ freelancer. Không tính trên phí di chuyển/gấp. Job online: trừ trước khi chuyển tiền; job tiền mặt: ghi công nợ, đối soát hằng tuần. | `lib/pricing.ts` |
 | Phí di chuyển | Miễn phí 5 km đầu, sau đó 5.000đ/km (tối đa 100.000đ); ngoài bán kính freelancer thì không nhận làm tại nhà. | `lib/pricing.ts`, `lib/geo.ts` |
 | Phí đặt gấp | Bắt đầu trong vòng 3 giờ: +50.000đ. Không nhận lịch trong vòng 60 phút. | `lib/pricing.ts` |
-| Xác minh | Tự nguyện: chụp CCCD 2 mặt + selfie (eKYC). Đã xác minh có dấu tick, huy hiệu và được xếp trước. | `lib/ekyc.ts`, `app/studio/verify` |
+| Xác minh | Tự nguyện: chụp CCCD 2 mặt + selfie, AI (Gemini) đọc thẻ và so khuôn mặt. Đã xác minh có dấu tick, huy hiệu và được xếp trước. | `app/api/identity`, `app/studio/verify` |
 | Xếp hạng | Đã xác minh danh tính được xếp trước, sau đó theo điểm đánh giá (có trọng số) và số job. Không bán vị trí. | `lib/trust.ts` |
 | Đánh giá | Chỉ khách hoàn thành lịch hẹn; số sao + tag + nhận xét; freelancer chỉ phản hồi, không xoá. | `app/bookings/[id]/review` |
 
@@ -27,6 +27,7 @@ Bản prototype chạy hoàn toàn phía client:
 
 - Dữ liệu mẫu nằm ở `lib/data.ts` (chuyên viên, dịch vụ, tác phẩm, đánh giá).
 - Trạng thái người dùng (đăng nhập demo, lịch hẹn, yêu cầu, báo giá, dịch vụ) nằm ở `lib/store.tsx`, lưu trong `localStorage`. Có nút "Đặt lại dữ liệu demo" ở trang Cá nhân.
+- Xác minh danh tính gọi Gemini qua `app/api/identity` (cần `GEMINI_API_KEY`, xem `.env.example`).
 - Chưa có OTP, thanh toán hay backend thật. Schema đề xuất cho Supabase ở `docs/supabase-schema.sql` (chưa áp dụng lên database).
 
 ## Chạy local
