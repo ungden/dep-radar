@@ -1,20 +1,36 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# dep360
 
-# Run and deploy your AI Studio app
+Marketplace đặt lịch làm đẹp với chuyên viên freelancer (nail, makeup, chăm sóc da, tóc, mi & mày).
 
-This contains everything you need to run your app locally.
+- **Khách hàng**: xem tác phẩm thật, tìm chuyên viên theo khu vực, đặt lịch (dịch vụ → thời gian → xác nhận & cọc 30%), quản lý lịch hẹn, hoặc **đăng yêu cầu** để freelancer gửi báo giá.
+- **Freelancer (Studio)**: tổng quan thu nhập, nhận/từ chối yêu cầu đặt lịch, xem việc mới quanh khu vực và gửi báo giá, lịch làm theo ngày, quản lý dịch vụ & bảng giá, bật/tắt nhận job.
 
-View your app in AI Studio: https://ai.studio/apps/946899eb-b121-4dde-bf4c-16e609b0ec83
+Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 
-## Run Locally
+## Trạng thái hiện tại
 
-**Prerequisites:**  Node.js
+Bản prototype chạy hoàn toàn phía client:
 
+- Dữ liệu mẫu nằm ở `lib/data.ts` (chuyên viên, dịch vụ, tác phẩm, đánh giá).
+- Trạng thái người dùng (đăng nhập demo, lịch hẹn, yêu cầu, báo giá, dịch vụ) nằm ở `lib/store.tsx`, lưu trong `localStorage`. Có nút "Đặt lại dữ liệu demo" ở trang Cá nhân.
+- Chưa có OTP, thanh toán hay backend thật. Schema đề xuất cho Supabase ở `docs/supabase-schema.sql` (chưa áp dụng lên database).
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Chạy local
+
+```bash
+npm install
+npm run dev
+```
+
+## Cấu trúc
+
+| Đường dẫn | Màn hình |
+| --- | --- |
+| `/welcome`, `/login` | Màn chào, đăng nhập & chọn vai trò |
+| `/`, `/search`, `/works/[id]` | Khám phá, tìm kiếm, chi tiết tác phẩm |
+| `/pros`, `/pros/[id]` | Danh sách & hồ sơ chuyên viên (tác phẩm, dịch vụ, giới thiệu, đánh giá) |
+| `/book/[serviceId]` | Luồng đặt lịch 3 bước |
+| `/bookings`, `/bookings/[id]` | Lịch hẹn (dùng chung cho khách & freelancer) |
+| `/requests`, `/requests/new`, `/requests/[id]` | Yêu cầu đã đăng & báo giá nhận được |
+| `/saved`, `/me` | Đã lưu, Cá nhân |
+| `/studio`, `/studio/jobs`, `/studio/schedule`, `/studio/services` | Khu vực freelancer |
