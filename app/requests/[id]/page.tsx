@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { Car, Hourglass, Zap } from "lucide-react"
 import { RequireSession } from "@/components/require-session"
-import { TrustedBadge, VerificationBadges, VerifiedMark } from "@/components/trust"
+import { VerifiedBadge, VerifiedMark } from "@/components/trust"
 import { Avatar, Button, ButtonLink, Card, EmptyState, PageHeader, Rating } from "@/components/ui"
 import { getPro } from "@/lib/data"
 import { actions, proView, quoteFor, useApp } from "@/lib/store"
@@ -79,7 +79,6 @@ function RequestDetail() {
                         <Link href={`/pros/${pro.id}`} className="flex items-center gap-1.5 font-semibold hover:underline">
                           {pro.name}
                           <VerifiedMark pro={pro} />
-                          <TrustedBadge pro={pro} />
                         </Link>
                         <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
                           <Rating value={pro.rating.average} count={pro.rating.count} className="text-xs" /> · {pro.stats.completedJobs} job
@@ -90,7 +89,7 @@ function RequestDetail() {
                         <p className="text-[11px] text-muted">{timeAgo(o.createdAt)}</p>
                       </div>
                     </div>
-                    <VerificationBadges pro={pro} className="mt-3" />
+                    <VerifiedBadge pro={pro} className="mt-3" />
                     <p className="mt-2 flex flex-wrap gap-x-3 text-xs text-ink-soft">
                       <span>Dịch vụ {formatPrice(quote.servicePrice)}</span>
                       <span className="inline-flex items-center gap-0.5">

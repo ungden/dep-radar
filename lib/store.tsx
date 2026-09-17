@@ -17,13 +17,12 @@ import type {
   ProService,
   Review,
   Session,
-  VerificationId,
   VerificationStatus,
 } from "./types"
 import { addDays, todayISO, uid } from "./utils"
 
 export interface AppState {
-  version: 4
+  version: 5
   session: Session | null
   savedWorks: string[]
   followedPros: string[]
@@ -33,7 +32,8 @@ export interface AppState {
   jobs: JobPost[]
   /** Listings of the demo freelancer (editable in Studio). */
   myServices: ProService[]
-  myVerifications: Record<VerificationId, VerificationStatus>
+  /** Identity verification status of the demo freelancer. */
+  myIdentity: VerificationStatus
   acceptingJobs: boolean
   /** Reviews written in this session. */
   reviews: Review[]
@@ -41,7 +41,7 @@ export interface AppState {
   replies: Record<string, string>
 }
 
-const STORAGE_KEY = "dep360:v4"
+const STORAGE_KEY = "dep360:v5"
 
 // ---------------------------------------------------------------------------
 // Derived helpers (pure, take state)
@@ -53,7 +53,7 @@ export function proView(s: AppState, proId: string): Pro | undefined {
   const extra = s.reviews.filter((r) => r.proId === proId)
   return {
     ...base,
-    verifications: proId === DEMO_PRO_ID ? s.myVerifications : base.verifications,
+    identity: proId === DEMO_PRO_ID ? s.myIdentity : base.identity,
     rating: mergeRating(base.rating, extra),
   }
 }
@@ -137,14 +137,14 @@ function seedState(): AppState {
   const t = todayISO()
   const now = new Date().toISOString()
   const base: Omit<AppState, "bookings" | "jobs"> = {
-    version: 4,
+    version: 5,
     session: null,
     savedWorks: ["w-milky-stone", "w-party-glow"],
     followedPros: ["linh-pham"],
     city: null,
     customerAddress: DEMO_CUSTOMER.address,
     myServices: PRO_SERVICES.filter((x) => x.proId === DEMO_PRO_ID).map((x) => ({ ...x, prices: { ...x.prices } })),
-    myVerifications: { ...getPro(DEMO_PRO_ID)!.verifications },
+    myIdentity: getPro(DEMO_PRO_ID)!.identity,
     acceptingJobs: true,
     reviews: [],
     replies: {},
@@ -365,7 +365,7 @@ function loadFromStorage() {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as AppState
-      if (parsed.version === 4) {
+      if (parsed.version === 5) {
         state = parsed
         listeners.forEach((l) => l())
       }
@@ -373,6 +373,7 @@ function loadFromStorage() {
     window.localStorage.removeItem("dep360:v1")
     window.localStorage.removeItem("dep360:v2")
     window.localStorage.removeItem("dep360:v3")
+    window.localStorage.removeItem("dep360:v4")
   } catch {
     // Storage unavailable (private mode): keep the in-memory seed.
   }
@@ -649,15 +650,8 @@ export const actions = {
   setAcceptingJobs(value: boolean) {
     setState((s) => ({ ...s, acceptingJobs: value }))
   },
-  submitVerification(id: VerificationId) {
-    setState((s) => ({
-      ...s,
-      myVerifications: s.myVerifications[id] === "verified" ? s.myVerifications : { ...s.myVerifications, [id]: "pending" },
-    }))
-    // Demo only: in production the dep360 team reviews submissions.
-    setTimeout(() => {
-      setState((s) => (s.myVerifications[id] === "pending" ? { ...s, myVerifications: { ...s.myVerifications, [id]: "verified" } } : s))
-    }, 4000)
+  setMyIdentity(status: VerificationStatus) {
+    setState((s) => ({ ...s, myIdentity: status }))
   },
 
   submitReview(bookingId: string, input: Pick<Review, "rating" | "tags" | "text">): string | null {

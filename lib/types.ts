@@ -43,9 +43,8 @@ export interface ProService {
 // ---------------------------------------------------------------------------
 // Freelancers, trust & ranking
 
-/** Optional verifications. Each one earns a badge and boosts ranking. */
-export type VerificationId = "identity" | "skill" | "hygiene"
-export type VerificationStatus = "verified" | "pending" | "none"
+/** Optional identity verification (CCCD + selfie). Verified freelancers get a badge and rank higher. */
+export type VerificationStatus = "none" | "pending" | "verified" | "rejected"
 
 export interface ProStats {
   completedJobs: number
@@ -75,7 +74,7 @@ export interface Pro {
   joinedAt: string
   bio: string
   highlights: string[]
-  verifications: Record<VerificationId, VerificationStatus>
+  identity: VerificationStatus
   stats: ProStats
   rating: RatingSummary
 }

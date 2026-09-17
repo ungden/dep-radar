@@ -6,7 +6,8 @@
 --  * Freelancers list catalogue services only, pricing each option inside its band.
 --  * Customers pay no platform fee. dep360 takes a flat commission on the service
 --    price only; travel and urgent fees go 100% to the freelancer.
---  * Verification is optional; each verified item is a badge and a ranking boost.
+--  * Identity verification (CCCD + selfie via an eKYC provider) is optional; verified
+--    freelancers get a badge and a ranking boost. Images are deleted after the check.
 --  * Quotes are computed and snapshotted server-side at booking time.
 --  * No deposit. Customers pay the full amount online, or pay the freelancer directly
 --    after the service; cash-job commission becomes freelancer debt netted weekly.
@@ -14,7 +15,6 @@
 
 create type public.dep360_role as enum ('customer', 'pro');
 create type public.dep360_category as enum ('nail', 'makeup', 'skincare', 'hair', 'lash-brow', 'massage');
-create type public.dep360_verification as enum ('identity', 'skill', 'hygiene');
 create type public.dep360_verification_status as enum ('none', 'pending', 'verified', 'rejected');
 create type public.dep360_booking_status as enum ('pending', 'confirmed', 'completed', 'cancelled', 'declined');
 create type public.dep360_job_status as enum ('open', 'booked', 'closed');
@@ -99,21 +99,27 @@ create table public.dep360_pros (
   -- Denormalised metrics, recomputed nightly.
   completed_jobs int not null default 0,
   response_minutes int not null default 0,
-  verified_count int not null default 0, -- drives the ranking boost
+  identity_status public.dep360_verification_status not null default 'none', -- drives badge & ranking boost
   rating_avg numeric(3, 2) not null default 0,
   rating_count int not null default 0,
   created_at timestamptz not null default now(),
   foreign key (city, district) references public.dep360_districts (city, district)
 );
 
-create table public.dep360_pro_verifications (
+create table public.dep360_identity_checks (
+  id uuid primary key default gen_random_uuid(),
   pro_id uuid not null references public.dep360_pros (id) on delete cascade,
-  kind public.dep360_verification not null,
   status public.dep360_verification_status not null default 'pending',
-  evidence_path text, -- private storage object (CCCD, certificate); never public
-  reviewed_by uuid references auth.users (id),
-  reviewed_at timestamptz,
-  primary key (pro_id, kind)
+  provider text not null,              -- e.g. 'vnpt-ekyc', 'fpt-ai'
+  provider_request_id text,
+  name_matches boolean,
+  face_match_score numeric(4, 3),
+  liveness_passed boolean,
+  reject_reason text,
+  consent_at timestamptz not null,     -- explicit consent (Decree 13/2023)
+  created_at timestamptz not null default now(),
+  decided_at timestamptz
+  -- No image columns: CCCD and selfie images are sent to the provider and not stored.
 );
 
 -- Listings ----------------------------------------------------------------------
@@ -283,7 +289,7 @@ alter table public.dep360_service_variants enable row level security;
 alter table public.dep360_districts enable row level security;
 alter table public.dep360_accounts enable row level security;
 alter table public.dep360_pros enable row level security;
-alter table public.dep360_pro_verifications enable row level security;
+alter table public.dep360_identity_checks enable row level security;
 alter table public.dep360_pro_services enable row level security;
 alter table public.dep360_pro_service_prices enable row level security;
 alter table public.dep360_works enable row level security;
@@ -306,10 +312,9 @@ create policy "own account" on public.dep360_accounts
 create policy "public pros" on public.dep360_pros for select using (true);
 -- Pros edit profile fields through an RPC that ignores metric columns.
 
-create policy "pro sees own verifications" on public.dep360_pro_verifications
+create policy "pro sees own identity checks" on public.dep360_identity_checks
   for select using ((select auth.uid()) = pro_id);
-create policy "pro submits verification" on public.dep360_pro_verifications
-  for insert with check ((select auth.uid()) = pro_id and status = 'pending');
+-- Checks are created by the /api/identity server route (service role), never by clients.
 
 create policy "public listings" on public.dep360_pro_services for select using (active or (select auth.uid()) = pro_id);
 create policy "pro manages listings" on public.dep360_pro_services

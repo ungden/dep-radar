@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Car, Check, CheckCircle2, Clock, CreditCard, HandCoins, Home, Info, Store, Zap } from "lucide-react"
 import { PriceBreakdown } from "@/components/price-breakdown"
-import { TrustedBadge, VerifiedMark } from "@/components/trust"
+import { VerifiedMark } from "@/components/trust"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, Skeleton, inputClass } from "@/components/ui"
 import { getTemplate } from "@/lib/catalog"
 import { DEMO_PRO_ID } from "@/lib/data"
@@ -148,7 +148,7 @@ function BookingFlow({ proId }: { proId: string }) {
         <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={44} />
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 text-sm font-semibold">
-            {pro.name} <VerifiedMark pro={pro} /> <TrustedBadge pro={pro} />
+            {pro.name} <VerifiedMark pro={pro} />
           </p>
           <p className="text-xs text-muted">
             ★ {pro.rating.average.toFixed(1)} ({pro.rating.count}) · {pro.stats.completedJobs} job

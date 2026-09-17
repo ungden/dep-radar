@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import { PageHeader } from "@/components/ui"
 import { CATALOG, CATEGORIES } from "@/lib/catalog"
 import { POLICY } from "@/lib/pricing"
-import { VERIFICATIONS } from "@/lib/trust"
 import { formatPrice } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Chính sách phí & đặt lịch" }
@@ -76,22 +75,18 @@ export default function PolicyPage() {
           </ul>
         </Section>
 
-        <Section title="7. Xác minh & huy hiệu (tự nguyện)">
-          <p>Freelancer không bắt buộc xác minh. Mỗi mục xác minh được gắn huy hiệu công khai và được ưu tiên hiển thị:</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5">
-            {VERIFICATIONS.map((v) => (
-              <li key={v.id}>
-                <b className="text-ink">{v.badge}</b>: {v.description}
-              </li>
-            ))}
-            <li>Đủ cả {VERIFICATIONS.length} mục: huy hiệu <b className="text-ink">Tin cậy</b>.</li>
+        <Section title="7. Xác minh danh tính (tự nguyện)">
+          <ul className="list-disc space-y-1 pl-5">
+            <li>Freelancer chụp CCCD 2 mặt và 1 ảnh selfie. Hệ thống eKYC đối chiếu khuôn mặt và thông tin trên CCCD.</li>
+            <li>Đã xác minh: dấu tick cạnh tên, huy hiệu “Đã xác minh danh tính” và được xếp trước hồ sơ chưa xác minh.</li>
+            <li>Ảnh CCCD và selfie chỉ dùng để xác minh, được xoá sau khi có kết quả. Khách không thấy thông tin CCCD.</li>
           </ul>
         </Section>
 
         <Section title="8. Đánh giá & xếp hạng">
           <ul className="list-disc space-y-1 pl-5">
             <li>Chỉ khách có lịch hẹn hoàn thành mới được đánh giá (số sao, tag, nhận xét). Freelancer không thể xoá, chỉ phản hồi công khai.</li>
-            <li>Thứ tự “Phù hợp nhất”: freelancer xác minh càng nhiều càng được xếp trước, sau đó theo điểm đánh giá (có trọng số theo số lượt) và số job. Không bán vị trí.</li>
+            <li>Thứ tự “Phù hợp nhất”: freelancer đã xác minh danh tính được xếp trước, sau đó theo điểm đánh giá (có trọng số theo số lượt) và số job. Không bán vị trí.</li>
           </ul>
         </Section>
       </div>

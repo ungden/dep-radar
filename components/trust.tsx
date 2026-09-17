@@ -2,54 +2,29 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { BadgeCheck, IdCard, MessageCircleReply, ShieldCheck, Star, Trophy } from "lucide-react"
+import { BadgeCheck, IdCard, MessageCircleReply, Star } from "lucide-react"
 import { Avatar } from "@/components/ui"
 import { proView, type AppState } from "@/lib/store"
-import { VERIFICATIONS, bayesianRating, isTrusted, isVerified, rankScore } from "@/lib/trust"
-import type { Pro, RatingSummary, Review, VerificationId } from "@/lib/types"
+import { bayesianRating, isVerified, rankScore } from "@/lib/trust"
+import type { Pro, RatingSummary, Review } from "@/lib/types"
 import { cn, parseISODate } from "@/lib/utils"
 
 /** Blue-check style mark next to the name: shown once identity is verified. */
 export function VerifiedMark({ pro, className }: { pro: Pro; className?: string }) {
-  if (!isVerified(pro, "identity")) return null
+  if (!isVerified(pro)) return null
   return <BadgeCheck className={cn("size-4 shrink-0 fill-rose text-white", className)} aria-label="Đã xác minh danh tính" />
 }
 
-/** Gold badge for freelancers who completed every verification. */
-export function TrustedBadge({ pro, className }: { pro: Pro; className?: string }) {
-  if (!isTrusted(pro)) return null
+/** Pill badge used on profiles and offers. */
+export function VerifiedBadge({ pro, className }: { pro: Pro; className?: string }) {
+  if (!isVerified(pro)) return null
   return (
     <span
-      title="Đã xác minh danh tính, tay nghề và cam kết vệ sinh"
-      className={cn("inline-flex shrink-0 items-center gap-1 rounded-full bg-[#fbefd9] px-2 py-0.5 text-[10.5px] font-semibold text-[#9a6412]", className)}
+      title="Đã đối chiếu CCCD và ảnh chân dung"
+      className={cn("inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-[11px] font-medium text-success", className)}
     >
-      <ShieldCheck className="size-3" /> Tin cậy
+      <IdCard className="size-3.5" /> Đã xác minh danh tính
     </span>
-  )
-}
-
-export const VERIFICATION_ICON: Record<VerificationId, React.ComponentType<{ className?: string }>> = {
-  identity: IdCard,
-  skill: Trophy,
-  hygiene: ShieldCheck,
-}
-
-/** Badges for the verifications a freelancer has completed. */
-export function VerificationBadges({ pro, className }: { pro: Pro; className?: string }) {
-  const done = VERIFICATIONS.filter((x) => isVerified(pro, x.id))
-  if (!done.length) return null
-  return (
-    <ul className={cn("flex flex-wrap gap-1.5", className)}>
-      {done.map((x) => {
-        const Icon = VERIFICATION_ICON[x.id]
-        return (
-          <li key={x.id} title={x.description} className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-[11px] font-medium text-success">
-            <Icon className="size-3.5" />
-            {x.badge}
-          </li>
-        )
-      })}
-    </ul>
   )
 }
 

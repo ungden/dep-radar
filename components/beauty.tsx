@@ -4,7 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Brush, Droplets, Eye, Flower2, Hand, Heart, MapPin, Scissors } from "lucide-react"
-import { TrustedBadge, VerifiedMark } from "@/components/trust"
+import { VerifiedMark } from "@/components/trust"
 import { Avatar, Rating } from "@/components/ui"
 import { CATEGORIES } from "@/lib/catalog"
 import { actions, distanceToCustomer, fromPrice, proView, useApp } from "@/lib/store"
@@ -135,7 +135,6 @@ export function ProCard({ pro: basePro, className }: { pro: Pro; className?: str
           <p className="flex items-center gap-1.5 font-semibold">
             <span className="truncate">{pro.name}</span>
             <VerifiedMark pro={pro} />
-            <TrustedBadge pro={pro} />
           </p>
           <p className="text-xs text-muted">{pro.title}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-ink-soft">

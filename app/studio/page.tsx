@@ -1,16 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Hourglass, ShieldCheck, Star, Wallet } from "lucide-react"
+import { ChevronRight, Hourglass, IdCard, Star, Wallet } from "lucide-react"
 import { JobBookingRow } from "@/components/booking-card"
 import { RequestCard } from "@/components/request-card"
 import { RequireSession } from "@/components/require-session"
-import { TrustedBadge, VERIFICATION_ICON } from "@/components/trust"
 import { Card, EmptyState, Logo, Toggle } from "@/components/ui"
 import { getTemplate } from "@/lib/catalog"
 import { POLICY } from "@/lib/pricing"
 import { actions, distanceToCustomer, proView, useApp } from "@/lib/store"
-import { VERIFICATIONS, isVerified, verifiedCount } from "@/lib/trust"
 import type { Pro } from "@/lib/types"
 import { cn, formatDateLong, formatPrice, todayISO } from "@/lib/utils"
 
@@ -168,36 +166,22 @@ function SectionTitle({ title, href, count }: { title: string; href: string; cou
 }
 
 function VerifyNudge({ pro }: { pro: Pro }) {
-  const done = verifiedCount(pro)
-  const total = VERIFICATIONS.length
+  if (pro.identity === "verified") return null
   return (
-    <Link href="/studio/profile" className="block">
-      <Card className={cn("p-4 transition-shadow hover:shadow-md", done < total && "ring-1 ring-rose/40")}>
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="size-5 text-rose" />
-          <p className="flex-1 text-sm font-semibold">
-            Xác minh hồ sơ {done}/{total}
+    <Link href="/studio/verify" className="block">
+      <Card className="flex items-center gap-3 p-4 ring-1 ring-rose/40 transition-shadow hover:shadow-md">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-blush text-rose">
+          <IdCard className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold">{pro.identity === "pending" ? "Đang xác minh danh tính" : "Xác minh danh tính để được ưu tiên"}</p>
+          <p className="text-xs text-ink-soft">
+            {pro.identity === "rejected"
+              ? "Lần trước chưa thành công, chụp lại CCCD và selfie nhé."
+              : "Chụp CCCD 2 mặt + 1 ảnh selfie. Có dấu tick và được xếp trước khi khách tìm kiếm."}
           </p>
-          <TrustedBadge pro={pro} />
-          <ChevronRight className="size-4 text-muted" />
         </div>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {VERIFICATIONS.map((v) => {
-            const Icon = VERIFICATION_ICON[v.id]
-            const ok = isVerified(pro, v.id)
-            return (
-              <div key={v.id} className={cn("rounded-xl px-2 py-2 text-center text-[11px]", ok ? "bg-success-soft text-success" : "bg-canvas text-muted")}>
-                <Icon className="mx-auto mb-1 size-4" />
-                {v.label}
-              </div>
-            )
-          })}
-        </div>
-        <p className="mt-3 text-[13px] text-ink-soft">
-          {done < total
-            ? "Không bắt buộc, nhưng hồ sơ xác minh được đẩy lên đầu kết quả tìm kiếm và gắn huy hiệu cho khách thấy. Đủ 3 mục nhận huy hiệu Tin cậy."
-            : "Bạn đã có huy hiệu Tin cậy và đang được ưu tiên hiển thị."}
-        </p>
+        <ChevronRight className="size-4 text-muted" />
       </Card>
     </Link>
   )

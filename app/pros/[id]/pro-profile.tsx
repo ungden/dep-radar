@@ -7,12 +7,11 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Briefcase, CalendarDays, Car, ChevronLeft, Home, MapPin, Share2, Sparkles, Store } from "lucide-react"
 import { FollowButton } from "@/components/follow-button"
 import { ServiceMenu } from "@/components/service-menu"
-import { RatingSummaryBlock, ReviewItem, TrustedBadge, VERIFICATION_ICON, VerificationBadges, VerifiedMark } from "@/components/trust"
+import { RatingSummaryBlock, ReviewItem, VerifiedBadge, VerifiedMark } from "@/components/trust"
 import { Avatar, Button, Card, EmptyState, Tabs } from "@/components/ui"
 import { worksByPro } from "@/lib/data"
 import { POLICY, travelFeeFor } from "@/lib/pricing"
 import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp } from "@/lib/store"
-import { VERIFICATIONS, isVerified } from "@/lib/trust"
 import { cn, formatPrice, parseISODate } from "@/lib/utils"
 
 type Tab = "services" | "works" | "reviews" | "about"
@@ -69,7 +68,6 @@ export function ProProfile({ proId }: { proId: string }) {
           <h1 className="mt-3 flex flex-wrap items-center gap-1.5 text-2xl font-semibold">
             {pro.name}
             <VerifiedMark pro={pro} className="size-5" />
-            <TrustedBadge pro={pro} />
           </h1>
           <p className="text-sm text-muted">
             {pro.title}
@@ -82,7 +80,7 @@ export function ProProfile({ proId }: { proId: string }) {
             </button>
           </div>
 
-          <VerificationBadges pro={pro} className="mt-3" />
+          <VerifiedBadge pro={pro} className="mt-3" />
           <ul className="mt-4 grid grid-cols-3 gap-2 text-center">
             {[
               [pro.stats.completedJobs.toLocaleString("vi-VN"), "Job hoàn thành"],
@@ -192,21 +190,13 @@ export function ProProfile({ proId }: { proId: string }) {
                   ))}
                 </div>
               </div>
-              <Card className="px-4 py-3">
-                <p className="text-sm font-semibold">Xác minh bởi dep360</p>
-                <ul className="mt-2 space-y-2">
-                  {VERIFICATIONS.map((v) => {
-                    const Icon = VERIFICATION_ICON[v.id]
-                    const done = isVerified(pro, v.id)
-                    return (
-                      <li key={v.id} className={cn("flex items-center gap-2 text-sm", done ? "text-ink" : "text-muted")}>
-                        <Icon className={cn("size-4", done ? "text-success" : "text-line")} />
-                        {v.badge}
-                        <span className="ml-auto text-xs">{done ? "✓" : "Chưa"}</span>
-                      </li>
-                    )
-                  })}
-                </ul>
+              <Card className="px-4 py-3 text-sm">
+                <p className="font-semibold">Xác minh bởi dep360</p>
+                <p className="mt-1 text-ink-soft">
+                  {pro.identity === "verified"
+                    ? "Đã đối chiếu ảnh CCCD với ảnh chân dung của chuyên viên."
+                    : "Chuyên viên chưa xác minh danh tính."}
+                </p>
               </Card>
               <div>
                 <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold">

@@ -3,7 +3,7 @@
 Marketplace đặt lịch làm đẹp với chuyên viên freelancer (nail, makeup, chăm sóc da, tóc, mi & mày, massage).
 
 - **Khách hàng**: xem tác phẩm thật, tìm chuyên viên theo khu vực, đặt lịch (dịch vụ → thời gian → địa điểm, phí & cách thanh toán), quản lý lịch hẹn, hoặc **đăng yêu cầu** để freelancer gửi báo giá.
-- **Freelancer (Studio)**: thu nhập sau hoa hồng, xác minh tự nguyện để có huy hiệu, nhận/từ chối yêu cầu đặt lịch, xem việc mới quanh khu vực và gửi báo giá, lịch làm theo ngày, quản lý dịch vụ & bảng giá, bật/tắt nhận job.
+- **Freelancer (Studio)**: thu nhập sau hoa hồng, xác minh danh tính (CCCD + selfie) để có dấu tick, nhận/từ chối yêu cầu đặt lịch, xem việc mới quanh khu vực và gửi báo giá, lịch làm theo ngày, quản lý dịch vụ & bảng giá, bật/tắt nhận job.
 
 Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 
@@ -17,8 +17,8 @@ Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 | Hoa hồng | Một mức 15% trên giá dịch vụ, thu từ freelancer. Không tính trên phí di chuyển/gấp. Job online: trừ trước khi chuyển tiền; job tiền mặt: ghi công nợ, đối soát hằng tuần. | `lib/pricing.ts` |
 | Phí di chuyển | Miễn phí 5 km đầu, sau đó 5.000đ/km (tối đa 100.000đ); ngoài bán kính freelancer thì không nhận làm tại nhà. | `lib/pricing.ts`, `lib/geo.ts` |
 | Phí đặt gấp | Bắt đầu trong vòng 3 giờ: +50.000đ. Không nhận lịch trong vòng 60 phút. | `lib/pricing.ts` |
-| Xác minh | Tự nguyện: CCCD, tay nghề, cam kết vệ sinh. Mỗi mục có huy hiệu; đủ 3 mục được huy hiệu "Tin cậy". | `lib/trust.ts` |
-| Xếp hạng | Xác minh càng nhiều càng được xếp trước, sau đó theo điểm đánh giá (có trọng số) và số job. Không bán vị trí. | `lib/trust.ts` |
+| Xác minh | Tự nguyện: chụp CCCD 2 mặt + selfie (eKYC). Đã xác minh có dấu tick, huy hiệu và được xếp trước. | `lib/ekyc.ts`, `app/studio/verify` |
+| Xếp hạng | Đã xác minh danh tính được xếp trước, sau đó theo điểm đánh giá (có trọng số) và số job. Không bán vị trí. | `lib/trust.ts` |
 | Đánh giá | Chỉ khách hoàn thành lịch hẹn; số sao + tag + nhận xét; freelancer chỉ phản hồi, không xoá. | `app/bookings/[id]/review` |
 
 ## Trạng thái hiện tại

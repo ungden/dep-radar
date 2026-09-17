@@ -37,7 +37,7 @@ const PRO_NAV: NavItem[] = [
 ]
 
 const FULLSCREEN = [/^\/login/]
-const NO_TABBAR = [/^\/book\//, /^\/works\//, /^\/bookings\/./, /^\/requests\/./]
+const NO_TABBAR = [/^\/book\//, /^\/works\//, /^\/bookings\/./, /^\/requests\/./, /^\/studio\/verify/]
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

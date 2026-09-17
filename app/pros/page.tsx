@@ -7,7 +7,7 @@ import { sortPros } from "@/components/trust"
 import { Chip, EmptyState, PageHeader } from "@/components/ui"
 import { CATEGORIES, CITIES, PROS } from "@/lib/data"
 import { actions, useApp } from "@/lib/store"
-import { isTrusted, isVerified } from "@/lib/trust"
+import { isVerified } from "@/lib/trust"
 import type { CategoryId } from "@/lib/types"
 
 type Sort = "match" | "rating" | "jobs"
@@ -19,7 +19,6 @@ export default function ProsPage() {
   const [sort, setSort] = React.useState<Sort>("match")
   const [onlyFollowing, setOnlyFollowing] = React.useState(false)
   const [verifiedOnly, setVerifiedOnly] = React.useState(false)
-  const [trustedOnly, setTrustedOnly] = React.useState(false)
 
   const pros = sortPros(
     state,
@@ -30,7 +29,7 @@ export default function ProsPage() {
         (!onlyFollowing || followedPros.includes(p.id)),
     ),
     sort,
-  ).filter((p) => (!verifiedOnly || isVerified(p, "identity")) && (!trustedOnly || isTrusted(p)))
+  ).filter((p) => !verifiedOnly || isVerified(p))
 
   return (
     <div className="md:pt-4">
@@ -74,9 +73,6 @@ export default function ProsPage() {
         <Chip active={verifiedOnly} onClick={() => setVerifiedOnly((v) => !v)}>
           Đã xác minh
         </Chip>
-        <Chip active={trustedOnly} onClick={() => setTrustedOnly((v) => !v)}>
-          Tin cậy
-        </Chip>
         <Chip active={onlyFollowing} onClick={() => setOnlyFollowing((v) => !v)}>
           Đang theo dõi
         </Chip>
@@ -85,7 +81,7 @@ export default function ProsPage() {
       {sort === "match" && (
         <p className="mt-3 flex items-start gap-1.5 text-xs text-muted">
           <Info className="mt-0.5 size-3.5 shrink-0" />
-          Chuyên viên đã xác minh được ưu tiên hiển thị, sau đó theo đánh giá và kinh nghiệm. Không nhận trả phí để lên top.
+          Chuyên viên đã xác minh danh tính được ưu tiên hiển thị, sau đó theo đánh giá và kinh nghiệm. Không nhận trả phí để lên top.
         </p>
       )}
 
