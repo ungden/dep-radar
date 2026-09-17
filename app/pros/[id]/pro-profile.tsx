@@ -60,7 +60,7 @@ export function ProProfile({ proId }: { proId: string }) {
       <div className="px-4 md:grid md:grid-cols-[320px_1fr] md:gap-10 md:px-0">
         <aside className="md:sticky md:top-24 md:self-start">
           <div className="-mt-12 flex items-end justify-between">
-            <Avatar name={pro.name} tone={pro.tone} size={96} className="border-4 border-canvas text-3xl" />
+            <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={96} className="border-4 border-canvas text-3xl" />
             <div className="flex gap-2 pb-1">
               <ShareButton name={pro.name} />
               <FollowButton proId={pro.id} />

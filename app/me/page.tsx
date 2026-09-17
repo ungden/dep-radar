@@ -74,7 +74,7 @@ export default function MePage() {
       </div>
 
       <Link href={isPro && pro ? `/pros/${pro.id}` : "/me"} className="mt-3 flex items-center gap-4">
-        <Avatar name={session.name} tone={pro?.tone} size={64} />
+        <Avatar name={session.name} tone={pro?.tone} src={pro?.avatar} size={64} />
         <div className="flex-1">
           <p className="text-lg font-semibold">{session.name}</p>
           <p className="text-sm text-muted">

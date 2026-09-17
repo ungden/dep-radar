@@ -26,6 +26,7 @@ export interface Pro {
   responseTime: string
   verified: boolean
   tone: string
+  avatar?: string
 }
 
 export interface Service {

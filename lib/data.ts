@@ -25,6 +25,7 @@ const img = (name: string) => `/images/works/${name}.webp`
 export const PROS: Pro[] = [
   {
     id: "linh-pham",
+    avatar: `/images/pros/linh-pham.webp`,
     name: "Linh Phạm",
     title: "Chuyên viên nail",
     categories: ["nail"],
@@ -46,6 +47,7 @@ export const PROS: Pro[] = [
   },
   {
     id: "thu-anh",
+    avatar: `/images/pros/thu-anh.webp`,
     name: "Thu Anh",
     title: "Chuyên viên makeup",
     categories: ["makeup"],
@@ -66,6 +68,7 @@ export const PROS: Pro[] = [
   },
   {
     id: "mai-tran",
+    avatar: `/images/pros/mai-tran.webp`,
     name: "Mai Trần",
     title: "Chuyên viên chăm sóc da",
     categories: ["skincare"],
@@ -87,6 +90,7 @@ export const PROS: Pro[] = [
   },
   {
     id: "quynh-vu",
+    avatar: `/images/pros/quynh-vu.webp`,
     name: "Quỳnh Vũ",
     title: "Stylist tóc",
     categories: ["hair"],
@@ -107,6 +111,7 @@ export const PROS: Pro[] = [
   },
   {
     id: "ha-my",
+    avatar: `/images/pros/ha-my.webp`,
     name: "Hà My",
     title: "Chuyên viên mi & mày",
     categories: ["lash-brow"],
@@ -128,6 +133,7 @@ export const PROS: Pro[] = [
   },
   {
     id: "ngoc-bao",
+    avatar: `/images/pros/ngoc-bao.webp`,
     name: "Ngọc Bảo",
     title: "Chuyên viên nail & makeup",
     categories: ["nail", "makeup"],
@@ -176,22 +182,22 @@ export const SERVICES: Service[] = [
 ]
 
 export const WORKS: Work[] = [
-  { id: "w-milky-stone", proId: "linh-pham", serviceId: "lp-design", category: "nail", title: "Nail milky đính đá nhẹ", description: "Thiết kế tinh tế, phù hợp đi làm, đi tiệc. Có thể tùy chỉnh theo tone da và độ dài móng.", images: [img("nail-1"), img("nail-3"), img("nail-2")], likes: 256, comments: 12 },
-  { id: "w-ombre", proId: "linh-pham", serviceId: "lp-design", category: "nail", title: "Nail ombre hồng", description: "Ombre hồng sữa chuyển nhẹ, form oval mềm.", images: [img("nail-2"), img("nail-1")], likes: 188, comments: 9 },
-  { id: "w-nude-short", proId: "linh-pham", serviceId: "lp-basic", category: "nail", title: "Móng ngắn tone nude", description: "Form vuông bo ngắn, hợp dân văn phòng gõ phím nhiều.", images: [img("nail-3")], likes: 142, comments: 6 },
-  { id: "w-french", proId: "linh-pham", serviceId: "lp-care", category: "nail", title: "Nail French", description: "French đầu móng mảnh, nền hồng trong.", images: [img("nail-4"), img("nail-1")], likes: 97, comments: 4 },
-  { id: "w-party-glow", proId: "thu-anh", serviceId: "ta-party", category: "makeup", title: "Makeup trong trẻo đi tiệc", description: "Nền mỏng, má hồng đào, môi căng bóng.", images: [img("makeup-1"), img("makeup-4")], likes: 412, comments: 31 },
-  { id: "w-smoky-soft", proId: "thu-anh", serviceId: "ta-photo", category: "makeup", title: "Mắt khói nâu mềm", description: "Layout chụp ảnh tone nâu ấm, không nặng mắt.", images: [img("makeup-2"), img("makeup-6")], likes: 305, comments: 18 },
-  { id: "w-bride-natural", proId: "thu-anh", serviceId: "ta-bride", category: "makeup", title: "Cô dâu tự nhiên", description: "Nền lì mỏng, bền suốt tiệc cưới ngoài trời.", images: [img("makeup-3"), img("makeup-5")], likes: 520, comments: 44 },
-  { id: "w-facial-calm", proId: "mai-tran", serviceId: "mt-recover", category: "skincare", title: "Phục hồi da nhạy cảm", description: "Liệu trình 4 buổi giúp da bớt đỏ, căng ẩm hơn.", images: [img("skin-1"), img("skin-4")], likes: 164, comments: 12 },
-  { id: "w-deep-clean", proId: "mai-tran", serviceId: "mt-deep", category: "skincare", title: "Làm sạch sâu tại nhà", description: "Set dụng cụ riêng, lấy nhân mụn nhẹ tay.", images: [img("skin-2"), img("skin-5")], likes: 131, comments: 7 },
-  { id: "w-body-glow", proId: "mai-tran", serviceId: "mt-facial", category: "skincare", title: "Facial thư giãn cuối tuần", description: "Massage mặt 20 phút, mặt nạ dịu da.", images: [img("skin-3")], likes: 88, comments: 3 },
-  { id: "w-event-waves", proId: "quynh-vu", serviceId: "qv-style", category: "hair", title: "Uốn lọn sóng dự tiệc", description: "Lọn to bồng bềnh, giữ nếp cả tối.", images: [img("hair-1"), img("hair-3")], likes: 176, comments: 10 },
-  { id: "w-bride-bun", proId: "quynh-vu", serviceId: "qv-bride", category: "hair", title: "Búi thấp cô dâu", description: "Búi thấp mềm, kết hợp phụ kiện ngọc trai.", images: [img("hair-2"), img("hair-4")], likes: 203, comments: 15 },
+  { id: "w-milky-stone", proId: "linh-pham", serviceId: "lp-design", category: "nail", title: "Nail milky đính đá nhẹ", description: "Thiết kế tinh tế, phù hợp đi làm, đi tiệc. Có thể tùy chỉnh theo tone da và độ dài móng.", images: [img("nail-milky-1"), img("nail-milky-2")], likes: 256, comments: 12 },
+  { id: "w-ombre", proId: "linh-pham", serviceId: "lp-design", category: "nail", title: "Nail ombre hồng", description: "Ombre hồng sữa chuyển nhẹ, form oval mềm.", images: [img("nail-ombre"), img("nail-milky-2")], likes: 188, comments: 9 },
+  { id: "w-nude-short", proId: "linh-pham", serviceId: "lp-basic", category: "nail", title: "Móng ngắn tone nude", description: "Form vuông bo ngắn, hợp dân văn phòng gõ phím nhiều.", images: [img("nail-nude-short")], likes: 142, comments: 6 },
+  { id: "w-french", proId: "linh-pham", serviceId: "lp-care", category: "nail", title: "Nail French", description: "French đầu móng mảnh, nền hồng trong.", images: [img("nail-french"), img("nail-milky-1")], likes: 97, comments: 4 },
+  { id: "w-party-glow", proId: "thu-anh", serviceId: "ta-party", category: "makeup", title: "Makeup trong trẻo đi tiệc", description: "Nền mỏng, má hồng đào, môi căng bóng.", images: [img("makeup-party-1"), img("makeup-party-2")], likes: 412, comments: 31 },
+  { id: "w-smoky-soft", proId: "thu-anh", serviceId: "ta-photo", category: "makeup", title: "Mắt khói nâu mềm", description: "Layout chụp ảnh tone nâu ấm, không nặng mắt.", images: [img("makeup-smoky"), img("makeup-party-2")], likes: 305, comments: 18 },
+  { id: "w-bride-natural", proId: "thu-anh", serviceId: "ta-bride", category: "makeup", title: "Cô dâu tự nhiên", description: "Nền lì mỏng, bền suốt tiệc cưới ngoài trời.", images: [img("makeup-bride-1"), img("makeup-bride-2")], likes: 520, comments: 44 },
+  { id: "w-facial-calm", proId: "mai-tran", serviceId: "mt-recover", category: "skincare", title: "Phục hồi da nhạy cảm", description: "Liệu trình 4 buổi giúp da bớt đỏ, căng ẩm hơn.", images: [img("skin-glow"), img("skin-massage")], likes: 164, comments: 12 },
+  { id: "w-deep-clean", proId: "mai-tran", serviceId: "mt-deep", category: "skincare", title: "Làm sạch sâu tại nhà", description: "Set dụng cụ riêng, lấy nhân mụn nhẹ tay.", images: [img("skin-deep"), img("skin-facial")], likes: 131, comments: 7 },
+  { id: "w-body-glow", proId: "mai-tran", serviceId: "mt-facial", category: "skincare", title: "Facial thư giãn cuối tuần", description: "Massage mặt 20 phút, mặt nạ dịu da.", images: [img("skin-facial"), img("skin-massage")], likes: 88, comments: 3 },
+  { id: "w-event-waves", proId: "quynh-vu", serviceId: "qv-style", category: "hair", title: "Uốn lọn sóng dự tiệc", description: "Lọn to bồng bềnh, giữ nếp cả tối.", images: [img("hair-waves-1"), img("hair-waves-2")], likes: 176, comments: 10 },
+  { id: "w-bride-bun", proId: "quynh-vu", serviceId: "qv-bride", category: "hair", title: "Búi thấp cô dâu", description: "Búi thấp mềm, kết hợp phụ kiện ngọc trai.", images: [img("hair-bun-1"), img("hair-bun-2")], likes: 203, comments: 15 },
   { id: "w-classic-lash", proId: "ha-my", serviceId: "hm-classic", category: "lash-brow", title: "Mi classic tự nhiên", description: "Mi mảnh, cong nhẹ, như mi thật.", images: [img("lash-1"), img("lash-2")], likes: 240, comments: 21 },
   { id: "w-brow-shape", proId: "ha-my", serviceId: "hm-brow", category: "lash-brow", title: "Dáng mày ngang mềm", description: "Mày ngang trẻ trung theo khuôn mặt tròn.", images: [img("brow-1"), img("brow-2")], likes: 158, comments: 8 },
-  { id: "w-nb-gel", proId: "ngoc-bao", serviceId: "nb-nail", category: "nail", title: "Gel trơn hồng đất", description: "Tone hồng đất ấm, hợp da ngăm.", images: [img("nail-4")], likes: 64, comments: 2 },
-  { id: "w-nb-combo", proId: "ngoc-bao", serviceId: "nb-combo", category: "makeup", title: "Combo phù dâu", description: "Makeup nhẹ + nail đồng bộ cho nhóm 4 người.", images: [img("makeup-5"), img("makeup-1")], likes: 91, comments: 5 },
+  { id: "w-nb-gel", proId: "ngoc-bao", serviceId: "nb-nail", category: "nail", title: "Gel trơn hồng đất", description: "Tone hồng đất ấm, hợp da ngăm.", images: [img("nail-earth")], likes: 64, comments: 2 },
+  { id: "w-nb-combo", proId: "ngoc-bao", serviceId: "nb-combo", category: "makeup", title: "Combo phù dâu", description: "Makeup nhẹ + nail đồng bộ cho nhóm 4 người.", images: [img("makeup-bridesmaid"), img("nail-earth")], likes: 91, comments: 5 },
 ]
 
 export const REVIEWS: Review[] = [

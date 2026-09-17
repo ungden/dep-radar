@@ -241,7 +241,7 @@ function BookingFlow({ initialServiceId }: { initialServiceId: string }) {
       {step === 3 && time && (
         <section className="space-y-4">
           <div className="flex items-center gap-3">
-            <Avatar name={pro.name} tone={pro.tone} size={48} />
+            <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={48} />
             <div>
               <p className="font-semibold">{pro.name}</p>
               <p className="text-xs text-muted">{pro.title}</p>

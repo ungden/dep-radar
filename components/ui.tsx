@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, Star } from "lucide-react"
@@ -58,14 +59,23 @@ export function Logo({ className }: { className?: string }) {
 export function Avatar({
   name,
   tone = "#EAD6D0",
+  src,
   size = 44,
   className,
 }: {
   name: string
   tone?: string
+  src?: string
   size?: number
   className?: string
 }) {
+  if (src) {
+    return (
+      <span aria-hidden className={cn("relative inline-block shrink-0 overflow-hidden rounded-full", className)} style={{ width: size, height: size, background: tone }}>
+        <Image src={src} alt="" fill sizes={`${size * 2}px`} className="object-cover" />
+      </span>
+    )
+  }
   return (
     <span
       aria-hidden

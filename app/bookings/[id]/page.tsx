@@ -51,7 +51,7 @@ function BookingDetail() {
   return (
     <div className="space-y-4">
       <Card className="flex items-center gap-3 p-4">
-        {isPro ? <Avatar name={booking.customerName} size={48} /> : <Avatar name={pro.name} tone={pro.tone} size={48} />}
+        {isPro ? <Avatar name={booking.customerName} size={48} /> : <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={48} />}
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{isPro ? booking.customerName : pro.name}</p>
           <p className="text-xs text-muted">{isPro ? `Khách hàng · ${booking.customerPhone}` : pro.title}</p>

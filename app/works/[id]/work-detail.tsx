@@ -94,7 +94,7 @@ export function WorkDetail({ workId }: { workId: string }) {
 
           <div className="mt-5 flex items-center gap-3">
             <Link href={`/pros/${pro.id}`} className="flex min-w-0 flex-1 items-center gap-3">
-              <Avatar name={pro.name} tone={pro.tone} size={44} />
+              <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={44} />
               <span className="min-w-0">
                 <span className="flex items-center gap-1 text-sm font-semibold">
                   {pro.name}

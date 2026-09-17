@@ -76,7 +76,7 @@ export function WorkFeedCard({ work, priority }: { work: Work; priority?: boolea
         <SaveWorkButton workId={work.id} className="absolute right-2 top-2 bg-white/85 backdrop-blur" />
       </div>
       <div className="mt-2 flex items-center gap-2">
-        <Avatar name={pro.name} tone={pro.tone} size={28} />
+        <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={28} />
         <div className="min-w-0 leading-tight">
           <p className="truncate text-[13px] font-medium">{pro.name}</p>
           <p className="truncate text-[11px] text-muted">{pro.title}</p>
@@ -117,7 +117,7 @@ export function ProCard({ pro, className }: { pro: Pro; className?: string }) {
       href={`/pros/${pro.id}`}
       className={cn("flex gap-3 rounded-[var(--radius-card)] bg-surface p-3.5 shadow-[var(--shadow-soft)] transition-shadow hover:shadow-md", className)}
     >
-      <Avatar name={pro.name} tone={pro.tone} size={56} />
+      <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={56} />
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-1 font-semibold">
           <span className="truncate">{pro.name}</span>

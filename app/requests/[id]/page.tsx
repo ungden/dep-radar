@@ -63,7 +63,7 @@ function RequestDetail() {
                   <Card className={cn("p-4", o.status === "rejected" && "opacity-55")}>
                     <div className="flex items-center gap-3">
                       <Link href={`/pros/${pro.id}`}>
-                        <Avatar name={pro.name} tone={pro.tone} size={44} />
+                        <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={44} />
                       </Link>
                       <div className="min-w-0 flex-1">
                         <Link href={`/pros/${pro.id}`} className="flex items-center gap-1 font-semibold hover:underline">
