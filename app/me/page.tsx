@@ -149,7 +149,7 @@ export default function MePage() {
           type="button"
           onClick={() => {
             actions.resetDemo()
-            router.push("/welcome")
+            router.push("/")
           }}
           className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm text-ink-soft"
         >

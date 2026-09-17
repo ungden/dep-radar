@@ -8,7 +8,6 @@ import { addDays, todayISO, uid } from "./utils"
 export interface AppState {
   version: 1
   session: Session | null
-  onboarded: boolean
   savedWorks: string[]
   followedPros: string[]
   bookings: Booking[]
@@ -84,7 +83,6 @@ function seedState(): AppState {
   return {
     version: 1,
     session: null,
-    onboarded: false,
     savedWorks: ["w-milky-stone", "w-party-glow"],
     followedPros: ["linh-pham"],
     myServices: SERVICES.filter((s) => s.proId === DEMO_PRO_ID).map((s) => ({ ...s, active: true })),
@@ -295,7 +293,7 @@ export const TIME_SLOTS = ["09:00", "10:30", "13:00", "14:30", "16:00", "16:30",
 
 export const actions = {
   signIn(session: Session) {
-    setState((s) => ({ ...s, session, onboarded: true }))
+    setState((s) => ({ ...s, session }))
   },
   signOut() {
     setState((s) => ({ ...s, session: null }))
@@ -313,9 +311,6 @@ export const actions = {
             : { role, name: CUSTOMER.name, phone: CUSTOMER.phone },
       }
     })
-  },
-  finishOnboarding() {
-    setState((s) => ({ ...s, onboarded: true }))
   },
   toggleSaveWork(id: string) {
     setState((s) => ({

@@ -15,7 +15,7 @@ import {
   Users,
 } from "lucide-react"
 import { Avatar, Logo } from "@/components/ui"
-import { actions, useApp, useHydrated } from "@/lib/store"
+import { actions, useApp } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
 type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; match?: RegExp }
@@ -36,20 +36,15 @@ const PRO_NAV: NavItem[] = [
   { href: "/me", label: "Cá nhân", icon: User },
 ]
 
-const FULLSCREEN = [/^\/welcome/, /^\/login/]
+const FULLSCREEN = [/^\/login/]
 const NO_TABBAR = [/^\/book\//, /^\/works\//, /^\/bookings\/./, /^\/requests\/./]
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const hydrated = useHydrated()
-  const { session, onboarded } = useApp()
+  const { session } = useApp()
   const isPro = session?.role === "pro"
   const nav = isPro ? PRO_NAV : CUSTOMER_NAV
-
-  React.useEffect(() => {
-    if (hydrated && !onboarded && pathname === "/") router.replace("/welcome")
-  }, [hydrated, onboarded, pathname, router])
 
   if (FULLSCREEN.some((r) => r.test(pathname))) return <>{children}</>
 
@@ -96,9 +91,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/login?role=pro" className="px-3 py-2 text-sm text-ink-soft hover:text-rose">
-                Trở thành freelancer
-              </Link>
               <Link href="/login" className="rounded-full bg-rose px-5 py-2 text-sm font-medium text-white hover:bg-rose-dark">
                 Đăng nhập
               </Link>
