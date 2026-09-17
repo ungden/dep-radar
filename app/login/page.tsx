@@ -38,7 +38,7 @@ function LoginForm() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-5">
       <PageHeader back />
-      <Logo className="text-4xl" />
+      <Logo size="lg" />
       <h1 className="mt-4 text-2xl font-semibold">Đăng nhập</h1>
       <p className="mt-1 text-sm text-ink-soft">Chọn cách bạn muốn dùng dep360. Bạn có thể đổi chế độ bất cứ lúc nào.</p>
 

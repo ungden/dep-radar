@@ -13,7 +13,7 @@ const body = Be_Vietnam_Pro({
 
 const serif = Playfair_Display({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "800"],
   variable: "--font-serif",
 })
 

@@ -48,10 +48,22 @@ export function ButtonLink({
   return <Link className={buttonClass(variant, size, className)} {...props} />
 }
 
-export function Logo({ className }: { className?: string }) {
+export function Logo({ className, size = "md" }: { className?: string; size?: "md" | "lg" }) {
+  const lg = size === "lg"
   return (
-    <span className={cn("font-display text-2xl tracking-tight text-ink", className)}>
-      dep<span className="text-rose">360</span>
+    <span className={cn("inline-flex items-center", lg ? "gap-3" : "gap-2", className)}>
+      <span
+        aria-hidden
+        className={cn(
+          "inline-flex shrink-0 items-center justify-center bg-rose font-display font-extrabold text-white shadow-sm",
+          lg ? "size-12 rounded-2xl text-[30px]" : "size-8 rounded-[10px] text-xl",
+        )}
+      >
+        <span className="-mt-[0.12em]">d</span>
+      </span>
+      <span className={cn("font-display font-extrabold leading-none tracking-tight text-ink [font-variant-numeric:lining-nums]", lg ? "text-[40px]" : "text-[26px]")}>
+        dep<span className="text-rose">360</span>
+      </span>
     </span>
   )
 }
