@@ -110,16 +110,7 @@ function List({ bookings }: { bookings: Booking[] }) {
           <JobBookingRow
             booking={b}
             actions={
-              b.status === "pending" ? (
-                <>
-                  <Button variant="outline" size="sm" className="border-line text-ink" onClick={() => actions.setBookingStatus(b.id, "declined")}>
-                    Từ chối
-                  </Button>
-                  <Button size="sm" onClick={() => actions.setBookingStatus(b.id, "confirmed")}>
-                    Nhận job
-                  </Button>
-                </>
-              ) : b.status === "confirmed" && b.date <= todayISO() ? (
+              b.status === "confirmed" && b.date <= todayISO() ? (
                 <>
                   <span />
                   <Button size="sm" variant="soft" onClick={() => actions.setBookingStatus(b.id, "completed")}>

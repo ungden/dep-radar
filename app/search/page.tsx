@@ -7,8 +7,10 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { ChevronLeft, Search, SlidersHorizontal, X } from "lucide-react"
 import { ProCard, WorkCard } from "@/components/beauty"
 import { Chip, EmptyState, Tabs } from "@/components/ui"
-import { CATEGORIES, CITIES, PROS, WORKS, getPro } from "@/lib/data"
-import { findService, useApp } from "@/lib/store"
+import { CATEGORIES, CITIES, PROS, WORKS } from "@/lib/data"
+import { sortPros } from "@/components/trust"
+import { getTemplate } from "@/lib/catalog"
+import { fromPrice, proView, useApp } from "@/lib/store"
 import type { CategoryId } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -60,29 +62,30 @@ function SearchView() {
   const works = React.useMemo(() => {
     const nq = normalize(query)
     return WORKS.filter((w) => {
-      const pro = getPro(w.proId)!
-      const service = findService(state, w.serviceId)
+      const pro = proView(state, w.proId)!
+      const price = fromPrice(state, w.proId, w.templateId)
       if (category && w.category !== category) return false
       if (city && pro.city !== city) return false
-      if (maxPrice && service && service.price > maxPrice) return false
-      if (topRated && pro.rating < 4.8) return false
+      if (maxPrice && price !== null && price > maxPrice) return false
+      if (topRated && pro.rating.average < 4.8) return false
       if (atHome && !pro.homeService) return false
-      if (nq && !normalize(`${w.title} ${w.description} ${pro.name} ${pro.title}`).includes(nq)) return false
+      if (nq && !normalize(`${w.title} ${w.description} ${getTemplate(w.templateId)?.name} ${pro.name} ${pro.title}`).includes(nq)) return false
       return true
     })
   }, [state, query, category, city, maxPrice, topRated, atHome])
 
   const pros = React.useMemo(() => {
     const nq = normalize(query)
-    return PROS.filter((p) => {
+    const list = PROS.filter((p) => {
       if (category && !p.categories.includes(category)) return false
       if (city && p.city !== city) return false
-      if (topRated && p.rating < 4.8) return false
+      if (topRated && p.rating.average < 4.8) return false
       if (atHome && !p.homeService) return false
       if (nq && !normalize(`${p.name} ${p.title} ${p.bio} ${p.district}`).includes(nq)) return false
       return true
     })
-  }, [query, category, city, topRated, atHome])
+    return sortPros(state, list, "match")
+  }, [state, query, category, city, topRated, atHome])
 
   const activeFilters = [city, maxPrice, topRated, atHome].filter(Boolean).length
 

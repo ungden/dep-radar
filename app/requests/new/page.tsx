@@ -2,20 +2,17 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { Info } from "lucide-react"
 import { CATEGORY_ICON } from "@/components/beauty"
 import { RequireSession } from "@/components/require-session"
 import { BottomBar, Button, Field, PageHeader, inputClass } from "@/components/ui"
-import { CATEGORIES, CITIES, DISTRICTS } from "@/lib/data"
+import { CATEGORIES, templatesByCategory } from "@/lib/catalog"
+import { CITIES, districtsOf } from "@/lib/geo"
+import { POLICY } from "@/lib/pricing"
 import { TIME_SLOTS, actions, useApp } from "@/lib/store"
-import type { CategoryId } from "@/lib/types"
-import { addDays, cn, todayISO } from "@/lib/utils"
-
-const BUDGETS = [
-  { label: "Dưới 300k", min: 100000, max: 300000 },
-  { label: "300k - 500k", min: 300000, max: 500000 },
-  { label: "500k - 1 triệu", min: 500000, max: 1000000 },
-  { label: "1 - 3 triệu", min: 1000000, max: 3000000 },
-]
+import { PAYMENT_LABEL } from "@/components/price-breakdown"
+import type { CategoryId, PaymentMethod } from "@/lib/types"
+import { addDays, cn, formatDuration, formatPrice, todayISO } from "@/lib/utils"
 
 export default function NewRequestPage() {
   return (
@@ -30,18 +27,32 @@ export default function NewRequestPage() {
 
 function NewRequestForm() {
   const router = useRouter()
-  const { city: preferredCity } = useApp()
+  const { customerAddress } = useApp()
   const [category, setCategory] = React.useState<CategoryId>("nail")
-  const [title, setTitle] = React.useState("")
+  const [templateId, setTemplateId] = React.useState(templatesByCategory("nail")[0].id)
+  const [variantId, setVariantId] = React.useState(templatesByCategory("nail")[0].variants[0].id)
   const [description, setDescription] = React.useState("")
   const [date, setDate] = React.useState(addDays(todayISO(), 2))
   const [time, setTime] = React.useState("16:00")
-  const [city, setCity] = React.useState(preferredCity ?? "Hà Nội")
-  const [district, setDistrict] = React.useState(DISTRICTS[preferredCity ?? "Hà Nội"][0])
-  const [atHome, setAtHome] = React.useState(true)
-  const [budget, setBudget] = React.useState(1)
+  const [city, setCity] = React.useState(customerAddress.city)
+  const [district, setDistrict] = React.useState(customerAddress.district)
+  const [detail, setDetail] = React.useState(customerAddress.detail)
+  const [atHomePref, setAtHome] = React.useState(true)
+  const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>("online")
 
-  const valid = title.trim().length >= 6 && date >= todayISO()
+  const templates = templatesByCategory(category)
+  const tpl = templates.find((t) => t.id === templateId) ?? templates[0]
+  const variant = tpl.variants.find((v) => v.id === variantId) ?? tpl.variants[0]
+  const atHome = atHomePref && !tpl.studioOnly
+
+  const pickCategory = (c: CategoryId) => {
+    setCategory(c)
+    const first = templatesByCategory(c)[0]
+    setTemplateId(first.id)
+    setVariantId(first.variants[0].id)
+  }
+
+  const valid = date >= todayISO() && (!atHome || detail.trim().length >= 3)
 
   return (
     <form
@@ -50,27 +61,27 @@ function NewRequestForm() {
         e.preventDefault()
         if (!valid) return
         const id = actions.createJob({
-          category,
-          title: title.trim(),
+          templateId: tpl.id,
+          variantId: variant.id,
           description: description.trim(),
           date,
           time,
           city,
           district,
+          addressDetail: detail.trim(),
           atHome,
-          budgetMin: BUDGETS[budget].min,
-          budgetMax: BUDGETS[budget].max,
+          paymentMethod,
         })
         router.replace(`/requests/${id}`)
       }}
     >
       <p className="rounded-2xl bg-blush px-4 py-3 text-[13px] text-rose-dark">
-        Freelancer phù hợp ở khu vực của bạn sẽ gửi báo giá. Bạn so sánh hồ sơ, giá và chọn người ưng ý nhất.
+        Chọn dịch vụ theo danh mục chuẩn của dep360. Freelancer phù hợp quanh bạn sẽ báo giá trong khung giá quy định, bạn so sánh hồ sơ, đánh giá và chọn người ưng ý.
       </p>
 
       <fieldset>
         <legend className="mb-2 text-[13px] font-medium text-ink-soft">Bạn cần làm gì?</legend>
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
           {CATEGORIES.map((c) => {
             const Icon = CATEGORY_ICON[c.id]
             const active = c.id === category
@@ -79,9 +90,9 @@ function NewRequestForm() {
                 key={c.id}
                 type="button"
                 aria-pressed={active}
-                onClick={() => setCategory(c.id)}
+                onClick={() => pickCategory(c.id)}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 rounded-2xl border py-3 text-[11px] transition-colors",
+                  "flex flex-col items-center gap-1.5 rounded-2xl border py-3 text-[11.5px] transition-colors",
                   active ? "border-rose bg-blush font-semibold text-rose-dark" : "border-line bg-surface text-ink-soft",
                 )}
               >
@@ -93,23 +104,58 @@ function NewRequestForm() {
         </div>
       </fieldset>
 
-      <Field label="Tiêu đề">
-        <input
+      <Field label="Dịch vụ">
+        <select
           className={inputClass}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="VD: Makeup + làm tóc đi đám cưới"
-          maxLength={80}
-        />
+          value={tpl.id}
+          onChange={(e) => {
+            const next = templates.find((t) => t.id === e.target.value)!
+            setTemplateId(next.id)
+            setVariantId(next.variants[0].id)
+          }}
+        >
+          {templates.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
       </Field>
 
-      <Field label="Mô tả chi tiết" hint="Tình trạng da/móng/tóc, phong cách mong muốn, số người...">
+      <fieldset>
+        <legend className="mb-2 text-[13px] font-medium text-ink-soft">Gói</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {tpl.variants.map((v) => (
+            <button
+              key={v.id}
+              type="button"
+              aria-pressed={v.id === variant.id}
+              onClick={() => setVariantId(v.id)}
+              className={cn(
+                "rounded-xl border px-3 py-2.5 text-left text-sm",
+                v.id === variant.id ? "border-rose bg-blush text-rose-dark" : "border-line bg-surface text-ink-soft",
+              )}
+            >
+              <span className="block font-medium">
+                {v.label} · {formatDuration(v.durationMin)}
+              </span>
+              <span className="block text-xs">
+                Khung giá {formatPrice(v.minPrice)} – {formatPrice(v.maxPrice)}
+              </span>
+            </button>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-muted">Bao gồm: {tpl.includes.join(" · ")}</p>
+      </fieldset>
+
+      <Field label="Mô tả thêm (tuỳ chọn)" hint="Tình trạng da/móng/tóc, phong cách mong muốn, số người…">
         <textarea
           className={cn(inputClass, "resize-none")}
-          rows={4}
+          rows={3}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="VD: Da mình hơi dầu, muốn makeup trong trẻo, bền đến tối..."
+          placeholder="VD: da hơi dầu, muốn makeup trong trẻo, bền đến tối…"
+          maxLength={300}
         />
       </Field>
 
@@ -119,7 +165,7 @@ function NewRequestForm() {
         </Field>
         <Field label="Giờ bắt đầu">
           <select className={inputClass} value={time} onChange={(e) => setTime(e.target.value)}>
-            {["06:00", "07:00", "08:00", ...TIME_SLOTS].map((t) => (
+            {TIME_SLOTS.map((t) => (
               <option key={t}>{t}</option>
             ))}
           </select>
@@ -130,7 +176,7 @@ function NewRequestForm() {
             value={city}
             onChange={(e) => {
               setCity(e.target.value)
-              setDistrict(DISTRICTS[e.target.value][0])
+              setDistrict(districtsOf(e.target.value)[0])
             }}
           >
             {CITIES.map((c) => (
@@ -140,7 +186,7 @@ function NewRequestForm() {
         </Field>
         <Field label="Quận/huyện">
           <select className={inputClass} value={district} onChange={(e) => setDistrict(e.target.value)}>
-            {DISTRICTS[city].map((d) => (
+            {districtsOf(city).map((d) => (
               <option key={d}>{d}</option>
             ))}
           </select>
@@ -157,10 +203,11 @@ function NewRequestForm() {
             <button
               key={o.l}
               type="button"
+              disabled={o.v && tpl.studioOnly}
               aria-pressed={atHome === o.v}
               onClick={() => setAtHome(o.v)}
               className={cn(
-                "h-11 rounded-xl border text-sm",
+                "h-11 rounded-xl border text-sm disabled:opacity-40",
                 atHome === o.v ? "border-rose bg-blush font-medium text-rose-dark" : "border-line bg-surface text-ink-soft",
               )}
             >
@@ -168,27 +215,45 @@ function NewRequestForm() {
             </button>
           ))}
         </div>
+        {tpl.studioOnly && <p className="mt-2 text-xs text-warning">Dịch vụ này cần thiết bị tại studio.</p>}
+        {atHome && (
+          <input
+            aria-label="Số nhà, đường"
+            placeholder="Số nhà, ngõ, đường, toà nhà"
+            className={cn(inputClass, "mt-2")}
+            value={detail}
+            onChange={(e) => setDetail(e.target.value)}
+          />
+        )}
       </fieldset>
 
       <fieldset>
-        <legend className="mb-2 text-[13px] font-medium text-ink-soft">Ngân sách</legend>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {BUDGETS.map((b, i) => (
+        <legend className="mb-2 text-[13px] font-medium text-ink-soft">Thanh toán</legend>
+        <div className="grid grid-cols-2 gap-2">
+          {(["online", "cash"] as const).map((m) => (
             <button
-              key={b.label}
+              key={m}
               type="button"
-              aria-pressed={budget === i}
-              onClick={() => setBudget(i)}
+              aria-pressed={paymentMethod === m}
+              onClick={() => setPaymentMethod(m)}
               className={cn(
                 "h-11 rounded-xl border text-sm",
-                budget === i ? "border-rose bg-blush font-medium text-rose-dark" : "border-line bg-surface text-ink-soft",
+                paymentMethod === m ? "border-rose bg-blush font-medium text-rose-dark" : "border-line bg-surface text-ink-soft",
               )}
             >
-              {b.label}
+              {PAYMENT_LABEL[m]}
             </button>
           ))}
         </div>
+        <p className="mt-2 text-xs text-muted">
+          {paymentMethod === "online" ? "Chỉ thanh toán khi bạn chọn báo giá. Không cần đặt cọc." : "Trả tiền mặt hoặc chuyển khoản cho chuyên viên sau khi làm."}
+        </p>
       </fieldset>
+
+      <p className="flex gap-2 text-xs text-muted">
+        <Info className="mt-0.5 size-3.5 shrink-0" />
+        Khách không mất phí đăng yêu cầu. Nếu làm tại nhà xa hơn {POLICY.freeTravelKm} km hoặc bắt đầu trong vòng {POLICY.urgentWithinHours} giờ, báo giá sẽ kèm phí di chuyển / đặt gấp theo quy định.
+      </p>
 
       <BottomBar>
         <Button type="submit" size="lg" className="w-full" disabled={!valid}>

@@ -4,20 +4,25 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { BadgeCheck, Bookmark, ChevronLeft, Clock, Heart, MessageCircle, Share2 } from "lucide-react"
+import { Bookmark, ChevronLeft, Clock, Heart, MessageCircle, Share2 } from "lucide-react"
 import { FollowButton } from "@/components/follow-button"
+import { TierBadge, VerifiedMark } from "@/components/trust"
 import { WorkCard } from "@/components/beauty"
 import { Avatar, ButtonLink, Card, Pill } from "@/components/ui"
-import { categoryLabel, getPro, getWork, worksByPro } from "@/lib/data"
-import { actions, findService, useApp } from "@/lib/store"
+import { getTemplate } from "@/lib/catalog"
+import { categoryLabel, getWork, worksByPro } from "@/lib/data"
+import { actions, proView, servicesOf, useApp } from "@/lib/store"
+import { tierOf } from "@/lib/trust"
 import { cn, formatDuration, formatPrice } from "@/lib/utils"
 
 export function WorkDetail({ workId }: { workId: string }) {
   const router = useRouter()
   const state = useApp()
   const work = getWork(workId)!
-  const pro = getPro(work.proId)!
-  const service = findService(state, work.serviceId)
+  const pro = proView(state, work.proId)!
+  const tpl = getTemplate(work.templateId)!
+  const listing = servicesOf(state, pro.id).find((x) => x.templateId === work.templateId)
+  const offered = listing ? tpl.variants.filter((v) => listing.prices[v.id] !== undefined) : []
   const saved = state.savedWorks.includes(work.id)
   const [index, setIndex] = React.useState(0)
   const [liked, setLiked] = React.useState(false)
@@ -96,11 +101,14 @@ export function WorkDetail({ workId }: { workId: string }) {
             <Link href={`/pros/${pro.id}`} className="flex min-w-0 flex-1 items-center gap-3">
               <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={44} />
               <span className="min-w-0">
-                <span className="flex items-center gap-1 text-sm font-semibold">
+                <span className="flex items-center gap-1.5 text-sm font-semibold">
                   {pro.name}
-                  {pro.verified && <BadgeCheck className="size-4 fill-rose text-white" />}
+                  <VerifiedMark pro={pro} />
+                  <TierBadge tier={tierOf(pro)} />
                 </span>
-                <span className="block text-xs text-muted">{pro.title}</span>
+                <span className="block text-xs text-muted">
+                  ★ {pro.rating.average.toFixed(1)} ({pro.rating.count}) · {pro.stats.completedJobs} job hoàn thành
+                </span>
               </span>
             </Link>
             <FollowButton proId={pro.id} />
@@ -124,26 +132,35 @@ export function WorkDetail({ workId }: { workId: string }) {
           <Card className="mt-5 p-4">
             <p className="text-sm font-semibold">Muốn làm mẫu này?</p>
             <p className="mt-0.5 text-[13px] text-muted">Đặt lịch với {pro.name}</p>
-            {service && (
-              <div className="mt-3 flex items-center justify-between rounded-xl bg-canvas px-3 py-2.5 text-sm">
-                <span className="font-medium">{service.name}</span>
-                <span className="flex items-center gap-3 text-ink-soft">
-                  <span className="inline-flex items-center gap-1 text-xs">
-                    <Clock className="size-3.5" />
-                    {formatDuration(service.durationMin)}
-                  </span>
-                  <b className="text-ink">{formatPrice(service.price)}</b>
-                </span>
-              </div>
+            <p className="mt-3 text-sm font-medium">{tpl.name}</p>
+            {listing ? (
+              <ul className="mt-2 divide-y divide-line rounded-xl bg-canvas px-3">
+                {offered.map((v) => (
+                  <li key={v.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                    <span>
+                      {v.label}
+                      <span className="ml-2 inline-flex items-center gap-1 text-xs text-muted">
+                        <Clock className="size-3.5" />
+                        {formatDuration(v.durationMin)}
+                      </span>
+                    </span>
+                    <Link href={`/book/${pro.id}?service=${tpl.id}&variant=${v.id}`} className="font-semibold text-rose">
+                      {formatPrice(listing.prices[v.id])} →
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-sm text-muted">Chuyên viên tạm ngưng dịch vụ này.</p>
             )}
             <div className="mt-3 grid grid-cols-2 gap-2">
               <ButtonLink href={`/pros/${pro.id}?tab=services`} variant="outline">
-                Xem dịch vụ
+                Bảng giá đầy đủ
               </ButtonLink>
-              {service && service.active !== false ? (
-                <ButtonLink href={`/book/${service.id}`}>Đặt lịch ngay</ButtonLink>
+              {listing ? (
+                <ButtonLink href={`/book/${pro.id}?service=${tpl.id}&variant=${offered[0].id}`}>Đặt lịch ngay</ButtonLink>
               ) : (
-                <ButtonLink href={`/pros/${pro.id}?tab=services`}>Chọn dịch vụ</ButtonLink>
+                <ButtonLink href={`/pros/${pro.id}?tab=services`}>Chọn dịch vụ khác</ButtonLink>
               )}
             </div>
           </Card>

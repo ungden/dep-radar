@@ -1,200 +1,359 @@
 "use client"
 
 import * as React from "react"
-import { DEMO_PRO_ID, SERVICES, getPro } from "./data"
-import type { Booking, CategoryId, JobPost, Offer, Service, Session } from "./types"
+import { getTemplate, getVariant, isPriceAllowed } from "./catalog"
+import { DEMO_CUSTOMER, DEMO_PRO_ID, PRO_SERVICES, REVIEWS, getPro } from "./data"
+import { travelDistanceKm } from "./geo"
+import { buildQuote, isUrgent } from "./pricing"
+import { mergeRating, tierOf } from "./trust"
+import type {
+  Booking,
+  CustomerAddress,
+  JobPost,
+  Offer,
+  PaymentMethod,
+  PriceQuote,
+  Pro,
+  ProService,
+  Review,
+  Session,
+  TierId,
+  VerificationId,
+  VerificationStatus,
+} from "./types"
 import { addDays, todayISO, uid } from "./utils"
 
 export interface AppState {
-  version: 1
+  version: 3
   session: Session | null
   savedWorks: string[]
   followedPros: string[]
+  city: string | null
+  customerAddress: CustomerAddress
   bookings: Booking[]
   jobs: JobPost[]
-  /** Services of the demo freelancer; editable in freelancer mode. */
-  myServices: Service[]
+  /** Listings of the demo freelancer (editable in Studio). */
+  myServices: ProService[]
+  myVerifications: Record<VerificationId, VerificationStatus>
   acceptingJobs: boolean
-  city: string | null
+  /** Reviews written in this session. */
+  reviews: Review[]
+  /** Freelancer replies written in this session, by review id. */
+  replies: Record<string, string>
 }
 
-const STORAGE_KEY = "dep360:v1"
-const CUSTOMER = { name: "Nguyễn Phương", phone: "0912 345 678", address: "123 Nguyễn Trãi, Thanh Xuân, Hà Nội" }
-export const DEMO_CUSTOMER = CUSTOMER
+const STORAGE_KEY = "dep360:v3"
+
+// ---------------------------------------------------------------------------
+// Derived helpers (pure, take state)
+
+/** Pro with session changes applied (verification submissions, new reviews). */
+export function proView(s: AppState, proId: string): Pro | undefined {
+  const base = getPro(proId)
+  if (!base) return undefined
+  const extra = s.reviews.filter((r) => r.proId === proId)
+  return {
+    ...base,
+    verifications: proId === DEMO_PRO_ID ? s.myVerifications : base.verifications,
+    rating: mergeRating(base.rating, extra),
+  }
+}
+
+export function proTier(s: AppState, proId: string): TierId {
+  const p = proView(s, proId)
+  return p ? tierOf(p) : "new"
+}
+
+export function servicesOf(s: AppState, proId: string, includeInactive = false): ProService[] {
+  const list = proId === DEMO_PRO_ID ? s.myServices : PRO_SERVICES.filter((x) => x.proId === proId)
+  return list.filter((x) => includeInactive || x.active)
+}
+
+export function priceOf(s: AppState, proId: string, templateId: string, variantId: string): number | null {
+  const svc = servicesOf(s, proId).find((x) => x.templateId === templateId)
+  return svc?.prices[variantId] ?? null
+}
+
+/** Lowest price of a template (or of all services) a freelancer offers. */
+export function fromPrice(s: AppState, proId: string, templateId?: string): number | null {
+  const prices = servicesOf(s, proId)
+    .filter((x) => !templateId || x.templateId === templateId)
+    .flatMap((x) => Object.values(x.prices))
+  return prices.length ? Math.min(...prices) : null
+}
+
+export function reviewsOf(s: AppState, proId: string): Review[] {
+  const fresh = s.reviews.filter((r) => r.proId === proId)
+  const seed = REVIEWS.filter((r) => r.proId === proId)
+  return [...fresh, ...seed].map((r) => (s.replies[r.id] ? { ...r, reply: s.replies[r.id] } : r))
+}
+
+export function distanceToCustomer(s: AppState, proId: string, address: CustomerAddress = s.customerAddress) {
+  const pro = getPro(proId)
+  if (!pro) return null
+  return travelDistanceKm(pro.city, pro.district, address.city, address.district)
+}
+
+export type HomeAvailability = { ok: true } | { ok: false; reason: string }
+
+export function homeAvailability(s: AppState, proId: string, templateId: string, address: CustomerAddress): HomeAvailability {
+  const pro = getPro(proId)!
+  const template = getTemplate(templateId)
+  if (!pro.homeService) return { ok: false, reason: `${pro.name} chỉ nhận làm tại studio.` }
+  if (template?.studioOnly) return { ok: false, reason: `Dịch vụ này cần thiết bị tại studio.` }
+  const km = travelDistanceKm(pro.city, pro.district, address.city, address.district)
+  if (km === null) return { ok: false, reason: `${pro.name} chỉ nhận khách tại ${pro.city}.` }
+  if (km > pro.maxTravelKm) return { ok: false, reason: `Khoảng ${km.toLocaleString("vi-VN")} km, vượt phạm vi di chuyển tối đa ${pro.maxTravelKm} km của ${pro.name}.` }
+  return { ok: true }
+}
+
+export function quoteFor(
+  s: AppState,
+  input: { proId: string; price: number; atHome: boolean; address: CustomerAddress; date: string; time: string },
+): PriceQuote {
+  const pro = getPro(input.proId)!
+  return buildQuote({
+    servicePrice: input.price,
+    atHome: input.atHome,
+    distanceKm: input.atHome ? travelDistanceKm(pro.city, pro.district, input.address.city, input.address.district) : null,
+    urgent: isUrgent(input.date, input.time),
+    tier: proTier(s, input.proId),
+  })
+}
+
+/** Slots already taken for a freelancer on a given day. */
+export function takenSlots(s: AppState, proId: string, date: string): Set<string> {
+  const taken = new Set<string>()
+  for (const b of s.bookings) {
+    if (b.proId === proId && b.date === date && (b.status === "pending" || b.status === "confirmed")) taken.add(b.time)
+  }
+  const seed = [...(proId + date)].reduce((a, c) => a + c.charCodeAt(0), 0)
+  if (seed % 3 === 0) taken.add("10:30")
+  if (seed % 4 === 1) taken.add("14:30")
+  return taken
+}
+
+export const TIME_SLOTS = ["08:00", "09:00", "10:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"]
+
+export const formatAddress = (a: CustomerAddress) => [a.detail, a.district, a.city].filter(Boolean).join(", ")
+
+// ---------------------------------------------------------------------------
+// Seed
 
 function seedState(): AppState {
   const t = todayISO()
   const now = new Date().toISOString()
-  const svc = (id: string) => SERVICES.find((s) => s.id === id)!
+  const base: Omit<AppState, "bookings" | "jobs"> = {
+    version: 3,
+    session: null,
+    savedWorks: ["w-milky-stone", "w-party-glow"],
+    followedPros: ["linh-pham"],
+    city: null,
+    customerAddress: DEMO_CUSTOMER.address,
+    myServices: PRO_SERVICES.filter((x) => x.proId === DEMO_PRO_ID).map((x) => ({ ...x, prices: { ...x.prices } })),
+    myVerifications: { ...getPro(DEMO_PRO_ID)!.verifications },
+    acceptingJobs: true,
+    reviews: [],
+    replies: {},
+  }
+  const draft = { ...base, bookings: [], jobs: [] } as AppState
+
   const booking = (
     id: string,
-    serviceId: string,
+    proId: string,
+    templateId: string,
+    variantId: string,
     date: string,
     time: string,
     status: Booking["status"],
-    extra: Partial<Booking> = {},
+    opts: { customer?: [string, string]; address?: CustomerAddress; atHome?: boolean; note?: string; reviewed?: boolean; pay?: PaymentMethod } = {},
   ): Booking => {
-    const s = svc(serviceId)
+    const tpl = getTemplate(templateId)!
+    const variant = getVariant(templateId, variantId)!
+    const pro = getPro(proId)!
+    const atHome = opts.atHome ?? true
+    const address = opts.address ?? DEMO_CUSTOMER.address
+    const price = priceOf(draft, proId, templateId, variantId)!
+    const quote = buildQuote({
+      servicePrice: price,
+      atHome,
+      distanceKm: atHome ? travelDistanceKm(pro.city, pro.district, address.city, address.district) : null,
+      urgent: false,
+      tier: tierOf(pro),
+    })
     return {
       id,
-      proId: s.proId,
-      serviceId,
-      serviceName: s.name,
-      category: s.category,
-      durationMin: s.durationMin,
+      proId,
+      templateId,
+      variantId,
+      serviceName: tpl.name,
+      variantLabel: variant.label,
+      category: tpl.category,
+      durationMin: variant.durationMin,
       date,
       time,
-      atHome: true,
-      address: CUSTOMER.address,
-      note: "",
-      total: s.price,
-      deposit: Math.round((s.price * 0.3) / 1000) * 1000,
+      atHome,
+      address: atHome ? formatAddress(address) : (pro.studioAddress ?? `${pro.district}, ${pro.city}`),
+      note: opts.note ?? "",
+      quote,
+      paymentMethod: opts.pay ?? "online",
       status,
-      customerName: CUSTOMER.name,
-      customerPhone: CUSTOMER.phone,
-      mine: true,
+      customerName: opts.customer?.[0] ?? DEMO_CUSTOMER.name,
+      customerPhone: opts.customer?.[1] ?? DEMO_CUSTOMER.phone,
+      mine: !opts.customer,
       source: "direct",
+      reviewed: opts.reviewed ?? false,
       createdAt: now,
-      ...extra,
     }
   }
-  const other = (name: string, phone: string, address: string) => ({
-    mine: false,
-    customerName: name,
-    customerPhone: phone,
-    address,
-  })
+  const hn = (district: string, detail: string): CustomerAddress => ({ city: "Hà Nội", district, detail })
 
-  const job = (j: Omit<JobPost, "createdAt" | "status" | "offers"> & Partial<JobPost>): JobPost => ({
-    status: "open",
-    offers: [],
-    createdAt: now,
-    ...j,
-  })
   const offer = (proId: string, price: number, message: string): Offer => ({
-    id: uid("of"),
+    id: `of-${proId}`,
     proId,
-    price,
+    price: price * 1000,
     message,
     status: "pending",
     createdAt: now,
   })
+  const job = (j: Omit<JobPost, "createdAt" | "status" | "offers" | "customerName" | "mine" | "atHome" | "paymentMethod"> & Partial<JobPost>): JobPost => ({
+    status: "open",
+    offers: [],
+    createdAt: now,
+    customerName: DEMO_CUSTOMER.name,
+    mine: false,
+    atHome: true,
+    paymentMethod: "cash",
+    ...j,
+  })
 
   return {
-    version: 1,
-    session: null,
-    savedWorks: ["w-milky-stone", "w-party-glow"],
-    followedPros: ["linh-pham"],
-    myServices: SERVICES.filter((s) => s.proId === DEMO_PRO_ID).map((s) => ({ ...s, active: true })),
-    acceptingJobs: true,
-    city: null,
+    ...base,
     bookings: [
-      booking("bk-1001", "lp-design", addDays(t, 2), "16:00", "confirmed"),
-      booking("bk-1002", "ta-party", addDays(t, 5), "10:00", "pending"),
-      booking("bk-1003", "mt-facial", addDays(t, -12), "15:00", "completed", { address: "45 Võ Văn Tần, Quận 3, TP.HCM" }),
-      booking("bk-1004", "qv-wash", addDays(t, -20), "09:00", "cancelled", { address: "12 Lê Lợi, Quận 1, TP.HCM" }),
-      booking("bk-2001", "lp-basic", addDays(t, 1), "09:00", "pending", other("Trà My", "0987 111 222", "Ngõ 12 Láng Hạ, Đống Đa, Hà Nội")),
-      booking("bk-2002", "lp-care", t, "14:00", "confirmed", { ...other("Hoàng Yến", "0936 222 333", "Ngõ 88 Nguyễn Trãi, Thanh Xuân"), atHome: false }),
-      booking("bk-2003", "lp-design", addDays(t, 3), "10:30", "pending", { ...other("Kim Oanh", "0977 333 444", "56 Trần Duy Hưng, Cầu Giấy, Hà Nội"), note: "Muốn làm mẫu milky giống ảnh trên trang" }),
-      booking("bk-2004", "lp-remove", addDays(t, -3), "18:00", "completed", other("Thanh Hương", "0904 444 555", "21 Chùa Bộc, Đống Đa, Hà Nội")),
-      booking("bk-2005", "lp-design", addDays(t, -6), "16:30", "completed", other("Ngân Hà", "0915 555 666", "8 Tô Vĩnh Diện, Thanh Xuân, Hà Nội")),
+      booking("bk-1001", "linh-pham", "nail-design", "stone", addDays(t, 2), "16:00", "confirmed"),
+      booking("bk-1002", "thu-anh", "makeup-party", "makeup", addDays(t, 5), "10:30", "pending", { pay: "cash" }),
+      booking("bk-1003", "mai-tran", "skin-basic", "60m", addDays(t, -12), "14:30", "completed", {
+        address: { city: "TP.HCM", district: "Quận 3", detail: "45 Võ Văn Tần" },
+      }),
+      booking("bk-1004", "quynh-vu", "hair-wash", "45m", addDays(t, -20), "09:00", "cancelled", { atHome: false, pay: "cash" }),
+      booking("bk-2001", "linh-pham", "nail-gel", "hand", addDays(t, 1), "09:00", "pending", {
+        customer: ["Trà My", "0987 111 222"],
+        address: hn("Đống Đa", "Ngõ 12 Láng Hạ"),
+        pay: "cash",
+      }),
+      booking("bk-2002", "linh-pham", "nail-removal", "remove-care", t, "13:00", "confirmed", {
+        customer: ["Hoàng Yến", "0936 222 333"],
+        atHome: false,
+      }),
+      booking("bk-2003", "linh-pham", "nail-design", "simple", addDays(t, 3), "10:30", "pending", {
+        customer: ["Kim Oanh", "0977 333 444"],
+        address: hn("Cầu Giấy", "56 Trần Duy Hưng"),
+        note: "Muốn làm mẫu milky giống ảnh trên trang",
+      }),
+      booking("bk-2004", "linh-pham", "nail-extension", "builder", addDays(t, -3), "17:30", "completed", {
+        customer: ["Thanh Hương", "0904 444 555"],
+        address: hn("Hai Bà Trưng", "21 Bạch Mai"),
+        reviewed: true,
+        pay: "cash",
+      }),
+      booking("bk-2005", "linh-pham", "nail-design", "art", addDays(t, -6), "16:00", "completed", {
+        customer: ["Ngân Hà", "0915 555 666"],
+        address: hn("Long Biên", "8 Nguyễn Văn Cừ"),
+        reviewed: true,
+      }),
     ],
     jobs: [
       job({
         id: "job-501",
         mine: true,
-        category: "makeup",
-        title: "Makeup + làm tóc đi đám cưới bạn thân",
-        description: "Mình da dầu, muốn makeup nhẹ nhàng trong trẻo, tóc búi thấp. Làm tại nhà trước 10h.",
+        templateId: "makeup-party",
+        variantId: "makeup-hair",
+        description: "Mình da dầu, muốn makeup trong trẻo, tóc búi thấp. Làm tại nhà trước 10h.",
         date: addDays(t, 9),
         time: "08:00",
         city: "Hà Nội",
         district: "Cầu Giấy",
-        atHome: true,
-        budgetMin: 500000,
-        budgetMax: 800000,
-        customerName: CUSTOMER.name,
-        offers: [offer("thu-anh", 750000, "Chị làm được cả makeup và búi tóc, có mi giả và kit cho da dầu. Đến trước 7h45 nhé.")],
+        addressDetail: "12 Xuân Thủy",
+        offers: [offer("thu-anh", 800, "Chị làm được cả makeup và búi tóc, có kit cho da dầu. Đến trước 7h45 nhé.")],
       }),
       job({
         id: "job-502",
-        mine: false,
-        category: "nail",
-        title: "Làm nail cho 3 phù dâu",
-        description: "3 bạn phù dâu, sơn gel tone hồng sữa đồng bộ, có thể đính đá nhẹ 2 ngón.",
+        templateId: "nail-design",
+        variantId: "simple",
+        description: "3 bạn phù dâu, sơn gel tone hồng sữa đồng bộ. Giá cho mỗi người.",
         date: addDays(t, 6),
-        time: "14:00",
+        time: "14:30",
         city: "Hà Nội",
         district: "Đống Đa",
-        atHome: true,
-        budgetMin: 900000,
-        budgetMax: 1200000,
+        addressDetail: "Ngõ 5 Thái Hà",
         customerName: "Phương Thảo",
       }),
       job({
         id: "job-503",
-        mine: false,
-        category: "nail",
-        title: "Sơn gel + dưỡng móng buổi tối",
+        templateId: "nail-gel",
+        variantId: "hand",
         description: "Móng ngắn, muốn tone nude đi làm. Sau 19h mới rảnh.",
         date: addDays(t, 2),
         time: "19:00",
         city: "Hà Nội",
         district: "Thanh Xuân",
-        atHome: true,
-        budgetMin: 250000,
-        budgetMax: 350000,
+        addressDetail: "Royal City",
         customerName: "Bích Ngọc",
-        offers: [offer("ngoc-bao", 300000, "Mình nhận nhé, có sẵn bảng màu nude.")],
       }),
       job({
         id: "job-504",
-        mine: false,
-        category: "nail",
-        title: "Tháo gel và chăm sóc móng",
+        templateId: "nail-removal",
+        variantId: "remove-care",
         description: "Móng đang yếu sau khi đắp bột, cần tháo và dưỡng.",
         date: addDays(t, 1),
-        time: "18:00",
+        time: "17:30",
         city: "Hà Nội",
         district: "Cầu Giấy",
-        atHome: false,
-        budgetMin: 100000,
-        budgetMax: 200000,
+        addressDetail: "Chung cư Mandarin",
         customerName: "Thu Trang",
       }),
       job({
         id: "job-505",
-        mine: false,
-        category: "makeup",
-        title: "Makeup chụp kỷ yếu nhóm 5 người",
-        description: "Concept nữ sinh trong trẻo, chụp ngoài trời từ 7h sáng.",
+        templateId: "makeup-photo",
+        variantId: "group",
+        description: "Nhóm 5 người chụp kỷ yếu, concept nữ sinh trong trẻo.",
         date: addDays(t, 11),
-        time: "06:00",
+        time: "08:00",
         city: "Hà Nội",
         district: "Cầu Giấy",
-        atHome: true,
-        budgetMin: 2000000,
-        budgetMax: 3000000,
+        addressDetail: "ĐH Sư phạm",
         customerName: "Minh Anh",
       }),
       job({
         id: "job-506",
-        mine: false,
-        category: "skincare",
-        title: "Facial tại nhà cho mẹ",
+        templateId: "skin-basic",
+        variantId: "90m",
         description: "Mẹ 55 tuổi da khô, muốn chăm sóc thư giãn 2 lần/tháng.",
         date: addDays(t, 4),
-        time: "09:30",
+        time: "09:00",
         city: "TP.HCM",
         district: "Quận 7",
-        atHome: true,
-        budgetMin: 300000,
-        budgetMax: 500000,
+        addressDetail: "Sunrise City",
         customerName: "Gia Hân",
+      }),
+      job({
+        id: "job-507",
+        templateId: "massage-neck",
+        variantId: "90m",
+        description: "Ngồi máy tính nhiều, đau cổ vai. Làm buổi tối sau giờ làm.",
+        date: addDays(t, 1),
+        time: "20:30",
+        city: "TP.HCM",
+        district: "Phú Nhuận",
+        addressDetail: "Phan Xích Long",
+        customerName: "Hoàng Nam",
       }),
     ],
   }
 }
+
+// ---------------------------------------------------------------------------
+// External store
 
 type Listener = () => void
 let state: AppState | null = null
@@ -214,11 +373,13 @@ function loadFromStorage() {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as AppState
-      if (parsed.version === 1) {
+      if (parsed.version === 3) {
         state = parsed
         listeners.forEach((l) => l())
       }
     }
+    window.localStorage.removeItem("dep360:v1")
+    window.localStorage.removeItem("dep360:v2")
   } catch {
     // Storage unavailable (private mode): keep the in-memory seed.
   }
@@ -254,39 +415,10 @@ export function useHydrated() {
   return React.useContext(HydratedContext)
 }
 
-/** Whole app state; derive with useMemo in components (snapshots must be stable). */
+/** Whole app state; derive with helpers above (snapshots must be stable). */
 export function useApp(): AppState {
   return React.useSyncExternalStore(subscribe, getState, () => serverSnapshot)
 }
-
-// ---------------------------------------------------------------------------
-// Derived helpers
-
-export function servicesFor(s: AppState, proId: string): Service[] {
-  if (proId === DEMO_PRO_ID) return s.myServices.filter((x) => x.active !== false)
-  return SERVICES.filter((x) => x.proId === proId)
-}
-
-export function findService(s: AppState, serviceId: string): Service | undefined {
-  return s.myServices.find((x) => x.id === serviceId) ?? SERVICES.find((x) => x.id === serviceId)
-}
-
-/** Slots already taken for a freelancer on a given day. */
-export function takenSlots(s: AppState, proId: string, date: string): Set<string> {
-  const taken = new Set<string>()
-  for (const b of s.bookings) {
-    if (b.proId === proId && b.date === date && (b.status === "pending" || b.status === "confirmed")) {
-      taken.add(b.time)
-    }
-  }
-  // Deterministic "busy elsewhere" slots so the calendar feels real.
-  const seed = [...(proId + date)].reduce((a, c) => a + c.charCodeAt(0), 0)
-  if (seed % 3 === 0) taken.add("10:30")
-  if (seed % 4 === 1) taken.add("13:00")
-  return taken
-}
-
-export const TIME_SLOTS = ["09:00", "10:30", "13:00", "14:30", "16:00", "16:30", "18:00", "19:30"]
 
 // ---------------------------------------------------------------------------
 // Actions
@@ -301,14 +433,13 @@ export const actions = {
   switchRole() {
     setState((s) => {
       if (!s.session) return s
-      const role = s.session.role === "pro" ? "customer" : "pro"
       const pro = getPro(DEMO_PRO_ID)!
       return {
         ...s,
         session:
-          role === "pro"
-            ? { role, name: pro.name, phone: "0968 000 111", proId: DEMO_PRO_ID }
-            : { role, name: CUSTOMER.name, phone: CUSTOMER.phone },
+          s.session.role === "pro"
+            ? { role: "customer", name: DEMO_CUSTOMER.name, phone: DEMO_CUSTOMER.phone }
+            : { role: "pro", name: pro.name, phone: "0968 000 111", proId: DEMO_PRO_ID },
       }
     })
   },
@@ -321,67 +452,79 @@ export const actions = {
   toggleFollow(proId: string) {
     setState((s) => ({
       ...s,
-      followedPros: s.followedPros.includes(proId)
-        ? s.followedPros.filter((x) => x !== proId)
-        : [proId, ...s.followedPros],
+      followedPros: s.followedPros.includes(proId) ? s.followedPros.filter((x) => x !== proId) : [proId, ...s.followedPros],
     }))
   },
+  setCity(city: string | null) {
+    setState((s) => ({ ...s, city }))
+  },
+  setCustomerAddress(address: CustomerAddress) {
+    setState((s) => ({ ...s, customerAddress: address }))
+  },
 
+  /** Returns the booking id, or an error message when the request breaks a rule. */
   createBooking(input: {
-    serviceId: string
+    proId: string
+    templateId: string
+    variantId: string
     date: string
     time: string
     atHome: boolean
-    address: string
+    address: CustomerAddress
     note: string
-  }): string {
+    paymentMethod: PaymentMethod
+  }): { id: string } | { error: string } {
+    const s = getState()
+    const pro = getPro(input.proId)
+    const tpl = getTemplate(input.templateId)
+    const variant = getVariant(input.templateId, input.variantId)
+    const price = priceOf(s, input.proId, input.templateId, input.variantId)
+    if (!pro || !tpl || !variant || price === null) return { error: "Dịch vụ không còn được cung cấp." }
+    if (input.proId === DEMO_PRO_ID && !s.acceptingJobs) return { error: `${pro.name} đang tạm nghỉ nhận lịch.` }
+    if (input.atHome) {
+      const home = homeAvailability(s, input.proId, input.templateId, input.address)
+      if (!home.ok) return { error: home.reason }
+    } else if (!pro.studioAddress) {
+      return { error: `${pro.name} không có studio, chỉ làm tại nhà.` }
+    }
+    if (takenSlots(s, input.proId, input.date).has(input.time)) return { error: "Khung giờ này vừa có người đặt." }
     const id = uid("bk")
-    setState((s) => {
-      const service = findService(s, input.serviceId)!
-      const booking: Booking = {
-        id,
-        proId: service.proId,
-        serviceId: service.id,
-        serviceName: service.name,
-        category: service.category,
-        durationMin: service.durationMin,
-        date: input.date,
-        time: input.time,
-        atHome: input.atHome,
-        address: input.address,
-        note: input.note,
-        total: service.price,
-        deposit: Math.round((service.price * 0.3) / 1000) * 1000,
-        status: "pending",
-        customerName: s.session?.role === "customer" ? s.session.name : CUSTOMER.name,
-        customerPhone: s.session?.role === "customer" ? s.session.phone : CUSTOMER.phone,
-        mine: true,
-        source: "direct",
-        createdAt: new Date().toISOString(),
-      }
-      return { ...s, bookings: [booking, ...s.bookings] }
-    })
-    return id
+    const booking: Booking = {
+      id,
+      proId: input.proId,
+      templateId: input.templateId,
+      variantId: input.variantId,
+      serviceName: tpl.name,
+      variantLabel: variant.label,
+      category: tpl.category,
+      durationMin: variant.durationMin,
+      date: input.date,
+      time: input.time,
+      atHome: input.atHome,
+      address: input.atHome ? formatAddress(input.address) : pro.studioAddress!,
+      note: input.note,
+      quote: quoteFor(s, { proId: input.proId, price, atHome: input.atHome, address: input.address, date: input.date, time: input.time }),
+      paymentMethod: input.paymentMethod,
+      status: "pending",
+      customerName: s.session?.role === "customer" ? s.session.name : DEMO_CUSTOMER.name,
+      customerPhone: s.session?.role === "customer" ? s.session.phone : DEMO_CUSTOMER.phone,
+      mine: true,
+      source: "direct",
+      reviewed: false,
+      createdAt: new Date().toISOString(),
+    }
+    setState((st) => ({
+      ...st,
+      bookings: [booking, ...st.bookings],
+      customerAddress: input.atHome ? input.address : st.customerAddress,
+    }))
+    return { id }
   },
   setBookingStatus(id: string, status: Booking["status"]) {
-    setState((s) => ({
-      ...s,
-      bookings: s.bookings.map((b) => (b.id === id ? { ...b, status } : b)),
-    }))
+    setState((s) => ({ ...s, bookings: s.bookings.map((b) => (b.id === id ? { ...b, status } : b)) }))
   },
 
-  createJob(input: {
-    category: CategoryId
-    title: string
-    description: string
-    date: string
-    time: string
-    city: string
-    district: string
-    atHome: boolean
-    budgetMin: number
-    budgetMax: number
-  }): string {
+  createJob(input: Omit<JobPost, "id" | "customerName" | "status" | "offers" | "mine" | "createdAt">): string {
     const id = uid("job")
     setState((s) => ({
       ...s,
@@ -390,7 +533,7 @@ export const actions = {
           ...input,
           id,
           mine: true,
-          customerName: s.session?.role === "customer" ? s.session.name : CUSTOMER.name,
+          customerName: s.session?.role === "customer" ? s.session.name : DEMO_CUSTOMER.name,
           status: "open",
           offers: [],
           createdAt: new Date().toISOString(),
@@ -401,111 +544,150 @@ export const actions = {
     return id
   },
   closeJob(jobId: string) {
-    setState((s) => ({
-      ...s,
-      jobs: s.jobs.map((j) => (j.id === jobId ? { ...j, status: "closed" } : j)),
-    }))
+    setState((s) => ({ ...s, jobs: s.jobs.map((j) => (j.id === jobId ? { ...j, status: "closed" } : j)) }))
   },
-  sendOffer(jobId: string, price: number, message: string) {
-    setState((s) => ({
-      ...s,
-      jobs: s.jobs.map((j) =>
+  sendOffer(jobId: string, price: number, message: string): string | null {
+    const s = getState()
+    const job = s.jobs.find((j) => j.id === jobId)
+    const variant = job && getVariant(job.templateId, job.variantId)
+    if (!job || !variant) return "Yêu cầu không tồn tại."
+    if (!isPriceAllowed(variant, price)) return "Giá phải nằm trong khung giá của dep360 và làm tròn tới 5.000đ."
+    setState((st) => ({
+      ...st,
+      jobs: st.jobs.map((j) =>
         j.id === jobId
           ? {
               ...j,
               offers: [
                 ...j.offers.filter((o) => o.proId !== DEMO_PRO_ID),
-                {
-                  id: uid("of"),
-                  proId: DEMO_PRO_ID,
-                  price,
-                  message,
-                  status: "pending",
-                  createdAt: new Date().toISOString(),
-                },
+                { id: uid("of"), proId: DEMO_PRO_ID, price, message, status: "pending", createdAt: new Date().toISOString() },
               ],
             }
           : j,
       ),
     }))
+    return null
   },
   withdrawOffer(jobId: string) {
     setState((s) => ({
       ...s,
-      jobs: s.jobs.map((j) =>
-        j.id === jobId ? { ...j, offers: j.offers.filter((o) => o.proId !== DEMO_PRO_ID) } : j,
+      jobs: s.jobs.map((j) => (j.id === jobId ? { ...j, offers: j.offers.filter((o) => o.proId !== DEMO_PRO_ID) } : j)),
+    }))
+  },
+  /** Customer accepts a freelancer's offer: the request becomes a confirmed booking. */
+  acceptOffer(jobId: string, offerId: string): string | null {
+    const s = getState()
+    const job = s.jobs.find((j) => j.id === jobId)
+    const offer = job?.offers.find((o) => o.id === offerId)
+    if (!job || !offer || job.status !== "open") return null
+    const tpl = getTemplate(job.templateId)!
+    const variant = getVariant(job.templateId, job.variantId)!
+    const pro = getPro(offer.proId)!
+    const address: CustomerAddress = { city: job.city, district: job.district, detail: job.addressDetail }
+    const id = uid("bk")
+    const booking: Booking = {
+      id,
+      proId: offer.proId,
+      templateId: job.templateId,
+      variantId: job.variantId,
+      serviceName: tpl.name,
+      variantLabel: variant.label,
+      category: tpl.category,
+      durationMin: variant.durationMin,
+      date: job.date,
+      time: job.time,
+      atHome: job.atHome,
+      address: job.atHome ? formatAddress(address) : (pro.studioAddress ?? `${pro.district}, ${pro.city}`),
+      note: job.description,
+      quote: quoteFor(s, { proId: offer.proId, price: offer.price, atHome: job.atHome, address, date: job.date, time: job.time }),
+      paymentMethod: job.paymentMethod,
+      status: "confirmed",
+      customerName: job.customerName,
+      customerPhone: DEMO_CUSTOMER.phone,
+      mine: job.mine,
+      source: "job",
+      reviewed: false,
+      createdAt: new Date().toISOString(),
+    }
+    setState((st) => ({
+      ...st,
+      bookings: [booking, ...st.bookings],
+      jobs: st.jobs.map((j) =>
+        j.id === jobId
+          ? { ...j, status: "booked", offers: j.offers.map((o) => ({ ...o, status: o.id === offerId ? "accepted" : "rejected" })) }
+          : j,
       ),
     }))
-  },
-  /** Customer accepts a freelancer's offer: the job becomes a confirmed booking. */
-  acceptOffer(jobId: string, offerId: string): string | null {
-    const bookingId = uid("bk")
-    let created = false
-    setState((s) => {
-      const job = s.jobs.find((j) => j.id === jobId)
-      const offer = job?.offers.find((o) => o.id === offerId)
-      if (!job || !offer || job.status !== "open") return s
-      created = true
-      const booking: Booking = {
-        id: bookingId,
-        proId: offer.proId,
-        serviceId: null,
-        serviceName: job.title,
-        category: job.category,
-        durationMin: 90,
-        date: job.date,
-        time: job.time,
-        atHome: job.atHome,
-        address: job.atHome ? `${job.district}, ${job.city}` : "Tại studio của chuyên viên",
-        note: job.description,
-        total: offer.price,
-        deposit: Math.round((offer.price * 0.3) / 1000) * 1000,
-        status: "confirmed",
-        customerName: job.customerName,
-        customerPhone: CUSTOMER.phone,
-        mine: job.mine,
-        source: "job",
-        createdAt: new Date().toISOString(),
-      }
-      return {
-        ...s,
-        bookings: [booking, ...s.bookings],
-        jobs: s.jobs.map((j) =>
-          j.id === jobId
-            ? {
-                ...j,
-                status: "booked",
-                offers: j.offers.map((o) => ({ ...o, status: o.id === offerId ? "accepted" : "rejected" })),
-              }
-            : j,
-        ),
-      }
-    })
-    return created ? bookingId : null
+    return id
   },
 
-  saveService(service: Omit<Service, "proId" | "id"> & { id?: string }) {
+  /** Create or update a listing. Prices outside the dep360 band are rejected. */
+  saveProService(templateId: string, prices: Record<string, number>, active = true): string | null {
+    const tpl = getTemplate(templateId)
+    const pro = proView(getState(), DEMO_PRO_ID)!
+    if (!tpl) return "Dịch vụ không có trong danh mục dep360."
+    if (!pro.categories.includes(tpl.category)) return "Dịch vụ không thuộc chuyên môn đã đăng ký."
+    if (tpl.requiresSkillCheck && pro.verifications.skill !== "verified") return "Dịch vụ này cần xác minh tay nghề trước."
+    const entries = Object.entries(prices)
+    if (!entries.length) return "Chọn ít nhất một gói."
+    for (const [variantId, price] of entries) {
+      const variant = tpl.variants.find((x) => x.id === variantId)
+      if (!variant) return "Gói không hợp lệ."
+      if (!isPriceAllowed(variant, price)) return `Giá gói "${variant.label}" phải từ ${variant.minPrice.toLocaleString("vi-VN")}đ đến ${variant.maxPrice.toLocaleString("vi-VN")}đ.`
+    }
     setState((s) => {
-      if (service.id) {
-        return { ...s, myServices: s.myServices.map((x) => (x.id === service.id ? { ...x, ...service, id: x.id } : x)) }
-      }
+      const exists = s.myServices.some((x) => x.templateId === templateId)
+      const next: ProService = { id: `${DEMO_PRO_ID}:${templateId}`, proId: DEMO_PRO_ID, templateId, prices, active }
       return {
         ...s,
-        myServices: [...s.myServices, { ...service, id: uid("svc"), proId: DEMO_PRO_ID, active: true }],
+        myServices: exists ? s.myServices.map((x) => (x.templateId === templateId ? next : x)) : [...s.myServices, next],
       }
     })
+    return null
   },
-  toggleService(id: string) {
+  toggleProService(templateId: string) {
     setState((s) => ({
       ...s,
-      myServices: s.myServices.map((x) => (x.id === id ? { ...x, active: x.active === false } : x)),
+      myServices: s.myServices.map((x) => (x.templateId === templateId ? { ...x, active: !x.active } : x)),
     }))
   },
-  setCity(city: string | null) {
-    setState((s) => ({ ...s, city }))
+  removeProService(templateId: string) {
+    setState((s) => ({ ...s, myServices: s.myServices.filter((x) => x.templateId !== templateId) }))
   },
   setAcceptingJobs(value: boolean) {
     setState((s) => ({ ...s, acceptingJobs: value }))
+  },
+  submitVerification(id: VerificationId) {
+    setState((s) => ({
+      ...s,
+      myVerifications: s.myVerifications[id] === "verified" ? s.myVerifications : { ...s.myVerifications, [id]: "pending" },
+    }))
+  },
+
+  submitReview(bookingId: string, input: Pick<Review, "rating" | "skill" | "punctuality" | "hygiene" | "attitude" | "tags" | "text">): string | null {
+    const s = getState()
+    const b = s.bookings.find((x) => x.id === bookingId)
+    if (!b || !b.mine) return "Không tìm thấy lịch hẹn."
+    if (b.status !== "completed") return "Chỉ đánh giá được lịch hẹn đã hoàn thành."
+    if (b.reviewed) return "Bạn đã đánh giá lịch hẹn này."
+    const review: Review = {
+      ...input,
+      id: uid("rv"),
+      proId: b.proId,
+      bookingId,
+      author: b.customerName,
+      date: todayISO(),
+      serviceName: `${b.serviceName} · ${b.variantLabel}`,
+    }
+    setState((st) => ({
+      ...st,
+      reviews: [review, ...st.reviews],
+      bookings: st.bookings.map((x) => (x.id === bookingId ? { ...x, reviewed: true } : x)),
+    }))
+    return null
+  },
+  replyReview(reviewId: string, text: string) {
+    setState((s) => ({ ...s, replies: { ...s.replies, [reviewId]: text } }))
   },
   resetDemo() {
     setState(() => seedState())

@@ -3,11 +3,13 @@
 import * as React from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { BadgeCheck, Hourglass } from "lucide-react"
+import { Car, Hourglass, Zap } from "lucide-react"
 import { RequireSession } from "@/components/require-session"
+import { TierBadge, VerificationChips, VerifiedMark } from "@/components/trust"
 import { Avatar, Button, ButtonLink, Card, EmptyState, PageHeader, Rating } from "@/components/ui"
 import { getPro } from "@/lib/data"
-import { actions, useApp } from "@/lib/store"
+import { actions, proView, quoteFor, useApp } from "@/lib/store"
+import { tierOf } from "@/lib/trust"
 import { cn, formatPrice, timeAgo } from "@/lib/utils"
 import { RequestCard } from "@/components/request-card"
 
@@ -25,7 +27,8 @@ export default function RequestDetailPage() {
 function RequestDetail() {
   const router = useRouter()
   const { id } = useParams<{ id: string }>()
-  const { jobs, bookings } = useApp()
+  const state = useApp()
+  const { jobs, bookings } = state
   const job = jobs.find((j) => j.id === id && j.mine)
 
   if (!job) return <EmptyState title="Không tìm thấy yêu cầu" action={<ButtonLink href="/requests">Về danh sách</ButtonLink>} />
@@ -57,7 +60,15 @@ function RequestDetail() {
         ) : (
           <ul className="space-y-3">
             {job.offers.map((o) => {
-              const pro = getPro(o.proId)!
+              const pro = proView(state, o.proId)!
+              const quote = quoteFor(state, {
+                proId: pro.id,
+                price: o.price,
+                atHome: job.atHome,
+                address: { city: job.city, district: job.district, detail: job.addressDetail },
+                date: job.date,
+                time: job.time,
+              })
               return (
                 <li key={o.id}>
                   <Card className={cn("p-4", o.status === "rejected" && "opacity-55")}>
@@ -66,19 +77,36 @@ function RequestDetail() {
                         <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={44} />
                       </Link>
                       <div className="min-w-0 flex-1">
-                        <Link href={`/pros/${pro.id}`} className="flex items-center gap-1 font-semibold hover:underline">
+                        <Link href={`/pros/${pro.id}`} className="flex items-center gap-1.5 font-semibold hover:underline">
                           {pro.name}
-                          {pro.verified && <BadgeCheck className="size-4 fill-rose text-white" />}
+                          <VerifiedMark pro={pro} />
+                          <TierBadge tier={tierOf(pro)} />
                         </Link>
-                        <p className="flex items-center gap-2 text-xs text-muted">
-                          <Rating value={pro.rating} count={pro.reviewCount} className="text-xs" /> · {pro.completedJobs} job
+                        <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
+                          <Rating value={pro.rating.average} count={pro.rating.count} className="text-xs" /> · {pro.stats.completedJobs} job · đúng giờ{" "}
+                          {Math.round(pro.stats.onTimeRate * 100)}%
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-semibold">{formatPrice(o.price)}</p>
+                        <p className="text-lg font-semibold">{formatPrice(quote.total)}</p>
                         <p className="text-[11px] text-muted">{timeAgo(o.createdAt)}</p>
                       </div>
                     </div>
+                    <VerificationChips pro={pro} className="mt-3" />
+                    <p className="mt-2 flex flex-wrap gap-x-3 text-xs text-ink-soft">
+                      <span>Dịch vụ {formatPrice(quote.servicePrice)}</span>
+                      <span className="inline-flex items-center gap-0.5">
+                        <Car className="size-3.5" />
+                        {quote.travelFee ? `+${formatPrice(quote.travelFee)}` : "Miễn phí di chuyển"}
+                        {quote.distanceKm !== null && ` (~${quote.distanceKm.toLocaleString("vi-VN")} km)`}
+                      </span>
+                      {quote.urgentFee > 0 && (
+                        <span className="inline-flex items-center gap-0.5 text-warning">
+                          <Zap className="size-3.5" />+{formatPrice(quote.urgentFee)}
+                        </span>
+                      )}
+                      <span className="text-success">Phí nền tảng 0đ</span>
+                    </p>
                     <p className="mt-3 rounded-xl bg-canvas px-3 py-2.5 text-[13px] leading-relaxed text-ink-soft">{o.message}</p>
                     {job.status === "open" && (
                       <div className="mt-3 grid grid-cols-2 gap-2">

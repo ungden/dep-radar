@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Bell, ChevronDown, MapPin, Megaphone, Search } from "lucide-react"
 import { CategoryRow, ProCard, WorkFeedCard } from "@/components/beauty"
+import { sortPros } from "@/components/trust"
 import { Logo, Tabs } from "@/components/ui"
 import { CITIES, PROS, WORKS, getPro } from "@/lib/data"
 import { actions, useApp } from "@/lib/store"
@@ -13,7 +14,8 @@ type Feed = "for-you" | "following" | "trending"
 
 export default function ExplorePage() {
   const router = useRouter()
-  const { city, followedPros, session } = useApp()
+  const state = useApp()
+  const { city, followedPros, session } = state
   const [feed, setFeed] = React.useState<Feed>("for-you")
   const [q, setQ] = React.useState("")
 
@@ -24,10 +26,7 @@ export default function ExplorePage() {
     return list
   }, [city, feed, followedPros])
 
-  const pros = React.useMemo(
-    () => PROS.filter((p) => !city || p.city === city).sort((a, b) => b.rating - a.rating),
-    [city],
-  )
+  const pros = React.useMemo(() => sortPros(state, PROS.filter((p) => !city || p.city === city), "match"), [state, city])
 
   return (
     <div className="pt-2 md:pt-8">
@@ -126,7 +125,7 @@ export default function ExplorePage() {
         <section className="mt-10 rounded-[var(--radius-card)] bg-ink p-6 text-white md:flex md:items-center md:justify-between md:p-8">
           <div>
             <p className="font-display text-2xl">Bạn là thợ làm đẹp tự do?</p>
-            <p className="mt-1 text-sm text-white/70">Nhận job gần nhà, tự chọn giờ làm, không mất phí mặt bằng.</p>
+            <p className="mt-1 text-sm text-white/70">Nhận job gần nhà, tự đặt giá trong khung chuẩn, không phí đăng ký. dep360 chỉ thu hoa hồng khi bạn hoàn thành job.</p>
           </div>
           <Link
             href={session ? "/studio" : "/login?role=pro"}

@@ -21,7 +21,7 @@ import {
 } from "lucide-react"
 import { Avatar, ButtonLink, Card, Skeleton, Toggle } from "@/components/ui"
 import { DEMO_PRO_ID, getPro } from "@/lib/data"
-import { DEMO_CUSTOMER, actions, useApp, useHydrated } from "@/lib/store"
+import { actions, formatAddress, useApp, useHydrated } from "@/lib/store"
 import { formatPrice } from "@/lib/utils"
 
 export default function MePage() {
@@ -65,7 +65,7 @@ export default function MePage() {
   const pro = isPro ? getPro(session.proId ?? DEMO_PRO_ID) : null
   const earnings = state.bookings
     .filter((b) => b.proId === DEMO_PRO_ID && b.status === "completed")
-    .reduce((sum, b) => sum + b.total, 0)
+    .reduce((sum, b) => sum + b.quote.payout, 0)
 
   return (
     <div className="mx-auto max-w-2xl pt-4 md:pt-8">
@@ -110,7 +110,7 @@ export default function MePage() {
         <>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <Card className="p-4">
-              <p className="text-xs text-muted">Đã thu từ job hoàn thành</p>
+              <p className="text-xs text-muted">Thực nhận (sau hoa hồng)</p>
               <p className="mt-1 text-lg font-semibold">{formatPrice(earnings)}</p>
             </Card>
             <Card className="flex items-center justify-between gap-2 p-4">
@@ -125,8 +125,9 @@ export default function MePage() {
             items={[
               { href: "/studio/jobs", icon: BriefcaseBusiness, label: "Việc mới quanh bạn" },
               { href: "/studio/services", icon: Ticket, label: "Dịch vụ & bảng giá" },
-              { href: `/pros/${DEMO_PRO_ID}`, icon: UserRound, label: "Hồ sơ & tác phẩm" },
-              { href: "/me/policy", icon: CreditCard, label: "Thanh toán & rút tiền", sub: "Nhận cọc sau khi hoàn thành job" },
+              { href: "/studio/profile", icon: ShieldCheck, label: "Hạng, xác minh & đánh giá", sub: "Giảm hoa hồng khi lên hạng" },
+              { href: `/pros/${DEMO_PRO_ID}`, icon: UserRound, label: "Hồ sơ công khai & tác phẩm" },
+              { href: "/me/policy", icon: CreditCard, label: "Hoa hồng & thanh toán", sub: "Đối soát tiền online & công nợ hằng tuần" },
               ...commonItems,
             ]}
           />
@@ -136,7 +137,7 @@ export default function MePage() {
           items={[
             { href: "/saved", icon: Heart, label: "Đã lưu", sub: `${state.savedWorks.length} mẫu · ${state.followedPros.length} chuyên viên` },
             { href: "/requests", icon: Megaphone, label: "Yêu cầu đã đăng", sub: `${state.jobs.filter((j) => j.mine).length} yêu cầu` },
-            { href: "/me/policy", icon: MapPin, label: "Địa chỉ của tôi", sub: DEMO_CUSTOMER.address },
+            { href: "/me/policy", icon: MapPin, label: "Địa chỉ của tôi", sub: formatAddress(state.customerAddress) },
             { href: "/me/policy", icon: CreditCard, label: "Phương thức thanh toán" },
             { href: "/me/policy", icon: Ticket, label: "Ưu đãi của tôi" },
             ...commonItems,
@@ -174,7 +175,7 @@ type MenuItem = { href: string; icon: React.ComponentType<{ className?: string }
 
 const commonItems: MenuItem[] = [
   { href: "/me/policy", icon: Bell, label: "Cài đặt thông báo" },
-  { href: "/me/policy", icon: ShieldCheck, label: "Chính sách đặt lịch & hủy" },
+  { href: "/me/policy", icon: ShieldCheck, label: "Chính sách phí, đặt lịch & huỷ" },
   { href: "/me/policy", icon: CircleHelp, label: "Trung tâm hỗ trợ" },
   { href: "/me/policy", icon: Info, label: "Về dep360" },
 ]

@@ -81,10 +81,3 @@ export function timeAgo(isoDateTime: string) {
   if (h < 24) return `${h} giờ trước`
   return `${Math.round(h / 24)} ngày trước`
 }
-
-export function hoursUntil(dateISO: string, time: string) {
-  const [h, m] = time.split(":").map(Number)
-  const start = parseISODate(dateISO)
-  start.setHours(h, m)
-  return (start.getTime() - Date.now()) / 3600000
-}

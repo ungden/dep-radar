@@ -4,9 +4,9 @@ import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { CATEGORY_ICON } from "@/components/beauty"
 import { Card } from "@/components/ui"
-import { categoryLabel } from "@/lib/data"
+import { getTemplate, getVariant } from "@/lib/catalog"
 import type { JobPost } from "@/lib/types"
-import { cn, formatDateLong, formatPrice } from "@/lib/utils"
+import { cn, formatDateLong, formatDuration, formatPrice } from "@/lib/utils"
 
 export function JobStatusLabel({ job }: { job: JobPost }) {
   const map = {
@@ -15,11 +15,13 @@ export function JobStatusLabel({ job }: { job: JobPost }) {
     closed: ["Đã đóng", "bg-canvas text-muted"],
   } as const
   const [label, cls] = map[job.status]
-  return <span className={cn("rounded-full px-2.5 py-1 text-[11px] font-semibold", cls)}>{label}</span>
+  return <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold", cls)}>{label}</span>
 }
 
-export function RequestCard({ job, href, footer }: { job: JobPost; href: string; footer?: React.ReactNode }) {
-  const Icon = CATEGORY_ICON[job.category]
+export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: string; footer?: React.ReactNode; extra?: React.ReactNode }) {
+  const tpl = getTemplate(job.templateId)!
+  const variant = getVariant(job.templateId, job.variantId)!
+  const Icon = CATEGORY_ICON[tpl.category]
   const pendingOffers = job.offers.filter((o) => o.status === "pending").length
   return (
     <Card className="p-4">
@@ -30,20 +32,23 @@ export function RequestCard({ job, href, footer }: { job: JobPost; href: string;
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
-              <p className="font-semibold leading-snug">{job.title}</p>
+              <p className="font-semibold leading-snug">
+                {tpl.name} <span className="font-normal text-muted">· {variant.label}</span>
+              </p>
               <JobStatusLabel job={job} />
             </div>
             <p className="mt-0.5 text-xs text-muted">
-              {categoryLabel(job.category)} · {job.district}, {job.city} · {job.atHome ? "Tại nhà" : "Tại studio"}
+              {job.district}, {job.city} · {job.atHome ? "Tại nhà khách" : "Khách đến studio"} · {formatDuration(variant.durationMin)}
             </p>
-            <p className="mt-2 line-clamp-2 text-[13px] text-ink-soft">{job.description}</p>
+            {job.description && <p className="mt-2 line-clamp-2 text-[13px] text-ink-soft">{job.description}</p>}
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
               <span>
                 {formatDateLong(job.date)} · {job.time}
               </span>
-              <span className="font-semibold">
-                {formatPrice(job.budgetMin)} - {formatPrice(job.budgetMax)}
+              <span className="text-ink-soft">
+                Khung giá <b className="text-ink">{formatPrice(variant.minPrice)} – {formatPrice(variant.maxPrice)}</b>
               </span>
+              {extra}
               {job.mine && (
                 <span className="ml-auto inline-flex items-center gap-0.5 text-rose">
                   {job.offers.length} báo giá{pendingOffers && job.status === "open" ? " mới" : ""}
