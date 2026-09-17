@@ -2,13 +2,12 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Lock, Pencil, Plus, Store, Trash2, X } from "lucide-react"
+import { Pencil, Plus, Store, Trash2, X } from "lucide-react"
 import { RequireSession } from "@/components/require-session"
 import { Button, ButtonLink, Card, PageHeader, Toggle } from "@/components/ui"
 import { categoryLabel, getTemplate, templatesByCategory } from "@/lib/catalog"
-import { COMMISSION_RATE } from "@/lib/pricing"
+import { POLICY } from "@/lib/pricing"
 import { actions, proView, servicesOf, useApp } from "@/lib/store"
-import { tierOf } from "@/lib/trust"
 import type { ServiceTemplate } from "@/lib/types"
 import { cn, formatDuration, formatPrice } from "@/lib/utils"
 
@@ -29,7 +28,7 @@ function ServicesManager() {
   const listings = servicesOf(state, proId, true)
   const [editing, setEditing] = React.useState<string | null>(null)
   const [adding, setAdding] = React.useState(false)
-  const rate = COMMISSION_RATE[tierOf(pro)]
+  const rate = POLICY.commissionRate
 
   const available = pro.categories.flatMap((c) => templatesByCategory(c)).filter((t) => !listings.some((l) => l.templateId === t.id))
 
@@ -49,7 +48,7 @@ function ServicesManager() {
           phí di chuyển / đặt gấp do hệ thống tính.
         </p>
         <p className="mt-1">
-          Hoa hồng hạng hiện tại: <b>{Math.round(rate * 100)}%</b> trên giá dịch vụ.{" "}
+          Hoa hồng dep360: <b>{Math.round(rate * 100)}%</b> trên giá dịch vụ.{" "}
           <Link href={`/pros/${proId}?tab=services`} className="underline underline-offset-2">
             Xem như khách
           </Link>
@@ -103,12 +102,10 @@ function ServicesManager() {
         <Sheet title="Thêm dịch vụ từ danh mục" onClose={() => setAdding(false)}>
           <ul className="space-y-2">
             {available.map((t) => {
-              const locked = t.requiresSkillCheck && pro.verifications.skill !== "verified"
               return (
                 <li key={t.id}>
                   <button
                     type="button"
-                    disabled={locked}
                     onClick={() => {
                       setAdding(false)
                       setEditing(t.id)
@@ -120,20 +117,19 @@ function ServicesManager() {
                       <span className="block text-xs text-muted">
                         {t.variants.length} gói · khung {formatPrice(Math.min(...t.variants.map((v) => v.minPrice)))} – {formatPrice(Math.max(...t.variants.map((v) => v.maxPrice)))}
                       </span>
-                      {locked && <span className="mt-1 block text-xs text-warning">Cần xác minh tay nghề trước</span>}
                     </span>
-                    {locked ? <Lock className="size-4 text-muted" /> : t.studioOnly ? <Store className="size-4 text-muted" /> : <Plus className="size-4 text-rose" />}
+                    {t.studioOnly ? <Store className="size-4 text-muted" /> : <Plus className="size-4 text-rose" />}
                   </button>
                 </li>
               )
             })}
           </ul>
           <p className="mt-4 text-xs text-muted">
-            Dịch vụ có khoá cần xác minh tay nghề tại{" "}
+            Mẹo: xác minh tay nghề tại{" "}
             <Link href="/studio/profile" className="text-rose underline underline-offset-2">
-              Hồ sơ & xác minh
-            </Link>
-            . Muốn nhận thêm chuyên môn khác, liên hệ đội ngũ dep360 để làm bài kiểm tra.
+              Xác minh & đánh giá
+            </Link>{" "}
+            để được gắn huy hiệu và ưu tiên hiển thị.
           </p>
         </Sheet>
       )}
@@ -146,7 +142,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
   const proId = state.session!.proId!
   const tpl = getTemplate(templateId) as ServiceTemplate
   const existing = servicesOf(state, proId, true).find((x) => x.templateId === templateId)
-  const rate = COMMISSION_RATE[tierOf(proView(state, proId)!)]
+  const rate = POLICY.commissionRate
   const [prices, setPrices] = React.useState<Record<string, number | undefined>>(() =>
     Object.fromEntries(tpl.variants.map((v) => [v.id, existing ? existing.prices[v.id] : v.suggestedPrice])),
   )

@@ -125,7 +125,7 @@ export default function MePage() {
             items={[
               { href: "/studio/jobs", icon: BriefcaseBusiness, label: "Việc mới quanh bạn" },
               { href: "/studio/services", icon: Ticket, label: "Dịch vụ & bảng giá" },
-              { href: "/studio/profile", icon: ShieldCheck, label: "Hạng, xác minh & đánh giá", sub: "Giảm hoa hồng khi lên hạng" },
+              { href: "/studio/profile", icon: ShieldCheck, label: "Xác minh & đánh giá", sub: "Xác minh để có huy hiệu và lên đầu tìm kiếm" },
               { href: `/pros/${DEMO_PRO_ID}`, icon: UserRound, label: "Hồ sơ công khai & tác phẩm" },
               { href: "/me/policy", icon: CreditCard, label: "Hoa hồng & thanh toán", sub: "Đối soát tiền online & công nợ hằng tuần" },
               ...commonItems,

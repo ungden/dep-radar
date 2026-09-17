@@ -5,7 +5,7 @@ import { getTemplate, getVariant, isPriceAllowed } from "./catalog"
 import { DEMO_CUSTOMER, DEMO_PRO_ID, PRO_SERVICES, REVIEWS, getPro } from "./data"
 import { travelDistanceKm } from "./geo"
 import { buildQuote, isUrgent } from "./pricing"
-import { mergeRating, tierOf } from "./trust"
+import { mergeRating } from "./trust"
 import type {
   Booking,
   CustomerAddress,
@@ -17,14 +17,13 @@ import type {
   ProService,
   Review,
   Session,
-  TierId,
   VerificationId,
   VerificationStatus,
 } from "./types"
 import { addDays, todayISO, uid } from "./utils"
 
 export interface AppState {
-  version: 3
+  version: 4
   session: Session | null
   savedWorks: string[]
   followedPros: string[]
@@ -42,7 +41,7 @@ export interface AppState {
   replies: Record<string, string>
 }
 
-const STORAGE_KEY = "dep360:v3"
+const STORAGE_KEY = "dep360:v4"
 
 // ---------------------------------------------------------------------------
 // Derived helpers (pure, take state)
@@ -57,11 +56,6 @@ export function proView(s: AppState, proId: string): Pro | undefined {
     verifications: proId === DEMO_PRO_ID ? s.myVerifications : base.verifications,
     rating: mergeRating(base.rating, extra),
   }
-}
-
-export function proTier(s: AppState, proId: string): TierId {
-  const p = proView(s, proId)
-  return p ? tierOf(p) : "new"
 }
 
 export function servicesOf(s: AppState, proId: string, includeInactive = false): ProService[] {
@@ -117,7 +111,6 @@ export function quoteFor(
     atHome: input.atHome,
     distanceKm: input.atHome ? travelDistanceKm(pro.city, pro.district, input.address.city, input.address.district) : null,
     urgent: isUrgent(input.date, input.time),
-    tier: proTier(s, input.proId),
   })
 }
 
@@ -144,7 +137,7 @@ function seedState(): AppState {
   const t = todayISO()
   const now = new Date().toISOString()
   const base: Omit<AppState, "bookings" | "jobs"> = {
-    version: 3,
+    version: 4,
     session: null,
     savedWorks: ["w-milky-stone", "w-party-glow"],
     followedPros: ["linh-pham"],
@@ -179,7 +172,6 @@ function seedState(): AppState {
       atHome,
       distanceKm: atHome ? travelDistanceKm(pro.city, pro.district, address.city, address.district) : null,
       urgent: false,
-      tier: tierOf(pro),
     })
     return {
       id,
@@ -373,13 +365,14 @@ function loadFromStorage() {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as AppState
-      if (parsed.version === 3) {
+      if (parsed.version === 4) {
         state = parsed
         listeners.forEach((l) => l())
       }
     }
     window.localStorage.removeItem("dep360:v1")
     window.localStorage.removeItem("dep360:v2")
+    window.localStorage.removeItem("dep360:v3")
   } catch {
     // Storage unavailable (private mode): keep the in-memory seed.
   }
@@ -627,7 +620,6 @@ export const actions = {
     const pro = proView(getState(), DEMO_PRO_ID)!
     if (!tpl) return "Dịch vụ không có trong danh mục dep360."
     if (!pro.categories.includes(tpl.category)) return "Dịch vụ không thuộc chuyên môn đã đăng ký."
-    if (tpl.requiresSkillCheck && pro.verifications.skill !== "verified") return "Dịch vụ này cần xác minh tay nghề trước."
     const entries = Object.entries(prices)
     if (!entries.length) return "Chọn ít nhất một gói."
     for (const [variantId, price] of entries) {
@@ -662,9 +654,13 @@ export const actions = {
       ...s,
       myVerifications: s.myVerifications[id] === "verified" ? s.myVerifications : { ...s.myVerifications, [id]: "pending" },
     }))
+    // Demo only: in production the dep360 team reviews submissions.
+    setTimeout(() => {
+      setState((s) => (s.myVerifications[id] === "pending" ? { ...s, myVerifications: { ...s.myVerifications, [id]: "verified" } } : s))
+    }, 4000)
   },
 
-  submitReview(bookingId: string, input: Pick<Review, "rating" | "skill" | "punctuality" | "hygiene" | "attitude" | "tags" | "text">): string | null {
+  submitReview(bookingId: string, input: Pick<Review, "rating" | "tags" | "text">): string | null {
     const s = getState()
     const b = s.bookings.find((x) => x.id === bookingId)
     if (!b || !b.mine) return "Không tìm thấy lịch hẹn."

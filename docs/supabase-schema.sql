@@ -4,8 +4,9 @@
 -- Business rules encoded here (mirrors lib/catalog.ts, lib/pricing.ts, lib/trust.ts):
 --  * dep360 owns the service catalogue (names, what's included, options, price bands).
 --  * Freelancers list catalogue services only, pricing each option inside its band.
---  * Customers pay no platform fee. dep360 takes a tier-based commission on the service
+--  * Customers pay no platform fee. dep360 takes a flat commission on the service
 --    price only; travel and urgent fees go 100% to the freelancer.
+--  * Verification is optional; each verified item is a badge and a ranking boost.
 --  * Quotes are computed and snapshotted server-side at booking time.
 --  * No deposit. Customers pay the full amount online, or pay the freelancer directly
 --    after the service; cash-job commission becomes freelancer debt netted weekly.
@@ -13,8 +14,7 @@
 
 create type public.dep360_role as enum ('customer', 'pro');
 create type public.dep360_category as enum ('nail', 'makeup', 'skincare', 'hair', 'lash-brow', 'massage');
-create type public.dep360_tier as enum ('new', 'standard', 'pro', 'top');
-create type public.dep360_verification as enum ('phone', 'identity', 'skill', 'hygiene');
+create type public.dep360_verification as enum ('identity', 'skill', 'hygiene');
 create type public.dep360_verification_status as enum ('none', 'pending', 'verified', 'rejected');
 create type public.dep360_booking_status as enum ('pending', 'confirmed', 'completed', 'cancelled', 'declined');
 create type public.dep360_job_status as enum ('open', 'booked', 'closed');
@@ -34,18 +34,8 @@ create table public.dep360_fee_policy (
   urgent_fee int not null default 50000,
   min_lead_minutes int not null default 60,
   free_cancel_hours int not null default 12,
+  commission_rate numeric(4, 3) not null default 0.15,
   updated_at timestamptz not null default now()
-);
-
-create table public.dep360_tiers (
-  id public.dep360_tier primary key,
-  label text not null,
-  commission_rate numeric(4, 3) not null check (commission_rate between 0 and 0.5),
-  min_jobs int not null,
-  min_rating numeric(3, 2) not null,
-  max_cancellation numeric(4, 3) not null,
-  min_response numeric(4, 3) not null,
-  required_verifications public.dep360_verification[] not null
 );
 
 create table public.dep360_service_templates (
@@ -54,7 +44,6 @@ create table public.dep360_service_templates (
   name text not null,
   description text not null,
   includes text[] not null default '{}',
-  requires_skill_check boolean not null default false,
   studio_only boolean not null default false,
   active boolean not null default true
 );
@@ -107,14 +96,10 @@ create table public.dep360_pros (
   max_travel_km numeric(4, 1) not null default 10 check (max_travel_km between 1 and 30),
   years_exp int not null default 0,
   accepting_jobs boolean not null default true,
-  -- Denormalised quality metrics, recomputed nightly over the last 90 days.
-  tier public.dep360_tier not null default 'new',
+  -- Denormalised metrics, recomputed nightly.
   completed_jobs int not null default 0,
-  cancellation_rate numeric(4, 3) not null default 0,
-  response_rate numeric(4, 3) not null default 0,
   response_minutes int not null default 0,
-  on_time_rate numeric(4, 3) not null default 1,
-  repeat_rate numeric(4, 3) not null default 0,
+  verified_count int not null default 0, -- drives the ranking boost
   rating_avg numeric(3, 2) not null default 0,
   rating_count int not null default 0,
   created_at timestamptz not null default now(),
@@ -150,22 +135,15 @@ create table public.dep360_pro_service_prices (
   foreign key (template_id, variant_id) references public.dep360_service_variants (template_id, id)
 );
 
--- Enforce the catalogue price band and skill verification on every write.
+-- Enforce the catalogue price band on every write.
 create function public.dep360_check_listing_price() returns trigger
 language plpgsql security definer set search_path = '' as $$
-declare v record; needs_skill boolean;
+declare v record;
 begin
   select min_price, max_price into v from public.dep360_service_variants
     where template_id = new.template_id and id = new.variant_id;
   if new.price < v.min_price or new.price > v.max_price then
     raise exception 'Price % outside allowed band [%, %]', new.price, v.min_price, v.max_price;
-  end if;
-  select requires_skill_check into needs_skill from public.dep360_service_templates where id = new.template_id;
-  if needs_skill and not exists (
-    select 1 from public.dep360_pro_verifications
-    where pro_id = new.pro_id and kind = 'skill' and status = 'verified'
-  ) then
-    raise exception 'Service % requires a verified skill check', new.template_id;
   end if;
   return new;
 end $$;
@@ -274,10 +252,6 @@ create table public.dep360_reviews (
   pro_id uuid not null references public.dep360_pros (id) on delete cascade,
   customer_id uuid not null references public.dep360_accounts (id) on delete cascade,
   rating int not null check (rating between 1 and 5),
-  skill int not null check (skill between 1 and 5),
-  punctuality int not null check (punctuality between 1 and 5),
-  hygiene int not null check (hygiene between 1 and 5),
-  attitude int not null check (attitude between 1 and 5),
   tags text[] not null default '{}',
   body text not null check (char_length(body) >= 10),
   photo_path text,
@@ -300,11 +274,10 @@ create table public.dep360_follows (
 
 -- Row level security -------------------------------------------------------------
 -- Money and status changes (create_booking, confirm/decline/complete/cancel,
--- send_offer, accept_offer, compute tiers) go through security-definer RPCs that
--- read dep360_fee_policy and dep360_tiers, so clients can never write prices or fees.
+-- send_offer, accept_offer, recompute metrics) go through security-definer RPCs that
+-- read dep360_fee_policy, so clients can never write prices or fees.
 
 alter table public.dep360_fee_policy enable row level security;
-alter table public.dep360_tiers enable row level security;
 alter table public.dep360_service_templates enable row level security;
 alter table public.dep360_service_variants enable row level security;
 alter table public.dep360_districts enable row level security;
@@ -323,7 +296,6 @@ alter table public.dep360_saved_works enable row level security;
 alter table public.dep360_follows enable row level security;
 
 create policy "public config" on public.dep360_fee_policy for select using (true);
-create policy "public tiers" on public.dep360_tiers for select using (true);
 create policy "public catalogue" on public.dep360_service_templates for select using (active);
 create policy "public variants" on public.dep360_service_variants for select using (true);
 create policy "public districts" on public.dep360_districts for select using (true);
@@ -332,7 +304,7 @@ create policy "own account" on public.dep360_accounts
   for all using ((select auth.uid()) = id) with check ((select auth.uid()) = id);
 
 create policy "public pros" on public.dep360_pros for select using (true);
--- Pros edit profile fields through an RPC that ignores tier/metrics columns.
+-- Pros edit profile fields through an RPC that ignores metric columns.
 
 create policy "pro sees own verifications" on public.dep360_pro_verifications
   for select using ((select auth.uid()) = pro_id);

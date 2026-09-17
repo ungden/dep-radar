@@ -26,8 +26,6 @@ export interface ServiceTemplate {
   description: string
   includes: string[]
   variants: ServiceVariant[]
-  /** Needs a dep360 skill check / certificate before a freelancer can list it. */
-  requiresSkillCheck?: boolean
   /** Only offered at the freelancer's studio (equipment not portable). */
   studioOnly?: boolean
 }
@@ -45,31 +43,18 @@ export interface ProService {
 // ---------------------------------------------------------------------------
 // Freelancers, trust & ranking
 
-export type VerificationId = "phone" | "identity" | "skill" | "hygiene"
+/** Optional verifications. Each one earns a badge and boosts ranking. */
+export type VerificationId = "identity" | "skill" | "hygiene"
 export type VerificationStatus = "verified" | "pending" | "none"
-
-export type TierId = "new" | "standard" | "pro" | "top"
 
 export interface ProStats {
   completedJobs: number
-  /** 0..1 share of accepted bookings the freelancer cancelled */
-  cancellationRate: number
-  /** 0..1 share of booking requests answered within 2 hours */
-  responseRate: number
   responseMinutes: number
-  /** 0..1 share of jobs where the freelancer arrived on time */
-  onTimeRate: number
-  /** 0..1 share of customers who booked again */
-  repeatRate: number
 }
 
 export interface RatingSummary {
   average: number
   count: number
-  skill: number
-  punctuality: number
-  hygiene: number
-  attitude: number
 }
 
 export interface Pro {
@@ -113,10 +98,6 @@ export interface Review {
   bookingId?: string
   author: string
   rating: number
-  skill: number
-  punctuality: number
-  hygiene: number
-  attitude: number
   tags: string[]
   text: string
   date: string

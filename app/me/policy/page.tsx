@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import { PageHeader } from "@/components/ui"
 import { CATALOG, CATEGORIES } from "@/lib/catalog"
-import { COMMISSION_RATE, POLICY } from "@/lib/pricing"
-import { TIERS } from "@/lib/trust"
+import { POLICY } from "@/lib/pricing"
+import { VERIFICATIONS } from "@/lib/trust"
 import { formatPrice } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Chính sách phí & đặt lịch" }
@@ -21,40 +21,21 @@ export default function PolicyPage() {
         </Section>
 
         <Section title="2. Hoa hồng từ freelancer">
-          <p>dep360 thu hoa hồng trên giá dịch vụ của mỗi job hoàn thành. Hạng càng cao, hoa hồng càng thấp.</p>
-          <table className="mt-3 w-full overflow-hidden rounded-xl bg-surface text-left text-[13px] shadow-[var(--shadow-soft)]">
-            <thead className="bg-canvas text-xs text-muted">
-              <tr>
-                <th className="px-3 py-2 font-medium">Hạng</th>
-                <th className="px-3 py-2 font-medium">Hoa hồng</th>
-                <th className="px-3 py-2 font-medium">Điều kiện</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {TIERS.map((t) => (
-                <tr key={t.id}>
-                  <td className="px-3 py-2 font-medium text-ink">{t.label}</td>
-                  <td className="px-3 py-2 font-semibold text-ink">{pct(COMMISSION_RATE[t.id])}</td>
-                  <td className="px-3 py-2">
-                    {t.minJobs ? `≥ ${t.minJobs} job, ★ ≥ ${t.minRating}, huỷ ≤ ${pct(t.maxCancellation)}, phản hồi ≥ ${pct(t.minResponse)}` : "Mới tham gia"}
-                    {t.requires.length > 1 && `, xác minh: ${t.requires.length} mục`}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <p>
+            dep360 thu <b className="text-ink">{pct(POLICY.commissionRate)}</b> trên giá dịch vụ của mỗi job hoàn thành, một mức duy nhất cho mọi freelancer. Không có phí đăng ký, phí duy trì
+            hay phí đẩy top.
+          </p>
           <ul className="mt-3 list-disc space-y-1 pl-5">
             <li>Không tính hoa hồng trên phí di chuyển và phí đặt gấp: 100% thuộc về freelancer.</li>
             <li>Job khách thanh toán online: dep360 trừ hoa hồng và chuyển phần còn lại cho freelancer sau khi hoàn thành.</li>
             <li>Job khách trả trực tiếp: hoa hồng ghi vào công nợ, tự trừ vào tiền online của kỳ đối soát hằng tuần; nếu không đủ, freelancer chuyển khoản phần còn thiếu.</li>
-            <li>Không có phí đăng ký, phí duy trì hay phí đẩy top. Thứ hạng hiển thị chỉ dựa trên chất lượng.</li>
           </ul>
         </Section>
 
         <Section title="3. Danh mục & khung giá chuẩn">
           <p>
             Tên dịch vụ, nội dung bao gồm, các gói (thời lượng/mức độ) và khung giá do dep360 quy định để khách so sánh công bằng và tránh báo giá tuỳ tiện. Freelancer chỉ chọn dịch vụ
-            trong danh mục, chọn gói mình làm và đặt giá trong khung (làm tròn 5.000đ). Một số dịch vụ như makeup cô dâu, lấy nhân mụn, massage bầu cần xác minh tay nghề.
+            trong danh mục, chọn gói mình làm và đặt giá trong khung (làm tròn 5.000đ).
           </p>
           <p className="mt-2">
             Hiện có {CATALOG.length} dịch vụ thuộc {CATEGORIES.length} danh mục: {CATEGORIES.map((c) => c.label).join(", ")}.
@@ -91,18 +72,26 @@ export default function PolicyPage() {
               Khách huỷ trước giờ hẹn từ {POLICY.freeCancelHours} tiếng: miễn phí, hoàn 100%. Huỷ muộn với lịch đã thanh toán online: {pct(POLICY.lateCancelRate)} giá trị chuyển cho
               freelancer để bù thời gian giữ lịch. Khách trả sau huỷ muộn nhiều lần sẽ bị tạm khoá hình thức trả sau.
             </li>
-            <li>Freelancer huỷ lịch đã nhận: khách được hoàn 100%, tỉ lệ huỷ của freelancer tăng và có thể bị hạ hạng.</li>
+            <li>Freelancer huỷ lịch đã nhận: khách được hoàn 100%, huỷ nhiều lần sẽ bị tạm ẩn hồ sơ.</li>
           </ul>
         </Section>
 
-        <Section title="7. Đánh giá & xếp hạng">
+        <Section title="7. Xác minh & huy hiệu (tự nguyện)">
+          <p>Freelancer không bắt buộc xác minh. Mỗi mục xác minh được gắn huy hiệu công khai và được ưu tiên hiển thị:</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {VERIFICATIONS.map((v) => (
+              <li key={v.id}>
+                <b className="text-ink">{v.badge}</b>: {v.description}
+              </li>
+            ))}
+            <li>Đủ cả {VERIFICATIONS.length} mục: huy hiệu <b className="text-ink">Tin cậy</b>.</li>
+          </ul>
+        </Section>
+
+        <Section title="8. Đánh giá & xếp hạng">
           <ul className="list-disc space-y-1 pl-5">
-            <li>Chỉ khách có lịch hẹn hoàn thành mới được đánh giá: sao tổng và 4 tiêu chí tay nghề, đúng giờ, vệ sinh, thái độ.</li>
-            <li>Freelancer không thể xoá hay sửa đánh giá, chỉ được phản hồi công khai.</li>
-            <li>
-              Thứ hạng “Phù hợp nhất” dùng điểm đánh giá có trọng số (tránh trường hợp vài đánh giá 5★), tỉ lệ huỷ, đúng giờ, phản hồi, khách quay lại, kinh nghiệm và mức xác minh.
-              Freelancer mới được ưu tiên hiển thị nhẹ để có cơ hội nhận job đầu tiên.
-            </li>
+            <li>Chỉ khách có lịch hẹn hoàn thành mới được đánh giá (số sao, tag, nhận xét). Freelancer không thể xoá, chỉ phản hồi công khai.</li>
+            <li>Thứ tự “Phù hợp nhất”: freelancer xác minh càng nhiều càng được xếp trước, sau đó theo điểm đánh giá (có trọng số theo số lượt) và số job. Không bán vị trí.</li>
           </ul>
         </Section>
       </div>

@@ -20,22 +20,12 @@ export default function ReviewPage() {
   )
 }
 
-const CRITERIA = [
-  ["skill", "Tay nghề"],
-  ["punctuality", "Đúng giờ"],
-  ["hygiene", "Vệ sinh, dụng cụ"],
-  ["attitude", "Thái độ"],
-] as const
-
-type Criterion = (typeof CRITERIA)[number][0]
-
 function ReviewForm() {
   const router = useRouter()
   const { id } = useParams<{ id: string }>()
   const state = useApp()
   const booking = state.bookings.find((b) => b.id === id && b.mine)
   const [rating, setRating] = React.useState(0)
-  const [subs, setSubs] = React.useState<Record<Criterion, number>>({ skill: 0, punctuality: 0, hygiene: 0, attitude: 0 })
   const [tags, setTags] = React.useState<string[]>([])
   const [text, setText] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
@@ -48,7 +38,7 @@ function ReviewForm() {
   }
 
   const pro = proView(state, booking.proId)!
-  const valid = rating > 0 && Object.values(subs).every((v) => v > 0) && text.trim().length >= 10
+  const valid = rating > 0 && text.trim().length >= 10
 
   return (
     <form
@@ -56,7 +46,7 @@ function ReviewForm() {
       onSubmit={(e) => {
         e.preventDefault()
         if (!valid) return
-        const err = actions.submitReview(booking.id, { rating, ...subs, tags, text: text.trim() })
+        const err = actions.submitReview(booking.id, { rating, tags, text: text.trim() })
         if (err) setError(err)
         else router.replace(`/pros/${booking.proId}?tab=reviews`)
       }}
@@ -73,17 +63,8 @@ function ReviewForm() {
 
       <div className="text-center">
         <p className="font-semibold">Trải nghiệm của bạn thế nào?</p>
-        <StarInput value={rating} onChange={setRating} size="lg" label="Đánh giá chung" />
+        <StarInput value={rating} onChange={setRating} label="Đánh giá chung" />
       </div>
-
-      <Card className="divide-y divide-line px-4">
-        {CRITERIA.map(([key, label]) => (
-          <div key={key} className="flex items-center justify-between py-3">
-            <span className="text-sm">{label}</span>
-            <StarInput value={subs[key]} onChange={(v) => setSubs((x) => ({ ...x, [key]: v }))} label={label} />
-          </div>
-        ))}
-      </Card>
 
       <div>
         <p className="mb-2 text-[13px] font-medium text-ink-soft">Điểm bạn thích (tuỳ chọn)</p>
@@ -125,12 +106,12 @@ function ReviewForm() {
   )
 }
 
-function StarInput({ value, onChange, size = "md", label }: { value: number; onChange: (v: number) => void; size?: "md" | "lg"; label: string }) {
+function StarInput({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
   return (
-    <div role="radiogroup" aria-label={label} className={cn("inline-flex", size === "lg" ? "mt-2 gap-2" : "gap-1")}>
+    <div role="radiogroup" aria-label={label} className="mt-2 inline-flex gap-2">
       {[1, 2, 3, 4, 5].map((n) => (
         <button key={n} type="button" role="radio" aria-checked={value === n} aria-label={`${n} sao`} onClick={() => onChange(n)}>
-          <Star className={cn(size === "lg" ? "size-9" : "size-6", n <= value ? "fill-[#e0a33a] text-[#e0a33a]" : "fill-line text-line")} />
+          <Star className={cn("size-9", n <= value ? "fill-[#e0a33a] text-[#e0a33a]" : "fill-line text-line")} />
         </button>
       ))}
     </div>

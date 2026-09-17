@@ -1,16 +1,17 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Hourglass, Percent, Star, Wallet } from "lucide-react"
+import { ChevronRight, Hourglass, ShieldCheck, Star, Wallet } from "lucide-react"
 import { JobBookingRow } from "@/components/booking-card"
 import { RequestCard } from "@/components/request-card"
 import { RequireSession } from "@/components/require-session"
-import { TierBadge } from "@/components/trust"
+import { TrustedBadge, VERIFICATION_ICON } from "@/components/trust"
 import { Card, EmptyState, Logo, Toggle } from "@/components/ui"
 import { getTemplate } from "@/lib/catalog"
-import { COMMISSION_RATE, POLICY } from "@/lib/pricing"
+import { POLICY } from "@/lib/pricing"
 import { actions, distanceToCustomer, proView, useApp } from "@/lib/store"
-import { nextTierProgress, tierDef, tierOf } from "@/lib/trust"
+import { VERIFICATIONS, isVerified, verifiedCount } from "@/lib/trust"
+import type { Pro } from "@/lib/types"
 import { cn, formatDateLong, formatPrice, todayISO } from "@/lib/utils"
 
 export default function StudioPage() {
@@ -31,8 +32,6 @@ function Dashboard() {
   const state = useApp()
   const proId = state.session!.proId!
   const pro = proView(state, proId)!
-  const tier = tierOf(pro)
-  const progress = nextTierProgress(pro)
   const today = todayISO()
   const mine = state.bookings.filter((b) => b.proId === proId)
   const byTime = (a: { date: string; time: string }, b: { date: string; time: string }) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)
@@ -78,36 +77,7 @@ function Dashboard() {
         <Toggle label="Nhận job mới" checked={state.acceptingJobs} onChange={actions.setAcceptingJobs} />
       </Card>
 
-      <Link href="/studio/profile" className="block">
-        <Card className="p-4 transition-shadow hover:shadow-md">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold">Hạng hiện tại</p>
-            <TierBadge tier={tier} />
-            <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1 text-xs text-ink-soft">
-              <Percent className="size-3.5" /> Hoa hồng {Math.round(COMMISSION_RATE[tier] * 100)}%
-            </span>
-            <ChevronRight className="size-4 text-muted" />
-          </div>
-          {progress ? (
-            <>
-              <p className="mt-2 text-[13px] text-ink-soft">
-                Lên hạng <b>{tierDef(progress.next.id).label}</b> để giảm hoa hồng còn {Math.round(COMMISSION_RATE[progress.next.id] * 100)}% và được ưu tiên hiển thị.
-              </p>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line">
-                <div
-                  className="h-full rounded-full bg-rose"
-                  style={{ width: `${(progress.reqs.filter((r) => r.done).length / progress.reqs.length) * 100}%` }}
-                />
-              </div>
-              <p className="mt-1.5 text-xs text-muted">
-                Còn thiếu: {progress.reqs.filter((r) => !r.done).map((r) => `${r.label.toLowerCase()} ${r.target}`).join(", ")}
-              </p>
-            </>
-          ) : (
-            <p className="mt-2 text-[13px] text-ink-soft">Bạn đang ở hạng cao nhất. Giữ vững chỉ số để duy trì mức hoa hồng thấp nhất.</p>
-          )}
-        </Card>
-      </Link>
+      <VerifyNudge pro={pro} />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat icon={<Wallet className="size-4" />} label="Thực nhận tháng này" value={formatPrice(net)} sub={`Doanh thu ${formatPrice(gross)} · hoa hồng ${formatPrice(commission)}`} />
@@ -194,5 +164,41 @@ function SectionTitle({ title, href, count }: { title: string; href: string; cou
         Xem tất cả <ChevronRight className="size-4" />
       </Link>
     </div>
+  )
+}
+
+function VerifyNudge({ pro }: { pro: Pro }) {
+  const done = verifiedCount(pro)
+  const total = VERIFICATIONS.length
+  return (
+    <Link href="/studio/profile" className="block">
+      <Card className={cn("p-4 transition-shadow hover:shadow-md", done < total && "ring-1 ring-rose/40")}>
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="size-5 text-rose" />
+          <p className="flex-1 text-sm font-semibold">
+            Xác minh hồ sơ {done}/{total}
+          </p>
+          <TrustedBadge pro={pro} />
+          <ChevronRight className="size-4 text-muted" />
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {VERIFICATIONS.map((v) => {
+            const Icon = VERIFICATION_ICON[v.id]
+            const ok = isVerified(pro, v.id)
+            return (
+              <div key={v.id} className={cn("rounded-xl px-2 py-2 text-center text-[11px]", ok ? "bg-success-soft text-success" : "bg-canvas text-muted")}>
+                <Icon className="mx-auto mb-1 size-4" />
+                {v.label}
+              </div>
+            )
+          })}
+        </div>
+        <p className="mt-3 text-[13px] text-ink-soft">
+          {done < total
+            ? "Không bắt buộc, nhưng hồ sơ xác minh được đẩy lên đầu kết quả tìm kiếm và gắn huy hiệu cho khách thấy. Đủ 3 mục nhận huy hiệu Tin cậy."
+            : "Bạn đã có huy hiệu Tin cậy và đang được ưu tiên hiển thị."}
+        </p>
+      </Card>
+    </Link>
   )
 }

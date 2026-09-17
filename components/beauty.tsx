@@ -4,11 +4,10 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Brush, Droplets, Eye, Flower2, Hand, Heart, MapPin, Scissors } from "lucide-react"
-import { RankBadge, TierBadge, VerifiedMark } from "@/components/trust"
+import { TrustedBadge, VerifiedMark } from "@/components/trust"
 import { Avatar, Rating } from "@/components/ui"
 import { CATEGORIES } from "@/lib/catalog"
 import { actions, distanceToCustomer, fromPrice, proView, useApp } from "@/lib/store"
-import { tierOf } from "@/lib/trust"
 import type { CategoryId, Pro, Work } from "@/lib/types"
 import { cn, formatCompact, formatPrice } from "@/lib/utils"
 
@@ -124,7 +123,6 @@ export function ProCard({ pro: basePro, className }: { pro: Pro; className?: str
   const state = useApp()
   const pro = proView(state, basePro.id)!
   const from = fromPrice(state, pro.id)
-  const tier = tierOf(pro)
   const km = state.session?.role !== "pro" ? distanceToCustomer(state, pro.id) : null
   return (
     <Link
@@ -137,7 +135,7 @@ export function ProCard({ pro: basePro, className }: { pro: Pro; className?: str
           <p className="flex items-center gap-1.5 font-semibold">
             <span className="truncate">{pro.name}</span>
             <VerifiedMark pro={pro} />
-            <TierBadge tier={tier} />
+            <TrustedBadge pro={pro} />
           </p>
           <p className="text-xs text-muted">{pro.title}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-ink-soft">
@@ -154,7 +152,6 @@ export function ProCard({ pro: basePro, className }: { pro: Pro; className?: str
           <p className="text-sm font-semibold">{from !== null ? formatPrice(from) : "—"}</p>
         </div>
       </div>
-      <RankBadge s={state} pro={pro} className="mt-2.5" />
     </Link>
   )
 }

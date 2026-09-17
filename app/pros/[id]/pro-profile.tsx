@@ -7,21 +7,12 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Briefcase, CalendarDays, Car, ChevronLeft, Home, MapPin, Share2, Sparkles, Store } from "lucide-react"
 import { FollowButton } from "@/components/follow-button"
 import { ServiceMenu } from "@/components/service-menu"
-import {
-  ProStatGrid,
-  RankBadge,
-  RatingBreakdown,
-  ReviewItem,
-  TierBadge,
-  VerificationChips,
-  VerificationList,
-  VerifiedMark,
-} from "@/components/trust"
+import { RatingSummaryBlock, ReviewItem, TrustedBadge, VERIFICATION_ICON, VerificationBadges, VerifiedMark } from "@/components/trust"
 import { Avatar, Button, Card, EmptyState, Tabs } from "@/components/ui"
 import { worksByPro } from "@/lib/data"
 import { POLICY, travelFeeFor } from "@/lib/pricing"
 import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp } from "@/lib/store"
-import { tierDef, tierOf } from "@/lib/trust"
+import { VERIFICATIONS, isVerified } from "@/lib/trust"
 import { cn, formatPrice, parseISODate } from "@/lib/utils"
 
 type Tab = "services" | "works" | "reviews" | "about"
@@ -31,7 +22,6 @@ export function ProProfile({ proId }: { proId: string }) {
   const params = useSearchParams()
   const state = useApp()
   const pro = proView(state, proId)!
-  const tier = tierOf(pro)
   const works = worksByPro(pro.id)
   const services = servicesOf(state, pro.id)
   const reviews = reviewsOf(state, pro.id)
@@ -79,10 +69,10 @@ export function ProProfile({ proId }: { proId: string }) {
           <h1 className="mt-3 flex flex-wrap items-center gap-1.5 text-2xl font-semibold">
             {pro.name}
             <VerifiedMark pro={pro} className="size-5" />
-            <TierBadge tier={tier} />
+            <TrustedBadge pro={pro} />
           </h1>
           <p className="text-sm text-muted">
-            {pro.title} · {pro.yearsExp} năm kinh nghiệm
+            {pro.title}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <button type="button" onClick={() => setTab("reviews")} className="inline-flex items-center gap-1 text-sm">
@@ -90,11 +80,21 @@ export function ProProfile({ proId }: { proId: string }) {
               <b>{pro.rating.average.toFixed(1)}</b>
               <span className="text-muted underline underline-offset-2">({pro.rating.count} đánh giá)</span>
             </button>
-            <RankBadge s={state} pro={pro} />
           </div>
 
-          <VerificationChips pro={pro} className="mt-3" />
-          <ProStatGrid pro={pro} className="mt-4" />
+          <VerificationBadges pro={pro} className="mt-3" />
+          <ul className="mt-4 grid grid-cols-3 gap-2 text-center">
+            {[
+              [pro.stats.completedJobs.toLocaleString("vi-VN"), "Job hoàn thành"],
+              [`${pro.yearsExp} năm`, "Kinh nghiệm"],
+              [`~${pro.stats.responseMinutes} phút`, "Phản hồi"],
+            ].map(([value, label]) => (
+              <li key={label} className="rounded-2xl bg-surface px-2 py-3 shadow-[var(--shadow-soft)]">
+                <p className="text-sm font-semibold">{value}</p>
+                <p className="text-[11px] text-muted">{label}</p>
+              </li>
+            ))}
+          </ul>
 
           <ul className="mt-4 space-y-2 text-[13px] text-ink-soft">
             <li className="flex items-center gap-2">
@@ -161,10 +161,10 @@ export function ProProfile({ proId }: { proId: string }) {
           {tab === "reviews" && (
             <div className="mt-5">
               <Card className="p-4">
-                <RatingBreakdown rating={pro.rating} />
+                <RatingSummaryBlock rating={pro.rating} />
               </Card>
               <p className="mt-3 text-xs text-muted">
-                Chỉ khách đã hoàn thành lịch hẹn qua dep360 mới được đánh giá. Điểm xếp hạng dùng trung bình có trọng số nên không bị đẩy lên bởi vài đánh giá 5 sao.
+                Chỉ khách đã hoàn thành lịch hẹn qua dep360 mới được đánh giá.
               </p>
               {reviews.length ? (
                 <ul className="mt-2 divide-y divide-line">
@@ -192,13 +192,21 @@ export function ProProfile({ proId }: { proId: string }) {
                   ))}
                 </div>
               </div>
-              <div>
-                <p className="mb-1 text-sm font-semibold">Hạng {tierDef(tier).label}</p>
-                <p className="text-sm text-ink-soft">{tierDef(tier).description}</p>
-              </div>
-              <Card className="px-4">
-                <p className="pt-4 text-sm font-semibold">Xác minh bởi dep360</p>
-                <VerificationList pro={pro} />
+              <Card className="px-4 py-3">
+                <p className="text-sm font-semibold">Xác minh bởi dep360</p>
+                <ul className="mt-2 space-y-2">
+                  {VERIFICATIONS.map((v) => {
+                    const Icon = VERIFICATION_ICON[v.id]
+                    const done = isVerified(pro, v.id)
+                    return (
+                      <li key={v.id} className={cn("flex items-center gap-2 text-sm", done ? "text-ink" : "text-muted")}>
+                        <Icon className={cn("size-4", done ? "text-success" : "text-line")} />
+                        {v.badge}
+                        <span className="ml-auto text-xs">{done ? "✓" : "Chưa"}</span>
+                      </li>
+                    )
+                  })}
+                </ul>
               </Card>
               <div>
                 <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold">

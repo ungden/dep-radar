@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Car, Check, CheckCircle2, Clock, CreditCard, HandCoins, Home, Info, Store, Zap } from "lucide-react"
 import { PriceBreakdown } from "@/components/price-breakdown"
-import { TierBadge, VerifiedMark } from "@/components/trust"
+import { TrustedBadge, VerifiedMark } from "@/components/trust"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, Skeleton, inputClass } from "@/components/ui"
 import { getTemplate } from "@/lib/catalog"
 import { DEMO_PRO_ID } from "@/lib/data"
@@ -24,7 +24,6 @@ import {
   useApp,
   useHydrated,
 } from "@/lib/store"
-import { tierOf } from "@/lib/trust"
 import type { CustomerAddress, PaymentMethod, PriceQuote } from "@/lib/types"
 import { addDays, addMinutes, cn, formatDateLong, formatDuration, formatPrice, parseISODate, todayISO, weekdayShort } from "@/lib/utils"
 
@@ -149,10 +148,10 @@ function BookingFlow({ proId }: { proId: string }) {
         <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={44} />
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 text-sm font-semibold">
-            {pro.name} <VerifiedMark pro={pro} /> <TierBadge tier={tierOf(pro)} />
+            {pro.name} <VerifiedMark pro={pro} /> <TrustedBadge pro={pro} />
           </p>
           <p className="text-xs text-muted">
-            ★ {pro.rating.average.toFixed(1)} ({pro.rating.count}) · {pro.stats.completedJobs} job · đúng giờ {Math.round(pro.stats.onTimeRate * 100)}%
+            ★ {pro.rating.average.toFixed(1)} ({pro.rating.count}) · {pro.stats.completedJobs} job
           </p>
         </div>
       </Card>

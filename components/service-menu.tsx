@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronDown, Clock, ShieldCheck, Store } from "lucide-react"
+import { Check, ChevronDown, Clock, Store } from "lucide-react"
 import { ButtonLink, Card, Chip, EmptyState } from "@/components/ui"
 import { categoryLabel, getTemplate } from "@/lib/catalog"
 import { servicesOf, useApp } from "@/lib/store"
@@ -62,11 +62,6 @@ function ServiceCard({ proId, service, bookable }: { proId: string; service: Pro
           <p className="mt-0.5 text-xs text-muted">{tpl.description}</p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
-          {tpl.requiresSkillCheck && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-[10.5px] font-semibold text-success">
-              <ShieldCheck className="size-3" /> Tay nghề đã kiểm
-            </span>
-          )}
           {tpl.studioOnly && (
             <span className="inline-flex items-center gap-1 rounded-full bg-canvas px-2 py-0.5 text-[10.5px] font-medium text-ink-soft">
               <Store className="size-3" /> Tại studio

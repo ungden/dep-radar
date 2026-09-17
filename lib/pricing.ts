@@ -1,11 +1,13 @@
-import type { PriceQuote, TierId } from "./types"
+import type { PriceQuote } from "./types"
 
 /**
- * dep360 fee policy. Customers never pay a platform fee. dep360 earns a commission
+ * dep360 fee policy. Customers never pay a platform fee. dep360 earns a flat commission
  * on the service price, paid by the freelancer. Travel and urgent fees go 100% to the
  * freelancer to cover transport (e.g. booking a car).
  */
 export const POLICY = {
+  /** Flat commission on the service price, paid by the freelancer. */
+  commissionRate: 0.15,
   /** Freelancer must call the customer and accept within this window. */
   confirmWithinHours: 2,
   /** Share of an online payment kept for the freelancer on late cancellation. */
@@ -18,13 +20,6 @@ export const POLICY = {
   minLeadMinutes: 60,
   freeCancelHours: 12,
 } as const
-
-export const COMMISSION_RATE: Record<TierId, number> = {
-  new: 0.2,
-  standard: 0.18,
-  pro: 0.15,
-  top: 0.12,
-}
 
 const roundUp5k = (n: number) => Math.ceil(n / 5000) * 5000
 const round1k = (n: number) => Math.round(n / 1000) * 1000
@@ -57,12 +52,11 @@ export function buildQuote(input: {
   atHome: boolean
   distanceKm: number | null
   urgent: boolean
-  tier: TierId
 }): PriceQuote {
   const travelFee = input.atHome ? travelFeeFor(input.distanceKm) : 0
   const urgentFee = input.urgent ? POLICY.urgentFee : 0
   const total = input.servicePrice + travelFee + urgentFee
-  const commissionRate = COMMISSION_RATE[input.tier]
+  const commissionRate = POLICY.commissionRate
   const commission = round1k(input.servicePrice * commissionRate)
   return {
     servicePrice: input.servicePrice,

@@ -103,7 +103,6 @@ export const CATALOG: ServiceTemplate[] = [
     description: "Makeup cô dâu có buổi thử trước.",
     includes: ["1 buổi thử makeup", "Makeup + làm tóc cô dâu", "Mi giả, phụ kiện tóc cơ bản"],
     variants: [v("one", "1 lễ (ăn hỏi hoặc cưới)", 120, 1200, 3500, 2000), v("two", "Trọn gói 2 lễ", 240, 2500, 6000, 3800)],
-    requiresSkillCheck: true,
   },
   // Skincare ---------------------------------------------------------------
   {
@@ -127,7 +126,6 @@ export const CATALOG: ServiceTemplate[] = [
       [60, 300, 600, 420],
       [90, 400, 800, 550],
     ]),
-    requiresSkillCheck: true,
   },
   {
     id: "skin-recovery",
@@ -165,7 +163,6 @@ export const CATALOG: ServiceTemplate[] = [
     description: "Làm tóc cô dâu có buổi thử trước.",
     includes: ["1 buổi thử tóc", "Tạo kiểu & cài phụ kiện", "Giữ nếp suốt lễ"],
     variants: [v("one", "1 lễ", 90, 600, 1800, 1000)],
-    requiresSkillCheck: true,
   },
   // Lash & brow ------------------------------------------------------------
   {
@@ -250,7 +247,6 @@ export const CATALOG: ServiceTemplate[] = [
       [60, 300, 600, 400],
       [90, 400, 800, 550],
     ]),
-    requiresSkillCheck: true,
   },
   {
     id: "massage-dry",

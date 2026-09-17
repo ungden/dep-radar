@@ -6,13 +6,12 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Bookmark, ChevronLeft, Clock, Heart, MessageCircle, Share2 } from "lucide-react"
 import { FollowButton } from "@/components/follow-button"
-import { TierBadge, VerifiedMark } from "@/components/trust"
+import { TrustedBadge, VerifiedMark } from "@/components/trust"
 import { WorkCard } from "@/components/beauty"
 import { Avatar, ButtonLink, Card, Pill } from "@/components/ui"
 import { getTemplate } from "@/lib/catalog"
 import { categoryLabel, getWork, worksByPro } from "@/lib/data"
 import { actions, proView, servicesOf, useApp } from "@/lib/store"
-import { tierOf } from "@/lib/trust"
 import { cn, formatDuration, formatPrice } from "@/lib/utils"
 
 export function WorkDetail({ workId }: { workId: string }) {
@@ -104,7 +103,7 @@ export function WorkDetail({ workId }: { workId: string }) {
                 <span className="flex items-center gap-1.5 text-sm font-semibold">
                   {pro.name}
                   <VerifiedMark pro={pro} />
-                  <TierBadge tier={tierOf(pro)} />
+                  <TrustedBadge pro={pro} />
                 </span>
                 <span className="block text-xs text-muted">
                   ★ {pro.rating.average.toFixed(1)} ({pro.rating.count}) · {pro.stats.completedJobs} job hoàn thành
