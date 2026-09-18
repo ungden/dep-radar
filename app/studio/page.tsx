@@ -8,7 +8,8 @@ import { RequireSession } from "@/components/require-session"
 import { Card, EmptyState, Logo, Toggle } from "@/components/ui"
 import { getTemplate } from "@/lib/catalog"
 import { POLICY } from "@/lib/pricing"
-import { actions, distanceToCustomer, proView, useApp } from "@/lib/store"
+import { actions, useAct } from "@/lib/client-actions"
+import { distanceToCustomer, proView, useApp } from "@/lib/store"
 import type { Pro } from "@/lib/types"
 import { cn, formatDateLong, formatPrice, todayISO } from "@/lib/utils"
 
@@ -28,10 +29,12 @@ export default function StudioPage() {
 
 function Dashboard() {
   const state = useApp()
+  const act = useAct()
   const proId = state.session!.proId!
   const pro = proView(state, proId)!
   const today = todayISO()
-  const mine = state.bookings.filter((b) => b.proId === proId)
+  // Jobs this freelancer was booked for, not bookings they made as a customer.
+  const mine = state.bookings.filter((b) => b.proId === proId && !b.mine)
   const byTime = (a: { date: string; time: string }, b: { date: string; time: string }) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)
   const pending = mine.filter((b) => b.status === "pending").sort(byTime)
   const todays = mine.filter((b) => b.date === today && b.status === "confirmed").sort(byTime)
@@ -40,15 +43,12 @@ function Dashboard() {
   const gross = doneThisMonth.reduce((s, b) => s + b.quote.total, 0)
   const commission = doneThisMonth.reduce((s, b) => s + b.quote.commission, 0)
   const net = doneThisMonth.reduce((s, b) => s + b.quote.payout, 0)
-  const onlinePayout = doneThisMonth.filter((b) => b.paymentMethod === "online").reduce((s, b) => s + b.quote.payout, 0)
-  const cashDebt = doneThisMonth.filter((b) => b.paymentMethod === "cash").reduce((s, b) => s + b.quote.commission, 0)
-  const settlement = onlinePayout - cashDebt
   const matchingJobs = state.jobs.filter((j) => {
     const km = distanceToCustomer(state, proId, { city: j.city, district: j.district, detail: "" })
     return (
       !j.mine &&
       j.status === "open" &&
-      pro.categories.includes(getTemplate(j.templateId)!.category) &&
+      pro.categories.includes(getTemplate(j.templateId)?.category ?? "nail") &&
       km !== null &&
       km <= pro.maxTravelKm &&
       !j.offers.some((o) => o.proId === proId)
@@ -72,18 +72,27 @@ function Dashboard() {
             {state.acceptingJobs ? `Nhận khách trong bán kính ${pro.maxTravelKm} km quanh ${pro.district}` : "Hồ sơ vẫn hiển thị nhưng khách không đặt được lịch mới"}
           </p>
         </div>
-        <Toggle label="Nhận job mới" checked={state.acceptingJobs} onChange={actions.setAcceptingJobs} />
+        <Toggle
+          label="Nhận job mới"
+          checked={state.acceptingJobs}
+          onChange={(value) => void act(() => actions.setAcceptingJobs(value))}
+        />
       </Card>
 
       <VerifyNudge pro={pro} />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat icon={<Wallet className="size-4" />} label="Thực nhận tháng này" value={formatPrice(net)} sub={`Doanh thu ${formatPrice(gross)} · hoa hồng ${formatPrice(commission)}`} />
         <Stat
           icon={<Wallet className="size-4" />}
-          label={settlement >= 0 ? "Đối soát: dep360 chuyển bạn" : "Đối soát: bạn cần nộp"}
-          value={formatPrice(Math.abs(settlement))}
-          sub={`Online ${formatPrice(onlinePayout)} − công nợ hoa hồng tiền mặt ${formatPrice(cashDebt)}`}
+          label="Thực nhận tháng này"
+          value={formatPrice(net)}
+          sub={`Khách trả ${formatPrice(gross)} · hoa hồng ${formatPrice(commission)}`}
+        />
+        <Stat
+          icon={<Wallet className="size-4" />}
+          label="Số job đã hoàn thành"
+          value={String(doneThisMonth.length)}
+          sub={`Tổng cộng ${pro.stats.completedJobs} job`}
         />
         <Stat icon={<Hourglass className="size-4" />} label="Chờ bạn xác nhận" value={String(pending.length)} highlight={pending.length > 0} sub={`Gọi khách & trả lời trong ${POLICY.confirmWithinHours} giờ`} />
         <Stat icon={<Star className="size-4" />} label="Đánh giá" value={pro.rating.average.toFixed(2)} sub={`${pro.rating.count} lượt`} />

@@ -9,8 +9,9 @@ import { bookingImage } from "@/components/booking-card"
 import { PriceBreakdown } from "@/components/price-breakdown"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, StatusBadge, buttonClass } from "@/components/ui"
-import { getPro } from "@/lib/data"
-import { actions, useApp } from "@/lib/store"
+import { formatPhone } from "@/lib/auth/phone"
+import { actions, useAct } from "@/lib/client-actions"
+import { getPro, useApp } from "@/lib/store"
 import { POLICY, hoursUntilStart } from "@/lib/pricing"
 import { addMinutes, formatDateLong, formatDuration, formatPrice } from "@/lib/utils"
 
@@ -27,9 +28,12 @@ export default function BookingDetailPage() {
 
 function BookingDetail() {
   const { id } = useParams<{ id: string }>()
-  const { bookings, session } = useApp()
+  const state = useApp()
+  const { bookings, session } = state
+  const act = useAct()
   const booking = bookings.find((b) => b.id === id)
   const [confirmCancel, setConfirmCancel] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   const isPro = session?.role === "pro" && booking?.proId === session.proId
   const isCustomer = session?.role === "customer" && booking?.mine
@@ -45,9 +49,21 @@ function BookingDetail() {
     )
   }
 
-  const pro = getPro(booking.proId)!
-  const image = bookingImage(booking)
+  const pro = getPro(state, booking.proId)
+  if (!pro) {
+    return (
+      <EmptyState
+        icon={<CalendarDays className="size-6" />}
+        title="Chuyên viên không còn hoạt động"
+        text="Hồ sơ chuyên viên của lịch hẹn này đã bị ẩn. Liên hệ hỗ trợ nếu bạn cần giúp."
+        action={<ButtonLink href="/bookings">Về danh sách</ButtonLink>}
+      />
+    )
+  }
+  const image = bookingImage(state, booking)
   const active = booking.status === "pending" || booking.status === "confirmed"
+  const run = (fn: () => Promise<{ error?: string }>) =>
+    void act(fn).then((message) => setError(message))
   const freeCancel = hoursUntilStart(booking.date, booking.time) >= POLICY.freeCancelHours
 
   return (
@@ -56,7 +72,9 @@ function BookingDetail() {
         {isPro ? <Avatar name={booking.customerName} size={48} /> : <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={48} />}
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{isPro ? booking.customerName : pro.name}</p>
-          <p className="text-xs text-muted">{isPro ? `Khách hàng · ${booking.customerPhone}` : pro.title}</p>
+          <p className="text-xs text-muted">
+            {isPro ? `Khách hàng · ${formatPhone(booking.customerPhone)}` : pro.title}
+          </p>
         </div>
         <StatusBadge status={booking.status} />
       </Card>
@@ -103,17 +121,25 @@ function BookingDetail() {
 
       <PriceBreakdown quote={booking.quote} paymentMethod={booking.paymentMethod} forPro={isPro} />
 
+      {error && (
+        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+          {error}
+        </p>
+      )}
+
       {isPro && booking.status === "pending" && (
         <p className="flex gap-2 rounded-xl bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning">
           <Phone className="mt-0.5 size-4 shrink-0" />
-          Gọi cho khách ({booking.customerPhone}) để xác nhận giờ, địa chỉ và yêu cầu trước khi nhận job. Cần phản hồi trong {POLICY.confirmWithinHours} giờ.
+          Gọi cho khách ({formatPhone(booking.customerPhone)}) để xác nhận giờ, địa chỉ và yêu cầu trước khi nhận job.
+          Cần phản hồi trong {POLICY.confirmWithinHours} giờ.
         </p>
       )}
 
       {isCustomer && booking.status === "pending" && (
         <p className="flex gap-2 rounded-xl bg-blush px-3.5 py-2.5 text-[13px] text-rose-dark">
           <Phone className="mt-0.5 size-4 shrink-0" />
-          {pro.name} sẽ gọi cho bạn qua số {booking.customerPhone} để xác nhận trong {POLICY.confirmWithinHours} giờ
+          {pro.name} sẽ gọi cho bạn qua số {formatPhone(booking.customerPhone)} để xác nhận trong{" "}
+          {POLICY.confirmWithinHours} giờ
           {booking.paymentMethod === "online" ? ". Nếu không được xác nhận, tiền được hoàn 100%." : "."}
         </p>
       )}
@@ -141,7 +167,7 @@ function BookingDetail() {
                   variant="danger"
                   size="lg"
                   onClick={() => {
-                    actions.setBookingStatus(booking.id, "cancelled")
+                    run(() => actions.setBookingStatus(booking.id, "cancelled", "Khách huỷ lịch"))
                     setConfirmCancel(false)
                   }}
                 >
@@ -153,21 +179,28 @@ function BookingDetail() {
                 <Button variant="outline" size="lg" className="border-line text-ink" onClick={() => setConfirmCancel(true)}>
                   Huỷ lịch
                 </Button>
-                <a href={`tel:${pro.phone.replace(/\s/g, "")}`} className={buttonClass("primary", "lg")}>
-                  <Phone className="size-4" /> Gọi chuyên viên
-                </a>
+                {booking.status !== "pending" && booking.proPhone ? (
+                  <a href={`tel:${booking.proPhone.replace(/\s/g, "")}`} className={buttonClass("primary", "lg")}>
+                    <Phone className="size-4" /> Gọi chuyên viên
+                  </a>
+                ) : (
+                  // The number appears once the freelancer has accepted the job.
+                  <span className="flex items-center justify-center rounded-xl bg-canvas px-3 text-center text-[13px] text-muted">
+                    {booking.proName} sẽ gọi cho bạn
+                  </span>
+                )}
               </div>
             )
           )}
           {isPro && booking.status === "pending" && (
             <div className="grid grid-cols-[auto_1fr_1fr] gap-2">
-              <Button variant="ghost" size="lg" onClick={() => actions.setBookingStatus(booking.id, "declined")}>
+              <Button variant="ghost" size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "declined"))}>
                 Từ chối
               </Button>
               <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "lg")}>
                 <Phone className="size-4" /> Gọi khách
               </a>
-              <Button size="lg" onClick={() => actions.setBookingStatus(booking.id, "confirmed")}>
+              <Button size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "confirmed"))}>
                 Đã gọi, nhận job
               </Button>
             </div>
@@ -177,7 +210,7 @@ function BookingDetail() {
               <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "lg")}>
                 <Phone className="size-4" /> Gọi khách
               </a>
-              <Button size="lg" onClick={() => actions.setBookingStatus(booking.id, "completed")}>
+              <Button size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "completed"))}>
                 Đánh dấu hoàn thành
               </Button>
             </div>

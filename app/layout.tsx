@@ -5,6 +5,8 @@ import "./globals.css"
 import { AppShell } from "@/components/layout/app-shell"
 import { SITE_URL } from "@/lib/env"
 import { StoreProvider } from "@/lib/store"
+import { emptySnapshot, loadSnapshot } from "@/lib/api/snapshot"
+import { backendEnabled } from "@/lib/supabase/env"
 
 const body = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -55,7 +57,9 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // One server read per navigation feeds every screen; see lib/api/snapshot.ts.
+  const snapshot = backendEnabled ? await loadSnapshot() : emptySnapshot
   return (
     <html lang="vi" className={`${body.variable} ${serif.variable}`}>
       <body className="min-h-dvh">
@@ -65,7 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Bỏ qua, tới nội dung chính
         </a>
-        <StoreProvider>
+        <StoreProvider snapshot={snapshot}>
           <AppShell>{children}</AppShell>
         </StoreProvider>
       </body>

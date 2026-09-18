@@ -7,7 +7,8 @@ import { Brush, Droplets, Eye, Flower2, Hand, Heart, MapPin, Scissors } from "lu
 import { VerifiedMark } from "@/components/trust"
 import { Avatar, Rating } from "@/components/ui"
 import { CATEGORIES } from "@/lib/catalog"
-import { actions, distanceToCustomer, fromPrice, proView, useApp } from "@/lib/store"
+import { actions, useAct } from "@/lib/client-actions"
+import { distanceToCustomer, fromPrice, proView, useApp } from "@/lib/store"
 import type { CategoryId, Pro, Work } from "@/lib/types"
 import { cn, formatCompact, formatPrice } from "@/lib/utils"
 
@@ -39,17 +40,24 @@ export function CategoryRow({ className }: { className?: string }) {
 }
 
 export function SaveWorkButton({ workId, className }: { workId: string; className?: string }) {
-  const { savedWorks } = useApp()
+  const { savedWorks, session } = useApp()
+  const act = useAct()
   const saved = savedWorks.includes(workId)
   return (
     <button
       type="button"
       aria-label={saved ? "Bỏ lưu" : "Lưu mẫu"}
       aria-pressed={saved}
+      // Saving needs an account, so send a visitor to sign in rather than
+      // pretending the heart stuck.
       onClick={(e) => {
         e.preventDefault()
         e.stopPropagation()
-        actions.toggleSaveWork(workId)
+        if (!session) {
+          window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`
+          return
+        }
+        void act(() => actions.toggleSaveWork(workId))
       }}
       className={cn("inline-flex size-8 items-center justify-center rounded-full transition-colors", className)}
     >
@@ -61,7 +69,8 @@ export function SaveWorkButton({ workId, className }: { workId: string; classNam
 /** Large cover card used on the explore feed. */
 export function WorkFeedCard({ work, priority }: { work: Work; priority?: boolean }) {
   const state = useApp()
-  const pro = proView(state, work.proId)!
+  const pro = proView(state, work.proId)
+  if (!pro) return null
   return (
     <Link href={`/works/${work.id}`} className="group block">
       <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-blush">
@@ -97,8 +106,9 @@ export function WorkFeedCard({ work, priority }: { work: Work; priority?: boolea
 /** Compact card with price & rating, used in search results. */
 export function WorkCard({ work }: { work: Work }) {
   const state = useApp()
-  const pro = proView(state, work.proId)!
+  const pro = proView(state, work.proId)
   const price = fromPrice(state, work.proId, work.templateId)
+  if (!pro) return null
   return (
     <Link href={`/works/${work.id}`} className="group block">
       <div className="relative aspect-square overflow-hidden rounded-2xl bg-blush">
@@ -121,7 +131,7 @@ export function WorkCard({ work }: { work: Work }) {
 
 export function ProCard({ pro: basePro, className }: { pro: Pro; className?: string }) {
   const state = useApp()
-  const pro = proView(state, basePro.id)!
+  const pro = proView(state, basePro.id) ?? basePro
   const from = fromPrice(state, pro.id)
   const km = state.session?.role !== "pro" ? distanceToCustomer(state, pro.id) : null
   return (

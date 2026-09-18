@@ -3,17 +3,18 @@ import { toProDetail, toProSummary, toReviewItem, toWorkItem } from "./map"
 import type { ListedService, ProDetail, ProSummary, ReviewItem, WorkItem } from "./types"
 
 /** Public profile fields. A phone number is not one of them. */
+// Public identity lives on `pros`; `accounts` is private and holds the phone.
 const PRO_PUBLIC = `
-  id, slug, title, bio, highlights, categories, city, district, lat, lng, areas,
-  home_service, studio_address, max_travel_km, years_exp, accepting_jobs,
-  identity_status, rating_avg, rating_count, completed_jobs, response_minutes,
-  accounts!inner (full_name, avatar_path)
+  id, slug, display_name, avatar_path, title, bio, highlights, categories,
+  city, district, lat, lng, areas, home_service, studio_address, max_travel_km,
+  years_exp, accepting_jobs, identity_status, rating_avg, rating_count,
+  completed_jobs, response_minutes
 `
 
 const WORK_WITH_PRO = `
-  id, pro_id, template_id, title, description, image_paths, sort_order,
-  pros!inner (slug, rating_avg, rating_count, identity_status, published,
-              accounts!inner (full_name, avatar_path))
+  id, slug, pro_id, template_id, title, description, image_paths, sort_order,
+  pros!works_pro_id_fkey!inner (slug, display_name, avatar_path, rating_avg, rating_count,
+                                identity_status, published)
 `
 
 export async function listPros(filter: { city?: string; category?: string } = {}): Promise<ProSummary[]> {
@@ -66,9 +67,8 @@ export async function listReviews(proId: string): Promise<ReviewItem[]> {
   const { data, error } = await supabase
     .from("reviews")
     .select(`
-      booking_id, pro_id, rating, tags, body, photo_paths, reply, created_at,
-      accounts!reviews_customer_id_fkey (full_name),
-      bookings!inner (template_id, variant_id)
+      booking_id, pro_id, author_name, rating, tags, body, photo_paths, reply, created_at,
+      bookings!reviews_booking_id_fkey!inner (template_id, variant_id)
     `)
     .eq("pro_id", proId)
     .is("hidden_at", null)
@@ -127,4 +127,41 @@ export async function availabilityProblem(input: {
   })
   if (error) throw error
   return (data as string | null) ?? null
+}
+
+/** For a work's own page: enough for metadata, without loading the whole feed. */
+export async function getWorkBySlug(slug: string) {
+  const supabase = await supabaseServer()
+  const { data, error } = await supabase
+    .from("works")
+    .select(
+      "id, slug, title, description, image_paths, pros!works_pro_id_fkey!inner (slug, display_name, published)",
+    )
+    .eq("slug", slug)
+    .eq("pros.published", true)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  const pro = Array.isArray(data.pros) ? data.pros[0] : data.pros
+  return {
+    slug: data.slug,
+    title: data.title,
+    description: data.description ?? "",
+    images: data.image_paths ?? [],
+    proSlug: pro?.slug ?? "",
+    proName: pro?.display_name ?? "Chuyên viên",
+  }
+}
+
+/** Slugs for the sitemap, so it lists what is actually published. */
+export async function listPublishedSlugs() {
+  const supabase = await supabaseServer()
+  const [pros, works] = await Promise.all([
+    supabase.from("pros").select("slug").eq("published", true).is("suspended_at", null),
+    supabase.from("works").select("slug, pros!works_pro_id_fkey!inner (published)").eq("pros.published", true),
+  ])
+  return {
+    pros: (pros.data ?? []).map((p) => p.slug),
+    works: (works.data ?? []).map((w) => w.slug),
+  }
 }

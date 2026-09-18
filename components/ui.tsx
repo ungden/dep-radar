@@ -133,11 +133,14 @@ export function Rating({ value, count, className }: { value: number; count?: num
 }
 
 const STATUS: Record<BookingStatus, { label: string; className: string }> = {
-  pending: { label: "Chờ xác nhận", className: "bg-warning-soft text-warning" },
+  pending: { label: "Chờ chuyên viên gọi", className: "bg-warning-soft text-warning" },
   confirmed: { label: "Đã xác nhận", className: "bg-success-soft text-success" },
+  in_progress: { label: "Đang làm", className: "bg-success-soft text-success" },
   completed: { label: "Hoàn thành", className: "bg-blush text-rose-dark" },
-  cancelled: { label: "Đã hủy", className: "bg-canvas text-muted" },
   declined: { label: "Bị từ chối", className: "bg-danger-soft text-danger" },
+  cancelled: { label: "Đã huỷ", className: "bg-canvas text-muted" },
+  expired: { label: "Hết hạn chờ", className: "bg-canvas text-muted" },
+  no_show: { label: "Khách vắng mặt", className: "bg-danger-soft text-danger" },
 }
 
 export function StatusBadge({ status }: { status: BookingStatus }) {

@@ -1,8 +1,11 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { cookies } from "next/headers"
+import { CITY_COOKIE } from "./snapshot"
 import { supabaseServer } from "@/lib/supabase/server"
 import type { PaymentMethod } from "@/lib/types"
+import { localTime } from "@/lib/utils"
 
 /**
  * Every write the app makes. Each one calls a database RPC that re-checks the
@@ -33,9 +36,66 @@ async function rpc<T>(fn: string, args: Record<string, unknown>, paths: string[]
   return { ok: true, data: data as T }
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * URLs carry a freelancer's slug; RPCs need the row id. Comparing a slug against
+ * the uuid column is not merely useless, it makes Postgres reject the whole
+ * query -- which is how every slot silently came back as "no openings".
+ */
+async function proIdFor(slugOrId: string): Promise<string | null> {
+  if (UUID.test(slugOrId)) return slugOrId
+  const supabase = await supabaseServer()
+  const { data, error } = await supabase.from("pros").select("id").eq("slug", slugOrId).maybeSingle()
+  if (error) console.error("proIdFor failed:", error.message)
+  return data?.id ?? null
+}
+
+/** Bookable start times for one day, generated from the freelancer's own hours. */
+export async function fetchSlots(input: {
+  proId: string
+  templateId: string
+  variantId: string
+  quantity?: number
+  date: string
+  atHome: boolean
+  addressId?: string | null
+}): Promise<{ startsAt: string; time: string }[]> {
+  const supabase = await supabaseServer()
+  const pro = await proIdFor(input.proId)
+  if (!pro) return []
+  let lat: number | null = null
+  let lng: number | null = null
+  if (input.atHome && input.addressId) {
+    const { data } = await supabase.from("addresses").select("lat, lng").eq("id", input.addressId).maybeSingle()
+    lat = data?.lat ?? null
+    lng = data?.lng ?? null
+  } else if (!input.atHome) {
+    const { data } = await supabase.from("pros").select("lat, lng").eq("id", pro).maybeSingle()
+    lat = data?.lat ?? null
+    lng = data?.lng ?? null
+  }
+  const { data, error } = await supabase.rpc("free_slots", {
+    p_pro: pro,
+    p_template: input.templateId,
+    p_variant: input.variantId,
+    p_quantity: input.quantity ?? 1,
+    p_date: input.date,
+    p_at_home: input.atHome,
+    p_lat: lat ?? undefined,
+    p_lng: lng ?? undefined,
+  })
+  if (error) {
+    console.error("free_slots failed:", error.message)
+    return []
+  }
+  return ((data ?? []) as unknown as string[]).map((startsAt) => ({ startsAt, time: localTime(startsAt) }))
+}
+
 // Customer -------------------------------------------------------------------
 
 export async function createBooking(input: {
+  /** Slug or id of the freelancer. */
   proId: string
   templateId: string
   variantId: string
@@ -46,10 +106,12 @@ export async function createBooking(input: {
   note?: string
   paymentMethod?: PaymentMethod
 }) {
+  const pro = await proIdFor(input.proId)
+  if (!pro) return { ok: false as const, error: "Không tìm thấy chuyên viên." }
   return rpc<string>(
     "create_booking",
     {
-      p_pro: input.proId,
+      p_pro: pro,
       p_template: input.templateId,
       p_variant: input.variantId,
       p_starts_at: input.startsAt,
@@ -121,6 +183,14 @@ export async function postJob(input: {
   )
 }
 
+export async function closeJob(jobId: string): Promise<ActionResult> {
+  const supabase = await supabaseServer()
+  const { error } = await supabase.from("jobs").delete().eq("id", jobId)
+  if (error) return { ok: false, error: messageFor(error) }
+  revalidatePath("/requests")
+  return { ok: true, data: undefined }
+}
+
 export async function acceptOffer(offerId: string) {
   return rpc<string>("accept_offer", { p_offer: offerId }, ["/requests", "/bookings"])
 }
@@ -153,6 +223,21 @@ export async function sendOffer(jobId: string, price: number, message: string) {
 
 export async function withdrawOffer(offerId: string) {
   return rpc<void>("withdraw_offer", { p_offer: offerId }, ["/studio/jobs"])
+}
+
+/** The job board holds a job id, not an offer id: find the caller's own offer. */
+export async function withdrawMyOfferOn(jobId: string): Promise<ActionResult> {
+  const supabase = await supabaseServer()
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
+  const { data: offer } = await supabase
+    .from("offers")
+    .select("id")
+    .eq("job_id", jobId)
+    .eq("pro_id", auth.user.id)
+    .maybeSingle()
+  if (!offer) return { ok: false, error: "Bạn chưa báo giá cho yêu cầu này." }
+  return withdrawOffer(offer.id)
 }
 
 export async function replyReview(bookingId: string, reply: string) {
@@ -243,6 +328,22 @@ export async function saveAddress(input: {
   if (input.isDefault) {
     await supabase.from("addresses").update({ is_default: false }).eq("account_id", auth.user.id)
   }
+
+  // Travel distance is computed from coordinates, so an address without them
+  // cannot be priced. Until there is a map to drop a pin on, fall back to the
+  // district centre -- which is why the UI calls the distance an estimate.
+  let { lat, lng } = input
+  if (lat == null || lng == null) {
+    const { data: centre } = await supabase
+      .from("districts")
+      .select("lat, lng")
+      .eq("city", input.city)
+      .eq("district", input.district)
+      .maybeSingle()
+    lat = centre?.lat ?? null
+    lng = centre?.lng ?? null
+  }
+
   const row = {
     account_id: auth.user.id,
     label: input.label,
@@ -250,8 +351,8 @@ export async function saveAddress(input: {
     district: input.district,
     detail: input.detail,
     note: input.note ?? "",
-    lat: input.lat ?? null,
-    lng: input.lng ?? null,
+    lat,
+    lng,
     is_default: input.isDefault ?? false,
   }
   const query = input.id
@@ -271,10 +372,17 @@ export async function deleteAddress(id: string): Promise<ActionResult> {
   return { ok: true, data: undefined }
 }
 
-export async function toggleSavedWork(workId: string): Promise<ActionResult<boolean>> {
+/** Takes a work slug, the id the URLs use. */
+export async function toggleSavedWork(workSlug: string): Promise<ActionResult<boolean>> {
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
+  const query = supabase.from("works").select("id")
+  const { data: work } = await (UUID.test(workSlug)
+    ? query.eq("id", workSlug).maybeSingle()
+    : query.eq("slug", workSlug).maybeSingle())
+  if (!work) return { ok: false, error: "Không tìm thấy tác phẩm." }
+  const workId = work.id
   const { data: existing } = await supabase
     .from("saved_works")
     .select("work_id")
@@ -292,10 +400,13 @@ export async function toggleSavedWork(workId: string): Promise<ActionResult<bool
   return { ok: true, data: true }
 }
 
-export async function toggleFollow(proId: string): Promise<ActionResult<boolean>> {
+/** Takes a freelancer slug, the id the URLs use. */
+export async function toggleFollow(proSlug: string): Promise<ActionResult<boolean>> {
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
+  const proId = await proIdFor(proSlug)
+  if (!proId) return { ok: false, error: "Không tìm thấy chuyên viên." }
   const { data: existing } = await supabase
     .from("follows")
     .select("pro_id")
@@ -309,4 +420,15 @@ export async function toggleFollow(proId: string): Promise<ActionResult<boolean>
   const { error } = await supabase.from("follows").insert({ account_id: auth.user.id, pro_id: proId })
   if (error) return { ok: false, error: messageFor(error) }
   return { ok: true, data: true }
+}
+
+/**
+ * Which city the customer is browsing. A cookie rather than browser storage, so
+ * the feed arrives already filtered instead of re-rendering after hydration.
+ */
+export async function setBrowsingCity(city: string | null): Promise<void> {
+  const store = await cookies()
+  if (city) store.set(CITY_COOKIE, city, { path: "/", maxAge: 60 * 60 * 24 * 180, sameSite: "lax" })
+  else store.delete(CITY_COOKIE)
+  revalidatePath("/", "layout")
 }

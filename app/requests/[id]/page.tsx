@@ -7,8 +7,8 @@ import { Car, Hourglass, Zap } from "lucide-react"
 import { RequireSession } from "@/components/require-session"
 import { VerifiedBadge, VerifiedMark } from "@/components/trust"
 import { Avatar, Button, ButtonLink, Card, EmptyState, PageHeader, Rating } from "@/components/ui"
-import { getPro } from "@/lib/data"
-import { actions, proView, quoteFor, useApp } from "@/lib/store"
+import { actions, useAct } from "@/lib/client-actions"
+import { getPro, proView, quoteFor, useApp } from "@/lib/store"
 import { cn, formatPrice, timeAgo } from "@/lib/utils"
 import { RequestCard } from "@/components/request-card"
 
@@ -27,7 +27,9 @@ function RequestDetail() {
   const router = useRouter()
   const { id } = useParams<{ id: string }>()
   const state = useApp()
+  const act = useAct()
   const { jobs, bookings } = state
+  const [error, setError] = React.useState<string | null>(null)
   const job = jobs.find((j) => j.id === id && j.mine)
 
   if (!job) return <EmptyState title="Không tìm thấy yêu cầu" action={<ButtonLink href="/requests">Về danh sách</ButtonLink>} />
@@ -41,11 +43,17 @@ function RequestDetail() {
 
       {job.status === "booked" && booking && (
         <div className="flex items-center justify-between gap-3 rounded-2xl bg-success-soft px-4 py-3 text-sm text-success">
-          Đã chốt với {getPro(booking.proId)?.name}.
+          Đã chốt với {getPro(state, booking.proId)?.name}.
           <Link href={`/bookings/${booking.id}`} className="font-semibold underline underline-offset-2">
             Xem lịch hẹn
           </Link>
         </div>
+      )}
+
+      {error && (
+        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+          {error}
+        </p>
       )}
 
       <section>
@@ -59,12 +67,13 @@ function RequestDetail() {
         ) : (
           <ul className="space-y-3">
             {job.offers.map((o) => {
-              const pro = proView(state, o.proId)!
+              const pro = proView(state, o.proId)
+              if (!pro) return null
               const quote = quoteFor(state, {
                 proId: pro.id,
                 price: o.price,
                 atHome: job.atHome,
-                address: { city: job.city, district: job.district, detail: job.addressDetail },
+                address: { city: job.city, district: job.district, detail: "" },
                 date: job.date,
                 time: job.time,
               })
@@ -112,9 +121,11 @@ function RequestDetail() {
                         </ButtonLink>
                         <Button
                           size="sm"
-                          onClick={() => {
-                            const bookingId = actions.acceptOffer(job.id, o.id)
-                            if (bookingId) router.push(`/bookings/${bookingId}`)
+                          onClick={async () => {
+                            setError(null)
+                            const result = await actions.acceptOffer(o.id)
+                            if ("error" in result) return setError(result.error)
+                            router.push(`/bookings/${result.id}`)
                           }}
                         >
                           Chọn báo giá này
@@ -131,8 +142,16 @@ function RequestDetail() {
       </section>
 
       {job.status === "open" && (
-        <button type="button" onClick={() => actions.closeJob(job.id)} className="mx-auto block py-2 text-sm text-muted underline underline-offset-2">
-          Đóng yêu cầu
+        <button
+          type="button"
+          onClick={async () => {
+            const message = await act(() => actions.closeJob(job.id))
+            if (message) setError(message)
+            else router.replace("/requests")
+          }}
+          className="mx-auto block py-2 text-sm text-muted underline underline-offset-2"
+        >
+          Xoá yêu cầu
         </button>
       )}
     </div>

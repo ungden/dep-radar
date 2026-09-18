@@ -6,7 +6,8 @@ import { RequestCard } from "@/components/request-card"
 import { RequireSession } from "@/components/require-session"
 import { Button, Chip, EmptyState, PageHeader, inputClass } from "@/components/ui"
 import { getTemplate, getVariant, isPriceAllowed } from "@/lib/catalog"
-import { actions, distanceToCustomer, proView, quoteFor, useApp } from "@/lib/store"
+import { actions, useAct } from "@/lib/client-actions"
+import { distanceToCustomer, priceOf, proView, quoteFor, useApp } from "@/lib/store"
 import type { JobPost } from "@/lib/types"
 import { cn, formatPrice } from "@/lib/utils"
 
@@ -36,7 +37,11 @@ function JobBoard() {
       const offered = job.offers.some((o) => o.proId === proId)
       if (scope === "offered") return offered
       if (job.status !== "open") return false
-      if (scope === "match") return pro.categories.includes(getTemplate(job.templateId)!.category) && km !== null && km <= pro.maxTravelKm
+      if (scope === "match") {
+        return (
+          pro.categories.includes(getTemplate(job.templateId)?.category ?? "nail") && km !== null && km <= pro.maxTravelKm
+        )
+      }
       return true
     })
     .sort((a, b) => a.job.date.localeCompare(b.job.date))
@@ -62,7 +67,9 @@ function JobBoard() {
       {jobs.length ? (
         <ul className="space-y-3">
           {jobs.map(({ job, km }) => {
-            const canOffer = pro.categories.includes(getTemplate(job.templateId)!.category) && km !== null && km <= pro.maxTravelKm
+            // Quoting needs the service listed at a price, inside the travel radius.
+            const listed = priceOf(state, proId, job.templateId, job.variantId)
+            const canOffer = listed !== null && km !== null && km <= pro.maxTravelKm
             return (
               <li key={job.id} id={job.id} className="scroll-mt-20">
                 <RequestCard
@@ -79,7 +86,13 @@ function JobBoard() {
                       job={job}
                       proId={proId}
                       disabled={!state.acceptingJobs || !canOffer}
-                      reason={!canOffer ? "Ngoài chuyên môn hoặc phạm vi di chuyển của bạn" : undefined}
+                      reason={
+                        listed === null
+                          ? "Bạn chưa niêm yết dịch vụ/gói này"
+                          : km === null || km > pro.maxTravelKm
+                            ? "Ngoài phạm vi di chuyển của bạn"
+                            : undefined
+                      }
                     />
                   }
                 />
@@ -100,10 +113,13 @@ function JobBoard() {
 
 function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: string; disabled: boolean; reason?: string }) {
   const state = useApp()
+  const act = useAct()
   const variant = getVariant(job.templateId, job.variantId)!
   const existing = job.offers.find((o) => o.proId === proId)
   const [open, setOpen] = React.useState(false)
-  const [price, setPrice] = React.useState(variant.suggestedPrice)
+  // A quote may not undercut the freelancer's own listed price.
+  const floor = priceOf(state, proId, job.templateId, job.variantId) ?? variant.minPrice
+  const [price, setPrice] = React.useState(Math.max(floor, variant.suggestedPrice))
   const [message, setMessage] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
   const others = job.offers.filter((o) => o.proId !== proId).length
@@ -121,7 +137,11 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
               : `Đã gửi báo giá ${formatPrice(existing.price)}`}
         </span>
         {existing.status === "pending" && (
-          <button type="button" onClick={() => actions.withdrawOffer(job.id)} className="font-medium underline underline-offset-2">
+          <button
+            type="button"
+            onClick={() => void act(() => actions.withdrawOffer(job.id))}
+            className="font-medium underline underline-offset-2"
+          >
             Rút lại
           </button>
         )}
@@ -140,12 +160,12 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
     )
   }
 
-  const allowed = isPriceAllowed(variant, price)
+  const allowed = isPriceAllowed(variant, price) && price >= floor
   const quote = quoteFor(state, {
     proId,
-    price: allowed ? price : variant.suggestedPrice,
+    price: allowed ? price : Math.max(floor, variant.suggestedPrice),
     atHome: job.atHome,
-    address: { city: job.city, district: job.district, detail: job.addressDetail },
+    address: { city: job.city, district: job.district, detail: "" },
     date: job.date,
     time: job.time,
   })
@@ -153,11 +173,11 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
   return (
     <form
       className="mt-3 space-y-3 border-t border-line pt-3"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault()
         if (message.trim().length < 10) return setError("Lời nhắn cần ít nhất 10 ký tự.")
-        const err = actions.sendOffer(job.id, price, message.trim())
-        if (err) setError(err)
+        const problem = await act(() => actions.sendOffer(job.id, price, message.trim()))
+        if (problem) setError(problem)
         else setOpen(false)
       }}
     >
@@ -171,7 +191,7 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
         <input
           id={`price-${job.id}`}
           type="range"
-          min={variant.minPrice}
+          min={floor}
           max={variant.maxPrice}
           step={5000}
           value={price}
@@ -179,9 +199,9 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
           className="mt-2 w-full accent-[var(--color-rose)]"
         />
         <div className="flex justify-between text-[11px] text-muted">
-          <span>{formatPrice(variant.minPrice)}</span>
-          <button type="button" className="text-rose" onClick={() => setPrice(variant.suggestedPrice)}>
-            Giá gợi ý {formatPrice(variant.suggestedPrice)}
+          <span>{formatPrice(floor)}</span>
+          <button type="button" className="text-rose" onClick={() => setPrice(Math.max(floor, variant.suggestedPrice))}>
+            Giá niêm yết {formatPrice(floor)}
           </button>
           <span>{formatPrice(variant.maxPrice)}</span>
         </div>

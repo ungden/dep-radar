@@ -11,9 +11,9 @@ import type { BookingStatus } from "@/lib/types"
 
 type Tab = "upcoming" | "completed" | "cancelled"
 const GROUPS: Record<Tab, BookingStatus[]> = {
-  upcoming: ["pending", "confirmed"],
+  upcoming: ["pending", "confirmed", "in_progress"],
   completed: ["completed"],
-  cancelled: ["cancelled", "declined"],
+  cancelled: ["cancelled", "declined", "expired", "no_show"],
 }
 
 export default function BookingsPage() {
@@ -62,7 +62,7 @@ function BookingsView() {
         items={[
           { value: "upcoming", label: "Sắp tới" },
           { value: "completed", label: "Đã hoàn thành" },
-          { value: "cancelled", label: "Đã hủy" },
+          { value: "cancelled", label: "Đã huỷ" },
         ]}
       />
       {list.length ? (

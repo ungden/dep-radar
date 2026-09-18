@@ -46,7 +46,14 @@ export const REVIEWS: Review[] = [
   r("r15", "dieu-huong", "Thanh Tâm", 5, ["Nhẹ nhàng", "Tư vấn kỹ"], "Massage bầu tháng thứ 7, chị rất cẩn thận, hỏi kỹ tình trạng trước.", "2026-08-22", "Massage bầu · 60 phút", { reply: "Chúc mẹ bầu mẹ tròn con vuông nha!" }),
 ]
 
-const PRO_PROFILES: Omit<Pro, "rating">[] = [
+/**
+ * Sample freelancers. Since the app reads from the database, this file exists to
+ * feed scripts/gen-demo-sql.ts -- it is the source of the demo seed, not of what
+ * the screens show. A seed row has no database id yet, and its rating is derived.
+ */
+type SeedPro = Omit<Pro, "rating" | "uuid" | "acceptingJobs">
+
+const PRO_PROFILES: SeedPro[] = [
   {
     id: "linh-pham",
     name: "Linh Phạm",
@@ -200,7 +207,10 @@ function ratingFromReviews(proId: string): RatingSummary {
   return { average: rows.reduce((sum, x) => sum + x.rating, 0) / rows.length, count: rows.length }
 }
 
-export const PROS: Pro[] = PRO_PROFILES.map((p) => ({ ...p, rating: ratingFromReviews(p.id) }))
+export const PROS: (SeedPro & { rating: RatingSummary })[] = PRO_PROFILES.map((p) => ({
+  ...p,
+  rating: ratingFromReviews(p.id),
+}))
 
 const ps = (proId: string, templateId: string, prices: Record<string, number>): ProService => ({
   id: `${proId}:${templateId}`,
@@ -246,25 +256,25 @@ export const PRO_SERVICES: ProService[] = [
 ]
 
 export const WORKS: Work[] = [
-  { id: "w-milky-stone", proId: "linh-pham", templateId: "nail-design", category: "nail", title: "Nail milky đính đá nhẹ", description: "Thiết kế tinh tế, phù hợp đi làm, đi tiệc. Có thể tùy chỉnh theo tone da và độ dài móng.", images: [img("nail-milky-1"), img("nail-milky-2")], likes: 256, comments: 12 },
-  { id: "w-ombre", proId: "linh-pham", templateId: "nail-design", category: "nail", title: "Nail ombre hồng", description: "Ombre hồng sữa chuyển nhẹ, form coffin mềm.", images: [img("nail-ombre"), img("nail-milky-2")], likes: 188, comments: 9 },
-  { id: "w-nude-short", proId: "linh-pham", templateId: "nail-gel", category: "nail", title: "Móng ngắn tone nude", description: "Form vuông bo ngắn, hợp dân văn phòng gõ phím nhiều.", images: [img("nail-nude-short")], likes: 142, comments: 6 },
-  { id: "w-french", proId: "linh-pham", templateId: "nail-design", category: "nail", title: "Nail French", description: "French đầu móng mảnh, nền hồng trong.", images: [img("nail-french"), img("nail-milky-1")], likes: 97, comments: 4 },
-  { id: "w-party-glow", proId: "thu-anh", templateId: "makeup-party", category: "makeup", title: "Makeup trong trẻo đi tiệc", description: "Nền mỏng, má hồng đào, môi căng bóng.", images: [img("makeup-party-1"), img("makeup-party-2")], likes: 412, comments: 31 },
-  { id: "w-smoky-soft", proId: "thu-anh", templateId: "makeup-photo", category: "makeup", title: "Mắt khói nâu mềm", description: "Layout chụp ảnh tone nâu ấm, không nặng mắt.", images: [img("makeup-smoky"), img("makeup-party-2")], likes: 305, comments: 18 },
-  { id: "w-bride-natural", proId: "thu-anh", templateId: "makeup-bridal", category: "makeup", title: "Cô dâu tự nhiên", description: "Nền lì mỏng, bền suốt lễ cưới.", images: [img("makeup-bride-1"), img("makeup-bride-2")], likes: 520, comments: 44 },
-  { id: "w-facial-calm", proId: "mai-tran", templateId: "skin-recovery", category: "skincare", title: "Phục hồi da nhạy cảm", description: "Liệu trình 4 buổi giúp da bớt đỏ, căng ẩm hơn.", images: [img("skin-glow"), img("skin-massage")], likes: 164, comments: 12 },
-  { id: "w-deep-clean", proId: "mai-tran", templateId: "skin-acne", category: "skincare", title: "Lấy nhân mụn tại nhà", description: "Dụng cụ dùng một lần, lấy nhân mụn nhẹ tay, không để lại thâm.", images: [img("skin-deep"), img("skin-facial")], likes: 131, comments: 7 },
-  { id: "w-body-glow", proId: "mai-tran", templateId: "skin-basic", category: "skincare", title: "Chăm sóc da cuối tuần", description: "Massage mặt 20 phút, mặt nạ dịu da.", images: [img("skin-facial"), img("skin-massage")], likes: 88, comments: 3 },
-  { id: "w-event-waves", proId: "quynh-vu", templateId: "hair-styling", category: "hair", title: "Uốn lọn sóng dự tiệc", description: "Lọn to bồng bềnh, giữ nếp cả tối.", images: [img("hair-waves-1"), img("hair-waves-2")], likes: 176, comments: 10 },
-  { id: "w-bride-bun", proId: "quynh-vu", templateId: "hair-styling", category: "hair", title: "Búi thấp dự tiệc cưới", description: "Búi thấp mềm, kết hợp phụ kiện ngọc trai.", images: [img("hair-bun-1"), img("hair-bun-2")], likes: 203, comments: 15 },
-  { id: "w-classic-lash", proId: "ha-my", templateId: "lash-classic", category: "lash-brow", title: "Mi classic tự nhiên", description: "Mi mảnh, cong nhẹ, như mi thật.", images: [img("lash-1"), img("lash-2")], likes: 240, comments: 21 },
-  { id: "w-brow-shape", proId: "ha-my", templateId: "brow-shaping", category: "lash-brow", title: "Dáng mày ngang mềm", description: "Mày ngang trẻ trung theo khuôn mặt tròn.", images: [img("brow-1"), img("brow-2")], likes: 158, comments: 8 },
-  { id: "w-nb-gel", proId: "ngoc-bao", templateId: "nail-gel", category: "nail", title: "Gel trơn hồng đất", description: "Tone hồng đất ấm, hợp da ngăm.", images: [img("nail-earth")], likes: 64, comments: 2 },
-  { id: "w-nb-combo", proId: "ngoc-bao", templateId: "makeup-party", category: "makeup", title: "Makeup nhóm phù dâu", description: "Makeup nhẹ đồng bộ cho nhóm 3 người.", images: [img("makeup-bridesmaid")], likes: 91, comments: 5 },
-  { id: "w-foot", proId: "dieu-huong", templateId: "massage-foot", category: "massage", title: "Massage chân tại nhà", description: "Ngâm chân thảo mộc, bấm huyệt bàn chân sau ngày dài.", images: [img("massage-foot")], likes: 132, comments: 9 },
-  { id: "w-neck", proId: "dieu-huong", templateId: "massage-neck", category: "massage", title: "Cổ vai gáy dân văn phòng", description: "Chườm nóng và massage giảm căng cứng cổ vai.", images: [img("massage-neck")], likes: 118, comments: 6 },
-  { id: "w-cupping", proId: "dieu-huong", templateId: "massage-oil-cupping", category: "massage", title: "Massage dầu + giác hơi", description: "Massage tinh dầu kết hợp giác hơi lưng.", images: [img("massage-cupping")], likes: 97, comments: 4 },
+  { id: "w-milky-stone", proId: "linh-pham", templateId: "nail-design", category: "nail", title: "Nail milky đính đá nhẹ", description: "Thiết kế tinh tế, phù hợp đi làm, đi tiệc. Có thể tùy chỉnh theo tone da và độ dài móng.", images: [img("nail-milky-1"), img("nail-milky-2")] },
+  { id: "w-ombre", proId: "linh-pham", templateId: "nail-design", category: "nail", title: "Nail ombre hồng", description: "Ombre hồng sữa chuyển nhẹ, form coffin mềm.", images: [img("nail-ombre"), img("nail-milky-2")] },
+  { id: "w-nude-short", proId: "linh-pham", templateId: "nail-gel", category: "nail", title: "Móng ngắn tone nude", description: "Form vuông bo ngắn, hợp dân văn phòng gõ phím nhiều.", images: [img("nail-nude-short")] },
+  { id: "w-french", proId: "linh-pham", templateId: "nail-design", category: "nail", title: "Nail French", description: "French đầu móng mảnh, nền hồng trong.", images: [img("nail-french"), img("nail-milky-1")] },
+  { id: "w-party-glow", proId: "thu-anh", templateId: "makeup-party", category: "makeup", title: "Makeup trong trẻo đi tiệc", description: "Nền mỏng, má hồng đào, môi căng bóng.", images: [img("makeup-party-1"), img("makeup-party-2")] },
+  { id: "w-smoky-soft", proId: "thu-anh", templateId: "makeup-photo", category: "makeup", title: "Mắt khói nâu mềm", description: "Layout chụp ảnh tone nâu ấm, không nặng mắt.", images: [img("makeup-smoky"), img("makeup-party-2")] },
+  { id: "w-bride-natural", proId: "thu-anh", templateId: "makeup-bridal", category: "makeup", title: "Cô dâu tự nhiên", description: "Nền lì mỏng, bền suốt lễ cưới.", images: [img("makeup-bride-1"), img("makeup-bride-2")] },
+  { id: "w-facial-calm", proId: "mai-tran", templateId: "skin-recovery", category: "skincare", title: "Phục hồi da nhạy cảm", description: "Liệu trình 4 buổi giúp da bớt đỏ, căng ẩm hơn.", images: [img("skin-glow"), img("skin-massage")] },
+  { id: "w-deep-clean", proId: "mai-tran", templateId: "skin-acne", category: "skincare", title: "Lấy nhân mụn tại nhà", description: "Dụng cụ dùng một lần, lấy nhân mụn nhẹ tay, không để lại thâm.", images: [img("skin-deep"), img("skin-facial")] },
+  { id: "w-body-glow", proId: "mai-tran", templateId: "skin-basic", category: "skincare", title: "Chăm sóc da cuối tuần", description: "Massage mặt 20 phút, mặt nạ dịu da.", images: [img("skin-facial"), img("skin-massage")] },
+  { id: "w-event-waves", proId: "quynh-vu", templateId: "hair-styling", category: "hair", title: "Uốn lọn sóng dự tiệc", description: "Lọn to bồng bềnh, giữ nếp cả tối.", images: [img("hair-waves-1"), img("hair-waves-2")] },
+  { id: "w-bride-bun", proId: "quynh-vu", templateId: "hair-styling", category: "hair", title: "Búi thấp dự tiệc cưới", description: "Búi thấp mềm, kết hợp phụ kiện ngọc trai.", images: [img("hair-bun-1"), img("hair-bun-2")] },
+  { id: "w-classic-lash", proId: "ha-my", templateId: "lash-classic", category: "lash-brow", title: "Mi classic tự nhiên", description: "Mi mảnh, cong nhẹ, như mi thật.", images: [img("lash-1"), img("lash-2")] },
+  { id: "w-brow-shape", proId: "ha-my", templateId: "brow-shaping", category: "lash-brow", title: "Dáng mày ngang mềm", description: "Mày ngang trẻ trung theo khuôn mặt tròn.", images: [img("brow-1"), img("brow-2")] },
+  { id: "w-nb-gel", proId: "ngoc-bao", templateId: "nail-gel", category: "nail", title: "Gel trơn hồng đất", description: "Tone hồng đất ấm, hợp da ngăm.", images: [img("nail-earth")] },
+  { id: "w-nb-combo", proId: "ngoc-bao", templateId: "makeup-party", category: "makeup", title: "Makeup nhóm phù dâu", description: "Makeup nhẹ đồng bộ cho nhóm 3 người.", images: [img("makeup-bridesmaid")] },
+  { id: "w-foot", proId: "dieu-huong", templateId: "massage-foot", category: "massage", title: "Massage chân tại nhà", description: "Ngâm chân thảo mộc, bấm huyệt bàn chân sau ngày dài.", images: [img("massage-foot")] },
+  { id: "w-neck", proId: "dieu-huong", templateId: "massage-neck", category: "massage", title: "Cổ vai gáy dân văn phòng", description: "Chườm nóng và massage giảm căng cứng cổ vai.", images: [img("massage-neck")] },
+  { id: "w-cupping", proId: "dieu-huong", templateId: "massage-oil-cupping", category: "massage", title: "Massage dầu + giác hơi", description: "Massage tinh dầu kết hợp giác hơi lưng.", images: [img("massage-cupping")] },
 ]
 
 export const getPro = (id: string) => PROS.find((p) => p.id === id)

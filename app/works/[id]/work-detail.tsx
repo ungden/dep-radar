@@ -4,30 +4,44 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bookmark, ChevronLeft, Clock, Heart, MessageCircle, Share2 } from "lucide-react"
+import { Bookmark, ChevronLeft, Clock, Share2 } from "lucide-react"
 import { FollowButton } from "@/components/follow-button"
 import { VerifiedMark } from "@/components/trust"
 import { WorkCard } from "@/components/beauty"
 import { Avatar, ButtonLink, Card, Pill } from "@/components/ui"
-import { getTemplate } from "@/lib/catalog"
-import { categoryLabel, getWork, worksByPro } from "@/lib/data"
-import { actions, proView, servicesOf, useApp } from "@/lib/store"
+import { categoryLabel, getTemplate } from "@/lib/catalog"
+import { actions, useAct } from "@/lib/client-actions"
+import { proView, servicesOf, useApp, worksOf } from "@/lib/store"
 import { cn, formatDuration, formatPrice } from "@/lib/utils"
 
 export function WorkDetail({ workId }: { workId: string }) {
   const router = useRouter()
   const state = useApp()
-  const work = getWork(workId)!
-  const pro = proView(state, work.proId)!
-  const tpl = getTemplate(work.templateId)!
+  const act = useAct()
+  const work = state.works.find((w) => w.id === workId)
+  const pro = work ? proView(state, work.proId) : undefined
+  const tpl = work ? getTemplate(work.templateId) : undefined
+  const [index, setIndex] = React.useState(0)
+  const [copied, setCopied] = React.useState(false)
+  const scroller = React.useRef<HTMLDivElement>(null)
+
+  // The page component already resolved this work, so a miss here means the
+  // freelancer unpublished it between the server render and this one.
+  if (!work || !pro || !tpl) {
+    return (
+      <div className="py-24 text-center text-sm text-ink-soft">
+        Tác phẩm này không còn hiển thị.{" "}
+        <Link href="/" className="text-rose underline underline-offset-2">
+          Về trang khám phá
+        </Link>
+      </div>
+    )
+  }
+
   const listing = servicesOf(state, pro.id).find((x) => x.templateId === work.templateId)
   const offered = listing ? tpl.variants.filter((v) => listing.prices[v.id] !== undefined) : []
   const saved = state.savedWorks.includes(work.id)
-  const [index, setIndex] = React.useState(0)
-  const [liked, setLiked] = React.useState(false)
-  const [copied, setCopied] = React.useState(false)
-  const scroller = React.useRef<HTMLDivElement>(null)
-  const others = worksByPro(pro.id).filter((w) => w.id !== work.id)
+  const others = worksOf(state, pro.id).filter((w) => w.id !== work.id)
 
   const share = async () => {
     const url = window.location.href
@@ -112,15 +126,22 @@ export function WorkDetail({ workId }: { workId: string }) {
             <FollowButton proId={pro.id} />
           </div>
 
+{/* No like or comment counts: nothing counts them yet, so there is no
+            number to show. Saving and sharing are real. */}
           <div className="mt-5 flex items-center gap-5 border-y border-line py-3 text-sm text-ink-soft">
-            <button type="button" onClick={() => setLiked((v) => !v)} className="inline-flex items-center gap-1.5" aria-pressed={liked}>
-              <Heart className={cn("size-5", liked && "fill-rose text-rose")} /> {work.likes + (liked ? 1 : 0)}
-            </button>
-            <span className="inline-flex items-center gap-1.5">
-              <MessageCircle className="size-5" /> {work.comments}
-            </span>
-            <button type="button" onClick={() => actions.toggleSaveWork(work.id)} className="inline-flex items-center gap-1.5" aria-pressed={saved}>
-              <Bookmark className={cn("size-5", saved && "fill-rose text-rose")} /> {saved ? "Đã lưu" : "Lưu"}
+            <button
+              type="button"
+              onClick={() => {
+                if (!state.session) {
+                  router.push(`/login?next=${encodeURIComponent(`/works/${work.id}`)}`)
+                  return
+                }
+                void act(() => actions.toggleSaveWork(work.id))
+              }}
+              className="inline-flex items-center gap-1.5"
+              aria-pressed={saved}
+            >
+              <Bookmark className={cn("size-5", saved && "fill-rose text-rose")} /> {saved ? "Đã lưu" : "Lưu mẫu"}
             </button>
             <button type="button" onClick={share} className="ml-auto inline-flex items-center gap-1.5">
               <Share2 className="size-5" /> {copied ? "Đã chép link" : "Chia sẻ"}

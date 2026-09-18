@@ -6,10 +6,11 @@ import { Info } from "lucide-react"
 import { CATEGORY_ICON } from "@/components/beauty"
 import { RequireSession } from "@/components/require-session"
 import { BottomBar, Button, Field, PageHeader, inputClass } from "@/components/ui"
+import { AddressPicker, defaultAddressId } from "@/components/address-picker"
 import { CATEGORIES, templatesByCategory } from "@/lib/catalog"
-import { CITIES, districtsOf } from "@/lib/geo"
 import { POLICY } from "@/lib/pricing"
-import { TIME_SLOTS, actions, useApp } from "@/lib/store"
+import { actions } from "@/lib/client-actions"
+import { useApp } from "@/lib/store"
 import { PAYMENT_LABEL } from "@/components/price-breakdown"
 import type { CategoryId, PaymentMethod } from "@/lib/types"
 import { addDays, cn, formatDuration, formatPrice, todayISO } from "@/lib/utils"
@@ -25,21 +26,28 @@ export default function NewRequestPage() {
   )
 }
 
+/** Half-hour starts, the same step the freelancers' own calendars use. */
+const TIME_OPTIONS = Array.from({ length: 28 }, (_, i) => {
+  const minutes = 8 * 60 + i * 30
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
+})
+
 function NewRequestForm() {
   const router = useRouter()
-  const { customerAddress } = useApp()
+  const state = useApp()
   const [category, setCategory] = React.useState<CategoryId>("nail")
   const [templateId, setTemplateId] = React.useState(templatesByCategory("nail")[0].id)
   const [variantId, setVariantId] = React.useState(templatesByCategory("nail")[0].variants[0].id)
   const [description, setDescription] = React.useState("")
   const [date, setDate] = React.useState(addDays(todayISO(), 2))
   const [time, setTime] = React.useState("16:00")
-  const [city, setCity] = React.useState(customerAddress?.city ?? CITIES[0])
-  const [district, setDistrict] = React.useState(customerAddress?.district ?? districtsOf(CITIES[0])[0])
-  const [detail, setDetail] = React.useState(customerAddress?.detail ?? "")
+  const [pickedAddress, setAddressId] = React.useState<string | null>(null)
   const [atHomePref, setAtHome] = React.useState(true)
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>("cash")
+  const [error, setError] = React.useState<string | null>(null)
+  const [busy, setBusy] = React.useState(false)
 
+  const addressId = pickedAddress ?? defaultAddressId(state.addresses)
   const templates = templatesByCategory(category)
   const tpl = templates.find((t) => t.id === templateId) ?? templates[0]
   const variant = tpl.variants.find((v) => v.id === variantId) ?? tpl.variants[0]
@@ -52,27 +60,29 @@ function NewRequestForm() {
     setVariantId(first.variants[0].id)
   }
 
-  const valid = date >= todayISO() && (!atHome || detail.trim().length >= 3)
+  const valid = date >= todayISO() && atHome && Boolean(addressId)
 
   return (
     <form
       className="space-y-6"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault()
-        if (!valid) return
-        const id = actions.createJob({
+        if (!valid || busy) return
+        setBusy(true)
+        setError(null)
+        const result = await actions.createJob({
           templateId: tpl.id,
           variantId: variant.id,
           description: description.trim(),
           date,
           time,
-          city,
-          district,
-          addressDetail: detail.trim(),
+          addressId,
           atHome,
           paymentMethod,
         })
-        router.replace(`/requests/${id}`)
+        setBusy(false)
+        if ("error" in result) return setError(result.error)
+        router.replace(`/requests/${result.id}`)
       }}
     >
       <p className="rounded-2xl bg-blush px-4 py-3 text-[13px] text-rose-dark">
@@ -165,29 +175,8 @@ function NewRequestForm() {
         </Field>
         <Field label="Giờ bắt đầu">
           <select className={inputClass} value={time} onChange={(e) => setTime(e.target.value)}>
-            {TIME_SLOTS.map((t) => (
+            {TIME_OPTIONS.map((t) => (
               <option key={t}>{t}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Tỉnh/thành">
-          <select
-            className={inputClass}
-            value={city}
-            onChange={(e) => {
-              setCity(e.target.value)
-              setDistrict(districtsOf(e.target.value)[0])
-            }}
-          >
-            {CITIES.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Quận/huyện">
-          <select className={inputClass} value={district} onChange={(e) => setDistrict(e.target.value)}>
-            {districtsOf(city).map((d) => (
-              <option key={d}>{d}</option>
             ))}
           </select>
         </Field>
@@ -216,14 +205,21 @@ function NewRequestForm() {
           ))}
         </div>
         {tpl.studioOnly && <p className="mt-2 text-xs text-warning">Dịch vụ này cần thiết bị tại studio.</p>}
+        {!atHome && (
+          <p className="mt-2 text-xs text-warning">
+            Đăng yêu cầu hiện chỉ dành cho dịch vụ làm tại nhà. Với dịch vụ tại studio, hãy đặt lịch trực tiếp với
+            chuyên viên.
+          </p>
+        )}
         {atHome && (
-          <input
-            aria-label="Số nhà, đường"
-            placeholder="Số nhà, ngõ, đường, toà nhà"
-            className={cn(inputClass, "mt-2")}
-            value={detail}
-            onChange={(e) => setDetail(e.target.value)}
-          />
+          <div className="mt-3">
+            <AddressPicker
+              value={addressId}
+              onChange={setAddressId}
+              city={state.addresses[0]?.city ?? "Hà Nội"}
+              district={state.addresses[0]?.district ?? "Đống Đa"}
+            />
+          </div>
         )}
       </fieldset>
 
@@ -256,9 +252,15 @@ function NewRequestForm() {
         Khách không mất phí đăng yêu cầu. Nếu làm tại nhà xa hơn {POLICY.freeTravelKm} km hoặc bắt đầu trong vòng {POLICY.urgentWithinHours} giờ, báo giá sẽ kèm phí di chuyển / đặt gấp theo quy định.
       </p>
 
+      {error && (
+        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+          {error}
+        </p>
+      )}
+
       <BottomBar>
-        <Button type="submit" size="lg" className="w-full" disabled={!valid}>
-          Đăng yêu cầu
+        <Button type="submit" size="lg" className="w-full" disabled={!valid || busy}>
+          {busy ? "Đang đăng…" : "Đăng yêu cầu"}
         </Button>
       </BottomBar>
     </form>

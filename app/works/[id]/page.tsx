@@ -1,25 +1,20 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { WORKS, getPro, getWork } from "@/lib/data"
+import { getWorkBySlug } from "@/lib/api/pros"
 import { WorkDetail } from "./work-detail"
 
-export function generateStaticParams() {
-  return WORKS.map((w) => ({ id: w.id }))
-}
-
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const work = getWork((await params).id)
+  const work = await getWorkBySlug((await params).id)
   if (!work) return {}
-  const pro = getPro(work.proId)
   return {
-    title: `${work.title} · ${pro?.name}`,
+    title: `${work.title} · ${work.proName}`,
     description: work.description,
-    openGraph: { images: [work.images[0]] },
+    openGraph: { images: work.images.slice(0, 1) },
   }
 }
 
 export default async function WorkPage({ params }: { params: Promise<{ id: string }> }) {
-  const work = getWork((await params).id)
+  const work = await getWorkBySlug((await params).id)
   if (!work) notFound()
-  return <WorkDetail workId={work.id} />
+  return <WorkDetail workId={work.slug} />
 }

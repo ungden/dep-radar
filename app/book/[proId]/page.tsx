@@ -5,25 +5,15 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Car, Check, CheckCircle2, Clock, CreditCard, HandCoins, Home, Info, Store, Zap } from "lucide-react"
+import { AddressPicker, defaultAddressId } from "@/components/address-picker"
 import { PriceBreakdown } from "@/components/price-breakdown"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, Skeleton, inputClass, PageSkeleton } from "@/components/ui"
 import { getTemplate } from "@/lib/catalog"
-import { DEMO_PRO_ID } from "@/lib/data"
-import { CITIES, districtsOf } from "@/lib/geo"
-import { POLICY, isTooSoon, isUrgent } from "@/lib/pricing"
-import {
-  TIME_SLOTS,
-  actions,
-  homeAvailability,
-  priceOf,
-  proView,
-  quoteFor,
-  servicesOf,
-  takenSlots,
-  useApp,
-  useHydrated,
-} from "@/lib/store"
+import { actions } from "@/lib/client-actions"
+import { formatPhone } from "@/lib/auth/phone"
+import { POLICY, isUrgent } from "@/lib/pricing"
+import { homeAvailability, priceOf, proView, quoteFor, servicesOf, useApp } from "@/lib/store"
 import type { CustomerAddress, PaymentMethod, PriceQuote } from "@/lib/types"
 import { addDays, addMinutes, cn, formatDateLong, formatDuration, formatPrice, parseISODate, todayISO, weekdayShort } from "@/lib/utils"
 
@@ -38,20 +28,10 @@ export default function BookPage() {
 }
 
 function BookGate() {
-  const hydrated = useHydrated()
   const { proId } = useParams<{ proId: string }>()
   const state = useApp()
   const pro = proView(state, proId)
 
-  if (!hydrated) {
-    return (
-      <div className="mx-auto max-w-2xl space-y-4 pt-16">
-        <Skeleton className="h-10" />
-        <Skeleton className="h-28" />
-        <Skeleton className="h-56" />
-      </div>
-    )
-  }
   if (!pro || !servicesOf(state, proId).length) {
     return (
       <div className="mx-auto max-w-2xl">
@@ -69,8 +49,8 @@ function BookingFlow({ proId }: { proId: string }) {
   const state = useApp()
   const pro = proView(state, proId)!
   const services = servicesOf(state, proId)
-  const isOwnProfile = state.session?.role === "pro" && state.session.proId === pro.id
-  const paused = pro.id === DEMO_PRO_ID && !state.acceptingJobs
+  const isOwnProfile = state.session?.proId === pro.id
+  const paused = !pro.acceptingJobs
 
   const initialService = services.find((s) => s.templateId === params.get("service")) ?? services[0]
   const initialVariant =
@@ -82,35 +62,72 @@ function BookingFlow({ proId }: { proId: string }) {
   const [templateId, setTemplateId] = React.useState(initialService.templateId)
   const [variantId, setVariantId] = React.useState(initialVariant)
   const [date, setDate] = React.useState(addDays(todayISO(), 1))
-  const [time, setTime] = React.useState<string | null>(null)
-  const [address, setAddress] = React.useState<CustomerAddress>(state.customerAddress ?? { city: pro.city, district: pro.district, detail: "" })
+  const [pickedTime, setTime] = React.useState<string | null>(null)
+  const [pickedAddress, setAddressId] = React.useState<string | null>(null)
   const [note, setNote] = React.useState("")
   const [payment, setPayment] = React.useState<PaymentMethod>("cash")
   const [error, setError] = React.useState<string | null>(null)
+  const [busy, setBusy] = React.useState(false)
   const [doneId, setDoneId] = React.useState<string | null>(null)
 
   const tpl = getTemplate(templateId)!
   const variant = tpl.variants.find((v) => v.id === variantId)!
   const price = priceOf(state, proId, templateId, variantId)!
-  const home = homeAvailability(state, proId, templateId, address)
+  // Start on the customer's default address without an effect writing it back.
+  const addressId = pickedAddress ?? defaultAddressId(state.addresses)
+  const chosen = state.addresses.find((a) => a.id === addressId) ?? null
+  const address: CustomerAddress | null = chosen
+    ? { city: chosen.city, district: chosen.district, detail: chosen.detail }
+    : null
+  const home = homeAvailability(state, proId, templateId, address ?? { city: pro.city, district: pro.district, detail: "" })
   const canStudio = Boolean(pro.studioAddress)
   const [atHomePref, setAtHome] = React.useState(true)
-  const atHome = home.ok && (atHomePref || !canStudio)
-  const locationOk = atHome || canStudio
+  const atHome = atHomePref || !canStudio
+  const locationOk = atHome ? home.ok && Boolean(chosen) : canStudio
 
   const days = Array.from({ length: 14 }, (_, i) => addDays(todayISO(), i))
-  const taken = takenSlots(state, pro.id, date)
+
+  // The freelancer's real openings for this day, from their working hours. The
+  // answer is tagged with what was asked, so a stale reply is simply ignored
+  // rather than having to be cleared from state first.
+  const slotKey = [proId, templateId, variantId, date, atHome, addressId].join("|")
+  const [loaded, setLoaded] = React.useState<{ key: string; list: { startsAt: string; time: string }[] } | null>(null)
+  React.useEffect(() => {
+    let live = true
+    void actions
+      .slotsFor({ proId, templateId, variantId, date, atHome, addressId })
+      .then((list) => live && setLoaded({ key: slotKey, list }))
+    return () => {
+      live = false
+    }
+  }, [slotKey, proId, templateId, variantId, date, atHome, addressId])
+  const slots = loaded?.key === slotKey ? loaded.list : null
+
+  // A time picked for another day or service may no longer be on offer.
+  const time = slots && pickedTime && !slots.some((s) => s.time === pickedTime) ? null : pickedTime
   const quote: PriceQuote | null = time ? quoteFor(state, { proId, price, atHome, address, date, time }) : null
 
-  const canNext = step === 1 ? true : step === 2 ? Boolean(time) : locationOk && (!atHome || address.detail.trim().length >= 3)
+  const canNext = step === 1 ? true : step === 2 ? Boolean(time) : locationOk
 
-  const submit = () => {
+  const submit = async () => {
     setError(null)
     if (!state.session) {
       router.push(`/login?next=${encodeURIComponent(`/book/${proId}?service=${templateId}&variant=${variantId}`)}`)
       return
     }
-    const res = actions.createBooking({ proId, templateId, variantId, date, time: time!, atHome, address, note: note.trim(), paymentMethod: payment })
+    setBusy(true)
+    const res = await actions.createBooking({
+      proId,
+      templateId,
+      variantId,
+      date,
+      time: time!,
+      atHome,
+      addressId: atHome ? addressId : null,
+      note: note.trim(),
+      paymentMethod: payment,
+    })
+    setBusy(false)
     if ("error" in res) setError(res.error)
     else setDoneId(res.id)
   }
@@ -123,7 +140,8 @@ function BookingFlow({ proId }: { proId: string }) {
         </span>
         <h1 className="mt-5 text-2xl font-semibold">Đã gửi yêu cầu đặt lịch</h1>
         <p className="mt-2 text-sm text-ink-soft">
-          {pro.name} sẽ gọi cho bạn qua số {state.session?.phone} để xác nhận lịch {time} · {formatDateLong(date)}, thường trong ~{pro.stats.responseMinutes} phút. Nếu không được xác nhận trong{" "}
+          {pro.name} sẽ gọi cho bạn qua số {formatPhone(state.session?.phone ?? "")} để xác nhận lịch {time} ·{" "}
+          {formatDateLong(date)}, thường trong ~{pro.stats.responseMinutes} phút. Nếu không được xác nhận trong{" "}
           {POLICY.confirmWithinHours} giờ, lịch tự huỷ{payment === "online" ? " và tiền được hoàn 100%" : ""}.
         </p>
         <div className="mt-8 grid w-full gap-2">
@@ -262,38 +280,51 @@ function BookingFlow({ proId }: { proId: string }) {
 
           <section className="mt-6">
             <h2 className="mb-3 font-semibold">Chọn khung giờ</h2>
-            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5">
-              {TIME_SLOTS.map((slot) => {
-                const disabled = taken.has(slot) || isTooSoon(date, slot)
-                const urgent = !disabled && isUrgent(date, slot)
-                const active = slot === time
-                return (
-                  <button
-                    key={slot}
-                    type="button"
-                    disabled={disabled}
-                    aria-pressed={active}
-                    onClick={() => setTime(slot)}
-                    className={cn(
-                      "relative h-12 rounded-xl border text-sm transition-colors",
-                      active ? "border-rose bg-blush font-semibold text-rose-dark" : "border-line bg-surface text-ink hover:border-blush-strong",
-                      disabled && "cursor-not-allowed border-transparent bg-canvas text-muted/60 line-through",
-                    )}
-                  >
-                    {slot}
-                    {urgent && (
-                      <span className="absolute -right-1 -top-2 inline-flex items-center gap-0.5 rounded-full bg-warning px-1.5 py-0.5 text-[9.5px] font-semibold text-white">
-                        <Zap className="size-2.5" />
-                        Gấp
-                      </span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
+            {slots === null ? (
+              <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 rounded-xl" />
+                ))}
+              </div>
+            ) : slots.length === 0 ? (
+              <p className="rounded-xl bg-canvas px-3.5 py-3 text-[13px] text-ink-soft">
+                {pro.name} không còn chỗ trống ngày này. Chọn ngày khác nhé.
+              </p>
+            ) : (
+              <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5">
+                {slots.map((slot) => {
+                  const urgent = isUrgent(date, slot.time)
+                  const active = slot.time === time
+                  return (
+                    <button
+                      key={slot.startsAt}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setTime(slot.time)}
+                      className={cn(
+                        "relative h-12 rounded-xl border text-sm transition-colors",
+                        active
+                          ? "border-rose bg-blush font-semibold text-rose-dark"
+                          : "border-line bg-surface text-ink hover:border-blush-strong",
+                      )}
+                    >
+                      {slot.time}
+                      {urgent && (
+                        <span className="absolute -right-1 -top-2 inline-flex items-center gap-0.5 rounded-full bg-warning px-1.5 py-0.5 text-[9.5px] font-semibold text-white">
+                          <Zap className="size-2.5" />
+                          Gấp
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
             <p className="mt-3 text-xs text-muted">
-              Gạch ngang: {pro.name} đã có lịch hoặc còn dưới {POLICY.minLeadMinutes} phút. Khung giờ bắt đầu trong vòng {POLICY.urgentWithinHours} giờ tính phí đặt gấp{" "}
-              {formatPrice(POLICY.urgentFee)} để chuyên viên đặt xe tới kịp.
+              Chỉ hiện khung giờ {pro.name} còn trống, đã tính cả thời lượng dịch vụ và thời gian di chuyển giữa hai
+              khách. Cần đặt trước ít nhất {POLICY.minLeadMinutes} phút. Khung giờ bắt đầu trong vòng{" "}
+              {POLICY.urgentWithinHours} giờ tính phí đặt gấp {formatPrice(POLICY.urgentFee)} để chuyên viên đặt xe tới
+              kịp.
             </p>
           </section>
         </>
@@ -329,39 +360,18 @@ function BookingFlow({ proId }: { proId: string }) {
                 </PlaceOption>
               </div>
 
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <select
-                  aria-label="Tỉnh/thành"
-                  className={cn(inputClass, "text-sm")}
-                  value={address.city}
-                  onChange={(e) => setAddress({ city: e.target.value, district: districtsOf(e.target.value)[0], detail: address.detail })}
-                >
-                  {CITIES.map((c) => (
-                    <option key={c}>{c}</option>
-                  ))}
-                </select>
-                <select
-                  aria-label="Quận/huyện"
-                  className={cn(inputClass, "text-sm")}
-                  value={address.district}
-                  onChange={(e) => setAddress({ ...address, district: e.target.value })}
-                >
-                  {districtsOf(address.city).map((d) => (
-                    <option key={d}>{d}</option>
-                  ))}
-                </select>
-              </div>
               {atHome && (
-                <input
-                  aria-label="Số nhà, đường"
-                  placeholder="Số nhà, ngõ, đường, toà nhà"
-                  className={cn(inputClass, "mt-2 text-sm")}
-                  value={address.detail}
-                  onChange={(e) => setAddress({ ...address, detail: e.target.value })}
-                />
+                <div className="mt-3">
+                  <AddressPicker value={addressId} onChange={setAddressId} city={pro.city} district={pro.district} />
+                </div>
               )}
 
-              {!home.ok && <p className="mt-2 text-xs text-warning">{home.reason}{canStudio ? " Bạn có thể đến studio." : ""}</p>}
+              {atHome && chosen && !home.ok && (
+                <p className="mt-2 text-xs text-warning">
+                  {home.reason}
+                  {canStudio ? " Bạn có thể đến studio." : ""}
+                </p>
+              )}
               {atHome && quote.distanceKm !== null && (
                 <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-soft">
                   <Car className="size-3.5" />
@@ -449,10 +459,16 @@ function BookingFlow({ proId }: { proId: string }) {
           <Button
             size="lg"
             className="flex-1"
-            disabled={!canNext || isOwnProfile || paused}
-            onClick={() => (step < 3 ? setStep((s) => s + 1) : submit())}
+            disabled={!canNext || isOwnProfile || paused || busy}
+            onClick={() => (step < 3 ? setStep((s) => s + 1) : void submit())}
           >
-            {step < 3 ? "Tiếp tục" : !state.session ? "Đăng nhập để đặt lịch" : "Gửi yêu cầu đặt lịch"}
+            {step < 3
+              ? "Tiếp tục"
+              : !state.session
+                ? "Đăng nhập để đặt lịch"
+                : busy
+                  ? "Đang gửi…"
+                  : "Gửi yêu cầu đặt lịch"}
           </Button>
         </div>
       </BottomBar>

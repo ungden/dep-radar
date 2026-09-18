@@ -1,23 +1,28 @@
 "use client"
 
+import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Car, Clock, CreditCard, HandCoins, Home, Phone, Store, Zap } from "lucide-react"
 import { Avatar, Button, ButtonLink, Card, StatusBadge, buttonClass } from "@/components/ui"
-import { actions as store } from "@/lib/store"
-import { getPro, worksByPro } from "@/lib/data"
+import { actions as store, useAct } from "@/lib/client-actions"
+import { type AppState, getPro, useApp, worksOf } from "@/lib/store"
 import type { Booking } from "@/lib/types"
 import { addMinutes, formatDateLong, formatPrice } from "@/lib/utils"
 
-export function bookingImage(b: Booking) {
-  const works = worksByPro(b.proId)
-  return (works.find((w) => w.templateId === b.templateId) ?? works.find((w) => w.category === b.category) ?? works[0])?.images[0]
+/** A picture of the work being booked, taken from the freelancer's portfolio. */
+export function bookingImage(state: AppState, b: Booking) {
+  const works = worksOf(state, b.proId)
+  return (works.find((w) => w.templateId === b.templateId) ?? works.find((w) => w.category === b.category) ?? works[0])
+    ?.images[0]
 }
 
 /** Customer-facing booking card. */
 export function BookingCard({ booking }: { booking: Booking }) {
-  const pro = getPro(booking.proId)!
-  const image = bookingImage(booking)
+  const state = useApp()
+  const pro = getPro(state, booking.proId)
+  const image = bookingImage(state, booking)
+  if (!pro) return null
   return (
     <Card className="p-3.5">
       <Link href={`/bookings/${booking.id}`} className="flex gap-3">
@@ -45,9 +50,17 @@ export function BookingCard({ booking }: { booking: Booking }) {
           <ButtonLink href={`/bookings/${booking.id}`} variant="outline" size="sm" className="border-line text-ink">
             Xem chi tiết
           </ButtonLink>
-          <a href={`tel:${pro.phone.replace(/\s/g, "")}`} className={buttonClass("soft", "sm")}>
-            <Phone className="size-3.5" /> Gọi chuyên viên
-          </a>
+          {/* Before the freelancer accepts, calling is their move, not the
+              customer's -- even if a past job means the number is already known. */}
+          {booking.status !== "pending" && booking.proPhone ? (
+            <a href={`tel:${booking.proPhone.replace(/\s/g, "")}`} className={buttonClass("soft", "sm")}>
+              <Phone className="size-3.5" /> Gọi chuyên viên
+            </a>
+          ) : (
+            <span className="flex items-center justify-center rounded-xl bg-canvas px-3 text-center text-xs text-muted">
+              Chờ {booking.proName} gọi
+            </span>
+          )}
         </div>
       )}
       {booking.status === "completed" && (
@@ -124,17 +137,33 @@ export function JobBookingRow({ booking, actions }: { booking: Booking; actions?
 
 /** Freelancer calls the customer to confirm details, then accepts. */
 export function PendingJobActions({ booking }: { booking: Booking }) {
+  const act = useAct()
+  const [error, setError] = React.useState<string | null>(null)
   return (
-    <div className="mt-3 grid grid-cols-[auto_1fr_1fr] gap-2">
-      <Button variant="ghost" size="sm" onClick={() => store.setBookingStatus(booking.id, "declined")}>
-        Từ chối
-      </Button>
-      <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "sm")}>
-        <Phone className="size-3.5" /> Gọi khách
-      </a>
-      <Button size="sm" onClick={() => store.setBookingStatus(booking.id, "confirmed")}>
-        Đã gọi, nhận job
-      </Button>
-    </div>
+    <>
+      <div className="mt-3 grid grid-cols-[auto_1fr_1fr] gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => void act(() => store.setBookingStatus(booking.id, "declined")).then(setError)}
+        >
+          Từ chối
+        </Button>
+        <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "sm")}>
+          <Phone className="size-3.5" /> Gọi khách
+        </a>
+        <Button
+          size="sm"
+          onClick={() => void act(() => store.setBookingStatus(booking.id, "confirmed")).then(setError)}
+        >
+          Đã gọi, nhận job
+        </Button>
+      </div>
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-danger">
+          {error}
+        </p>
+      )}
+    </>
   )
 }

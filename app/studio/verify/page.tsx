@@ -5,7 +5,7 @@ import { Camera, CheckCircle2, Clock, IdCard, Loader2, RotateCcw, ScanFace, Shie
 import { RequireSession } from "@/components/require-session"
 import { BottomBar, Button, ButtonLink, Card, PageHeader } from "@/components/ui"
 import { type IdentityImage, type IdentityImageKind, checkImage, loadImage, verifyIdentity } from "@/lib/identity-check"
-import { actions, proView, useApp } from "@/lib/store"
+import { proView, useApp, useRefresh } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
 export default function VerifyPage() {
@@ -29,6 +29,7 @@ type Phase = "form" | "checking" | "done" | "review" | "failed"
 
 function VerifyFlow() {
   const state = useApp()
+  const refresh = useRefresh()
   const pro = proView(state, state.session!.proId!)!
   const [consent, setConsent] = React.useState(false)
   const [images, setImages] = React.useState<Partial<Record<IdentityImageKind, IdentityImage>>>({})
@@ -65,28 +66,27 @@ function VerifyFlow() {
   const submit = async () => {
     if (!ready) return
     setPhase("checking")
-    actions.setMyIdentity("pending")
     try {
+      // The server records the attempt and owns the resulting status; this screen
+      // only reports what came back and then re-reads the profile.
       const result = await verifyIdentity(images as Record<IdentityImageKind, IdentityImage>, pro.name)
       if (result.status === "verified") {
-        actions.setMyIdentity("verified")
         setNameOnCard(result.nameOnCard)
         setPhase("done")
       } else if (result.status === "review") {
         setReason(result.reason)
         setPhase("review")
       } else {
-        actions.setMyIdentity("rejected")
         setReason(result.reason)
         setPhase("failed")
       }
     } catch (err) {
-      actions.setMyIdentity("none")
       setReason(err instanceof Error ? err.message : "Không kết nối được dịch vụ xác minh.")
       setPhase("failed")
     }
     Object.values(images).forEach((img) => img && URL.revokeObjectURL(img.url))
     setImages({})
+    refresh()
   }
 
   if (phase === "checking") {

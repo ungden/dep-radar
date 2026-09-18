@@ -59,12 +59,13 @@ for (const pro of PROS) {
   lines.push(
     `update public.accounts set full_name = ${q(pro.name)}, active_role = 'pro',`,
     `  avatar_path = ${pro.avatar ? q(pro.avatar) : "null"} where id = ${q(id)};`,
-    `insert into public.pros (id, slug, title, bio, highlights, categories, city, district, lat, lng, areas,`,
+    `insert into public.pros (id, slug, display_name, avatar_path, title, bio, highlights, categories, city, district, lat, lng, areas,`,
     `  home_service, studio_address, max_travel_km, years_exp, accepting_jobs, published, identity_status)`,
-    `values (${q(id)}, ${q(pro.id)}, ${q(pro.title)}, ${q(pro.bio)}, ${arr(pro.highlights)},`,
+    `values (${q(id)}, ${q(pro.id)}, ${q(pro.name)}, ${pro.avatar ? q(pro.avatar) : "null"}, ${q(pro.title)}, ${q(pro.bio)}, ${arr(pro.highlights)},`,
     `  array[${pro.categories.map(q).join(", ")}]::public.category_id[], ${q(pro.city)}, ${q(pro.district)}, ${lat}, ${lng}, ${arr(pro.areas)},`,
     `  ${pro.homeService}, ${pro.studioAddress ? q(pro.studioAddress) : "null"}, ${pro.maxTravelKm}, ${pro.yearsExp}, true, true, ${q(pro.identity)})`,
-    `on conflict (id) do update set title = excluded.title, bio = excluded.bio, highlights = excluded.highlights,`,
+    `on conflict (id) do update set display_name = excluded.display_name, avatar_path = excluded.avatar_path,`,
+    `  title = excluded.title, bio = excluded.bio, highlights = excluded.highlights,`,
     `  categories = excluded.categories, city = excluded.city, district = excluded.district,`,
     `  lat = excluded.lat, lng = excluded.lng, areas = excluded.areas, home_service = excluded.home_service,`,
     `  studio_address = excluded.studio_address, max_travel_km = excluded.max_travel_km, years_exp = excluded.years_exp;`,
@@ -105,11 +106,12 @@ lines.push("")
 lines.push("-- Portfolio -----------------------------------------------------------------")
 WORKS.forEach((work, i) => {
   lines.push(
-    `insert into public.works (id, pro_id, template_id, title, description, image_paths, is_cover, sort_order)`,
+    `insert into public.works (id, pro_id, template_id, title, description, image_paths, is_cover, sort_order, slug)`,
     `values (${q(uuidFor("work", work.id))}, ${q(uuidFor("pro", work.proId))}, ${q(work.templateId)}, ${q(work.title)},`,
-    `  ${q(work.description)}, ${arr(work.images)}, ${i === 0}, ${i})`,
+    `  ${q(work.description)}, ${arr(work.images)}, ${i === 0}, ${i}, public.slugify(${q(work.title)}))`,
     `on conflict (id) do update set title = excluded.title, description = excluded.description,`,
-    `  image_paths = excluded.image_paths, template_id = excluded.template_id, sort_order = excluded.sort_order;`,
+    `  image_paths = excluded.image_paths, template_id = excluded.template_id, sort_order = excluded.sort_order,`,
+    `  slug = excluded.slug;`,
   )
 })
 lines.push("")
@@ -163,13 +165,13 @@ for (const review of REVIEWS) {
     `  'cash', 'completed', (${q(review.date)}::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',`,
     `  (${q(review.date)}::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',`,
     `  (${q(review.date)}::date + interval '16 hours') at time zone 'Asia/Ho_Chi_Minh',`,
-    `  (${q(review.date)}::date - interval '2 days') at time zone 'Asia/Ho_Chi_Minh')`,
+    `  (${q(review.date)}::date + interval '11 hours 20 minutes') at time zone 'Asia/Ho_Chi_Minh')`,
     `on conflict (id) do nothing;`,
     `insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)`,
     `values (${q(proId)}, ${q(bookingId)}, 'commission', ${-commission}, 'Hoa hồng job hoàn thành')`,
     `on conflict (booking_id, kind) do nothing;`,
-    `insert into public.reviews (booking_id, pro_id, customer_id, rating, tags, body, photo_paths, reply, replied_at, created_at)`,
-    `values (${q(bookingId)}, ${q(proId)}, ${q(customerId)}, ${review.rating}, ${arr(review.tags)}, ${q(review.text)},`,
+    `insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)`,
+    `values (${q(bookingId)}, ${q(proId)}, ${q(customerId)}, ${q(review.author)}, ${review.rating}, ${arr(review.tags)}, ${q(review.text)},`,
     `  ${arr(review.photo ? [review.photo] : [])}, ${review.reply ? q(review.reply) : "null"},`,
     `  ${review.reply ? `${q(review.date)}::date` : "null"}, ${q(review.date)}::date)`,
     `on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,`,

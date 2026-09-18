@@ -7,9 +7,9 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { ChevronLeft, Search, SlidersHorizontal, X } from "lucide-react"
 import { ProCard, WorkCard } from "@/components/beauty"
 import { Chip, EmptyState, Tabs, PageSkeleton } from "@/components/ui"
-import { CATEGORIES, CITIES, PROS, WORKS } from "@/lib/data"
 import { sortPros } from "@/components/trust"
-import { getTemplate } from "@/lib/catalog"
+import { CATEGORIES, getTemplate } from "@/lib/catalog"
+import { CITIES } from "@/lib/geo"
 import { fromPrice, proView, useApp } from "@/lib/store"
 import type { CategoryId } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -61,8 +61,9 @@ function SearchView() {
 
   const works = React.useMemo(() => {
     const nq = normalize(query)
-    return WORKS.filter((w) => {
-      const pro = proView(state, w.proId)!
+    return state.works.filter((w) => {
+      const pro = proView(state, w.proId)
+      if (!pro) return false
       const price = fromPrice(state, w.proId, w.templateId)
       if (category && w.category !== category) return false
       if (city && pro.city !== city) return false
@@ -76,7 +77,7 @@ function SearchView() {
 
   const pros = React.useMemo(() => {
     const nq = normalize(query)
-    const list = PROS.filter((p) => {
+    const list = state.pros.filter((p) => {
       if (category && !p.categories.includes(category)) return false
       if (city && p.city !== city) return false
       if (topRated && p.rating.average < 4.8) return false

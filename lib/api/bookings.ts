@@ -15,7 +15,7 @@ const BOOKING_SELECT = `
   service_price, distance_km, travel_fee, urgent_fee, total, commission_rate, commission, payout,
   payment_method, confirm_by, cancel_reason, cancelled_by, reschedule_to, reschedule_by, created_at,
   customer:accounts!bookings_customer_id_fkey (full_name, phone),
-  pro:pros!inner (slug, accounts!inner (full_name, phone, avatar_path)),
+  pro:pros!bookings_pro_id_fkey!inner (slug, display_name, avatar_path, accounts!pros_id_fkey (phone)),
   reviews (booking_id)
 `
 

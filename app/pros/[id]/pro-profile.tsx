@@ -9,9 +9,8 @@ import { FollowButton } from "@/components/follow-button"
 import { ServiceMenu } from "@/components/service-menu"
 import { RatingSummaryBlock, ReviewItem, VerifiedBadge, VerifiedMark } from "@/components/trust"
 import { Avatar, Button, Card, EmptyState, Tabs } from "@/components/ui"
-import { worksByPro } from "@/lib/data"
 import { POLICY, travelFeeFor } from "@/lib/pricing"
-import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp } from "@/lib/store"
+import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp, worksOf } from "@/lib/store"
 import { cn, formatPrice, parseISODate } from "@/lib/utils"
 
 type Tab = "services" | "works" | "reviews" | "about"
@@ -21,7 +20,7 @@ export function ProProfile({ proId }: { proId: string }) {
   const params = useSearchParams()
   const state = useApp()
   const pro = proView(state, proId)!
-  const works = worksByPro(pro.id)
+  const works = worksOf(state, pro.id)
   const services = servicesOf(state, pro.id)
   const reviews = reviewsOf(state, pro.id)
   const from = fromPrice(state, pro.id)

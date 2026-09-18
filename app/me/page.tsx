@@ -4,40 +4,27 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeftRight,
-  Bell,
   BriefcaseBusiness,
   ChevronRight,
-  CircleHelp,
-  CreditCard,
   Heart,
-  Info,
   LogOut,
   MapPin,
   Megaphone,
-  RotateCcw,
   ShieldCheck,
   Ticket,
   UserRound,
 } from "lucide-react"
-import { Avatar, ButtonLink, Card, Skeleton, Toggle } from "@/components/ui"
-import { DEMO_PRO_ID, getPro } from "@/lib/data"
-import { actions, formatAddress, useApp, useHydrated } from "@/lib/store"
+import { Avatar, ButtonLink, Card, Toggle } from "@/components/ui"
+import { formatPhone } from "@/lib/auth/phone"
+import { actions, useAct } from "@/lib/client-actions"
+import { getPro, useApp } from "@/lib/store"
 import { formatPrice } from "@/lib/utils"
 
 export default function MePage() {
-  const hydrated = useHydrated()
   const router = useRouter()
   const state = useApp()
+  const act = useAct()
   const { session } = state
-
-  if (!hydrated) {
-    return (
-      <div className="mx-auto max-w-2xl space-y-3 pt-16">
-        <Skeleton className="h-20" />
-        <Skeleton className="h-64" />
-      </div>
-    )
-  }
 
   if (!session) {
     return (
@@ -62,9 +49,10 @@ export default function MePage() {
   }
 
   const isPro = session.role === "pro"
-  const pro = isPro ? getPro(session.proId ?? DEMO_PRO_ID) : null
+  const pro = session.proId ? getPro(state, session.proId) : null
+  // Only jobs this freelancer actually completed, from their own bookings.
   const earnings = state.bookings
-    .filter((b) => b.proId === DEMO_PRO_ID && b.status === "completed")
+    .filter((b) => !b.mine && b.proId === session.proId && b.status === "completed")
     .reduce((sum, b) => sum + b.quote.payout, 0)
 
   return (
@@ -78,7 +66,7 @@ export default function MePage() {
         <div className="flex-1">
           <p className="text-lg font-semibold">{session.name}</p>
           <p className="text-sm text-muted">
-            {isPro ? `${pro?.title} · Xem hồ sơ công khai` : session.phone}
+            {isPro ? `${pro?.title} · Xem hồ sơ công khai` : formatPhone(session.phone)}
           </p>
         </div>
         {isPro && <ChevronRight className="size-5 text-muted" />}
@@ -96,13 +84,14 @@ export default function MePage() {
         </div>
         <button
           type="button"
-          onClick={() => {
-            actions.switchRole()
+          onClick={async () => {
+            if (!isPro && !session.proId) return router.push("/studio/onboarding")
+            await actions.switchRole(isPro ? "customer" : "pro")
             router.push(isPro ? "/" : "/studio")
           }}
           className="rounded-full bg-rose px-4 py-2 text-[13px] font-medium text-white hover:bg-rose-dark"
         >
-          Chuyển
+          {!isPro && !session.proId ? "Mở hồ sơ" : "Chuyển"}
         </button>
       </Card>
 
@@ -118,7 +107,11 @@ export default function MePage() {
                 <p className="text-xs text-muted">Nhận job mới</p>
                 <p className="mt-1 text-sm font-semibold">{state.acceptingJobs ? "Đang bật" : "Tạm nghỉ"}</p>
               </div>
-              <Toggle label="Nhận job mới" checked={state.acceptingJobs} onChange={actions.setAcceptingJobs} />
+              <Toggle
+                label="Nhận job mới"
+                checked={state.acceptingJobs}
+                onChange={(value) => void act(() => actions.setAcceptingJobs(value))}
+              />
             </Card>
           </div>
           <Menu
@@ -126,7 +119,7 @@ export default function MePage() {
               { href: "/studio/jobs", icon: BriefcaseBusiness, label: "Việc mới quanh bạn" },
               { href: "/studio/services", icon: Ticket, label: "Dịch vụ & bảng giá" },
               { href: "/studio/profile", icon: ShieldCheck, label: "Xác minh & đánh giá" },
-              { href: `/pros/${DEMO_PRO_ID}`, icon: UserRound, label: "Hồ sơ công khai & tác phẩm" },
+              ...(pro ? [{ href: `/pros/${pro.id}`, icon: UserRound, label: "Hồ sơ công khai & tác phẩm" }] : []),
               ...commonItems,
             ]}
           />
@@ -136,6 +129,12 @@ export default function MePage() {
           items={[
             { href: "/saved", icon: Heart, label: "Đã lưu", sub: `${state.savedWorks.length} mẫu · ${state.followedPros.length} chuyên viên` },
             { href: "/requests", icon: Megaphone, label: "Yêu cầu đã đăng", sub: `${state.jobs.filter((j) => j.mine).length} yêu cầu` },
+            {
+              href: "/me/dia-chi",
+              icon: MapPin,
+              label: "Địa chỉ của tôi",
+              sub: state.addresses.length ? `${state.addresses.length} địa chỉ đã lưu` : "Chưa có địa chỉ nào",
+            },
             ...commonItems,
           ]}
         />
@@ -144,18 +143,8 @@ export default function MePage() {
       <Card className="mt-4 divide-y divide-line">
         <button
           type="button"
-          onClick={() => {
-            actions.resetDemo()
-            router.push("/")
-          }}
-          className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm text-ink-soft"
-        >
-          <RotateCcw className="size-5" /> Đặt lại dữ liệu demo
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            actions.signOut()
+          onClick={async () => {
+            await actions.signOut()
             router.push("/")
           }}
           className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm text-danger"
