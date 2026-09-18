@@ -1,604 +1,282 @@
-import { isEvidenceRadarSchemaReady, isSupabaseSchemaReady, supabase } from "@/lib/supabase"
-import { getPublishedEditorialPost, getPublishedEditorialPosts } from "@/lib/editorial"
-import { deriveCreatorProductState, isPublicEvidenceEvent } from "@/lib/evidence-radar/state-engine"
-import { REAL_KOLS } from "@/lib/kols-data"
-import { isActivePublicCreator } from "@/lib/creator-roster"
-import { productsWithTaxonomy, productWithTaxonomy } from "@/lib/product-taxonomy"
-import { RESEARCHED_PRODUCTS } from "@/lib/product-research"
-import { isPublicCreatorEvent, isPublicOffer, summarizeApprovedRatings } from "@/lib/public-trust"
-import type { CommunityReview, CreatorEvidenceItem, CreatorProductEvent, CreatorProductState, Kol, Post, Product, ProductOffer, Review } from "@/lib/types"
+import type { Pro, ProService, RatingSummary, Review, Work } from "./types"
 
-// Historical profiles stay in REAL_KOLS for editorial review. Public fallback
-// contains only creators that passed the latest TikTok roster gate.
-export const SAMPLE_KOLS: Kol[] = REAL_KOLS.filter(isActivePublicCreator)
+export { CATEGORIES, categoryLabel } from "./catalog"
+export { CITIES } from "./geo"
 
-export const EDITORIAL_AUTHOR_NAME = "360dep.vn Beauty Desk"
-export const EDITORIAL_AUTHOR_AVATAR = "/brand/icon-192.png"
+const img = (name: string) => `/images/works/${name}.webp`
+const avatar = (id: string) => `/images/pros/${id}.webp`
 
-export const SAMPLE_PRODUCTS: Product[] = productsWithTaxonomy([
-  { id: "1", name: "Hyaluronic Acid 2% + B5 Serum", brand: "The Ordinary", image: "/images/products/the-ordinary-hyaluronic-acid-2-b5.jpg", rating: 4.7, reviews: 0, sold: "Đang cập nhật", price: "300.000đ", category: "Skincare", category_key: "skincare", subcategory_key: "serum", concern_tags: ["da thiếu nước", "phục hồi", "da khô"], ingredient_tags: ["hyaluronic acid", "panthenol", "ceramides"], aliases: ["The Ordinary Hyaluronic Acid", "TO HA B5"], tags: ["HA", "B5", "Cấp ẩm"], affiliate_url: null, description: "Serum cấp ẩm có hyaluronic acid và B5, hợp routine phục hồi khi da thiếu nước hoặc cần lớp serum tối giản trước kem dưỡng." },
-  { id: "2", name: "Fit Me Matte + Poreless Foundation", brand: "Maybelline New York", image: "/images/products/maybelline-fit-me-matte-poreless-foundation.jpg", rating: 4.5, reviews: 0, sold: "Đang cập nhật", price: "180.000đ", category: "Makeup", category_key: "makeup", subcategory_key: "foundation", concern_tags: ["nền", "da dầu", "lỗ chân lông"], ingredient_tags: ["oil-free"], aliases: ["Maybelline Fit Me"], tags: ["Foundation", "Drugstore", "Da dầu"], affiliate_url: null, description: "Kem nền drugstore finish matte tự nhiên, phù hợp da thường đến dầu và ngân sách học sinh sinh viên." },
-  { id: "3", name: "Sensibio H2O Micellar Water", brand: "Bioderma", image: "/images/products/bioderma-sensibio-h2o-micellar-water.jpg", rating: 4.8, reviews: 0, sold: "Đang cập nhật", price: "320.000đ", category: "Skincare", category_key: "skincare", subcategory_key: "cleanser", concern_tags: ["làm sạch", "da nhạy cảm", "tẩy trang"], ingredient_tags: ["micellar technology"], aliases: ["Bioderma Sensibio", "Sensibio H2O"], tags: ["Micellar", "Da nhạy cảm", "Không cần rửa lại"], affiliate_url: null, description: "Nước tẩy trang micellar cho da nhạy cảm, dùng để làm sạch makeup, bụi mịn và kem chống nắng nhẹ trong routine tối giản." },
-  { id: "4", name: "Powder Kiss Lip + Cheek Mousse", brand: "MAC Cosmetics", image: "/images/products/mac-powder-kiss-lip-cheek-mousse.jpg", rating: 4.7, reviews: 0, sold: "Đang cập nhật", price: "720.000đ", category: "Makeup", category_key: "makeup", subcategory_key: "lip", concern_tags: ["son lì", "má hồng", "môi khô"], ingredient_tags: ["mousse texture"], aliases: ["MAC Powder Kiss Liquid", "MAC Powder Kiss Mousse"], tags: ["Soft matte", "Lip & cheek", "Prestige"], affiliate_url: null, description: "Son/má dạng mousse hazy matte, dùng cho môi và má khi muốn hiệu ứng blur mềm thay vì lớp lì khô." },
-  { id: "5", name: "Perfect Serum Original", brand: "Mise-en-Scene", image: "/images/products/mise-en-scene-perfect-serum-original.jpg", rating: 4.6, reviews: 0, sold: "Đang cập nhật", price: "250.000đ", category: "Haircare", category_key: "haircare", subcategory_key: "styling", concern_tags: ["tóc khô xơ", "frizz", "tóc nhuộm"], ingredient_tags: ["argan oil", "camellia oil"], aliases: ["Mise en Scene Perfect Serum"], tags: ["Hair serum", "K-beauty", "Tóc khô"], affiliate_url: null, description: "Serum dưỡng tóc K-beauty cho tóc khô xơ, giúp giảm rối, thêm bóng và làm mềm phần đuôi tóc sau tạo kiểu." },
-  { id: "6", name: "Hydrating Facial Cleanser", brand: "CeraVe", image: "/images/products/cerave-hydrating-facial-cleanser.jpg", rating: 4.8, reviews: 0, sold: "Đang cập nhật", price: "380.000đ", category: "Skincare", category_key: "skincare", subcategory_key: "cleanser", concern_tags: ["da khô", "da nhạy cảm", "làm sạch"], ingredient_tags: ["ceramides", "hyaluronic acid"], aliases: ["CeraVe Hydrating Cleanser"], tags: ["Dịu nhẹ", "Ceramide", "Không hương liệu"], affiliate_url: null, description: "Sữa rửa mặt dịu nhẹ cho da thường đến khô, làm sạch mà không khiến da căng rát." },
-  { id: "7", name: "Miss Dior Eau de Parfum", brand: "Dior Beauty", image: "/images/products/miss-dior-eau-de-parfum.jpg", rating: 4.8, reviews: 0, sold: "Đang cập nhật", price: "3.950.000đ", category: "Perfume", category_key: "fragrance", subcategory_key: "edp", concern_tags: ["nước hoa nữ", "mùi hẹn hò", "lưu hương"], ingredient_tags: ["centifolia rose", "lily of the valley"], aliases: ["Miss Dior EDP"], tags: ["EDP", "Floral", "Luxury"], affiliate_url: null, description: "Nước hoa nữ floral luxury với cảm giác tươi, mềm và nữ tính, làm anchor cho nhóm fragrance hẹn hò hoặc quà tặng." },
-  { id: "8", name: "Gluta-Hya Serum Burst Lotion Dewy Radiance", brand: "Vaseline", image: "/images/products/vaseline-gluta-hya-dewy-radiance-lotion.jpg", rating: 4.5, reviews: 0, sold: "Đang cập nhật", price: "140.000đ", category: "Bodycare", category_key: "bodycare", subcategory_key: "body_lotion", concern_tags: ["body sáng da", "da khô", "bodycare"], ingredient_tags: ["glutaglow", "hyaluron", "niacinamide"], aliases: ["Vaseline Gluta-Hya Dewy"], tags: ["Body lotion", "Gluta-Hya", "Dewy"], affiliate_url: null, description: "Sữa dưỡng thể dạng serum burst, thấm nhanh, hỗ trợ da body ẩm mượt và nhìn sáng khỏe hơn trong routine hằng ngày." },
-  ...RESEARCHED_PRODUCTS,
-])
+const r = (
+  id: string,
+  proId: string,
+  author: string,
+  rating: number,
+  tags: string[],
+  text: string,
+  date: string,
+  serviceName: string,
+  extra: Partial<Review> = {},
+): Review => ({
+  id,
+  proId,
+  author,
+  rating,
+  tags,
+  text,
+  date,
+  serviceName,
+  ...extra,
+})
 
-const CURATED_LEGACY_PRODUCTS = new Map(SAMPLE_PRODUCTS.slice(0, 8).map((product) => [product.id, product]))
-const PUBLIC_CREATOR_PRODUCT_EVENTS: CreatorProductEvent[] = []
+export const REVIEWS: Review[] = [
+  r("r1", "linh-pham", "Ngọc Hân", 5, ["Tay nghề tốt", "Bền đẹp"], "Làm kỹ, form móng đẹp, đến đúng giờ. Giữ được hơn 3 tuần không bong.", "2026-09-02", "Nail thiết kế · Đính đá / charm", { photo: img("nail-milky-1"), reply: "Cảm ơn Hân nhiều, hẹn gặp lại lần sau nha!" }),
+  r("r2", "linh-pham", "Thảo Vy", 5, ["Dụng cụ sạch sẽ", "Tư vấn kỹ"], "Tư vấn màu rất có tâm, dụng cụ hấp tiệt trùng trước mặt mình luôn.", "2026-08-21", "Sơn gel trơn · Tay"),
+  r("r3", "linh-pham", "Minh Châu", 4, ["Tay nghề tốt"], "Đẹp, nhưng đến trễ 15 phút vì kẹt xe, có nhắn báo trước.", "2026-08-10", "Nối móng · Đắp gel", { reply: "Xin lỗi Châu vì hôm đó mưa kẹt xe, lần sau mình sẽ đi sớm hơn ạ." }),
+  r("r4", "thu-anh", "Lan Phương", 5, ["Bền đẹp", "Nhẹ nhàng"], "Makeup trong veo, chụp ảnh lên rất xinh, bền cả tối.", "2026-09-05", "Makeup dự tiệc · Makeup", { photo: img("makeup-party-1") }),
+  r("r5", "thu-anh", "Bảo Ngọc", 5, ["Tư vấn kỹ"], "Chị rất nhẹ nhàng, hỏi kỹ về da trước khi làm.", "2026-08-28", "Makeup chụp ảnh / kỷ yếu · 1 người"),
+  r("r6", "thu-anh", "Hải Yến", 4, ["Tay nghề tốt"], "Layout đẹp, hơi lâu hơn dự kiến một chút.", "2026-08-12", "Makeup cô dâu · 1 lễ (ăn hỏi hoặc cưới)"),
+  r("r7", "mai-tran", "Khánh Linh", 5, ["Dụng cụ sạch sẽ", "Nhẹ nhàng"], "Da dịu hẳn sau 2 buổi, không bị đỏ như lúc đi spa.", "2026-09-01", "Phục hồi da nhạy cảm · 75 phút", { photo: img("skin-glow"), reply: "Nhớ bôi kem chống nắng đều nha Linh!" }),
+  r("r8", "mai-tran", "Tuấn Anh", 5, ["Tay nghề tốt", "Đúng giờ"], "Lấy mụn nhẹ tay, không thâm, dụng cụ bóc tem trước mặt.", "2026-08-19", "Lấy nhân mụn chuẩn y khoa · 60 phút"),
+  r("r9", "quynh-vu", "Hồng Nhung", 5, ["Bền đẹp"], "Tóc giữ nếp tới cuối tiệc cưới.", "2026-08-17", "Tạo kiểu tóc sự kiện · Búi / tết cầu kỳ", { photo: img("hair-bun-1") }),
+  r("r10", "quynh-vu", "Mỹ Duyên", 4, ["Giá hợp lý"], "Uốn đẹp nhưng lọn hơi nhanh xẹp.", "2026-08-02", "Tạo kiểu tóc sự kiện · Uốn / duỗi tạo kiểu"),
+  r("r11", "ha-my", "Phương Anh", 5, ["Nhẹ nhàng", "Bền đẹp"], "Mi tự nhiên, không cộm, không cay mắt.", "2026-09-08", "Nối mi classic · Full set", { photo: img("lash-1") }),
+  r("r12", "ha-my", "Thu Hà", 5, ["Đúng giờ"], "Dáng mày hợp mặt, làm nhanh.", "2026-08-25", "Tạo dáng & tỉa mày · Tạo dáng"),
+  r("r13", "ngoc-bao", "Diệu Linh", 5, ["Giá hợp lý", "Nhẹ nhàng"], "Nhóm mình 3 người làm nhanh gọn, bạn rất dễ thương.", "2026-08-30", "Makeup dự tiệc · Makeup"),
+  r("r14", "dieu-huong", "Quốc Bảo", 5, ["Tay nghề tốt", "Đúng giờ"], "Bấm huyệt đúng chỗ đau, mang theo cả giường gấp, rất chuyên nghiệp.", "2026-09-06", "Massage cổ vai gáy · 90 phút"),
+  r("r15", "dieu-huong", "Thanh Tâm", 5, ["Nhẹ nhàng", "Tư vấn kỹ"], "Massage bầu tháng thứ 7, chị rất cẩn thận, hỏi kỹ tình trạng trước.", "2026-08-22", "Massage bầu · 60 phút", { reply: "Chúc mẹ bầu mẹ tròn con vuông nha!" }),
+]
 
-export const SAMPLE_CREATOR_EVIDENCE_ITEMS: CreatorEvidenceItem[] = PUBLIC_CREATOR_PRODUCT_EVENTS.slice(0, 4).map((event) => ({
-  id: `evidence-${event.id}`,
-  creator_id: event.creator_id,
-  source_platform: event.source_platform,
-  source_url: event.source_url,
-  source_post_id: event.source_post_id ?? null,
-  published_at: event.event_date,
-  observed_at: event.observed_at,
-  source_title: event.source_title,
-  source_excerpt: event.source_excerpt,
-  raw_text: event.source_excerpt,
-  media_url: event.media_url ?? null,
-  status: "published",
-  candidate_product_ids: [event.product_id],
-  candidate_product_names: [],
-  researcher_note: event.evidence_note,
-}))
-
-export const SAMPLE_REVIEWS: Review[] = []
-
-function mergeOffers(offers: ProductOffer[]) {
-  const seen = new Set<string>()
-  return offers
-    .filter(isPublicOffer)
-    .filter((offer) => {
-      if (seen.has(offer.id)) return false
-      seen.add(offer.id)
-      return true
-    })
-    .sort((a, b) => {
-      if (a.is_preferred !== b.is_preferred) return Number(b.is_preferred) - Number(a.is_preferred)
-      if (Boolean(a.affiliate_url) !== Boolean(b.affiliate_url)) return Number(Boolean(b.affiliate_url)) - Number(Boolean(a.affiliate_url))
-      return b.last_checked_at.localeCompare(a.last_checked_at)
-    })
-}
-
-function mergeTimelineEvents(events: CreatorProductEvent[]) {
-  const seen = new Set<string>()
-  return events
-    .filter((event) => {
-      const key = [
-        event.creator_id,
-        event.product_id,
-        event.event_type,
-        event.event_date,
-        event.source_excerpt,
-      ].join("|")
-      if (seen.has(key)) return false
-      seen.add(key)
-      return true
-    })
-    .sort((a, b) => b.event_date.localeCompare(a.event_date) || b.observed_at.localeCompare(a.observed_at))
-}
-
-const ALL_FALLBACK_TIMELINE_EVENTS = mergeTimelineEvents([
-  ...PUBLIC_CREATOR_PRODUCT_EVENTS,
-])
-
-export const SAMPLE_POSTS: Post[] = [
+const PRO_PROFILES: Omit<Pro, "rating">[] = [
   {
-    id: "p1",
-    title: "Top serum cấp ẩm phục hồi đáng cân nhắc 2026",
-    slug: "top-5-serum-phuc-hoi-da-2026",
-    excerpt: "Tổng hợp các serum phục hồi được cộng đồng skincare Việt yêu thích sau nhiều tuần dùng thực tế.",
-    content: "Serum cấp ẩm và phục hồi là nhóm đáng cân nhắc khi da thiếu nước, bong nhẹ hoặc đang cần routine ít biến số.\n\nThe Ordinary Hyaluronic Acid 2% + B5 là lựa chọn dễ hiểu trong nhóm HA/B5: tập trung cấp ẩm, hỗ trợ cảm giác da mềm hơn và dễ layer trước kem dưỡng. Các lựa chọn có ceramide, panthenol hoặc HA cũng đáng cân nhắc nếu da dễ căng rát.\n\nĐiều quan trọng là chọn routine tối giản, chống nắng đều và cho da đủ thời gian phục hồi thay vì thay sản phẩm liên tục.",
-    author_name: EDITORIAL_AUTHOR_NAME,
-    author_avatar: EDITORIAL_AUTHOR_AVATAR,
-    category: "Review Sản Phẩm",
-    tags: ["Serum", "Phục hồi da", "Review"],
-    image: "/images/products/the-ordinary-hyaluronic-acid-2-b5.jpg",
-    likes: 342,
-    comments: 56,
-    created_at: "2026-04-10T08:00:00Z",
-    product_ids: ["1"],
+    id: "linh-pham",
+    name: "Linh Phạm",
+    title: "Chuyên viên nail",
+    phone: "0968 112 233",
+    avatar: avatar("linh-pham"),
+    tone: "#E9C9C6",
+    categories: ["nail"],
+    city: "Hà Nội",
+    district: "Thanh Xuân",
+    areas: ["Thanh Xuân", "Đống Đa", "Cầu Giấy", "Hai Bà Trưng"],
+    homeService: true,
+    studioAddress: "Ngõ 88 Nguyễn Trãi, Thanh Xuân",
+    maxTravelKm: 12,
+    yearsExp: 5,
+    joinedAt: "2024-03-12",
+    bio: "Mình chuyên nail tone nude, milky, đính đá nhẹ cho đi làm và đi tiệc. Dụng cụ tiệt trùng từng khách, gel chính hãng, có tư vấn form móng theo bàn tay.",
+    highlights: ["Gel chính hãng có tem", "Tiệt trùng dụng cụ bằng nồi hấp", "Bảo hành bong tróc 5 ngày"],
+    identity: "none",
+    stats: { completedJobs: 486, responseMinutes: 10 },
   },
   {
-    id: "p2",
-    title: "Hướng dẫn chọn kem chống nắng cho từng loại da",
-    slug: "huong-dan-chon-kem-chong-nang",
-    excerpt: "Kem chống nắng không chỉ là SPF. Kết cấu, finish và độ hợp da mới quyết định bạn có dùng đều không.",
-    content: "Da dầu thường hợp kem chống nắng dạng gel, fluid hoặc finish ráo. Da khô nên ưu tiên công thức có thành phần cấp ẩm.\n\nDa nhạy cảm cần thử sản phẩm trên vùng nhỏ trước, tránh đổi quá nhiều sản phẩm cùng lúc. Một sản phẩm tốt là sản phẩm bạn có thể dùng đủ lượng mỗi ngày.\n\nKhi hoạt động ngoài trời, hãy thoa lại sau vài giờ và kết hợp mũ, kính, khẩu trang để bảo vệ da tốt hơn.",
-    author_name: EDITORIAL_AUTHOR_NAME,
-    author_avatar: EDITORIAL_AUTHOR_AVATAR,
-    category: "Chăm Sóc Da",
-    tags: ["Chống nắng", "SPF", "Da dầu", "Da khô"],
-    image: "/images/hero-sunscreen.png",
-    likes: 518,
-    comments: 73,
-    created_at: "2026-04-08T10:30:00Z",
-    product_ids: ["6"],
+    id: "thu-anh",
+    name: "Thu Anh",
+    title: "Chuyên viên makeup",
+    phone: "0912 445 566",
+    avatar: avatar("thu-anh"),
+    tone: "#E6D2C3",
+    categories: ["makeup"],
+    city: "Hà Nội",
+    district: "Ba Đình",
+    areas: ["Ba Đình", "Hoàn Kiếm", "Tây Hồ", "Cầu Giấy", "Đống Đa"],
+    homeService: true,
+    maxTravelKm: 15,
+    yearsExp: 6,
+    joinedAt: "2024-01-20",
+    bio: "Makeup trong trẻo, bền màu cho tiệc, kỷ yếu, chụp ảnh và cô dâu. Có sẵn kit mỹ phẩm cho da nhạy cảm, cọ vệ sinh riêng từng khách.",
+    highlights: ["Kit mỹ phẩm cho da nhạy cảm", "Nhận makeup nhóm", "Có buổi thử cho cô dâu"],
+    identity: "verified",
+    stats: { completedJobs: 352, responseMinutes: 30 },
   },
   {
-    id: "p3",
-    title: "Drugstore makeup haul dưới 500K",
-    slug: "drugstore-makeup-haul-duoi-500k",
-    excerpt: "Những món makeup giá dễ chịu nhưng đủ dùng cho một layout hằng ngày gọn đẹp.",
-    content: "Một layout drugstore hợp lý nên bắt đầu từ nền mỏng nhẹ, son dễ tán và mascara không lem.\n\nMaybelline Fit Me là lựa chọn quen thuộc cho da dầu vì độ che phủ vừa phải và finish lì. Khi phối với son velvet hoặc tint, tổng thể vẫn tươi mà không quá dày.\n\nMẹo nhỏ là đầu tư vào dụng cụ tán nền tốt, vì cùng một sản phẩm nhưng cách apply có thể tạo khác biệt lớn.",
-    author_name: EDITORIAL_AUTHOR_NAME,
-    author_avatar: EDITORIAL_AUTHOR_AVATAR,
-    category: "Trang Điểm",
-    tags: ["Drugstore", "Makeup haul", "Tiết kiệm"],
-    image: "/images/hero-makeup.png",
-    likes: 267,
-    comments: 41,
-    created_at: "2026-04-06T14:00:00Z",
-    product_ids: ["2", "4"],
+    id: "mai-tran",
+    name: "Mai Trần",
+    title: "Chuyên viên chăm sóc da",
+    phone: "0903 778 899",
+    avatar: avatar("mai-tran"),
+    tone: "#DCD5C8",
+    categories: ["skincare"],
+    city: "TP.HCM",
+    district: "Quận 3",
+    areas: ["Quận 1", "Quận 3", "Phú Nhuận", "Bình Thạnh"],
+    homeService: true,
+    studioAddress: "Hẻm 214 Võ Văn Tần, Quận 3",
+    maxTravelKm: 10,
+    yearsExp: 7,
+    joinedAt: "2023-11-02",
+    bio: "Facial thư giãn, lấy nhân mụn chuẩn y khoa và phục hồi da tại nhà. Soi da trước khi làm, không lột tẩy mạnh, dụng cụ dùng một lần.",
+    highlights: ["Chứng chỉ Điều dưỡng da liễu", "Dụng cụ lấy mụn dùng một lần", "Soi da miễn phí"],
+    identity: "verified",
+    stats: { completedJobs: 268, responseMinutes: 45 },
   },
   {
-    id: "p4",
-    title: "Skincare routine cho da dầu mụn",
-    slug: "skincare-routine-da-dau-mun",
-    excerpt: "Routine 5 bước cơ bản, tập trung vào làm sạch, phục hồi và chống nắng đều đặn.",
-    content: "Da dầu mụn không cần routine quá nhiều bước. Làm sạch dịu nhẹ, dưỡng ẩm vừa đủ và chống nắng ổn định thường hiệu quả hơn việc liên tục thêm treatment.\n\nNếu dùng BHA hoặc retinoid, hãy tăng tần suất chậm và theo dõi phản ứng của da. Khi da kích ứng, ưu tiên phục hồi trước.\n\nMột routine tốt là routine bạn duy trì được trong nhiều tuần, có ghi chú phản ứng và điều chỉnh từ từ.",
-    author_name: EDITORIAL_AUTHOR_NAME,
-    author_avatar: EDITORIAL_AUTHOR_AVATAR,
-    category: "Skincare Routine",
-    tags: ["Da dầu mụn", "Routine", "BHA"],
-    image: "/images/products/bioderma-sensibio-h2o-micellar-water.jpg",
-    likes: 489,
-    comments: 67,
-    created_at: "2026-04-04T09:00:00Z",
-    product_ids: ["1", "3", "6"],
+    id: "quynh-vu",
+    name: "Quỳnh Vũ",
+    title: "Stylist tóc",
+    phone: "0938 221 447",
+    avatar: avatar("quynh-vu"),
+    tone: "#D9CBBF",
+    categories: ["hair"],
+    city: "TP.HCM",
+    district: "Quận 1",
+    areas: ["Quận 1", "Quận 3", "Quận 7"],
+    homeService: true,
+    studioAddress: "Lầu 2, 45 Lê Thánh Tôn, Quận 1",
+    maxTravelKm: 10,
+    yearsExp: 4,
+    joinedAt: "2024-06-08",
+    bio: "Tạo kiểu tóc sự kiện, uốn lọn, búi tết theo trang phục. Gội dưỡng sinh tại studio.",
+    highlights: ["Mang máy uốn, máy sấy riêng", "Nhận làm tóc nhóm"],
+    identity: "verified",
+    stats: { completedJobs: 190, responseMinutes: 60 },
   },
   {
-    id: "p5",
-    title: "Giảm rối cho mái tóc hư tổn sau tẩy nhuộm",
-    slug: "giai-cuu-toc-hu-ton-sau-tay-nhuom",
-    excerpt: "Ba bước phục hồi tóc đơn giản tại nhà cho tóc khô xơ, dễ rối và thiếu bóng.",
-    content: "Sau tẩy nhuộm, tóc thường mất độ ẩm và dễ gãy hơn. Hãy giảm nhiệt, ưu tiên dầu gội dịu nhẹ và thêm bước dưỡng phần thân đuôi tóc.\n\nSerum dưỡng tóc như Mise-en-Scene Perfect Serum Original giúp giảm ma sát, giảm rối và tạo độ bóng ở phần đuôi tóc. Tránh dùng nhiệt quá thường xuyên nếu tóc đang yếu.\n\nKiên trì trong 4 đến 8 tuần sẽ cho kết quả rõ hơn so với đổi sản phẩm liên tục.",
-    author_name: EDITORIAL_AUTHOR_NAME,
-    author_avatar: EDITORIAL_AUTHOR_AVATAR,
-    category: "Chăm Sóc Tóc",
-    tags: ["Tóc hư tổn", "Nhuộm tóc", "Phục hồi"],
-    image: "/images/products/mise-en-scene-perfect-serum-original.jpg",
-    likes: 198,
-    comments: 32,
-    created_at: "2026-04-02T16:00:00Z",
-    product_ids: ["5"],
+    id: "ha-my",
+    name: "Hà My",
+    title: "Chuyên viên mi & mày",
+    phone: "0965 334 112",
+    avatar: avatar("ha-my"),
+    tone: "#EAD6D0",
+    categories: ["lash-brow"],
+    city: "Hà Nội",
+    district: "Hoàn Kiếm",
+    areas: ["Hoàn Kiếm", "Hai Bà Trưng", "Đống Đa"],
+    homeService: true,
+    studioAddress: "Phố Hàng Bông, Hoàn Kiếm",
+    maxTravelKm: 8,
+    yearsExp: 5,
+    joinedAt: "2023-09-15",
+    bio: "Nối mi classic và volume nhẹ tại studio, tạo dáng mày theo khuôn mặt tại nhà hoặc studio. Test kích ứng keo trước khi làm.",
+    highlights: ["Keo ít kích ứng, test trước", "Bảo hành rụng mi 3 ngày"],
+    identity: "verified",
+    stats: { completedJobs: 410, responseMinutes: 15 },
   },
   {
-    id: "p6",
-    title: "So sánh sữa dưỡng thể trắng da hot hiện nay",
-    slug: "so-sanh-sua-duong-the-trang-da",
-    excerpt: "Nhìn vào kết cấu, độ thấm, cảm giác sau bôi và hiệu quả dưỡng sáng theo thời gian.",
-    content: "Sữa dưỡng thể dưỡng sáng nên được đánh giá theo độ thấm, khả năng cấp ẩm và trải nghiệm dùng hằng ngày.\n\nVaseline Gluta-Hya có texture nhẹ, hợp thời tiết nóng ẩm. Những sản phẩm có SPF tiện cho ban ngày nhưng vẫn không thay thế chống nắng chuyên dụng khi phơi nắng lâu.\n\nDưỡng body cần đều đặn. Hiệu quả thường đến từ việc dùng đủ lượng và duy trì nhiều tuần.",
-    author_name: EDITORIAL_AUTHOR_NAME,
-    author_avatar: EDITORIAL_AUTHOR_AVATAR,
-    category: "Mẹo Làm Đẹp",
-    tags: ["Body lotion", "Trắng da", "So sánh"],
-    image: "/images/products/vaseline-gluta-hya-dewy-radiance-lotion.jpg",
-    likes: 371,
-    comments: 48,
-    created_at: "2026-03-30T11:00:00Z",
-    product_ids: ["8"],
+    id: "ngoc-bao",
+    name: "Ngọc Bảo",
+    title: "Chuyên viên nail & makeup",
+    phone: "0906 553 224",
+    avatar: avatar("ngoc-bao"),
+    tone: "#E3CFC9",
+    categories: ["nail", "makeup"],
+    city: "Đà Nẵng",
+    district: "Hải Châu",
+    areas: ["Hải Châu", "Sơn Trà", "Thanh Khê"],
+    homeService: true,
+    maxTravelKm: 12,
+    yearsExp: 2,
+    joinedAt: "2026-08-01",
+    bio: "Mới tham gia dep360. Combo nail + makeup nhẹ cho ngày đặc biệt, nhận nhóm bạn và phù dâu.",
+    highlights: ["Nhận nhóm bạn, phù dâu"],
+    identity: "pending",
+    stats: { completedJobs: 7, responseMinutes: 90 },
+  },
+  {
+    id: "dieu-huong",
+    name: "Diệu Hương",
+    title: "Kỹ thuật viên massage",
+    phone: "0917 662 335",
+    avatar: avatar("dieu-huong"),
+    tone: "#DDD3C6",
+    categories: ["massage"],
+    city: "TP.HCM",
+    district: "Bình Thạnh",
+    areas: ["Bình Thạnh", "Phú Nhuận", "Quận 1", "Gò Vấp"],
+    homeService: true,
+    maxTravelKm: 12,
+    yearsExp: 8,
+    joinedAt: "2024-04-18",
+    bio: "Kỹ thuật viên massage trị liệu 8 năm. Mang theo giường gấp, khăn sạch và tinh dầu. Massage bầu có chứng chỉ.",
+    highlights: ["Mang giường massage gấp", "Có chứng chỉ massage bầu", "Khăn dùng riêng từng khách"],
+    identity: "verified",
+    stats: { completedJobs: 128, responseMinutes: 25 },
   },
 ]
 
-const EDITORIAL_PUBLISHED_POSTS = getPublishedEditorialPosts()
-const ALL_FALLBACK_POSTS: Post[] = [...EDITORIAL_PUBLISHED_POSTS, ...SAMPLE_POSTS]
-
-function normalizeEditorialPost(post: Post): Post {
-  return {
-    ...post,
-    hubSlug: post.hubSlug ?? inferLegacyPostHub(post),
-    author_name: EDITORIAL_AUTHOR_NAME,
-    author_avatar: EDITORIAL_AUTHOR_AVATAR,
-  }
+/** Ratings are derived from the reviews we actually have, never hand-written. */
+function ratingFromReviews(proId: string): RatingSummary {
+  const rows = REVIEWS.filter((x) => x.proId === proId)
+  if (!rows.length) return { average: 0, count: 0 }
+  return { average: rows.reduce((sum, x) => sum + x.rating, 0) / rows.length, count: rows.length }
 }
 
-function inferLegacyPostHub(post: Post) {
-  const category = normalizeText(post.category ?? "")
-  const tags = normalizeText((post.tags ?? []).join(" "))
+export const PROS: Pro[] = PRO_PROFILES.map((p) => ({ ...p, rating: ratingFromReviews(p.id) }))
 
-  if (category.includes("nuoc hoa") || category.includes("fragrance") || category.includes("perfume")) {
-    return "mui-huong"
-  }
-  if (tags.includes("son moi") || tags.includes("lip") || tags.includes("matte") || tags.includes("glossy")) {
-    return "makeup"
-  }
+const ps = (proId: string, templateId: string, prices: Record<string, number>): ProService => ({
+  id: `${proId}:${templateId}`,
+  proId,
+  templateId,
+  prices: Object.fromEntries(Object.entries(prices).map(([k, v]) => [k, v * 1000])),
+  active: true,
+})
 
-  return undefined
-}
+export const PRO_SERVICES: ProService[] = [
+  ps("linh-pham", "nail-gel", { hand: 180, "hand-foot": 320 }),
+  ps("linh-pham", "nail-design", { simple: 300, stone: 380, art: 520 }),
+  ps("linh-pham", "nail-extension", { tips: 320, builder: 450 }),
+  ps("linh-pham", "nail-removal", { remove: 80, "remove-care": 140 }),
 
-function mergePosts(primary: Post[], fallback: Post[]) {
-  const seen = new Set<string>()
-  return [...primary, ...fallback]
-    .filter((post) => {
-      const key = post.slug || post.id
-      if (seen.has(key)) return false
-      seen.add(key)
-      return true
-    })
-    .map(normalizeEditorialPost)
-}
+  ps("thu-anh", "makeup-daily", { single: 350 }),
+  ps("thu-anh", "makeup-party", { makeup: 600, "makeup-hair": 850 }),
+  ps("thu-anh", "makeup-photo", { single: 550, group: 380 }),
+  ps("thu-anh", "makeup-bridal", { one: 2200, two: 4000 }),
 
-function mergeProducts(primary: Product[], fallback: Product[]) {
-  const seen = new Set<string>()
-  return [...primary, ...fallback].filter((product) => {
-    if (seen.has(product.id)) return false
-    seen.add(product.id)
-    return true
-  })
-}
+  ps("mai-tran", "skin-basic", { "60m": 350, "90m": 480 }),
+  ps("mai-tran", "skin-acne", { "60m": 420, "90m": 560 }),
+  ps("mai-tran", "skin-recovery", { "75m": 450 }),
 
-async function fromSupabase<T>(query: PromiseLike<{ data: T | null; error: unknown }>, fallback: T): Promise<T> {
-  if (!isSupabaseSchemaReady) return fallback
-  try {
-    const { data, error } = await query
-    if (error || data == null) return fallback
-    return data
-  } catch {
-    return fallback
-  }
-}
+  ps("quynh-vu", "hair-wash", { "45m": 160, "60m": 200 }),
+  ps("quynh-vu", "hair-styling", { curl: 300, updo: 420 }),
 
-export async function getProducts(): Promise<Product[]> {
-  const [products, approvedRatings] = await Promise.all([
-    fromSupabase<Product[]>(supabase.from("radar_products").select("*").order("name"), SAMPLE_PRODUCTS),
-    fromSupabase<Array<{ product_id: string; rating: number }>>(
-      supabase.from("user_ratings").select("product_id,rating").eq("status", "approved"),
-      []
-    ),
-  ])
-  const ratingsByProduct = new Map<string, Array<{ rating: number }>>()
-  for (const rating of approvedRatings) {
-    ratingsByProduct.set(rating.product_id, [...(ratingsByProduct.get(rating.product_id) ?? []), rating])
-  }
-  return productsWithTaxonomy(mergeProducts(products, SAMPLE_PRODUCTS))
-    .map((product) => CURATED_LEGACY_PRODUCTS.get(product.id) ?? product)
-    .filter((product) => product.status !== "pending" && product.status !== "archived")
-    .map((product) => {
-      const summary = summarizeApprovedRatings(ratingsByProduct.get(product.id) ?? [])
-      return { ...product, rating: summary.average ?? 0, reviews: summary.count, affiliate_url: null }
-    })
-}
+  ps("ha-my", "lash-classic", { full: 350 }),
+  ps("ha-my", "lash-volume", { full: 450 }),
+  ps("ha-my", "lash-refill", { refill: 200 }),
+  ps("ha-my", "brow-shaping", { shape: 120 }),
 
-export async function getProductOffers(filters: { productId?: string } = {}) {
-  const fallback: ProductOffer[] = []
+  ps("ngoc-bao", "nail-gel", { hand: 150, "hand-foot": 280 }),
+  ps("ngoc-bao", "nail-design", { simple: 250, stone: 320 }),
+  ps("ngoc-bao", "makeup-daily", { single: 300 }),
+  ps("ngoc-bao", "makeup-party", { makeup: 500 }),
 
-  if (!isSupabaseSchemaReady) return fallback
+  ps("dieu-huong", "massage-foot", { "60m": 300, "90m": 420, "120m": 520 }),
+  ps("dieu-huong", "massage-neck", { "60m": 300, "90m": 420, "120m": 520 }),
+  ps("dieu-huong", "massage-oil-cupping", { "60m": 350, "90m": 480, "120m": 600 }),
+  ps("dieu-huong", "massage-prenatal", { "60m": 420, "90m": 560 }),
+  ps("dieu-huong", "massage-dry", { "60m": 350, "90m": 480, "120m": 600 }),
+]
 
-  let query = supabase.from("product_offers").select("*")
-  if (filters.productId) query = query.eq("product_id", filters.productId)
-  const offers = await fromSupabase<ProductOffer[]>(query, fallback)
-  return mergeOffers(offers)
-}
+export const WORKS: Work[] = [
+  { id: "w-milky-stone", proId: "linh-pham", templateId: "nail-design", category: "nail", title: "Nail milky đính đá nhẹ", description: "Thiết kế tinh tế, phù hợp đi làm, đi tiệc. Có thể tùy chỉnh theo tone da và độ dài móng.", images: [img("nail-milky-1"), img("nail-milky-2")], likes: 256, comments: 12 },
+  { id: "w-ombre", proId: "linh-pham", templateId: "nail-design", category: "nail", title: "Nail ombre hồng", description: "Ombre hồng sữa chuyển nhẹ, form coffin mềm.", images: [img("nail-ombre"), img("nail-milky-2")], likes: 188, comments: 9 },
+  { id: "w-nude-short", proId: "linh-pham", templateId: "nail-gel", category: "nail", title: "Móng ngắn tone nude", description: "Form vuông bo ngắn, hợp dân văn phòng gõ phím nhiều.", images: [img("nail-nude-short")], likes: 142, comments: 6 },
+  { id: "w-french", proId: "linh-pham", templateId: "nail-design", category: "nail", title: "Nail French", description: "French đầu móng mảnh, nền hồng trong.", images: [img("nail-french"), img("nail-milky-1")], likes: 97, comments: 4 },
+  { id: "w-party-glow", proId: "thu-anh", templateId: "makeup-party", category: "makeup", title: "Makeup trong trẻo đi tiệc", description: "Nền mỏng, má hồng đào, môi căng bóng.", images: [img("makeup-party-1"), img("makeup-party-2")], likes: 412, comments: 31 },
+  { id: "w-smoky-soft", proId: "thu-anh", templateId: "makeup-photo", category: "makeup", title: "Mắt khói nâu mềm", description: "Layout chụp ảnh tone nâu ấm, không nặng mắt.", images: [img("makeup-smoky"), img("makeup-party-2")], likes: 305, comments: 18 },
+  { id: "w-bride-natural", proId: "thu-anh", templateId: "makeup-bridal", category: "makeup", title: "Cô dâu tự nhiên", description: "Nền lì mỏng, bền suốt lễ cưới.", images: [img("makeup-bride-1"), img("makeup-bride-2")], likes: 520, comments: 44 },
+  { id: "w-facial-calm", proId: "mai-tran", templateId: "skin-recovery", category: "skincare", title: "Phục hồi da nhạy cảm", description: "Liệu trình 4 buổi giúp da bớt đỏ, căng ẩm hơn.", images: [img("skin-glow"), img("skin-massage")], likes: 164, comments: 12 },
+  { id: "w-deep-clean", proId: "mai-tran", templateId: "skin-acne", category: "skincare", title: "Lấy nhân mụn tại nhà", description: "Dụng cụ dùng một lần, lấy nhân mụn nhẹ tay, không để lại thâm.", images: [img("skin-deep"), img("skin-facial")], likes: 131, comments: 7 },
+  { id: "w-body-glow", proId: "mai-tran", templateId: "skin-basic", category: "skincare", title: "Chăm sóc da cuối tuần", description: "Massage mặt 20 phút, mặt nạ dịu da.", images: [img("skin-facial"), img("skin-massage")], likes: 88, comments: 3 },
+  { id: "w-event-waves", proId: "quynh-vu", templateId: "hair-styling", category: "hair", title: "Uốn lọn sóng dự tiệc", description: "Lọn to bồng bềnh, giữ nếp cả tối.", images: [img("hair-waves-1"), img("hair-waves-2")], likes: 176, comments: 10 },
+  { id: "w-bride-bun", proId: "quynh-vu", templateId: "hair-styling", category: "hair", title: "Búi thấp dự tiệc cưới", description: "Búi thấp mềm, kết hợp phụ kiện ngọc trai.", images: [img("hair-bun-1"), img("hair-bun-2")], likes: 203, comments: 15 },
+  { id: "w-classic-lash", proId: "ha-my", templateId: "lash-classic", category: "lash-brow", title: "Mi classic tự nhiên", description: "Mi mảnh, cong nhẹ, như mi thật.", images: [img("lash-1"), img("lash-2")], likes: 240, comments: 21 },
+  { id: "w-brow-shape", proId: "ha-my", templateId: "brow-shaping", category: "lash-brow", title: "Dáng mày ngang mềm", description: "Mày ngang trẻ trung theo khuôn mặt tròn.", images: [img("brow-1"), img("brow-2")], likes: 158, comments: 8 },
+  { id: "w-nb-gel", proId: "ngoc-bao", templateId: "nail-gel", category: "nail", title: "Gel trơn hồng đất", description: "Tone hồng đất ấm, hợp da ngăm.", images: [img("nail-earth")], likes: 64, comments: 2 },
+  { id: "w-nb-combo", proId: "ngoc-bao", templateId: "makeup-party", category: "makeup", title: "Makeup nhóm phù dâu", description: "Makeup nhẹ đồng bộ cho nhóm 3 người.", images: [img("makeup-bridesmaid")], likes: 91, comments: 5 },
+  { id: "w-foot", proId: "dieu-huong", templateId: "massage-foot", category: "massage", title: "Massage chân tại nhà", description: "Ngâm chân thảo mộc, bấm huyệt bàn chân sau ngày dài.", images: [img("massage-foot")], likes: 132, comments: 9 },
+  { id: "w-neck", proId: "dieu-huong", templateId: "massage-neck", category: "massage", title: "Cổ vai gáy dân văn phòng", description: "Chườm nóng và massage giảm căng cứng cổ vai.", images: [img("massage-neck")], likes: 118, comments: 6 },
+  { id: "w-cupping", proId: "dieu-huong", templateId: "massage-oil-cupping", category: "massage", title: "Massage dầu + giác hơi", description: "Massage tinh dầu kết hợp giác hơi lưng.", images: [img("massage-cupping")], likes: 97, comments: 4 },
+]
 
-export async function getPreferredProductOffer(product: Product) {
-  const offers = await getProductOffers({ productId: product.id })
-  return offers.find((offer) => offer.is_preferred && offer.affiliate_url)
-    ?? offers.find((offer) => offer.affiliate_url)
-    ?? offers.find((offer) => offer.is_preferred)
-    ?? offers[0]
-    ?? null
-}
+export const getPro = (id: string) => PROS.find((p) => p.id === id)
+export const getWork = (id: string) => WORKS.find((w) => w.id === id)
+export const worksByPro = (proId: string) => WORKS.filter((w) => w.proId === proId)
 
-export async function getProduct(id: string): Promise<Product | null> {
-  const fallback = SAMPLE_PRODUCTS.find((product) => product.id === id) ?? null
-  const curatedLegacyProduct = fallback ? CURATED_LEGACY_PRODUCTS.get(fallback.id) : null
-  if (curatedLegacyProduct) {
-    const publicLegacyProduct = productWithTaxonomy(curatedLegacyProduct)
-    const reviews = await getCommunityReviews({ productId: id })
-    const summary = summarizeApprovedRatings(reviews)
-    return { ...publicLegacyProduct, rating: summary.average ?? 0, reviews: summary.count, affiliate_url: null }
-  }
+/** The freelancer profile used by the demo "freelancer" session. */
+export const DEMO_PRO_ID = "linh-pham"
 
-  const product = await fromSupabase<Product | null>(
-    supabase.from("radar_products").select("*").eq("id", id).maybeSingle(),
-    fallback
-  )
-  const publicProduct = product ? productWithTaxonomy(CURATED_LEGACY_PRODUCTS.get(product.id) ?? product) : null
-  if (!publicProduct || publicProduct.status === "pending" || publicProduct.status === "archived") return null
-  const reviews = await getCommunityReviews({ productId: id })
-  const summary = summarizeApprovedRatings(reviews)
-  return { ...publicProduct, rating: summary.average ?? 0, reviews: summary.count, affiliate_url: null }
-}
-
-export async function getCreatorEvidenceItems(filters: { creatorId?: string; status?: string } = {}) {
-  const fallback = SAMPLE_CREATOR_EVIDENCE_ITEMS.filter((item) => {
-    if (filters.creatorId && item.creator_id !== filters.creatorId) return false
-    if (filters.status && item.status !== filters.status) return false
-    return true
-  })
-
-  if (!isSupabaseSchemaReady) return fallback
-
-  let query = supabase.from("creator_evidence_items").select("*").order("observed_at", { ascending: false })
-  if (filters.creatorId) query = query.eq("creator_id", filters.creatorId)
-  if (filters.status) query = query.eq("status", filters.status)
-  return fromSupabase<CreatorEvidenceItem[]>(query, fallback)
-}
-
-const HUB_PRODUCT_CATEGORIES: Record<string, string[]> = {
-  "da-mat": ["Skincare"],
-  "tri-mun": ["Skincare"],
-  "sang-da-chong-nang": ["Skincare", "Bodycare"],
-  "ingredient-radar": ["Skincare"],
-  "product-radar": ["Skincare", "Makeup", "Bodycare", "Haircare", "Perfume"],
-  bodycare: ["Bodycare"],
-  "toc-da-dau": ["Haircare"],
-  makeup: ["Makeup"],
-  "mui-huong": ["Perfume", "Bodycare"],
-  "nam-gioi": ["Skincare", "Haircare"],
-  "clinic-treatment": ["Skincare"],
-  "beauty-lifestyle": ["Skincare", "Bodycare"],
-  "nails-mi-long-may": ["Makeup"],
-  "beauty-tech": ["Skincare", "Haircare"],
-}
-
-function normalizeText(text: string) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-}
-
-function scoreProductForPost(product: Product, post: Post, explicitRank: number | null) {
-  const postText = normalizeText([
-    post.title,
-    post.excerpt,
-    post.content,
-    post.category,
-    post.hubSlug,
-    ...(post.tags ?? []),
-  ].join(" "))
-  const productText = normalizeText([
-    product.name,
-    product.brand,
-    product.category,
-    product.description,
-    ...(product.tags ?? []),
-  ].join(" "))
-  const hubCategories = post.hubSlug ? HUB_PRODUCT_CATEGORIES[post.hubSlug] ?? [] : []
-  let score = explicitRank == null ? 0 : 1000 - explicitRank
-
-  if (hubCategories.some((category) => normalizeText(category) === normalizeText(product.category))) score += 80
-  if (normalizeText(post.category) === normalizeText(product.category)) score += 70
-  if (postText.includes(normalizeText(product.category))) score += 30
-  if (postText.includes(normalizeText(product.brand))) score += 12
-
-  for (const tag of product.tags ?? []) {
-    const normalizedTag = normalizeText(tag)
-    if (postText.includes(normalizedTag)) score += 24
-  }
-
-  for (const tag of post.tags ?? []) {
-    const normalizedTag = normalizeText(tag)
-    if (productText.includes(normalizedTag)) score += 18
-  }
-
-  score += Math.min(product.rating, 5)
-  score += Math.min(product.reviews / 1000, 5)
-  return score
-}
-
-export async function getPostProductRecommendations(post: Post, limit = 3) {
-  const products = await getProducts()
-  const explicitIds = post.product_ids ?? []
-  const explicitRank = new Map(explicitIds.map((id, index) => [id, index]))
-
-  return products
-    .map((product) => ({
-      product,
-      score: scoreProductForPost(product, post, explicitRank.get(product.id) ?? null),
-    }))
-    .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score || b.product.rating - a.product.rating)
-    .slice(0, limit)
-    .map((item) => item.product)
-}
-
-export async function getKols() {
-  const rows = await fromSupabase<Kol[]>(
-    supabase.from("kols").select("*").eq("directory_status", "active").order("trustscore", { ascending: false }),
-    SAMPLE_KOLS
-  )
-  return rows.map((row) => {
-    const researched = REAL_KOLS.find((creator) => creator.id === row.id)
-    return researched
-      ? {
-          ...researched,
-          ...row,
-          avatar: row.avatar || researched.avatar,
-          cover: row.cover || researched.cover,
-          socials: researched.socials,
-        }
-      : row
-  })
-}
-
-export async function getKol(id: string) {
-  const fallback = SAMPLE_KOLS.find((kol) => kol.id === id) ?? null
-  const row = await fromSupabase<Kol | null>(
-    supabase.from("kols").select("*").eq("id", id).eq("directory_status", "active").maybeSingle(),
-    fallback
-  )
-  const researched = REAL_KOLS.find((creator) => creator.id === id)
-  return row && researched
-    ? {
-        ...researched,
-        ...row,
-        avatar: row.avatar || researched.avatar,
-        cover: row.cover || researched.cover,
-        socials: researched.socials,
-      }
-    : row
-}
-
-export async function getReviews(filters: { productId?: string; kolId?: string } = {}) {
-  const fallback = SAMPLE_REVIEWS.filter((review) => {
-    if (filters.productId && review.productid !== filters.productId) return false
-    if (filters.kolId && review.kolid !== filters.kolId) return false
-    return true
-  })
-
-  if (!isSupabaseSchemaReady) return fallback
-
-  let query = supabase.from("reviews").select("*")
-  if (filters.productId) query = query.eq("productid", filters.productId)
-  if (filters.kolId) query = query.eq("kolid", filters.kolId)
-  return fromSupabase<Review[]>(query, fallback)
-}
-
-export async function getCommunityReviews(filters: { productId?: string; userId?: string } = {}) {
-  if (!isSupabaseSchemaReady) return [] as CommunityReview[]
-
-  let query = supabase
-    .from("user_ratings")
-    .select("*")
-    .order("created_at", { ascending: false })
-
-  if (filters.productId) query = query.eq("product_id", filters.productId)
-  if (filters.userId) {
-    query = query.eq("user_id", filters.userId)
-  } else {
-    query = query.eq("status", "approved")
-  }
-
-  return fromSupabase<CommunityReview[]>(query, [])
-}
-
-export async function getCreatorProductEvents(filters: { productId?: string; creatorId?: string } = {}) {
-  const fallback = ALL_FALLBACK_TIMELINE_EVENTS.filter((event) => {
-    if (filters.productId && event.product_id !== filters.productId) return false
-    if (filters.creatorId && event.creator_id !== filters.creatorId) return false
-    return true
-  })
-
-  if (!isSupabaseSchemaReady) return fallback
-
-  let query = supabase.from("creator_product_events").select("*")
-  if (filters.productId) query = query.eq("product_id", filters.productId)
-  if (filters.creatorId) query = query.eq("creator_id", filters.creatorId)
-  const events = await fromSupabase<CreatorProductEvent[]>(query, fallback)
-  return mergeTimelineEvents(events).filter(isPublicEvidenceEvent).filter(isPublicCreatorEvent)
-}
-
-export async function getCreatorProductStates(filters: { productId?: string; creatorId?: string } = {}) {
-  const grouped = new Map<string, CreatorProductEvent[]>()
-  for (const event of PUBLIC_CREATOR_PRODUCT_EVENTS) {
-    if (filters.productId && event.product_id !== filters.productId) continue
-    if (filters.creatorId && event.creator_id !== filters.creatorId) continue
-    const key = `${event.creator_id}|${event.product_id}`
-    grouped.set(key, [...(grouped.get(key) ?? []), event])
-  }
-  const fallback = Array.from(grouped.entries()).map(([key, events]) => {
-    const [creatorId, productId] = key.split("|")
-    const derived = deriveCreatorProductState(events)
-    return {
-      creator_id: creatorId,
-      product_id: productId,
-      state: derived.state,
-      state_confidence: derived.stateConfidence,
-      last_confirmed_at: derived.lastConfirmedAt,
-      expires_at: derived.expiresAt,
-      evidence_count: derived.evidenceCount,
-      last_event_id: derived.lastEventId,
-      computed_at: new Date().toISOString(),
-    } satisfies CreatorProductState
-  })
-
-  if (!isEvidenceRadarSchemaReady) return fallback
-  let query = supabase.from("creator_product_states").select("*").gte("state_confidence", 70)
-  if (filters.productId) query = query.eq("product_id", filters.productId)
-  if (filters.creatorId) query = query.eq("creator_id", filters.creatorId)
-  return fromSupabase<CreatorProductState[]>(query, fallback)
-}
-
-export async function getPosts() {
-  const posts = await fromSupabase<Post[]>(
-    supabase.from("posts").select("*").order("created_at", { ascending: false }),
-    ALL_FALLBACK_POSTS
-  )
-  return mergePosts(posts, EDITORIAL_PUBLISHED_POSTS)
-}
-
-export async function getPost(id: string) {
-  const fallback = ALL_FALLBACK_POSTS.find((post) => post.id === id || post.slug === id) ?? getPublishedEditorialPost(id)
-  if (!isSupabaseSchemaReady) return fallback ? normalizeEditorialPost(fallback) : null
-
-  const byId = await fromSupabase<Post | null>(
-    supabase.from("posts").select("*").eq("id", id).maybeSingle(),
-    null
-  )
-  if (byId) return normalizeEditorialPost(byId)
-
-  const post = await fromSupabase<Post | null>(
-    supabase.from("posts").select("*").eq("slug", id).maybeSingle(),
-    fallback
-  )
-  return post ? normalizeEditorialPost(post) : null
-}
-
-export async function getRelatedPosts(category: string, currentId: string, limit = 2) {
-  const fallback = ALL_FALLBACK_POSTS
-    .filter((post) => post.category === category && post.id !== currentId)
-    .slice(0, limit)
-
-  const posts = await fromSupabase<Post[]>(
-    supabase
-      .from("posts")
-      .select("id, title, image, category, created_at, slug, excerpt, content, author_name, author_avatar, tags, likes, comments, product_ids")
-      .eq("category", category)
-      .neq("id", currentId)
-      .limit(limit),
-    fallback
-  )
-  return posts.map(normalizeEditorialPost)
-}
-
-export async function searchAll(query: string) {
-  const normalized = query.trim().toLowerCase()
-  if (!normalized) return { products: [], posts: [], kols: [] }
-
-  const fallback = {
-    products: SAMPLE_PRODUCTS.filter((product) =>
-      [product.name, product.brand, product.category, ...product.tags].some((field) =>
-        field.toLowerCase().includes(normalized)
-      )
-    ),
-    posts: ALL_FALLBACK_POSTS.filter((post) =>
-      [post.title, post.excerpt, post.author_name, post.category, ...post.tags].some((field) =>
-        field.toLowerCase().includes(normalized)
-      )
-    ),
-    kols: SAMPLE_KOLS.filter((kol) =>
-      [kol.name, kol.handle, kol.platform, ...kol.categories].some((field) =>
-        field.toLowerCase().includes(normalized)
-      )
-    ),
-  }
-
-  if (!isSupabaseSchemaReady) return fallback
-
-  const pattern = `%${query}%`
-  try {
-    const [productsRes, postsRes, kolsRes] = await Promise.all([
-      supabase.from("radar_products").select("*").or(`name.ilike.${pattern},brand.ilike.${pattern},category.ilike.${pattern}`).limit(12),
-      supabase.from("posts").select("*").or(`title.ilike.${pattern},excerpt.ilike.${pattern},category.ilike.${pattern}`).limit(12),
-      supabase.from("kols").select("*").or(`name.ilike.${pattern},handle.ilike.${pattern},platform.ilike.${pattern}`).limit(12),
-    ])
-
-    return {
-      products: (productsRes.data as Product[] | null) ?? fallback.products,
-      posts: mergePosts((postsRes.data as Post[] | null) ?? [], fallback.posts).slice(0, 12),
-      kols: (kolsRes.data as Kol[] | null) ?? fallback.kols,
-    }
-  } catch {
-    return fallback
-  }
+/** Default address of the demo customer. */
+export const DEMO_CUSTOMER = {
+  name: "Nguyễn Phương",
+  phone: "0912 345 678",
+  address: { city: "Hà Nội", district: "Thanh Xuân", detail: "123 Nguyễn Trãi" },
 }

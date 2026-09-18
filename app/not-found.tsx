@@ -1,16 +1,22 @@
-import Link from 'next/link'
- 
+import type { Metadata } from "next"
+import { ButtonLink } from "@/components/ui"
+
+export const metadata: Metadata = { title: "Không tìm thấy trang" }
+
 export default function NotFound() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center bg-slate-50 dark:bg-slate-950">
-      <h2 className="text-4xl font-display font-bold text-slate-900 dark:text-slate-50 mb-4">404 - Không tìm thấy trang</h2>
-      <p className="text-lg text-slate-600 dark:text-slate-400 mb-8">Rất tiếc, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.</p>
-      <Link 
-        href="/"
-        className="inline-flex h-12 items-center justify-center bg-rose-600 px-8 py-2 text-sm font-bold uppercase tracking-wider text-white hover:bg-rose-700 transition-colors rounded-xl"
-      >
-        Về trang chủ
-      </Link>
+    <div className="flex min-h-[70dvh] flex-col items-center justify-center px-6 text-center">
+      <p className="font-display text-5xl font-extrabold text-ink">
+        4<span className="text-rose">0</span>4
+      </p>
+      <h1 className="mt-4 text-xl font-semibold">Không tìm thấy trang</h1>
+      <p className="mt-1 max-w-sm text-sm text-ink-soft">Trang bạn tìm có thể đã bị xoá hoặc đổi địa chỉ.</p>
+      <div className="mt-6 flex gap-2">
+        <ButtonLink href="/">Về trang khám phá</ButtonLink>
+        <ButtonLink href="/pros" variant="outline">
+          Xem chuyên viên
+        </ButtonLink>
+      </div>
     </div>
   )
 }

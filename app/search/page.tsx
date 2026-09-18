@@ -1,252 +1,242 @@
 "use client"
 
+import * as React from "react"
 import { Suspense } from "react"
-import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import Image from "next/image"
-import { useEffect, useState } from "react"
-import { Search, Package, FileText, Users } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { ChevronLeft, Search, SlidersHorizontal, X } from "lucide-react"
+import { ProCard, WorkCard } from "@/components/beauty"
+import { Chip, EmptyState, Tabs, PageSkeleton } from "@/components/ui"
+import { CATEGORIES, CITIES, PROS, WORKS } from "@/lib/data"
+import { sortPros } from "@/components/trust"
+import { getTemplate } from "@/lib/catalog"
+import { fromPrice, proView, useApp } from "@/lib/store"
+import type { CategoryId } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { searchAll } from "@/lib/data"
-import { trackEvent } from "@/lib/analytics"
-import type { Product, Post, Kol } from "@/lib/types"
+const PRICE_OPTIONS = [
+  { value: "", label: "Mọi mức giá" },
+  { value: "300000", label: "Dưới 300k" },
+  { value: "500000", label: "Dưới 500k" },
+  { value: "1000000", label: "Dưới 1 triệu" },
+]
 
-function SearchResults() {
-  const searchParams = useSearchParams()
-  const query = searchParams.get("q") || ""
-
-  const [products, setProducts] = useState<Product[]>([])
-  const [posts, setPosts] = useState<Post[]>([])
-  const [kols, setKols] = useState<Kol[]>([])
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (!query.trim()) {
-      return
-    }
-
-    let active = true
-
-    async function search() {
-      setLoading(true)
-      const results = await searchAll(query)
-      if (!active) return
-      setProducts(results.products)
-      setPosts(results.posts)
-      setKols(results.kols)
-      trackEvent("search", {
-        search_term: query,
-        result_count: results.products.length + results.posts.length + results.kols.length,
-      })
-      setLoading(false)
-    }
-
-    search()
-    return () => {
-      active = false
-    }
-  }, [query])
-
-  const totalResults = products.length + posts.length + kols.length
-  const hasQuery = query.trim().length > 0
-
-  return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 md:py-12">
-      <div className="container mx-auto px-4 md:px-6">
-        {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900 dark:text-slate-50 mb-2">
-            Tìm kiếm
-          </h1>
-          {hasQuery && !loading && (
-            <p className="text-slate-500 dark:text-slate-400 font-medium">
-              {totalResults} kết quả cho &ldquo;{query}&rdquo;
-            </p>
-          )}
-        </div>
-
-        {hasQuery && loading && (
-          <div className="flex items-center justify-center py-20">
-            <div className="h-8 w-8 border-4 border-rose-200 dark:border-rose-800 border-t-rose-600 dark:border-t-rose-400 rounded-full animate-spin" />
-          </div>
-        )}
-
-        {!loading && hasQuery && totalResults === 0 && (
-          <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
-            <Search className="h-12 w-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
-            <p className="text-lg font-medium text-slate-500 dark:text-slate-400">
-              Không tìm thấy kết quả cho &ldquo;{query}&rdquo;
-            </p>
-            <p className="text-sm text-slate-400 dark:text-slate-500 mt-2">
-              Thử tìm kiếm với từ khóa khác
-            </p>
-          </div>
-        )}
-
-        {!loading && !hasQuery && (
-          <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
-            <Search className="h-12 w-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
-            <p className="text-lg font-medium text-slate-500 dark:text-slate-400">
-              Nhập từ khóa để bắt đầu tìm kiếm
-            </p>
-          </div>
-        )}
-
-        {/* Products Section */}
-        {!loading && products.length > 0 && (
-          <section className="mb-12">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 rounded-xl bg-rose-100 dark:bg-rose-950/50 flex items-center justify-center text-rose-600 dark:text-rose-400">
-                <Package className="h-5 w-5" />
-              </div>
-              <h2 className="text-xl font-display font-bold text-slate-900 dark:text-slate-50">
-                Sản phẩm
-              </h2>
-              <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                {products.length}
-              </Badge>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product, index) => (
-                <Link key={product.id} href={`/products/${product.id}`}>
-                  <Card className="overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl h-full group">
-                    <div className="relative aspect-square bg-slate-100 dark:bg-slate-800">
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        fill
-                        sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                        priority={index === 0}
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <CardContent className="p-4">
-                      <div className="text-xs font-bold text-rose-500 uppercase tracking-wider mb-1">
-                        {product.brand}
-                      </div>
-                      <h3 className="font-bold text-slate-900 dark:text-slate-50 line-clamp-2 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
-                        {product.name}
-                      </h3>
-                      <div className="mt-2 text-sm font-bold text-slate-900 dark:text-slate-50">
-                        {product.price}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Posts Section */}
-        {!loading && posts.length > 0 && (
-          <section className="mb-12">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-950/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                <FileText className="h-5 w-5" />
-              </div>
-              <h2 className="text-xl font-display font-bold text-slate-900 dark:text-slate-50">
-                Bài viết
-              </h2>
-              <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                {posts.length}
-              </Badge>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post, index) => (
-                <Link key={post.id} href={`/blog/${post.id}`}>
-                  <Card className="overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl h-full group">
-                    <div className="relative h-48 bg-slate-100 dark:bg-slate-800">
-                      <Image
-                        src={post.image}
-                        alt={post.title}
-                        fill
-                        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                        priority={products.length === 0 && index === 0}
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <CardContent className="p-4">
-                      <Badge className="bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 text-xs mb-2">
-                        {post.category}
-                      </Badge>
-                      <h3 className="font-bold text-slate-900 dark:text-slate-50 line-clamp-2 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors mb-2">
-                        {post.title}
-                      </h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
-                        {post.excerpt}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* KOLs Section */}
-        {!loading && kols.length > 0 && (
-          <section className="mb-12">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                <Users className="h-5 w-5" />
-              </div>
-              <h2 className="text-xl font-display font-bold text-slate-900 dark:text-slate-50">
-                KOL/KOC
-              </h2>
-              <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                {kols.length}
-              </Badge>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {kols.map((kol) => (
-                <Link key={kol.id} href={`/koc-tracker/${kol.id}`}>
-                  <Card className="overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl h-full group">
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <Avatar className="h-16 w-16 border-2 border-white dark:border-slate-800 shadow-sm">
-                        <AvatarImage src={kol.avatar} />
-                        <AvatarFallback>{kol.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <h3 className="font-bold text-slate-900 dark:text-slate-50 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors truncate">
-                          {kol.name}
-                        </h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
-                          {kol.handle}
-                        </p>
-                        <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs mt-1">
-                          {kol.platform}
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
-    </div>
-  )
+function normalize(s: string) {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/đ/g, "d")
 }
 
 export default function SearchPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
-          <div className="h-8 w-8 border-4 border-rose-200 dark:border-rose-800 border-t-rose-600 dark:border-t-rose-400 rounded-full animate-spin" />
-        </div>
-      }
-    >
-      <SearchResults />
+    <Suspense fallback={<PageSkeleton />}>
+      <SearchView />
     </Suspense>
+  )
+}
+
+function SearchView() {
+  const router = useRouter()
+  const params = useSearchParams()
+  const state = useApp()
+  const [q, setQ] = React.useState(params.get("q") ?? "")
+  const [showFilters, setShowFilters] = React.useState(false)
+  const [mode, setMode] = React.useState<"works" | "pros">("works")
+
+  const category = (params.get("category") as CategoryId | null) ?? null
+  const city = params.get("city") ?? state.city ?? ""
+  const maxPrice = Number(params.get("price") ?? 0)
+  const topRated = params.get("rating") === "1"
+  const atHome = params.get("home") === "1"
+  const query = params.get("q") ?? ""
+
+  const setParam = (key: string, value: string | null) => {
+    const next = new URLSearchParams(params.toString())
+    if (value) next.set(key, value)
+    else next.delete(key)
+    router.replace(`/search?${next.toString()}`, { scroll: false })
+  }
+
+  const works = React.useMemo(() => {
+    const nq = normalize(query)
+    return WORKS.filter((w) => {
+      const pro = proView(state, w.proId)!
+      const price = fromPrice(state, w.proId, w.templateId)
+      if (category && w.category !== category) return false
+      if (city && pro.city !== city) return false
+      if (maxPrice && price !== null && price > maxPrice) return false
+      if (topRated && pro.rating.average < 4.8) return false
+      if (atHome && !pro.homeService) return false
+      if (nq && !normalize(`${w.title} ${w.description} ${getTemplate(w.templateId)?.name} ${pro.name} ${pro.title}`).includes(nq)) return false
+      return true
+    })
+  }, [state, query, category, city, maxPrice, topRated, atHome])
+
+  const pros = React.useMemo(() => {
+    const nq = normalize(query)
+    const list = PROS.filter((p) => {
+      if (category && !p.categories.includes(category)) return false
+      if (city && p.city !== city) return false
+      if (topRated && p.rating.average < 4.8) return false
+      if (atHome && !p.homeService) return false
+      if (nq && !normalize(`${p.name} ${p.title} ${p.bio} ${p.district}`).includes(nq)) return false
+      return true
+    })
+    return sortPros(state, list, "match")
+  }, [state, query, category, city, topRated, atHome])
+
+  const activeFilters = [city, maxPrice, topRated, atHome].filter(Boolean).length
+
+  return (
+    <div className="md:pt-6">
+      <div className="sticky top-0 z-30 -mx-4 bg-canvas/95 px-4 pb-3 pt-2 backdrop-blur md:static md:mx-0 md:px-0">
+        <div className="flex items-center gap-2">
+          <button type="button" aria-label="Quay lại" onClick={() => router.back()} className="-ml-2 inline-flex size-10 items-center justify-center md:hidden">
+            <ChevronLeft className="size-5" />
+          </button>
+          <form
+            className="relative flex-1"
+            onSubmit={(e) => {
+              e.preventDefault()
+              setParam("q", q.trim() || null)
+            }}
+          >
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              type="search"
+              aria-label="Tìm kiếm"
+              placeholder="Nail trơn, makeup tiệc, nối mi..."
+              className="h-11 w-full rounded-full border border-line bg-surface pl-10 pr-10 text-sm focus:border-rose focus:outline-none"
+            />
+            {q && (
+              <button
+                type="button"
+                aria-label="Xóa"
+                onClick={() => {
+                  setQ("")
+                  setParam("q", null)
+                }}
+                className="absolute right-2 top-1/2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-muted"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </form>
+        </div>
+
+        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
+          <Chip active={showFilters || activeFilters > 0} onClick={() => setShowFilters((v) => !v)}>
+            <SlidersHorizontal className="size-3.5" /> Lọc{activeFilters ? ` (${activeFilters})` : ""}
+          </Chip>
+          <Chip active={!category} onClick={() => setParam("category", null)}>
+            Tất cả
+          </Chip>
+          {CATEGORIES.map((c) => (
+            <Chip key={c.id} active={category === c.id} onClick={() => setParam("category", category === c.id ? null : c.id)}>
+              {c.label}
+            </Chip>
+          ))}
+        </div>
+
+        {showFilters && (
+          <div className="mt-3 grid gap-3 rounded-2xl bg-surface p-4 shadow-[var(--shadow-soft)] sm:grid-cols-2 md:grid-cols-4">
+            <SelectFilter label="Khu vực" value={city} onChange={(v) => setParam("city", v || null)}>
+              <option value="">Toàn quốc</option>
+              {CITIES.map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </SelectFilter>
+            <SelectFilter label="Giá" value={maxPrice ? String(maxPrice) : ""} onChange={(v) => setParam("price", v || null)}>
+              {PRICE_OPTIONS.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </SelectFilter>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={topRated} onChange={(e) => setParam("rating", e.target.checked ? "1" : null)} className="size-4 accent-[var(--color-rose)]" />
+              Đánh giá từ 4.8
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={atHome} onChange={(e) => setParam("home", e.target.checked ? "1" : null)} className="size-4 accent-[var(--color-rose)]" />
+              Nhận làm tại nhà
+            </label>
+          </div>
+        )}
+      </div>
+
+      <Tabs
+        value={mode}
+        onChange={setMode}
+        items={[
+          { value: "works", label: `Tác phẩm (${works.length})` },
+          { value: "pros", label: `Chuyên viên (${pros.length})` },
+        ]}
+      />
+
+      {mode === "works" ? (
+        works.length ? (
+          <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4 md:gap-x-5">
+            {works.map((w) => (
+              <WorkCard key={w.id} work={w} />
+            ))}
+          </div>
+        ) : (
+          <NoResults />
+        )
+      ) : pros.length ? (
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {pros.map((p) => (
+            <ProCard key={p.id} pro={p} />
+          ))}
+        </div>
+      ) : (
+        <NoResults />
+      )}
+    </div>
+  )
+}
+
+function SelectFilter({
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  children: React.ReactNode
+}) {
+  return (
+    <label className="block text-xs text-muted">
+      {label}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={cn("mt-1 h-10 w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink focus:border-rose focus:outline-none")}
+      >
+        {children}
+      </select>
+    </label>
+  )
+}
+
+function NoResults() {
+  return (
+    <EmptyState
+      icon={<Search className="size-6" />}
+      title="Không tìm thấy kết quả"
+      text="Thử bỏ bớt bộ lọc, hoặc đăng yêu cầu để freelancer chủ động báo giá cho bạn."
+      action={
+        <Link href="/requests/new" className="text-sm font-medium text-rose underline underline-offset-2">
+          Đăng yêu cầu
+        </Link>
+      }
+    />
   )
 }

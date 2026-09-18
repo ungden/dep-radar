@@ -1,14 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="360dep.vn">
-  <defs>
-    <linearGradient id="fav-bg" x1="7" y1="5" x2="57" y2="59" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#26211f"/>
-      <stop offset=".58" stop-color="#111113"/>
-      <stop offset="1" stop-color="#09090b"/>
-    </linearGradient>
-  </defs>
-  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#fav-bg)"/>
-  <rect x="6" y="6" width="52" height="52" rx="10" fill="none" stroke="#f7efe7" stroke-opacity=".1"/>
-  <path d="M13 39c11-16 29-22 43-11" fill="none" stroke="#d8a48f" stroke-width="2.8" stroke-linecap="round"/>
-  <circle cx="51" cy="25" r="2.6" fill="#d8a48f"/>
-  <text x="32" y="43" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="900" letter-spacing="0" fill="#f7efe7">đ</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="dep360">
+  <rect width="64" height="64" rx="16" fill="#b5646d"/>
+  <text x="32" y="46" text-anchor="middle" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-weight="800" font-size="44" fill="#ffffff">d</text>
 </svg>

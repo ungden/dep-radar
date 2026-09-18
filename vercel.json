@@ -1,9 +1,0 @@
-{
-  "name": "360-do-dep",
-  "crons": [
-    {
-      "path": "/api/cron/daily-briefing",
-      "schedule": "0 7 * * *"
-    }
-  ]
-}

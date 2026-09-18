@@ -1,103 +1,74 @@
-import type { Metadata } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
-import './globals.css';
+import type { Metadata, Viewport } from "next"
+import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google"
+import "./globals.css"
 
-import { GoogleAnalytics } from '@/components/analytics/google-analytics';
-import { WebVitals } from '@/components/analytics/web-vitals';
-import { Navbar } from '@/components/layout/navbar';
-import { Footer } from '@/components/layout/footer';
-import { PageTransition } from '@/components/layout/page-transition';
-import { ThemeProvider } from '@/components/theme-provider';
-import { AuthProvider } from '@/lib/auth-context';
-import { absoluteUrl, getSiteUrl } from '@/lib/seo';
+import { AppShell } from "@/components/layout/app-shell"
+import { SITE_URL } from "@/lib/env"
+import { StoreProvider } from "@/lib/store"
 
-const inter = Inter({
-  subsets: ['latin', 'vietnamese'],
-  variable: '--font-sans',
-});
+const body = Be_Vietnam_Pro({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
+})
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin', 'vietnamese'],
-  variable: '--font-display',
-});
+// Only the extrabold wordmark weight is used, so nothing else is downloaded.
+const serif = Playfair_Display({
+  subsets: ["latin", "vietnamese"],
+  weight: ["800"],
+  variable: "--font-serif",
+})
 
 export const metadata: Metadata = {
-  metadataBase: new URL(getSiteUrl()),
-  applicationName: '360dep.vn',
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: "/" },
+  applicationName: "dep360",
   title: {
-    default: '360dep.vn | Catalogue, review mỹ phẩm và beauty radar',
-    template: '%s | 360dep.vn',
+    default: "dep360 | Đặt lịch làm đẹp với chuyên viên freelancer",
+    template: "%s | dep360",
   },
-  description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
-  keywords: ['360dep.vn', '360dep', 'review mỹ phẩm', 'catalogue làm đẹp', 'beauty radar', 'skincare Việt Nam'],
-  alternates: {
-    canonical: getSiteUrl(),
-  },
-  manifest: '/brand/site.webmanifest',
+  description:
+    "Tìm chuyên viên nail, makeup, chăm sóc da, tóc, mi & mày làm tại nhà. Xem tác phẩm thật, đặt lịch nhanh, hoặc đăng yêu cầu để freelancer báo giá.",
+  manifest: "/brand/site.webmanifest",
   icons: {
     icon: [
-      { url: '/brand/favicon.ico', sizes: 'any' },
-      { url: '/brand/favicon.svg', type: 'image/svg+xml' },
-      { url: '/brand/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: "/brand/favicon.svg", type: "image/svg+xml" },
+      { url: "/brand/favicon-32.png", sizes: "32x32", type: "image/png" },
     ],
-    apple: [
-      { url: '/brand/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
-    shortcut: ['/brand/favicon.ico'],
+    apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180" }],
   },
-  appleWebApp: {
-    title: '360dep.vn',
-    capable: true,
-    statusBarStyle: 'default',
-  },
+  appleWebApp: { title: "dep360", capable: true, statusBarStyle: "default" },
+  twitter: { card: "summary_large_image" },
   openGraph: {
-    type: 'website',
-    locale: 'vi_VN',
-    siteName: '360dep.vn',
-    url: getSiteUrl(),
-    title: '360dep.vn | Catalogue, review mỹ phẩm và beauty radar',
-    description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
-    images: [
-      {
-        url: absoluteUrl('/brand/social-share.jpg'),
-        width: 1200,
-        height: 630,
-        alt: '360dep.vn - Beauty Radar',
-      },
-    ],
+    type: "website",
+    locale: "vi_VN",
+    siteName: "dep360",
+    title: "dep360 | Đẹp hơn mỗi ngày, theo cách của bạn",
+    description: "Đặt lịch làm đẹp với chuyên viên freelancer gần bạn.",
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: '360dep.vn | Catalogue, review mỹ phẩm và beauty radar',
-    description: 'Catalogue, review mỹ phẩm và kiến thức làm đẹp có kiểm chứng cho người dùng Việt Nam.',
-    images: [absoluteUrl('/brand/social-share.jpg')],
-  },
-};
+}
+
+export const viewport: Viewport = {
+  themeColor: "#faf6f4",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" className={`${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
-      <body className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-50 antialiased flex flex-col" suppressHydrationWarning>
-        <GoogleAnalytics />
-        <WebVitals />
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
+    <html lang="vi" className={`${body.variable} ${serif.variable}`}>
+      <body className="min-h-dvh">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:shadow"
         >
-          <AuthProvider>
-            <a href="#main-content" className="sr-only z-[100] rounded-md bg-white px-4 py-3 font-bold text-slate-900 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
-              Bỏ qua điều hướng
-            </a>
-            <Navbar />
-            <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col outline-none">
-              <PageTransition>{children}</PageTransition>
-            </main>
-            <Footer />
-          </AuthProvider>
-        </ThemeProvider>
+          Bỏ qua, tới nội dung chính
+        </a>
+        <StoreProvider>
+          <AppShell>{children}</AppShell>
+        </StoreProvider>
       </body>
     </html>
-  );
+  )
 }
