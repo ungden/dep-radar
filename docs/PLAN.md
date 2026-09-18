@@ -236,7 +236,48 @@ Dark mode · đa ngôn ngữ · hệ thống hạng/tier · đánh giá nhiều 
 
 Kiểm chứng trên production: các route chính 200, `/nope` 404, `robots.txt` và `sitemap.xml` đúng domain, thẻ OG có ảnh, security header có đủ, `/api/identity` trả `no-store` + `noindex`.
 
-### 🔄 Giai đoạn 1 — nền móng backend: đã xong phần server, còn phần giao diện
+### ✅ Giai đoạn 1 — xong, production đã chạy trên database thật (19/09/2026)
+
+Từ hôm nay `dep-radar.vercel.app` đọc/ghi Supabase. Không còn store giả lập trong trình duyệt: một đường dữ liệu duy nhất.
+
+**Database giữ luật**
+- Danh mục, khung giá và chính sách phí là *dữ liệu*, sinh từ `lib/catalog.ts` nên giá trên màn hình và giá database không thể lệch nhau.
+- Lịch hẹn lưu **ảnh chụp báo giá**, có đệm di chuyển và ràng buộc `EXCLUDE`: trùng lịch là *không thể*.
+- `build_quote` / `travel_fee` / `commission_for` khớp từng đồng với `lib/pricing.ts`.
+- `availability_problem()` là câu trả lời duy nhất cho “vì sao không đặt được”; `free_slots()` sinh khung giờ từ **giờ làm việc của chính chuyên viên** — không còn danh sách giờ cứng, và Chủ nhật hiện là đóng cửa vì chuyên viên đó nghỉ.
+- Máy trạng thái đầy đủ qua RPC; `accept_offer` cũng về “chờ gọi xác nhận” như mọi lịch khác.
+- Cron đã chạy: 5 phút/lần huỷ lịch quá hạn và **trả lại khung giờ**, 15 phút/lần đóng yêu cầu hết hạn, 10 phút/lần nhắc T-24h và T-2h, 02:00 tính lại chỉ số, mỗi giờ khoá nhận job khi ví âm quá hạn.
+
+**Giao diện chạy trên dữ liệu thật**
+- `lib/api/snapshot.ts`: một lần đọc server cho mỗi lần chuyển trang, cả app render từ đó. `lib/client-actions.ts` gửi mọi thao tác ghi qua server action → RPC → database kiểm tra lại luật. Lỗi được hiển thị (“Khung giờ này đã có lịch khác”), không nuốt.
+- URL vẫn là slug đọc được (`/works/nail-milky-dinh-da-nhe`), RPC dùng id.
+- Đăng nhập bằng số điện thoại; `/studio/onboarding` cho phép **chuyên viên thứ hai tồn tại**; `/me/dia-chi` quản lý sổ địa chỉ.
+- Lịch hẹn gắn với địa chỉ đã lưu, vì phí di chuyển tính từ toạ độ.
+- Bỏ đếm lượt thích/bình luận: không có gì đếm chúng.
+- Mọi ngày giờ là giờ Việt Nam, không phụ thuộc máy chủ (sửa lỗi lệch 7 tiếng).
+
+**Chuyên viên tự vận hành được**
+- `/studio/works` đăng tác phẩm, `/studio/profile/edit` sửa hồ sơ, ảnh đại diện, bán kính, studio và giờ làm việc.
+- Ảnh được vẽ lại qua canvas và nén lại trước khi rời máy: **xoá sạch EXIF**, tức toạ độ GPS nơi chụp ảnh — thường là nhà của ai đó.
+- Mở hồ sơ là một checklist nói rõ còn thiếu gì; nút chỉ bật khi database sẽ chấp nhận.
+
+**Vận hành**
+- `/admin`: hàng đợi xác minh (hiện đúng những gì AI nói: tên trên thẻ, có khớp hồ sơ không, cùng người không, độ chắc chắn), danh sách chuyên viên kèm số dư ví và nút tạm khoá, lịch hẹn gần đây, hộp báo cáo. Duyệt xác minh sẽ khoá tên hiển thị theo CCCD và báo cho chuyên viên.
+
+**Hai lỗi thiết kế thật đã lộ ra và đã sửa**
+1. Feed trống trơn: hồ sơ công khai đọc tên qua `accounts`, mà bảng đó riêng tư vì chứa số điện thoại. Nay danh tính công khai nằm ở `pros` và ở chính đánh giá; `accounts` vẫn riêng tư và chỉ mở cho bên còn lại của một lịch hẹn — chuyên viên thấy số khách ngay vì họ là người phải gọi, khách thấy số chuyên viên sau khi job được nhận.
+2. Mọi khung giờ đều báo “hết chỗ”: tra cứu slug đem so với cột uuid, khiến Postgres từ chối cả câu truy vấn. Đã sửa, và cả hai đường giờ đều ghi log thay vì im lặng trả về rỗng.
+
+**Kiểm chứng**: `supabase/tests/rules.sql` + 12 test RLS qua đúng API, chạy trong CI; và chạy tay trọn vòng trên máy thật — khách đăng nhập bằng số điện thoại, đặt một khung giờ do database sinh ra, chuyên viên nhận được thông báo, gọi rồi nhận job; một chuyên viên mới đăng ký từ con số không, thêm dịch vụ, tải ảnh, đặt giờ làm, mở hồ sơ và xuất hiện trong danh sách.
+
+**Còn lại của Giai đoạn 1 (cần tài khoản/khoá của anh)**
+- `GEMINI_API_KEY` trên Vercel — thiếu thì xác minh danh tính trả 503 và nói rõ là chưa cấu hình.
+- Nhà cung cấp SMS/ZNS cho OTP thật. Chưa có thì đăng nhập vẫn chạy, màn hình nói thẳng là chưa gửi SMS.
+- Sentry + analytics (cần DSN/khoá).
+
+---
+
+#### Chi tiết phần server (làm trước, 18/09)
 
 **Đã xong**
 
@@ -250,17 +291,3 @@ Kiểm chứng trên production: các route chính 200, `/nope` 404, `robots.txt
 - **Lớp truy cập dữ liệu** `lib/api/*` bất đồng bộ, mọi ghi đi qua RPC và trả về kết quả thay vì ném lỗi. Khách chỉ thấy số điện thoại chuyên viên sau khi job được nhận.
 - **Kiểm thử**: `supabase/tests/rules.sql` (phí, khung giá, sinh khung giờ, cả máy trạng thái, trùng lịch, tự đặt cho mình, hết hạn, các guard) + `tests/rls.integration.test.ts` (12 test RLS qua đúng API với JWT thật). Workflow `Database` chạy cả hai.
 
-**Còn lại của Giai đoạn 1**
-
-- Chuyển 25 màn hình từ store trong trình duyệt sang `lib/api/*`. Đây là phần việc lớn nhất còn lại: dữ liệu mẫu đang nằm trong hằng số `lib/data.ts` và màn hình import trực tiếp `getPro`/`WORKS`/`PROS`.
-- Bật biến Supabase trên Vercel **sau khi** chuyển xong giao diện. Hiện chưa bật là có chủ ý: bật sớm thì middleware sẽ chặn `/bookings` và đẩy sang `/login`, mà `/login` của bản demo không tạo phiên Supabase → vòng lặp chuyển trang.
-- Cron job (pg_cron) gọi các hàm bảo trì; hiện hàm đã có nhưng chưa có lịch chạy.
-- Storage bucket cho avatar / tác phẩm / ảnh đánh giá (nén + xoá EXIF phía server).
-- `/admin` tối thiểu: hàng đợi xác minh, danh sách chuyên viên, can thiệp lịch hẹn, báo cáo vi phạm.
-- Sentry + analytics với 2 phễu.
-
-**Cần anh/chị làm (mình không làm được)**
-
-1. `GEMINI_API_KEY` trên Vercel — thiếu thì xác minh danh tính trả 503.
-2. Nhà cung cấp SMS/ZNS cho OTP thật (quyết định số 4 ở mục 7). Chưa có thì đăng nhập vẫn chạy nhưng không có mã xác thực.
-3. Chốt 7 quyết định ở mục 7, nhất là số 1 (thành phố + danh mục ra mắt) và số 2 (cách thu hoa hồng — schema đang làm theo hướng ví trả trước).

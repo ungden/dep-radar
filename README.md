@@ -72,3 +72,10 @@ npm run demo:sql        # ghi lại dữ liệu mẫu từ lib/data.ts
 
 Biến môi trường: xem `.env.example`. Thiếu biến Supabase thì app chạy ở chế độ
 demo trong trình duyệt và nói rõ điều đó, thay vì vỡ.
+
+## Ảnh tải lên
+
+Ảnh tác phẩm và ảnh đại diện được vẽ lại qua canvas rồi nén lại **trên máy người
+dùng** trước khi tải lên. Việc đó vừa giảm dung lượng, vừa xoá khối EXIF — trên
+ảnh chụp bằng điện thoại, khối đó chứa toạ độ GPS nơi chụp, thường là nhà của ai
+đó. Ảnh CCCD và selfie thì không lưu ở đâu cả: gửi thẳng cho AI rồi thôi.
