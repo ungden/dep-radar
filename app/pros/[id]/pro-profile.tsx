@@ -11,7 +11,7 @@ import { RatingSummaryBlock, ReviewItem, VerifiedBadge, VerifiedMark } from "@/c
 import { Avatar, Button, Card, EmptyState, Tabs } from "@/components/ui"
 import { POLICY, travelFeeFor } from "@/lib/pricing"
 import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp, worksOf } from "@/lib/store"
-import { cn, formatPrice, parseISODate } from "@/lib/utils"
+import { cn, formatPrice, formatResponseTime, parseISODate } from "@/lib/utils"
 
 type Tab = "services" | "works" | "reviews" | "about"
 
@@ -84,7 +84,7 @@ export function ProProfile({ proId }: { proId: string }) {
             {[
               [pro.stats.completedJobs.toLocaleString("vi-VN"), "Job hoàn thành"],
               [`${pro.yearsExp} năm`, "Kinh nghiệm"],
-              [`~${pro.stats.responseMinutes} phút`, "Phản hồi"],
+              [formatResponseTime(pro.stats.responseMinutes) ?? "—", "Phản hồi"],
             ].map(([value, label]) => (
               <li key={label} className="rounded-2xl bg-surface px-2 py-3 shadow-[var(--shadow-soft)]">
                 <p className="text-sm font-semibold">{value}</p>

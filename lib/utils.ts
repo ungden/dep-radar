@@ -14,6 +14,15 @@ export function formatCompact(value: number) {
   return String(value)
 }
 
+/** "~40 phút", "~2 giờ": a response time a person can read at a glance. */
+export function formatResponseTime(minutes: number) {
+  if (minutes <= 0) return null
+  if (minutes < 90) return `~${minutes} phút`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `~${hours} giờ`
+  return `~${Math.round(hours / 24)} ngày`
+}
+
 export function formatDuration(minutes: number) {
   if (minutes < 60) return `${minutes} phút`
   const h = Math.floor(minutes / 60)

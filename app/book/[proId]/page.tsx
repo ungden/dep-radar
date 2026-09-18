@@ -15,7 +15,18 @@ import { formatPhone } from "@/lib/auth/phone"
 import { POLICY, isUrgent } from "@/lib/pricing"
 import { homeAvailability, priceOf, proView, quoteFor, servicesOf, useApp } from "@/lib/store"
 import type { CustomerAddress, PaymentMethod, PriceQuote } from "@/lib/types"
-import { addDays, addMinutes, cn, formatDateLong, formatDuration, formatPrice, parseISODate, todayISO, weekdayShort } from "@/lib/utils"
+import {
+  addDays,
+  addMinutes,
+  cn,
+  formatDateLong,
+  formatDuration,
+  formatPrice,
+  formatResponseTime,
+  parseISODate,
+  todayISO,
+  weekdayShort,
+} from "@/lib/utils"
 
 const STEPS = ["Dịch vụ", "Thời gian", "Xác nhận"]
 
@@ -132,6 +143,8 @@ function BookingFlow({ proId }: { proId: string }) {
     else setDoneId(res.id)
   }
 
+  const responseTime = formatResponseTime(pro.stats.responseMinutes)
+
   if (doneId) {
     return (
       <div className="mx-auto flex min-h-[80dvh] max-w-md flex-col items-center justify-center text-center">
@@ -141,7 +154,8 @@ function BookingFlow({ proId }: { proId: string }) {
         <h1 className="mt-5 text-2xl font-semibold">Đã gửi yêu cầu đặt lịch</h1>
         <p className="mt-2 text-sm text-ink-soft">
           {pro.name} sẽ gọi cho bạn qua số {formatPhone(state.session?.phone ?? "")} để xác nhận lịch {time} ·{" "}
-          {formatDateLong(date)}, thường trong ~{pro.stats.responseMinutes} phút. Nếu không được xác nhận trong{" "}
+          {formatDateLong(date)}
+          {responseTime ? `, thường trong ${responseTime}` : ""}. Nếu không được xác nhận trong{" "}
           {POLICY.confirmWithinHours} giờ, lịch tự huỷ{payment === "online" ? " và tiền được hoàn 100%" : ""}.
         </p>
         <div className="mt-8 grid w-full gap-2">

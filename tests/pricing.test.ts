@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { POLICY, buildQuote, commissionFor, hoursUntilStart, isTooSoon, isUrgent, payoutFor, travelFeeFor } from "@/lib/pricing"
-import { addDays, todayISO } from "@/lib/utils"
+import { addDays, formatResponseTime, localDate, localTime, toTimestamptz, todayISO } from "@/lib/utils"
 
 const NOW = new Date(2026, 8, 18, 10, 0) // 18/09/2026 10:00 local
 
@@ -78,5 +78,37 @@ describe("time windows", () => {
   it("keeps helper dates consistent", () => {
     expect(addDays(todayISO(), 0)).toBe(todayISO())
     expect(addDays("2026-09-30", 1)).toBe("2026-10-01")
+  })
+})
+
+describe("formatResponseTime", () => {
+  it("reads in the unit that fits", () => {
+    expect(formatResponseTime(40)).toBe("~40 phút")
+    expect(formatResponseTime(89)).toBe("~89 phút")
+    expect(formatResponseTime(120)).toBe("~2 giờ")
+    expect(formatResponseTime(3600)).toBe("~3 ngày")
+  })
+
+  it("says nothing when there is nothing to say", () => {
+    // A freelancer with no answered bookings has no response time, and showing
+    // "~0 phút" would be a claim rather than a fact.
+    expect(formatResponseTime(0)).toBeNull()
+  })
+})
+
+describe("Vietnamese wall-clock time", () => {
+  it("keeps a date the same either side of UTC midnight", () => {
+    // 2026-09-18T18:30Z is already the 19th in Vietnam.
+    expect(localDate("2026-09-18T18:30:00Z")).toBe("2026-09-19")
+    expect(localTime("2026-09-18T18:30:00Z")).toBe("01:30")
+  })
+
+  it("turns a Vietnamese wall-clock booking into the right instant", () => {
+    expect(toTimestamptz("2026-09-21", "15:00")).toBe("2026-09-21T08:00:00.000Z")
+  })
+
+  it("does date arithmetic on civil dates, not on instants", () => {
+    expect(addDays("2026-09-30", 1)).toBe("2026-10-01")
+    expect(addDays("2026-12-31", 1)).toBe("2027-01-01")
   })
 })
