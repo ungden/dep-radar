@@ -64,13 +64,19 @@ export async function fetchSlots(input: {
   const supabase = await supabaseServer()
   const pro = await proIdFor(input.proId)
   if (!pro) return []
+
   let lat: number | null = null
   let lng: number | null = null
   if (input.atHome && input.addressId) {
     const { data } = await supabase.from("addresses").select("lat, lng").eq("id", input.addressId).maybeSingle()
     lat = data?.lat ?? null
     lng = data?.lng ?? null
-  } else if (!input.atHome) {
+  }
+  if (lat == null || lng == null) {
+    // No address chosen yet: answer the question actually being asked -- which
+    // hours are free -- from the freelancer's own location. Whether they will
+    // travel to a particular address is checked when one is picked, and again
+    // by create_booking. Measuring from nowhere would show a free day as full.
     const { data } = await supabase.from("pros").select("lat, lng").eq("id", pro).maybeSingle()
     lat = data?.lat ?? null
     lng = data?.lng ?? null

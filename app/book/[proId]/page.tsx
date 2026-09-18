@@ -288,7 +288,7 @@ function BookingFlow({ proId }: { proId: string }) {
               </div>
             ) : slots.length === 0 ? (
               <p className="rounded-xl bg-canvas px-3.5 py-3 text-[13px] text-ink-soft">
-                {pro.name} không còn chỗ trống ngày này. Chọn ngày khác nhé.
+                {pro.name} không nhận khách hoặc đã kín lịch ngày này. Chọn ngày khác nhé.
               </p>
             ) : (
               <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5">
