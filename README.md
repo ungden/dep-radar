@@ -50,3 +50,25 @@ npm run dev
 | `/saved`, `/me` | Đã lưu, Cá nhân |
 | `/studio`, `/studio/jobs`, `/studio/schedule`, `/studio/services`, `/studio/profile` | Khu vực freelancer: thu nhập, báo giá, lịch, bảng giá, xác minh & đánh giá |
 | `/chinh-sach` | Chính sách phí, hoa hồng, huỷ lịch, xác minh & xếp hạng |
+
+## Cơ sở dữ liệu
+
+Luật chơi (khung giá, phí, trạng thái lịch hẹn) sống ở database, không ở trình duyệt.
+
+```bash
+supabase start          # Postgres + Auth + REST cục bộ
+supabase db reset       # áp migration rồi seed danh mục + dữ liệu mẫu
+npm run db:test         # test luật nghiệp vụ (SQL)
+npm run test:db         # test row level security qua đúng API
+```
+
+Danh mục và khung giá sinh ra từ `lib/catalog.ts`:
+
+```bash
+npm run catalog:sql     # ghi lại supabase/seed/catalog.sql
+npm run catalog:check   # CI: báo lỗi nếu file đã cũ
+npm run demo:sql        # ghi lại dữ liệu mẫu từ lib/data.ts
+```
+
+Biến môi trường: xem `.env.example`. Thiếu biến Supabase thì app chạy ở chế độ
+demo trong trình duyệt và nói rõ điều đó, thay vì vỡ.

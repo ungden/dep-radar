@@ -218,3 +218,49 @@ Dark mode · đa ngôn ngữ · hệ thống hạng/tier · đánh giá nhiều 
 - Kiểm tra tay trên 2 thiết bị thật (iOS Safari, Android Chrome) + chụp màn hình từng luồng.
 - Smoke test production sau mỗi deploy: các route chính 200, sitemap/robots đúng domain, `/api/identity` từ chối khi chưa đăng nhập.
 - Lighthouse: Performance ≥ 85, Accessibility ≥ 95, SEO ≥ 95 trên trang chủ và hồ sơ thợ.
+
+---
+
+## 9. Nhật ký thực hiện
+
+### ✅ Giai đoạn 0 — xong, đã lên production (18/09/2026)
+
+Đã merge PR #2 vào `main` (squash), đóng PR #1, xoá branch `codex/*`. Production chạy từ `main`.
+
+- `NEXT_PUBLIC_SITE_URL` đã đặt trên Vercel (production + preview); xoá 3 biến Supabase cũ không còn code nào dùng.
+- `lib/env.ts`, `app/error.tsx`, `app/global-error.tsx`, `PageSkeleton` cho 5 `<Suspense>`, `app/opengraph-image.tsx`, canonical, security header, bỏ `output: "standalone"`.
+- `/api/identity`: giới hạn theo IP, kiểm tra origin, timeout 25s, `maxDuration`, phân biệt lỗi cấu hình với lỗi bận.
+- Ngừng bịa: điểm đánh giá suy ra từ đánh giá thật, bỏ mẫu đã lưu/đang theo dõi mặc định, bỏ lịch bận ngẫu nhiên, `phone` thật cho từng chuyên viên, thanh toán online hiện rõ là "sắp có", menu Cá nhân chỉ còn đường dẫn có thật, `/chinh-sach` ghi rõ điều gì chưa áp dụng, một hàm làm tròn hoa hồng duy nhất.
+- Token màu đạt WCAG AA, tôn trọng `prefers-reduced-motion`, có skip link.
+- Vitest 28 test + GitHub Actions (typecheck, lint, test, build).
+
+Kiểm chứng trên production: các route chính 200, `/nope` 404, `robots.txt` và `sitemap.xml` đúng domain, thẻ OG có ảnh, security header có đủ, `/api/identity` trả `no-store` + `noindex`.
+
+### 🔄 Giai đoạn 1 — nền móng backend: đã xong phần server, còn phần giao diện
+
+**Đã xong**
+
+- **Database** (dự án Supabase `ohjrocksurzkypcbfkha`, 8 migration đã áp dụng): danh mục + khung giá + chính sách phí là *dữ liệu*, sinh từ `lib/catalog.ts` bằng `scripts/gen-catalog-sql.ts` nên giá trên giao diện và giá database bắt buộc giống nhau. Có `working_hours`, `days_off`, `addresses` (kèm toạ độ), `wallet_entries`, `threads/messages`, `notifications`, `reports`. Lịch hẹn lưu **ảnh chụp báo giá**, có đệm di chuyển và ràng buộc `EXCLUDE` — trùng lịch là *không thể*, không phải *khó xảy ra*.
+- **Luật ở server**: `build_quote` / `travel_fee` / `commission_for` khớp từng đồng với `lib/pricing.ts`. `availability_problem()` là câu trả lời duy nhất cho "vì sao không đặt được", `free_slots()` sinh khung giờ từ giờ làm việc của chính chuyên viên (không còn danh sách giờ cứng). Máy trạng thái đầy đủ qua RPC security definer; `accept_offer` đi chung đường kiểm tra và **về trạng thái chờ gọi xác nhận**. Hoàn thành job trừ hoa hồng một lần qua sổ ví.
+- **Cron**: tự hết hạn lịch không ai nhận (và trả lại khung giờ), hết hạn yêu cầu/báo giá, nhắc T-24h và T-2h, tính lại chỉ số mỗi đêm, ví âm quá hạn thì ngưng nhận job.
+- **Khoá**: RLS toàn bộ; địa chỉ là dữ liệu riêng tư; chỉ số, xác minh và tạm khoá không do chuyên viên tự ghi; hồ sơ chỉ public khi có dịch vụ + giờ làm + ảnh.
+  *Lỗ hổng đã bít:* Postgres cấp `EXECUTE` cho `PUBLIC` với mọi hàm mới, nên các hàm bảo trì từng gọi được bằng anon key — riêng `enforce_wallet_threshold()` đủ để ngưng nhận job của **toàn bộ** chuyên viên. Đã revoke từ `PUBLIC` rồi cấp lại đúng vai, có test cho từng cửa.
+- **Xác minh do server sở hữu**: `/api/identity` yêu cầu đăng nhập, giới hạn 3 lần/24h/tài khoản, ghi `identity_checks`, tự ghi trạng thái và khoá tên hiển thị theo tên trên thẻ. Sửa localStorage không còn ra huy hiệu. Số CCCD chỉ lưu dạng băm có salt để chặn một thẻ xác minh nhiều tài khoản. Không lưu ảnh.
+- **Đăng nhập bằng số điện thoại**: OTP thật khi có nhà cung cấp SMS; chưa có thì nói thẳng là chưa gửi SMS. Một số điện thoại là một tài khoản (chuẩn hoá E.164). `becomePro()` tạo hồ sơ chuyên viên có slug riêng — **chuyên viên thứ hai đã tồn tại được**.
+- **Lớp truy cập dữ liệu** `lib/api/*` bất đồng bộ, mọi ghi đi qua RPC và trả về kết quả thay vì ném lỗi. Khách chỉ thấy số điện thoại chuyên viên sau khi job được nhận.
+- **Kiểm thử**: `supabase/tests/rules.sql` (phí, khung giá, sinh khung giờ, cả máy trạng thái, trùng lịch, tự đặt cho mình, hết hạn, các guard) + `tests/rls.integration.test.ts` (12 test RLS qua đúng API với JWT thật). Workflow `Database` chạy cả hai.
+
+**Còn lại của Giai đoạn 1**
+
+- Chuyển 25 màn hình từ store trong trình duyệt sang `lib/api/*`. Đây là phần việc lớn nhất còn lại: dữ liệu mẫu đang nằm trong hằng số `lib/data.ts` và màn hình import trực tiếp `getPro`/`WORKS`/`PROS`.
+- Bật biến Supabase trên Vercel **sau khi** chuyển xong giao diện. Hiện chưa bật là có chủ ý: bật sớm thì middleware sẽ chặn `/bookings` và đẩy sang `/login`, mà `/login` của bản demo không tạo phiên Supabase → vòng lặp chuyển trang.
+- Cron job (pg_cron) gọi các hàm bảo trì; hiện hàm đã có nhưng chưa có lịch chạy.
+- Storage bucket cho avatar / tác phẩm / ảnh đánh giá (nén + xoá EXIF phía server).
+- `/admin` tối thiểu: hàng đợi xác minh, danh sách chuyên viên, can thiệp lịch hẹn, báo cáo vi phạm.
+- Sentry + analytics với 2 phễu.
+
+**Cần anh/chị làm (mình không làm được)**
+
+1. `GEMINI_API_KEY` trên Vercel — thiếu thì xác minh danh tính trả 503.
+2. Nhà cung cấp SMS/ZNS cho OTP thật (quyết định số 4 ở mục 7). Chưa có thì đăng nhập vẫn chạy nhưng không có mã xác thực.
+3. Chốt 7 quyết định ở mục 7, nhất là số 1 (thành phố + danh mục ra mắt) và số 2 (cách thu hoa hồng — schema đang làm theo hướng ví trả trước).
