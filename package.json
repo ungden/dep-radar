@@ -14,9 +14,12 @@
     "catalog:check": "tsx scripts/gen-catalog-sql.ts --check",
     "db:reset": "supabase db reset",
     "demo:sql": "tsx scripts/gen-demo-sql.ts",
-    "db:test": "supabase db reset && docker exec -i supabase_db_dep360 psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f - < supabase/tests/rules.sql"
+    "db:test": "supabase db reset && docker exec -i supabase_db_dep360 psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f - < supabase/tests/rules.sql",
+    "test:db": "scripts/test-db.sh"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.116.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.553.0",
     "next": "^15.4.9",

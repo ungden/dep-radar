@@ -36,3 +36,5 @@ jobs:
       - run: supabase db reset
       - name: Business rules
         run: docker exec -i supabase_db_dep360 psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f - < supabase/tests/rules.sql
+      - name: Row level security, over the API
+        run: npm run test:db
