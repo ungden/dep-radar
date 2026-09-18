@@ -1,0 +1,38 @@
+name: Database
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - "supabase/**"
+      - "lib/catalog.ts"
+      - "lib/geo.ts"
+      - "lib/pricing.ts"
+      - "scripts/gen-*.ts"
+      - ".github/workflows/db.yml"
+
+concurrency:
+  group: db-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      # The catalogue SQL is generated from lib/catalog.ts: a stale file would mean
+      # the price bands the UI shows are not the ones the database enforces.
+      - run: npm run catalog:check
+      - run: supabase start -x realtime,storage-api,imgproxy,studio,edge-runtime,logflare,vector,supavisor
+      - run: supabase db reset
+      - name: Business rules
+        run: docker exec -i supabase_db_dep360 psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f - < supabase/tests/rules.sql
