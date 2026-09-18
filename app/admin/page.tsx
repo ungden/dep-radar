@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
+// Whose desk this is depends on the request, so it is never prerendered.
+export const dynamic = "force-dynamic"
+
 export default async function AdminPage() {
   // The middleware already turned away non-admins; this is the second lock, and
   // 404 rather than 403 so the page does not advertise that it exists.

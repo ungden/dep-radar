@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { backendEnabled } from "@/lib/supabase/env"
 import { supabaseServer } from "@/lib/supabase/server"
 import { localDate, localTime } from "@/lib/utils"
 import type { ActionResult } from "./actions"
@@ -63,6 +64,8 @@ export interface AdminReport {
 const row = (v: unknown) => (Array.isArray(v) ? ((v[0] ?? {}) as Record<string, unknown>) : ((v ?? {}) as Record<string, unknown>))
 
 export async function isAdmin(): Promise<boolean> {
+  // Nobody is an admin of a database that is not configured.
+  if (!backendEnabled) return false
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return false
