@@ -1394,6 +1394,10 @@ export type Database = {
         }
         Returns: string
       }
+      decide_identity_check: {
+        Args: { p_approve: boolean; p_check: string; p_reason?: string }
+        Returns: undefined
+      }
       decline_booking: {
         Args: { p_booking: string; p_reason?: string }
         Returns: undefined
@@ -1459,6 +1463,10 @@ export type Database = {
         Args: { p_booking: string; p_starts_at: string }
         Returns: undefined
       }
+      resolve_report: {
+        Args: { p_report: string; p_resolution?: string; p_status: string }
+        Returns: undefined
+      }
       respond_reschedule: {
         Args: { p_accept: boolean; p_booking: string }
         Returns: undefined
@@ -1471,6 +1479,14 @@ export type Database = {
       service_duration_min: {
         Args: { p_quantity?: number; p_template: string; p_variant: string }
         Returns: number
+      }
+      set_pro_suspended: {
+        Args: { p_pro: string; p_reason?: string; p_suspended: boolean }
+        Returns: undefined
+      }
+      set_review_hidden: {
+        Args: { p_booking: string; p_hidden: boolean }
+        Returns: undefined
       }
       slugify: { Args: { input: string }; Returns: string }
       start_booking: { Args: { p_booking: string }; Returns: undefined }
