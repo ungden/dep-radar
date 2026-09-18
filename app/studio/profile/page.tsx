@@ -5,7 +5,8 @@ import { BadgeCheck, ChevronRight, Eye, IdCard, TrendingUp } from "lucide-react"
 import { RequireSession } from "@/components/require-session"
 import { RatingSummaryBlock, ReviewItem, VerifiedMark } from "@/components/trust"
 import { Avatar, ButtonLink, Card, PageHeader } from "@/components/ui"
-import { actions, proView, reviewsOf, useApp } from "@/lib/store"
+import { actions, useAct } from "@/lib/client-actions"
+import { proView, reviewsOf, useApp } from "@/lib/store"
 import type { VerificationStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -35,6 +36,7 @@ export default function StudioProfilePage() {
 
 function ProfileTrust() {
   const state = useApp()
+  const act = useAct()
   const proId = state.session!.proId!
   const pro = proView(state, proId)!
   const reviews = reviewsOf(state, proId)
@@ -96,7 +98,8 @@ function ProfileTrust() {
         </Card>
         <ul className="mt-2 divide-y divide-line">
           {reviews.map((r) => (
-            <ReviewItem key={r.id} review={r} onReply={(text) => actions.replyReview(r.id, text)} />
+            // A review is identified by the booking it belongs to.
+            <ReviewItem key={r.id} review={r} onReply={(text) => void act(() => actions.replyReview(r.id, text))} />
           ))}
         </ul>
         <p className="mt-2 text-xs text-muted">Bạn không thể xoá hay sửa đánh giá, chỉ phản hồi công khai. Đánh giá vi phạm có thể báo cáo cho dep360.</p>

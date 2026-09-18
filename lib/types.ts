@@ -61,7 +61,10 @@ export interface RatingSummary {
 }
 
 export interface Pro {
+  /** Public, readable id used in URLs. */
   id: string
+  /** Database id, used when calling a server action. */
+  uuid: string
   name: string
   title: string
   phone: string
@@ -76,6 +79,8 @@ export interface Pro {
   /** Maximum distance the freelancer travels for home service. */
   maxTravelKm: number
   yearsExp: number
+  /** Off means the freelancer is not taking new bookings right now. */
+  acceptingJobs: boolean
   joinedAt: string
   bio: string
   highlights: string[]
@@ -85,6 +90,7 @@ export interface Pro {
 }
 
 export interface Work {
+  /** Readable id used in URLs. */
   id: string
   proId: string
   templateId: string
@@ -92,8 +98,6 @@ export interface Work {
   title: string
   description: string
   images: string[]
-  likes: number
-  comments: number
 }
 
 export interface Review {
@@ -113,7 +117,16 @@ export interface Review {
 // ---------------------------------------------------------------------------
 // Bookings & requests
 
-export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled" | "declined"
+/** pending: waiting for the freelancer to call and accept. */
+export type BookingStatus =
+  | "pending"
+  | "confirmed"
+  | "in_progress"
+  | "completed"
+  | "declined"
+  | "cancelled"
+  | "expired"
+  | "no_show"
 
 export interface PriceQuote {
   servicePrice: number
@@ -158,10 +171,23 @@ export interface Booking {
   status: BookingStatus
   customerName: string
   customerPhone: string
+  /** The freelancer's name and number as this viewer is allowed to see them. */
+  proName: string
+  /** Empty until the freelancer has accepted: before that, they call the customer. */
+  proPhone: string
   /** true when the signed-in customer created it */
   mine: boolean
   source: "direct" | "job"
   reviewed: boolean
+  /** Head count for a per-person service. */
+  quantity: number
+  /** The freelancer must call and accept before this moment. */
+  confirmBy: string
+  cancelReason?: string
+  cancelledBy?: Role
+  /** A start time one side proposed, waiting for the other to answer. */
+  rescheduleTo?: string
+  rescheduleBy?: Role
   createdAt: string
 }
 
@@ -193,6 +219,7 @@ export interface JobPost {
   customerName: string
   status: JobStatus
   offers: Offer[]
+  quantity: number
   mine: boolean
   createdAt: string
 }

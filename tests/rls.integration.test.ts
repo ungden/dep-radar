@@ -9,6 +9,7 @@
 import { createHmac } from "node:crypto"
 import { createClient } from "@supabase/supabase-js"
 import { beforeAll, describe, expect, it } from "vitest"
+import { addDays, todayISO } from "@/lib/utils"
 
 const URL = process.env.SUPABASE_TEST_URL
 const ANON = process.env.SUPABASE_TEST_ANON_KEY
@@ -172,22 +173,28 @@ describe.skipIf(!configured)("row level security over the API", () => {
   it("books, then refuses the same slot twice", async () => {
     const as = client(tokenFor(customerId))
     const { data: addresses } = await as.from("addresses").select("id").limit(1)
-    // Ask the database which slots are free rather than guessing one, so the test
-    // is repeatable against a database that already has bookings in it.
-    const monday = new Date()
-    monday.setDate(monday.getDate() + ((8 - monday.getDay()) % 7 || 7))
-    const { data: slots } = await as.rpc("free_slots", {
-      p_pro: proId,
-      p_template: "nail-design",
-      p_variant: "simple",
-      p_quantity: 1,
-      p_date: monday.toISOString().slice(0, 10),
-      p_at_home: true,
-      p_lat: 21.0181,
-      p_lng: 105.829,
-    })
-    const startsAt = (slots as unknown as string[])?.at(-1)
-    expect(startsAt, "the demo freelancer has no free slot next Monday").toBeTruthy()
+
+    // Ask the database which day has openings rather than guessing one: the demo
+    // freelancers take Sundays off, and a guessed date makes the test lie.
+    const ask = (date: string) =>
+      as.rpc("free_slots", {
+        p_pro: proId,
+        p_template: "nail-design",
+        p_variant: "simple",
+        p_quantity: 1,
+        p_date: date,
+        p_at_home: true,
+        p_lat: 21.0181,
+        p_lng: 105.829,
+      })
+
+    let startsAt: string | undefined
+    for (let i = 1; i <= 10 && !startsAt; i++) {
+      const date = addDays(todayISO(), i)
+      const { data } = await ask(date)
+      startsAt = (data as unknown as string[])?.at(-1)
+    }
+    expect(startsAt, "the demo freelancer has no free slot in the next ten days").toBeTruthy()
 
     const args = {
       p_pro: proId,

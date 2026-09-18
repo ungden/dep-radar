@@ -7,7 +7,8 @@ import { RequireSession } from "@/components/require-session"
 import { Button, ButtonLink, Card, PageHeader, Toggle } from "@/components/ui"
 import { categoryLabel, getTemplate, templatesByCategory } from "@/lib/catalog"
 import { POLICY, payoutFor } from "@/lib/pricing"
-import { actions, proView, servicesOf, useApp } from "@/lib/store"
+import { actions, useAct } from "@/lib/client-actions"
+import { proView, servicesOf, useApp } from "@/lib/store"
 import type { ServiceTemplate } from "@/lib/types"
 import { cn, formatDuration, formatPrice } from "@/lib/utils"
 
@@ -23,6 +24,7 @@ export default function StudioServicesPage() {
 
 function ServicesManager() {
   const state = useApp()
+  const act = useAct()
   const proId = state.session!.proId!
   const pro = proView(state, proId)!
   const listings = servicesOf(state, proId, true)
@@ -77,7 +79,11 @@ function ServicesManager() {
                   >
                     <Pencil className="size-4" />
                   </button>
-                  <Toggle label={l.active ? "Tạm ẩn dịch vụ" : "Hiện dịch vụ"} checked={l.active} onChange={() => actions.toggleProService(l.templateId)} />
+                  <Toggle
+                    label={l.active ? "Tạm ẩn dịch vụ" : "Hiện dịch vụ"}
+                    checked={l.active}
+                    onChange={(value) => void act(() => actions.toggleProService(l.templateId, l.prices, value))}
+                  />
                 </div>
                 <ul className="mt-3 flex flex-wrap gap-2">
                   {tpl.variants
@@ -139,6 +145,7 @@ function ServicesManager() {
 
 function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () => void }) {
   const state = useApp()
+  const act = useAct()
   const proId = state.session!.proId!
   const tpl = getTemplate(templateId) as ServiceTemplate
   const existing = servicesOf(state, proId, true).find((x) => x.templateId === templateId)
@@ -147,11 +154,15 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
     Object.fromEntries(tpl.variants.map((v) => [v.id, existing ? existing.prices[v.id] : v.suggestedPrice])),
   )
   const [error, setError] = React.useState<string | null>(null)
+  const [busy, setBusy] = React.useState(false)
 
-  const save = () => {
+  const save = async () => {
     const chosen = Object.fromEntries(Object.entries(prices).filter(([, p]) => p !== undefined)) as Record<string, number>
-    const err = actions.saveProService(templateId, chosen, existing?.active ?? true)
-    if (err) setError(err)
+    if (!Object.keys(chosen).length) return setError("Chọn ít nhất một gói.")
+    setBusy(true)
+    const problem = await act(() => actions.saveProService(templateId, chosen, existing?.active ?? true))
+    setBusy(false)
+    if (problem) setError(problem)
     else onClose()
   }
 
@@ -213,16 +224,18 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
         {existing && (
           <Button
             variant="danger"
-            onClick={() => {
-              actions.removeProService(templateId)
-              onClose()
+            aria-label="Bỏ dịch vụ này"
+            onClick={async () => {
+              const problem = await act(() => actions.removeProService(templateId))
+              if (problem) setError(problem)
+              else onClose()
             }}
           >
             <Trash2 className="size-4" />
           </Button>
         )}
-        <Button size="lg" className="flex-1" onClick={save}>
-          Lưu bảng giá
+        <Button size="lg" className="flex-1" disabled={busy} onClick={() => void save()}>
+          {busy ? "Đang lưu…" : "Lưu bảng giá"}
         </Button>
       </div>
       <ButtonLink href="/chinh-sach" variant="ghost" size="sm" className="mt-2 w-full">

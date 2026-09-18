@@ -7,7 +7,8 @@ import { CalendarDays } from "lucide-react"
 import { JobBookingRow } from "@/components/booking-card"
 import { RequireSession } from "@/components/require-session"
 import { Button, EmptyState, PageHeader, Tabs, PageSkeleton } from "@/components/ui"
-import { actions, useApp } from "@/lib/store"
+import { actions, useAct } from "@/lib/client-actions"
+import { useApp } from "@/lib/store"
 import type { Booking } from "@/lib/types"
 import { addDays, cn, formatDateLong, parseISODate, todayISO, weekdayShort } from "@/lib/utils"
 
@@ -29,13 +30,15 @@ export default function SchedulePage() {
 function Schedule() {
   const params = useSearchParams()
   const state = useApp()
+  const act = useAct()
   const proId = state.session!.proId!
   const [tab, setTab] = React.useState<Tab>((params.get("tab") as Tab | null) ?? "calendar")
   const today = todayISO()
   const [day, setDay] = React.useState(today)
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i))
 
-  const mine = state.bookings.filter((b) => b.proId === proId)
+  // Jobs booked with this freelancer, not their own bookings as a customer.
+  const mine = state.bookings.filter((b) => b.proId === proId && !b.mine)
   const active = mine.filter((b) => b.status === "confirmed" || b.status === "pending")
   const countByDay = (d: string) => active.filter((b) => b.date === d).length
   const byTime = (a: Booking, b: Booking) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)
@@ -103,6 +106,7 @@ function Schedule() {
 }
 
 function List({ bookings }: { bookings: Booking[] }) {
+  const act = useAct()
   return (
     <ul className="space-y-3">
       {bookings.map((b) => (
@@ -113,7 +117,7 @@ function List({ bookings }: { bookings: Booking[] }) {
               b.status === "confirmed" && b.date <= todayISO() ? (
                 <>
                   <span />
-                  <Button size="sm" variant="soft" onClick={() => actions.setBookingStatus(b.id, "completed")}>
+                  <Button size="sm" variant="soft" onClick={() => void act(() => actions.setBookingStatus(b.id, "completed"))}>
                     Hoàn thành
                   </Button>
                 </>

@@ -5,8 +5,10 @@ import { Info } from "lucide-react"
 import { ProCard } from "@/components/beauty"
 import { sortPros } from "@/components/trust"
 import { Chip, EmptyState, PageHeader } from "@/components/ui"
-import { CATEGORIES, CITIES, PROS } from "@/lib/data"
-import { actions, useApp } from "@/lib/store"
+import { CATEGORIES } from "@/lib/catalog"
+import { CITIES } from "@/lib/geo"
+import { actions } from "@/lib/client-actions"
+import { useApp } from "@/lib/store"
 import { isVerified } from "@/lib/trust"
 import type { CategoryId } from "@/lib/types"
 
@@ -22,7 +24,7 @@ export default function ProsPage() {
 
   const pros = sortPros(
     state,
-    PROS.filter(
+    state.pros.filter(
       (p) =>
         (!city || p.city === city) &&
         (cat === "all" || p.categories.includes(cat)) &&
@@ -39,7 +41,7 @@ export default function ProsPage() {
           <select
             aria-label="Khu vực"
             value={city ?? ""}
-            onChange={(e) => actions.setCity(e.target.value || null)}
+            onChange={(e) => void actions.setCity(e.target.value || null)}
             className="h-9 rounded-full border border-line bg-surface px-3 text-[13px] focus:border-rose focus:outline-none"
           >
             <option value="">Toàn quốc</option>

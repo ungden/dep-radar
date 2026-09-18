@@ -3,16 +3,15 @@
 import * as React from "react"
 import { Heart } from "lucide-react"
 import { ProCard, WorkCard } from "@/components/beauty"
-import { ButtonLink, EmptyState, PageHeader, Skeleton, Tabs } from "@/components/ui"
-import { PROS, WORKS } from "@/lib/data"
-import { useApp, useHydrated } from "@/lib/store"
+import { ButtonLink, EmptyState, PageHeader, Tabs } from "@/components/ui"
+import { useApp } from "@/lib/store"
 
 export default function SavedPage() {
-  const hydrated = useHydrated()
-  const { savedWorks, followedPros } = useApp()
+  const state = useApp()
+  const { savedWorks, followedPros } = state
   const [tab, setTab] = React.useState<"works" | "pros">("works")
-  const works = savedWorks.map((id) => WORKS.find((w) => w.id === id)).filter((w) => w !== undefined)
-  const pros = PROS.filter((p) => followedPros.includes(p.id))
+  const works = savedWorks.map((id) => state.works.find((w) => w.id === id)).filter((w) => w !== undefined)
+  const pros = state.pros.filter((p) => followedPros.includes(p.id))
 
   return (
     <div className="md:pt-4">
@@ -21,17 +20,11 @@ export default function SavedPage() {
         value={tab}
         onChange={setTab}
         items={[
-          { value: "works", label: `Mẫu đã lưu (${hydrated ? works.length : "…"})` },
-          { value: "pros", label: `Chuyên viên (${hydrated ? pros.length : "…"})` },
+          { value: "works", label: `Mẫu đã lưu (${works.length})` },
+          { value: "pros", label: `Chuyên viên (${pros.length})` },
         ]}
       />
-      {!hydrated ? (
-        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-square" />
-          ))}
-        </div>
-      ) : tab === "works" ? (
+      {tab === "works" ? (
         works.length ? (
           <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4">
             {works.map((w) => (

@@ -732,12 +732,14 @@ export type Database = {
         Row: {
           accepting_jobs: boolean
           areas: string[]
+          avatar_path: string | null
           bio: string
           buffer_min: number
           categories: Database["public"]["Enums"]["category_id"][]
           city: string
           completed_jobs: number
           created_at: string
+          display_name: string
           district: string
           highlights: string[]
           home_service: boolean
@@ -761,12 +763,14 @@ export type Database = {
         Insert: {
           accepting_jobs?: boolean
           areas?: string[]
+          avatar_path?: string | null
           bio?: string
           buffer_min?: number
           categories?: Database["public"]["Enums"]["category_id"][]
           city: string
           completed_jobs?: number
           created_at?: string
+          display_name?: string
           district: string
           highlights?: string[]
           home_service?: boolean
@@ -790,12 +794,14 @@ export type Database = {
         Update: {
           accepting_jobs?: boolean
           areas?: string[]
+          avatar_path?: string | null
           bio?: string
           buffer_min?: number
           categories?: Database["public"]["Enums"]["category_id"][]
           city?: string
           completed_jobs?: number
           created_at?: string
+          display_name?: string
           district?: string
           highlights?: string[]
           home_service?: boolean
@@ -909,6 +915,7 @@ export type Database = {
       }
       reviews: {
         Row: {
+          author_name: string
           body: string
           booking_id: string
           created_at: string
@@ -922,6 +929,7 @@ export type Database = {
           tags: string[]
         }
         Insert: {
+          author_name?: string
           body: string
           booking_id: string
           created_at?: string
@@ -935,6 +943,7 @@ export type Database = {
           tags?: string[]
         }
         Update: {
+          author_name?: string
           body?: string
           booking_id?: string
           created_at?: string
@@ -1221,6 +1230,7 @@ export type Database = {
           image_paths: string[]
           is_cover: boolean
           pro_id: string
+          slug: string
           sort_order: number
           template_id: string
           title: string
@@ -1232,6 +1242,7 @@ export type Database = {
           image_paths: string[]
           is_cover?: boolean
           pro_id: string
+          slug: string
           sort_order?: number
           template_id: string
           title: string
@@ -1243,6 +1254,7 @@ export type Database = {
           image_paths?: string[]
           is_cover?: boolean
           pro_id?: string
+          slug?: string
           sort_order?: number
           template_id?: string
           title?: string
@@ -1460,6 +1472,7 @@ export type Database = {
         Args: { p_quantity?: number; p_template: string; p_variant: string }
         Returns: number
       }
+      slugify: { Args: { input: string }; Returns: string }
       start_booking: { Args: { p_booking: string }; Returns: undefined }
       travel_distance_km: {
         Args: {

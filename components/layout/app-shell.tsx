@@ -15,7 +15,8 @@ import {
   Users,
 } from "lucide-react"
 import { Avatar, Logo } from "@/components/ui"
-import { actions, useApp } from "@/lib/store"
+import { actions } from "@/lib/client-actions"
+import { useApp } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
 type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; match?: RegExp }
@@ -76,13 +77,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  actions.switchRole()
+                onClick={async () => {
+                  if (!isPro && !session.proId) return router.push("/studio/onboarding")
+                  await actions.switchRole(isPro ? "customer" : "pro")
                   router.push(isPro ? "/" : "/studio")
                 }}
                 className="rounded-full border border-line px-4 py-2 text-[13px] text-ink-soft hover:border-rose hover:text-rose"
               >
-                {isPro ? "Chuyển sang đặt lịch" : "Chế độ freelancer"}
+                {isPro ? "Chuyển sang đặt lịch" : "Chế độ chuyên viên"}
               </button>
               <Link href="/me" className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 hover:bg-blush/60">
                 <Avatar name={session.name} size={32} />

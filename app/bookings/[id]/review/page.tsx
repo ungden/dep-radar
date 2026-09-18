@@ -5,7 +5,8 @@ import { useParams, useRouter } from "next/navigation"
 import { Star } from "lucide-react"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, inputClass } from "@/components/ui"
-import { actions, proView, useApp } from "@/lib/store"
+import { actions } from "@/lib/client-actions"
+import { proView, useApp } from "@/lib/store"
 import { REVIEW_TAGS } from "@/lib/trust"
 import { cn, formatDateLong } from "@/lib/utils"
 
@@ -29,6 +30,7 @@ function ReviewForm() {
   const [tags, setTags] = React.useState<string[]>([])
   const [text, setText] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
+  const [busy, setBusy] = React.useState(false)
 
   if (!booking || booking.status !== "completed") {
     return <EmptyState title="Chưa thể đánh giá" text="Chỉ đánh giá được lịch hẹn đã hoàn thành." action={<ButtonLink href="/bookings">Về lịch hẹn</ButtonLink>} />
@@ -37,18 +39,24 @@ function ReviewForm() {
     return <EmptyState title="Bạn đã đánh giá lịch hẹn này" action={<ButtonLink href={`/pros/${booking.proId}?tab=reviews`}>Xem đánh giá</ButtonLink>} />
   }
 
-  const pro = proView(state, booking.proId)!
+  const pro = proView(state, booking.proId)
+  if (!pro) {
+    return <EmptyState title="Chuyên viên không còn hoạt động" action={<ButtonLink href="/bookings">Về lịch hẹn</ButtonLink>} />
+  }
   const valid = rating > 0 && text.trim().length >= 10
 
   return (
     <form
       className="space-y-5"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault()
-        if (!valid) return
-        const err = actions.submitReview(booking.id, { rating, tags, text: text.trim() })
-        if (err) setError(err)
-        else router.replace(`/pros/${booking.proId}?tab=reviews`)
+        if (!valid || busy) return
+        setBusy(true)
+        setError(null)
+        const result = await actions.submitReview(booking.id, { rating, tags, text: text.trim() })
+        setBusy(false)
+        if (result.error) return setError(result.error)
+        router.replace(`/pros/${booking.proId}?tab=reviews`)
       }}
     >
       <Card className="flex items-center gap-3 p-3">
@@ -98,7 +106,7 @@ function ReviewForm() {
       {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
 
       <BottomBar>
-        <Button type="submit" size="lg" className="w-full" disabled={!valid}>
+        <Button type="submit" size="lg" className="w-full" disabled={!valid || busy}>
           Gửi đánh giá
         </Button>
       </BottomBar>

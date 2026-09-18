@@ -7,8 +7,9 @@ import { CalendarDays, ChevronDown, MapPin, Megaphone, Search } from "lucide-rea
 import { CategoryRow, ProCard, WorkFeedCard } from "@/components/beauty"
 import { sortPros } from "@/components/trust"
 import { Logo, Tabs } from "@/components/ui"
-import { CITIES, PROS, WORKS, getPro } from "@/lib/data"
-import { actions, useApp } from "@/lib/store"
+import { CITIES } from "@/lib/geo"
+import { actions } from "@/lib/client-actions"
+import { getPro, useApp } from "@/lib/store"
 
 type Feed = "for-you" | "following" | "trending"
 
@@ -20,13 +21,21 @@ export default function ExplorePage() {
   const [q, setQ] = React.useState("")
 
   const works = React.useMemo(() => {
-    let list = WORKS.filter((w) => !city || getPro(w.proId)?.city === city)
+    let list = state.works.filter((w) => !city || getPro(state, w.proId)?.city === city)
     if (feed === "following") list = list.filter((w) => followedPros.includes(w.proId))
-    if (feed === "trending") list = [...list].sort((a, b) => b.likes - a.likes)
+    // Until there are real engagement numbers, "trending" is the best-rated work.
+    if (feed === "trending") {
+      list = [...list].sort(
+        (a, b) => (getPro(state, b.proId)?.rating.average ?? 0) - (getPro(state, a.proId)?.rating.average ?? 0),
+      )
+    }
     return list
-  }, [city, feed, followedPros])
+  }, [state, city, feed, followedPros])
 
-  const pros = React.useMemo(() => sortPros(state, PROS.filter((p) => !city || p.city === city), "match"), [state, city])
+  const pros = React.useMemo(
+    () => sortPros(state, state.pros.filter((p) => !city || p.city === city), "match"),
+    [state, city],
+  )
 
   return (
     <div className="pt-2 md:pt-8">
@@ -134,8 +143,7 @@ export default function ExplorePage() {
             <p className="mt-1 text-sm text-white/70">Nhận job gần nhà, tự đặt giá trong khung chuẩn, không phí đăng ký. dep360 chỉ thu hoa hồng khi bạn hoàn thành job.</p>
           </div>
           <Link
-            href={session ? "/studio" : "/login?role=pro"}
-            onClick={() => session && actions.switchRole()}
+            href={session ? (session.proId ? "/studio" : "/studio/onboarding") : "/login?role=pro"}
             className="mt-4 inline-flex h-11 items-center rounded-xl bg-white px-5 text-sm font-medium text-ink md:mt-0"
           >
             Bắt đầu nhận job
@@ -155,7 +163,7 @@ function CityPicker({ value }: { value: string | null }) {
       <select
         aria-label="Chọn khu vực"
         value={value ?? ""}
-        onChange={(e) => actions.setCity(e.target.value || null)}
+        onChange={(e) => void actions.setCity(e.target.value || null)}
         className="absolute inset-0 cursor-pointer opacity-0"
       >
         <option value="">Toàn quốc</option>

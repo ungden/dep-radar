@@ -24,37 +24,71 @@ export function formatDuration(minutes: number) {
 const WEEKDAYS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"]
 const WEEKDAY_LONG = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]
 
+/**
+ * dep360 runs in one country. Every date the product talks about is a wall-clock
+ * date in Vietnam, while the server runs in UTC, so nothing here may depend on the
+ * machine's timezone: that is a seven-hour error either side of midnight.
+ *
+ * A "yyyy-mm-dd" string is a civil date. It is parsed at UTC midnight and only
+ * ever read back with getUTC*, so the arithmetic is the same everywhere.
+ */
+export const VN_TZ = "Asia/Ho_Chi_Minh"
+/** Vietnam has no daylight saving, so the offset is a constant. */
+const VN_OFFSET = "+07:00"
+
 export function toISODate(d: Date) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, "0")
-  const day = String(d.getDate()).padStart(2, "0")
-  return `${y}-${m}-${day}`
+  return d.toISOString().slice(0, 10)
 }
 
 export function parseISODate(iso: string) {
-  const [y, m, d] = iso.split("-").map(Number)
-  return new Date(y, m - 1, d)
+  return new Date(`${iso}T00:00:00Z`)
 }
 
 export function addDays(iso: string, days: number) {
   const d = parseISODate(iso)
-  d.setDate(d.getDate() + days)
+  d.setUTCDate(d.getUTCDate() + days)
   return toISODate(d)
 }
 
+/** Today in Vietnam, whatever the server's clock is set to. */
 export function todayISO() {
-  return toISODate(new Date())
+  return localDate(new Date().toISOString())
+}
+
+/** The civil date in Vietnam of an instant. */
+export function localDate(timestamptz: string) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: VN_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(timestamptz))
+}
+
+/** The wall-clock time in Vietnam of an instant, as "HH:mm". */
+export function localTime(timestamptz: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: VN_TZ,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(timestamptz))
+}
+
+/** A Vietnamese wall-clock date and time as the instant the database stores. */
+export function toTimestamptz(isoDate: string, time: string) {
+  return new Date(`${isoDate}T${time}:00${VN_OFFSET}`).toISOString()
 }
 
 export function weekdayShort(iso: string) {
-  return WEEKDAYS[parseISODate(iso).getDay()]
+  return WEEKDAYS[parseISODate(iso).getUTCDay()]
 }
 
 /** "Thứ 4, 26 Tháng 6" */
 export function formatDateLong(iso: string, withYear = false) {
   const d = parseISODate(iso)
-  const base = `${WEEKDAY_LONG[d.getDay()]}, ${d.getDate()} Tháng ${d.getMonth() + 1}`
-  return withYear ? `${base}, ${d.getFullYear()}` : base
+  const base = `${WEEKDAY_LONG[d.getUTCDay()]}, ${d.getUTCDate()} Tháng ${d.getUTCMonth() + 1}`
+  return withYear ? `${base}, ${d.getUTCFullYear()}` : base
 }
 
 export function addMinutes(time: string, minutes: number) {

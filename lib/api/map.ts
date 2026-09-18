@@ -20,13 +20,12 @@ function joined(v: unknown): Row {
 }
 
 export function toProSummary(row: Row): ProSummary {
-  const account = joined(row.accounts)
   return {
     id: str(row.id),
     slug: str(row.slug),
-    name: str(account.full_name, "Chuyên viên"),
+    name: str(row.display_name, "Chuyên viên"),
     title: str(row.title),
-    avatar: strOrNull(account.avatar_path),
+    avatar: strOrNull(row.avatar_path),
     categories: arr(row.categories) as CategoryId[],
     city: str(row.city),
     district: str(row.district),
@@ -43,13 +42,12 @@ export function toProSummary(row: Row): ProSummary {
 }
 
 export function toProDetail(row: Row): ProDetail {
-  const account = joined(row.accounts)
   return {
     ...toProSummary(row),
     bio: str(row.bio),
     highlights: arr(row.highlights),
-    // A phone number is only selected by queries allowed to see it.
-    phone: strOrNull(account.phone),
+    // Not public: a number reaches the customer through their booking.
+    phone: null,
     lat: row.lat == null ? null : num(row.lat),
     lng: row.lng == null ? null : num(row.lng),
   }
@@ -57,14 +55,13 @@ export function toProDetail(row: Row): ProDetail {
 
 export function toWorkItem(row: Row): WorkItem {
   const pro = joined(row.pros)
-  const account = joined(pro.accounts)
   const template = getTemplate(str(row.template_id))
   return {
-    id: str(row.id),
+    id: str(row.slug) || str(row.id),
     proId: str(row.pro_id),
     proSlug: str(pro.slug),
-    proName: str(account.full_name, "Chuyên viên"),
-    proAvatar: strOrNull(account.avatar_path),
+    proName: str(pro.display_name, "Chuyên viên"),
+    proAvatar: strOrNull(pro.avatar_path),
     proRating: { average: num(pro.rating_avg), count: num(pro.rating_count) },
     proIdentity: str(pro.identity_status, "none") as WorkItem["proIdentity"],
     templateId: str(row.template_id),
@@ -76,14 +73,13 @@ export function toWorkItem(row: Row): WorkItem {
 }
 
 export function toReviewItem(row: Row): ReviewItem {
-  const account = joined(row.accounts)
   const booking = joined(row.bookings)
   const template = getTemplate(str(booking.template_id))
   const variant = getVariant(str(booking.template_id), str(booking.variant_id))
   return {
     bookingId: str(row.booking_id),
     proId: str(row.pro_id),
-    author: str(account.full_name, "Khách hàng"),
+    author: str(row.author_name, "Khách hàng"),
     rating: num(row.rating),
     tags: arr(row.tags),
     body: str(row.body),
@@ -148,8 +144,9 @@ export function toBookingItem(row: Row): BookingItem {
     pro: {
       id: str(row.pro_id),
       slug: str(pro.slug),
-      name: str(proAccount.full_name, "Chuyên viên"),
-      avatar: strOrNull(proAccount.avatar_path),
+      name: str(pro.display_name, "Chuyên viên"),
+      avatar: strOrNull(pro.avatar_path),
+      // Released by row level security once the job has been accepted.
       phone: strOrNull(proAccount.phone),
     },
   }
