@@ -25,6 +25,13 @@ const v = (id: string, label: string, durationMin: number, min: number, max: num
   suggestedPrice: k(suggested),
 })
 
+/** A per-head option: price and duration are multiplied by the head count. */
+const group = (variant: ServiceVariant, maxQuantity: number): ServiceVariant => ({
+  ...variant,
+  perPerson: true,
+  maxQuantity,
+})
+
 const byDuration = (bands: [number, number, number, number][]) =>
   bands.map(([d, min, max, sug]) => v(`${d}m`, `${d} phút`, d, min, max, sug))
 
@@ -94,7 +101,7 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Makeup chụp ảnh / kỷ yếu",
     description: "Layout lên hình theo concept, ánh sáng.",
     includes: ["Layout theo concept", "Mi giả", "Dặm lại 1 lần trong buổi chụp (nếu ở lại)"],
-    variants: [v("single", "1 người", 60, 400, 900, 550), v("group", "Nhóm (giá mỗi người)", 45, 250, 600, 380)],
+    variants: [v("single", "1 người", 60, 400, 900, 550), group(v("group", "Nhóm (giá mỗi người)", 45, 250, 600, 380), 8)],
   },
   {
     id: "makeup-bridal",

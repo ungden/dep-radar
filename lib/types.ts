@@ -17,6 +17,10 @@ export interface ServiceVariant {
   minPrice: number
   maxPrice: number
   suggestedPrice: number
+  /** Price and duration are per head: the customer picks a head count. */
+  perPerson?: boolean
+  /** Highest head count accepted (1 for everything but group services). */
+  maxQuantity?: number
 }
 
 export interface ServiceTemplate {
