@@ -19,8 +19,8 @@ export default function PolicyPage() {
       <div className="rounded-2xl bg-warning-soft px-4 py-3 text-[13px] text-warning">
         <p className="font-semibold">Đây là bản demo</p>
         <p className="mt-1">
-          Chuyên viên, tác phẩm và lịch hẹn là dữ liệu mẫu. Dữ liệu bạn tạo chỉ lưu trên trình duyệt này. Những mục ghi “sắp áp dụng” là quy định đã chốt nhưng hệ thống
-          chưa tự động thực hiện.
+          Chuyên viên và tác phẩm hiện là dữ liệu mẫu. Lịch hẹn, đánh giá và hồ sơ bạn tạo là dữ liệu thật, lưu trên máy chủ. Những mục ghi “sắp áp dụng” là quy định đã
+          chốt nhưng hệ thống chưa tự động thực hiện.
         </p>
       </div>
 
@@ -36,8 +36,8 @@ export default function PolicyPage() {
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-5">
             <li>Không tính hoa hồng trên phí di chuyển và phí đặt gấp: 100% thuộc về freelancer.</li>
-            <li>Khách trả trực tiếp cho freelancer (tiền mặt hoặc chuyển khoản). Hoa hồng được ghi nhận theo từng job hoàn thành.</li>
-            <li><b className="text-ink">Sắp áp dụng:</b> ví trả trước cho freelancer, hoa hồng tự trừ vào ví khi hoàn thành job; ví âm quá hạn sẽ tạm ngưng nhận job.</li>
+            <li>Khách trả trực tiếp cho freelancer (tiền mặt hoặc chuyển khoản). Mỗi job hoàn thành tự trừ hoa hồng vào ví freelancer.</li>
+            <li>Ví âm quá hạn mức sẽ tạm ngưng nhận job mới cho tới khi nạp lại. <b className="text-ink">Sắp áp dụng:</b> nạp ví bằng chuyển khoản VietQR.</li>
             <li><b className="text-ink">Sắp áp dụng:</b> khách thanh toán online toàn bộ qua cổng thanh toán.</li>
           </ul>
         </Section>
@@ -74,10 +74,11 @@ export default function PolicyPage() {
           <ul className="list-disc space-y-1 pl-5">
             <li>Không cần đặt cọc. Hiện tại khách trả trực tiếp cho chuyên viên sau khi làm.</li>
             <li>
-              Sau khi khách đặt, freelancer gọi điện xác nhận giờ, địa chỉ, yêu cầu rồi mới nhận job, trong vòng {POLICY.confirmWithinHours} giờ.{" "}
-              <b className="text-ink">Sắp áp dụng:</b> quá hạn thì lịch tự huỷ.
+              Sau khi khách đặt, freelancer gọi điện xác nhận giờ, địa chỉ, yêu cầu rồi mới nhận job, trong vòng{" "}
+              {POLICY.confirmWithinHours} giờ. Quá hạn, lịch tự huỷ và khung giờ được trả lại cho người khác đặt.
             </li>
             <li>Khách huỷ trước giờ hẹn từ {POLICY.freeCancelHours} tiếng: miễn phí.</li>
+            <li>Chúng tôi nhắc lịch cho cả hai bên trước 24 giờ và trước 2 giờ.</li>
             <li>
               <b className="text-ink">Sắp áp dụng:</b> huỷ muộn tính {pct(POLICY.lateCancelRate)} giá trị dịch vụ để bù thời gian giữ lịch của chuyên viên; huỷ muộn nhiều lần bị
               hạn chế đặt lịch.
