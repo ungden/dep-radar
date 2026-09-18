@@ -79,6 +79,8 @@ function Dashboard() {
         />
       </Card>
 
+      {!pro.published && <SetupNudge />}
+
       <VerifyNudge pro={pro} />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -171,6 +173,32 @@ function SectionTitle({ title, href, count }: { title: string; href: string; cou
         Xem tất cả <ChevronRight className="size-4" />
       </Link>
     </div>
+  )
+}
+
+/** A profile nobody can see is the first thing to fix. */
+function SetupNudge() {
+  return (
+    <Card className="p-4 ring-1 ring-warning/40">
+      <p className="text-sm font-semibold">Hồ sơ của bạn chưa hiển thị với khách</p>
+      <p className="mt-1 text-xs text-ink-soft">
+        Cần ít nhất một dịch vụ có giá, giờ làm việc và một ảnh tác phẩm. Sau đó bật hiển thị trong trang hồ sơ.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Link href="/studio/services" className="rounded-full bg-blush px-3 py-1.5 text-[13px] font-medium text-rose-dark">
+          Dịch vụ & giá
+        </Link>
+        <Link href="/studio/works" className="rounded-full bg-blush px-3 py-1.5 text-[13px] font-medium text-rose-dark">
+          Tác phẩm
+        </Link>
+        <Link
+          href="/studio/profile/edit"
+          className="rounded-full bg-blush px-3 py-1.5 text-[13px] font-medium text-rose-dark"
+        >
+          Hồ sơ & giờ làm
+        </Link>
+      </div>
+    </Card>
   )
 }
 

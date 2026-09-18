@@ -43,13 +43,15 @@ function ProfileTrust() {
 
   return (
     <div className="space-y-6">
-      <Link href={`/pros/${proId}`} className="flex items-center gap-3">
+      <Link href="/studio/profile/edit" className="flex items-center gap-3">
         <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={56} />
         <div className="flex-1">
           <p className="flex items-center gap-1.5 font-semibold">
             {pro.name} <VerifiedMark pro={pro} />
           </p>
-          <p className="text-sm text-muted">Xem hồ sơ công khai</p>
+          <p className="text-sm text-muted">
+            {pro.published ? "Đang hiển thị với khách · sửa hồ sơ" : "Chưa hiển thị với khách · hoàn thiện hồ sơ"}
+          </p>
         </div>
         <ChevronRight className="size-5 text-muted" />
       </Link>

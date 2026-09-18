@@ -109,6 +109,7 @@ const pro = (over: Partial<Pro>): Pro => ({
   ...PROS[0],
   uuid: `uuid-${PROS[0].id}`,
   acceptingJobs: true,
+  published: true,
   ...over,
 })
 

@@ -51,7 +51,7 @@ export const REVIEWS: Review[] = [
  * feed scripts/gen-demo-sql.ts -- it is the source of the demo seed, not of what
  * the screens show. A seed row has no database id yet, and its rating is derived.
  */
-type SeedPro = Omit<Pro, "rating" | "uuid" | "acceptingJobs">
+type SeedPro = Omit<Pro, "rating" | "uuid" | "acceptingJobs" | "published">
 
 const PRO_PROFILES: SeedPro[] = [
   {
@@ -255,7 +255,8 @@ export const PRO_SERVICES: ProService[] = [
   ps("dieu-huong", "massage-dry", { "60m": 350, "90m": 480, "120m": 600 }),
 ]
 
-export const WORKS: Work[] = [
+/** Seed rows have no database id yet; the generator assigns one. */
+export const WORKS: Omit<Work, "dbId">[] = [
   { id: "w-milky-stone", proId: "linh-pham", templateId: "nail-design", category: "nail", title: "Nail milky đính đá nhẹ", description: "Thiết kế tinh tế, phù hợp đi làm, đi tiệc. Có thể tùy chỉnh theo tone da và độ dài móng.", images: [img("nail-milky-1"), img("nail-milky-2")] },
   { id: "w-ombre", proId: "linh-pham", templateId: "nail-design", category: "nail", title: "Nail ombre hồng", description: "Ombre hồng sữa chuyển nhẹ, form coffin mềm.", images: [img("nail-ombre"), img("nail-milky-2")] },
   { id: "w-nude-short", proId: "linh-pham", templateId: "nail-gel", category: "nail", title: "Móng ngắn tone nude", description: "Form vuông bo ngắn, hợp dân văn phòng gõ phím nhiều.", images: [img("nail-nude-short")] },

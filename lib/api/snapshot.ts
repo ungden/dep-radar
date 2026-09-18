@@ -82,7 +82,7 @@ const first = (v: unknown): Row => (Array.isArray(v) ? ((v[0] ?? {}) as Row) : (
 const PRO_SELECT = `
   id, slug, display_name, avatar_path, title, bio, highlights, categories,
   city, district, lat, lng, areas, home_service, studio_address, max_travel_km,
-  years_exp, accepting_jobs, identity_status, rating_avg, rating_count,
+  years_exp, accepting_jobs, published, identity_status, rating_avg, rating_count,
   completed_jobs, response_minutes, created_at
 `
 
@@ -110,6 +110,7 @@ function toPro(row: Row): Pro & { uuid: string } {
     maxTravelKm: Number(row.max_travel_km ?? 10),
     yearsExp: row.years_exp ?? 0,
     acceptingJobs: Boolean(row.accepting_jobs),
+    published: Boolean(row.published),
     joinedAt: localDate(row.created_at),
     bio: row.bio ?? "",
     highlights: row.highlights ?? [],
@@ -137,14 +138,18 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
   const me = auth.user?.id ?? null
   const city = (await cookies()).get(CITY_COOKIE)?.value ?? null
 
-  const [prosRes, worksRes, reviewsRes, pricesRes, listingsRes] = await Promise.all([
+  const [prosRes, ownProRes, worksRes, reviewsRes, pricesRes, listingsRes] = await Promise.all([
     supabase.from("pros").select(PRO_SELECT).eq("published", true).is("suspended_at", null),
+    // The caller's own profile is not in that list until it is published, and
+    // without it their studio cannot see their own services or works.
+    me
+      ? supabase.from("pros").select(PRO_SELECT).eq("id", me).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
     supabase
       .from("works")
-      .select(
-        "id, slug, pro_id, template_id, title, description, image_paths, sort_order, pros!works_pro_id_fkey!inner (slug, published)",
-      )
-      .eq("pros.published", true)
+      // Row level security already makes works public; the freelancer's own
+      // unpublished ones have to be here too, or they cannot manage them.
+      .select("id, slug, pro_id, template_id, title, description, image_paths, sort_order")
       .order("sort_order"),
     supabase
       .from("reviews")
@@ -159,6 +164,9 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
   ])
 
   const pros = rowsOf("pros", prosRes).map(toPro)
+  if (ownProRes.data && !pros.some((p) => p.id === (ownProRes.data as Row).slug)) {
+    pros.push(toPro(ownProRes.data as Row))
+  }
   const slugOf = new Map(pros.map((p) => [p.uuid, p.id]))
 
   const workRows = rowsOf("works", worksRes)
@@ -166,6 +174,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     const template = getTemplate(row.template_id)
     return {
       id: row.slug,
+      dbId: row.id,
       proId: slugOf.get(row.pro_id) ?? row.pro_id,
       templateId: row.template_id,
       category: (template?.category ?? "nail") as CategoryId,

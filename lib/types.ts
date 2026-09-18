@@ -81,6 +81,8 @@ export interface Pro {
   yearsExp: number
   /** Off means the freelancer is not taking new bookings right now. */
   acceptingJobs: boolean
+  /** A profile is only listed once it has a service, hours and a photo. */
+  published: boolean
   joinedAt: string
   bio: string
   highlights: string[]
@@ -92,6 +94,8 @@ export interface Pro {
 export interface Work {
   /** Readable id used in URLs. */
   id: string
+  /** Database id, used when editing or deleting it. */
+  dbId: string
   proId: string
   templateId: string
   category: CategoryId

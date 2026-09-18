@@ -7,6 +7,7 @@ import {
   BriefcaseBusiness,
   ChevronRight,
   Heart,
+  ImagePlus,
   LogOut,
   MapPin,
   Megaphone,
@@ -118,6 +119,8 @@ export default function MePage() {
             items={[
               { href: "/studio/jobs", icon: BriefcaseBusiness, label: "Việc mới quanh bạn" },
               { href: "/studio/services", icon: Ticket, label: "Dịch vụ & bảng giá" },
+              { href: "/studio/works", icon: ImagePlus, label: "Tác phẩm" },
+              { href: "/studio/profile/edit", icon: UserRound, label: "Hồ sơ, giờ làm & khu vực" },
               { href: "/studio/profile", icon: ShieldCheck, label: "Xác minh & đánh giá" },
               ...(pro ? [{ href: `/pros/${pro.id}`, icon: UserRound, label: "Hồ sơ công khai & tác phẩm" }] : []),
               ...commonItems,

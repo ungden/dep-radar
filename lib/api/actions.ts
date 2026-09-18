@@ -438,3 +438,116 @@ export async function setBrowsingCity(city: string | null): Promise<void> {
   else store.delete(CITY_COOKIE)
   revalidatePath("/", "layout")
 }
+
+// Portfolio -------------------------------------------------------------------
+
+export async function saveWork(input: {
+  id?: string
+  templateId: string
+  title: string
+  description?: string
+  images: string[]
+}): Promise<ActionResult<string>> {
+  const supabase = await supabaseServer()
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
+  if (!input.images.length) return { ok: false, error: "Cần ít nhất một ảnh." }
+
+  const slug = await uniqueWorkSlug(input.title)
+  const row = {
+    pro_id: auth.user.id,
+    template_id: input.templateId,
+    title: input.title.trim(),
+    description: (input.description ?? "").trim(),
+    image_paths: input.images,
+  }
+  const query = input.id
+    ? supabase.from("works").update(row).eq("id", input.id).select("id").single()
+    : supabase.from("works").insert({ ...row, slug }).select("id").single()
+  const { data, error } = await query
+  if (error) return { ok: false, error: messageFor(error) }
+  revalidatePath("/studio/works")
+  revalidatePath("/")
+  return { ok: true, data: data.id }
+}
+
+export async function deleteWork(id: string): Promise<ActionResult> {
+  const supabase = await supabaseServer()
+  const { error } = await supabase.from("works").delete().eq("id", id)
+  if (error) return { ok: false, error: messageFor(error) }
+  revalidatePath("/studio/works")
+  revalidatePath("/")
+  return { ok: true, data: undefined }
+}
+
+/** Readable, unique address for a portfolio piece. */
+async function uniqueWorkSlug(title: string): Promise<string> {
+  const supabase = await supabaseServer()
+  const { data } = await supabase.rpc("slugify", { input: title })
+  const base = (data as string | null) || "tac-pham"
+  const { data: taken } = await supabase.from("works").select("slug").like("slug", `${base}%`)
+  const used = new Set((taken ?? []).map((w) => w.slug))
+  if (!used.has(base)) return base
+  for (let i = 2; i < 200; i++) if (!used.has(`${base}-${i}`)) return `${base}-${i}`
+  return `${base}-${Date.now().toString(36)}`
+}
+
+export async function saveProProfile(input: {
+  displayName?: string
+  title?: string
+  bio?: string
+  avatarPath?: string | null
+  studioAddress?: string | null
+  homeService?: boolean
+  maxTravelKm?: number
+  published?: boolean
+}): Promise<ActionResult> {
+  const supabase = await supabaseServer()
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
+
+  // Only the fields a freelancer owns; the guards in the database drop the rest.
+  const row: Partial<{
+    display_name: string
+    title: string
+    bio: string
+    avatar_path: string | null
+    studio_address: string | null
+    home_service: boolean
+    max_travel_km: number
+    published: boolean
+  }> = {}
+  if (input.displayName !== undefined) row.display_name = input.displayName.trim()
+  if (input.title !== undefined) row.title = input.title.trim()
+  if (input.bio !== undefined) row.bio = input.bio.trim()
+  if (input.avatarPath !== undefined) row.avatar_path = input.avatarPath
+  if (input.studioAddress !== undefined) row.studio_address = input.studioAddress || null
+  if (input.homeService !== undefined) row.home_service = input.homeService
+  if (input.maxTravelKm !== undefined) row.max_travel_km = input.maxTravelKm
+  if (input.published !== undefined) row.published = input.published
+
+  const { error } = await supabase.from("pros").update(row).eq("id", auth.user.id)
+  if (error) return { ok: false, error: messageFor(error) }
+  revalidatePath("/studio", "layout")
+  revalidatePath("/")
+  return { ok: true, data: undefined }
+}
+
+/** Weekly opening hours, replaced as a set. */
+export async function saveWorkingHours(
+  windows: { weekday: number; startMin: number; endMin: number }[],
+): Promise<ActionResult> {
+  const supabase = await supabaseServer()
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
+  const { error: clearError } = await supabase.from("working_hours").delete().eq("pro_id", auth.user.id)
+  if (clearError) return { ok: false, error: messageFor(clearError) }
+  if (windows.length) {
+    const { error } = await supabase.from("working_hours").insert(
+      windows.map((w) => ({ pro_id: auth.user.id, weekday: w.weekday, start_min: w.startMin, end_min: w.endMin })),
+    )
+    if (error) return { ok: false, error: messageFor(error) }
+  }
+  revalidatePath("/studio", "layout")
+  return { ok: true, data: undefined }
+}

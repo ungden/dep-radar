@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/webp"],
     minimumCacheTTL: 60 * 60 * 24 * 30,
+    // Portfolio photos and avatars come from Supabase Storage.
+    remotePatterns: [
+      { protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" },
+      // The local stack serves the same files over http on a port.
+      { protocol: "http", hostname: "127.0.0.1", port: "54321", pathname: "/storage/v1/object/public/**" },
+    ],
   },
   async headers() {
     return [
