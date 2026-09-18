@@ -120,7 +120,9 @@ lines.push("-- Customers who left the reviews ----------------------------------
 const reviewers = [...new Set(REVIEWS.map((r) => r.author))]
 reviewers.forEach((name, i) => {
   const id = uuidFor("customer", name)
-  authUser(id, `+8498${String(1000000 + i).slice(0, 7)}`, name)
+  // A valid Vietnamese mobile number: +84 then 9 digits. The demo reviewers get
+  // a reserved block so they never collide with a real one.
+  authUser(id, `+849${81000000 + i}`, name)
   const [lat, lng] = coords("Hà Nội", "Đống Đa")
   lines.push(
     `update public.accounts set full_name = ${q(name)} where id = ${q(id)};`,
