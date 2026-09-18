@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bell, ChevronDown, MapPin, Megaphone, Search } from "lucide-react"
+import { CalendarDays, ChevronDown, MapPin, Megaphone, Search } from "lucide-react"
 import { CategoryRow, ProCard, WorkFeedCard } from "@/components/beauty"
 import { sortPros } from "@/components/trust"
 import { Logo, Tabs } from "@/components/ui"
@@ -34,9 +34,8 @@ export default function ExplorePage() {
       <div className="flex h-12 items-center justify-between md:hidden">
         <CityPicker value={city} />
         <Logo />
-        <Link href={session ? "/bookings" : "/login"} aria-label="Thông báo" className="relative inline-flex size-10 items-center justify-center">
-          <Bell className="size-5" />
-          <span className="absolute right-2.5 top-2.5 size-2 rounded-full bg-rose" />
+        <Link href={session ? "/bookings" : "/login"} aria-label="Lịch hẹn của tôi" className="inline-flex size-10 items-center justify-center">
+          <CalendarDays className="size-5" />
         </Link>
       </div>
 
@@ -67,6 +66,13 @@ export default function ExplorePage() {
           className="h-12 w-full rounded-full border border-line bg-surface pl-11 pr-4 text-[15px] placeholder:text-muted focus:border-rose focus:outline-none md:h-14"
         />
       </form>
+
+      <p className="mt-3 rounded-2xl bg-warning-soft px-3.5 py-2.5 text-[12.5px] text-warning">
+        Bản demo: chuyên viên và tác phẩm là dữ liệu mẫu, thanh toán online chưa hoạt động.{" "}
+        <Link href="/chinh-sach" className="font-medium underline underline-offset-2">
+          Xem chi tiết
+        </Link>
+      </p>
 
       <CategoryRow className="mt-5" />
 

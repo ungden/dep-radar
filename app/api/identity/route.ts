@@ -8,6 +8,37 @@ import { NextResponse } from "next/server"
  */
 
 export const runtime = "nodejs"
+export const maxDuration = 30
+
+/**
+ * Best-effort abuse guard. Serverless instances are short-lived, so this only
+ * blunts casual hammering; a shared store (KV/Redis) plus real accounts comes
+ * with the backend work in phase 1.
+ */
+const WINDOW_MS = 60 * 60 * 1000
+const MAX_PER_WINDOW = 5
+const hits = new Map<string, number[]>()
+
+function rateLimited(request: Request) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
+  const now = Date.now()
+  const recent = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS)
+  recent.push(now)
+  hits.set(ip, recent)
+  if (hits.size > 5000) hits.clear()
+  return recent.length > MAX_PER_WINDOW
+}
+
+/** Only our own pages may call this; it is not a public face-matching API. */
+function wrongOrigin(request: Request) {
+  const origin = request.headers.get("origin")
+  if (!origin) return false // same-origin form posts may omit it
+  try {
+    return new URL(origin).host !== new URL(request.url).host
+  } catch {
+    return true
+  }
+}
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash"
@@ -79,6 +110,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Dịch vụ xác minh chưa được cấu hình (thiếu GEMINI_API_KEY)." }, { status: 503 })
   }
 
+  if (wrongOrigin(request)) return NextResponse.json({ error: "Yêu cầu không hợp lệ." }, { status: 403 })
+  if (rateLimited(request)) {
+    return NextResponse.json({ error: "Bạn đã thử xác minh quá nhiều lần. Vui lòng thử lại sau 1 giờ." }, { status: 429 })
+  }
+
   let form: FormData
   try {
     form = await request.formData()
@@ -95,19 +131,26 @@ export async function POST(request: Request) {
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
       method: "POST",
+      signal: AbortSignal.timeout(25_000),
       headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: PROMPT }, front, back, selfie] }],
         generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: SCHEMA },
       }),
     })
+    if (res.status === 404) throw new Error(`model_not_found:${MODEL}`)
     if (!res.ok) throw new Error(`Gemini ${res.status}`)
     const json = await res.json()
     const text: string | undefined = json?.candidates?.[0]?.content?.parts?.[0]?.text
     if (!text) throw new Error("Empty response")
     verdict = JSON.parse(text) as AiVerdict
   } catch (err) {
-    console.error("identity check failed:", err instanceof Error ? err.message : "unknown error")
+    const message = err instanceof Error ? err.message : "unknown error"
+    console.error("identity check failed:", message)
+    if (message.startsWith("model_not_found:")) {
+      // A config mistake must not look like an outage.
+      return NextResponse.json({ error: `Cấu hình sai: model "${MODEL}" không tồn tại. Kiểm tra biến GEMINI_MODEL.` }, { status: 500 })
+    }
     return NextResponse.json({ error: "AI xác minh đang bận, vui lòng thử lại sau ít phút." }, { status: 502 })
   }
 

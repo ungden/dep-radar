@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ChevronLeft, Search, SlidersHorizontal, X } from "lucide-react"
 import { ProCard, WorkCard } from "@/components/beauty"
-import { Chip, EmptyState, Tabs } from "@/components/ui"
+import { Chip, EmptyState, Tabs, PageSkeleton } from "@/components/ui"
 import { CATEGORIES, CITIES, PROS, WORKS } from "@/lib/data"
 import { sortPros } from "@/components/trust"
 import { getTemplate } from "@/lib/catalog"
@@ -31,7 +31,7 @@ function normalize(s: string) {
 
 export default function SearchPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<PageSkeleton />}>
       <SearchView />
     </Suspense>
   )

@@ -24,6 +24,15 @@ export const POLICY = {
 const roundUp5k = (n: number) => Math.ceil(n / 5000) * 5000
 const round1k = (n: number) => Math.round(n / 1000) * 1000
 
+/** Commission and payout come from one formula so every screen shows the same number. */
+export function commissionFor(servicePrice: number, rate: number = POLICY.commissionRate) {
+  return round1k(servicePrice * rate)
+}
+
+export function payoutFor(servicePrice: number, rate: number = POLICY.commissionRate) {
+  return servicePrice - commissionFor(servicePrice, rate)
+}
+
 export function travelFeeFor(distanceKm: number | null) {
   if (distanceKm === null) return 0
   const extraKm = distanceKm - POLICY.freeTravelKm
@@ -57,7 +66,7 @@ export function buildQuote(input: {
   const urgentFee = input.urgent ? POLICY.urgentFee : 0
   const total = input.servicePrice + travelFee + urgentFee
   const commissionRate = POLICY.commissionRate
-  const commission = round1k(input.servicePrice * commissionRate)
+  const commission = commissionFor(input.servicePrice, commissionRate)
   return {
     servicePrice: input.servicePrice,
     distanceKm: input.atHome ? input.distanceKm : null,

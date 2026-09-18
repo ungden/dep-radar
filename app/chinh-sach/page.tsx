@@ -4,7 +4,11 @@ import { CATALOG, CATEGORIES } from "@/lib/catalog"
 import { POLICY } from "@/lib/pricing"
 import { formatPrice } from "@/lib/utils"
 
-export const metadata: Metadata = { title: "Chính sách phí & đặt lịch" }
+export const metadata: Metadata = {
+  title: "Chính sách phí & đặt lịch",
+  description: "Cách dep360 tính giá, phí di chuyển, phí đặt gấp và hoa hồng; quy trình xác nhận, huỷ lịch và đánh giá.",
+  alternates: { canonical: "/chinh-sach" },
+}
 
 const pct = (n: number) => `${Math.round(n * 100)}%`
 
@@ -12,7 +16,13 @@ export default function PolicyPage() {
   return (
     <div className="mx-auto max-w-2xl md:pt-4">
       <PageHeader title="Chính sách phí & đặt lịch" back />
-      <p className="rounded-2xl bg-warning-soft px-4 py-3 text-[13px] text-warning">Bản demo: chưa có thanh toán thật, dữ liệu chỉ lưu trên trình duyệt của bạn.</p>
+      <div className="rounded-2xl bg-warning-soft px-4 py-3 text-[13px] text-warning">
+        <p className="font-semibold">Đây là bản demo</p>
+        <p className="mt-1">
+          Chuyên viên, tác phẩm và lịch hẹn là dữ liệu mẫu. Dữ liệu bạn tạo chỉ lưu trên trình duyệt này. Những mục ghi “sắp áp dụng” là quy định đã chốt nhưng hệ thống
+          chưa tự động thực hiện.
+        </p>
+      </div>
 
       <div className="mt-6 space-y-8 text-sm leading-relaxed text-ink-soft">
         <Section title="1. Khách hàng không trả phí nền tảng">
@@ -26,8 +36,9 @@ export default function PolicyPage() {
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-5">
             <li>Không tính hoa hồng trên phí di chuyển và phí đặt gấp: 100% thuộc về freelancer.</li>
-            <li>Job khách thanh toán online: dep360 trừ hoa hồng và chuyển phần còn lại cho freelancer sau khi hoàn thành.</li>
-            <li>Job khách trả trực tiếp: hoa hồng ghi vào công nợ, tự trừ vào tiền online của kỳ đối soát hằng tuần; nếu không đủ, freelancer chuyển khoản phần còn thiếu.</li>
+            <li>Khách trả trực tiếp cho freelancer (tiền mặt hoặc chuyển khoản). Hoa hồng được ghi nhận theo từng job hoàn thành.</li>
+            <li><b className="text-ink">Sắp áp dụng:</b> ví trả trước cho freelancer, hoa hồng tự trừ vào ví khi hoàn thành job; ví âm quá hạn sẽ tạm ngưng nhận job.</li>
+            <li><b className="text-ink">Sắp áp dụng:</b> khách thanh toán online toàn bộ qua cổng thanh toán.</li>
           </ul>
         </Section>
 
@@ -61,17 +72,17 @@ export default function PolicyPage() {
 
         <Section title="6. Thanh toán, xác nhận & huỷ">
           <ul className="list-disc space-y-1 pl-5">
-            <li>Không cần đặt cọc. Khách chọn thanh toán online toàn bộ (MoMo, ZaloPay, thẻ) hoặc trả trực tiếp cho chuyên viên sau khi làm.</li>
+            <li>Không cần đặt cọc. Hiện tại khách trả trực tiếp cho chuyên viên sau khi làm.</li>
             <li>
-              Sau khi khách đặt, freelancer gọi điện xác nhận giờ, địa chỉ, yêu cầu rồi mới nhận job, trong vòng {POLICY.confirmWithinHours} giờ. Quá hạn, lịch tự huỷ và tiền online
-              (nếu có) được hoàn 100%.
+              Sau khi khách đặt, freelancer gọi điện xác nhận giờ, địa chỉ, yêu cầu rồi mới nhận job, trong vòng {POLICY.confirmWithinHours} giờ.{" "}
+              <b className="text-ink">Sắp áp dụng:</b> quá hạn thì lịch tự huỷ.
             </li>
-            <li>Tiền thanh toán online do dep360 giữ và chỉ chuyển cho freelancer sau khi job hoàn thành.</li>
+            <li>Khách huỷ trước giờ hẹn từ {POLICY.freeCancelHours} tiếng: miễn phí.</li>
             <li>
-              Khách huỷ trước giờ hẹn từ {POLICY.freeCancelHours} tiếng: miễn phí, hoàn 100%. Huỷ muộn với lịch đã thanh toán online: {pct(POLICY.lateCancelRate)} giá trị chuyển cho
-              freelancer để bù thời gian giữ lịch. Khách trả sau huỷ muộn nhiều lần sẽ bị tạm khoá hình thức trả sau.
+              <b className="text-ink">Sắp áp dụng:</b> huỷ muộn tính {pct(POLICY.lateCancelRate)} giá trị dịch vụ để bù thời gian giữ lịch của chuyên viên; huỷ muộn nhiều lần bị
+              hạn chế đặt lịch.
             </li>
-            <li>Freelancer huỷ lịch đã nhận: khách được hoàn 100%, huỷ nhiều lần sẽ bị tạm ẩn hồ sơ.</li>
+            <li>Freelancer huỷ lịch đã nhận thì khách không mất phí. <b className="text-ink">Sắp áp dụng:</b> huỷ nhiều lần sẽ bị tạm ẩn hồ sơ.</li>
           </ul>
         </Section>
 
@@ -87,6 +98,7 @@ export default function PolicyPage() {
           <ul className="list-disc space-y-1 pl-5">
             <li>Chỉ khách có lịch hẹn hoàn thành mới được đánh giá (số sao, tag, nhận xét). Freelancer không thể xoá, chỉ phản hồi công khai.</li>
             <li>Thứ tự “Phù hợp nhất”: freelancer đã xác minh danh tính được xếp trước, sau đó theo điểm đánh giá (có trọng số theo số lượt) và số job. Không bán vị trí.</li>
+            <li>Điểm đánh giá hiển thị được tính từ chính các đánh giá có trên hồ sơ, không nhập tay.</li>
           </ul>
         </Section>
       </div>

@@ -22,12 +22,13 @@ import type {
 import { addDays, todayISO, uid } from "./utils"
 
 export interface AppState {
-  version: 5
+  version: 6
   session: Session | null
   savedWorks: string[]
   followedPros: string[]
   city: string | null
-  customerAddress: CustomerAddress
+  /** null until the customer actually enters one; distances are never guessed. */
+  customerAddress: CustomerAddress | null
   bookings: Booking[]
   jobs: JobPost[]
   /** Listings of the demo freelancer (editable in Studio). */
@@ -41,7 +42,7 @@ export interface AppState {
   replies: Record<string, string>
 }
 
-const STORAGE_KEY = "dep360:v5"
+const STORAGE_KEY = "dep360:v6"
 
 // ---------------------------------------------------------------------------
 // Derived helpers (pure, take state)
@@ -82,9 +83,9 @@ export function reviewsOf(s: AppState, proId: string): Review[] {
   return [...fresh, ...seed].map((r) => (s.replies[r.id] ? { ...r, reply: s.replies[r.id] } : r))
 }
 
-export function distanceToCustomer(s: AppState, proId: string, address: CustomerAddress = s.customerAddress) {
+export function distanceToCustomer(s: AppState, proId: string, address: CustomerAddress | null = s.customerAddress) {
   const pro = getPro(proId)
-  if (!pro) return null
+  if (!pro || !address) return null
   return travelDistanceKm(pro.city, pro.district, address.city, address.district)
 }
 
@@ -120,9 +121,6 @@ export function takenSlots(s: AppState, proId: string, date: string): Set<string
   for (const b of s.bookings) {
     if (b.proId === proId && b.date === date && (b.status === "pending" || b.status === "confirmed")) taken.add(b.time)
   }
-  const seed = [...(proId + date)].reduce((a, c) => a + c.charCodeAt(0), 0)
-  if (seed % 3 === 0) taken.add("10:30")
-  if (seed % 4 === 1) taken.add("14:30")
   return taken
 }
 
@@ -137,12 +135,12 @@ function seedState(): AppState {
   const t = todayISO()
   const now = new Date().toISOString()
   const base: Omit<AppState, "bookings" | "jobs"> = {
-    version: 5,
+    version: 6,
     session: null,
-    savedWorks: ["w-milky-stone", "w-party-glow"],
-    followedPros: ["linh-pham"],
+    savedWorks: [],
+    followedPros: [],
     city: null,
-    customerAddress: DEMO_CUSTOMER.address,
+    customerAddress: null,
     myServices: PRO_SERVICES.filter((x) => x.proId === DEMO_PRO_ID).map((x) => ({ ...x, prices: { ...x.prices } })),
     myIdentity: getPro(DEMO_PRO_ID)!.identity,
     acceptingJobs: true,
@@ -188,7 +186,7 @@ function seedState(): AppState {
       address: atHome ? formatAddress(address) : (pro.studioAddress ?? `${pro.district}, ${pro.city}`),
       note: opts.note ?? "",
       quote,
-      paymentMethod: opts.pay ?? "online",
+      paymentMethod: opts.pay ?? "cash",
       status,
       customerName: opts.customer?.[0] ?? DEMO_CUSTOMER.name,
       customerPhone: opts.customer?.[1] ?? DEMO_CUSTOMER.phone,
@@ -223,15 +221,14 @@ function seedState(): AppState {
     ...base,
     bookings: [
       booking("bk-1001", "linh-pham", "nail-design", "stone", addDays(t, 2), "16:00", "confirmed"),
-      booking("bk-1002", "thu-anh", "makeup-party", "makeup", addDays(t, 5), "10:30", "pending", { pay: "cash" }),
+      booking("bk-1002", "thu-anh", "makeup-party", "makeup", addDays(t, 5), "10:30", "pending"),
       booking("bk-1003", "mai-tran", "skin-basic", "60m", addDays(t, -12), "14:30", "completed", {
         address: { city: "TP.HCM", district: "Quận 3", detail: "45 Võ Văn Tần" },
       }),
-      booking("bk-1004", "quynh-vu", "hair-wash", "45m", addDays(t, -20), "09:00", "cancelled", { atHome: false, pay: "cash" }),
+      booking("bk-1004", "quynh-vu", "hair-wash", "45m", addDays(t, -20), "09:00", "cancelled", { atHome: false }),
       booking("bk-2001", "linh-pham", "nail-gel", "hand", addDays(t, 1), "09:00", "pending", {
         customer: ["Trà My", "0987 111 222"],
         address: hn("Đống Đa", "Ngõ 12 Láng Hạ"),
-        pay: "cash",
       }),
       booking("bk-2002", "linh-pham", "nail-removal", "remove-care", t, "13:00", "confirmed", {
         customer: ["Hoàng Yến", "0936 222 333"],
@@ -246,7 +243,6 @@ function seedState(): AppState {
         customer: ["Thanh Hương", "0904 444 555"],
         address: hn("Hai Bà Trưng", "21 Bạch Mai"),
         reviewed: true,
-        pay: "cash",
       }),
       booking("bk-2005", "linh-pham", "nail-design", "art", addDays(t, -6), "16:00", "completed", {
         customer: ["Ngân Hà", "0915 555 666"],
@@ -365,18 +361,14 @@ function loadFromStorage() {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as AppState
-      if (parsed.version === 5) {
-        state = parsed
-        listeners.forEach((l) => l())
-      }
+      if (parsed.version === 6) state = parsed
     }
-    window.localStorage.removeItem("dep360:v1")
-    window.localStorage.removeItem("dep360:v2")
-    window.localStorage.removeItem("dep360:v3")
-    window.localStorage.removeItem("dep360:v4")
+    for (const old of ["dep360:v1", "dep360:v2", "dep360:v3", "dep360:v4", "dep360:v5"]) window.localStorage.removeItem(old)
   } catch {
     // Storage unavailable (private mode): keep the in-memory seed.
   }
+  hydrated = true
+  listeners.forEach((l) => l())
 }
 
 function setState(updater: (s: AppState) => AppState) {
@@ -394,19 +386,22 @@ function subscribe(listener: Listener) {
   return () => listeners.delete(listener)
 }
 
-const HydratedContext = React.createContext(false)
+/** true once localStorage has been read on the client; false during SSR/first paint. */
+let hydrated = false
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [hydrated, setHydrated] = React.useState(false)
   React.useEffect(() => {
     loadFromStorage()
-    setHydrated(true)
   }, [])
-  return <HydratedContext.Provider value={hydrated}>{children}</HydratedContext.Provider>
+  return <>{children}</>
 }
 
 export function useHydrated() {
-  return React.useContext(HydratedContext)
+  return React.useSyncExternalStore(
+    subscribe,
+    () => hydrated,
+    () => false,
+  )
 }
 
 /** Whole app state; derive with helpers above (snapshots must be stable). */

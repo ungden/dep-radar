@@ -60,6 +60,7 @@ export interface Pro {
   id: string
   name: string
   title: string
+  phone: string
   avatar?: string
   tone: string
   categories: CategoryId[]

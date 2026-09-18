@@ -49,4 +49,4 @@ npm run dev
 | `/requests`, `/requests/new`, `/requests/[id]` | Yêu cầu đã đăng & báo giá nhận được |
 | `/saved`, `/me` | Đã lưu, Cá nhân |
 | `/studio`, `/studio/jobs`, `/studio/schedule`, `/studio/services`, `/studio/profile` | Khu vực freelancer: thu nhập, báo giá, lịch, bảng giá, xác minh & đánh giá |
-| `/me/policy` | Chính sách phí, hoa hồng, huỷ lịch, xác minh & xếp hạng |
+| `/chinh-sach` | Chính sách phí, hoa hồng, huỷ lịch, xác minh & xếp hạng |

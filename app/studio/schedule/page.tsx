@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation"
 import { CalendarDays } from "lucide-react"
 import { JobBookingRow } from "@/components/booking-card"
 import { RequireSession } from "@/components/require-session"
-import { Button, EmptyState, PageHeader, Tabs } from "@/components/ui"
+import { Button, EmptyState, PageHeader, Tabs, PageSkeleton } from "@/components/ui"
 import { actions, useApp } from "@/lib/store"
 import type { Booking } from "@/lib/types"
 import { addDays, cn, formatDateLong, parseISODate, todayISO, weekdayShort } from "@/lib/utils"
@@ -18,7 +18,7 @@ export default function SchedulePage() {
     <div className="mx-auto max-w-3xl md:pt-4">
       <PageHeader title="Lịch làm" />
       <RequireSession role="pro">
-        <Suspense>
+        <Suspense fallback={<PageSkeleton />}>
           <Schedule />
         </Suspense>
       </RequireSession>

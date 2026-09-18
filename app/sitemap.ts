@@ -1,13 +1,14 @@
 import type { MetadataRoute } from "next"
 import { PROS, WORKS } from "@/lib/data"
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+import { SITE_URL } from "@/lib/env"
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const lastModified = new Date()
   return [
-    { url: siteUrl, changeFrequency: "daily", priority: 1 },
-    { url: `${siteUrl}/pros`, changeFrequency: "daily", priority: 0.8 },
-    ...PROS.map((p) => ({ url: `${siteUrl}/pros/${p.id}`, changeFrequency: "weekly" as const, priority: 0.7 })),
-    ...WORKS.map((w) => ({ url: `${siteUrl}/works/${w.id}`, changeFrequency: "monthly" as const, priority: 0.5 })),
+    { url: SITE_URL, lastModified, changeFrequency: "daily", priority: 1 },
+    { url: `${SITE_URL}/pros`, lastModified, changeFrequency: "daily", priority: 0.8 },
+    { url: `${SITE_URL}/chinh-sach`, lastModified, changeFrequency: "monthly", priority: 0.3 },
+    ...PROS.map((p) => ({ url: `${SITE_URL}/pros/${p.id}`, lastModified, changeFrequency: "weekly" as const, priority: 0.7 })),
+    ...WORKS.map((w) => ({ url: `${SITE_URL}/works/${w.id}`, lastModified, changeFrequency: "monthly" as const, priority: 0.5 })),
   ]
 }

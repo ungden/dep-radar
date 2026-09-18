@@ -8,17 +8,17 @@
   --color-surface: #ffffff;
   --color-ink: #2b2322;
   --color-ink-soft: #5b4f4d;
-  --color-muted: #948684;
+  --color-muted: #7a6c6a;
   --color-line: #efe5e2;
   --color-blush: #f6e8e6;
   --color-blush-strong: #edd3d0;
-  --color-rose: #b5646d;
-  --color-rose-dark: #9b4f58;
-  --color-success: #3f8a60;
+  --color-rose: #a8535d;
+  --color-rose-dark: #8f434c;
+  --color-success: #2f6f4b;
   --color-success-soft: #e5f2ea;
-  --color-warning: #b9772c;
+  --color-warning: #8a5410;
   --color-warning-soft: #fbefdc;
-  --color-danger: #b54848;
+  --color-danger: #a13a3a;
   --color-danger-soft: #f8e4e2;
 
   --radius-card: 1.25rem;
@@ -58,5 +58,9 @@
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .motion-scale {
+    transform: none !important;
   }
 }

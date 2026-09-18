@@ -4,7 +4,7 @@ import * as React from "react"
 import { Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Briefcase, Sparkles } from "lucide-react"
-import { Button, Field, Logo, PageHeader, inputClass } from "@/components/ui"
+import { Button, Field, Logo, PageHeader, inputClass, PageSkeleton } from "@/components/ui"
 import { DEMO_CUSTOMER, DEMO_PRO_ID, getPro } from "@/lib/data"
 import { actions } from "@/lib/store"
 import type { Role } from "@/lib/types"
@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
 
 export default function LoginPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<PageSkeleton />}>
       <LoginForm />
     </Suspense>
   )

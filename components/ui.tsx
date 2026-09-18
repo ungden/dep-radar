@@ -241,6 +241,18 @@ export function EmptyState({
   )
 }
 
+/** Standard route-level loading placeholder (used as Suspense fallback). */
+export function PageSkeleton() {
+  return (
+    <div className="mx-auto max-w-2xl space-y-3 pt-16" aria-busy="true" aria-live="polite">
+      <span className="sr-only">Đang tải…</span>
+      <Skeleton className="h-10 w-1/2" />
+      <Skeleton className="h-28" />
+      <Skeleton className="h-28" />
+    </div>
+  )
+}
+
 export function Skeleton({ className }: { className?: string }) {
   return <div className={cn("animate-pulse rounded-2xl bg-blush/70", className)} />
 }

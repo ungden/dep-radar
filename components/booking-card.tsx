@@ -45,8 +45,8 @@ export function BookingCard({ booking }: { booking: Booking }) {
           <ButtonLink href={`/bookings/${booking.id}`} variant="outline" size="sm" className="border-line text-ink">
             Xem chi tiết
           </ButtonLink>
-          <a href="tel:0968000111" className={buttonClass("soft", "sm")}>
-            <Phone className="size-3.5" /> Liên hệ
+          <a href={`tel:${pro.phone.replace(/\s/g, "")}`} className={buttonClass("soft", "sm")}>
+            <Phone className="size-3.5" /> Gọi chuyên viên
           </a>
         </div>
       )}

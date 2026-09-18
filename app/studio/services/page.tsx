@@ -6,7 +6,7 @@ import { Pencil, Plus, Store, Trash2, X } from "lucide-react"
 import { RequireSession } from "@/components/require-session"
 import { Button, ButtonLink, Card, PageHeader, Toggle } from "@/components/ui"
 import { categoryLabel, getTemplate, templatesByCategory } from "@/lib/catalog"
-import { POLICY } from "@/lib/pricing"
+import { POLICY, payoutFor } from "@/lib/pricing"
 import { actions, proView, servicesOf, useApp } from "@/lib/store"
 import type { ServiceTemplate } from "@/lib/types"
 import { cn, formatDuration, formatPrice } from "@/lib/utils"
@@ -86,7 +86,7 @@ function ServicesManager() {
                       <li key={v.id} className="rounded-xl bg-canvas px-3 py-2 text-[13px]">
                         <span className="text-ink-soft">{v.label}</span> · <b>{formatPrice(l.prices[v.id])}</b>
                         <span className="block text-[11px] text-muted">
-                          {formatDuration(v.durationMin)} · bạn nhận {formatPrice(Math.round((l.prices[v.id] * (1 - rate)) / 1000) * 1000)}
+                          {formatDuration(v.durationMin)} · bạn nhận {formatPrice(payoutFor(l.prices[v.id], rate))}
                         </span>
                       </li>
                     ))}
@@ -198,7 +198,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
                     <span>Tối đa {formatPrice(v.maxPrice)}</span>
                   </div>
                   <p className="mt-1 text-xs text-ink-soft">
-                    Bạn nhận {formatPrice(Math.round((price * (1 - rate)) / 1000) * 1000)} sau hoa hồng {Math.round(rate * 100)}%
+                    Bạn nhận {formatPrice(payoutFor(price, rate))} sau hoa hồng {Math.round(rate * 100)}%
                   </p>
                 </>
               )}
@@ -225,7 +225,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
           Lưu bảng giá
         </Button>
       </div>
-      <ButtonLink href="/me/policy" variant="ghost" size="sm" className="mt-2 w-full">
+      <ButtonLink href="/chinh-sach" variant="ghost" size="sm" className="mt-2 w-full">
         Vì sao có khung giá?
       </ButtonLink>
     </Sheet>

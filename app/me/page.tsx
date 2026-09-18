@@ -125,9 +125,8 @@ export default function MePage() {
             items={[
               { href: "/studio/jobs", icon: BriefcaseBusiness, label: "Việc mới quanh bạn" },
               { href: "/studio/services", icon: Ticket, label: "Dịch vụ & bảng giá" },
-              { href: "/studio/profile", icon: ShieldCheck, label: "Xác minh & đánh giá", sub: "Xác minh để có huy hiệu và lên đầu tìm kiếm" },
+              { href: "/studio/profile", icon: ShieldCheck, label: "Xác minh & đánh giá" },
               { href: `/pros/${DEMO_PRO_ID}`, icon: UserRound, label: "Hồ sơ công khai & tác phẩm" },
-              { href: "/me/policy", icon: CreditCard, label: "Hoa hồng & thanh toán", sub: "Đối soát tiền online & công nợ hằng tuần" },
               ...commonItems,
             ]}
           />
@@ -137,9 +136,6 @@ export default function MePage() {
           items={[
             { href: "/saved", icon: Heart, label: "Đã lưu", sub: `${state.savedWorks.length} mẫu · ${state.followedPros.length} chuyên viên` },
             { href: "/requests", icon: Megaphone, label: "Yêu cầu đã đăng", sub: `${state.jobs.filter((j) => j.mine).length} yêu cầu` },
-            { href: "/me/policy", icon: MapPin, label: "Địa chỉ của tôi", sub: formatAddress(state.customerAddress) },
-            { href: "/me/policy", icon: CreditCard, label: "Phương thức thanh toán" },
-            { href: "/me/policy", icon: Ticket, label: "Ưu đãi của tôi" },
             ...commonItems,
           ]}
         />
@@ -174,10 +170,7 @@ export default function MePage() {
 type MenuItem = { href: string; icon: React.ComponentType<{ className?: string }>; label: string; sub?: string }
 
 const commonItems: MenuItem[] = [
-  { href: "/me/policy", icon: Bell, label: "Cài đặt thông báo" },
-  { href: "/me/policy", icon: ShieldCheck, label: "Chính sách phí, đặt lịch & huỷ" },
-  { href: "/me/policy", icon: CircleHelp, label: "Trung tâm hỗ trợ" },
-  { href: "/me/policy", icon: Info, label: "Về dep360" },
+  { href: "/chinh-sach", icon: ShieldCheck, label: "Chính sách phí, đặt lịch & huỷ" },
 ]
 
 function Menu({ items }: { items: MenuItem[] }) {

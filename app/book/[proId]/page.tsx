@@ -7,7 +7,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Car, Check, CheckCircle2, Clock, CreditCard, HandCoins, Home, Info, Store, Zap } from "lucide-react"
 import { PriceBreakdown } from "@/components/price-breakdown"
 import { VerifiedMark } from "@/components/trust"
-import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, Skeleton, inputClass } from "@/components/ui"
+import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, Skeleton, inputClass, PageSkeleton } from "@/components/ui"
 import { getTemplate } from "@/lib/catalog"
 import { DEMO_PRO_ID } from "@/lib/data"
 import { CITIES, districtsOf } from "@/lib/geo"
@@ -31,7 +31,7 @@ const STEPS = ["Dịch vụ", "Thời gian", "Xác nhận"]
 
 export default function BookPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<PageSkeleton />}>
       <BookGate />
     </Suspense>
   )
@@ -83,9 +83,9 @@ function BookingFlow({ proId }: { proId: string }) {
   const [variantId, setVariantId] = React.useState(initialVariant)
   const [date, setDate] = React.useState(addDays(todayISO(), 1))
   const [time, setTime] = React.useState<string | null>(null)
-  const [address, setAddress] = React.useState<CustomerAddress>(state.customerAddress)
+  const [address, setAddress] = React.useState<CustomerAddress>(state.customerAddress ?? { city: pro.city, district: pro.district, detail: "" })
   const [note, setNote] = React.useState("")
-  const [payment, setPayment] = React.useState<PaymentMethod>("online")
+  const [payment, setPayment] = React.useState<PaymentMethod>("cash")
   const [error, setError] = React.useState<string | null>(null)
   const [doneId, setDoneId] = React.useState<string | null>(null)
 
@@ -392,17 +392,18 @@ function BookingFlow({ proId }: { proId: string }) {
             <div className="grid gap-2 sm:grid-cols-2">
               {(
                 [
-                  ["online", "Thanh toán online toàn bộ", "MoMo, ZaloPay, thẻ. Hoàn 100% nếu chuyên viên không nhận.", CreditCard],
-                  ["cash", "Trả trực tiếp sau khi làm", "Tiền mặt hoặc chuyển khoản cho chuyên viên.", HandCoins],
+                  ["cash", "Trả trực tiếp sau khi làm", "Tiền mặt hoặc chuyển khoản cho chuyên viên.", HandCoins, true],
+                  ["online", "Thanh toán online (sắp có)", "Đang tích hợp cổng thanh toán.", CreditCard, false],
                 ] as const
-              ).map(([value, label, hint, Icon]) => (
+              ).map(([value, label, hint, Icon, available]) => (
                 <button
                   key={value}
                   type="button"
+                  disabled={!available}
                   aria-pressed={payment === value}
-                  onClick={() => setPayment(value)}
+                  onClick={() => available && setPayment(value)}
                   className={cn(
-                    "flex gap-2.5 rounded-xl border p-3 text-left",
+                    "flex gap-2.5 rounded-xl border p-3 text-left disabled:opacity-50",
                     payment === value ? "border-rose bg-blush" : "border-line bg-surface",
                   )}
                 >
@@ -423,7 +424,7 @@ function BookingFlow({ proId }: { proId: string }) {
             <span>
               Không cần đặt cọc. {pro.name} sẽ gọi điện xác nhận trước khi nhận job. Huỷ miễn phí trước {POLICY.freeCancelHours} giờ
               {payment === "online" ? "; tiền online do dep360 giữ và chỉ chuyển cho chuyên viên sau khi hoàn thành" : ""}.{" "}
-              <Link href="/me/policy" className="text-rose underline underline-offset-2">
+              <Link href="/chinh-sach" className="text-rose underline underline-offset-2">
                 Chính sách phí
               </Link>
             </span>
@@ -451,7 +452,7 @@ function BookingFlow({ proId }: { proId: string }) {
             disabled={!canNext || isOwnProfile || paused}
             onClick={() => (step < 3 ? setStep((s) => s + 1) : submit())}
           >
-            {step < 3 ? "Tiếp tục" : !state.session ? "Đăng nhập để đặt lịch" : payment === "online" ? "Thanh toán & gửi yêu cầu" : "Gửi yêu cầu đặt lịch"}
+            {step < 3 ? "Tiếp tục" : !state.session ? "Đăng nhập để đặt lịch" : "Gửi yêu cầu đặt lịch"}
           </Button>
         </div>
       </BottomBar>

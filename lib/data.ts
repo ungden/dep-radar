@@ -1,4 +1,4 @@
-import type { Pro, ProService, Review, Work } from "./types"
+import type { Pro, ProService, RatingSummary, Review, Work } from "./types"
 
 export { CATEGORIES, categoryLabel } from "./catalog"
 export { CITIES } from "./geo"
@@ -6,11 +6,52 @@ export { CITIES } from "./geo"
 const img = (name: string) => `/images/works/${name}.webp`
 const avatar = (id: string) => `/images/pros/${id}.webp`
 
-export const PROS: Pro[] = [
+const r = (
+  id: string,
+  proId: string,
+  author: string,
+  rating: number,
+  tags: string[],
+  text: string,
+  date: string,
+  serviceName: string,
+  extra: Partial<Review> = {},
+): Review => ({
+  id,
+  proId,
+  author,
+  rating,
+  tags,
+  text,
+  date,
+  serviceName,
+  ...extra,
+})
+
+export const REVIEWS: Review[] = [
+  r("r1", "linh-pham", "Ngọc Hân", 5, ["Tay nghề tốt", "Bền đẹp"], "Làm kỹ, form móng đẹp, đến đúng giờ. Giữ được hơn 3 tuần không bong.", "2026-09-02", "Nail thiết kế · Đính đá / charm", { photo: img("nail-milky-1"), reply: "Cảm ơn Hân nhiều, hẹn gặp lại lần sau nha!" }),
+  r("r2", "linh-pham", "Thảo Vy", 5, ["Dụng cụ sạch sẽ", "Tư vấn kỹ"], "Tư vấn màu rất có tâm, dụng cụ hấp tiệt trùng trước mặt mình luôn.", "2026-08-21", "Sơn gel trơn · Tay"),
+  r("r3", "linh-pham", "Minh Châu", 4, ["Tay nghề tốt"], "Đẹp, nhưng đến trễ 15 phút vì kẹt xe, có nhắn báo trước.", "2026-08-10", "Nối móng · Đắp gel", { reply: "Xin lỗi Châu vì hôm đó mưa kẹt xe, lần sau mình sẽ đi sớm hơn ạ." }),
+  r("r4", "thu-anh", "Lan Phương", 5, ["Bền đẹp", "Nhẹ nhàng"], "Makeup trong veo, chụp ảnh lên rất xinh, bền cả tối.", "2026-09-05", "Makeup dự tiệc · Makeup", { photo: img("makeup-party-1") }),
+  r("r5", "thu-anh", "Bảo Ngọc", 5, ["Tư vấn kỹ"], "Chị rất nhẹ nhàng, hỏi kỹ về da trước khi làm.", "2026-08-28", "Makeup chụp ảnh / kỷ yếu · 1 người"),
+  r("r6", "thu-anh", "Hải Yến", 4, ["Tay nghề tốt"], "Layout đẹp, hơi lâu hơn dự kiến một chút.", "2026-08-12", "Makeup cô dâu · 1 lễ (ăn hỏi hoặc cưới)"),
+  r("r7", "mai-tran", "Khánh Linh", 5, ["Dụng cụ sạch sẽ", "Nhẹ nhàng"], "Da dịu hẳn sau 2 buổi, không bị đỏ như lúc đi spa.", "2026-09-01", "Phục hồi da nhạy cảm · 75 phút", { photo: img("skin-glow"), reply: "Nhớ bôi kem chống nắng đều nha Linh!" }),
+  r("r8", "mai-tran", "Tuấn Anh", 5, ["Tay nghề tốt", "Đúng giờ"], "Lấy mụn nhẹ tay, không thâm, dụng cụ bóc tem trước mặt.", "2026-08-19", "Lấy nhân mụn chuẩn y khoa · 60 phút"),
+  r("r9", "quynh-vu", "Hồng Nhung", 5, ["Bền đẹp"], "Tóc giữ nếp tới cuối tiệc cưới.", "2026-08-17", "Tạo kiểu tóc sự kiện · Búi / tết cầu kỳ", { photo: img("hair-bun-1") }),
+  r("r10", "quynh-vu", "Mỹ Duyên", 4, ["Giá hợp lý"], "Uốn đẹp nhưng lọn hơi nhanh xẹp.", "2026-08-02", "Tạo kiểu tóc sự kiện · Uốn / duỗi tạo kiểu"),
+  r("r11", "ha-my", "Phương Anh", 5, ["Nhẹ nhàng", "Bền đẹp"], "Mi tự nhiên, không cộm, không cay mắt.", "2026-09-08", "Nối mi classic · Full set", { photo: img("lash-1") }),
+  r("r12", "ha-my", "Thu Hà", 5, ["Đúng giờ"], "Dáng mày hợp mặt, làm nhanh.", "2026-08-25", "Tạo dáng & tỉa mày · Tạo dáng"),
+  r("r13", "ngoc-bao", "Diệu Linh", 5, ["Giá hợp lý", "Nhẹ nhàng"], "Nhóm mình 3 người làm nhanh gọn, bạn rất dễ thương.", "2026-08-30", "Makeup dự tiệc · Makeup"),
+  r("r14", "dieu-huong", "Quốc Bảo", 5, ["Tay nghề tốt", "Đúng giờ"], "Bấm huyệt đúng chỗ đau, mang theo cả giường gấp, rất chuyên nghiệp.", "2026-09-06", "Massage cổ vai gáy · 90 phút"),
+  r("r15", "dieu-huong", "Thanh Tâm", 5, ["Nhẹ nhàng", "Tư vấn kỹ"], "Massage bầu tháng thứ 7, chị rất cẩn thận, hỏi kỹ tình trạng trước.", "2026-08-22", "Massage bầu · 60 phút", { reply: "Chúc mẹ bầu mẹ tròn con vuông nha!" }),
+]
+
+const PRO_PROFILES: Omit<Pro, "rating">[] = [
   {
     id: "linh-pham",
     name: "Linh Phạm",
     title: "Chuyên viên nail",
+    phone: "0968 112 233",
     avatar: avatar("linh-pham"),
     tone: "#E9C9C6",
     categories: ["nail"],
@@ -26,12 +67,12 @@ export const PROS: Pro[] = [
     highlights: ["Gel chính hãng có tem", "Tiệt trùng dụng cụ bằng nồi hấp", "Bảo hành bong tróc 5 ngày"],
     identity: "none",
     stats: { completedJobs: 486, responseMinutes: 10 },
-    rating: { average: 4.86, count: 312 },
   },
   {
     id: "thu-anh",
     name: "Thu Anh",
     title: "Chuyên viên makeup",
+    phone: "0912 445 566",
     avatar: avatar("thu-anh"),
     tone: "#E6D2C3",
     categories: ["makeup"],
@@ -46,12 +87,12 @@ export const PROS: Pro[] = [
     highlights: ["Kit mỹ phẩm cho da nhạy cảm", "Nhận makeup nhóm", "Có buổi thử cho cô dâu"],
     identity: "verified",
     stats: { completedJobs: 352, responseMinutes: 30 },
-    rating: { average: 4.81, count: 241 },
   },
   {
     id: "mai-tran",
     name: "Mai Trần",
     title: "Chuyên viên chăm sóc da",
+    phone: "0903 778 899",
     avatar: avatar("mai-tran"),
     tone: "#DCD5C8",
     categories: ["skincare"],
@@ -67,12 +108,12 @@ export const PROS: Pro[] = [
     highlights: ["Chứng chỉ Điều dưỡng da liễu", "Dụng cụ lấy mụn dùng một lần", "Soi da miễn phí"],
     identity: "verified",
     stats: { completedJobs: 268, responseMinutes: 45 },
-    rating: { average: 4.9, count: 188 },
   },
   {
     id: "quynh-vu",
     name: "Quỳnh Vũ",
     title: "Stylist tóc",
+    phone: "0938 221 447",
     avatar: avatar("quynh-vu"),
     tone: "#D9CBBF",
     categories: ["hair"],
@@ -88,12 +129,12 @@ export const PROS: Pro[] = [
     highlights: ["Mang máy uốn, máy sấy riêng", "Nhận làm tóc nhóm"],
     identity: "verified",
     stats: { completedJobs: 190, responseMinutes: 60 },
-    rating: { average: 4.7, count: 96 },
   },
   {
     id: "ha-my",
     name: "Hà My",
     title: "Chuyên viên mi & mày",
+    phone: "0965 334 112",
     avatar: avatar("ha-my"),
     tone: "#EAD6D0",
     categories: ["lash-brow"],
@@ -109,12 +150,12 @@ export const PROS: Pro[] = [
     highlights: ["Keo ít kích ứng, test trước", "Bảo hành rụng mi 3 ngày"],
     identity: "verified",
     stats: { completedJobs: 410, responseMinutes: 15 },
-    rating: { average: 4.83, count: 276 },
   },
   {
     id: "ngoc-bao",
     name: "Ngọc Bảo",
     title: "Chuyên viên nail & makeup",
+    phone: "0906 553 224",
     avatar: avatar("ngoc-bao"),
     tone: "#E3CFC9",
     categories: ["nail", "makeup"],
@@ -129,12 +170,12 @@ export const PROS: Pro[] = [
     highlights: ["Nhận nhóm bạn, phù dâu"],
     identity: "pending",
     stats: { completedJobs: 7, responseMinutes: 90 },
-    rating: { average: 4.8, count: 5 },
   },
   {
     id: "dieu-huong",
     name: "Diệu Hương",
     title: "Kỹ thuật viên massage",
+    phone: "0917 662 335",
     avatar: avatar("dieu-huong"),
     tone: "#DDD3C6",
     categories: ["massage"],
@@ -149,9 +190,17 @@ export const PROS: Pro[] = [
     highlights: ["Mang giường massage gấp", "Có chứng chỉ massage bầu", "Khăn dùng riêng từng khách"],
     identity: "verified",
     stats: { completedJobs: 128, responseMinutes: 25 },
-    rating: { average: 4.78, count: 84 },
   },
 ]
+
+/** Ratings are derived from the reviews we actually have, never hand-written. */
+function ratingFromReviews(proId: string): RatingSummary {
+  const rows = REVIEWS.filter((x) => x.proId === proId)
+  if (!rows.length) return { average: 0, count: 0 }
+  return { average: rows.reduce((sum, x) => sum + x.rating, 0) / rows.length, count: rows.length }
+}
+
+export const PROS: Pro[] = PRO_PROFILES.map((p) => ({ ...p, rating: ratingFromReviews(p.id) }))
 
 const ps = (proId: string, templateId: string, prices: Record<string, number>): ProService => ({
   id: `${proId}:${templateId}`,
@@ -216,46 +265,6 @@ export const WORKS: Work[] = [
   { id: "w-foot", proId: "dieu-huong", templateId: "massage-foot", category: "massage", title: "Massage chân tại nhà", description: "Ngâm chân thảo mộc, bấm huyệt bàn chân sau ngày dài.", images: [img("massage-foot")], likes: 132, comments: 9 },
   { id: "w-neck", proId: "dieu-huong", templateId: "massage-neck", category: "massage", title: "Cổ vai gáy dân văn phòng", description: "Chườm nóng và massage giảm căng cứng cổ vai.", images: [img("massage-neck")], likes: 118, comments: 6 },
   { id: "w-cupping", proId: "dieu-huong", templateId: "massage-oil-cupping", category: "massage", title: "Massage dầu + giác hơi", description: "Massage tinh dầu kết hợp giác hơi lưng.", images: [img("massage-cupping")], likes: 97, comments: 4 },
-]
-
-const r = (
-  id: string,
-  proId: string,
-  author: string,
-  rating: number,
-  tags: string[],
-  text: string,
-  date: string,
-  serviceName: string,
-  extra: Partial<Review> = {},
-): Review => ({
-  id,
-  proId,
-  author,
-  rating,
-  tags,
-  text,
-  date,
-  serviceName,
-  ...extra,
-})
-
-export const REVIEWS: Review[] = [
-  r("r1", "linh-pham", "Ngọc Hân", 5, ["Tay nghề tốt", "Bền đẹp"], "Làm kỹ, form móng đẹp, đến đúng giờ. Giữ được hơn 3 tuần không bong.", "2026-09-02", "Nail thiết kế · Đính đá / charm", { photo: img("nail-milky-1"), reply: "Cảm ơn Hân nhiều, hẹn gặp lại lần sau nha!" }),
-  r("r2", "linh-pham", "Thảo Vy", 5, ["Dụng cụ sạch sẽ", "Tư vấn kỹ"], "Tư vấn màu rất có tâm, dụng cụ hấp tiệt trùng trước mặt mình luôn.", "2026-08-21", "Sơn gel trơn · Tay"),
-  r("r3", "linh-pham", "Minh Châu", 4, ["Tay nghề tốt"], "Đẹp, nhưng đến trễ 15 phút vì kẹt xe, có nhắn báo trước.", "2026-08-10", "Nối móng · Đắp gel", { reply: "Xin lỗi Châu vì hôm đó mưa kẹt xe, lần sau mình sẽ đi sớm hơn ạ." }),
-  r("r4", "thu-anh", "Lan Phương", 5, ["Bền đẹp", "Nhẹ nhàng"], "Makeup trong veo, chụp ảnh lên rất xinh, bền cả tối.", "2026-09-05", "Makeup dự tiệc · Makeup", { photo: img("makeup-party-1") }),
-  r("r5", "thu-anh", "Bảo Ngọc", 5, ["Tư vấn kỹ"], "Chị rất nhẹ nhàng, hỏi kỹ về da trước khi làm.", "2026-08-28", "Makeup chụp ảnh / kỷ yếu · 1 người"),
-  r("r6", "thu-anh", "Hải Yến", 4, ["Tay nghề tốt"], "Layout đẹp, hơi lâu hơn dự kiến một chút.", "2026-08-12", "Makeup cô dâu · 1 lễ (ăn hỏi hoặc cưới)"),
-  r("r7", "mai-tran", "Khánh Linh", 5, ["Dụng cụ sạch sẽ", "Nhẹ nhàng"], "Da dịu hẳn sau 2 buổi, không bị đỏ như lúc đi spa.", "2026-09-01", "Phục hồi da nhạy cảm · 75 phút", { photo: img("skin-glow"), reply: "Nhớ bôi kem chống nắng đều nha Linh!" }),
-  r("r8", "mai-tran", "Tuấn Anh", 5, ["Tay nghề tốt", "Đúng giờ"], "Lấy mụn nhẹ tay, không thâm, dụng cụ bóc tem trước mặt.", "2026-08-19", "Lấy nhân mụn chuẩn y khoa · 60 phút"),
-  r("r9", "quynh-vu", "Hồng Nhung", 5, ["Bền đẹp"], "Tóc giữ nếp tới cuối tiệc cưới.", "2026-08-17", "Tạo kiểu tóc sự kiện · Búi / tết cầu kỳ", { photo: img("hair-bun-1") }),
-  r("r10", "quynh-vu", "Mỹ Duyên", 4, ["Giá hợp lý"], "Uốn đẹp nhưng lọn hơi nhanh xẹp.", "2026-08-02", "Tạo kiểu tóc sự kiện · Uốn / duỗi tạo kiểu"),
-  r("r11", "ha-my", "Phương Anh", 5, ["Nhẹ nhàng", "Bền đẹp"], "Mi tự nhiên, không cộm, không cay mắt.", "2026-09-08", "Nối mi classic · Full set", { photo: img("lash-1") }),
-  r("r12", "ha-my", "Thu Hà", 5, ["Đúng giờ"], "Dáng mày hợp mặt, làm nhanh.", "2026-08-25", "Tạo dáng & tỉa mày · Tạo dáng"),
-  r("r13", "ngoc-bao", "Diệu Linh", 5, ["Giá hợp lý", "Nhẹ nhàng"], "Nhóm mình 3 người làm nhanh gọn, bạn rất dễ thương.", "2026-08-30", "Makeup dự tiệc · Makeup"),
-  r("r14", "dieu-huong", "Quốc Bảo", 5, ["Tay nghề tốt", "Đúng giờ"], "Bấm huyệt đúng chỗ đau, mang theo cả giường gấp, rất chuyên nghiệp.", "2026-09-06", "Massage cổ vai gáy · 90 phút"),
-  r("r15", "dieu-huong", "Thanh Tâm", 5, ["Nhẹ nhàng", "Tư vấn kỹ"], "Massage bầu tháng thứ 7, chị rất cẩn thận, hỏi kỹ tình trạng trước.", "2026-08-22", "Massage bầu · 60 phút", { reply: "Chúc mẹ bầu mẹ tròn con vuông nha!" }),
 ]
 
 export const getPro = (id: string) => PROS.find((p) => p.id === id)

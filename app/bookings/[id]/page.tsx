@@ -4,7 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { CalendarDays, Home, Info, MessageSquareText, Phone, Store } from "lucide-react"
+import { CalendarDays, Home, Info, Phone, Store } from "lucide-react"
 import { bookingImage } from "@/components/booking-card"
 import { PriceBreakdown } from "@/components/price-breakdown"
 import { RequireSession } from "@/components/require-session"
@@ -153,8 +153,8 @@ function BookingDetail() {
                 <Button variant="outline" size="lg" className="border-line text-ink" onClick={() => setConfirmCancel(true)}>
                   Huỷ lịch
                 </Button>
-                <a href="tel:0968000111" className={buttonClass("primary", "lg")}>
-                  <Phone className="size-4" /> Liên hệ
+                <a href={`tel:${pro.phone.replace(/\s/g, "")}`} className={buttonClass("primary", "lg")}>
+                  <Phone className="size-4" /> Gọi chuyên viên
                 </a>
               </div>
             )
@@ -175,7 +175,7 @@ function BookingDetail() {
           {isPro && booking.status === "confirmed" && (
             <div className="grid grid-cols-2 gap-2">
               <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "lg")}>
-                <MessageSquareText className="size-4" /> Gọi khách
+                <Phone className="size-4" /> Gọi khách
               </a>
               <Button size="lg" onClick={() => actions.setBookingStatus(booking.id, "completed")}>
                 Đánh dấu hoàn thành

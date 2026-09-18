@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
+import { PageSkeleton } from "@/components/ui"
 import { PROS, getPro } from "@/lib/data"
 import { ProProfile } from "./pro-profile"
 
@@ -21,7 +22,7 @@ export default async function ProPage({ params }: { params: Promise<{ id: string
   const pro = getPro((await params).id)
   if (!pro) notFound()
   return (
-    <Suspense>
+    <Suspense fallback={<PageSkeleton />}>
       <ProProfile proId={pro.id} />
     </Suspense>
   )

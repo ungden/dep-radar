@@ -34,11 +34,11 @@ function NewRequestForm() {
   const [description, setDescription] = React.useState("")
   const [date, setDate] = React.useState(addDays(todayISO(), 2))
   const [time, setTime] = React.useState("16:00")
-  const [city, setCity] = React.useState(customerAddress.city)
-  const [district, setDistrict] = React.useState(customerAddress.district)
-  const [detail, setDetail] = React.useState(customerAddress.detail)
+  const [city, setCity] = React.useState(customerAddress?.city ?? CITIES[0])
+  const [district, setDistrict] = React.useState(customerAddress?.district ?? districtsOf(CITIES[0])[0])
+  const [detail, setDetail] = React.useState(customerAddress?.detail ?? "")
   const [atHomePref, setAtHome] = React.useState(true)
-  const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>("online")
+  const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>("cash")
 
   const templates = templatesByCategory(category)
   const tpl = templates.find((t) => t.id === templateId) ?? templates[0]
@@ -230,23 +230,24 @@ function NewRequestForm() {
       <fieldset>
         <legend className="mb-2 text-[13px] font-medium text-ink-soft">Thanh toán</legend>
         <div className="grid grid-cols-2 gap-2">
-          {(["online", "cash"] as const).map((m) => (
+          {(["cash", "online"] as const).map((m) => (
             <button
               key={m}
               type="button"
+              disabled={m === "online"}
               aria-pressed={paymentMethod === m}
-              onClick={() => setPaymentMethod(m)}
+              onClick={() => m === "cash" && setPaymentMethod(m)}
               className={cn(
-                "h-11 rounded-xl border text-sm",
+                "h-11 rounded-xl border text-sm disabled:opacity-50",
                 paymentMethod === m ? "border-rose bg-blush font-medium text-rose-dark" : "border-line bg-surface text-ink-soft",
               )}
             >
-              {PAYMENT_LABEL[m]}
+              {m === "online" ? "Thanh toán online (sắp có)" : PAYMENT_LABEL[m]}
             </button>
           ))}
         </div>
         <p className="mt-2 text-xs text-muted">
-          {paymentMethod === "online" ? "Chỉ thanh toán khi bạn chọn báo giá. Không cần đặt cọc." : "Trả tiền mặt hoặc chuyển khoản cho chuyên viên sau khi làm."}
+          Trả tiền mặt hoặc chuyển khoản cho chuyên viên sau khi làm. Không cần đặt cọc.
         </p>
       </fieldset>
 

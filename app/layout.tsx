@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google"
 import "./globals.css"
 
 import { AppShell } from "@/components/layout/app-shell"
+import { SITE_URL } from "@/lib/env"
 import { StoreProvider } from "@/lib/store"
 
 const body = Be_Vietnam_Pro({
@@ -11,16 +12,16 @@ const body = Be_Vietnam_Pro({
   variable: "--font-body",
 })
 
+// Only the extrabold wordmark weight is used, so nothing else is downloaded.
 const serif = Playfair_Display({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "800"],
+  weight: ["800"],
   variable: "--font-serif",
 })
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: "/" },
   applicationName: "dep360",
   title: {
     default: "dep360 | Đặt lịch làm đẹp với chuyên viên freelancer",
@@ -37,6 +38,7 @@ export const metadata: Metadata = {
     apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180" }],
   },
   appleWebApp: { title: "dep360", capable: true, statusBarStyle: "default" },
+  twitter: { card: "summary_large_image" },
   openGraph: {
     type: "website",
     locale: "vi_VN",
@@ -57,6 +59,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi" className={`${body.variable} ${serif.variable}`}>
       <body className="min-h-dvh">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:shadow"
+        >
+          Bỏ qua, tới nội dung chính
+        </a>
         <StoreProvider>
           <AppShell>{children}</AppShell>
         </StoreProvider>
