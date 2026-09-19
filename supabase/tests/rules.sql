@@ -220,5 +220,45 @@ begin
   delete from public.pros where id = customer;
 
   perform set_config('request.jwt.claim.sub', '', true);
+
+  ---------------------------------------------------------------------------
+  -- Postgres grants EXECUTE on every new function to PUBLIC. That has slipped
+  -- through twice, so this asserts the list rather than trusting the habit: if
+  -- a new function is reachable without signing in and is not one of the
+  -- read-only pricing helpers, this fails.
+  raise notice 'anonymous callers reach only the read-only helpers';
+  select string_agg(p.proname, ', ' order by p.proname) into msg
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public'
+    and has_function_privilege('anon', p.oid, 'EXECUTE')
+    and p.proname <> all (array[
+      'app_timezone', 'travel_distance_km', 'travel_fee', 'commission_for', 'is_urgent', 'build_quote',
+      'service_duration_min', 'listed_price', 'within_working_hours', 'availability_problem', 'free_slots',
+      'slugify', 'is_admin', 'is_pro'
+    ]);
+  assert msg is null, format('anon can execute: %s', msg);
+
+  raise notice 'signed-in callers reach only their own actions';
+  select string_agg(p.proname, ', ' order by p.proname) into msg
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public'
+    and has_function_privilege('authenticated', p.oid, 'EXECUTE')
+    and p.proname <> all (array[
+      -- read-only helpers
+      'app_timezone', 'travel_distance_km', 'travel_fee', 'commission_for', 'is_urgent', 'build_quote',
+      'service_duration_min', 'listed_price', 'within_working_hours', 'availability_problem', 'free_slots',
+      'slugify', 'is_admin', 'is_pro',
+      -- the state machine and the things a person does to their own account
+      'create_booking', 'confirm_booking', 'decline_booking', 'start_booking', 'complete_booking',
+      'mark_no_show', 'cancel_booking', 'request_reschedule', 'respond_reschedule', 'post_job',
+      'send_offer', 'accept_offer', 'withdraw_offer', 'write_review', 'reply_review', 'open_thread',
+      'delete_my_account',
+      -- admin decisions, which check is_admin() themselves
+      'decide_identity_check', 'set_pro_suspended', 'set_review_hidden', 'resolve_report'
+    ]);
+  assert msg is null, format('authenticated can execute: %s', msg);
+
   raise notice 'ALL DATABASE RULES PASS';
 end $$;
