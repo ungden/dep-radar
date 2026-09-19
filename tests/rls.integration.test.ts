@@ -68,6 +68,32 @@ describe.skipIf(!configured)("row level security over the API", () => {
     expect(reviews.data?.length).toBeGreaterThan(0)
   })
 
+  it("shows a visitor the whole review, not just the star count", async () => {
+    // Twice now a public thing has been read through a private table and quietly
+    // come back empty: the freelancer's name through `accounts`, and the service
+    // on a review through `bookings`. A rating with no reviews under it is worse
+    // than no rating, so assert the text is actually there.
+    const { data, error } = await client()
+      .from("reviews")
+      .select("booking_id, author_name, service_label, rating, body")
+      .limit(5)
+    expect(error, error?.message).toBeNull()
+    expect(data?.length, "no reviews are visible to an anonymous visitor").toBeGreaterThan(0)
+    for (const review of data ?? []) {
+      expect(review.body?.length, "review body").toBeGreaterThan(0)
+      expect(review.author_name?.length, "review author").toBeGreaterThan(0)
+      expect(review.service_label?.length, "which service the review is about").toBeGreaterThan(0)
+    }
+  })
+
+  it("shows a visitor a freelancer's name and photo", async () => {
+    const { data } = await client().from("pros").select("slug, display_name, avatar_path").eq("published", true)
+    expect(data?.length).toBeGreaterThan(0)
+    for (const pro of data ?? []) {
+      expect(pro.display_name?.length, `${pro.slug} has no public name`).toBeGreaterThan(0)
+    }
+  })
+
   it("never hands a phone number or an address to an anonymous visitor", async () => {
     const anon = client()
     const accounts = await anon.from("accounts").select("phone")

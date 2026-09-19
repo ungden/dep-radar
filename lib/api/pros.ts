@@ -78,10 +78,9 @@ export async function listReviews(proId: string): Promise<ReviewItem[]> {
   const supabase = await supabaseServer()
   const { data, error } = await supabase
     .from("reviews")
-    .select(`
-      booking_id, pro_id, author_name, rating, tags, body, photo_paths, reply, created_at,
-      bookings!reviews_booking_id_fkey!inner (template_id, variant_id)
-    `)
+    // No join: `bookings` is private, so joining it would hide every review
+    // from anyone who is not a party to it.
+    .select("booking_id, pro_id, author_name, service_label, rating, tags, body, photo_paths, reply, created_at")
     .eq("pro_id", proId)
     .is("hidden_at", null)
     .order("created_at", { ascending: false })

@@ -153,10 +153,9 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       .order("sort_order"),
     supabase
       .from("reviews")
-      .select(`
-        booking_id, pro_id, author_name, rating, tags, body, photo_paths, reply, created_at,
-        bookings!reviews_booking_id_fkey!inner (template_id, variant_id)
-      `)
+      // No join: `bookings` is private, and a review has to be readable by
+      // anyone looking at the profile.
+      .select("booking_id, pro_id, author_name, service_label, rating, tags, body, photo_paths, reply, created_at")
       .is("hidden_at", null)
       .order("created_at", { ascending: false }),
     supabase.from("pro_service_prices").select("pro_id, template_id, variant_id, price"),
@@ -185,9 +184,6 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
   })
 
   const reviews: Review[] = rowsOf("reviews", reviewsRes).map((row: Row) => {
-    const booking = first(row.bookings)
-    const template = getTemplate(booking.template_id)
-    const variant = getVariant(booking.template_id, booking.variant_id)
     return {
       id: row.booking_id,
       proId: slugOf.get(row.pro_id) ?? row.pro_id,
@@ -197,7 +193,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       tags: row.tags ?? [],
       text: row.body,
       date: localDate(row.created_at),
-      serviceName: [template?.name, variant?.label].filter(Boolean).join(" · "),
+      serviceName: row.service_label ?? "",
       photo: (row.photo_paths ?? [])[0],
       reply: row.reply ?? undefined,
     }

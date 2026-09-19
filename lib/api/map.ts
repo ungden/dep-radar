@@ -73,9 +73,6 @@ export function toWorkItem(row: Row): WorkItem {
 }
 
 export function toReviewItem(row: Row): ReviewItem {
-  const booking = joined(row.bookings)
-  const template = getTemplate(str(booking.template_id))
-  const variant = getVariant(str(booking.template_id), str(booking.variant_id))
   return {
     bookingId: str(row.booking_id),
     proId: str(row.pro_id),
@@ -86,7 +83,7 @@ export function toReviewItem(row: Row): ReviewItem {
     photos: arr(row.photo_paths),
     reply: strOrNull(row.reply),
     createdAt: str(row.created_at),
-    serviceName: [template?.name, variant?.label].filter(Boolean).join(" · "),
+    serviceName: str(row.service_label),
   }
 }
 
