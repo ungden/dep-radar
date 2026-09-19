@@ -211,9 +211,7 @@ export async function deleteAccount(): Promise<ActionResult> {
     return { ok: false, error: "Bạn còn lịch hẹn chưa hoàn tất. Hoàn tất hoặc huỷ trước khi xoá tài khoản." }
   }
 
-  // Cast: the generated types are regenerated from the local stack, which does
-  // not know this function until the migration has been applied there.
-  const { error } = await supabase.rpc("delete_my_account" as never)
+  const { error } = await supabase.rpc("delete_my_account")
   if (error) return { ok: false, error: "Không xoá được tài khoản. Liên hệ hỗ trợ giúp bạn." }
   await supabase.auth.signOut()
   revalidatePath("/", "layout")

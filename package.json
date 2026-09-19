@@ -15,7 +15,8 @@
     "db:reset": "supabase db reset",
     "demo:sql": "tsx scripts/gen-demo-sql.ts",
     "db:test": "supabase db reset && docker exec -i supabase_db_dep360 psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f - < supabase/tests/rules.sql",
-    "test:db": "scripts/test-db.sh"
+    "test:db": "scripts/test-db.sh",
+    "types": "supabase gen types typescript --linked --schema public > lib/supabase/database.types.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

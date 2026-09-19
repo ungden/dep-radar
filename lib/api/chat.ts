@@ -41,9 +41,10 @@ export async function listThreads(): Promise<ThreadSummary[]> {
 
   const { data, error } = await supabase
     .from("threads")
+    // The customer's name is on the thread, not joined from `accounts`: that
+    // row carries their phone number and a thread does not entitle anyone to it.
     .select(`
-      id, customer_id, pro_id, booking_id, last_message_at,
-      customer:accounts!threads_customer_id_fkey (full_name, avatar_path),
+      id, customer_id, pro_id, booking_id, customer_name, last_message_at,
       pro:pros!threads_pro_id_fkey (slug, display_name, avatar_path),
       messages (id, sender_id, body, image_paths, read_at, created_at)
     `)
@@ -56,7 +57,6 @@ export async function listThreads(): Promise<ThreadSummary[]> {
   return (data ?? [])
     .map((t) => {
       const iAmPro = t.pro_id === me
-      const customer = one(t.customer)
       const pro = one(t.pro)
       const messages = [...((t.messages ?? []) as Record<string, unknown>[])].sort((a, b) =>
         String(a.created_at).localeCompare(String(b.created_at)),
@@ -64,8 +64,8 @@ export async function listThreads(): Promise<ThreadSummary[]> {
       const last = messages.at(-1)
       return {
         id: t.id,
-        otherName: String((iAmPro ? customer.full_name : pro.display_name) ?? "Người dùng"),
-        otherAvatar: (iAmPro ? customer.avatar_path : pro.avatar_path) as string | null,
+        otherName: String((iAmPro ? t.customer_name : pro.display_name) ?? "Người dùng"),
+        otherAvatar: (iAmPro ? null : pro.avatar_path) as string | null,
         proSlug: String(pro.slug ?? ""),
         bookingId: t.booking_id,
         lastMessage: last
@@ -110,8 +110,7 @@ export async function threadHeader(threadId: string): Promise<{ name: string; pr
   const { data } = await supabase
     .from("threads")
     .select(`
-      pro_id, booking_id,
-      customer:accounts!threads_customer_id_fkey (full_name),
+      pro_id, booking_id, customer_name,
       pro:pros!threads_pro_id_fkey (slug, display_name)
     `)
     .eq("id", threadId)
@@ -120,7 +119,7 @@ export async function threadHeader(threadId: string): Promise<{ name: string; pr
   const iAmPro = data.pro_id === auth.user.id
   const pro = one(data.pro)
   return {
-    name: String((iAmPro ? one(data.customer).full_name : pro.display_name) ?? "Người dùng"),
+    name: String((iAmPro ? data.customer_name : pro.display_name) ?? "Người dùng"),
     proSlug: String(pro.slug ?? ""),
     bookingId: data.booking_id,
   }
@@ -136,12 +135,7 @@ export async function openThread(proId: string, bookingId?: string | null): Prom
     if (!data) return { ok: false, error: "Không tìm thấy chuyên viên." }
     pro = data.id
   }
-  // Cast: the generated types come from the local stack, which does not know
-  // this function until its migration has been applied there.
-  const { data, error } = await supabase.rpc("open_thread" as never, {
-    p_pro: pro,
-    p_booking: bookingId ?? undefined,
-  } as never)
+  const { data, error } = await supabase.rpc("open_thread", { p_pro: pro, p_booking: bookingId ?? undefined })
   if (error) return { ok: false, error: error.message }
   return { ok: true, data: data as unknown as string }
 }
