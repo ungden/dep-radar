@@ -5,7 +5,7 @@ import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
 
 /**
  * Identity verification with a vision AI (Gemini).
- * Input: multipart form with `front`, `back`, `selfie` (JPEG) and `profileName`.
+ * Input: multipart form with `front`, `back`, `selfie` (JPEG).
  * The AI reads the CCCD, checks the selfie and compares the two faces.
  *
  * The verdict is the server's, not the browser's: with a backend configured this
@@ -52,7 +52,7 @@ const MAX_IMAGE_BYTES = 2 * 1024 * 1024
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash"
 const MAX_CHECKS_PER_DAY = 3
 
-const PROMPT = `Bạn là bộ phận xác minh danh tính của dep360, nền tảng đặt lịch làm đẹp tại Việt Nam.
+const PROMPT = `Bạn là bộ phận xác minh danh tính của 360dep, nền tảng đặt lịch làm đẹp tại Việt Nam.
 Người dùng là freelancer đã đồng ý xác minh danh tính. Bạn nhận 3 ảnh theo thứ tự:
 1) mặt trước Căn cước công dân (CCCD) Việt Nam, 2) mặt sau CCCD, 3) ảnh selfie của người đăng ký.
 
@@ -119,10 +119,9 @@ function nameMatches(profileName: string, cardName: string) {
 }
 
 /** One-way, salted: enough to notice the same card twice, useless if leaked. */
-function cardHash(cardNumber: string) {
+function cardHash(cardNumber: string, salt: string) {
   const digits = cardNumber.replace(/\D/g, "")
   if (digits.length < 9) return null
-  const salt = process.env.IDENTITY_HASH_SALT ?? "dep360"
   return createHash("sha256").update(`${salt}:${digits}`).digest("hex")
 }
 
@@ -156,7 +155,8 @@ async function callerPro() {
   if ((count ?? 0) >= MAX_CHECKS_PER_DAY) {
     return { error: `Bạn đã thử xác minh ${MAX_CHECKS_PER_DAY} lần trong 24 giờ. Vui lòng thử lại sau.`, status: 429 as const }
   }
-  return { proId: pro.id }
+  const { data: account } = await supabase.from("accounts").select("full_name").eq("id", auth.user.id).maybeSingle()
+  return { proId: pro.id, profileName: account?.full_name ?? "" }
 }
 
 /** Record the outcome and let the database own the resulting badge. */
@@ -167,9 +167,10 @@ async function record(input: {
   nameMatched: boolean | null
   reason?: string
   consentAt: string
+  salt: string
 }) {
   const admin = supabaseAdmin()
-  const hash = cardHash(input.verdict.card_number)
+  const hash = cardHash(input.verdict.card_number, input.salt)
 
   if (input.status === "verified" && hash) {
     const { data: clash } = await admin
@@ -185,7 +186,7 @@ async function record(input: {
     }
   }
 
-  await admin.from("identity_checks").insert({
+  const { error: checkError } = await admin.from("identity_checks").insert({
     pro_id: input.proId,
     status: input.status,
     model: MODEL,
@@ -198,8 +199,9 @@ async function record(input: {
     consent_at: input.consentAt,
     decided_at: input.status === "pending" ? null : new Date().toISOString(),
   })
+  if (checkError) throw new Error("Không ghi được lượt xác minh.")
 
-  await admin
+  const { error: proError } = await admin
     .from("pros")
     .update({
       identity_status: input.status,
@@ -209,6 +211,7 @@ async function record(input: {
         : {}),
     })
     .eq("id", input.proId)
+  if (proError) throw new Error("Không cập nhật được trạng thái xác minh.")
 
   return input.status
 }
@@ -218,20 +221,24 @@ export async function POST(request: Request) {
   if (!apiKey) {
     return NextResponse.json({ error: "Dịch vụ xác minh chưa được cấu hình (thiếu GEMINI_API_KEY)." }, { status: 503 })
   }
+  const salt = process.env.IDENTITY_HASH_SALT?.trim()
+  if (!salt) return NextResponse.json({ error: "Dịch vụ xác minh chưa được cấu hình an toàn." }, { status: 503 })
 
   if (wrongOrigin(request)) return NextResponse.json({ error: "Yêu cầu không hợp lệ." }, { status: 403 })
 
   // With a backend, the account is what gets rate limited, not the IP address.
   let proId: string | null = null
+  let profileName = ""
   if (backendEnabled) {
     const caller = await callerPro()
     if ("error" in caller) return NextResponse.json({ error: caller.error }, { status: caller.status })
     proId = caller.proId
+    profileName = caller.profileName
   } else if (rateLimited(request)) {
     return NextResponse.json({ error: "Bạn đã thử xác minh quá nhiều lần. Vui lòng thử lại sau 1 giờ." }, { status: 429 })
   }
 
-  let form: FormData
+  let form: Awaited<ReturnType<Request["formData"]>>
   try {
     form = await request.formData()
   } catch {
@@ -245,7 +252,6 @@ export async function POST(request: Request) {
   if (!front || !back || !selfie) {
     return NextResponse.json({ error: "Cần đủ 3 ảnh JPEG/PNG, mỗi ảnh tối đa 2MB." }, { status: 400 })
   }
-  const profileName = String(form.get("profileName") ?? "").slice(0, 80)
   const consentAt = new Date().toISOString()
 
   let verdict: AiVerdict
@@ -265,6 +271,12 @@ export async function POST(request: Request) {
     const text: string | undefined = json?.candidates?.[0]?.content?.parts?.[0]?.text
     if (!text) throw new Error("Empty response")
     verdict = JSON.parse(text) as AiVerdict
+    if (
+      typeof verdict.front_is_cccd !== "boolean" || typeof verdict.back_is_cccd !== "boolean" ||
+      typeof verdict.selfie_ok !== "boolean" || !["yes", "no", "uncertain"].includes(verdict.same_person) ||
+      typeof verdict.confidence !== "number" || verdict.confidence < 0 || verdict.confidence > 1 ||
+      typeof verdict.name_on_card !== "string" || typeof verdict.card_number !== "string" || !Array.isArray(verdict.issues)
+    ) throw new Error("invalid_response")
   } catch (err) {
     const message = err instanceof Error ? err.message : "unknown error"
     console.error("identity check failed:", message)
@@ -278,7 +290,7 @@ export async function POST(request: Request) {
   const hint = verdict.issues?.length ? ` ${verdict.issues.join(". ")}.` : ""
 
   const reject = async (reason: string) => {
-    if (proId) await record({ proId, status: "rejected", verdict, nameMatched: null, reason, consentAt })
+    if (proId) await record({ proId, status: "rejected", verdict, nameMatched: null, reason, consentAt, salt })
     return NextResponse.json({ status: "rejected", reason })
   }
 
@@ -290,23 +302,23 @@ export async function POST(request: Request) {
   if (verdict.same_person === "yes" && verdict.confidence >= 0.8) {
     const matched = profileName && verdict.name_on_card ? nameMatches(profileName, verdict.name_on_card) : null
     if (matched === false) {
-      const reason = `Khuôn mặt khớp, nhưng tên trên thẻ (${verdict.name_on_card}) khác tên hồ sơ. Đội ngũ dep360 sẽ kiểm tra thêm.`
-      if (proId) await record({ proId, status: "pending", verdict, nameMatched: false, reason, consentAt })
+      const reason = `Khuôn mặt khớp, nhưng tên trên thẻ (${verdict.name_on_card}) khác tên hồ sơ. Đội ngũ 360dep sẽ kiểm tra thêm.`
+      if (proId) await record({ proId, status: "pending", verdict, nameMatched: false, reason, consentAt, salt })
       return NextResponse.json({ status: "review", nameOnCard: verdict.name_on_card, reason })
     }
     const status = proId
-      ? await record({ proId, status: "verified", verdict, nameMatched: matched, consentAt })
+      ? await record({ proId, status: "verified", verdict, nameMatched: matched, consentAt, salt })
       : "verified"
     return status === "verified"
       ? NextResponse.json({ status: "verified", nameOnCard: verdict.name_on_card })
       : NextResponse.json({
           status: "review",
           nameOnCard: verdict.name_on_card,
-          reason: "Thẻ CCCD này đã dùng để xác minh một tài khoản khác. Đội ngũ dep360 sẽ kiểm tra thêm.",
+          reason: "Thẻ CCCD này đã dùng để xác minh một tài khoản khác. Đội ngũ 360dep sẽ kiểm tra thêm.",
         })
   }
 
-  const reason = `AI chưa đủ chắc chắn đây là cùng một người.${hint} Đội ngũ dep360 sẽ kiểm tra thêm, hoặc bạn chụp lại selfie rõ hơn.`
-  if (proId) await record({ proId, status: "pending", verdict, nameMatched: null, reason, consentAt })
+  const reason = `AI chưa đủ chắc chắn đây là cùng một người.${hint} Đội ngũ 360dep sẽ kiểm tra thêm, hoặc bạn chụp lại selfie rõ hơn.`
+  if (proId) await record({ proId, status: "pending", verdict, nameMatched: null, reason, consentAt, salt })
   return NextResponse.json({ status: "review", nameOnCard: verdict.name_on_card, reason })
 }

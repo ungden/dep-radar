@@ -6,7 +6,7 @@ import { formatPrice } from "@/lib/utils"
 
 export const metadata: Metadata = {
   title: "Chính sách phí & đặt lịch",
-  description: "Cách dep360 tính giá, phí di chuyển, phí đặt gấp và hoa hồng; quy trình xác nhận, huỷ lịch và đánh giá.",
+  description: "Cách 360dep tính giá, phí di chuyển, phí đặt gấp và hoa hồng; quy trình xác nhận, huỷ lịch và đánh giá.",
   alternates: { canonical: "/chinh-sach" },
 }
 
@@ -26,12 +26,12 @@ export default function PolicyPage() {
 
       <div className="mt-6 space-y-8 text-sm leading-relaxed text-ink-soft">
         <Section title="1. Khách hàng không trả phí nền tảng">
-          <p>Khách chỉ trả giá dịch vụ chuyên viên niêm yết, cộng phí di chuyển hoặc phí đặt gấp nếu có. dep360 không cộng thêm bất kỳ phí dịch vụ nào cho khách.</p>
+          <p>Khách chỉ trả giá dịch vụ chuyên viên niêm yết, cộng phí di chuyển hoặc phí đặt gấp nếu có. 360dep không cộng thêm bất kỳ phí dịch vụ nào cho khách.</p>
         </Section>
 
         <Section title="2. Hoa hồng từ freelancer">
           <p>
-            dep360 thu <b className="text-ink">{pct(POLICY.commissionRate)}</b> trên giá dịch vụ của mỗi job hoàn thành, một mức duy nhất cho mọi freelancer. Không có phí đăng ký, phí duy trì
+            360dep thu <b className="text-ink">{pct(POLICY.commissionRate)}</b> trên giá dịch vụ của mỗi job hoàn thành, một mức duy nhất cho mọi freelancer. Không có phí đăng ký, phí duy trì
             hay phí đẩy top.
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-5">
@@ -44,7 +44,7 @@ export default function PolicyPage() {
 
         <Section title="3. Danh mục & khung giá chuẩn">
           <p>
-            Tên dịch vụ, nội dung bao gồm, các gói (thời lượng/mức độ) và khung giá do dep360 quy định để khách so sánh công bằng và tránh báo giá tuỳ tiện. Freelancer chỉ chọn dịch vụ
+            Tên dịch vụ, nội dung bao gồm, các gói (thời lượng/mức độ) và khung giá do 360dep quy định để khách so sánh công bằng và tránh báo giá tuỳ tiện. Freelancer chỉ chọn dịch vụ
             trong danh mục, chọn gói mình làm và đặt giá trong khung (làm tròn 5.000đ).
           </p>
           <p className="mt-2">
@@ -91,7 +91,7 @@ export default function PolicyPage() {
           <ul className="list-disc space-y-1 pl-5">
             <li>Freelancer chụp CCCD 2 mặt và 1 ảnh selfie. AI đọc CCCD và đối chiếu ảnh chân dung trên thẻ với ảnh selfie.</li>
             <li>Đã xác minh: dấu tick cạnh tên, huy hiệu “Đã xác minh danh tính” và được xếp trước hồ sơ chưa xác minh.</li>
-            <li>Ảnh CCCD và selfie chỉ dùng để xác minh, dep360 không lưu lại. Khách không thấy thông tin CCCD.</li>
+            <li>Ảnh CCCD và selfie chỉ dùng để xác minh, 360dep không lưu lại. Khách không thấy thông tin CCCD.</li>
           </ul>
         </Section>
 

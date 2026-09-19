@@ -6,6 +6,7 @@ import { Card, EmptyState, PageHeader } from "@/components/ui"
 import { listPros, listWorks } from "@/lib/api/pros"
 import { CATEGORIES, categoryLabel, templatesByCategory } from "@/lib/catalog"
 import { absoluteUrl } from "@/lib/env"
+import { serializeJsonLd } from "@/lib/json-ld"
 import { CITIES } from "@/lib/geo"
 import { POLICY } from "@/lib/pricing"
 import type { CategoryId } from "@/lib/types"
@@ -76,7 +77,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
     name: `${category.label} tại nhà ${city}`,
     serviceType: category.label,
     areaServed: { "@type": "City", name: city },
-    provider: { "@type": "Organization", name: "dep360", url: absoluteUrl("/") },
+    provider: { "@type": "Organization", name: "360dep", url: absoluteUrl("/") },
     offers: templates.flatMap((t) =>
       t.variants.map((v) => ({
         "@type": "Offer",
@@ -94,17 +95,17 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
 
   return (
     <div className="md:pt-4">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
       <PageHeader title={`${category.label} tại nhà ${city}`} back="/" />
 
       <p className="text-sm leading-relaxed text-ink-soft">
         {pros.length > 0
-          ? `${pros.length} chuyên viên ${category.label.toLowerCase()} nhận làm tại nhà ở ${city}. Giá theo khung chuẩn của dep360, khách không trả phí nền tảng, miễn phí di chuyển trong ${POLICY.freeTravelKm} km đầu.`
-          : `dep360 chưa có chuyên viên ${category.label.toLowerCase()} ở ${city}. Bạn có thể đăng yêu cầu để chuyên viên quanh khu vực báo giá.`}
+          ? `${pros.length} chuyên viên ${category.label.toLowerCase()} nhận làm tại nhà ở ${city}. Giá theo khung chuẩn của 360dep, khách không trả phí nền tảng, miễn phí di chuyển trong ${POLICY.freeTravelKm} km đầu.`
+          : `360dep chưa có chuyên viên ${category.label.toLowerCase()} ở ${city}. Bạn có thể đăng yêu cầu để chuyên viên quanh khu vực báo giá.`}
       </p>
 
       <Card className="mt-4 p-4">
-        <h2 className="text-sm font-semibold">Khung giá {category.label.toLowerCase()} ở dep360</h2>
+        <h2 className="text-sm font-semibold">Khung giá {category.label.toLowerCase()} ở 360dep</h2>
         <ul className="mt-2 space-y-1.5 text-[13px] text-ink-soft">
           {templates.map((t) => (
             <li key={t.id} className="flex flex-wrap gap-x-2">

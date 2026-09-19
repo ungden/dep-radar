@@ -538,16 +538,8 @@ export async function saveWorkingHours(
   windows: { weekday: number; startMin: number; endMin: number }[],
 ): Promise<ActionResult> {
   const supabase = await supabaseServer()
-  const { data: auth } = await supabase.auth.getUser()
-  if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
-  const { error: clearError } = await supabase.from("working_hours").delete().eq("pro_id", auth.user.id)
-  if (clearError) return { ok: false, error: messageFor(clearError) }
-  if (windows.length) {
-    const { error } = await supabase.from("working_hours").insert(
-      windows.map((w) => ({ pro_id: auth.user.id, weekday: w.weekday, start_min: w.startMin, end_min: w.endMin })),
-    )
-    if (error) return { ok: false, error: messageFor(error) }
-  }
+  const { error } = await supabase.rpc("replace_working_hours" as never, { p_windows: windows } as never)
+  if (error) return { ok: false, error: messageFor(error) }
   revalidatePath("/studio", "layout")
   return { ok: true, data: undefined }
 }

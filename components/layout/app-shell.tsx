@@ -62,7 +62,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="min-h-dvh">
       <header className="sticky top-0 z-40 hidden border-b border-line bg-canvas/90 backdrop-blur md:block">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-6">
-          <Link href={isPro ? "/studio" : "/"} aria-label="dep360">
+          <Link href={isPro ? "/studio" : "/"} aria-label="360dep">
             <Logo />
           </Link>
           <nav className="flex flex-1 items-center gap-1">

@@ -4,6 +4,7 @@ import { Suspense } from "react"
 import { PageSkeleton } from "@/components/ui"
 import { getProBySlug, listProServices, listReviews } from "@/lib/api/pros"
 import { absoluteUrl } from "@/lib/env"
+import { serializeJsonLd } from "@/lib/json-ld"
 import { getTemplate } from "@/lib/catalog"
 import { ProProfile } from "./pro-profile"
 
@@ -13,6 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `${pro.name} · ${pro.title} tại ${pro.city}`,
     description: pro.bio,
+    alternates: { canonical: `/pros/${pro.slug}` },
   }
 }
 
@@ -71,7 +73,7 @@ export default async function ProPage({ params }: { params: Promise<{ id: string
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
       <Suspense fallback={<PageSkeleton />}>
         <ProProfile proId={pro.slug} />
       </Suspense>

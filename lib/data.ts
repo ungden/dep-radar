@@ -173,7 +173,7 @@ const PRO_PROFILES: SeedPro[] = [
     maxTravelKm: 12,
     yearsExp: 2,
     joinedAt: "2026-08-01",
-    bio: "Mới tham gia dep360. Combo nail + makeup nhẹ cho ngày đặc biệt, nhận nhóm bạn và phù dâu.",
+    bio: "Mới tham gia 360dep. Combo nail + makeup nhẹ cho ngày đặc biệt, nhận nhóm bạn và phù dâu.",
     highlights: ["Nhận nhóm bạn, phù dâu"],
     identity: "pending",
     stats: { completedJobs: 7, responseMinutes: 90 },

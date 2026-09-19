@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { supabaseServer } from "@/lib/supabase/server"
+import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
 import type { ActionResult } from "./actions"
 
 /**
@@ -93,11 +93,17 @@ export async function listMessages(threadId: string): Promise<ChatMessage[]> {
     console.error("listMessages failed:", error.message)
     return []
   }
+  const paths = (data ?? []).flatMap((m) => (m.image_paths ?? []).filter((path) => !path.startsWith("http")))
+  const { data: signed } = paths.length
+    ? await supabaseAdmin().storage.from("chat").createSignedUrls(paths, 5 * 60)
+    : { data: [] }
+  const urls = new Map((signed ?? []).map((item) => [item.path, item.signedUrl]))
+
   return (data ?? []).map((m) => ({
     id: m.id,
     mine: m.sender_id === auth.user.id,
     body: m.body ?? "",
-    images: m.image_paths ?? [],
+    images: (m.image_paths ?? []).map((path) => (path.startsWith("http") ? path : urls.get(path))).filter(Boolean) as string[],
     createdAt: m.created_at,
   }))
 }
@@ -148,12 +154,11 @@ export async function sendMessage(threadId: string, body: string, images: string
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
   if (!body.trim() && images.length === 0) return { ok: false, error: "Nhập tin nhắn." }
-  const { error } = await supabase.from("messages").insert({
-    thread_id: threadId,
-    sender_id: auth.user.id,
-    body: body.trim().slice(0, 2000),
-    image_paths: images,
-  })
+  const { error } = await supabase.rpc("send_message" as never, {
+    p_thread: threadId,
+    p_body: body.trim().slice(0, 2000),
+    p_image_paths: images,
+  } as never)
   if (error) return { ok: false, error: "Không gửi được tin nhắn." }
   revalidatePath(`/tin-nhan/${threadId}`)
   revalidatePath("/tin-nhan")

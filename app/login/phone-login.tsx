@@ -26,7 +26,6 @@ export function PhoneLogin({ next, otpEnabled }: { next: string | null; otpEnabl
     setBusy(false)
     if (!result.ok) return setError(result.error)
     if (result.otpSent) setStep("code")
-    else done()
   }
 
   async function submitCode(event: React.FormEvent) {
@@ -91,7 +90,7 @@ export function PhoneLogin({ next, otpEnabled }: { next: string | null; otpEnabl
         hint={
           otpEnabled
             ? "Chúng tôi gửi một mã xác thực qua SMS."
-            : "Bản demo: chưa gửi SMS, đăng nhập ngay bằng số này."
+            : "SMS đang chưa được cấu hình. Bạn chưa thể đăng nhập hoặc tạo tài khoản."
         }
       >
         <input
@@ -113,7 +112,7 @@ export function PhoneLogin({ next, otpEnabled }: { next: string | null; otpEnabl
         {busy ? "Đang xử lý…" : otpEnabled ? "Gửi mã xác thực" : "Tiếp tục"}
       </Button>
       <p className="text-center text-xs text-muted">
-        Tiếp tục nghĩa là bạn đồng ý để dep360 xử lý số điện thoại của bạn theo{" "}
+        Tiếp tục nghĩa là bạn đồng ý để 360dep xử lý số điện thoại của bạn theo{" "}
         <Link href="/chinh-sach" className="underline">
           chính sách
         </Link>

@@ -66,7 +66,7 @@ export function Footer() {
           </nav>
 
           <nav>
-            <h2 className="text-sm font-semibold">dep360</h2>
+            <h2 className="text-sm font-semibold">360dep</h2>
             <ul className="mt-3 space-y-1.5 text-[13px] text-ink-soft">
               <li>
                 <Link href="/tro-giup" className="hover:text-ink">

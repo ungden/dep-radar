@@ -143,7 +143,7 @@ function ReviewForm() {
         </p>
       </div>
 
-      <p className="text-xs text-muted">Đánh giá được gắn nhãn “Đã đặt qua dep360” và không thể bị chuyên viên xoá. Chuyên viên chỉ có thể phản hồi công khai.</p>
+      <p className="text-xs text-muted">Đánh giá được gắn nhãn “Đã đặt qua 360dep” và không thể bị chuyên viên xoá. Chuyên viên chỉ có thể phản hồi công khai.</p>
       {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
 
       <BottomBar>

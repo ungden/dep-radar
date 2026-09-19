@@ -53,7 +53,7 @@ export function ReportButton({
       <Card className="p-4 text-[13px] text-ink-soft">
         <p className="font-semibold text-ink">Đã gửi báo cáo</p>
         <p className="mt-1">
-          Đội ngũ dep360 sẽ xem và liên hệ nếu cần thêm thông tin. Việc bạn báo cáo không hiển thị với phía bên kia.
+          Đội ngũ 360dep sẽ xem và liên hệ nếu cần thêm thông tin. Việc bạn báo cáo không hiển thị với phía bên kia.
         </p>
       </Card>
     )

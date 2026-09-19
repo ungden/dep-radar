@@ -19,7 +19,6 @@ export default function robots(): MetadataRoute.Robots {
         "/search",
         "/admin",
         "/api",
-        "/offline",
       ],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,

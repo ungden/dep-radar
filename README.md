@@ -1,4 +1,4 @@
-# dep360
+# 360dep
 
 Marketplace đặt lịch làm đẹp với chuyên viên freelancer (nail, makeup, chăm sóc da, tóc, mi & mày, massage).
 
@@ -11,7 +11,7 @@ Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 
 | Chủ đề | Quy định | Code |
 | --- | --- | --- |
-| Danh mục dịch vụ | dep360 quy định tên, nội dung, gói (thời lượng/mức độ) và khung giá. Freelancer chỉ chọn dịch vụ trong danh mục và đặt giá trong khung. | `lib/catalog.ts` |
+| Danh mục dịch vụ | 360dep quy định tên, nội dung, gói (thời lượng/mức độ) và khung giá. Freelancer chỉ chọn dịch vụ trong danh mục và đặt giá trong khung. | `lib/catalog.ts` |
 | Phí khách hàng | 0đ phí nền tảng, không đặt cọc. Khách trả giá dịch vụ + phí di chuyển/đặt gấp nếu có; thanh toán online toàn bộ hoặc trả trực tiếp sau khi làm. | `lib/pricing.ts` |
 | Xác nhận lịch | Freelancer gọi điện cho khách xác nhận rồi mới nhận job, trong 2 giờ; quá hạn tự huỷ. | `app/bookings/[id]` |
 | Hoa hồng | Một mức 15% trên giá dịch vụ, thu từ freelancer. Không tính trên phí di chuyển/gấp. Job online: trừ trước khi chuyển tiền; job tiền mặt: ghi công nợ, đối soát hằng tuần. | `lib/pricing.ts` |
@@ -26,7 +26,7 @@ Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 Bản prototype chạy hoàn toàn phía client:
 
 - Dữ liệu mẫu nằm ở `lib/data.ts` (chuyên viên, dịch vụ, tác phẩm, đánh giá).
-- Trạng thái người dùng (đăng nhập demo, lịch hẹn, yêu cầu, báo giá, dịch vụ) nằm ở `lib/store.tsx`, lưu trong `localStorage`. Có nút "Đặt lại dữ liệu demo" ở trang Cá nhân.
+- Trạng thái màn hình nằm ở `lib/store.tsx`; tài khoản, lịch hẹn, yêu cầu, báo giá và dịch vụ lấy từ Supabase qua RLS/RPC. Không có đăng nhập demo theo số điện thoại.
 - Xác minh danh tính gọi Gemini qua `app/api/identity` (cần `GEMINI_API_KEY`, xem `.env.example`).
 - Chưa có OTP, thanh toán hay backend thật. Schema đề xuất cho Supabase ở `docs/supabase-schema.sql` (chưa áp dụng lên database).
 

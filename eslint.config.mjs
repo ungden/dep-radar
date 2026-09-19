@@ -7,6 +7,7 @@ export default defineConfig([{
         ".vercel/**",
         "coverage/**",
         "node_modules/**",
+        "apps/mobile/**",
         "tsconfig.tsbuildinfo",
     ],
     extends: [...next],

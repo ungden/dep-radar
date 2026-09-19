@@ -61,7 +61,7 @@ export function ReviewItem({ review, onReply }: { review: Review; onReply?: (tex
           <p className="flex items-center gap-1.5 text-sm font-medium">
             {review.author}
             <span className="inline-flex items-center gap-0.5 rounded-full bg-success-soft px-1.5 py-0.5 text-[10px] font-semibold text-success">
-              <BadgeCheck className="size-3" /> Đã đặt qua dep360
+              <BadgeCheck className="size-3" /> Đã đặt qua 360dep
             </span>
           </p>
           <p className="truncate text-xs text-muted">

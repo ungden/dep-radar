@@ -69,7 +69,7 @@ function VerifyFlow() {
     try {
       // The server records the attempt and owns the resulting status; this screen
       // only reports what came back and then re-reads the profile.
-      const result = await verifyIdentity(images as Record<IdentityImageKind, IdentityImage>, pro.name)
+      const result = await verifyIdentity(images as Record<IdentityImageKind, IdentityImage>)
       if (result.status === "verified") {
         setNameOnCard(result.nameOnCard)
         setPhase("done")
@@ -206,7 +206,7 @@ function VerifyFlow() {
       <label className="flex items-start gap-2.5 rounded-2xl bg-canvas p-3.5 text-[13px] text-ink-soft">
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-[var(--color-rose)]" />
         <span>
-          Tôi đồng ý cho dep360 gửi ảnh CCCD và ảnh chân dung của tôi tới dịch vụ AI (Google Gemini) chỉ để xác minh danh tính, theo Nghị định 13/2023/NĐ-CP. dep360 không
+          Tôi đồng ý cho 360dep gửi ảnh CCCD và ảnh chân dung của tôi tới dịch vụ AI (Google Gemini) chỉ để xác minh danh tính, theo Nghị định 13/2023/NĐ-CP. 360dep không
           lưu ảnh; khách hàng chỉ thấy dấu xác minh, không thấy thông tin CCCD.
         </span>
       </label>

@@ -119,7 +119,7 @@ export function ProProfile({ proId }: { proId: string }) {
             )}
             <li className="flex items-center gap-2">
               <CalendarDays className="size-4 text-muted" />
-              Tham gia dep360 từ tháng {joined.getMonth() + 1}/{joined.getFullYear()}
+              Tham gia 360dep từ tháng {joined.getMonth() + 1}/{joined.getFullYear()}
             </li>
           </ul>
 
@@ -169,7 +169,7 @@ export function ProProfile({ proId }: { proId: string }) {
                 <RatingSummaryBlock rating={pro.rating} />
               </Card>
               <div className="mt-3 flex items-center gap-2">
-                <p className="flex-1 text-xs text-muted">Chỉ khách đã hoàn thành lịch hẹn qua dep360 mới được đánh giá.</p>
+                <p className="flex-1 text-xs text-muted">Chỉ khách đã hoàn thành lịch hẹn qua 360dep mới được đánh giá.</p>
                 {reviews.some((r) => r.photo) && (
                   <Chip active={withPhotos} onClick={() => setWithPhotos((v) => !v)}>
                     Có ảnh
@@ -203,7 +203,7 @@ export function ProProfile({ proId }: { proId: string }) {
                 </div>
               </div>
               <Card className="px-4 py-3 text-sm">
-                <p className="font-semibold">Xác minh bởi dep360</p>
+                <p className="font-semibold">Xác minh bởi 360dep</p>
                 <p className="mt-1 text-ink-soft">
                   {pro.identity === "verified"
                     ? "Đã đối chiếu ảnh CCCD với ảnh chân dung của chuyên viên."

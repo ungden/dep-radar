@@ -69,7 +69,7 @@ function Settings() {
       <Card className="p-4">
         <p className="font-semibold">Dữ liệu của bạn</p>
         <p className="mt-1 text-[13px] text-ink-soft">
-          dep360 lưu tên, số điện thoại, địa chỉ bạn tự nhập và lịch sử đặt lịch. Ảnh CCCD và ảnh selfie khi xác minh
+          360dep lưu tên, số điện thoại, địa chỉ bạn tự nhập và lịch sử đặt lịch. Ảnh CCCD và ảnh selfie khi xác minh
           không được lưu ở đâu cả. Chi tiết trong{" "}
           <Link href="/chinh-sach" className="text-rose underline underline-offset-2">
             chính sách

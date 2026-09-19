@@ -99,7 +99,7 @@ function BookingFlow({ proId }: { proId: string }) {
   const home = homeAvailability(state, proId, templateId, address ?? { city: pro.city, district: pro.district, detail: "" })
   const canStudio = Boolean(pro.studioAddress)
   const [atHomePref, setAtHome] = React.useState(true)
-  const atHome = atHomePref || !canStudio
+  const atHome = !tpl.studioOnly && (atHomePref || !canStudio)
   const locationOk = atHome ? home.ok && Boolean(chosen) : canStudio
 
   const days = Array.from({ length: 14 }, (_, i) => addDays(todayISO(), i))
@@ -124,7 +124,7 @@ function BookingFlow({ proId }: { proId: string }) {
   const time = slots && pickedTime && !slots.some((s) => s.time === pickedTime) ? null : pickedTime
   const quote: PriceQuote | null = time ? quoteFor(state, { proId, price, atHome, address, date, time }) : null
 
-  const canNext = step === 1 ? true : step === 2 ? Boolean(time) : locationOk
+  const canNext = step === 1 ? true : step === 2 ? Boolean(time) && locationOk : locationOk
 
   const submit = async () => {
     setError(null)
@@ -301,6 +301,22 @@ function BookingFlow({ proId }: { proId: string }) {
             price={price}
             duration={durationMin}
           />
+
+          <section className="mt-6 rounded-2xl bg-surface p-4 shadow-[var(--shadow-soft)]">
+            <h2 className="mb-3 font-semibold">Địa điểm trước khi chọn giờ</h2>
+            <div className="grid grid-cols-2 gap-2">
+              <PlaceOption active={atHome} disabled={!home.ok || tpl.studioOnly} onClick={() => { setAtHome(true); setTime(null) }} icon={<Home className="size-4" />}>
+                Làm tại nhà
+              </PlaceOption>
+              <PlaceOption active={!atHome && canStudio} disabled={!canStudio} onClick={() => { setAtHome(false); setTime(null) }} icon={<Store className="size-4" />}>
+                Tại studio
+              </PlaceOption>
+            </div>
+            {atHome && <div className="mt-3"><AddressPicker value={addressId} onChange={(id) => { setAddressId(id); setTime(null) }} city={pro.city} district={pro.district} /></div>}
+            {tpl.studioOnly && <p className="mt-2 text-xs text-ink-soft">Gói dịch vụ này chỉ thực hiện tại studio.</p>}
+            {atHome && chosen && !home.ok && <p className="mt-2 text-xs text-warning">{home.reason}{canStudio ? " Bạn có thể đến studio." : ""}</p>}
+            {!atHome && canStudio && <p className="mt-2 text-xs text-ink-soft">Studio: {pro.studioAddress}</p>}
+          </section>
 
           <section className="mt-6">
             <h2 className="mb-3 flex items-baseline justify-between font-semibold">
@@ -492,7 +508,7 @@ function BookingFlow({ proId }: { proId: string }) {
             <Info className="mt-0.5 size-3.5 shrink-0" />
             <span>
               Không cần đặt cọc. {pro.name} sẽ gọi điện xác nhận trước khi nhận job. Huỷ miễn phí trước {POLICY.freeCancelHours} giờ
-              {payment === "online" ? "; tiền online do dep360 giữ và chỉ chuyển cho chuyên viên sau khi hoàn thành" : ""}.{" "}
+              {payment === "online" ? "; tiền online do 360dep giữ và chỉ chuyển cho chuyên viên sau khi hoàn thành" : ""}.{" "}
               <Link href="/chinh-sach" className="text-rose underline underline-offset-2">
                 Chính sách phí
               </Link>

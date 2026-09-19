@@ -1,6 +1,5 @@
 "use server"
 
-import { randomBytes } from "node:crypto"
 import { revalidatePath } from "next/cache"
 import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
 import { otpEnabled } from "./config"
@@ -23,17 +22,15 @@ export async function requestCode(rawPhone: string, fullName: string): Promise<A
   const name = fullName.trim()
   if (name.length < 2) return { ok: false, error: "Nhập họ tên của bạn." }
 
-  if (otpEnabled) {
-    const supabase = await supabaseServer()
-    const { error } = await supabase.auth.signInWithOtp({
-      phone,
-      options: { data: { full_name: name }, channel: "sms" },
-    })
-    if (error) return { ok: false, error: "Không gửi được mã xác thực. Vui lòng thử lại sau." }
-    return { ok: true, otpSent: true }
-  }
+  if (!otpEnabled) return { ok: false, error: "Đăng nhập SMS đang chưa khả dụng. Vui lòng thử lại sau." }
 
-  return demoSignIn(phone, name)
+  const supabase = await supabaseServer()
+  const { error } = await supabase.auth.signInWithOtp({
+    phone,
+    options: { data: { full_name: name }, channel: "sms" },
+  })
+  if (error) return { ok: false, error: "Không gửi được mã xác thực. Vui lòng thử lại sau." }
+  return { ok: true, otpSent: true }
 }
 
 export async function verifyCode(rawPhone: string, code: string): Promise<AuthResult> {
@@ -44,49 +41,6 @@ export async function verifyCode(rawPhone: string, code: string): Promise<AuthRe
   const supabase = await supabaseServer()
   const { error } = await supabase.auth.verifyOtp({ phone, token: code.trim(), type: "sms" })
   if (error) return { ok: false, error: "Mã xác thực không đúng hoặc đã hết hạn." }
-  revalidatePath("/", "layout")
-  return { ok: true, otpSent: false }
-}
-
-/**
- * Supabase only enables phone sign-in once an SMS provider is paid for, so the
- * demo build carries the account on an internal identity derived from the phone
- * number. The customer still only ever types their phone number; this address is
- * never shown, never emailed and never a login anybody can use, because the
- * password is rotated to fresh random bytes on every sign-in and never leaves the
- * server. `accounts.phone` remains the real number the product works with.
- */
-const internalIdentity = (phone: string) => `${phone.replace("+", "")}@phone.dep360.local`
-
-async function demoSignIn(phone: string, name: string): Promise<AuthResult> {
-  const admin = supabaseAdmin()
-  const password = randomBytes(24).toString("base64url")
-  const email = internalIdentity(phone)
-
-  // The admin API cannot look a user up by phone, so use our own accounts row.
-  const { data: account } = await admin.from("accounts").select("id").eq("phone", phone).maybeSingle()
-
-  if (account) {
-    const { error } = await admin.auth.admin.updateUserById(account.id, { email, email_confirm: true, password })
-    if (error) return { ok: false, error: "Không mở được phiên đăng nhập. Vui lòng thử lại." }
-  } else {
-    const { data: created, error } = await admin.auth.admin.createUser({
-      email,
-      email_confirm: true,
-      phone,
-      phone_confirm: true,
-      password,
-      user_metadata: { full_name: name },
-    })
-    if (error || !created.user) return { ok: false, error: "Không tạo được tài khoản. Vui lòng thử lại." }
-    // The trigger creates the accounts row; make sure the phone is stored in our shape.
-    await admin.from("accounts").update({ full_name: name, phone }).eq("id", created.user.id)
-  }
-
-  const supabase = await supabaseServer()
-  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-  if (signInError) return { ok: false, error: "Không mở được phiên đăng nhập. Vui lòng thử lại." }
-
   revalidatePath("/", "layout")
   return { ok: true, otpSent: false }
 }
@@ -118,12 +72,21 @@ export async function becomePro(input: {
     .maybeSingle()
 
   const slug = await uniqueSlug(account?.full_name || "chuyen-vien")
+  const { data: district } = await supabase
+    .from("districts")
+    .select("lat, lng")
+    .eq("city", input.city)
+    .eq("district", input.district)
+    .maybeSingle()
+  if (!district) return { ok: false, error: "Khu vực hoạt động không hợp lệ." }
   const { error } = await supabase.from("pros").insert({
     id: auth.user.id,
     slug,
     title: input.title,
     city: input.city,
     district: input.district,
+    lat: district.lat,
+    lng: district.lng,
     categories: input.categories as never,
   })
   if (error) return { ok: false, error: "Không tạo được hồ sơ chuyên viên." }
@@ -152,7 +115,7 @@ async function uniqueSlug(name: string) {
   const taken = new Set((data ?? []).map((r) => r.slug))
   if (!taken.has(base)) return base
   for (let i = 2; i < 100; i++) if (!taken.has(`${base}-${i}`)) return `${base}-${i}`
-  return `${base}-${randomBytes(3).toString("hex")}`
+  return `${base}-${crypto.randomUUID().slice(0, 6)}`
 }
 
 export async function switchRole(role: "customer" | "pro"): Promise<void> {

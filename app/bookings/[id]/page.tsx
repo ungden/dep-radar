@@ -334,7 +334,7 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
           <p className="text-xs text-muted">
             {mode === "cancel"
               ? "Khách không mất phí. Huỷ nhiều lần sẽ ảnh hưởng tới thứ hạng hiển thị của bạn."
-              : `Chỉ báo khi bạn đã tới nơi và chờ. dep360 bù phí di chuyển ${formatPrice(booking.quote.travelFee)} vào ví bạn.`}
+              : `Chỉ báo khi bạn đã tới nơi và chờ. 360dep bù phí di chuyển ${formatPrice(booking.quote.travelFee)} vào ví bạn.`}
           </p>
           <input
             className={cn(inputClass, "text-sm")}

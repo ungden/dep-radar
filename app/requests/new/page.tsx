@@ -86,7 +86,7 @@ function NewRequestForm() {
       }}
     >
       <p className="rounded-2xl bg-blush px-4 py-3 text-[13px] text-rose-dark">
-        Chọn dịch vụ theo danh mục chuẩn của dep360. Freelancer phù hợp quanh bạn sẽ báo giá trong khung giá quy định, bạn so sánh hồ sơ, đánh giá và chọn người ưng ý.
+        Chọn dịch vụ theo danh mục chuẩn của 360dep. Freelancer phù hợp quanh bạn sẽ báo giá trong khung giá quy định, bạn so sánh hồ sơ, đánh giá và chọn người ưng ý.
       </p>
 
       <fieldset>

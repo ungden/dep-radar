@@ -238,8 +238,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       .from("jobs")
       .select(`
         id, customer_id, template_id, variant_id, quantity, description, starts_at,
-        at_home, address_id, city, district, payment_method, status, created_at,
-        accounts!jobs_customer_id_fkey!inner (full_name),
+        at_home, address_id, city, district, customer_name, payment_method, status, created_at,
         offers (id, pro_id, price, message, status, expires_at, created_at)
       `)
       .order("created_at", { ascending: false }),
@@ -327,7 +326,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     addressDetail: "",
     atHome: row.at_home,
     paymentMethod: row.payment_method as PaymentMethod,
-    customerName: first(row.accounts).full_name ?? "Khách hàng",
+    customerName: row.customer_name ?? "Khách hàng",
     status: row.status === "expired" ? "closed" : (row.status as JobPost["status"]),
     quantity: row.quantity ?? 1,
     mine: row.customer_id === me,

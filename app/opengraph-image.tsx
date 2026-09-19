@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og"
 
-export const alt = "dep360 — Đặt lịch làm đẹp với chuyên viên freelancer"
+export const alt = "360dep — Đặt lịch làm đẹp với chuyên viên freelancer"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 

@@ -60,14 +60,17 @@ export async function walletSummary(): Promise<WalletSummary> {
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return { balance: 0, entries: [] }
-  const { data, error } = await supabase
+  const [{ data, error }, { data: balance, error: balanceError }] = await Promise.all([
+    supabase
     .from("wallet_entries")
     .select("id, kind, amount, note, created_at, booking_id")
     .eq("pro_id", auth.user.id)
     .order("created_at", { ascending: false })
-    .limit(200)
-  if (error) {
-    console.error("walletSummary failed:", error.message)
+    .limit(200),
+    supabase.rpc("my_wallet_balance" as never, {} as never),
+  ])
+  if (error || balanceError) {
+    console.error("walletSummary failed:", error?.message ?? balanceError?.message)
     return { balance: 0, entries: [] }
   }
   const entries = (data ?? []).map((e) => ({
@@ -78,7 +81,7 @@ export async function walletSummary(): Promise<WalletSummary> {
     createdAt: e.created_at,
     bookingId: e.booking_id,
   }))
-  return { balance: entries.reduce((sum, e) => sum + e.amount, 0), entries }
+  return { balance: Number(balance ?? 0), entries }
 }
 
 /** What the freelancer earned from completed jobs, by month. */
@@ -123,6 +126,20 @@ export interface DayOff {
   startsOn: string
   endsOn: string
   reason: string
+}
+
+export async function listWorkingHours(): Promise<{ weekday: number; startMin: number; endMin: number }[]> {
+  const supabase = await supabaseServer()
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return []
+  const { data, error } = await supabase
+    .from("working_hours")
+    .select("weekday, start_min, end_min")
+    .eq("pro_id", auth.user.id)
+    .order("weekday")
+    .order("start_min")
+  if (error) return []
+  return (data ?? []).map((row) => ({ weekday: row.weekday, startMin: row.start_min, endMin: row.end_min }))
 }
 
 export async function listDaysOff(): Promise<DayOff[]> {

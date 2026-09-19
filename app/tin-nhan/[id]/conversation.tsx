@@ -138,8 +138,8 @@ export function Conversation({
               if (!file) return
               setBusy(true)
               try {
-                const url = await uploadImage("reviews", file)
-                await send("", [url])
+                const path = await uploadImage("chat", file)
+                await send("", [path])
               } catch (err) {
                 setError(err instanceof Error ? err.message : "Tải ảnh không thành công.")
               }

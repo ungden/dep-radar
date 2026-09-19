@@ -20,7 +20,7 @@ export default function OfflinePage() {
       </span>
       <h1 className="mt-4 text-xl font-semibold">Không có kết nối</h1>
       <p className="mt-1 max-w-sm text-sm text-ink-soft">
-        dep360 cần mạng để hiện giá, khung giờ trống và trạng thái lịch hẹn đúng lúc, nên chúng tôi không hiện bản lưu
+        360dep cần mạng để hiện giá, khung giờ trống và trạng thái lịch hẹn đúng lúc, nên chúng tôi không hiện bản lưu
         tạm — một khung giờ trống từ một tiếng trước có thể đã có người đặt.
       </p>
       <ButtonLink href="/" className="mt-6">

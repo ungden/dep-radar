@@ -66,15 +66,13 @@ export type IdentityResult =
   | { status: "review"; reason: string; nameOnCard?: string }
   | { status: "rejected"; reason: string }
 
-export async function verifyIdentity(images: Record<IdentityImageKind, IdentityImage>, profileName: string): Promise<IdentityResult> {
+export async function verifyIdentity(images: Record<IdentityImageKind, IdentityImage>): Promise<IdentityResult> {
   for (const kind of ["front", "back", "selfie"] as const) {
     const issue = checkImage(kind, images[kind])
     if (issue) return { status: "rejected", reason: issue }
   }
   const body = new FormData()
   for (const kind of ["front", "back", "selfie"] as const) body.append(kind, await toJpeg(images[kind]), `${kind}.jpg`)
-  body.append("profileName", profileName)
-
   const res = await fetch("/api/identity", { method: "POST", body })
   const data = (await res.json().catch(() => null)) as IdentityResult | { error: string } | null
   if (!res.ok || !data || "error" in data) {

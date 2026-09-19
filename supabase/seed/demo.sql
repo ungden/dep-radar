@@ -189,7 +189,7 @@ update public.accounts set full_name = 'Ngọc Bảo', active_role = 'pro',
   avatar_path = '/images/pros/ngoc-bao.webp' where id = '6ecaa96d-5749-4fe4-8384-642d3f798120';
 insert into public.pros (id, slug, display_name, avatar_path, title, bio, highlights, categories, city, district, lat, lng, areas,
   home_service, studio_address, max_travel_km, years_exp, accepting_jobs, published, identity_status)
-values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'ngoc-bao', 'Ngọc Bảo', '/images/pros/ngoc-bao.webp', 'Chuyên viên nail & makeup', 'Mới tham gia dep360. Combo nail + makeup nhẹ cho ngày đặc biệt, nhận nhóm bạn và phù dâu.', array['Nhận nhóm bạn, phù dâu']::text[],
+values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'ngoc-bao', 'Ngọc Bảo', '/images/pros/ngoc-bao.webp', 'Chuyên viên nail & makeup', 'Mới tham gia 360dep. Combo nail + makeup nhẹ cho ngày đặc biệt, nhận nhóm bạn và phù dâu.', array['Nhận nhóm bạn, phù dâu']::text[],
   array['nail', 'makeup']::public.category_id[], 'Đà Nẵng', 'Hải Châu', 16.0472, 108.2199, array['Hải Châu', 'Sơn Trà', 'Thanh Khê']::text[],
   true, null, 12, 2, true, true, 'pending')
 on conflict (id) do update set display_name = excluded.display_name, avatar_path = excluded.avatar_path,

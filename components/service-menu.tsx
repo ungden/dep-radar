@@ -40,7 +40,7 @@ export function ServiceMenu({ proId, bookable = true }: { proId: string; bookabl
         ))}
       </ul>
       <p className="mt-4 text-xs text-muted">
-        Tên dịch vụ, nội dung và khung giá do dep360 chuẩn hoá. Giá đã gồm vật tư. Phí di chuyển và phí đặt gấp (nếu có) được tính rõ trước khi xác nhận.
+        Tên dịch vụ, nội dung và khung giá do 360dep chuẩn hoá. Giá đã gồm vật tư. Phí di chuyển và phí đặt gấp (nếu có) được tính rõ trước khi xác nhận.
       </p>
     </div>
   )

@@ -167,7 +167,7 @@ export default function ExplorePage() {
         <section className="mt-10 rounded-[var(--radius-card)] bg-ink p-6 text-white md:flex md:items-center md:justify-between md:p-8">
           <div>
             <p className="font-display text-2xl">Bạn là thợ làm đẹp tự do?</p>
-            <p className="mt-1 text-sm text-white/70">Nhận job gần nhà, tự đặt giá trong khung chuẩn, không phí đăng ký. dep360 chỉ thu hoa hồng khi bạn hoàn thành job.</p>
+            <p className="mt-1 text-sm text-white/70">Nhận job gần nhà, tự đặt giá trong khung chuẩn, không phí đăng ký. 360dep chỉ thu hoa hồng khi bạn hoàn thành job.</p>
           </div>
           <Link
             href={session ? (session.proId ? "/studio" : "/studio/onboarding") : "/login?role=pro"}

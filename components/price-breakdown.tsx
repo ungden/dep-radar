@@ -46,14 +46,14 @@ export function PriceBreakdown({
 
       {forPro && (
         <div className="space-y-1.5 border-t border-line pt-2">
-          <Line label={`Hoa hồng dep360 (${Math.round(quote.commissionRate * 100)}% giá dịch vụ)`} value={`−${formatPrice(quote.commission)}`} />
+          <Line label={`Hoa hồng 360dep (${Math.round(quote.commissionRate * 100)}% giá dịch vụ)`} value={`−${formatPrice(quote.commission)}`} />
           <div className="flex justify-between font-semibold text-success">
             <span>Bạn thực nhận</span>
             <span>{formatPrice(quote.payout)}</span>
           </div>
           <p className="text-xs text-muted">
             {paymentMethod === "online"
-              ? `Khách đã thanh toán online. dep360 chuyển ${formatPrice(quote.payout)} cho bạn trong kỳ đối soát sau khi hoàn thành.`
+              ? `Khách đã thanh toán online. 360dep chuyển ${formatPrice(quote.payout)} cho bạn trong kỳ đối soát sau khi hoàn thành.`
               : `Thu ${formatPrice(quote.total)} trực tiếp từ khách. Hoa hồng ${formatPrice(quote.commission)} ghi vào công nợ, tự trừ vào tiền online kỳ tới.`}{" "}
             Phí di chuyển và phí đặt gấp giữ nguyên 100% cho bạn.
           </p>

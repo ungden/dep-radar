@@ -213,7 +213,7 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
           <b className="text-ink">{formatPrice(quote.total)}</b>
         </div>
         <div className="flex justify-between">
-          <span>Hoa hồng dep360 ({Math.round(quote.commissionRate * 100)}%)</span>
+          <span>Hoa hồng 360dep ({Math.round(quote.commissionRate * 100)}%)</span>
           <span>−{formatPrice(quote.commission)}</span>
         </div>
         <div className="flex justify-between font-semibold text-success">

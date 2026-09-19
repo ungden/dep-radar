@@ -61,10 +61,10 @@ export function Logo({ className, size = "md" }: { className?: string; size?: "m
           lg ? "size-12 rounded-2xl text-[30px]" : "size-8 rounded-[10px] text-xl",
         )}
       >
-        <span className="-mt-[0.12em]">d</span>
+        <span className="-mt-[0.08em]">3</span>
       </span>
       <span className={cn("font-display font-extrabold leading-none tracking-tight text-ink [font-variant-numeric:lining-nums]", lg ? "text-[40px]" : "text-[26px]")}>
-        dep<span className="text-rose">360</span>
+        <span className="text-rose">360</span>dep
       </span>
     </span>
   )

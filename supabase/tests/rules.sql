@@ -283,9 +283,9 @@ begin
       'create_booking', 'confirm_booking', 'decline_booking', 'start_booking', 'complete_booking',
       'mark_no_show', 'cancel_booking', 'request_reschedule', 'respond_reschedule', 'post_job',
       'send_offer', 'accept_offer', 'withdraw_offer', 'write_review', 'reply_review', 'open_thread',
-      'mark_thread_read', 'delete_my_account',
+      'send_message', 'replace_working_hours', 'my_wallet_balance', 'mark_thread_read', 'delete_my_account',
       -- admin decisions, which check is_admin() themselves
-      'decide_identity_check', 'set_pro_suspended', 'set_review_hidden', 'resolve_report'
+      'decide_identity_check', 'decide_no_show_compensation', 'set_pro_suspended', 'set_review_hidden', 'resolve_report'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 

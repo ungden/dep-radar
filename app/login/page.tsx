@@ -7,7 +7,7 @@ import { PhoneLogin } from "./phone-login"
 
 export const metadata: Metadata = {
   title: "Đăng nhập",
-  description: "Đăng nhập dep360 bằng số điện thoại để đặt lịch hoặc nhận job.",
+  description: "Đăng nhập 360dep bằng số điện thoại để đặt lịch hoặc nhận job.",
 }
 
 export default async function LoginPage({

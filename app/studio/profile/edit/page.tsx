@@ -7,6 +7,7 @@ import { Camera, CheckCircle2, Circle } from "lucide-react"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, Button, Card, Field, PageHeader, Toggle, inputClass } from "@/components/ui"
 import { saveProProfile, saveWorkingHours } from "@/lib/api/actions"
+import { listWorkingHours } from "@/lib/api/me"
 import { addDayOff, listDaysOff, removeDayOff, type DayOff } from "@/lib/api/me"
 import { proView, servicesOf, useApp, useRefresh, worksOf } from "@/lib/store"
 import { uploadImage } from "@/lib/uploads"
@@ -235,6 +236,31 @@ function WorkingHoursEditor({ onError }: { onError: (message: string | null) => 
   )
   const [busy, setBusy] = React.useState(false)
   const [saved, setSaved] = React.useState(false)
+  const [loaded, setLoaded] = React.useState(false)
+
+  React.useEffect(() => {
+    let live = true
+    void listWorkingHours().then((windows) => {
+      if (!live) return
+      if (windows.length) {
+        setDays((current) => {
+          const next = { ...current }
+          for (const day of [0, 1, 2, 3, 4, 5, 6]) next[day] = { ...next[day], on: false }
+          for (const window of windows) {
+            // This editor currently exposes one contiguous window per day. It
+            // preserves the widest saved window instead of overwriting it with defaults.
+            const prior = next[window.weekday]
+            next[window.weekday] = !prior.on || window.endMin - window.startMin > prior.end - prior.start
+              ? { on: true, start: window.startMin, end: window.endMin }
+              : prior
+          }
+          return next
+        })
+      }
+      setLoaded(true)
+    })
+    return () => { live = false }
+  }, [])
 
   return (
     <Card className="p-4">
@@ -289,7 +315,7 @@ function WorkingHoursEditor({ onError }: { onError: (message: string | null) => 
       <Button
         size="sm"
         className="mt-3"
-        disabled={busy}
+        disabled={busy || !loaded}
         onClick={async () => {
           setBusy(true)
           onError(null)
@@ -303,7 +329,7 @@ function WorkingHoursEditor({ onError }: { onError: (message: string | null) => 
           refresh()
         }}
       >
-        {busy ? "Đang lưu…" : "Lưu giờ làm việc"}
+        {busy ? "Đang lưu…" : loaded ? "Lưu giờ làm việc" : "Đang tải giờ làm việc…"}
       </Button>
       {saved && <span className="ml-2 text-sm text-success">Đã lưu.</span>}
     </Card>

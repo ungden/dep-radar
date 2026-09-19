@@ -4,7 +4,7 @@ import "./globals.css"
 
 import { AppShell } from "@/components/layout/app-shell"
 import { SITE_URL } from "@/lib/env"
-import { RegisterServiceWorker } from "@/components/register-sw"
+import { UnregisterServiceWorker } from "@/components/register-sw"
 import { StoreProvider } from "@/lib/store"
 import { emptySnapshot, loadSnapshot } from "@/lib/api/snapshot"
 import { backendEnabled } from "@/lib/supabase/env"
@@ -25,28 +25,20 @@ const serif = Playfair_Display({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   alternates: { canonical: "/" },
-  applicationName: "dep360",
+  applicationName: "360dep",
   title: {
-    default: "dep360 | Đặt lịch làm đẹp với chuyên viên freelancer",
-    template: "%s | dep360",
+    default: "360dep | Đặt lịch làm đẹp với chuyên viên freelancer",
+    template: "%s | 360dep",
   },
   description:
     "Tìm chuyên viên nail, makeup, chăm sóc da, tóc, mi & mày làm tại nhà. Xem tác phẩm thật, đặt lịch nhanh, hoặc đăng yêu cầu để freelancer báo giá.",
-  manifest: "/brand/site.webmanifest",
-  icons: {
-    icon: [
-      { url: "/brand/favicon.svg", type: "image/svg+xml" },
-      { url: "/brand/favicon-32.png", sizes: "32x32", type: "image/png" },
-    ],
-    apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180" }],
-  },
-  appleWebApp: { title: "dep360", capable: true, statusBarStyle: "default" },
+  icons: { icon: [{ url: "/brand/favicon.svg", type: "image/svg+xml" }] },
   twitter: { card: "summary_large_image" },
   openGraph: {
     type: "website",
     locale: "vi_VN",
-    siteName: "dep360",
-    title: "dep360 | Đẹp hơn mỗi ngày, theo cách của bạn",
+    siteName: "360dep",
+    title: "360dep | Đẹp hơn mỗi ngày, theo cách của bạn",
     description: "Đặt lịch làm đẹp với chuyên viên freelancer gần bạn.",
   },
 }
@@ -70,7 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           Bỏ qua, tới nội dung chính
         </a>
-        <RegisterServiceWorker />
+        <UnregisterServiceWorker />
         <StoreProvider snapshot={snapshot}>
           <AppShell>{children}</AppShell>
         </StoreProvider>

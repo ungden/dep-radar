@@ -46,11 +46,11 @@ function ServicesManager() {
       />
       <div className="mb-4 rounded-2xl bg-blush px-4 py-3 text-[13px] text-rose-dark">
         <p>
-          Bạn chỉ chọn dịch vụ từ danh mục chuẩn của dep360 và đặt giá trong khung cho phép, để khách so sánh công bằng. Giá đã gồm vật tư, không thu thêm phụ phí ngoài
+          Bạn chỉ chọn dịch vụ từ danh mục chuẩn của 360dep và đặt giá trong khung cho phép, để khách so sánh công bằng. Giá đã gồm vật tư, không thu thêm phụ phí ngoài
           phí di chuyển / đặt gấp do hệ thống tính.
         </p>
         <p className="mt-1">
-          Hoa hồng dep360: <b>{Math.round(rate * 100)}%</b> trên giá dịch vụ.{" "}
+          Hoa hồng 360dep: <b>{Math.round(rate * 100)}%</b> trên giá dịch vụ.{" "}
           <Link href={`/pros/${proId}?tab=services`} className="underline underline-offset-2">
             Xem như khách
           </Link>
