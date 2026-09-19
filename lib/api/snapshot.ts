@@ -298,6 +298,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       },
       paymentMethod: row.payment_method as PaymentMethod,
       status: row.status as BookingStatus,
+      customerId: row.customer_id,
       customerName: customer.full_name ?? "Khách hàng",
       // Present for the freelancer, who has to make the call; a customer only
       // ever sees their own number here.

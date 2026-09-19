@@ -7,13 +7,15 @@ import { useParams } from "next/navigation"
 import { CalendarDays, Home, Info, Phone, Store } from "lucide-react"
 import { bookingImage } from "@/components/booking-card"
 import { PriceBreakdown } from "@/components/price-breakdown"
+import { ReportButton } from "@/components/report-button"
 import { RequireSession } from "@/components/require-session"
-import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, StatusBadge, buttonClass } from "@/components/ui"
+import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, StatusBadge, buttonClass, inputClass } from "@/components/ui"
 import { formatPhone } from "@/lib/auth/phone"
 import { actions, useAct } from "@/lib/client-actions"
 import { getPro, useApp } from "@/lib/store"
 import { POLICY, hoursUntilStart } from "@/lib/pricing"
-import { addMinutes, formatDateLong, formatDuration, formatPrice } from "@/lib/utils"
+import type { Booking } from "@/lib/types"
+import { addMinutes, cn, formatDateLong, formatDuration, formatPrice, localDate, localTime, todayISO } from "@/lib/utils"
 
 export default function BookingDetailPage() {
   return (
@@ -205,7 +207,7 @@ function BookingDetail() {
               </Button>
             </div>
           )}
-          {isPro && booking.status === "confirmed" && (
+          {isPro && (booking.status === "confirmed" || booking.status === "in_progress") && (
             <div className="grid grid-cols-2 gap-2">
               <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "lg")}>
                 <Phone className="size-4" /> Gọi khách
@@ -216,6 +218,14 @@ function BookingDetail() {
             </div>
           )}
         </BottomBar>
+      )}
+
+      {/* The awkward outcomes, kept out of the main bar but not hidden away:
+          a job the freelancer has to give back, a time that has to move, and a
+          customer who was not there. */}
+      {isPro && active && <ProTrouble booking={booking} onError={setError} />}
+      {isCustomer && booking.rescheduleTo && booking.rescheduleBy === "pro" && (
+        <RescheduleOffer booking={booking} onError={setError} />
       )}
 
       {!active && isCustomer && (
@@ -232,6 +242,10 @@ function BookingDetail() {
           <ButtonLink href={`/book/${booking.proId}?service=${booking.templateId}&variant=${booking.variantId}`}>Đặt lại</ButtonLink>
         </div>
       )}
+      <div className="pt-2 text-center">
+        <ReportButton bookingId={booking.id} targetAccountId={isPro ? booking.customerId : null} />
+      </div>
+
       {isPro && (
         <p className="text-center text-xs text-muted">
           <Link href="/studio/schedule" className="underline underline-offset-2">
@@ -240,5 +254,137 @@ function BookingDetail() {
         </p>
       )}
     </div>
+  )
+}
+
+/** What a freelancer does when a job cannot go ahead as booked. */
+function ProTrouble({ booking, onError }: { booking: Booking; onError: (message: string | null) => void }) {
+  const act = useAct()
+  const [mode, setMode] = React.useState<"none" | "cancel" | "reschedule" | "noshow">("none")
+  const [reason, setReason] = React.useState("")
+  const [date, setDate] = React.useState(booking.date)
+  const [time, setTime] = React.useState(booking.time)
+
+  const run = (fn: () => Promise<{ error?: string }>) =>
+    void act(fn).then((message) => {
+      onError(message)
+      if (!message) setMode("none")
+    })
+
+  // Reporting a no-show only makes sense once the appointment has started.
+  const started = hoursUntilStart(booking.date, booking.time) < 0
+
+  if (mode === "none") {
+    return (
+      <div className="flex flex-wrap gap-3 text-[13px]">
+        <button type="button" className="text-muted underline underline-offset-2" onClick={() => setMode("reschedule")}>
+          Đề nghị đổi giờ
+        </button>
+        <button type="button" className="text-muted underline underline-offset-2" onClick={() => setMode("cancel")}>
+          Huỷ job này
+        </button>
+        {started && booking.status !== "pending" && (
+          <button type="button" className="text-muted underline underline-offset-2" onClick={() => setMode("noshow")}>
+            Khách không có mặt
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <Card className="space-y-3 p-4">
+      {mode === "reschedule" && (
+        <>
+          <p className="text-sm font-semibold">Đề nghị giờ khác</p>
+          <p className="text-xs text-muted">Khách phải đồng ý thì lịch mới đổi. Gọi trước cho khách sẽ nhanh hơn.</p>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="date"
+              aria-label="Ngày mới"
+              className={cn(inputClass, "text-sm")}
+              value={date}
+              min={todayISO()}
+              onChange={(e) => setDate(e.target.value)}
+            />
+            <input
+              type="time"
+              aria-label="Giờ mới"
+              step={1800}
+              className={cn(inputClass, "text-sm")}
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
+          </div>
+        </>
+      )}
+
+      {mode !== "reschedule" && (
+        <>
+          <p className="text-sm font-semibold">
+            {mode === "cancel" ? "Huỷ job đã nhận" : "Báo khách không có mặt"}
+          </p>
+          <p className="text-xs text-muted">
+            {mode === "cancel"
+              ? "Khách không mất phí. Huỷ nhiều lần sẽ ảnh hưởng tới thứ hạng hiển thị của bạn."
+              : `Chỉ báo khi bạn đã tới nơi và chờ. dep360 bù phí di chuyển ${formatPrice(booking.quote.travelFee)} vào ví bạn.`}
+          </p>
+          <input
+            className={cn(inputClass, "text-sm")}
+            placeholder="Lý do (gửi cho khách)"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+        </>
+      )}
+
+      <div className="flex gap-2">
+        <Button variant="ghost" size="sm" onClick={() => setMode("none")}>
+          Quay lại
+        </Button>
+        {mode === "reschedule" && (
+          <Button size="sm" onClick={() => run(() => actions.requestReschedule(booking.id, date, time))}>
+            Gửi đề nghị
+          </Button>
+        )}
+        {mode === "cancel" && (
+          <Button variant="danger" size="sm" onClick={() => run(() => actions.setBookingStatus(booking.id, "cancelled", reason))}>
+            Xác nhận huỷ
+          </Button>
+        )}
+        {mode === "noshow" && (
+          <Button variant="danger" size="sm" onClick={() => run(() => actions.setBookingStatus(booking.id, "no_show", reason))}>
+            Xác nhận vắng mặt
+          </Button>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+/** The customer answering a time the freelancer proposed. */
+function RescheduleOffer({ booking, onError }: { booking: Booking; onError: (message: string | null) => void }) {
+  const act = useAct()
+  const when = booking.rescheduleTo
+  if (!when) return null
+  return (
+    <Card className="p-4 ring-1 ring-warning/40">
+      <p className="text-sm font-semibold">{booking.proName} đề nghị đổi sang giờ khác</p>
+      <p className="mt-0.5 text-[13px] text-ink-soft">
+        {formatDateLong(localDate(when), true)} · {localTime(when)}
+      </p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => void act(() => actions.respondReschedule(booking.id, false)).then(onError)}
+        >
+          Giữ giờ cũ
+        </Button>
+        <Button size="sm" onClick={() => void act(() => actions.respondReschedule(booking.id, true)).then(onError)}>
+          Đồng ý đổi
+        </Button>
+      </div>
+    </Card>
   )
 }

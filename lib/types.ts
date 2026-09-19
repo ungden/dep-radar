@@ -173,6 +173,7 @@ export interface Booking {
   quote: PriceQuote
   paymentMethod: PaymentMethod
   status: BookingStatus
+  customerId: string
   customerName: string
   customerPhone: string
   /** The freelancer's name and number as this viewer is allowed to see them. */

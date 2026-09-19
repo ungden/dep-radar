@@ -8,7 +8,7 @@ import { Briefcase, CalendarDays, Car, ChevronLeft, Home, MapPin, Share2, Sparkl
 import { FollowButton } from "@/components/follow-button"
 import { ServiceMenu } from "@/components/service-menu"
 import { RatingSummaryBlock, ReviewItem, VerifiedBadge, VerifiedMark } from "@/components/trust"
-import { Avatar, Button, Card, EmptyState, Tabs } from "@/components/ui"
+import { Avatar, Button, Card, Chip, EmptyState, Tabs } from "@/components/ui"
 import { POLICY, travelFeeFor } from "@/lib/pricing"
 import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp, worksOf } from "@/lib/store"
 import { cn, formatPrice, formatResponseTime, parseISODate } from "@/lib/utils"
@@ -26,6 +26,8 @@ export function ProProfile({ proId }: { proId: string }) {
   const from = fromPrice(state, pro.id)
   const km = state.session?.role !== "pro" ? distanceToCustomer(state, pro.id) : null
   const [tab, setTab] = React.useState<Tab>((params.get("tab") as Tab | null) ?? "services")
+  const [withPhotos, setWithPhotos] = React.useState(false)
+  const shownReviews = withPhotos ? reviews.filter((r) => r.photo) : reviews
   const tabsRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
@@ -160,17 +162,22 @@ export function ProProfile({ proId }: { proId: string }) {
               <Card className="p-4">
                 <RatingSummaryBlock rating={pro.rating} />
               </Card>
-              <p className="mt-3 text-xs text-muted">
-                Chỉ khách đã hoàn thành lịch hẹn qua dep360 mới được đánh giá.
-              </p>
-              {reviews.length ? (
+              <div className="mt-3 flex items-center gap-2">
+                <p className="flex-1 text-xs text-muted">Chỉ khách đã hoàn thành lịch hẹn qua dep360 mới được đánh giá.</p>
+                {reviews.some((r) => r.photo) && (
+                  <Chip active={withPhotos} onClick={() => setWithPhotos((v) => !v)}>
+                    Có ảnh
+                  </Chip>
+                )}
+              </div>
+              {shownReviews.length ? (
                 <ul className="mt-2 divide-y divide-line">
-                  {reviews.map((r) => (
+                  {shownReviews.map((r) => (
                     <ReviewItem key={r.id} review={r} />
                   ))}
                 </ul>
               ) : (
-                <EmptyState title="Chưa có đánh giá" />
+                <EmptyState title={withPhotos ? "Chưa có đánh giá kèm ảnh" : "Chưa có đánh giá"} />
               )}
             </div>
           )}

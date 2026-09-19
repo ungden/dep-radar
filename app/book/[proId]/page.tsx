@@ -74,6 +74,7 @@ function BookingFlow({ proId }: { proId: string }) {
   const [variantId, setVariantId] = React.useState(initialVariant)
   const [date, setDate] = React.useState(addDays(todayISO(), 1))
   const [pickedTime, setTime] = React.useState<string | null>(null)
+  const [quantity, setQuantity] = React.useState(1)
   const [pickedAddress, setAddressId] = React.useState<string | null>(null)
   const [note, setNote] = React.useState("")
   const [payment, setPayment] = React.useState<PaymentMethod>("cash")
@@ -83,7 +84,12 @@ function BookingFlow({ proId }: { proId: string }) {
 
   const tpl = getTemplate(templateId)!
   const variant = tpl.variants.find((v) => v.id === variantId)!
-  const price = priceOf(state, proId, templateId, variantId)!
+  const unitPrice = priceOf(state, proId, templateId, variantId)!
+  // A per-head option is priced and timed per person, so the head count changes
+  // both the total and how long the freelancer is booked for.
+  const heads = variant.perPerson ? Math.min(Math.max(quantity, 1), variant.maxQuantity ?? 1) : 1
+  const price = unitPrice * heads
+  const durationMin = variant.durationMin * heads
   // Start on the customer's default address without an effect writing it back.
   const addressId = pickedAddress ?? defaultAddressId(state.addresses)
   const chosen = state.addresses.find((a) => a.id === addressId) ?? null
@@ -101,17 +107,17 @@ function BookingFlow({ proId }: { proId: string }) {
   // The freelancer's real openings for this day, from their working hours. The
   // answer is tagged with what was asked, so a stale reply is simply ignored
   // rather than having to be cleared from state first.
-  const slotKey = [proId, templateId, variantId, date, atHome, addressId].join("|")
+  const slotKey = [proId, templateId, variantId, heads, date, atHome, addressId].join("|")
   const [loaded, setLoaded] = React.useState<{ key: string; list: { startsAt: string; time: string }[] } | null>(null)
   React.useEffect(() => {
     let live = true
     void actions
-      .slotsFor({ proId, templateId, variantId, date, atHome, addressId })
+      .slotsFor({ proId, templateId, variantId, quantity: heads, date, atHome, addressId })
       .then((list) => live && setLoaded({ key: slotKey, list }))
     return () => {
       live = false
     }
-  }, [slotKey, proId, templateId, variantId, date, atHome, addressId])
+  }, [slotKey, proId, templateId, variantId, heads, date, atHome, addressId])
   const slots = loaded?.key === slotKey ? loaded.list : null
 
   // A time picked for another day or service may no longer be on offer.
@@ -135,6 +141,7 @@ function BookingFlow({ proId }: { proId: string }) {
       time: time!,
       atHome,
       addressId: atHome ? addressId : null,
+      quantity: heads,
       note: note.trim(),
       paymentMethod: payment,
     })
@@ -217,6 +224,7 @@ function BookingFlow({ proId }: { proId: string }) {
                       onClick={() => {
                         setTemplateId(s.templateId)
                         setVariantId(offered[0].id)
+                        setQuantity(1)
                       }}
                       className="flex w-full items-center gap-3 text-left"
                     >
@@ -229,6 +237,30 @@ function BookingFlow({ proId }: { proId: string }) {
                         {selected && <Check className="size-3.5" />}
                       </span>
                     </button>
+                    {selected && variant.perPerson && (
+                      <div className="mt-3 flex items-center gap-2 rounded-xl bg-canvas px-3 py-2">
+                        <span className="flex-1 text-[13px]">Số người</span>
+                        <button
+                          type="button"
+                          aria-label="Giảm số người"
+                          disabled={heads <= 1}
+                          onClick={() => setQuantity(heads - 1)}
+                          className="inline-flex size-8 items-center justify-center rounded-full border border-line disabled:opacity-40"
+                        >
+                          −
+                        </button>
+                        <span className="w-6 text-center font-semibold">{heads}</span>
+                        <button
+                          type="button"
+                          aria-label="Tăng số người"
+                          disabled={heads >= (variant.maxQuantity ?? 1)}
+                          onClick={() => setQuantity(heads + 1)}
+                          className="inline-flex size-8 items-center justify-center rounded-full border border-line disabled:opacity-40"
+                        >
+                          +
+                        </button>
+                      </div>
+                    )}
                     {selected && (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {offered.map((v) => (
@@ -236,7 +268,10 @@ function BookingFlow({ proId }: { proId: string }) {
                             key={v.id}
                             type="button"
                             aria-pressed={v.id === variantId}
-                            onClick={() => setVariantId(v.id)}
+                            onClick={() => {
+                              setVariantId(v.id)
+                              setQuantity(1)
+                            }}
                             className={cn(
                               "rounded-xl border px-3 py-2 text-left text-[13px]",
                               v.id === variantId ? "border-rose bg-blush text-rose-dark" : "border-line bg-canvas text-ink-soft",
@@ -260,7 +295,12 @@ function BookingFlow({ proId }: { proId: string }) {
 
       {step === 2 && (
         <>
-          <ServiceSummary name={tpl.name} variant={variant.label} price={price} duration={variant.durationMin} />
+          <ServiceSummary
+            name={tpl.name}
+            variant={heads > 1 ? `${variant.label} × ${heads} người` : variant.label}
+            price={price}
+            duration={durationMin}
+          />
 
           <section className="mt-6">
             <h2 className="mb-3 flex items-baseline justify-between font-semibold">
@@ -346,7 +386,12 @@ function BookingFlow({ proId }: { proId: string }) {
 
       {step === 3 && time && quote && (
         <section className="space-y-4">
-          <ServiceSummary name={tpl.name} variant={variant.label} price={price} duration={variant.durationMin} />
+          <ServiceSummary
+            name={tpl.name}
+            variant={heads > 1 ? `${variant.label} × ${heads} người` : variant.label}
+            price={price}
+            duration={durationMin}
+          />
 
           <Card className="divide-y divide-line px-4">
             <div className="flex gap-4 py-3.5 text-sm">
@@ -354,7 +399,7 @@ function BookingFlow({ proId }: { proId: string }) {
               <span className="flex-1 font-medium">
                 {formatDateLong(date, true)}
                 <br />
-                {time} - {addMinutes(time, variant.durationMin)}
+                {time} - {addMinutes(time, durationMin)}
                 {quote.urgentFee > 0 && (
                   <span className="ml-2 inline-flex items-center gap-0.5 rounded-full bg-warning-soft px-1.5 py-0.5 text-[11px] font-semibold text-warning">
                     <Zap className="size-3" /> Đặt gấp

@@ -6,9 +6,12 @@ import {
   ArrowLeftRight,
   BriefcaseBusiness,
   ChevronRight,
+  Bell,
   Heart,
   ImagePlus,
   LogOut,
+  Settings,
+  Wallet,
   MapPin,
   Megaphone,
   ShieldCheck,
@@ -120,6 +123,7 @@ export default function MePage() {
               { href: "/studio/jobs", icon: BriefcaseBusiness, label: "Việc mới quanh bạn" },
               { href: "/studio/services", icon: Ticket, label: "Dịch vụ & bảng giá" },
               { href: "/studio/works", icon: ImagePlus, label: "Tác phẩm" },
+              { href: "/studio/wallet", icon: Wallet, label: "Ví & thu nhập" },
               { href: "/studio/profile/edit", icon: UserRound, label: "Hồ sơ, giờ làm & khu vực" },
               { href: "/studio/profile", icon: ShieldCheck, label: "Xác minh & đánh giá" },
               ...(pro ? [{ href: `/pros/${pro.id}`, icon: UserRound, label: "Hồ sơ công khai & tác phẩm" }] : []),
@@ -162,6 +166,8 @@ export default function MePage() {
 type MenuItem = { href: string; icon: React.ComponentType<{ className?: string }>; label: string; sub?: string }
 
 const commonItems: MenuItem[] = [
+  { href: "/thong-bao", icon: Bell, label: "Thông báo" },
+  { href: "/me/cai-dat", icon: Settings, label: "Cài đặt tài khoản" },
   { href: "/chinh-sach", icon: ShieldCheck, label: "Chính sách phí, đặt lịch & huỷ" },
 ]
 

@@ -90,12 +90,14 @@ function Dashboard() {
           value={formatPrice(net)}
           sub={`Khách trả ${formatPrice(gross)} · hoa hồng ${formatPrice(commission)}`}
         />
-        <Stat
-          icon={<Wallet className="size-4" />}
-          label="Số job đã hoàn thành"
-          value={String(doneThisMonth.length)}
-          sub={`Tổng cộng ${pro.stats.completedJobs} job`}
-        />
+        <Link href="/studio/wallet" className="contents">
+          <Stat
+            icon={<Wallet className="size-4" />}
+            label="Ví & thu nhập"
+            value={String(doneThisMonth.length) + " job"}
+            sub={`Tổng cộng ${pro.stats.completedJobs} job · xem sổ ví`}
+          />
+        </Link>
         <Stat icon={<Hourglass className="size-4" />} label="Chờ bạn xác nhận" value={String(pending.length)} highlight={pending.length > 0} sub={`Gọi khách & trả lời trong ${POLICY.confirmWithinHours} giờ`} />
         <Stat icon={<Star className="size-4" />} label="Đánh giá" value={pro.rating.average.toFixed(2)} sub={`${pro.rating.count} lượt`} />
       </div>

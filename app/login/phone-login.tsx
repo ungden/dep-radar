@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button, Field, inputClass } from "@/components/ui"
 import { requestCode, verifyCode } from "@/lib/auth/actions"
@@ -113,9 +114,9 @@ export function PhoneLogin({ next, otpEnabled }: { next: string | null; otpEnabl
       </Button>
       <p className="text-center text-xs text-muted">
         Tiếp tục nghĩa là bạn đồng ý để dep360 xử lý số điện thoại của bạn theo{" "}
-        <a href="/chinh-sach" className="underline">
+        <Link href="/chinh-sach" className="underline">
           chính sách
-        </a>
+        </Link>
         .
       </p>
     </form>

@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { CalendarDays, ChevronDown, MapPin, Megaphone, Search } from "lucide-react"
+import { Bell, CalendarDays, ChevronDown, MapPin, Megaphone, Search } from "lucide-react"
 import { CategoryRow, ProCard, WorkFeedCard } from "@/components/beauty"
 import { sortPros } from "@/components/trust"
 import { Logo, Tabs } from "@/components/ui"
@@ -43,9 +43,20 @@ export default function ExplorePage() {
       <div className="flex h-12 items-center justify-between md:hidden">
         <CityPicker value={city} />
         <Logo />
-        <Link href={session ? "/bookings" : "/login"} aria-label="Lịch hẹn của tôi" className="inline-flex size-10 items-center justify-center">
-          <CalendarDays className="size-5" />
-        </Link>
+        {session ? (
+          <Link href="/thong-bao" aria-label="Thông báo" className="relative inline-flex size-10 items-center justify-center">
+            <Bell className="size-5" />
+            {state.unreadNotifications > 0 && (
+              <span className="absolute right-1.5 top-1.5 min-w-4 rounded-full bg-rose px-1 text-[10px] font-semibold leading-4 text-white">
+                {state.unreadNotifications > 9 ? "9+" : state.unreadNotifications}
+              </span>
+            )}
+          </Link>
+        ) : (
+          <Link href="/login" aria-label="Lịch hẹn của tôi" className="inline-flex size-10 items-center justify-center">
+            <CalendarDays className="size-5" />
+          </Link>
+        )}
       </div>
 
       <div className="md:flex md:items-end md:justify-between md:gap-8">

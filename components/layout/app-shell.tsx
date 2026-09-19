@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
+  Bell,
   BriefcaseBusiness,
   CalendarDays,
   Heart,
@@ -14,6 +15,7 @@ import {
   User,
   Users,
 } from "lucide-react"
+import { Footer } from "@/components/layout/footer"
 import { Avatar, Logo } from "@/components/ui"
 import { actions } from "@/lib/client-actions"
 import { useApp } from "@/lib/store"
@@ -43,7 +45,8 @@ const NO_TABBAR = [/^\/book\//, /^\/works\//, /^\/bookings\/./, /^\/requests\/./
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { session } = useApp()
+  const state = useApp()
+  const { session } = state
   const isPro = session?.role === "pro"
   const nav = isPro ? PRO_NAV : CUSTOMER_NAV
 
@@ -75,6 +78,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
           {session ? (
             <div className="flex items-center gap-3">
+              <Link
+                href="/thong-bao"
+                aria-label="Thông báo"
+                className="relative inline-flex size-9 items-center justify-center rounded-full hover:bg-blush/60"
+              >
+                <Bell className="size-[18px]" />
+                {state.unreadNotifications > 0 && (
+                  <span className="absolute right-1 top-1 min-w-4 rounded-full bg-rose px-1 text-[10px] font-semibold leading-4 text-white">
+                    {state.unreadNotifications > 9 ? "9+" : state.unreadNotifications}
+                  </span>
+                )}
+              </Link>
               <button
                 type="button"
                 onClick={async () => {
@@ -101,7 +116,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className={cn("mx-auto max-w-6xl px-4 md:px-6 md:pb-16", showTabbar ? "pb-24" : "pb-6")}>{children}</main>
+      <main className={cn("mx-auto max-w-6xl px-4 md:px-6", showTabbar ? "pb-24" : "pb-6")} id="main">
+        {children}
+      </main>
+
+      {/* Only on the customer side: the studio is a workspace, not a website. */}
+      {!isPro && <Footer />}
 
       {showTabbar && (
         <nav

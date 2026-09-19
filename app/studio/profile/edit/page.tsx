@@ -7,9 +7,10 @@ import { Camera, CheckCircle2, Circle } from "lucide-react"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, Button, Card, Field, PageHeader, Toggle, inputClass } from "@/components/ui"
 import { saveProProfile, saveWorkingHours } from "@/lib/api/actions"
+import { addDayOff, listDaysOff, removeDayOff, type DayOff } from "@/lib/api/me"
 import { proView, servicesOf, useApp, useRefresh, worksOf } from "@/lib/store"
 import { uploadImage } from "@/lib/uploads"
-import { cn } from "@/lib/utils"
+import { cn, todayISO } from "@/lib/utils"
 
 const DAYS = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]
 const HOURS = Array.from({ length: 25 }, (_, i) => i * 60)
@@ -148,6 +149,8 @@ function ProfileEditor() {
       </Card>
 
       <WorkingHoursEditor onError={setError} />
+
+      <DaysOffEditor onError={setError} />
 
       {error && (
         <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
@@ -303,6 +306,111 @@ function WorkingHoursEditor({ onError }: { onError: (message: string | null) => 
         {busy ? "Đang lưu…" : "Lưu giờ làm việc"}
       </Button>
       {saved && <span className="ml-2 text-sm text-success">Đã lưu.</span>}
+    </Card>
+  )
+}
+
+/**
+ * Time off. A day off does not cancel a booking somebody already made -- the
+ * server refuses and says how many are in the way, because those are appointments
+ * a person is expecting, not calendar entries.
+ */
+function DaysOffEditor({ onError }: { onError: (message: string | null) => void }) {
+  const refresh = useRefresh()
+  const [rows, setRows] = React.useState<DayOff[] | null>(null)
+  const [from, setFrom] = React.useState(todayISO())
+  const [to, setTo] = React.useState(todayISO())
+  const [reason, setReason] = React.useState("")
+  const [busy, setBusy] = React.useState(false)
+
+  React.useEffect(() => {
+    let live = true
+    void listDaysOff().then((list) => live && setRows(list))
+    return () => {
+      live = false
+    }
+  }, [])
+
+  return (
+    <Card className="p-4">
+      <p className="font-semibold">Ngày nghỉ</p>
+      <p className="mt-0.5 text-xs text-muted">Khách sẽ không thấy khung giờ nào trong những ngày này.</p>
+
+      {rows && rows.length > 0 && (
+        <ul className="mt-3 space-y-2">
+          {rows.map((row) => (
+            <li key={row.id} className="flex items-center gap-2 rounded-xl bg-canvas px-3 py-2 text-[13px]">
+              <span className="min-w-0 flex-1">
+                {row.startsOn === row.endsOn ? row.startsOn : `${row.startsOn} → ${row.endsOn}`}
+                {row.reason && <span className="ml-2 text-muted">{row.reason}</span>}
+              </span>
+              <button
+                type="button"
+                className="text-muted hover:text-danger"
+                onClick={async () => {
+                  const result = await removeDayOff(row.id)
+                  if (!result.ok) return onError(result.error)
+                  setRows((current) => (current ?? []).filter((r) => r.id !== row.id))
+                  refresh()
+                }}
+              >
+                Xoá
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <Field label="Từ ngày">
+          <input
+            type="date"
+            className={cn(inputClass, "text-sm")}
+            value={from}
+            min={todayISO()}
+            onChange={(e) => {
+              setFrom(e.target.value)
+              if (to < e.target.value) setTo(e.target.value)
+            }}
+          />
+        </Field>
+        <Field label="Đến ngày">
+          <input
+            type="date"
+            className={cn(inputClass, "text-sm")}
+            value={to}
+            min={from}
+            onChange={(e) => setTo(e.target.value)}
+          />
+        </Field>
+      </div>
+      <div className="mt-2">
+        <Field label="Lý do (tuỳ chọn)">
+          <input
+            className={cn(inputClass, "text-sm")}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Về quê, đi học, nghỉ phép…"
+          />
+        </Field>
+      </div>
+      <Button
+        size="sm"
+        className="mt-3"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true)
+          onError(null)
+          const result = await addDayOff(from, to, reason)
+          setBusy(false)
+          if (!result.ok) return onError(result.error)
+          setRows(await listDaysOff())
+          setReason("")
+          refresh()
+        }}
+      >
+        {busy ? "Đang lưu…" : "Thêm ngày nghỉ"}
+      </Button>
     </Card>
   )
 }

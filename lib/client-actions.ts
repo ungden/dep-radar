@@ -195,7 +195,7 @@ export const actions = {
 
   async submitReview(
     bookingId: string,
-    input: { rating: number; tags: string[]; text: string },
+    input: { rating: number; tags: string[]; text: string; photos?: string[] },
   ): Promise<Result> {
     return asResult(
       await api.writeReview({
@@ -203,6 +203,7 @@ export const actions = {
         rating: input.rating,
         tags: input.tags,
         body: input.text,
+        photos: input.photos,
       }),
     )
   },
