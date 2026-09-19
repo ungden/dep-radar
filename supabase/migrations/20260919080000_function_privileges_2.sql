@@ -1,8 +1,15 @@
--- Postgres grants EXECUTE on a new function to PUBLIC, and the earlier
--- `alter default privileges` only covers functions created by the role that set
--- it -- which is not the role migrations run as on the hosted project. So every
--- function added since then (the admin decisions, account deletion, chat) came
--- back out with a grant to PUBLIC.
+-- A new function comes out of `create function` reachable by anon, by two
+-- separate routes, and it took three rounds of this to see both:
+--
+--   1. Postgres itself grants EXECUTE to PUBLIC, and anon is in PUBLIC.
+--   2. The platform sets `alter default privileges in schema public grant
+--      execute on functions to anon, authenticated`, which hands anon a
+--      *direct* grant -- `anon=X/postgres` in the function's proacl.
+--
+-- The earlier `alter default privileges ... revoke` only covers functions
+-- created by the role that set it, which is not the role migrations run as on
+-- the hosted project. And because of (2), revoking from PUBLIC alone leaves
+-- anon holding its own grant. Any revoke here has to name anon explicitly.
 --
 -- None of them were exploitable: each checks is_admin() or auth.uid() first and
 -- raises. But relying on every future function remembering to do that is how a

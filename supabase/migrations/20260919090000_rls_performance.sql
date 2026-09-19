@@ -232,7 +232,12 @@ begin
    where thread_id = p_thread and sender_id <> me and read_at is null;
 end $$;
 
-revoke all on function public.mark_thread_read(uuid) from public;
+-- Revoking from `public` alone is not enough, and this is the third time that
+-- has caught us out. The platform sets `alter default privileges ... grant
+-- execute on functions to anon, authenticated`, so a new function arrives with
+-- anon holding a *direct* grant (`anon=X/postgres` in proacl), which a revoke
+-- aimed at PUBLIC does not touch. Name every role, then grant back the one.
+revoke all on function public.mark_thread_read(uuid) from public, anon, authenticated;
 grant execute on function public.mark_thread_read(uuid) to authenticated;
 
 -- 3. Covering indexes for the foreign keys -----------------------------------
