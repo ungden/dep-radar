@@ -3,6 +3,7 @@
 import * as React from "react"
 import * as api from "./api/actions"
 import * as auth from "./auth/actions"
+import { useAnnounce } from "@/components/live-region"
 import { useRefresh } from "./store"
 import type { BookingStatus, CustomerAddress, PaymentMethod } from "./types"
 import { toTimestamptz } from "./utils"
@@ -216,16 +217,20 @@ export const actions = {
 
 /**
  * Run a write, then re-read the page so the screen shows the database's answer.
- * Returns the error sentence when there is one, so a caller can display it.
+ * Returns the error sentence when there is one, so a caller can display it, and
+ * announces the outcome for anyone not watching the pixels change.
  */
 export function useAct() {
   const refresh = useRefresh()
+  const announce = useAnnounce()
   return React.useCallback(
-    async (run: () => Promise<Result | { id: string } | { error: string }>) => {
+    async (run: () => Promise<Result | { id: string } | { error: string }>, done?: string) => {
       const result = await run()
       refresh()
-      return "error" in result && result.error ? result.error : null
+      const error = "error" in result && result.error ? result.error : null
+      announce(error ?? done ?? "")
+      return error
     },
-    [refresh],
+    [refresh, announce],
   )
 }

@@ -101,7 +101,7 @@ function ProfileTrust() {
         <ul className="mt-2 divide-y divide-line">
           {reviews.map((r) => (
             // A review is identified by the booking it belongs to.
-            <ReviewItem key={r.id} review={r} onReply={(text) => void act(() => actions.replyReview(r.id, text))} />
+            <ReviewItem key={r.id} review={r} onReply={(text) => void act(() => actions.replyReview(r.id, text), "Đã gửi phản hồi")} />
           ))}
         </ul>
         <p className="mt-2 text-xs text-muted">Bạn không thể xoá hay sửa đánh giá, chỉ phản hồi công khai. Đánh giá vi phạm có thể báo cáo cho dep360.</p>

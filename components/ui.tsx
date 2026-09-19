@@ -201,14 +201,45 @@ export function Tabs<T extends string>({
   items: { value: T; label: React.ReactNode }[]
   className?: string
 }) {
+  /**
+   * A tablist that declares ARIA has to behave like one: arrow keys move between
+   * tabs, and only the selected tab is in the tab order. Without this a keyboard
+   * user tabs through every tab to reach the content.
+   */
+  const move = (from: number, delta: number) => {
+    const next = (from + delta + items.length) % items.length
+    onChange(items[next].value)
+    // Focus follows selection, which is the expected behaviour for this pattern.
+    requestAnimationFrame(() => {
+      document.getElementById(`tab-${items[next].value}`)?.focus()
+    })
+  }
+
   return (
     <div role="tablist" className={cn("no-scrollbar flex gap-6 overflow-x-auto border-b border-line", className)}>
-      {items.map((it) => (
+      {items.map((it, index) => (
         <button
           key={it.value}
+          id={`tab-${it.value}`}
           role="tab"
           type="button"
           aria-selected={value === it.value}
+          tabIndex={value === it.value ? 0 : -1}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowRight") {
+              e.preventDefault()
+              move(index, 1)
+            } else if (e.key === "ArrowLeft") {
+              e.preventDefault()
+              move(index, -1)
+            } else if (e.key === "Home") {
+              e.preventDefault()
+              move(index, -index)
+            } else if (e.key === "End") {
+              e.preventDefault()
+              move(index, items.length - 1 - index)
+            }
+          }}
           onClick={() => onChange(it.value)}
           className={cn(
             "relative shrink-0 pb-3 pt-1 text-sm transition-colors",

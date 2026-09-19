@@ -56,7 +56,7 @@ function Addresses() {
             type="button"
             aria-label={`Xoá địa chỉ ${address.label}`}
             onClick={async () => {
-              const problem = await act(() => actions.deleteAddress(address.id))
+              const problem = await act(() => actions.deleteAddress(address.id), "Đã xoá địa chỉ")
               setError(problem)
             }}
             className="inline-flex size-9 items-center justify-center rounded-full text-muted hover:bg-danger-soft hover:text-danger"

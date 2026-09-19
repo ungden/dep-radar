@@ -114,7 +114,7 @@ export default function MePage() {
               <Toggle
                 label="Nhận job mới"
                 checked={state.acceptingJobs}
-                onChange={(value) => void act(() => actions.setAcceptingJobs(value))}
+                onChange={(value) => void act(() => actions.setAcceptingJobs(value), value ? "Đang nhận job mới" : "Đã tạm nghỉ nhận job")}
               />
             </Card>
           </div>

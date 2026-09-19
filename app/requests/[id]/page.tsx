@@ -145,7 +145,7 @@ function RequestDetail() {
         <button
           type="button"
           onClick={async () => {
-            const message = await act(() => actions.closeJob(job.id))
+            const message = await act(() => actions.closeJob(job.id), "Đã xoá yêu cầu")
             if (message) setError(message)
             else router.replace("/requests")
           }}

@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react"
 import { Footer } from "@/components/layout/footer"
+import { LiveRegionProvider } from "@/components/live-region"
 import { Avatar, Logo } from "@/components/ui"
 import { actions } from "@/lib/client-actions"
 import { useApp } from "@/lib/store"
@@ -50,13 +51,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isPro = session?.role === "pro"
   const nav = isPro ? PRO_NAV : CUSTOMER_NAV
 
-  if (FULLSCREEN.some((r) => r.test(pathname))) return <>{children}</>
+  if (FULLSCREEN.some((r) => r.test(pathname))) return <LiveRegionProvider>{children}</LiveRegionProvider>
 
   const isActive = (item: NavItem) => (item.match ? item.match.test(pathname) : pathname.startsWith(item.href))
   const showTabbar = !NO_TABBAR.some((r) => r.test(pathname))
 
   return (
-    <div className="min-h-dvh">
+    <LiveRegionProvider>
+      <div className="min-h-dvh">
       <header className="sticky top-0 z-40 hidden border-b border-line bg-canvas/90 backdrop-blur md:block">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-6">
           <Link href={isPro ? "/studio" : "/"} aria-label="dep360">
@@ -150,6 +152,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </ul>
         </nav>
       )}
-    </div>
+      </div>
+    </LiveRegionProvider>
   )
 }

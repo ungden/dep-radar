@@ -145,7 +145,7 @@ export function PendingJobActions({ booking }: { booking: Booking }) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => void act(() => store.setBookingStatus(booking.id, "declined")).then(setError)}
+          onClick={() => void act(() => store.setBookingStatus(booking.id, "declined"), "Đã từ chối job").then(setError)}
         >
           Từ chối
         </Button>
@@ -154,7 +154,7 @@ export function PendingJobActions({ booking }: { booking: Booking }) {
         </a>
         <Button
           size="sm"
-          onClick={() => void act(() => store.setBookingStatus(booking.id, "confirmed")).then(setError)}
+          onClick={() => void act(() => store.setBookingStatus(booking.id, "confirmed"), "Đã nhận job").then(setError)}
         >
           Đã gọi, nhận job
         </Button>

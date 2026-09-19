@@ -57,7 +57,7 @@ export function SaveWorkButton({ workId, className }: { workId: string; classNam
           window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`
           return
         }
-        void act(() => actions.toggleSaveWork(workId))
+        void act(() => actions.toggleSaveWork(workId), saved ? "Đã bỏ lưu" : "Đã lưu mẫu")
       }}
       className={cn("inline-flex size-8 items-center justify-center rounded-full transition-colors", className)}
     >

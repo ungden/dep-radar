@@ -17,7 +17,7 @@ export function FollowButton({ proId, className }: { proId: string; className?: 
           window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`
           return
         }
-        void act(() => actions.toggleFollow(proId))
+        void act(() => actions.toggleFollow(proId), following ? "Đã bỏ theo dõi" : "Đang theo dõi")
       }}
       className={cn(
         "h-9 shrink-0 rounded-full px-4 text-[13px] font-medium transition-colors",

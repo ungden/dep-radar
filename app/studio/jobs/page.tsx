@@ -139,7 +139,7 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
         {existing.status === "pending" && (
           <button
             type="button"
-            onClick={() => void act(() => actions.withdrawOffer(job.id))}
+            onClick={() => void act(() => actions.withdrawOffer(job.id), "Đã rút báo giá")}
             className="font-medium underline underline-offset-2"
           >
             Rút lại
@@ -176,7 +176,7 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
       onSubmit={async (e) => {
         e.preventDefault()
         if (message.trim().length < 10) return setError("Lời nhắn cần ít nhất 10 ký tự.")
-        const problem = await act(() => actions.sendOffer(job.id, price, message.trim()))
+        const problem = await act(() => actions.sendOffer(job.id, price, message.trim()), "Đã gửi báo giá")
         if (problem) setError(problem)
         else setOpen(false)
       }}

@@ -117,7 +117,7 @@ function List({ bookings }: { bookings: Booking[] }) {
               b.status === "confirmed" && b.date <= todayISO() ? (
                 <>
                   <span />
-                  <Button size="sm" variant="soft" onClick={() => void act(() => actions.setBookingStatus(b.id, "completed"))}>
+                  <Button size="sm" variant="soft" onClick={() => void act(() => actions.setBookingStatus(b.id, "completed"), "Đã đánh dấu hoàn thành")}>
                     Hoàn thành
                   </Button>
                 </>

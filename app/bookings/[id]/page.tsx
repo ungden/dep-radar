@@ -64,8 +64,8 @@ function BookingDetail() {
   }
   const image = bookingImage(state, booking)
   const active = booking.status === "pending" || booking.status === "confirmed"
-  const run = (fn: () => Promise<{ error?: string }>) =>
-    void act(fn).then((message) => setError(message))
+  const run = (fn: () => Promise<{ error?: string }>, done?: string) =>
+    void act(fn, done).then((message) => setError(message))
   const freeCancel = hoursUntilStart(booking.date, booking.time) >= POLICY.freeCancelHours
 
   return (
@@ -169,7 +169,7 @@ function BookingDetail() {
                   variant="danger"
                   size="lg"
                   onClick={() => {
-                    run(() => actions.setBookingStatus(booking.id, "cancelled", "Khách huỷ lịch"))
+                    run(() => actions.setBookingStatus(booking.id, "cancelled", "Khách huỷ lịch"), "Đã huỷ lịch hẹn")
                     setConfirmCancel(false)
                   }}
                 >
@@ -196,13 +196,13 @@ function BookingDetail() {
           )}
           {isPro && booking.status === "pending" && (
             <div className="grid grid-cols-[auto_1fr_1fr] gap-2">
-              <Button variant="ghost" size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "declined"))}>
+              <Button variant="ghost" size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "declined"), "Đã từ chối job")}>
                 Từ chối
               </Button>
               <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "lg")}>
                 <Phone className="size-4" /> Gọi khách
               </a>
-              <Button size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "confirmed"))}>
+              <Button size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "confirmed"), "Đã nhận job")}>
                 Đã gọi, nhận job
               </Button>
             </div>
@@ -212,7 +212,7 @@ function BookingDetail() {
               <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "lg")}>
                 <Phone className="size-4" /> Gọi khách
               </a>
-              <Button size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "completed"))}>
+              <Button size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "completed"), "Đã đánh dấu hoàn thành")}>
                 Đánh dấu hoàn thành
               </Button>
             </div>
@@ -265,8 +265,8 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
   const [date, setDate] = React.useState(booking.date)
   const [time, setTime] = React.useState(booking.time)
 
-  const run = (fn: () => Promise<{ error?: string }>) =>
-    void act(fn).then((message) => {
+  const run = (fn: () => Promise<{ error?: string }>, done: string) =>
+    void act(fn, done).then((message) => {
       onError(message)
       if (!message) setMode("none")
     })
@@ -343,17 +343,17 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
           Quay lại
         </Button>
         {mode === "reschedule" && (
-          <Button size="sm" onClick={() => run(() => actions.requestReschedule(booking.id, date, time))}>
+          <Button size="sm" onClick={() => run(() => actions.requestReschedule(booking.id, date, time), "Đã gửi đề nghị đổi giờ")}>
             Gửi đề nghị
           </Button>
         )}
         {mode === "cancel" && (
-          <Button variant="danger" size="sm" onClick={() => run(() => actions.setBookingStatus(booking.id, "cancelled", reason))}>
+          <Button variant="danger" size="sm" onClick={() => run(() => actions.setBookingStatus(booking.id, "cancelled", reason), "Đã huỷ job")}>
             Xác nhận huỷ
           </Button>
         )}
         {mode === "noshow" && (
-          <Button variant="danger" size="sm" onClick={() => run(() => actions.setBookingStatus(booking.id, "no_show", reason))}>
+          <Button variant="danger" size="sm" onClick={() => run(() => actions.setBookingStatus(booking.id, "no_show", reason), "Đã báo khách vắng mặt")}>
             Xác nhận vắng mặt
           </Button>
         )}
@@ -377,11 +377,11 @@ function RescheduleOffer({ booking, onError }: { booking: Booking; onError: (mes
         <Button
           variant="outline"
           size="sm"
-          onClick={() => void act(() => actions.respondReschedule(booking.id, false)).then(onError)}
+          onClick={() => void act(() => actions.respondReschedule(booking.id, false), "Đã giữ giờ cũ").then(onError)}
         >
           Giữ giờ cũ
         </Button>
-        <Button size="sm" onClick={() => void act(() => actions.respondReschedule(booking.id, true)).then(onError)}>
+        <Button size="sm" onClick={() => void act(() => actions.respondReschedule(booking.id, true), "Đã đổi giờ hẹn").then(onError)}>
           Đồng ý đổi
         </Button>
       </div>

@@ -78,6 +78,14 @@ export const CATALOG: ServiceTemplate[] = [
     includes: ["Tháo gel bằng dung dịch chuyên dụng", "Dũa lại form", "Dưỡng móng"],
     variants: [v("remove", "Tháo gel", 30, 50, 120, 80), v("remove-care", "Tháo + dưỡng", 45, 100, 200, 140)],
   },
+  {
+    id: "nail-pedicure",
+    category: "nail",
+    name: "Chăm sóc bàn chân (pedicure)",
+    description: "Ngâm chân, lấy da chết, cắt da và dưỡng gót.",
+    includes: ["Ngâm chân thảo mộc", "Lấy da chết, cắt da", "Dưỡng gót & massage chân"],
+    variants: [v("basic", "Cơ bản", 45, 120, 300, 180), v("deluxe", "Có đắp mặt nạ chân", 75, 220, 500, 320)],
+  },
   // Makeup -----------------------------------------------------------------
   {
     id: "makeup-daily",
@@ -142,7 +150,62 @@ export const CATALOG: ServiceTemplate[] = [
     includes: ["Soi da", "Làm sạch dịu nhẹ", "Serum & mặt nạ phục hồi"],
     variants: byDuration([[75, 350, 700, 450]]),
   },
+  {
+    id: "skin-wax",
+    category: "skincare",
+    name: "Waxing",
+    description: "Wax lông bằng sáp nóng hoặc sáp hạt, kèm dịu da sau wax.",
+    includes: ["Làm sạch vùng wax", "Wax", "Dịu da sau wax"],
+    variants: [
+      v("underarm", "Nách", 20, 80, 200, 120),
+      v("half-leg", "Nửa chân", 30, 120, 300, 180),
+      v("full-leg", "Cả chân", 45, 200, 500, 320),
+      v("arm", "Tay", 30, 120, 300, 180),
+    ],
+  },
   // Hair -------------------------------------------------------------------
+  {
+    id: "hair-cut",
+    category: "hair",
+    name: "Cắt tóc",
+    description: "Cắt theo dáng mặt, gội và sấy tạo kiểu.",
+    includes: ["Tư vấn dáng tóc", "Cắt & tỉa", "Gội, sấy tạo kiểu"],
+    variants: [v("women", "Nữ", 45, 120, 350, 200), v("men", "Nam", 30, 80, 250, 150)],
+  },
+  {
+    id: "hair-color",
+    category: "hair",
+    name: "Nhuộm tóc",
+    description: "Nhuộm phủ bạc hoặc đổi màu, kèm dưỡng sau nhuộm.",
+    includes: ["Test da đầu", "Nhuộm", "Dưỡng phục hồi sau nhuộm"],
+    variants: [
+      v("roots", "Phủ chân tóc / phủ bạc", 90, 250, 600, 380),
+      v("full", "Nhuộm toàn đầu", 120, 400, 1200, 700),
+      v("bleach", "Tẩy & nhuộm màu sáng", 180, 700, 2500, 1300),
+    ],
+    studioOnly: true,
+  },
+  {
+    id: "hair-perm",
+    category: "hair",
+    name: "Uốn tóc",
+    description: "Uốn lạnh hoặc uốn nóng, kèm dưỡng giữ nếp.",
+    includes: ["Tư vấn kiểu lọn", "Uốn", "Dưỡng giữ nếp"],
+    variants: [v("cold", "Uốn lạnh", 150, 500, 1500, 850), v("hot", "Uốn nóng / setting", 180, 700, 2000, 1100)],
+    studioOnly: true,
+  },
+  {
+    id: "hair-treatment",
+    category: "hair",
+    name: "Hấp dầu & phục hồi tóc",
+    description: "Phục hồi tóc khô xơ sau tẩy, nhuộm hoặc uốn.",
+    includes: ["Gội làm sạch", "Ủ dưỡng chuyên sâu", "Sấy tạo kiểu nhẹ"],
+    variants: byDuration([
+      [45, 150, 400, 250],
+      [75, 300, 800, 480],
+    ]),
+    studioOnly: true,
+  },
   {
     id: "hair-wash",
     category: "hair",
@@ -172,6 +235,34 @@ export const CATALOG: ServiceTemplate[] = [
     variants: [v("one", "1 lễ", 90, 600, 1800, 1000)],
   },
   // Lash & brow ------------------------------------------------------------
+  {
+    id: "lash-lift",
+    category: "lash-brow",
+    name: "Uốn mi (lash lift)",
+    description: "Uốn cong mi thật, không cần nối, giữ 4–6 tuần.",
+    includes: ["Test kích ứng", "Uốn mi", "Nhuộm mi (nếu chọn)"],
+    variants: [v("lift", "Uốn mi", 60, 200, 450, 300), v("lift-tint", "Uốn + nhuộm mi", 75, 250, 550, 380)],
+  },
+  {
+    id: "brow-tattoo",
+    category: "lash-brow",
+    name: "Phun xăm mày",
+    description: "Phun sợi hoặc phun bột, có buổi dặm lại sau 1 tháng.",
+    includes: ["Test màu & vẽ dáng", "Phun mày", "1 buổi dặm lại trong 45 ngày"],
+    variants: [
+      v("hairstroke", "Phun sợi", 150, 1500, 5000, 2800),
+      v("powder", "Phun bột / ombre", 150, 1500, 5000, 2800),
+    ],
+    studioOnly: true,
+  },
+  {
+    id: "brow-tint",
+    category: "lash-brow",
+    name: "Nhuộm mày",
+    description: "Nhuộm mày cho dáng rõ hơn mà chưa cần phun xăm.",
+    includes: ["Tỉa gọn", "Nhuộm mày", "Hướng dẫn giữ màu"],
+    variants: [v("tint", "Nhuộm mày", 30, 100, 250, 150)],
+  },
   {
     id: "lash-classic",
     category: "lash-brow",

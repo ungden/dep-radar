@@ -82,7 +82,7 @@ function ServicesManager() {
                   <Toggle
                     label={l.active ? "Tạm ẩn dịch vụ" : "Hiện dịch vụ"}
                     checked={l.active}
-                    onChange={(value) => void act(() => actions.toggleProService(l.templateId, l.prices, value))}
+                    onChange={(value) => void act(() => actions.toggleProService(l.templateId, l.prices, value), value ? "Đã hiện dịch vụ" : "Đã tạm ẩn dịch vụ")}
                   />
                 </div>
                 <ul className="mt-3 flex flex-wrap gap-2">
@@ -160,7 +160,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
     const chosen = Object.fromEntries(Object.entries(prices).filter(([, p]) => p !== undefined)) as Record<string, number>
     if (!Object.keys(chosen).length) return setError("Chọn ít nhất một gói.")
     setBusy(true)
-    const problem = await act(() => actions.saveProService(templateId, chosen, existing?.active ?? true))
+    const problem = await act(() => actions.saveProService(templateId, chosen, existing?.active ?? true), "Đã lưu bảng giá")
     setBusy(false)
     if (problem) setError(problem)
     else onClose()
@@ -226,7 +226,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
             variant="danger"
             aria-label="Bỏ dịch vụ này"
             onClick={async () => {
-              const problem = await act(() => actions.removeProService(templateId))
+              const problem = await act(() => actions.removeProService(templateId), "Đã bỏ dịch vụ")
               if (problem) setError(problem)
               else onClose()
             }}
