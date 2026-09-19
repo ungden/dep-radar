@@ -291,3 +291,58 @@ Từ hôm nay `dep-radar.vercel.app` đọc/ghi Supabase. Không còn store gi�
 - **Lớp truy cập dữ liệu** `lib/api/*` bất đồng bộ, mọi ghi đi qua RPC và trả về kết quả thay vì ném lỗi. Khách chỉ thấy số điện thoại chuyên viên sau khi job được nhận.
 - **Kiểm thử**: `supabase/tests/rules.sql` (phí, khung giá, sinh khung giờ, cả máy trạng thái, trùng lịch, tự đặt cho mình, hết hạn, các guard) + `tests/rls.integration.test.ts` (12 test RLS qua đúng API với JWT thật). Workflow `Database` chạy cả hai.
 
+### ✅ Giai đoạn 2 & 3 — phần lớn đã xong (19/09/2026)
+
+**Chuyên viên tự vận hành được từ đầu đến cuối**
+- Mở hồ sơ → chọn chuyên môn → thêm dịch vụ trong khung giá → tải ảnh tác phẩm → đặt giờ làm việc & ngày nghỉ → mở hồ sơ. Đã chạy thật trên production, không cần ai hỗ trợ.
+- Sửa hồ sơ, ảnh đại diện, bán kính di chuyển, studio; ngày nghỉ (server từ chối khoảng đã có lịch và nói còn bao nhiêu lịch chắn đường).
+- Vòng đời job đầy đủ: gọi → nhận / từ chối → hoàn thành; **huỷ job đã nhận**, **đề nghị đổi giờ**, **báo khách vắng mặt** (chỉ sau giờ hẹn, dep360 bù phí di chuyển vào ví).
+- **Ví & thu nhập**: số dư, từng dòng ghi rõ vì sao, thu nhập theo tháng, hạn mức âm khiến ngưng nhận job.
+- Bảng việc: chỉ báo giá dịch vụ mình đã niêm yết, không thấp hơn giá niêm yết của chính mình.
+- **Danh mục mở rộng**: 23 → 32 dịch vụ, 44 → 64 gói. Thêm cắt/nhuộm/uốn/hấp tóc, uốn mi, phun xăm mày, nhuộm mày, waxing, pedicure.
+
+**Phía khách**
+- Sổ địa chỉ; lịch hẹn gắn với địa chỉ đã lưu vì phí di chuyển tính từ toạ độ.
+- Số lượng người cho gói tính theo đầu người — đổi cả giá, thời lượng và khung giờ khả dụng.
+- Trả lời đề nghị đổi giờ; huỷ có lý do.
+- Đánh giá kèm ảnh, lọc “có ảnh”.
+- **Tin nhắn** với chuyên viên (Realtime): hỏi trước khi đặt, hoặc nhắn trong lịch hẹn. Thread chỉ mở được khi có lý do — chung một lịch hẹn, hoặc hỏi một hồ sơ đã công khai.
+- **Thông báo**: trung tâm thông báo + chuông có số thật; nhắc lịch T-24h/T-2h do cron gửi.
+- **Cài đặt tài khoản** kèm xoá tài khoản theo Nghị định 13/2023.
+- **Trợ giúp & an toàn** (`/tro-giup`), báo cáo vấn đề trong lịch hẹn, chia sẻ lịch hẹn cho người thân.
+- Khám phá: “Dành cho bạn” xếp theo danh mục đã đặt/đã lưu rồi tới khoảng cách; “cùng dịch vụ của chuyên viên khác”; sắp xếp theo giá và theo khoảng cách; lọc “đang nhận job”.
+
+**Vận hành**
+- `/admin`: hàng đợi xác minh (hiện đúng những gì AI nói), danh sách chuyên viên kèm ví và nút tạm khoá, lịch hẹn, hộp báo cáo.
+
+### ✅ Giai đoạn 4 — phần chính đã xong
+
+- Trang đích `/{thanh-pho}/{danh-muc}` cho đúng câu người ta gõ (“nail tại nhà Hà Nội”): metadata riêng, khung giá, JSON-LD, revalidate 10 phút.
+- JSON-LD `BeautySalon` + `Offer` + `Review` trên hồ sơ (chỉ gắn `aggregateRating` khi có đánh giá thật), `FAQPage` trên trang trợ giúp.
+- Footer desktop, cũng là nơi liên kết các trang đích.
+- Một vùng `aria-live` duy nhất cho toàn app: mọi thao tác ghi đều được đọc lên, không chỉ đổi pixel. Tab có bàn phím (mũi tên/Home/End). Vùng chạm tab bar 44px, nhãn 11,5px. Màn rộng có thêm cột `xl`.
+
+### ✅ Giai đoạn 5 — phần không cần tài khoản bên thứ ba
+
+- Service worker + trang `/offline`. **Không cache dữ liệu Supabase**: app hiện giá, khung giờ trống và trạng thái lịch — hiện bản lưu tạm là hiện một khung giờ đã có người đặt. Manifest có `id`, `lang`, shortcuts.
+
+---
+
+## 10. Còn lại, và vì sao
+
+**Cần khoá/tài khoản của anh — mình không tạo được**
+- `GEMINI_API_KEY` trên Vercel. Thiếu thì xác minh danh tính trả 503 và nói rõ là chưa cấu hình.
+- Nhà cung cấp SMS/ZNS cho OTP thật (`SUPABASE_SMS_PROVIDER_READY=true`). Chưa có thì đăng nhập vẫn chạy và màn hình nói thẳng là chưa gửi SMS.
+- Sentry + analytics: cần DSN/khoá.
+- Zalo ZNS / Web Push: cần Zalo OA (pháp nhân) và khoá VAPID.
+- Cổng thanh toán (payOS/VNPay/MoMo): cần pháp nhân + rà pháp lý. Hiện “thanh toán online” hiển thị rõ là chưa hoạt động, không bấm được.
+- Nạp ví VietQR tự động (webhook SePay/Casso): cần tài khoản ngân hàng doanh nghiệp. Hiện ví ghi nhận thủ công và trang ví nói đúng như vậy.
+- Bản đồ ghim địa chỉ (Goong/Google Maps): cần khoá. Hiện khoảng cách tính theo tâm quận và giao diện gọi đó là “ước tính”.
+- Domain `dep360.vn`.
+
+**Mình chủ động chưa làm, kèm lý do**
+- **Lọc “chuyên viên nữ”**: cần thu thập giới tính. Đó là dữ liệu cá nhân, phải có mục đích rõ và sự đồng ý — nên là quyết định sản phẩm của anh, không phải thứ mình tự thêm.
+- **Lọc “rảnh hôm nay”**: khung giờ trống phụ thuộc dịch vụ và ngày, nên nhãn đó sẽ là phỏng đoán đóng vai sự thật. Thay bằng “đang nhận job”, là dữ kiện thật trên hồ sơ.
+- **Đền 30% khi huỷ muộn**: cần thanh toán online để thu. Trang chính sách ghi rõ là “sắp áp dụng”.
+- **Đóng gói Capacitor lên App Store/Play**: cần tài khoản nhà phát triển và khai báo quyền riêng tư cho CCCD + khuôn mặt.
+- **Lịch tuần/tháng cho chuyên viên**: hiện có xem theo ngày, chờ xác nhận và lịch sử. Xem theo tháng là tiện lợi, chưa phải thiếu sót.

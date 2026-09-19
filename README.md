@@ -79,3 +79,18 @@ demo trong trình duyệt và nói rõ điều đó, thay vì vỡ.
 dùng** trước khi tải lên. Việc đó vừa giảm dung lượng, vừa xoá khối EXIF — trên
 ảnh chụp bằng điện thoại, khối đó chứa toạ độ GPS nơi chụp, thường là nhà của ai
 đó. Ảnh CCCD và selfie thì không lưu ở đâu cả: gửi thẳng cho AI rồi thôi.
+
+## Cấu trúc
+
+| Thư mục | Nội dung |
+| --- | --- |
+| `app/` | Route Next.js. Trang công khai server-render kèm metadata riêng; trang riêng tư do `middleware.ts` chặn. |
+| `lib/api/` | Lớp truy cập dữ liệu. `snapshot.ts` là một lần đọc cho mỗi lần chuyển trang; mọi thao tác ghi đi qua server action → RPC. |
+| `lib/catalog.ts` | Danh mục dịch vụ và khung giá. Nguồn duy nhất, sinh ra SQL cho database. |
+| `lib/pricing.ts` | Luật phí. Có bản song song trong SQL, hai bên có test đối chiếu. |
+| `supabase/migrations/` | Schema, RLS, RPC, cron. |
+| `supabase/tests/rules.sql` | Test luật nghiệp vụ chạy trong database. |
+| `tests/` | Unit test (offline) + test row level security qua đúng API. |
+
+Nguyên tắc xuyên suốt: **không hiển thị thứ gì hệ thống không thực hiện được.**
+Điều gì chưa chạy thì ghi rõ "sắp áp dụng"; con số nào không có thật thì không hiện.
