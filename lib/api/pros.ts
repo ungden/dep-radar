@@ -1,6 +1,13 @@
+import { backendEnabled } from "@/lib/supabase/env"
 import { supabaseServer } from "@/lib/supabase/server"
 import { toProDetail, toProSummary, toReviewItem, toWorkItem } from "./map"
 import type { ListedService, ProDetail, ProSummary, ReviewItem, WorkItem } from "./types"
+
+/**
+ * Without a configured database there is nothing to read, and a build must not
+ * fail over it: CI builds with no Supabase variables on purpose, to prove the app
+ * degrades instead of crashing.
+ */
 
 /** Public profile fields. A phone number is not one of them. */
 // Public identity lives on `pros`; `accounts` is private and holds the phone.
@@ -18,6 +25,7 @@ const WORK_WITH_PRO = `
 `
 
 export async function listPros(filter: { city?: string; category?: string } = {}): Promise<ProSummary[]> {
+  if (!backendEnabled) return []
   const supabase = await supabaseServer()
   let query = supabase.from("pros").select(PRO_PUBLIC).eq("published", true).is("suspended_at", null)
   if (filter.city) query = query.eq("city", filter.city)
@@ -28,6 +36,7 @@ export async function listPros(filter: { city?: string; category?: string } = {}
 }
 
 export async function getProBySlug(slug: string): Promise<ProDetail | null> {
+  if (!backendEnabled) return null
   const supabase = await supabaseServer()
   const { data, error } = await supabase.from("pros").select(PRO_PUBLIC).eq("slug", slug).maybeSingle()
   if (error) throw error
@@ -35,6 +44,7 @@ export async function getProBySlug(slug: string): Promise<ProDetail | null> {
 }
 
 export async function listProServices(proId: string): Promise<ListedService[]> {
+  if (!backendEnabled) return []
   const supabase = await supabaseServer()
   const [{ data: services, error: e1 }, { data: prices, error: e2 }] = await Promise.all([
     supabase.from("pro_services").select("template_id, active").eq("pro_id", proId),
@@ -52,6 +62,7 @@ export async function listProServices(proId: string): Promise<ListedService[]> {
 }
 
 export async function listWorks(filter: { proId?: string; category?: string; limit?: number } = {}): Promise<WorkItem[]> {
+  if (!backendEnabled) return []
   const supabase = await supabaseServer()
   let query = supabase.from("works").select(WORK_WITH_PRO).eq("pros.published", true).order("sort_order")
   if (filter.proId) query = query.eq("pro_id", filter.proId)
@@ -63,6 +74,7 @@ export async function listWorks(filter: { proId?: string; category?: string; lim
 }
 
 export async function listReviews(proId: string): Promise<ReviewItem[]> {
+  if (!backendEnabled) return []
   const supabase = await supabaseServer()
   const { data, error } = await supabase
     .from("reviews")
@@ -131,6 +143,7 @@ export async function availabilityProblem(input: {
 
 /** For a work's own page: enough for metadata, without loading the whole feed. */
 export async function getWorkBySlug(slug: string) {
+  if (!backendEnabled) return null
   const supabase = await supabaseServer()
   const { data, error } = await supabase
     .from("works")
@@ -155,6 +168,7 @@ export async function getWorkBySlug(slug: string) {
 
 /** Slugs for the sitemap, so it lists what is actually published. */
 export async function listPublishedSlugs() {
+  if (!backendEnabled) return { pros: [], works: [] }
   const supabase = await supabaseServer()
   const [pros, works] = await Promise.all([
     supabase.from("pros").select("slug").eq("published", true).is("suspended_at", null),

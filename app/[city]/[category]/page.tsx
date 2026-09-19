@@ -33,6 +33,13 @@ export function generateStaticParams() {
   return CITIES.flatMap((city) => CATEGORIES.map((c) => ({ city: slugOfCity(city), category: c.id })))
 }
 
+/**
+ * Prerendered for speed and for crawlers, then refreshed in the background. A
+ * marketplace page that only changed on deploy would hide a freelancer who
+ * signed up this morning.
+ */
+export const revalidate = 600
+
 type Params = Promise<{ city: string; category: string }>
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
