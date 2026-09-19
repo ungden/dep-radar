@@ -7,6 +7,7 @@ import { useParams } from "next/navigation"
 import { CalendarDays, Home, Info, Phone, Store } from "lucide-react"
 import { bookingImage } from "@/components/booking-card"
 import { PriceBreakdown } from "@/components/price-breakdown"
+import { MessageButton } from "@/components/message-button"
 import { ReportButton } from "@/components/report-button"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, StatusBadge, buttonClass, inputClass } from "@/components/ui"
@@ -242,7 +243,11 @@ function BookingDetail() {
           <ButtonLink href={`/book/${booking.proId}?service=${booking.templateId}&variant=${booking.variantId}`}>Đặt lại</ButtonLink>
         </div>
       )}
-      <div className="pt-2 text-center">
+      <div className="flex justify-center pt-2">
+        <MessageButton proId={booking.proId} bookingId={booking.id} label="Nhắn tin" />
+      </div>
+
+      <div className="pt-1 text-center">
         <ReportButton bookingId={booking.id} targetAccountId={isPro ? booking.customerId : null} />
       </div>
 

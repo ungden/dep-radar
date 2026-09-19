@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Briefcase, CalendarDays, Car, ChevronLeft, Home, MapPin, Share2, Sparkles, Store } from "lucide-react"
 import { FollowButton } from "@/components/follow-button"
+import { MessageButton } from "@/components/message-button"
 import { ServiceMenu } from "@/components/service-menu"
 import { RatingSummaryBlock, ReviewItem, VerifiedBadge, VerifiedMark } from "@/components/trust"
 import { Avatar, Button, Card, Chip, EmptyState, Tabs } from "@/components/ui"
@@ -125,6 +126,11 @@ export function ProProfile({ proId }: { proId: string }) {
           <Button size="lg" className="mt-5 w-full" onClick={openServices} disabled={!services.length}>
             Xem bảng giá & đặt lịch{from !== null ? ` · từ ${formatPrice(from)}` : ""}
           </Button>
+          {/* Asking before booking is often the difference between booking and
+              not: "tóc tôi đã tẩy, có uốn được không?" */}
+          {state.session?.proId !== pro.id && (
+            <MessageButton proId={pro.id} label={`Nhắn tin cho ${pro.name.split(" ").slice(-1)[0]}`} className="mt-2 w-full" />
+          )}
         </aside>
 
         <div ref={tabsRef} className="scroll-mt-4 md:scroll-mt-24">

@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { SUPABASE_ANON_KEY, SUPABASE_URL, backendEnabled } from "@/lib/supabase/env"
 
 /** Signed-in-only areas. The server decides, not the rendered page. */
-const PRIVATE = ["/studio", "/bookings", "/requests", "/me", "/book"]
+const PRIVATE = ["/studio", "/bookings", "/requests", "/me", "/book", "/tin-nhan", "/thong-bao"]
 const ADMIN = "/admin"
 
 export async function middleware(request: NextRequest) {

@@ -10,6 +10,7 @@ import {
   Heart,
   LayoutGrid,
   ListChecks,
+  MessageSquare,
   Scissors,
   Search,
   User,
@@ -80,6 +81,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
           {session ? (
             <div className="flex items-center gap-3">
+              <Link
+                href="/tin-nhan"
+                aria-label="Tin nhắn"
+                className="inline-flex size-9 items-center justify-center rounded-full hover:bg-blush/60"
+              >
+                <MessageSquare className="size-[18px]" />
+              </Link>
               <Link
                 href="/thong-bao"
                 aria-label="Thông báo"

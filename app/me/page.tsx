@@ -10,6 +10,7 @@ import {
   Heart,
   ImagePlus,
   LogOut,
+  MessageSquare,
   Settings,
   Wallet,
   MapPin,
@@ -166,6 +167,7 @@ export default function MePage() {
 type MenuItem = { href: string; icon: React.ComponentType<{ className?: string }>; label: string; sub?: string }
 
 const commonItems: MenuItem[] = [
+  { href: "/tin-nhan", icon: MessageSquare, label: "Tin nhắn" },
   { href: "/thong-bao", icon: Bell, label: "Thông báo" },
   { href: "/me/cai-dat", icon: Settings, label: "Cài đặt tài khoản" },
   { href: "/chinh-sach", icon: ShieldCheck, label: "Chính sách phí, đặt lịch & huỷ" },
