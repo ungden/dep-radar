@@ -147,7 +147,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex flex-col items-center gap-1 py-2.5 text-[10.5px]",
+                      // A tab bar is the most-tapped thing in the app: 44px tall
+                      // and a label you can read without squinting.
+                      "flex min-h-11 flex-col items-center justify-center gap-0.5 py-2 text-[11.5px]",
                       active ? "font-semibold text-rose" : "text-muted",
                     )}
                   >

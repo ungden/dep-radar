@@ -4,6 +4,7 @@ import "./globals.css"
 
 import { AppShell } from "@/components/layout/app-shell"
 import { SITE_URL } from "@/lib/env"
+import { RegisterServiceWorker } from "@/components/register-sw"
 import { StoreProvider } from "@/lib/store"
 import { emptySnapshot, loadSnapshot } from "@/lib/api/snapshot"
 import { backendEnabled } from "@/lib/supabase/env"
@@ -69,6 +70,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           Bỏ qua, tới nội dung chính
         </a>
+        <RegisterServiceWorker />
         <StoreProvider snapshot={snapshot}>
           <AppShell>{children}</AppShell>
         </StoreProvider>

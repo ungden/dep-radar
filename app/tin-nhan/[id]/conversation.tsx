@@ -23,7 +23,7 @@ export function Conversation({
   initial,
 }: {
   threadId: string
-  header: { name: string; proSlug: string; bookingId: string | null }
+  header: { name: string; proSlug: string; bookingId: string | null; iAmPro: boolean }
   initial: ChatMessage[]
 }) {
   const [messages, setMessages] = React.useState(initial)
@@ -74,7 +74,7 @@ export function Conversation({
             <Link href={`/bookings/${header.bookingId}`} className="text-[13px] text-rose">
               Xem lịch hẹn
             </Link>
-          ) : header.proSlug ? (
+          ) : header.proSlug && !header.iAmPro ? (
             <Link href={`/pros/${header.proSlug}`} className="text-[13px] text-rose">
               Xem hồ sơ
             </Link>

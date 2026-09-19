@@ -181,7 +181,7 @@ function SearchView() {
 
       {mode === "works" ? (
         works.length ? (
-          <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4 md:gap-x-5">
+          <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4 md:gap-x-5 xl:grid-cols-5">
             {works.map((w) => (
               <WorkCard key={w.id} work={w} />
             ))}

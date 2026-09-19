@@ -103,7 +103,9 @@ export async function listMessages(threadId: string): Promise<ChatMessage[]> {
 }
 
 /** Who the caller is talking to, for the conversation header. */
-export async function threadHeader(threadId: string): Promise<{ name: string; proSlug: string; bookingId: string | null } | null> {
+export async function threadHeader(
+  threadId: string,
+): Promise<{ name: string; proSlug: string; bookingId: string | null; iAmPro: boolean } | null> {
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return null
@@ -122,6 +124,7 @@ export async function threadHeader(threadId: string): Promise<{ name: string; pr
     name: String((iAmPro ? data.customer_name : pro.display_name) ?? "Người dùng"),
     proSlug: String(pro.slug ?? ""),
     bookingId: data.booking_id,
+    iAmPro,
   }
 }
 

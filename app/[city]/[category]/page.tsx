@@ -159,7 +159,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
       {cityWorks.length > 0 && (
         <section className="mt-8">
           <h2 className="mb-3 font-semibold">Tác phẩm {category.label.toLowerCase()} gần đây</h2>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
             {cityWorks.slice(0, 8).map((w) => (
               <WorkCard
                 key={w.id}

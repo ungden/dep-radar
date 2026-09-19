@@ -126,7 +126,7 @@ export default function ExplorePage() {
           {feed === "following" ? "Bạn chưa theo dõi chuyên viên nào ở khu vực này." : "Chưa có tác phẩm ở khu vực này."}
         </p>
       ) : (
-        <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-4 md:gap-x-5">
+        <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-4 md:gap-x-5 xl:grid-cols-5">
           {works.map((w, i) => (
             <WorkFeedCard key={w.id} work={w} priority={i < 4} />
           ))}

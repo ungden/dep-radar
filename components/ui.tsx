@@ -21,7 +21,9 @@ const buttonVariants: Record<ButtonVariant, string> = {
   danger: "border border-danger/40 bg-surface text-danger hover:bg-danger-soft",
 }
 const buttonSizes: Record<ButtonSize, string> = {
-  sm: "h-9 rounded-xl px-3.5 text-[13px]",
+  // 36px is below the 44px recommendation, so a small button keeps a larger
+  // invisible hit area around it.
+  sm: "h-9 rounded-xl px-3.5 text-[13px] [&]:relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
   md: "h-11 rounded-xl px-5 text-sm",
   lg: "h-13 rounded-2xl px-6 text-[15px]",
 }
@@ -109,7 +111,7 @@ export function Chip({
       type="button"
       aria-pressed={active}
       className={cn(
-        "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-4 text-[13px] font-medium transition-colors",
+        "relative inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-4 text-[13px] font-medium transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
         active ? "border-rose bg-rose text-white" : "border-line bg-surface text-ink-soft hover:border-blush-strong",
         className,
       )}

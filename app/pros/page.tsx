@@ -88,7 +88,7 @@ export default function ProsPage() {
       )}
 
       {pros.length ? (
-        <ul className="mt-4 grid gap-3 md:grid-cols-2">
+        <ul className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {pros.map((p) => (
             <li key={p.id}>
               <ProCard pro={p} />
