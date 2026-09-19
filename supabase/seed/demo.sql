@@ -728,8 +728,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'bd9f070b-6e1b-43e8-872b-d225fb16e44b', 'commission', -57000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('bd9f070b-6e1b-43e8-872b-d225fb16e44b', '5cb61497-1c4a-49d9-80a2-9864426c89bb', 'f06b6da3-a344-4f36-8c08-bef99f162401', 'Ngọc Hân', 5, array['Tay nghề tốt', 'Bền đẹp']::text[], 'Làm kỹ, form móng đẹp, đến đúng giờ. Giữ được hơn 3 tuần không bong.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('bd9f070b-6e1b-43e8-872b-d225fb16e44b', '5cb61497-1c4a-49d9-80a2-9864426c89bb', 'f06b6da3-a344-4f36-8c08-bef99f162401', 'Ngọc Hân', 'Nail thiết kế · Đính đá / charm', 5, array['Tay nghề tốt', 'Bền đẹp']::text[], 'Làm kỹ, form móng đẹp, đến đúng giờ. Giữ được hơn 3 tuần không bong.',
   array['/images/works/nail-milky-1.webp']::text[], 'Cảm ơn Hân nhiều, hẹn gặp lại lần sau nha!',
   '2026-09-02'::date, '2026-09-02'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -751,8 +751,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'dc49cdd4-e279-4ec0-84fd-dac4683810fe', 'commission', -27000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('dc49cdd4-e279-4ec0-84fd-dac4683810fe', '5cb61497-1c4a-49d9-80a2-9864426c89bb', '9a937381-49b2-4ef9-8edb-2c55ae893c48', 'Thảo Vy', 5, array['Dụng cụ sạch sẽ', 'Tư vấn kỹ']::text[], 'Tư vấn màu rất có tâm, dụng cụ hấp tiệt trùng trước mặt mình luôn.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('dc49cdd4-e279-4ec0-84fd-dac4683810fe', '5cb61497-1c4a-49d9-80a2-9864426c89bb', '9a937381-49b2-4ef9-8edb-2c55ae893c48', 'Thảo Vy', 'Sơn gel trơn · Tay', 5, array['Dụng cụ sạch sẽ', 'Tư vấn kỹ']::text[], 'Tư vấn màu rất có tâm, dụng cụ hấp tiệt trùng trước mặt mình luôn.',
   '{}'::text[], null,
   null, '2026-08-21'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -774,8 +774,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'b4287a1e-f41f-4354-859e-33e42f13198b', 'commission', -68000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('b4287a1e-f41f-4354-859e-33e42f13198b', '5cb61497-1c4a-49d9-80a2-9864426c89bb', 'bdb0d68c-8db6-41bf-8584-4569b2534db0', 'Minh Châu', 4, array['Tay nghề tốt']::text[], 'Đẹp, nhưng đến trễ 15 phút vì kẹt xe, có nhắn báo trước.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('b4287a1e-f41f-4354-859e-33e42f13198b', '5cb61497-1c4a-49d9-80a2-9864426c89bb', 'bdb0d68c-8db6-41bf-8584-4569b2534db0', 'Minh Châu', 'Nối móng · Đắp gel', 4, array['Tay nghề tốt']::text[], 'Đẹp, nhưng đến trễ 15 phút vì kẹt xe, có nhắn báo trước.',
   '{}'::text[], 'Xin lỗi Châu vì hôm đó mưa kẹt xe, lần sau mình sẽ đi sớm hơn ạ.',
   '2026-08-10'::date, '2026-08-10'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -797,8 +797,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', '45e315f5-b594-4c9b-8c7c-5fb9375a0ee6', 'commission', -90000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('45e315f5-b594-4c9b-8c7c-5fb9375a0ee6', '9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'b1e151a4-83e9-46f4-8592-d240360f1d64', 'Lan Phương', 5, array['Bền đẹp', 'Nhẹ nhàng']::text[], 'Makeup trong veo, chụp ảnh lên rất xinh, bền cả tối.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('45e315f5-b594-4c9b-8c7c-5fb9375a0ee6', '9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'b1e151a4-83e9-46f4-8592-d240360f1d64', 'Lan Phương', 'Makeup dự tiệc · Makeup', 5, array['Bền đẹp', 'Nhẹ nhàng']::text[], 'Makeup trong veo, chụp ảnh lên rất xinh, bền cả tối.',
   array['/images/works/makeup-party-1.webp']::text[], null,
   null, '2026-09-05'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -820,8 +820,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', '824c4706-83fe-439d-897e-3fe6f31a942d', 'commission', -83000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('824c4706-83fe-439d-897e-3fe6f31a942d', '9eef8114-88b2-4fe8-8655-35eb03b8bf61', '73433aa8-86d8-43bd-80cd-924c09ff5fce', 'Bảo Ngọc', 5, array['Tư vấn kỹ']::text[], 'Chị rất nhẹ nhàng, hỏi kỹ về da trước khi làm.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('824c4706-83fe-439d-897e-3fe6f31a942d', '9eef8114-88b2-4fe8-8655-35eb03b8bf61', '73433aa8-86d8-43bd-80cd-924c09ff5fce', 'Bảo Ngọc', 'Makeup chụp ảnh / kỷ yếu · 1 người', 5, array['Tư vấn kỹ']::text[], 'Chị rất nhẹ nhàng, hỏi kỹ về da trước khi làm.',
   '{}'::text[], null,
   null, '2026-08-28'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -843,8 +843,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'c077d96a-bfa5-4a97-85d3-59050126a036', 'commission', -330000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('c077d96a-bfa5-4a97-85d3-59050126a036', '9eef8114-88b2-4fe8-8655-35eb03b8bf61', '73afbfcc-5f79-464f-8d16-fc4bd4b78ad4', 'Hải Yến', 4, array['Tay nghề tốt']::text[], 'Layout đẹp, hơi lâu hơn dự kiến một chút.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('c077d96a-bfa5-4a97-85d3-59050126a036', '9eef8114-88b2-4fe8-8655-35eb03b8bf61', '73afbfcc-5f79-464f-8d16-fc4bd4b78ad4', 'Hải Yến', 'Makeup cô dâu · 1 lễ (ăn hỏi hoặc cưới)', 4, array['Tay nghề tốt']::text[], 'Layout đẹp, hơi lâu hơn dự kiến một chút.',
   '{}'::text[], null,
   null, '2026-08-12'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -866,8 +866,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('5fd22452-981a-4762-8f5d-106d1f03bec9', '1c83c1ba-7fb8-4c11-8015-ae5e2ebe4646', 'commission', -68000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('1c83c1ba-7fb8-4c11-8015-ae5e2ebe4646', '5fd22452-981a-4762-8f5d-106d1f03bec9', 'cd023aa1-2d9c-4d5a-8daf-edb5c6aca73c', 'Khánh Linh', 5, array['Dụng cụ sạch sẽ', 'Nhẹ nhàng']::text[], 'Da dịu hẳn sau 2 buổi, không bị đỏ như lúc đi spa.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('1c83c1ba-7fb8-4c11-8015-ae5e2ebe4646', '5fd22452-981a-4762-8f5d-106d1f03bec9', 'cd023aa1-2d9c-4d5a-8daf-edb5c6aca73c', 'Khánh Linh', 'Phục hồi da nhạy cảm · 75 phút', 5, array['Dụng cụ sạch sẽ', 'Nhẹ nhàng']::text[], 'Da dịu hẳn sau 2 buổi, không bị đỏ như lúc đi spa.',
   array['/images/works/skin-glow.webp']::text[], 'Nhớ bôi kem chống nắng đều nha Linh!',
   '2026-09-01'::date, '2026-09-01'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -889,8 +889,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('5fd22452-981a-4762-8f5d-106d1f03bec9', 'b6389ca9-9982-4bd9-80c8-8ff370edfa70', 'commission', -63000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('b6389ca9-9982-4bd9-80c8-8ff370edfa70', '5fd22452-981a-4762-8f5d-106d1f03bec9', 'ee2c9d96-c553-4f05-8d05-5a54acd5c718', 'Tuấn Anh', 5, array['Tay nghề tốt', 'Đúng giờ']::text[], 'Lấy mụn nhẹ tay, không thâm, dụng cụ bóc tem trước mặt.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('b6389ca9-9982-4bd9-80c8-8ff370edfa70', '5fd22452-981a-4762-8f5d-106d1f03bec9', 'ee2c9d96-c553-4f05-8d05-5a54acd5c718', 'Tuấn Anh', 'Lấy nhân mụn chuẩn y khoa · 60 phút', 5, array['Tay nghề tốt', 'Đúng giờ']::text[], 'Lấy mụn nhẹ tay, không thâm, dụng cụ bóc tem trước mặt.',
   '{}'::text[], null,
   null, '2026-08-19'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -912,8 +912,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'a85ba79c-f1d2-461a-8329-751291e998ec', 'commission', -63000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('a85ba79c-f1d2-461a-8329-751291e998ec', '4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'd1241708-0ec0-4cd0-85bf-98a098dc5af1', 'Hồng Nhung', 5, array['Bền đẹp']::text[], 'Tóc giữ nếp tới cuối tiệc cưới.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('a85ba79c-f1d2-461a-8329-751291e998ec', '4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'd1241708-0ec0-4cd0-85bf-98a098dc5af1', 'Hồng Nhung', 'Tạo kiểu tóc sự kiện · Búi / tết cầu kỳ', 5, array['Bền đẹp']::text[], 'Tóc giữ nếp tới cuối tiệc cưới.',
   array['/images/works/hair-bun-1.webp']::text[], null,
   null, '2026-08-17'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -935,8 +935,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', '78003582-4c0a-4d5c-8bf8-594443e7c47c', 'commission', -45000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('78003582-4c0a-4d5c-8bf8-594443e7c47c', '4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', '85d2b31f-0c89-4731-84cf-8147ae5acb33', 'Mỹ Duyên', 4, array['Giá hợp lý']::text[], 'Uốn đẹp nhưng lọn hơi nhanh xẹp.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('78003582-4c0a-4d5c-8bf8-594443e7c47c', '4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', '85d2b31f-0c89-4731-84cf-8147ae5acb33', 'Mỹ Duyên', 'Tạo kiểu tóc sự kiện · Uốn / duỗi tạo kiểu', 4, array['Giá hợp lý']::text[], 'Uốn đẹp nhưng lọn hơi nhanh xẹp.',
   '{}'::text[], null,
   null, '2026-08-02'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -958,8 +958,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', '5b56ddce-104d-4533-8903-b77cd016e986', 'commission', -53000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('5b56ddce-104d-4533-8903-b77cd016e986', 'ffe52497-3a38-41b9-8efc-1b76837aa36d', '93164c11-60ad-434d-8cbd-0e217e49a33c', 'Phương Anh', 5, array['Nhẹ nhàng', 'Bền đẹp']::text[], 'Mi tự nhiên, không cộm, không cay mắt.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('5b56ddce-104d-4533-8903-b77cd016e986', 'ffe52497-3a38-41b9-8efc-1b76837aa36d', '93164c11-60ad-434d-8cbd-0e217e49a33c', 'Phương Anh', 'Nối mi classic · Full set', 5, array['Nhẹ nhàng', 'Bền đẹp']::text[], 'Mi tự nhiên, không cộm, không cay mắt.',
   array['/images/works/lash-1.webp']::text[], null,
   null, '2026-09-08'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -981,8 +981,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', 'a2a3820d-44d7-4787-89c0-b74aeb6f5384', 'commission', -18000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('a2a3820d-44d7-4787-89c0-b74aeb6f5384', 'ffe52497-3a38-41b9-8efc-1b76837aa36d', '545175ee-67df-4326-894e-200fe3b03272', 'Thu Hà', 5, array['Đúng giờ']::text[], 'Dáng mày hợp mặt, làm nhanh.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('a2a3820d-44d7-4787-89c0-b74aeb6f5384', 'ffe52497-3a38-41b9-8efc-1b76837aa36d', '545175ee-67df-4326-894e-200fe3b03272', 'Thu Hà', 'Tạo dáng & tỉa mày · Tạo dáng', 5, array['Đúng giờ']::text[], 'Dáng mày hợp mặt, làm nhanh.',
   '{}'::text[], null,
   null, '2026-08-25'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -1004,8 +1004,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'e44a239c-9a33-4f18-825d-609b816c20d8', 'commission', -75000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('e44a239c-9a33-4f18-825d-609b816c20d8', '6ecaa96d-5749-4fe4-8384-642d3f798120', 'e027b0ba-dfba-4717-8b0d-f92acb62a9b8', 'Diệu Linh', 5, array['Giá hợp lý', 'Nhẹ nhàng']::text[], 'Nhóm mình 3 người làm nhanh gọn, bạn rất dễ thương.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('e44a239c-9a33-4f18-825d-609b816c20d8', '6ecaa96d-5749-4fe4-8384-642d3f798120', 'e027b0ba-dfba-4717-8b0d-f92acb62a9b8', 'Diệu Linh', 'Makeup dự tiệc · Makeup', 5, array['Giá hợp lý', 'Nhẹ nhàng']::text[], 'Nhóm mình 3 người làm nhanh gọn, bạn rất dễ thương.',
   '{}'::text[], null,
   null, '2026-08-30'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -1027,8 +1027,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'a291b915-0d35-40c8-8dca-8d7e51ef872c', 'commission', -63000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('a291b915-0d35-40c8-8dca-8d7e51ef872c', '3d48e94c-1b06-4234-8b62-f63c55989f25', 'cbe9e85a-9bde-4f14-8fec-bb3bd008b9dd', 'Quốc Bảo', 5, array['Tay nghề tốt', 'Đúng giờ']::text[], 'Bấm huyệt đúng chỗ đau, mang theo cả giường gấp, rất chuyên nghiệp.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('a291b915-0d35-40c8-8dca-8d7e51ef872c', '3d48e94c-1b06-4234-8b62-f63c55989f25', 'cbe9e85a-9bde-4f14-8fec-bb3bd008b9dd', 'Quốc Bảo', 'Massage cổ vai gáy · 90 phút', 5, array['Tay nghề tốt', 'Đúng giờ']::text[], 'Bấm huyệt đúng chỗ đau, mang theo cả giường gấp, rất chuyên nghiệp.',
   '{}'::text[], null,
   null, '2026-09-06'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
@@ -1050,8 +1050,8 @@ on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
 values ('3d48e94c-1b06-4234-8b62-f63c55989f25', '985c291f-20cf-4629-88fd-f804f9a5dff4', 'commission', -63000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
-insert into public.reviews (booking_id, pro_id, customer_id, author_name, rating, tags, body, photo_paths, reply, replied_at, created_at)
-values ('985c291f-20cf-4629-88fd-f804f9a5dff4', '3d48e94c-1b06-4234-8b62-f63c55989f25', 'a86f5455-4503-4cb3-8222-596c1f117886', 'Thanh Tâm', 5, array['Nhẹ nhàng', 'Tư vấn kỹ']::text[], 'Massage bầu tháng thứ 7, chị rất cẩn thận, hỏi kỹ tình trạng trước.',
+insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
+values ('985c291f-20cf-4629-88fd-f804f9a5dff4', '3d48e94c-1b06-4234-8b62-f63c55989f25', 'a86f5455-4503-4cb3-8222-596c1f117886', 'Thanh Tâm', 'Massage bầu · 60 phút', 5, array['Nhẹ nhàng', 'Tư vấn kỹ']::text[], 'Massage bầu tháng thứ 7, chị rất cẩn thận, hỏi kỹ tình trạng trước.',
   '{}'::text[], 'Chúc mẹ bầu mẹ tròn con vuông nha!',
   '2026-08-22'::date, '2026-08-22'::date)
 on conflict (booking_id) do update set rating = excluded.rating, body = excluded.body,
