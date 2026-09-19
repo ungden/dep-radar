@@ -9,7 +9,7 @@ import { sortPros } from "@/components/trust"
 import { Logo, Tabs } from "@/components/ui"
 import { CITIES } from "@/lib/geo"
 import { actions } from "@/lib/client-actions"
-import { getPro, useApp } from "@/lib/store"
+import { distanceToCustomer, getPro, useApp } from "@/lib/store"
 
 type Feed = "for-you" | "following" | "trending"
 
@@ -20,16 +20,32 @@ export default function ExplorePage() {
   const [feed, setFeed] = React.useState<Feed>("for-you")
   const [q, setQ] = React.useState("")
 
+  /**
+   * "Dành cho bạn" from what this person has actually done: the categories they
+   * booked or saved come first, then how close the freelancer is, then rating.
+   * With no history it is simply the best-rated work, which is the honest
+   * default rather than a pretend personalisation.
+   */
   const works = React.useMemo(() => {
     let list = state.works.filter((w) => !city || getPro(state, w.proId)?.city === city)
     if (feed === "following") list = list.filter((w) => followedPros.includes(w.proId))
-    // Until there are real engagement numbers, "trending" is the best-rated work.
-    if (feed === "trending") {
-      list = [...list].sort(
-        (a, b) => (getPro(state, b.proId)?.rating.average ?? 0) - (getPro(state, a.proId)?.rating.average ?? 0),
-      )
+
+    const interested = new Set<string>()
+    for (const b of state.bookings) if (b.mine) interested.add(b.category)
+    for (const slug of state.savedWorks) {
+      const saved = state.works.find((w) => w.id === slug)
+      if (saved) interested.add(saved.category)
     }
-    return list
+
+    const score = (w: (typeof list)[number]) => {
+      const pro = getPro(state, w.proId)
+      const rating = pro?.rating.count ? pro.rating.average : 0
+      if (feed === "trending") return rating
+      const km = distanceToCustomer(state, w.proId)
+      const near = km === null ? 0 : Math.max(0, 1 - km / 20)
+      return (interested.has(w.category) ? 10 : 0) + near * 2 + rating
+    }
+    return [...list].sort((a, b) => score(b) - score(a))
   }, [state, city, feed, followedPros])
 
   const pros = React.useMemo(

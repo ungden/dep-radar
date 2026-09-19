@@ -10,7 +10,7 @@ import { Chip, EmptyState, Tabs, PageSkeleton } from "@/components/ui"
 import { sortPros } from "@/components/trust"
 import { CATEGORIES, getTemplate } from "@/lib/catalog"
 import { CITIES } from "@/lib/geo"
-import { fromPrice, proView, useApp } from "@/lib/store"
+import { distanceToCustomer, fromPrice, proView, useApp } from "@/lib/store"
 import type { CategoryId } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -50,6 +50,8 @@ function SearchView() {
   const maxPrice = Number(params.get("price") ?? 0)
   const topRated = params.get("rating") === "1"
   const atHome = params.get("home") === "1"
+  const openOnly = params.get("open") === "1"
+  const sort = (params.get("sort") as "match" | "price" | "near" | null) ?? "match"
   const query = params.get("q") ?? ""
 
   const setParam = (key: string, value: string | null) => {
@@ -70,10 +72,25 @@ function SearchView() {
       if (maxPrice && price !== null && price > maxPrice) return false
       if (topRated && pro.rating.average < 4.8) return false
       if (atHome && !pro.homeService) return false
+      if (openOnly && !pro.acceptingJobs) return false
       if (nq && !normalize(`${w.title} ${w.description} ${getTemplate(w.templateId)?.name} ${pro.name} ${pro.title}`).includes(nq)) return false
       return true
     })
-  }, [state, query, category, city, maxPrice, topRated, atHome])
+  }, [state, query, category, city, maxPrice, topRated, atHome, openOnly])
+
+  // Sorting works by the price of the service the work is for, or by how far the
+  // freelancer is from the customer's saved address.
+  const sortedWorks = React.useMemo(() => {
+    if (sort === "match") return works
+    return [...works].sort((a, b) => {
+      if (sort === "price") {
+        return (fromPrice(state, a.proId, a.templateId) ?? Infinity) - (fromPrice(state, b.proId, b.templateId) ?? Infinity)
+      }
+      const da = distanceToCustomer(state, a.proId)
+      const db = distanceToCustomer(state, b.proId)
+      return (da ?? Infinity) - (db ?? Infinity)
+    })
+  }, [works, sort, state])
 
   const pros = React.useMemo(() => {
     const nq = normalize(query)
@@ -82,13 +99,22 @@ function SearchView() {
       if (city && p.city !== city) return false
       if (topRated && p.rating.average < 4.8) return false
       if (atHome && !p.homeService) return false
+      if (openOnly && !p.acceptingJobs) return false
       if (nq && !normalize(`${p.name} ${p.title} ${p.bio} ${p.district}`).includes(nq)) return false
       return true
     })
+    if (sort === "near") {
+      return [...list].sort(
+        (a, b) => (distanceToCustomer(state, a.id) ?? Infinity) - (distanceToCustomer(state, b.id) ?? Infinity),
+      )
+    }
+    if (sort === "price") {
+      return [...list].sort((a, b) => (fromPrice(state, a.id) ?? Infinity) - (fromPrice(state, b.id) ?? Infinity))
+    }
     return sortPros(state, list, "match")
-  }, [state, query, category, city, topRated, atHome])
+  }, [state, query, category, city, topRated, atHome, openOnly, sort])
 
-  const activeFilters = [city, maxPrice, topRated, atHome].filter(Boolean).length
+  const activeFilters = [city, maxPrice, topRated, atHome, openOnly].filter(Boolean).length
 
   return (
     <div className="md:pt-6">
@@ -166,6 +192,22 @@ function SearchView() {
               <input type="checkbox" checked={atHome} onChange={(e) => setParam("home", e.target.checked ? "1" : null)} className="size-4 accent-[var(--color-rose)]" />
               Nhận làm tại nhà
             </label>
+            {/* "Đang nhận job", not "rảnh hôm nay": this is a fact on the
+                profile, where free time depends on the service and the day. */}
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={openOnly}
+                onChange={(e) => setParam("open", e.target.checked ? "1" : null)}
+                className="size-4 accent-[var(--color-rose)]"
+              />
+              Đang nhận job
+            </label>
+            <SelectFilter label="Sắp xếp" value={sort} onChange={(v) => setParam("sort", v === "match" ? null : v)}>
+              <option value="match">Phù hợp nhất</option>
+              <option value="price">Giá thấp trước</option>
+              <option value="near">Gần tôi nhất</option>
+            </SelectFilter>
           </div>
         )}
       </div>
@@ -174,15 +216,15 @@ function SearchView() {
         value={mode}
         onChange={setMode}
         items={[
-          { value: "works", label: `Tác phẩm (${works.length})` },
+          { value: "works", label: `Tác phẩm (${sortedWorks.length})` },
           { value: "pros", label: `Chuyên viên (${pros.length})` },
         ]}
       />
 
       {mode === "works" ? (
-        works.length ? (
+        sortedWorks.length ? (
           <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4 md:gap-x-5 xl:grid-cols-5">
-            {works.map((w) => (
+            {sortedWorks.map((w) => (
               <WorkCard key={w.id} work={w} />
             ))}
           </div>

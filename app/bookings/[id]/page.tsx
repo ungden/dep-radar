@@ -9,6 +9,7 @@ import { bookingImage } from "@/components/booking-card"
 import { PriceBreakdown } from "@/components/price-breakdown"
 import { MessageButton } from "@/components/message-button"
 import { ReportButton } from "@/components/report-button"
+import { ShareBooking } from "@/components/share-booking"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, StatusBadge, buttonClass, inputClass } from "@/components/ui"
 import { formatPhone } from "@/lib/auth/phone"
@@ -247,7 +248,8 @@ function BookingDetail() {
         <MessageButton proId={booking.proId} bookingId={booking.id} label="Nhắn tin" />
       </div>
 
-      <div className="pt-1 text-center">
+      <div className="flex flex-col items-center gap-2 pt-1">
+        {isCustomer && active && <ShareBooking booking={booking} />}
         <ReportButton bookingId={booking.id} targetAccountId={isPro ? booking.customerId : null} />
       </div>
 

@@ -69,6 +69,11 @@ export function Footer() {
             <h2 className="text-sm font-semibold">dep360</h2>
             <ul className="mt-3 space-y-1.5 text-[13px] text-ink-soft">
               <li>
+                <Link href="/tro-giup" className="hover:text-ink">
+                  Trợ giúp & an toàn
+                </Link>
+              </li>
+              <li>
                 <Link href="/chinh-sach" className="hover:text-ink">
                   Chính sách phí & đặt lịch
                 </Link>

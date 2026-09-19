@@ -20,6 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: SITE_URL, lastModified, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/pros`, lastModified, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/chinh-sach`, lastModified, changeFrequency: "monthly", priority: 0.3 },
+    { url: `${SITE_URL}/tro-giup`, lastModified, changeFrequency: "monthly", priority: 0.4 },
     // The searches people actually type: "nail tại nhà Hà Nội".
     ...CITIES.flatMap((city) =>
       CATEGORIES.map((c) => ({

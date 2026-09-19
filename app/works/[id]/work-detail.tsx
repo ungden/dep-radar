@@ -42,6 +42,12 @@ export function WorkDetail({ workId }: { workId: string }) {
   const offered = listing ? tpl.variants.filter((v) => listing.prices[v.id] !== undefined) : []
   const saved = state.savedWorks.includes(work.id)
   const others = worksOf(state, pro.id).filter((w) => w.id !== work.id)
+  // The same service by someone else: this is how a customer compares, and it
+  // was the one thing the explore feed could not do.
+  const similar = state.works
+    .filter((w) => w.templateId === work.templateId && w.proId !== work.proId)
+    .sort((a, b) => (proView(state, b.proId)?.rating.average ?? 0) - (proView(state, a.proId)?.rating.average ?? 0))
+    .slice(0, 8)
 
   const share = async () => {
     const url = window.location.href
@@ -189,8 +195,20 @@ export function WorkDetail({ workId }: { workId: string }) {
       {others.length > 0 && (
         <section className="mt-10 px-4 md:px-0">
           <h2 className="mb-3 text-lg font-semibold">Tác phẩm khác của {pro.name}</h2>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
             {others.map((w) => (
+              <WorkCard key={w.id} work={w} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {similar.length > 0 && (
+        <section className="mt-10 px-4 md:px-0">
+          <h2 className="mb-1 text-lg font-semibold">{tpl.name} của chuyên viên khác</h2>
+          <p className="mb-3 text-[13px] text-muted">So sánh tay nghề và giá trước khi đặt.</p>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+            {similar.map((w) => (
               <WorkCard key={w.id} work={w} />
             ))}
           </div>

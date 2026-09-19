@@ -7,6 +7,7 @@ import {
   BriefcaseBusiness,
   ChevronRight,
   Bell,
+  CircleHelp,
   Heart,
   ImagePlus,
   LogOut,
@@ -170,6 +171,7 @@ const commonItems: MenuItem[] = [
   { href: "/tin-nhan", icon: MessageSquare, label: "Tin nhắn" },
   { href: "/thong-bao", icon: Bell, label: "Thông báo" },
   { href: "/me/cai-dat", icon: Settings, label: "Cài đặt tài khoản" },
+  { href: "/tro-giup", icon: CircleHelp, label: "Trợ giúp & an toàn" },
   { href: "/chinh-sach", icon: ShieldCheck, label: "Chính sách phí, đặt lịch & huỷ" },
 ]
 
