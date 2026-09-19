@@ -160,14 +160,12 @@ export async function sendMessage(threadId: string, body: string, images: string
   return { ok: true, data: undefined }
 }
 
+/**
+ * Stamp the other side's messages as read. This goes through an RPC rather than
+ * an update, because the row belongs to the other person: the function touches
+ * read_at and nothing else, which a row-level policy could not guarantee.
+ */
 export async function markThreadRead(threadId: string): Promise<void> {
   const supabase = await supabaseServer()
-  const { data: auth } = await supabase.auth.getUser()
-  if (!auth.user) return
-  await supabase
-    .from("messages")
-    .update({ read_at: new Date().toISOString() })
-    .eq("thread_id", threadId)
-    .neq("sender_id", auth.user.id)
-    .is("read_at", null)
+  await supabase.rpc("mark_thread_read", { p_thread: threadId })
 }

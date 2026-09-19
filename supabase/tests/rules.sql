@@ -10,7 +10,7 @@
 do $$
 declare
   linh uuid; thu uuid; customer uuid; addr uuid; booking uuid; other uuid;
-  msg text; km numeric; q public.quote; n int; slot timestamptz;
+  msg text; km numeric; q public.quote; n int; slot timestamptz; thread uuid;
   -- Every date below is anchored to the next Monday, so the tests never land on
   -- the Sunday the demo freelancers take off.
   monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
@@ -172,6 +172,35 @@ begin
   exception when insufficient_privilege then null;
   end;
 
+  raise notice 'a read receipt clears the unread count, and only for a thread party';
+  -- This is not a hypothetical: the app used to stamp read_at with a plain
+  -- update, which RLS silently dropped, so the unread badge never cleared.
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  thread := public.open_thread(linh, booking);
+  insert into public.messages (thread_id, sender_id, body) values (thread, customer, 'Chị tới lúc 3h nhé');
+
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  select count(*) into n from public.messages
+   where thread_id = thread and sender_id <> linh and read_at is null;
+  assert n = 1, format('unread before reading: %s', n);
+
+  perform public.mark_thread_read(thread);
+  select count(*) into n from public.messages
+   where thread_id = thread and sender_id <> linh and read_at is null;
+  assert n = 0, format('unread after reading: %s', n);
+
+  -- Somebody outside the thread neither reads it nor clears it. The count has
+  -- to be taken back as a party: read from the outsider it is zero either way.
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  insert into public.messages (thread_id, sender_id, body) values (thread, customer, 'Em đợi chị ạ');
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  perform public.mark_thread_read(thread);
+
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  select count(*) into n from public.messages
+   where thread_id = thread and sender_id <> linh and read_at is null;
+  assert n = 1, 'an outsider cleared somebody else''s unread count';
+
   raise notice 'nobody books themselves';
   perform set_config('request.jwt.claim.sub', linh::text, true);
   begin
@@ -254,7 +283,7 @@ begin
       'create_booking', 'confirm_booking', 'decline_booking', 'start_booking', 'complete_booking',
       'mark_no_show', 'cancel_booking', 'request_reschedule', 'respond_reschedule', 'post_job',
       'send_offer', 'accept_offer', 'withdraw_offer', 'write_review', 'reply_review', 'open_thread',
-      'delete_my_account',
+      'mark_thread_read', 'delete_my_account',
       -- admin decisions, which check is_admin() themselves
       'decide_identity_check', 'set_pro_suspended', 'set_review_hidden', 'resolve_report'
     ]);

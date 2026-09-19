@@ -1442,6 +1442,10 @@ export type Database = {
         Args: { p_booking: string; p_reason?: string }
         Returns: undefined
       }
+      mark_thread_read: {
+        Args: { p_thread: string }
+        Returns: undefined
+      }
       notify: {
         Args: {
           p_account: string

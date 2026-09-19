@@ -326,6 +326,37 @@ Từ hôm nay `dep-radar.vercel.app` đọc/ghi Supabase. Không còn store gi�
 
 - Service worker + trang `/offline`. **Không cache dữ liệu Supabase**: app hiện giá, khung giờ trống và trạng thái lịch — hiện bản lưu tạm là hiện một khung giờ đã có người đặt. Manifest có `id`, `lang`, shortcuts.
 
+### ✅ Dọn theo cảnh báo của database linter (19/09/2026)
+
+Không phải sửa lỗi ai báo — đọc cảnh báo của Supabase advisor rồi xử lý, vì cả ba
+thứ dưới đây chỉ đau khi đã có nhiều người dùng, mà lúc đó thì đắt.
+
+- **32 policy gọi `auth.uid()` trực tiếp** → Postgres tính lại cho từng dòng quét
+  qua. Bọc thành `(select auth.uid())` để tính một lần cho mỗi truy vấn. Cùng
+  một luật, cùng một kết quả. Còn **0**.
+- **72 cảnh báo “nhiều policy cùng loại”** → mỗi policy phải chạy trên mọi dòng.
+  Năm policy `admin reads every …` đã nằm sẵn trong nhánh `is_admin()` của policy
+  chính nên bỏ; hai policy mở thread nhập thành một; policy chủ hồ sơ trên
+  `works`, `days_off`, `working_hours`, `pro_services`, `pro_service_prices` tách
+  `for all` thành insert/update/delete, vì SELECT đã do policy công khai trả lời.
+  Còn **0**. Không đổi một quyền nào — kiểm lại bằng cách chạy truy vấn dưới vai
+  `anon` và vai chuyên viên.
+- **18 khoá ngoại không có index** → thêm index phủ. Advisor giờ báo chúng là
+  “chưa dùng”, đúng, vì chưa có lưu lượng; chúng tồn tại cho lúc xoá dòng cha và
+  lúc join, nên giữ.
+
+**Và một lỗi thật lộ ra khi đọc lại policy**: `messages` không có policy UPDATE
+nào, nên lệnh đóng dấu `read_at` của app bị RLS lặng lẽ bỏ qua — số tin chưa đọc
+chưa bao giờ về 0. Thêm policy UPDATE là cách sai: RLS không giới hạn được *cột*,
+nên ai đóng dấu đọc được cũng sửa được nội dung tin của người kia. Thay bằng RPC
+`mark_thread_read()` chỉ chạm đúng một cột. `supabase/tests/rules.sql` từ nay
+assert biên nhận đã đọc hoạt động, và người ngoài thread không xoá được số chưa
+đọc của người khác.
+
+**Chưa làm, có lý do**: advisor còn một mục INFO — Auth server đang cấp tối đa 10
+kết nối theo số tuyệt đối thay vì theo phần trăm. Đó là cấu hình dự án trong
+dashboard, chỉ có ý nghĩa khi anh nâng cỡ instance, nên để anh bấm.
+
 ---
 
 ## 10. Còn lại, và vì sao
