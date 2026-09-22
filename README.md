@@ -23,12 +23,11 @@ Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 
 ## Trạng thái hiện tại
 
-Bản prototype chạy hoàn toàn phía client:
-
-- Dữ liệu mẫu nằm ở `lib/data.ts` (chuyên viên, dịch vụ, tác phẩm, đánh giá).
-- Trạng thái màn hình nằm ở `lib/store.tsx`; tài khoản, lịch hẹn, yêu cầu, báo giá và dịch vụ lấy từ Supabase qua RLS/RPC. Không có đăng nhập demo theo số điện thoại.
-- Xác minh danh tính gọi Gemini qua `app/api/identity` (cần `GEMINI_API_KEY`, xem `.env.example`).
-- Chưa có OTP, thanh toán hay backend thật. Schema đề xuất cho Supabase ở `docs/supabase-schema.sql` (chưa áp dụng lên database).
+- Production (`www.360dep.vn`) đọc và ghi Supabase thật. Luật giá, phí, lịch trống và trạng thái lịch hẹn nằm trong database (RLS + RPC), trình duyệt chỉ hiển thị.
+- Chuyên viên và tác phẩm đang hiện là **dữ liệu mẫu** (sinh từ `lib/data.ts`), có nhãn trên trang.
+- **Đăng nhập bằng mật khẩu**, không có OTP/SMS. Tạo tài khoản cần họ tên, số điện thoại, email và mật khẩu; đăng nhập bằng số điện thoại **hoặc** email. Quên mật khẩu: link đặt lại gửi qua email.
+- Chưa có: thanh toán online, xác minh danh tính khi thiếu `GEMINI_API_KEY`, nạp ví tự động. Màn hình nói rõ những chỗ đó.
+- Kế hoạch sửa còn lại: `docs/AUDIT_2026-09-22.md`.
 
 ## Chạy local
 
@@ -70,8 +69,30 @@ npm run catalog:check   # CI: báo lỗi nếu file đã cũ
 npm run demo:sql        # ghi lại dữ liệu mẫu từ lib/data.ts
 ```
 
-Biến môi trường: xem `.env.example`. Thiếu biến Supabase thì app chạy ở chế độ
-demo trong trình duyệt và nói rõ điều đó, thay vì vỡ.
+Biến môi trường: xem `.env.example`.
+
+Migration trên production được áp bằng `supabase db push` hoặc MCP; tên file trong
+`supabase/migrations/` phải trùng số phiên bản mà production đã ghi
+(`supabase migration list` không được lệch).
+
+## Vận hành
+
+**Đăng nhập (dashboard Supabase, làm một lần):**
+
+1. Authentication → SMTP Settings: dùng SMTP riêng (ví dụ Resend, domain `360dep.vn` đã xác thực). SMTP mặc định của Supabase chỉ gửi tới thành viên project, nên email quên mật khẩu sẽ không tới khách.
+2. Authentication → URL Configuration: Site URL `https://www.360dep.vn`; Redirect URLs thêm `https://www.360dep.vn/auth/confirm` và `http://localhost:3000/auth/confirm`.
+3. Authentication → Email Templates → Reset Password: link trỏ tới
+   `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/dat-lai-mat-khau`
+   để link mở được trên máy khác với máy đã yêu cầu.
+4. Authentication → Rate Limits: đăng nhập đi qua server action, nên mọi người dùng chia chung giới hạn theo IP của Vercel. Nâng giới hạn "sign-ins/sign-ups" khi có lưu lượng thật.
+
+**Cấp quyền admin** — chỉ bằng SQL editor (service role), sau khi người đó đã tự tạo tài khoản. Client không ghi được cột `is_admin`:
+
+```sql
+update public.accounts set is_admin = true
+where id = (select id from auth.users where lower(email) = lower('<email>'));
+select count(*) from public.accounts where is_admin;
+```
 
 ## Ảnh tải lên
 

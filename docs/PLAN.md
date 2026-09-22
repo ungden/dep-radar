@@ -272,7 +272,7 @@ Từ hôm nay `dep-radar.vercel.app` đọc/ghi Supabase. Không còn store gi�
 
 **Còn lại của Giai đoạn 1 (cần tài khoản/khoá của anh)**
 - `GEMINI_API_KEY` trên Vercel — thiếu thì xác minh danh tính trả 503 và nói rõ là chưa cấu hình.
-- Nhà cung cấp SMS/ZNS cho OTP thật. Chưa có thì đăng nhập vẫn chạy, màn hình nói thẳng là chưa gửi SMS.
+- ~~Nhà cung cấp SMS/ZNS cho OTP thật~~ — đã thay bằng đăng nhập mật khẩu (22/09/2026).
 - Sentry + analytics (cần DSN/khoá).
 
 ---
@@ -322,7 +322,7 @@ Từ hôm nay `dep-radar.vercel.app` đọc/ghi Supabase. Không còn store gi�
 - Footer desktop, cũng là nơi liên kết các trang đích.
 - Một vùng `aria-live` duy nhất cho toàn app: mọi thao tác ghi đều được đọc lên, không chỉ đổi pixel. Tab có bàn phím (mũi tên/Home/End). Vùng chạm tab bar 44px, nhãn 11,5px. Màn rộng có thêm cột `xl`.
 
-### ✅ Giai đoạn 5 — phần không cần tài khoản bên thứ ba
+### ⚠️ Giai đoạn 5 — phần không cần tài khoản bên thứ ba (PWA đã bị gỡ ở `6e7bbe7`, xem `docs/AUDIT_2026-09-22.md`)
 
 - Service worker + trang `/offline`. **Không cache dữ liệu Supabase**: app hiện giá, khung giờ trống và trạng thái lịch — hiện bản lưu tạm là hiện một khung giờ đã có người đặt. Manifest có `id`, `lang`, shortcuts.
 
@@ -363,7 +363,7 @@ dashboard, chỉ có ý nghĩa khi anh nâng cỡ instance, nên để anh bấm
 
 **Cần khoá/tài khoản của anh — mình không tạo được**
 - `GEMINI_API_KEY` trên Vercel. Thiếu thì xác minh danh tính trả 503 và nói rõ là chưa cấu hình.
-- Nhà cung cấp SMS/ZNS cho OTP thật (`SUPABASE_SMS_PROVIDER_READY=true`). Chưa có thì đăng nhập vẫn chạy và màn hình nói thẳng là chưa gửi SMS.
+- ~~Nhà cung cấp SMS/ZNS cho OTP~~ — bỏ ngày 22/09/2026: đăng nhập bằng mật khẩu, quên mật khẩu qua email. Cần SMTP riêng cho Supabase (xem README → Vận hành).
 - Sentry + analytics: cần DSN/khoá.
 - Zalo ZNS / Web Push: cần Zalo OA (pháp nhân) và khoá VAPID.
 - Cổng thanh toán (payOS/VNPay/MoMo): cần pháp nhân + rà pháp lý. Hiện “thanh toán online” hiển thị rõ là chưa hoạt động, không bấm được.
@@ -377,3 +377,7 @@ dashboard, chỉ có ý nghĩa khi anh nâng cỡ instance, nên để anh bấm
 - **Đền 30% khi huỷ muộn**: cần thanh toán online để thu. Trang chính sách ghi rõ là “sắp áp dụng”.
 - **Đóng gói Capacitor lên App Store/Play**: cần tài khoản nhà phát triển và khai báo quyền riêng tư cho CCCD + khuôn mặt.
 - **Lịch tuần/tháng cho chuyên viên**: hiện có xem theo ngày, chờ xác nhận và lịch sử. Xem theo tháng là tiện lợi, chưa phải thiếu sót.
+
+---
+
+Audit tiếp theo và kế hoạch sửa: `docs/AUDIT_2026-09-22.md`.
