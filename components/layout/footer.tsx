@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Logo } from "@/components/ui"
-import { CATEGORIES } from "@/lib/catalog"
+import { CATEGORIES, VERTICALS } from "@/lib/catalog"
 import { CITIES } from "@/lib/geo"
 import { POLICY } from "@/lib/pricing"
 
@@ -22,31 +22,35 @@ const citySlug = (city: string) =>
 export function Footer() {
   return (
     <footer className="mt-16 hidden border-t border-line bg-surface md:block">
-      <div className="mx-auto max-w-6xl px-6 py-10">
+      <div className="mx-auto max-w-[1200px] px-6 py-10">
         <div className="grid gap-8 md:grid-cols-[1.2fr_1fr_1fr_1fr]">
           <div>
             <Logo />
             <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-ink-soft">
-              Đặt lịch làm đẹp với chuyên viên freelancer đến tận nhà. Giá theo khung chuẩn, khách không trả phí nền
+              Đặt thợ làm đẹp, người chụp ảnh và người mẫu gần bạn. Giá theo khung chuẩn, khách không trả phí nền
               tảng, miễn phí di chuyển trong {POLICY.freeTravelKm} km đầu.
             </p>
           </div>
 
           <nav>
-            <h2 className="text-sm font-semibold">Dịch vụ</h2>
-            <ul className="mt-3 space-y-1.5 text-[13px] text-ink-soft">
-              {CATEGORIES.map((c) => (
-                <li key={c.id}>
-                  <Link href={`/search?category=${c.id}`} className="hover:text-ink">
-                    {c.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {VERTICALS.map((v) => (
+              <div key={v.id} className="mb-5 last:mb-0">
+                <h2 className="text-sm font-bold">{v.label}</h2>
+                <ul className="mt-2 space-y-1.5 text-[13px] text-ink-soft">
+                  {CATEGORIES.filter((c) => c.vertical === v.id).map((c) => (
+                    <li key={c.id}>
+                      <Link href={`/search?category=${c.id}`} className="hover:text-ink">
+                        {c.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </nav>
 
           <nav>
-            <h2 className="text-sm font-semibold">Khu vực</h2>
+            <h2 className="text-sm font-bold">Khu vực</h2>
             <ul className="mt-3 space-y-1.5 text-[13px] text-ink-soft">
               {CITIES.map((city) => (
                 <li key={city}>
@@ -66,7 +70,7 @@ export function Footer() {
           </nav>
 
           <nav>
-            <h2 className="text-sm font-semibold">360dep</h2>
+            <h2 className="text-sm font-bold">360dep</h2>
             <ul className="mt-3 space-y-1.5 text-[13px] text-ink-soft">
               <li>
                 <Link href="/tro-giup" className="hover:text-ink">
@@ -80,12 +84,12 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/login?role=pro" className="hover:text-ink">
-                  Trở thành chuyên viên
+                  Nhận khách trên 360dep
                 </Link>
               </li>
               <li>
                 <Link href="/pros" className="hover:text-ink">
-                  Tất cả chuyên viên
+                  Tất cả người làm
                 </Link>
               </li>
             </ul>

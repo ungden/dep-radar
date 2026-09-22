@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 import {
-  bayesRating,
   diversify,
   PRO_PER_PAGE,
   PRO_SPACING,
@@ -9,6 +8,7 @@ import {
   supplyIsThin,
   type FeedContext,
 } from "@/lib/feed"
+import { bayesianRating } from "@/lib/trust"
 import type { CategoryId, Pro, Work } from "@/lib/types"
 
 const NOW = new Date("2026-09-23T10:00:00+07:00")
@@ -135,7 +135,7 @@ describe("rankFeed", () => {
 
 describe("scoring", () => {
   it("a single five-star review does not beat a long 4.8 record", () => {
-    expect(bayesRating(5, 1)).toBeLessThan(bayesRating(4.8, 40))
+    expect(bayesianRating({ average: 5, count: 1 })).toBeLessThan(bayesianRating({ average: 4.8, count: 40 }))
   })
 
   it("ignores save rates until there are enough impressions", () => {

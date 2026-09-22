@@ -8,6 +8,7 @@ export default defineConfig([{
         "coverage/**",
         "node_modules/**",
         "apps/mobile/**",
+        ".claude/**",
         "tsconfig.tsbuildinfo",
     ],
     extends: [...next],

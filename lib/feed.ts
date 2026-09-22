@@ -1,4 +1,5 @@
 import { verticalOf } from "./catalog"
+import { bayesianRating } from "./trust"
 import type { CategoryId, Pro, VerticalId, Work, WorkStats } from "./types"
 
 /**
@@ -65,15 +66,6 @@ export function supplyIsThin(pros: number, works: number) {
 const DAY = 24 * 60 * 60 * 1000
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n))
 
-/**
- * A rating pulled towards the average while it rests on few reviews, so one
- * five-star review does not outrank forty 4.8s.
- */
-export function bayesRating(average: number, count: number, prior = 4.5, weight = 5) {
-  if (count <= 0) return prior
-  return (prior * weight + average * count) / (weight + count)
-}
-
 export function isNewPro(pro: Pick<Pro, "joinedAt">, now: Date) {
   const joined = Date.parse(pro.joinedAt)
   return Number.isFinite(joined) && now.getTime() - joined <= NEW_PRO_DAYS * DAY
@@ -96,7 +88,9 @@ export function scoreWork(work: Work, pro: Pro, ctx: FeedContext): ScoreParts {
   // Unknown distance is neutral, not a penalty: most visitors have no address yet.
   const near = km === null ? 0.5 : km > pro.maxTravelKm && !pro.studioAddress ? 0 : clamp01(1 - km / Math.max(pro.maxTravelKm, 1))
 
-  const rating = bayesRating(pro.rating.average, pro.rating.count)
+  // Pulled towards the platform mean while it rests on few reviews, so one
+  // five-star review does not outrank forty 4.8s.
+  const rating = bayesianRating(pro.rating)
   const quality = clamp01((rating - 3) / 2) * 0.7 + (pro.identity === "verified" ? 0.2 : 0) + clamp01(Math.log10(1 + pro.stats.completedJobs) / 2) * 0.1
 
   const created = Date.parse(work.createdAt)

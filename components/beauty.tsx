@@ -3,14 +3,32 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Brush, Camera, Clapperboard, Droplets, Eye, Flower2, Hand, Heart, MapPin, Package, Scissors, Smartphone, UserRound, Video } from "lucide-react"
+import {
+  Brush,
+  Camera,
+  Clapperboard,
+  Droplets,
+  Eye,
+  Flower2,
+  Hand,
+  Heart,
+  Layers,
+  Package,
+  Play,
+  Scissors,
+  Smartphone,
+  UserRound,
+  Video,
+} from "lucide-react"
 import { VerifiedMark } from "@/components/trust"
-import { Avatar, Rating } from "@/components/ui"
-import { CATEGORIES } from "@/lib/catalog"
+import { Avatar } from "@/components/ui"
+import { CATEGORIES, VERTICALS, categoryLabel } from "@/lib/catalog"
 import { actions, useAct } from "@/lib/client-actions"
-import { distanceToCustomer, fromPrice, proView, useApp } from "@/lib/store"
+import { trackWork } from "@/lib/feed-events"
+import type { VerticalFilter } from "@/lib/feed"
+import { distanceToCustomer, fromPrice, proView, useApp, worksOf, type AppState } from "@/lib/store"
 import type { CategoryId, Pro, Work } from "@/lib/types"
-import { cn, formatCompact, formatPrice } from "@/lib/utils"
+import { cn, formatPrice } from "@/lib/utils"
 
 export const CATEGORY_ICON: Record<CategoryId, React.ComponentType<{ className?: string }>> = {
   nail: Hand,
@@ -27,17 +45,84 @@ export const CATEGORY_ICON: Record<CategoryId, React.ComponentType<{ className?:
   "model-video": Video,
 }
 
-export function CategoryRow({ className }: { className?: string }) {
+/** "2,4 km" when we know where the customer is, otherwise the district. */
+export function whereLabel(state: AppState, pro: Pro) {
+  const km = state.session?.role !== "pro" ? distanceToCustomer(state, pro.id) : null
+  return km !== null ? `${km.toLocaleString("vi-VN")} km` : pro.district
+}
+
+// ---------------------------------------------------------------------------
+// Trade switch and categories
+
+export function VerticalSwitch({
+  value,
+  onChange,
+  className,
+}: {
+  value: VerticalFilter
+  onChange: (v: VerticalFilter) => void
+  className?: string
+}) {
+  const items: { id: VerticalFilter; label: string }[] = [{ id: "all", label: "Tất cả" }, ...VERTICALS]
   return (
-    <div className={cn("grid grid-cols-6 gap-1 md:flex md:gap-8", className)}>
-      {CATEGORIES.map((c) => {
-        const Icon = CATEGORY_ICON[c.id]
+    <div role="radiogroup" aria-label="Ngành" className={cn("no-scrollbar flex gap-2 overflow-x-auto", className)}>
+      {items.map((it) => {
+        const active = value === it.id
         return (
-          <Link key={c.id} href={`/search?category=${c.id}`} className="group flex flex-col items-center gap-2 text-center md:w-20">
-            <span className="flex size-12 items-center justify-center rounded-full bg-subtle text-accent transition-colors group-hover:bg-subtle-strong md:size-14">
-              <Icon className="size-5 md:size-6" />
+          <button
+            key={it.id}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => onChange(it.id)}
+            className={cn(
+              "inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[14px] font-semibold transition-colors",
+              active ? "bg-ink text-white" : "bg-subtle text-ink hover:bg-subtle-strong",
+            )}
+          >
+            {it.id !== "all" && (
+              <span
+                aria-hidden
+                className={cn(
+                  "size-2 rounded-full",
+                  it.id === "beauty" && "bg-beauty",
+                  it.id === "photo" && "bg-photo",
+                  it.id === "model" && "bg-model",
+                  active && "ring-2 ring-white/30",
+                )}
+              />
+            )}
+            {it.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * Categories as small round photos of real work, the way people already scan
+ * stories. A category with no work yet shows its icon instead of a stock image.
+ */
+export function CategoryBubbles({ vertical = "all", className }: { vertical?: VerticalFilter; className?: string }) {
+  const state = useApp()
+  const list = CATEGORIES.filter((c) => vertical === "all" || c.vertical === vertical)
+  const cover = (id: CategoryId) => state.works.find((w) => w.category === id && w.images[0])?.images[0]
+  return (
+    <div className={cn("no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:gap-6 md:px-0", className)}>
+      {list.map((c) => {
+        const Icon = CATEGORY_ICON[c.id]
+        const src = cover(c.id)
+        return (
+          <Link key={c.id} href={`/search?category=${c.id}`} className="group flex w-[68px] shrink-0 flex-col items-center gap-1.5 text-center">
+            <span className="relative flex size-16 items-center justify-center overflow-hidden rounded-full bg-subtle ring-1 ring-line transition-transform group-active:scale-95">
+              {src ? (
+                <Image src={src} alt="" fill sizes="64px" className="object-cover" />
+              ) : (
+                <Icon className="size-6 text-ink-soft" />
+              )}
             </span>
-            <span className="text-[11px] leading-tight text-ink-soft md:text-xs">{c.label}</span>
+            <span className="text-[12.5px] font-medium leading-tight text-ink">{c.label}</span>
           </Link>
         )
       })}
@@ -45,8 +130,15 @@ export function CategoryRow({ className }: { className?: string }) {
   )
 }
 
+/** Kept for pages that still show the old compact row. */
+export const CategoryRow = CategoryBubbles
+
+// ---------------------------------------------------------------------------
+// Posts
+
 export function SaveWorkButton({ workId, className }: { workId: string; className?: string }) {
-  const { savedWorks, session } = useApp()
+  const state = useApp()
+  const { savedWorks, session } = state
   const act = useAct()
   const saved = savedWorks.includes(workId)
   return (
@@ -63,110 +155,198 @@ export function SaveWorkButton({ workId, className }: { workId: string; classNam
           window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`
           return
         }
+        const work = state.works.find((w) => w.id === workId)
+        if (work && !saved) trackWork(work.dbId, "save")
         void act(() => actions.toggleSaveWork(workId), saved ? "Đã bỏ lưu" : "Đã lưu mẫu")
       }}
-      className={cn("inline-flex size-8 items-center justify-center rounded-full transition-colors", className)}
+      // 44px to tap, 34px to see.
+      className={cn("group/save inline-flex size-11 items-center justify-center", className)}
     >
-      <Heart className={cn("size-[18px]", saved ? "fill-accent text-accent" : "text-ink-soft")} />
+      <span className="inline-flex size-[34px] items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur transition-transform group-active/save:scale-90">
+        <Heart className={cn("size-[18px]", saved ? "fill-accent text-accent" : "text-ink")} />
+      </span>
     </button>
   )
 }
 
-/** Large cover card used on the explore feed. */
-export function WorkFeedCard({ work, priority }: { work: Work; priority?: boolean }) {
-  const state = useApp()
-  const pro = proView(state, work.proId)
-  if (!pro) return null
-  return (
-    <Link href={`/works/${work.id}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-subtle">
-        <Image
-          src={work.images[0]}
-          alt={work.title}
-          fill
-          priority={priority}
-          sizes="(min-width: 768px) 25vw, 50vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-        />
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 pt-12">
-          <p className="text-[13px] font-medium leading-snug text-white">{work.title}</p>
-        </div>
-        <SaveWorkButton workId={work.id} className="absolute right-2 top-2 bg-white/85 backdrop-blur" />
-      </div>
-      <div className="mt-2 flex items-center gap-2">
-        <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={28} />
-        <div className="min-w-0 flex-1 leading-tight">
-          <p className="flex items-center gap-1 truncate text-[13px] font-medium">
-            <span className="truncate">{pro.name}</span>
-            <VerifiedMark pro={pro} className="size-3.5" />
-          </p>
-          <p className="text-[11px] text-muted">
-            <span className="text-ink">★ {pro.rating.average.toFixed(1)}</span> · {pro.stats.completedJobs} job
-          </p>
-        </div>
-      </div>
-    </Link>
-  )
+/** Counts an impression once, when at least half the card has been on screen. */
+function useImpression(work: Work) {
+  const ref = React.useRef<HTMLAnchorElement>(null)
+  React.useEffect(() => {
+    const el = ref.current
+    if (!el || typeof IntersectionObserver === "undefined") return
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          trackWork(work.dbId, "impression")
+          io.disconnect()
+        }
+      },
+      { threshold: 0.5 },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [work.dbId])
+  return ref
 }
 
-/** Compact card with price & rating, used in search results. */
-export function WorkCard({ work }: { work: Work }) {
+function MediaBadge({ work }: { work: Work }) {
+  if (work.video)
+    return (
+      <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
+        <Play className="size-3 fill-white" /> Clip
+      </span>
+    )
+  if (work.kind === "before_after")
+    return (
+      <span className="absolute left-2.5 top-2.5 rounded-full bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
+        Trước / sau
+      </span>
+    )
+  if (work.images.length > 1)
+    return (
+      <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
+        <Layers className="size-3" /> {work.images.length}
+      </span>
+    )
+  return null
+}
+
+/**
+ * The feed card. The photo carries it and nothing is written over it; under it,
+ * the three things a customer needs before tapping: what it is, what it costs,
+ * who does it and where.
+ */
+export function PostCard({ work, priority, className }: { work: Work; priority?: boolean; className?: string }) {
   const state = useApp()
   const pro = proView(state, work.proId)
+  const ref = useImpression(work)
+  if (!pro) return null
   const price = fromPrice(state, work.proId, work.templateId)
-  if (!pro) return null
+  const cover = work.kind === "before_after" && work.images[1] ? work.images[1] : work.images[0]
   return (
-    <Link href={`/works/${work.id}`} className="group block">
-      <div className="relative aspect-square overflow-hidden rounded-2xl bg-subtle">
-        <Image src={work.images[0]} alt={work.title} fill sizes="(min-width: 768px) 25vw, 50vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+    <Link ref={ref} href={`/works/${work.id}`} className={cn("group block animate-fade-up", className)}>
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] bg-subtle">
+        {cover && (
+          <Image
+            src={cover}
+            alt={work.title}
+            fill
+            priority={priority}
+            sizes="(min-width: 1280px) 290px, (min-width: 1024px) 31vw, (min-width: 640px) 33vw, 50vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+        )}
+        <MediaBadge work={work} />
+        <SaveWorkButton workId={work.id} className="absolute right-0.5 top-0.5" />
       </div>
-      <div className="mt-2 flex items-start gap-1">
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-medium">{work.title}</p>
-          <p className="flex items-center gap-1 truncate text-xs text-muted">
-            {pro.name} <VerifiedMark pro={pro} className="size-3" />
-          </p>
-          <Rating value={pro.rating.average} count={pro.rating.count} className="mt-0.5 text-xs" />
-          {price !== null && <p className="mt-0.5 text-[13px] font-semibold">Từ {formatPrice(price)}</p>}
+      <div className="mt-2.5 px-0.5">
+        <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink">{work.title}</p>
+        <p className="mt-0.5 text-[14px] text-ink">
+          {price !== null ? (
+            <>
+              <span className="text-muted">Từ </span>
+              <span className="font-semibold">{formatPrice(price)}</span>
+            </>
+          ) : (
+            <span className="text-muted">{categoryLabel(work.category)}</span>
+          )}
+        </p>
+        <div className="mt-2 flex items-center gap-2">
+          <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={28} />
+          <div className="min-w-0 flex-1 leading-tight">
+            <p className="flex items-center gap-1 text-[13px] font-semibold text-ink">
+              <span className="truncate">{pro.name}</span>
+              <VerifiedMark pro={pro} className="size-3.5" />
+            </p>
+            <p className="truncate text-[12.5px] text-ink-soft">
+              {pro.rating.count > 0 ? `★ ${pro.rating.average.toFixed(1)} · ` : ""}
+              {whereLabel(state, pro)}
+            </p>
+          </div>
         </div>
-        <SaveWorkButton workId={work.id} className="-mr-1.5 -mt-1.5" />
       </div>
     </Link>
   )
 }
 
+/** Older names still imported by some pages. */
+export const WorkFeedCard = PostCard
+export const WorkCard = PostCard
+
+// ---------------------------------------------------------------------------
+// People
+
+function TrustLine({ pro, state }: { pro: Pro; state: AppState }) {
+  return (
+    <p className="flex flex-wrap items-center gap-x-1.5 text-[13px] text-ink-soft">
+      {pro.rating.count > 0 ? (
+        <span>
+          <span className="font-semibold text-ink">★ {pro.rating.average.toFixed(1)}</span> ({pro.rating.count})
+        </span>
+      ) : (
+        <span>Chưa có đánh giá</span>
+      )}
+      {pro.stats.completedJobs > 0 && (
+        <>
+          <span aria-hidden className="text-line">•</span>
+          <span>{pro.stats.completedJobs.toLocaleString("vi-VN")} lịch đã làm</span>
+        </>
+      )}
+      <span aria-hidden className="text-line">•</span>
+      <span>{whereLabel(state, pro)}</span>
+    </p>
+  )
+}
+
+/**
+ * A person, for lists: who they are, three recent pieces of work, and the
+ * facts that decide a booking. Used where a customer compares freelancers.
+ */
 export function ProCard({ pro: basePro, className }: { pro: Pro; className?: string }) {
   const state = useApp()
   const pro = proView(state, basePro.id) ?? basePro
   const from = fromPrice(state, pro.id)
-  const km = state.session?.role !== "pro" ? distanceToCustomer(state, pro.id) : null
+  const photos = worksOf(state, pro.id)
+    .map((w) => w.images[0])
+    .filter(Boolean)
+    .slice(0, 3)
   return (
     <Link
       href={`/pros/${pro.id}`}
-      className={cn("block rounded-[var(--radius-card)] bg-surface p-3.5 shadow-[var(--shadow-soft)] transition-shadow hover:shadow-md", className)}
+      className={cn("group block rounded-[var(--radius-lg)] border border-line bg-surface p-3 transition-colors hover:border-ink/25", className)}
     >
-      <div className="flex gap-3">
-        <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={60} />
+      <div className="flex items-center gap-3">
+        <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={52} />
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5 font-semibold">
+          <p className="flex items-center gap-1.5 text-[16px] font-bold">
             <span className="truncate">{pro.name}</span>
             <VerifiedMark pro={pro} />
           </p>
-          <p className="text-xs text-muted">{pro.title}</p>
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-ink-soft">
-            <Rating value={pro.rating.average} count={pro.rating.count} className="text-xs" />
-            <span>{formatCompact(pro.stats.completedJobs)} job</span>
-            <span className="inline-flex items-center gap-0.5">
-              <MapPin className="size-3.5" />
-              {km !== null ? `${km.toLocaleString("vi-VN")} km` : `${pro.district}, ${pro.city}`}
-            </span>
-          </div>
+          <p className="truncate text-[13px] text-muted">{pro.title || pro.categories.map(categoryLabel).join(" · ")}</p>
         </div>
         <div className="shrink-0 text-right">
-          <p className="text-[11px] text-muted">Từ</p>
-          <p className="text-sm font-semibold">{from !== null ? formatPrice(from) : "—"}</p>
+          <p className="text-xs text-muted">Từ</p>
+          <p className="text-[15px] font-bold">{from !== null ? formatPrice(from) : "—"}</p>
         </div>
+      </div>
+      {photos.length > 0 && (
+        <div className="mt-3 grid grid-cols-3 gap-1.5">
+          {photos.map((src, i) => (
+            <span key={i} className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-sm)] bg-subtle">
+              <Image src={src} alt="" fill sizes="(min-width: 768px) 140px, 30vw" className="object-cover" />
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="mt-2.5">
+        <TrustLine pro={pro} state={state} />
       </div>
     </Link>
   )
+}
+
+/** The same person, narrower, for a horizontal row on the home page. */
+export function ProTile({ pro, className }: { pro: Pro; className?: string }) {
+  return <ProCard pro={pro} className={cn("w-[300px] shrink-0 md:w-auto", className)} />
 }

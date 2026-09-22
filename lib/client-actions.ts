@@ -5,7 +5,7 @@ import * as api from "./api/actions"
 import * as auth from "./auth/actions"
 import { useAnnounce } from "@/components/live-region"
 import { useRefresh } from "./store"
-import type { BookingStatus, CustomerAddress, PaymentMethod } from "./types"
+import type { BookingStatus, CategoryId, CustomerAddress, PaymentMethod, WorkEventKind } from "./types"
 import { toTimestamptz } from "./utils"
 
 /**
@@ -212,6 +212,14 @@ export const actions = {
   /** A review is identified by the booking it belongs to. */
   async replyReview(bookingId: string, text: string): Promise<Result> {
     return asResult(await api.replyReview(bookingId, text))
+  },
+
+  // MERGE-STUB: replaced by the backend branch (accounts.interests, work_stats_daily).
+  async setInterests(_categories: CategoryId[]): Promise<Result> {
+    return { error: "Chưa lưu được sở thích." }
+  },
+  async logWorkEvents(_events: { work: string; kind: WorkEventKind }[]): Promise<Result> {
+    return done
   },
 }
 
