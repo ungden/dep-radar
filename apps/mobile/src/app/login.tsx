@@ -2,49 +2,59 @@ import * as React from "react"
 import { router } from "expo-router"
 import { Pressable, StyleSheet, Text, TextInput } from "react-native"
 import { Card, Screen } from "@/components/screen"
-import { signInWithEmail, signUpWithEmail } from "@/lib/api"
+import { myPhone, setMyPhone, signInWithGoogle } from "@/lib/api"
 
 export default function Login() {
-  const [creating, setCreating] = React.useState(false)
-  const [name, setName] = React.useState("")
+  const [needsPhone, setNeedsPhone] = React.useState(false)
   const [phone, setPhone] = React.useState("")
-  const [email, setEmail] = React.useState("")
-  const [password, setPassword] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
 
-  const submit = async () => {
+  const run = async (task: () => Promise<void>) => {
     setBusy(true)
     setError(null)
     try {
-      if (creating) await signUpWithEmail({ fullName: name, phone, email, password })
-      else await signInWithEmail(email, password)
-      router.replace("/")
+      await task()
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không đăng nhập được.")
+      setError(e instanceof Error ? e.message : "Có lỗi xảy ra.")
     } finally {
       setBusy(false)
     }
   }
 
-  const ready = email.includes("@") && password.length >= (creating ? 8 : 1) && (!creating || (name.trim().length >= 2 && phone.trim().length >= 9))
+  const google = () =>
+    run(async () => {
+      await signInWithGoogle()
+      // Google never provides a phone number; ask once, then carry on.
+      if (await myPhone()) router.replace("/")
+      else setNeedsPhone(true)
+    })
+
+  const savePhone = () =>
+    run(async () => {
+      await setMyPhone(phone)
+      router.replace("/")
+    })
+
+  if (needsPhone) {
+    return (
+      <Screen title="Thêm số điện thoại" subtitle="Chuyên viên gọi số này để xác nhận lịch hẹn. Mỗi số một tài khoản.">
+        <Card>
+          <TextInput value={phone} onChangeText={setPhone} placeholder="0968 112 233" style={styles.input} inputMode="tel" autoComplete="tel" />
+          <Pressable disabled={busy || phone.replace(/\D/g, "").length < 9} onPress={() => void savePhone()} style={styles.button}>
+            <Text style={styles.buttonText}>{busy ? "Đang lưu…" : "Lưu và tiếp tục"}</Text>
+          </Pressable>
+          {error ? <Text selectable style={styles.error}>{error}</Text> : null}
+        </Card>
+      </Screen>
+    )
+  }
 
   return (
-    <Screen title={creating ? "Tạo tài khoản" : "Đăng nhập"} subtitle="Đăng nhập bằng email và mật khẩu. Quên mật khẩu: dùng trang web 360dep.">
+    <Screen title="Đăng nhập" subtitle="Dùng tài khoản Google của bạn.">
       <Card>
-        {creating ? (
-          <>
-            <TextInput value={name} onChangeText={setName} placeholder="Họ và tên" style={styles.input} autoComplete="name" />
-            <TextInput value={phone} onChangeText={setPhone} placeholder="0968 112 233" style={styles.input} inputMode="tel" autoComplete="tel" />
-          </>
-        ) : null}
-        <TextInput value={email} onChangeText={setEmail} placeholder="Email" style={styles.input} inputMode="email" autoCapitalize="none" autoComplete="email" />
-        <TextInput value={password} onChangeText={setPassword} placeholder="Mật khẩu" style={styles.input} secureTextEntry autoComplete={creating ? "new-password" : "current-password"} />
-        <Pressable disabled={busy || !ready} onPress={() => void submit()} style={styles.button}>
-          <Text style={styles.buttonText}>{busy ? "Đang xử lý…" : creating ? "Tạo tài khoản" : "Đăng nhập"}</Text>
-        </Pressable>
-        <Pressable onPress={() => { setCreating(!creating); setError(null) }}>
-          <Text style={styles.link}>{creating ? "Đã có tài khoản? Đăng nhập" : "Chưa có tài khoản? Tạo tài khoản"}</Text>
+        <Pressable disabled={busy} onPress={() => void google()} style={styles.google}>
+          <Text style={styles.googleText}>{busy ? "Đang mở Google…" : "Tiếp tục với Google"}</Text>
         </Pressable>
         {error ? <Text selectable style={styles.error}>{error}</Text> : null}
       </Card>
@@ -56,6 +66,7 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderColor: "#E8DCD9", borderRadius: 12, padding: 13, color: "#2A2020" },
   button: { backgroundColor: "#C65E68", padding: 14, borderRadius: 12, alignItems: "center" },
   buttonText: { color: "white", fontWeight: "700" },
-  link: { color: "#C65E68", textAlign: "center", paddingVertical: 8 },
+  google: { borderWidth: 1, borderColor: "#E8DCD9", backgroundColor: "white", padding: 14, borderRadius: 12, alignItems: "center" },
+  googleText: { color: "#2A2020", fontWeight: "600" },
   error: { color: "#B23A48" },
 })

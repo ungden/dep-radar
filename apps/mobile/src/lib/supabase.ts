@@ -14,5 +14,6 @@ const storage = {
 }
 
 export const supabase = createClient(url, key, {
-  auth: { storage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false },
+  // PKCE: Google sends back a one-time code through the dep360:// deep link.
+  auth: { storage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false, flowType: "pkce" },
 })

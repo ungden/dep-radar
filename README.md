@@ -25,7 +25,7 @@ Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 
 - Production (`www.360dep.vn`) đọc và ghi Supabase thật. Luật giá, phí, lịch trống và trạng thái lịch hẹn nằm trong database (RLS + RPC), trình duyệt chỉ hiển thị.
 - Chuyên viên và tác phẩm đang hiện là **dữ liệu mẫu** (sinh từ `lib/data.ts`), có nhãn trên trang.
-- **Đăng nhập bằng mật khẩu**, không có OTP/SMS. Tạo tài khoản cần họ tên, số điện thoại, email và mật khẩu; đăng nhập bằng số điện thoại **hoặc** email. Quên mật khẩu: link đặt lại gửi qua email.
+- **Đăng nhập bằng Google** (Supabase Auth), không mật khẩu, không OTP. Lần đầu đăng nhập, app hỏi số điện thoại một lần; database không cho đặt lịch, đăng yêu cầu hay mở hồ sơ chuyên viên khi chưa có số.
 - Chưa có: thanh toán online, xác minh danh tính khi thiếu `GEMINI_API_KEY`, nạp ví tự động. Màn hình nói rõ những chỗ đó.
 - Kế hoạch sửa còn lại: `docs/AUDIT_2026-09-22.md`.
 
@@ -77,16 +77,20 @@ Migration trên production được áp bằng `supabase db push` hoặc MCP; t�
 
 ## Vận hành
 
-**Đăng nhập (dashboard Supabase, làm một lần):**
+**Đăng nhập Google (làm một lần):**
 
-1. Authentication → SMTP Settings: dùng SMTP riêng (ví dụ Resend, domain `360dep.vn` đã xác thực). SMTP mặc định của Supabase chỉ gửi tới thành viên project, nên email quên mật khẩu sẽ không tới khách.
-2. Authentication → URL Configuration: Site URL `https://www.360dep.vn`; Redirect URLs thêm `https://www.360dep.vn/auth/confirm` và `http://localhost:3000/auth/confirm`.
-3. Authentication → Email Templates → Reset Password: link trỏ tới
-   `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/dat-lai-mat-khau`
-   để link mở được trên máy khác với máy đã yêu cầu.
-4. Authentication → Rate Limits: đăng nhập đi qua server action, nên mọi người dùng chia chung giới hạn theo IP của Vercel. Nâng giới hạn "sign-ins/sign-ups" khi có lưu lượng thật.
+1. Google Cloud Console → APIs & Services → Credentials → *Create OAuth client ID*, loại **Web application**.
+   - Authorized JavaScript origins: `https://www.360dep.vn`
+   - Authorized redirect URIs: `https://ohjrocksurzkypcbfkha.supabase.co/auth/v1/callback`
+   - OAuth consent screen: tên app 360dep, email hỗ trợ, domain `360dep.vn`; scope chỉ cần `email`, `profile`, `openid`.
+2. Supabase → Authentication → Sign In / Providers → **Google**: bật, dán Client ID và Client Secret, lưu.
+3. Supabase → Authentication → URL Configuration: Site URL `https://www.360dep.vn`; Redirect URLs thêm
+   `https://www.360dep.vn/auth/callback`, `http://localhost:3000/auth/callback`, và `dep360://auth/callback` (app mobile).
+   Muốn đăng nhập trên bản preview của Vercel thì thêm cả `https://*-tduong297-gmailcoms-projects.vercel.app/auth/callback`.
 
-**Cấp quyền admin** — chỉ bằng SQL editor (service role), sau khi người đó đã tự tạo tài khoản. Client không ghi được cột `is_admin`:
+Trang `/login` tự hỏi Supabase xem Google đã bật chưa: chưa bật thì nút bị khoá và trang nói rõ, bật xong thì nút chạy sau tối đa một phút.
+
+**Cấp quyền admin** — chỉ bằng SQL editor (service role), sau khi người đó đã đăng nhập Google một lần. Client không ghi được cột `is_admin`:
 
 ```sql
 update public.accounts set is_admin = true
@@ -115,3 +119,9 @@ dùng** trước khi tải lên. Việc đó vừa giảm dung lượng, vừa x
 
 Nguyên tắc xuyên suốt: **không hiển thị thứ gì hệ thống không thực hiện được.**
 Điều gì chưa chạy thì ghi rõ "sắp áp dụng"; con số nào không có thật thì không hiện.
+
+**Đổi số điện thoại cho một tài khoản** (người dùng chỉ tự đặt được một lần):
+
+```sql
+update public.accounts set phone = '+84xxxxxxxxx' where id = '<account id>';
+```

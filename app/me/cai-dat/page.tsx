@@ -6,8 +6,6 @@ import Link from "next/link"
 import { RequireSession } from "@/components/require-session"
 import { Button, Card, Field, PageHeader, inputClass } from "@/components/ui"
 import { deleteAccount, updateAccount } from "@/lib/api/me"
-import { changePassword } from "@/lib/auth/actions"
-import { PASSWORD_MIN } from "@/lib/auth/credentials"
 import { formatPhone } from "@/lib/auth/phone"
 import { useApp, useRefresh } from "@/lib/store"
 import { supabaseBrowser } from "@/lib/supabase/client"
@@ -52,14 +50,21 @@ function Settings() {
         <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
       </Field>
 
-      <Field
-        label="Số điện thoại"
-        hint="Số điện thoại là tài khoản của bạn. Muốn đổi số, liên hệ hỗ trợ để xác minh lại."
-      >
-        <input className={inputClass} value={formatPhone(session?.phone ?? "")} disabled />
-      </Field>
+      {session?.phone ? (
+        <Field label="Số điện thoại" hint="Chuyên viên gọi số này để xác nhận lịch hẹn. Muốn đổi số, liên hệ hỗ trợ.">
+          <input className={inputClass} value={formatPhone(session.phone)} disabled />
+        </Field>
+      ) : (
+        <Card className="p-4">
+          <p className="font-semibold">Chưa có số điện thoại</p>
+          <p className="mt-1 text-[13px] text-ink-soft">Cần số điện thoại trước khi đặt lịch hoặc nhận job.</p>
+          <Link href="/me/so-dien-thoai?next=/me/cai-dat" className="mt-2 inline-block text-sm font-medium text-rose underline underline-offset-2">
+            Thêm số điện thoại
+          </Link>
+        </Card>
+      )}
 
-      <Field label="Email" hint="Dùng để lấy lại mật khẩu. Muốn đổi email, liên hệ hỗ trợ.">
+      <Field label="Email" hint="Email của tài khoản Google bạn dùng để đăng nhập.">
         <input className={inputClass} value={email ?? "…"} disabled />
       </Field>
 
@@ -85,8 +90,6 @@ function Settings() {
       >
         {busy ? "Đang lưu…" : "Lưu thay đổi"}
       </Button>
-
-      <ChangePassword />
 
       <Card className="p-4">
         <p className="font-semibold">Dữ liệu của bạn</p>
@@ -141,57 +144,3 @@ function Settings() {
   )
 }
 
-function ChangePassword() {
-  const [current, setCurrent] = React.useState("")
-  const [next, setNext] = React.useState("")
-  const [error, setError] = React.useState<string | null>(null)
-  const [done, setDone] = React.useState(false)
-  const [busy, setBusy] = React.useState(false)
-
-  return (
-    <Card className="space-y-3 p-4">
-      <p className="font-semibold">Đổi mật khẩu</p>
-      <Field label="Mật khẩu hiện tại">
-        <input
-          className={inputClass}
-          type="password"
-          value={current}
-          onChange={(e) => setCurrent(e.target.value)}
-          autoComplete="current-password"
-        />
-      </Field>
-      <Field label="Mật khẩu mới" hint={`Ít nhất ${PASSWORD_MIN} ký tự.`}>
-        <input
-          className={inputClass}
-          type="password"
-          value={next}
-          onChange={(e) => setNext(e.target.value)}
-          autoComplete="new-password"
-        />
-      </Field>
-      {error && (
-        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
-          {error}
-        </p>
-      )}
-      {done && <p className="text-sm text-success">Đã đổi mật khẩu.</p>}
-      <Button
-        variant="outline"
-        disabled={busy || !current || next.length < PASSWORD_MIN}
-        onClick={async () => {
-          setBusy(true)
-          setError(null)
-          setDone(false)
-          const result = await changePassword(current, next)
-          setBusy(false)
-          if (!result.ok) return setError(result.error)
-          setCurrent("")
-          setNext("")
-          setDone(true)
-        }}
-      >
-        {busy ? "Đang đổi…" : "Đổi mật khẩu"}
-      </Button>
-    </Card>
-  )
-}
