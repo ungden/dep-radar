@@ -1,6 +1,7 @@
 "use client"
 
 import { supabaseBrowser } from "./supabase/client"
+import { stripVideoLocation } from "./video-meta"
 
 /**
  * Uploading a photo.
@@ -60,4 +61,80 @@ export async function removeImage(bucket: Bucket, publicUrl: string): Promise<vo
   if (index === -1) return // A seeded image that lives in the repo, not in storage.
   const path = publicUrl.slice(index + marker.length)
   await supabaseBrowser().storage.from(bucket).remove([path])
+}
+
+// ---------------------------------------------------------------------------
+// Clips
+
+export const VIDEO_MAX_SECONDS = 60
+export const VIDEO_MAX_BYTES = 50 * 1024 * 1024
+const VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"]
+
+/** Loads just enough of the clip to know its length and to grab a poster frame. */
+async function probeVideo(file: File): Promise<{ seconds: number; poster: Blob }> {
+  const url = URL.createObjectURL(file)
+  try {
+    const video = document.createElement("video")
+    video.muted = true
+    video.playsInline = true
+    video.preload = "auto"
+    video.src = url
+    await new Promise<void>((resolve, reject) => {
+      video.onloadedmetadata = () => resolve()
+      video.onerror = () => reject(new Error("Trình duyệt không đọc được clip này. Thử xuất lại dạng MP4 nhé."))
+    })
+    const seconds = video.duration
+    // A frame a little in, so the poster is not the black first frame.
+    video.currentTime = Math.min(0.5, seconds / 2)
+    await new Promise<void>((resolve) => (video.onseeked = () => resolve()))
+    const scale = Math.min(1, MAX_EDGE / Math.max(video.videoWidth, video.videoHeight))
+    const canvas = document.createElement("canvas")
+    canvas.width = Math.round(video.videoWidth * scale)
+    canvas.height = Math.round(video.videoHeight * scale)
+    canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height)
+    const poster = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", QUALITY))
+    if (!poster) throw new Error("Không lấy được ảnh bìa cho clip.")
+    return { seconds, poster }
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+/**
+ * Uploads a clip of at most 60 seconds to the `videos` bucket, with the place
+ * it was filmed removed (lib/video-meta.ts), plus a poster frame to `works`.
+ * The post stores the poster as images[0], so every card has a still.
+ */
+export async function uploadVideo(file: File): Promise<{ video: string; poster: string }> {
+  if (!VIDEO_TYPES.includes(file.type)) throw new Error("Chỉ nhận clip MP4, MOV hoặc WebM.")
+  if (file.size > VIDEO_MAX_BYTES) throw new Error("Clip quá 50 MB. Cắt ngắn hoặc xuất ở 720p nhé.")
+  const supabase = supabaseBrowser()
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) throw new Error("Cần đăng nhập.")
+
+  const { seconds, poster } = await probeVideo(file)
+  if (!Number.isFinite(seconds) || seconds > VIDEO_MAX_SECONDS + 0.5) {
+    throw new Error(`Clip dài tối đa ${VIDEO_MAX_SECONDS} giây.`)
+  }
+
+  const clean = file.type === "video/webm" ? await file.arrayBuffer() : stripVideoLocation(await file.arrayBuffer()).buffer
+  const extension = file.type === "video/webm" ? "webm" : file.type === "video/quicktime" ? "mov" : "mp4"
+  const id = crypto.randomUUID()
+  const videoPath = `${auth.user.id}/${id}.${extension}`
+  const posterPath = `${auth.user.id}/${id}.jpg`
+
+  const [videoUpload, posterUpload] = await Promise.all([
+    supabase.storage.from("videos").upload(videoPath, new Blob([clean], { type: file.type }), {
+      contentType: file.type,
+      cacheControl: "31536000",
+      upsert: false,
+    }),
+    supabase.storage.from("works").upload(posterPath, poster, { contentType: "image/jpeg", cacheControl: "31536000", upsert: false }),
+  ])
+  if (videoUpload.error || posterUpload.error) throw new Error("Tải clip lên không thành công, thử lại nhé.")
+
+  return {
+    video: supabase.storage.from("videos").getPublicUrl(videoPath).data.publicUrl,
+    poster: supabase.storage.from("works").getPublicUrl(posterPath).data.publicUrl,
+  }
 }
