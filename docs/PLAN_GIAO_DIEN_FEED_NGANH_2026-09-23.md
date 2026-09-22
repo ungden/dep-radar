@@ -435,3 +435,38 @@ Nguồn tham khảo cho mục 3:
 - Znews — "Chụp ảnh 'dạo' bằng iPhone 13, Gen Z TP.HCM kiếm 18 triệu đồng/tháng": https://lifestyle.znews.vn/chup-anh-dao-bang-iphone-13-gen-z-tphcm-kiem-18-trieu-dongthang-post1510574.html
 - Photophone Sài Gòn (dịch vụ chụp theo giờ bằng điện thoại): https://photophonesaigon.vn/chup-hinh-dien-thoai/
 - Bảng giá thuê mẫu và chi phí buổi lookbook: https://juvamedia.com/gia-thue-mau-chup-anh/ · https://studiochupanhdep.com/gia-thue-mau-chup-lookbook_517.html · https://rimo.vn/gia-thue-mau-chup-anh-quan-ao/
+
+---
+
+## 6. Nhật ký thực hiện (23/09/2026, nhánh `feat/redesign-verticals`)
+
+Anh chọn "code hết". Các quyết định ở mục 5 được lấy theo đề xuất: hướng "tạp chí đời thường" (bỏ hồng spa + Playfair),
+tên nghề cụ thể + "người làm" khi nói chung, trang chủ mặc định "Tất cả", một app hai chế độ, giữ chữ "360dep".
+
+**Hệ thiết kế**: `lib/design/tokens.ts` là nguồn duy nhất cho web (`app/globals.css`, có test đối chiếu) và app
+(`apps/mobile`). Một màu nhấn đỏ son `#C42D45`, nút chính màu đen, chữ Be Vietnam Pro, không chữ nào dưới 12px.
+Logo mới (vòng ống kính + chấm đỏ), ảnh chia sẻ và trang lỗi không còn tên cũ "dep360".
+
+**Trang chủ & feed** (`app/page.tsx`, `lib/feed.ts`, `lib/occasions.ts`): đúng bố cục mục 2.2; công thức xếp hạng
+và luật đa dạng ở mục 2.3 có 14 test; bố cục "người trước" khi cung mỏng; lượt hiển thị/mở/lưu/bấm đặt gửi theo lô,
+không gắn tài khoản (`lib/feed-events.ts` → `log_work_events`).
+
+**Ngành mới**: 16 dịch vụ chụp & quay, người mẫu trong `lib/catalog.ts`; bài đăng ảnh / trước-sau / clip ≤60 giây
+(xoá GPS trong clip bằng `lib/video-meta.ts`, có test); giao file sau buổi chụp; quyền dùng ảnh và đồng ý đăng lại;
+đặt chung một buổi; tuyển mẫu (`/tuyen-mau`, `/studio/tuyen-mau`); thẻ người mẫu không có số đo; dịch vụ người mẫu
+và tin có thù lao chỉ mở khi đã xác minh; bộ lọc nội dung cấm; đánh giá hai chiều.
+
+**Màn hình web làm lại**: trang chủ, chi tiết bài, hồ sơ, người làm, tìm kiếm, theo dịp (`/dip/[id]`), trang đích SEO,
+đã lưu, đặt lịch, lịch hẹn (dòng thời gian), Studio "Hôm nay", đăng tác phẩm, hồ sơ Studio, đăng ký, bảng giá, Tôi,
+đăng nhập, chính sách.
+
+**App mobile** (`apps/mobile`): màn thật cho khách và Studio, dùng chung token và thuật toán feed qua `src/shared.ts`.
+Một số màn ít dùng mở trang web trong app (xem `apps/mobile/README.md`).
+
+**Chưa kiểm chứng / còn lại**
+- 12 migration `20260923*` chưa chạy trên Supabase thật (Docker trên máy treo); đã chạy trên PGlite. Cần
+  `supabase start && npm run db:test && npm run test:db`, rồi sinh lại `lib/supabase/database.types.ts`.
+- Web đọc được database chưa có migration (tự lùi về truy vấn cũ), nhưng tính năng mới chỉ chạy sau khi áp migration.
+- App chưa chạy trên simulator (Xcode chưa được chọn); đăng nhập Google cần development build, không chạy trong Expo Go.
+- Push notification cho app chưa có bảng lưu token.
+- Khung giá chụp & quay, người mẫu cần khảo sát lại với 20–30 người làm nghề.
