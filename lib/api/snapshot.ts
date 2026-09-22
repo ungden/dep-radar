@@ -102,12 +102,28 @@ type Row = Record<string, any>
 
 const first = (v: unknown): Row => (Array.isArray(v) ? ((v[0] ?? {}) as Row) : ((v ?? {}) as Row))
 
-const PRO_SELECT = `
+const PRO_BASE = `
   id, slug, display_name, avatar_path, title, bio, highlights, categories,
   city, district, lat, lng, areas, home_service, studio_address, max_travel_km,
   years_exp, accepting_jobs, published, identity_status, rating_avg, rating_count,
-  completed_jobs, response_minutes, created_at, equipment
-`
+  completed_jobs, response_minutes, created_at`
+const PRO_SELECT = `${PRO_BASE}, equipment`
+
+/**
+ * The web can reach production before the 2026-09-23 migrations do (or be
+ * rolled back after them). A select naming a column that is not there fails
+ * whole -- which once blanked the feed -- so on "undefined column" (42703)
+ * read again without the new columns: the new features stay empty, the rest
+ * of the site keeps working.
+ */
+async function orLegacy<T extends { error: { code?: string } | null }>(run: (legacy: boolean) => PromiseLike<T>): Promise<T> {
+  const first = await run(false)
+  if (first.error?.code === "42703") {
+    console.warn("snapshot: new columns missing, reading without them (migrations not applied?)")
+    return run(true)
+  }
+  return first
+}
 
 /** Tone used behind an avatar while its image loads. Stable per freelancer. */
 const TONES = ["#E9C9C6", "#EBD5C3", "#DCD3E8", "#CFDDD6", "#F0D8C0", "#D8D2C7", "#E4CBD6"]
@@ -191,18 +207,24 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
 
   const [prosRes, ownProRes, worksRes, reviewsRes, pricesRes, listingsRes, modelsRes, statsRes, castingsRes] =
     await Promise.all([
-      supabase.from("pros").select(PRO_SELECT).eq("published", true).is("suspended_at", null),
+      orLegacy((legacy) =>
+        supabase.from("pros").select(legacy ? PRO_BASE : PRO_SELECT).eq("published", true).is("suspended_at", null),
+      ),
       // The caller's own profile is not in that list until it is published, and
       // without it their studio cannot see their own services or works.
       me
-        ? supabase.from("pros").select(PRO_SELECT).eq("id", me).maybeSingle()
+        ? orLegacy((legacy) => supabase.from("pros").select(legacy ? PRO_BASE : PRO_SELECT).eq("id", me).maybeSingle())
         : Promise.resolve({ data: null, error: null }),
-      supabase
-        .from("works")
-        // Row level security already makes works public; the freelancer's own
-        // unpublished ones have to be here too, or they cannot manage them.
-        .select("id, slug, pro_id, template_id, title, description, image_paths, sort_order, kind, video_path, created_at")
-        .order("sort_order"),
+      orLegacy((legacy) =>
+        supabase
+          .from("works")
+          // Row level security already makes works public; the freelancer's own
+          // unpublished ones have to be here too, or they cannot manage them.
+          .select(
+            `id, slug, pro_id, template_id, title, description, image_paths, sort_order, created_at${legacy ? "" : ", kind, video_path"}`,
+          )
+          .order("sort_order"),
+      ),
       supabase
         .from("reviews")
         // No join: `bookings` is private, and a review has to be readable by
@@ -337,22 +359,29 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
 
   // Signed in: their own bookings, requests, addresses and shortlist.
   const [accountRes, bookingsRes, jobsRes, addressesRes, savedRes, followsRes, unreadRes] = await Promise.all([
-    supabase.from("accounts").select("id, full_name, phone, active_role, is_admin, interests").eq("id", me).maybeSingle(),
-    supabase
-      .from("bookings")
-      .select(`
-        id, customer_id, pro_id, template_id, variant_id, quantity, source, status,
-        starts_at, duration_min, at_home, city, district, address, address_note, note,
-        service_price, distance_km, travel_fee, urgent_fee, total, commission_rate, commission, payout,
-        payment_method, confirm_by, cancel_reason, cancelled_by, reschedule_to, reschedule_by, created_at,
-        usage_scope, consent_repost, booking_group_id,
-        delivery_due_at, delivered_at, delivery_url, delivery_note, delivery_accepted_at,
-        customer:accounts!bookings_customer_id_fkey (full_name, phone),
-        pro:pros!bookings_pro_id_fkey!inner (slug, display_name, avatar_path, accounts!pros_id_fkey (phone)),
-        reviews (booking_id)
-      `)
-      .or(`customer_id.eq.${me},pro_id.eq.${me}`)
-      .order("starts_at", { ascending: false }),
+    orLegacy((legacy) =>
+      supabase
+        .from("accounts")
+        .select(legacy ? "id, full_name, phone, active_role, is_admin" : "id, full_name, phone, active_role, is_admin, interests")
+        .eq("id", me)
+        .maybeSingle(),
+    ),
+    orLegacy((legacy) =>
+      supabase
+        .from("bookings")
+        .select(`
+          id, customer_id, pro_id, template_id, variant_id, quantity, source, status,
+          starts_at, duration_min, at_home, city, district, address, address_note, note,
+          service_price, distance_km, travel_fee, urgent_fee, total, commission_rate, commission, payout,
+          payment_method, confirm_by, cancel_reason, cancelled_by, reschedule_to, reschedule_by, created_at,
+          ${legacy ? "" : "usage_scope, consent_repost, booking_group_id, delivery_due_at, delivered_at, delivery_url, delivery_note, delivery_accepted_at,"}
+          customer:accounts!bookings_customer_id_fkey (full_name, phone),
+          pro:pros!bookings_pro_id_fkey!inner (slug, display_name, avatar_path, accounts!pros_id_fkey (phone)),
+          reviews (booking_id)
+        `)
+        .or(`customer_id.eq.${me},pro_id.eq.${me}`)
+        .order("starts_at", { ascending: false }),
+    ),
     supabase
       .from("jobs")
       .select(`
@@ -367,7 +396,8 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     supabase.from("notifications").select("id", { count: "exact", head: true }).eq("account_id", me).is("read_at", null),
   ])
 
-  const account = accountRes.data
+  // Loose on purpose: the select differs by whether the migrations are in.
+  const account = accountRes.data as Row | null
   const myPro = pros.find((p) => p.uuid === me)
   const session: Session | null = account
     ? {
