@@ -15,12 +15,28 @@ export async function listPros() {
   return data
 }
 
-export async function requestSmsOtp(phone: string, fullName: string) {
-  const { error } = await supabase.auth.signInWithOtp({ phone, options: { data: { full_name: fullName }, channel: "sms" } })
-  if (error) throw new ApiError("Không gửi được mã SMS. Vui lòng thử lại sau.", "OTP_UNAVAILABLE")
+// Password sign-in, same as the web. The phone number goes to Auth as metadata
+// and the database normalises it (normalize_vn_phone in handle_new_user), so this
+// app does not keep its own copy of the rules. Signing in by phone number needs
+// the server-side lookup the web app has, so here it is email only for now.
+export async function signInWithEmail(email: string, password: string) {
+  const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
+  if (error) throw new ApiError("Sai email hoặc mật khẩu.", "INVALID_CREDENTIALS")
 }
 
-export async function verifySmsOtp(phone: string, token: string) {
-  const { error } = await supabase.auth.verifyOtp({ phone, token, type: "sms" })
-  if (error) throw new ApiError("Mã xác thực không đúng hoặc đã hết hạn.", "OTP_INVALID")
+export async function signUpWithEmail(input: { fullName: string; phone: string; email: string; password: string }) {
+  if (input.password.length < 8) throw new ApiError("Mật khẩu cần ít nhất 8 ký tự.", "WEAK_PASSWORD")
+  const { error } = await supabase.auth.signUp({
+    email: input.email.trim().toLowerCase(),
+    password: input.password,
+    options: { data: { full_name: input.fullName.trim(), phone: input.phone } },
+  })
+  if (error) {
+    throw new ApiError(
+      error.code === "user_already_exists" || error.code === "email_exists"
+        ? "Email này đã có tài khoản."
+        : "Không tạo được tài khoản. Kiểm tra số điện thoại (mỗi số một tài khoản) rồi thử lại.",
+      "SIGN_UP_FAILED",
+    )
+  }
 }

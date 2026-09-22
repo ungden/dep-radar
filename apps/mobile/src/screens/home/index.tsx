@@ -9,7 +9,7 @@ export function Home() {
   const [error, setError] = React.useState<string | null>(null)
   React.useEffect(() => { void listPros().then(setPros).catch((e) => setError(e.message)) }, [])
   return <Screen title="360dep" subtitle="Đặt lịch với chuyên viên làm đẹp gần bạn">
-    <Link href="/login" asChild><Pressable style={styles.cta}><Text style={styles.ctaText}>Đăng nhập bằng SMS</Text></Pressable></Link>
+    <Link href="/login" asChild><Pressable style={styles.cta}><Text style={styles.ctaText}>Đăng nhập</Text></Pressable></Link>
     <Text style={styles.heading}>Chuyên viên nổi bật</Text>
     {error ? <Card><Text selectable>{error}</Text></Card> : pros.length === 0 ? <ActivityIndicator color="#C65E68" /> : pros.map((pro) =>
       <Link key={pro.id} href={{ pathname: "/pro/[slug]", params: { slug: pro.slug } }} asChild>
