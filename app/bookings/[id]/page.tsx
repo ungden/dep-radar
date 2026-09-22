@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { CalendarDays, Home, Info, Phone, Store } from "lucide-react"
 import { bookingImage } from "@/components/booking-card"
+import { BookingTimeline, ComboPartners, DeliveryPanel, ReviewCustomer } from "@/components/booking-extras"
 import { PriceBreakdown } from "@/components/price-breakdown"
 import { MessageButton } from "@/components/message-button"
 import { ReportButton } from "@/components/report-button"
@@ -14,6 +15,7 @@ import { RequireSession } from "@/components/require-session"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, StatusBadge, buttonClass, inputClass } from "@/components/ui"
 import { formatPhone } from "@/lib/auth/phone"
 import { actions, useAct } from "@/lib/client-actions"
+import { getTemplate } from "@/lib/catalog"
 import { getPro, useApp } from "@/lib/store"
 import { POLICY, hoursUntilStart } from "@/lib/pricing"
 import type { Booking } from "@/lib/types"
@@ -58,8 +60,8 @@ function BookingDetail() {
     return (
       <EmptyState
         icon={<CalendarDays className="size-6" />}
-        title="Chuyên viên không còn hoạt động"
-        text="Hồ sơ chuyên viên của lịch hẹn này đã bị ẩn. Liên hệ hỗ trợ nếu bạn cần giúp."
+        title="Người làm không còn hoạt động"
+        text="Hồ sơ của người làm trong lịch hẹn này đã bị ẩn. Liên hệ hỗ trợ nếu bạn cần giúp."
         action={<ButtonLink href="/bookings">Về danh sách</ButtonLink>}
       />
     )
@@ -70,8 +72,14 @@ function BookingDetail() {
     void act(fn, done).then((message) => setError(message))
   const freeCancel = hoursUntilStart(booking.date, booking.time) >= POLICY.freeCancelHours
 
+  const onLocation = Boolean(getTemplate(booking.templateId)?.onLocation)
+
   return (
     <div className="space-y-4">
+      <BookingTimeline booking={booking} />
+      <DeliveryPanel booking={booking} isPro={isPro} />
+      <ComboPartners booking={booking} />
+
       <Card className="flex items-center gap-3 p-4">
         {isPro ? <Avatar name={booking.customerName} size={48} /> : <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={48} />}
         <div className="min-w-0 flex-1">
@@ -110,11 +118,21 @@ function BookingDetail() {
           <span className="font-medium">
             <span className="mb-0.5 flex items-center gap-1 text-xs font-normal text-accent">
               {booking.atHome ? <Home className="size-3.5" /> : <Store className="size-3.5" />}
-              {booking.atHome ? "Làm tại nhà khách" : "Tại studio"}
+              {booking.atHome ? (onLocation ? "Địa điểm khách chọn" : "Làm tại nhà khách") : "Tại studio"}
             </span>
             {booking.address}
           </span>
         </div>
+        {(booking.usageScope === "commercial" || booking.consentRepost || onLocation) && (
+          <div className="flex gap-4 py-3.5">
+            <span className="w-20 shrink-0 text-[13px] text-muted">Hình ảnh</span>
+            <span className="text-ink-soft">
+              {booking.usageScope === "commercial" ? "Dùng cho kinh doanh" : "Dùng cá nhân"}
+              <br />
+              {booking.consentRepost ? "Khách đồng ý cho đăng làm tác phẩm" : "Không đăng làm tác phẩm"}
+            </span>
+          </div>
+        )}
         {booking.note && (
           <div className="flex gap-4 py-3.5">
             <span className="w-20 shrink-0 text-[13px] text-muted">Ghi chú</span>
@@ -185,11 +203,11 @@ function BookingDetail() {
                 </Button>
                 {booking.status !== "pending" && booking.proPhone ? (
                   <a href={`tel:${booking.proPhone.replace(/\s/g, "")}`} className={buttonClass("primary", "lg")}>
-                    <Phone className="size-4" /> Gọi chuyên viên
+                    <Phone className="size-4" /> Gọi {booking.proName}
                   </a>
                 ) : (
                   // The number appears once the freelancer has accepted the job.
-                  <span className="flex items-center justify-center rounded-xl bg-canvas px-3 text-center text-[13px] text-muted">
+                  <span className="flex items-center justify-center rounded-full bg-subtle px-3 text-center text-[13px] text-ink-soft">
                     {booking.proName} sẽ gọi cho bạn
                   </span>
                 )}
@@ -198,14 +216,14 @@ function BookingDetail() {
           )}
           {isPro && booking.status === "pending" && (
             <div className="grid grid-cols-[auto_1fr_1fr] gap-2">
-              <Button variant="ghost" size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "declined"), "Đã từ chối job")}>
+              <Button variant="ghost" size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "declined"), "Đã từ chối lịch")}>
                 Từ chối
               </Button>
               <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "lg")}>
                 <Phone className="size-4" /> Gọi khách
               </a>
-              <Button size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "confirmed"), "Đã nhận job")}>
-                Đã gọi, nhận job
+              <Button size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "confirmed"), "Đã nhận lịch")}>
+                Đã gọi, nhận lịch
               </Button>
             </div>
           )}
@@ -226,6 +244,7 @@ function BookingDetail() {
           a job the freelancer has to give back, a time that has to move, and a
           customer who was not there. */}
       {isPro && active && <ProTrouble booking={booking} onError={setError} />}
+      {isPro && <ReviewCustomer booking={booking} />}
       {isCustomer && booking.rescheduleTo && booking.rescheduleBy === "pro" && (
         <RescheduleOffer booking={booking} onError={setError} />
       )}
