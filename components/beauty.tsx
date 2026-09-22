@@ -64,8 +64,20 @@ export function VerticalSwitch({
   className?: string
 }) {
   const items: { id: VerticalFilter; label: string }[] = [{ id: "all", label: "Tất cả" }, ...VERTICALS]
+  const ref = React.useRef<HTMLDivElement>(null)
+  // On a phone the last trade sits off-screen; keep the chosen one in view
+  // without moving the page vertically.
+  React.useEffect(() => {
+    const row = ref.current
+    const chosen = row?.querySelector<HTMLElement>('[aria-checked="true"]')
+    if (!row || !chosen) return
+    const left = chosen.offsetLeft - row.offsetLeft
+    if (left < row.scrollLeft || left + chosen.offsetWidth > row.scrollLeft + row.clientWidth) {
+      row.scrollTo({ left: Math.max(0, left - 16), behavior: "smooth" })
+    }
+  }, [value])
   return (
-    <div role="radiogroup" aria-label="Ngành" className={cn("no-scrollbar flex gap-2 overflow-x-auto", className)}>
+    <div ref={ref} role="radiogroup" aria-label="Ngành" className={cn("no-scrollbar flex gap-2 overflow-x-auto", className)}>
       {items.map((it) => {
         const active = value === it.id
         return (
