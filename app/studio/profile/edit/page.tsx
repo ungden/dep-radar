@@ -78,7 +78,7 @@ function ProfileEditor() {
           ) : (
             <Avatar name={displayName} tone={pro.tone} size={64} />
           )}
-          <label className="absolute -bottom-1 -right-1 inline-flex size-7 cursor-pointer items-center justify-center rounded-full bg-accent text-white">
+          <label className="absolute -bottom-1 -right-1 inline-flex size-7 cursor-pointer items-center justify-center rounded-full bg-ink text-white">
             <Camera className="size-3.5" />
             <input
               type="file"

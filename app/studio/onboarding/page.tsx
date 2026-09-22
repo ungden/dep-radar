@@ -77,7 +77,7 @@ export default function OnboardingPage() {
                 className={cn(
                   "rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors",
                   categories.includes(c.id)
-                    ? "border-accent bg-accent text-white"
+                    ? "border-ink bg-ink text-white"
                     : "border-line bg-surface text-ink-soft hover:border-subtle-strong",
                 )}
               >

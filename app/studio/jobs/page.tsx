@@ -198,7 +198,7 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
           onChange={(e) => setPrice(Number(e.target.value))}
           className="mt-2 w-full accent-[var(--color-ink)]"
         />
-        <div className="flex justify-between text-[11px] text-muted">
+        <div className="flex justify-between text-xs text-muted">
           <span>{formatPrice(floor)}</span>
           <button type="button" className="text-accent" onClick={() => setPrice(Math.max(floor, variant.suggestedPrice))}>
             Giá niêm yết {formatPrice(floor)}

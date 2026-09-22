@@ -158,7 +158,7 @@ function BookingFlow({ proId }: { proId: string }) {
         <span className="flex size-20 items-center justify-center rounded-full bg-success-soft text-success">
           <CheckCircle2 className="size-10" />
         </span>
-        <h1 className="mt-5 text-2xl font-semibold">Đã gửi yêu cầu đặt lịch</h1>
+        <h1 className="mt-5 text-[28px] font-extrabold tracking-tight">Đã gửi yêu cầu đặt lịch</h1>
         <p className="mt-2 text-sm text-ink-soft">
           {pro.name} sẽ gọi cho bạn qua số {formatPhone(state.session?.phone ?? "")} để xác nhận lịch {time} ·{" "}
           {formatDateLong(date)}
@@ -233,7 +233,7 @@ function BookingFlow({ proId }: { proId: string }) {
                         <span className="block truncate text-xs text-muted">{t.description}</span>
                       </span>
                       <span className="text-sm text-ink-soft">từ {formatPrice(Math.min(...Object.values(s.prices)))}</span>
-                      <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full border", selected ? "border-accent bg-accent text-white" : "border-line")}>
+                      <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full border", selected ? "border-ink bg-ink text-white" : "border-line")}>
                         {selected && <Check className="size-3.5" />}
                       </span>
                     </button>
@@ -340,7 +340,7 @@ function BookingFlow({ proId }: { proId: string }) {
                       active ? "border-accent bg-subtle text-accent-dark" : "border-transparent text-ink-soft hover:bg-surface",
                     )}
                   >
-                    <span className="text-[11px] text-muted">{d === todayISO() ? "Nay" : weekdayShort(d)}</span>
+                    <span className="text-xs text-muted">{d === todayISO() ? "Nay" : weekdayShort(d)}</span>
                     <span className={cn("font-medium", active && "font-semibold")}>{parseISODate(d).getDate()}</span>
                   </button>
                 )
@@ -417,7 +417,7 @@ function BookingFlow({ proId }: { proId: string }) {
                 <br />
                 {time} - {addMinutes(time, durationMin)}
                 {quote.urgentFee > 0 && (
-                  <span className="ml-2 inline-flex items-center gap-0.5 rounded-full bg-warning-soft px-1.5 py-0.5 text-[11px] font-semibold text-warning">
+                  <span className="ml-2 inline-flex items-center gap-0.5 rounded-full bg-warning-soft px-1.5 py-0.5 text-xs font-semibold text-warning">
                     <Zap className="size-3" /> Đặt gấp
                   </span>
                 )}
@@ -522,7 +522,7 @@ function BookingFlow({ proId }: { proId: string }) {
         <div className="flex items-center gap-3">
           {step === 3 && quote && (
             <div className="shrink-0">
-              <p className="text-[11px] text-muted">Tổng</p>
+              <p className="text-xs text-muted">Tổng</p>
               <p className="font-semibold">{formatPrice(quote.total)}</p>
             </div>
           )}
@@ -564,7 +564,7 @@ function Stepper({ step, onJump }: { step: number; onJump: (s: number) => void }
             <button
               type="button"
               onClick={() => onJump(n)}
-              className={cn("relative z-10 flex size-7 items-center justify-center rounded-full text-xs font-semibold", active || done ? "bg-accent text-white" : "bg-line text-muted")}
+              className={cn("relative z-10 flex size-7 items-center justify-center rounded-full text-xs font-semibold", active || done ? "bg-ink text-white" : "bg-line text-muted")}
             >
               {done ? <Check className="size-3.5" /> : n}
             </button>

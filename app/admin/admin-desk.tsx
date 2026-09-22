@@ -194,7 +194,7 @@ function CheckCard({ check, onDecide }: { check: PendingCheck; onDecide: (approv
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[11px] text-muted">{label}</dt>
+      <dt className="text-xs text-muted">{label}</dt>
       <dd className="font-medium">{value}</dd>
     </div>
   )
@@ -207,5 +207,5 @@ function Flag({ on, label, tone = "success" }: { on: boolean; label: string; ton
     muted: "bg-canvas text-muted",
     danger: "bg-danger-soft text-danger",
   }
-  return <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", tones[tone])}>{label}</span>
+  return <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", tones[tone])}>{label}</span>
 }

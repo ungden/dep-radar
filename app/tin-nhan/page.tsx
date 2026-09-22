@@ -36,12 +36,12 @@ export default async function InboxPage() {
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
                         <span className="truncate text-sm font-semibold">{t.otherName}</span>
-                        <span className="ml-auto shrink-0 text-[11px] text-muted">{timeAgo(t.lastMessageAt)}</span>
+                        <span className="ml-auto shrink-0 text-xs text-muted">{timeAgo(t.lastMessageAt)}</span>
                       </span>
                       <span className="mt-0.5 flex items-center gap-2">
                         <span className="truncate text-[13px] text-ink-soft">{t.lastMessage}</span>
                         {t.unread > 0 && (
-                          <span className="ml-auto shrink-0 rounded-full bg-accent px-1.5 text-[11px] font-semibold text-white">
+                          <span className="ml-auto shrink-0 rounded-full bg-accent px-1.5 text-xs font-semibold text-white">
                             {t.unread}
                           </span>
                         )}

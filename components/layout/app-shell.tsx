@@ -110,7 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link href="/thong-bao" aria-label="Thông báo" className="relative inline-flex size-10 items-center justify-center rounded-full hover:bg-subtle">
                 <Bell className="size-5" />
                 {state.unreadNotifications > 0 && (
-                  <span className="absolute right-0.5 top-0.5 min-w-[18px] rounded-full bg-accent px-1 text-center text-[11px] font-bold leading-[18px] text-white">
+                  <span className="absolute right-0.5 top-0.5 min-w-[18px] rounded-full bg-accent px-1 text-center text-xs font-bold leading-[18px] text-white">
                     {state.unreadNotifications > 9 ? "9+" : state.unreadNotifications}
                   </span>
                 )}

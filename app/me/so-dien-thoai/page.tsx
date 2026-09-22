@@ -24,7 +24,7 @@ export default async function PhonePage({ searchParams }: { searchParams: Promis
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pb-10">
       <PageHeader back="/" />
       <Logo size="lg" />
-      <h1 className="mt-4 text-2xl font-semibold">Thêm số điện thoại</h1>
+      <h1 className="mt-4 text-[28px] font-extrabold tracking-tight">Thêm số điện thoại</h1>
       <p className="mt-1 text-sm text-ink-soft">
         {account.full_name ? `Chào ${account.full_name}. ` : ""}Chuyên viên gọi số này để xác nhận lịch hẹn trước khi
         nhận job, và bạn gọi lại cho họ khi cần. Mỗi số điện thoại chỉ gắn với một tài khoản.

@@ -21,7 +21,7 @@ export function VerifiedBadge({ pro, className }: { pro: Pro; className?: string
   return (
     <span
       title="Đã đối chiếu CCCD và ảnh chân dung"
-      className={cn("inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-[11px] font-medium text-success", className)}
+      className={cn("inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-xs font-medium text-success", className)}
     >
       <IdCard className="size-3.5" /> Đã xác minh danh tính
     </span>
@@ -60,7 +60,7 @@ export function ReviewItem({ review, onReply }: { review: Review; onReply?: (tex
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 text-sm font-medium">
             {review.author}
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-success-soft px-1.5 py-0.5 text-[10px] font-semibold text-success">
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-success-soft px-1.5 py-0.5 text-xs font-semibold text-success">
               <BadgeCheck className="size-3" /> Đã đặt qua 360dep
             </span>
           </p>
@@ -73,7 +73,7 @@ export function ReviewItem({ review, onReply }: { review: Review; onReply?: (tex
       {review.tags.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {review.tags.map((t) => (
-            <span key={t} className="rounded-full bg-subtle px-2 py-0.5 text-[11px] text-accent-dark">
+            <span key={t} className="rounded-full bg-subtle px-2 py-0.5 text-xs text-accent-dark">
               {t}
             </span>
           ))}
@@ -112,7 +112,7 @@ export function ReviewItem({ review, onReply }: { review: Review; onReply?: (tex
               placeholder="Cảm ơn khách, giải thích nếu có vấn đề…"
               className="h-9 flex-1 rounded-xl border border-line bg-surface px-3 text-sm focus:border-accent focus:outline-none"
             />
-            <button type="submit" className="h-9 rounded-xl bg-accent px-3 text-[13px] font-medium text-white">
+            <button type="submit" className="h-9 rounded-full bg-ink px-4 text-[13px] font-semibold text-white">
               Gửi
             </button>
           </form>

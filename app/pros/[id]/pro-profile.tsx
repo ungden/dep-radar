@@ -67,7 +67,7 @@ export function ProProfile({ proId }: { proId: string }) {
               <FollowButton proId={pro.id} />
             </div>
           </div>
-          <h1 className="mt-3 flex flex-wrap items-center gap-1.5 text-2xl font-semibold">
+          <h1 className="mt-3 flex flex-wrap items-center gap-1.5 text-[28px] font-extrabold tracking-tight">
             {pro.name}
             <VerifiedMark pro={pro} className="size-5" />
           </h1>
@@ -91,7 +91,7 @@ export function ProProfile({ proId }: { proId: string }) {
             ].map(([value, label]) => (
               <li key={label} className="rounded-2xl bg-surface px-2 py-3 shadow-[var(--shadow-soft)]">
                 <p className="text-sm font-semibold">{value}</p>
-                <p className="text-[11px] text-muted">{label}</p>
+                <p className="text-xs text-muted">{label}</p>
               </li>
             ))}
           </ul>

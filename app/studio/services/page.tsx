@@ -91,7 +91,7 @@ function ServicesManager() {
                     .map((v) => (
                       <li key={v.id} className="rounded-xl bg-canvas px-3 py-2 text-[13px]">
                         <span className="text-ink-soft">{v.label}</span> · <b>{formatPrice(l.prices[v.id])}</b>
-                        <span className="block text-[11px] text-muted">
+                        <span className="block text-xs text-muted">
                           {formatDuration(v.durationMin)} · bạn nhận {formatPrice(payoutFor(l.prices[v.id], rate))}
                         </span>
                       </li>
@@ -201,7 +201,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
                     onChange={(e) => setPrices((x) => ({ ...x, [v.id]: Number(e.target.value) }))}
                     className="mt-3 w-full accent-[var(--color-ink)]"
                   />
-                  <div className="flex justify-between text-[11px] text-muted">
+                  <div className="flex justify-between text-xs text-muted">
                     <span>Tối thiểu {formatPrice(v.minPrice)}</span>
                     <button type="button" className="text-accent" onClick={() => setPrices((x) => ({ ...x, [v.id]: v.suggestedPrice }))}>
                       Gợi ý {formatPrice(v.suggestedPrice)}

@@ -93,7 +93,7 @@ export function Conversation({
             <div
               className={cn(
                 "max-w-[78%] rounded-2xl px-3.5 py-2.5 text-sm",
-                m.mine ? "bg-accent text-white" : "bg-surface text-ink shadow-[var(--shadow-soft)]",
+                m.mine ? "bg-ink text-white" : "border border-line bg-surface text-ink",
               )}
             >
               {m.images.map((src) => (
@@ -102,7 +102,7 @@ export function Conversation({
                 </span>
               ))}
               {m.body && <p className="whitespace-pre-wrap leading-relaxed">{m.body}</p>}
-              <span className={cn("mt-0.5 block text-[10.5px]", m.mine ? "text-white/70" : "text-muted")}>
+              <span className={cn("mt-0.5 block text-xs", m.mine ? "text-white/70" : "text-muted")}>
                 {localTime(m.createdAt)}
               </span>
             </div>

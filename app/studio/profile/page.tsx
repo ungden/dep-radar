@@ -82,9 +82,9 @@ function ProfileTrust() {
             <p className="text-xs text-muted">{STATUS_TEXT[pro.identity]}</p>
           </div>
           {pro.identity === "verified" ? (
-            <span className="rounded-full bg-success-soft px-2.5 py-1 text-[11px] font-semibold text-success">Đã xác minh</span>
+            <span className="rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">Đã xác minh</span>
           ) : pro.identity === "pending" ? (
-            <span className="rounded-full bg-warning-soft px-2.5 py-1 text-[11px] font-semibold text-warning">Đang kiểm tra</span>
+            <span className="rounded-full bg-warning-soft px-2.5 py-1 text-xs font-semibold text-warning">Đang kiểm tra</span>
           ) : (
             <ButtonLink href="/studio/verify" size="sm">
               {pro.identity === "rejected" ? "Chụp lại" : "Xác minh ngay"}

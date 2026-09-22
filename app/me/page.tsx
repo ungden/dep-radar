@@ -35,7 +35,7 @@ export default function MePage() {
   if (!session) {
     return (
       <div className="mx-auto max-w-2xl pt-6">
-        <h1 className="text-2xl font-semibold">Cá nhân</h1>
+        <h1 className="text-[28px] font-extrabold tracking-tight">Cá nhân</h1>
         <Card className="mt-4 p-5 text-center">
           <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-subtle text-accent">
             <UserRound className="size-7" />
@@ -64,7 +64,7 @@ export default function MePage() {
   return (
     <div className="mx-auto max-w-2xl pt-4 md:pt-8">
       <div className="flex h-12 items-center justify-between">
-        <h1 className="text-2xl font-semibold">Cá nhân</h1>
+        <h1 className="text-[28px] font-extrabold tracking-tight">Cá nhân</h1>
       </div>
 
       <Link href={isPro && pro ? `/pros/${pro.id}` : "/me"} className="mt-3 flex items-center gap-4">
@@ -95,7 +95,7 @@ export default function MePage() {
             await actions.switchRole(isPro ? "customer" : "pro")
             router.push(isPro ? "/" : "/studio")
           }}
-          className="rounded-full bg-accent px-4 py-2 text-[13px] font-medium text-white hover:bg-accent-dark"
+          className="h-10 rounded-full bg-ink px-4 text-[13px] font-semibold text-white hover:bg-ink/85"
         >
           {!isPro && !session.proId ? "Mở hồ sơ" : "Chuyển"}
         </button>

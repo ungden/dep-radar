@@ -84,10 +84,10 @@ function WorksManager() {
                 </div>
                 <div className="p-2.5">
                   <p className="truncate text-[13px] font-medium">{work.title}</p>
-                  <p className="truncate text-[11px] text-muted">{getTemplate(work.templateId)?.name}</p>
+                  <p className="truncate text-xs text-muted">{getTemplate(work.templateId)?.name}</p>
                   <button
                     type="button"
-                    className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-muted hover:text-danger"
+                    className="mt-1.5 inline-flex items-center gap-1 text-xs text-muted hover:text-danger"
                     onClick={async () => {
                       const result = await deleteWork(work.dbId)
                       if (!result.ok) return setError(result.error)

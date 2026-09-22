@@ -231,7 +231,7 @@ function TopBar() {
             <Link href="/thong-bao" aria-label="Thông báo" className="relative inline-flex size-11 items-center justify-center">
               <Bell className="size-[22px]" />
               {state.unreadNotifications > 0 && (
-                <span className="absolute right-1.5 top-1.5 min-w-[18px] rounded-full bg-accent px-1 text-center text-[11px] font-bold leading-[18px] text-white">
+                <span className="absolute right-1.5 top-1.5 min-w-[18px] rounded-full bg-accent px-1 text-center text-xs font-bold leading-[18px] text-white">
                   {state.unreadNotifications > 9 ? "9+" : state.unreadNotifications}
                 </span>
               )}

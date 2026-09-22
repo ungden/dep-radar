@@ -63,7 +63,7 @@ function ServiceCard({ proId, service, bookable }: { proId: string; service: Pro
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
           {tpl.studioOnly && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-canvas px-2 py-0.5 text-[10.5px] font-medium text-ink-soft">
+            <span className="inline-flex items-center gap-1 rounded-full bg-canvas px-2 py-0.5 text-xs font-medium text-ink-soft">
               <Store className="size-3" /> Tại studio
             </span>
           )}

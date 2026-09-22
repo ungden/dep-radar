@@ -15,7 +15,7 @@ export function JobStatusLabel({ job }: { job: JobPost }) {
     closed: ["Đã đóng", "bg-canvas text-muted"],
   } as const
   const [label, cls] = map[job.status]
-  return <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold", cls)}>{label}</span>
+  return <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold", cls)}>{label}</span>
 }
 
 export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: string; footer?: React.ReactNode; extra?: React.ReactNode }) {
