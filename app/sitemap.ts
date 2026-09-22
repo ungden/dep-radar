@@ -3,6 +3,7 @@ import { listPublishedSlugs } from "@/lib/api/pros"
 import { CATEGORIES } from "@/lib/catalog"
 import { SITE_URL } from "@/lib/env"
 import { CITIES } from "@/lib/geo"
+import { OCCASIONS } from "@/lib/occasions"
 import { backendEnabled } from "@/lib/supabase/env"
 
 const citySlug = (city: string) =>
@@ -21,7 +22,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/pros`, lastModified, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/chinh-sach`, lastModified, changeFrequency: "monthly", priority: 0.3 },
     { url: `${SITE_URL}/tro-giup`, lastModified, changeFrequency: "monthly", priority: 0.4 },
-    // The searches people actually type: "nail tại nhà Hà Nội".
+    // Occasions: what people book together for a day ("Áo dài Tết").
+    ...OCCASIONS.map((o) => ({
+      url: `${SITE_URL}/dip/${o.id}`,
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    })),
+    // The searches people actually type, one page per city and category in
+    // every trade: "nail tại nhà Hà Nội", "chụp ảnh điện thoại ở Hà Nội".
     ...CITIES.flatMap((city) =>
       CATEGORIES.map((c) => ({
         url: `${SITE_URL}/${citySlug(city)}/${c.id}`,

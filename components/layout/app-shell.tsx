@@ -75,18 +75,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <LiveRegionProvider>
       <div className="min-h-dvh">
       <header className="sticky top-0 z-40 hidden border-b border-line bg-canvas/90 backdrop-blur md:block">
-        <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-6 px-6">
+        <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-5 px-6">
           <Link href={isPro ? "/studio" : "/"} aria-label="360dep">
             <Logo />
           </Link>
-          <nav className="flex flex-1 items-center gap-0.5">
+          <nav className="no-scrollbar flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
             {top.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 aria-current={isActive(item) ? "page" : undefined}
                 className={cn(
-                  "rounded-full px-3.5 py-2 text-[14px] font-semibold transition-colors",
+                  "shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-[14px] font-semibold transition-colors",
                   isActive(item) ? "bg-ink text-white" : "text-ink-soft hover:bg-subtle hover:text-ink",
                 )}
               >
@@ -97,7 +97,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {pathname !== "/" && !isPro && (
             <Link
               href="/search"
-              className="hidden h-10 w-56 items-center gap-2 rounded-full border border-line bg-surface px-4 text-[14px] text-muted hover:border-ink/30 lg:inline-flex"
+              className="hidden h-10 w-44 shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-4 text-[14px] text-muted hover:border-ink/30 xl:inline-flex"
             >
               <Search className="size-4 text-ink" /> Tìm kiếm
             </Link>
@@ -132,7 +132,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/login?role=pro" className="hidden h-10 items-center rounded-full px-4 text-[14px] font-semibold text-ink hover:bg-subtle lg:inline-flex">
+              <Link href="/login?role=pro" className="hidden h-10 items-center whitespace-nowrap rounded-full px-4 text-[14px] font-semibold text-ink hover:bg-subtle xl:inline-flex">
                 Nhận khách trên 360dep
               </Link>
               <Link href="/login" className="inline-flex h-10 items-center rounded-full bg-ink px-5 text-[14px] font-semibold text-white hover:bg-ink/85">
