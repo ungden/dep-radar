@@ -5,10 +5,16 @@
  *   npm run catalog:sql          # regenerate
  *   npm run catalog:check        # fail if the committed file is stale (CI)
  *
+ * Production does not run seed files, so a catalogue change also needs a
+ * migration. This prints the same upserts for the given trades, to paste into one:
+ *
+ *   npx tsx scripts/gen-catalog-sql.ts --templates=photo,model
+ *
  * The output is idempotent: safe to run against an existing database.
  */
 import { writeFileSync, readFileSync, existsSync } from "node:fs"
-import { CATALOG } from "../lib/catalog"
+import { CATALOG, verticalOf } from "../lib/catalog"
+import type { ServiceTemplate } from "../lib/types"
 import { DISTRICT_COORDS } from "../lib/geo"
 import { POLICY } from "../lib/pricing"
 
@@ -50,16 +56,19 @@ for (const [city, districts] of Object.entries(DISTRICT_COORDS)) {
 
 lines.push("", "-- Service catalogue ---------------------------------------------------------")
 
-CATALOG.forEach((t, ti) => {
-  lines.push(
-    `insert into public.service_templates (id, category, name, description, includes, studio_only, active, sort_order) values (`,
-    `  ${q(t.id)}, ${q(t.category)}, ${q(t.name)}, ${q(t.description)}, ${arr(t.includes)}, ${Boolean(t.studioOnly)}, true, ${ti})`,
+/** Upserts for one service and its options. sort_order is its place in CATALOG. */
+function templateSql(t: ServiceTemplate, sortOrder: number): string[] {
+  const out = [
+    `insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order) values (`,
+    `  ${q(t.id)}, ${q(t.category)}, ${q(t.name)}, ${q(t.description)}, ${arr(t.includes)}, ${Boolean(t.studioOnly)}, ${Boolean(t.onLocation)}, ${t.deliverable ? q(t.deliverable) : "null"}, ${t.deliveryDays ?? "null"}, ${Boolean(t.requiresVerification)}, true, ${sortOrder})`,
     "  on conflict (id) do update set category = excluded.category, name = excluded.name,",
     "    description = excluded.description, includes = excluded.includes,",
-    "    studio_only = excluded.studio_only, active = excluded.active, sort_order = excluded.sort_order;",
-  )
+    "    studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,",
+    "    delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,",
+    "    active = excluded.active, sort_order = excluded.sort_order;",
+  ]
   t.variants.forEach((v, vi) => {
-    lines.push(
+    out.push(
       `insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, per_person, max_quantity, sort_order) values (`,
       `  ${q(t.id)}, ${q(v.id)}, ${q(v.label)}, ${v.durationMin}, ${v.minPrice}, ${v.maxPrice}, ${v.suggestedPrice}, ${Boolean(v.perPerson)}, ${v.maxQuantity ?? 1}, ${vi})`,
       "  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,",
@@ -67,7 +76,18 @@ CATALOG.forEach((t, ti) => {
       "    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order;",
     )
   })
-})
+  return out
+}
+
+const only = process.argv.find((a) => a.startsWith("--templates="))
+if (only) {
+  const verticals = only.slice("--templates=".length).split(",")
+  const picked = CATALOG.flatMap((t, ti) => (verticals.includes(verticalOf(t.category)) ? templateSql(t, ti) : []))
+  process.stdout.write(picked.join("\n") + "\n")
+  process.exit(0)
+}
+
+CATALOG.forEach((t, ti) => lines.push(...templateSql(t, ti)))
 
 // Anything dropped from the catalogue stops being offered but is kept, because
 // existing bookings and listings still point at it.
