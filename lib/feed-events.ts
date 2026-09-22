@@ -1,5 +1,6 @@
 "use client"
 
+import { actions } from "./client-actions"
 import type { WorkEventKind } from "./types"
 
 /**
@@ -10,28 +11,21 @@ import type { WorkEventKind } from "./types"
  * Events are batched and sent at most every few seconds, and when the page is
  * hidden, so scrolling a feed is one request rather than fifty.
  */
-type Sender = (events: { work: string; kind: WorkEventKind }[]) => Promise<unknown>
-
 const FLUSH_MS = 4000
 const MAX_BATCH = 60
 
 let queue: { work: string; kind: WorkEventKind }[] = []
 let timer: ReturnType<typeof setTimeout> | null = null
-let sender: Sender | null = null
 /** An impression is counted once per post per page view. */
 const seen = new Set<string>()
 
-export function setWorkEventSender(send: Sender) {
-  sender = send
-}
-
 function flush() {
   timer = null
-  if (!queue.length || !sender) return
+  if (!queue.length) return
   const batch = queue.slice(0, MAX_BATCH)
   queue = queue.slice(MAX_BATCH)
-  // Losing a count is fine; breaking the page over one is not.
-  void sender(batch).catch(() => {})
+  // Fire and forget: losing a count is fine; breaking the page over one is not.
+  actions.logWorkEvents(batch)
   if (queue.length) schedule()
 }
 

@@ -46,7 +46,7 @@ export default function CastingPage() {
   const left = Math.max(0, casting.slots - casting.acceptedCount)
   const trade = getVertical(verticalOf(casting.category))
 
-  const run = async (fn: () => Promise<{ error?: string }>, done: string) => {
+  const run = async (fn: () => Promise<{ error?: string } | { id: string }>, done: string) => {
     setBusy(true)
     setError(await act(fn, done))
     setBusy(false)

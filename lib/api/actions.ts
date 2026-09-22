@@ -4,7 +4,15 @@ import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { CITY_COOKIE } from "./snapshot"
 import { supabaseServer } from "@/lib/supabase/server"
-import type { PaymentMethod } from "@/lib/types"
+import type {
+  CastingCompensation,
+  CategoryId,
+  ModelProfile,
+  PaymentMethod,
+  UsageScope,
+  WorkEventKind,
+  WorkKind,
+} from "@/lib/types"
 import { localTime } from "@/lib/utils"
 
 /**
@@ -447,11 +455,25 @@ export async function saveWork(input: {
   title: string
   description?: string
   images: string[]
+  /** before_after: images[0] is before, images[1] is after. */
+  kind?: WorkKind
+  /** Public URL of a clip in the `videos` bucket; images[0] is its poster frame. */
+  video?: string | null
 }): Promise<ActionResult<string>> {
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
+  const kind: WorkKind = input.kind ?? "work"
+  const video = input.video || null
+  // The database refuses all of these too; this only puts the reason in words.
   if (!input.images.length) return { ok: false, error: "Cần ít nhất một ảnh." }
+  if (kind === "before_after" && input.images.length < 2) {
+    return { ok: false, error: "Ảnh trước/sau cần đủ 2 ảnh: ảnh trước, rồi ảnh sau." }
+  }
+  if (video && kind !== "work") return { ok: false, error: "Bài trước/sau chỉ gồm ảnh, không kèm clip." }
+  if (video && !video.includes(`/storage/v1/object/public/videos/${auth.user.id}/`)) {
+    return { ok: false, error: "Clip phải được tải lên từ máy của bạn." }
+  }
 
   const slug = await uniqueWorkSlug(input.title)
   const row = {
@@ -460,6 +482,8 @@ export async function saveWork(input: {
     title: input.title.trim(),
     description: (input.description ?? "").trim(),
     image_paths: input.images,
+    kind,
+    video_path: video,
   }
   const query = input.id
     ? supabase.from("works").update(row).eq("id", input.id).select("id").single()
@@ -501,6 +525,8 @@ export async function saveProProfile(input: {
   homeService?: boolean
   maxTravelKm?: number
   published?: boolean
+  /** Photo & video: what they shoot with. */
+  equipment?: string | null
 }): Promise<ActionResult> {
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()
@@ -516,6 +542,7 @@ export async function saveProProfile(input: {
     home_service: boolean
     max_travel_km: number
     published: boolean
+    equipment: string | null
   }> = {}
   if (input.displayName !== undefined) row.display_name = input.displayName.trim()
   if (input.title !== undefined) row.title = input.title.trim()
@@ -525,6 +552,11 @@ export async function saveProProfile(input: {
   if (input.homeService !== undefined) row.home_service = input.homeService
   if (input.maxTravelKm !== undefined) row.max_travel_km = input.maxTravelKm
   if (input.published !== undefined) row.published = input.published
+  if (input.equipment !== undefined) {
+    const equipment = (input.equipment ?? "").trim()
+    if (equipment.length > 200) return { ok: false, error: "Thiết bị tối đa 200 ký tự." }
+    row.equipment = equipment || null
+  }
 
   const { error } = await supabase.from("pros").update(row).eq("id", auth.user.id)
   if (error) return { ok: false, error: messageFor(error) }
@@ -542,4 +574,154 @@ export async function saveWorkingHours(
   if (error) return { ok: false, error: messageFor(error) }
   revalidatePath("/studio", "layout")
   return { ok: true, data: undefined }
+}
+
+/** Photo & video: the equipment line on the profile. Same path as the rest of it. */
+export async function setEquipment(equipment: string): Promise<ActionResult> {
+  return saveProProfile({ equipment })
+}
+
+/**
+ * A model's casting card. A plain table write: row level security keeps it to
+ * the owner and the table's checks hold the bounds, so this only tidies the
+ * input and says in words what the database would refuse.
+ */
+export async function saveModelProfile(input: ModelProfile): Promise<ActionResult> {
+  const supabase = await supabaseServer()
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
+
+  const height = input.heightCm == null ? null : Math.round(input.heightCm)
+  if (height !== null && (height < 120 || height > 220)) {
+    return { ok: false, error: "Chiều cao từ 120 đến 220 cm." }
+  }
+  const size = (value: string) => value.trim().slice(0, 20)
+  const list = (values: string[]) =>
+    [...new Set(values.map((v) => v.trim().slice(0, 40)).filter(Boolean))].slice(0, 12)
+
+  const { error } = await supabase.from("model_profiles").upsert({
+    pro_id: auth.user.id,
+    height_cm: height,
+    top_size: size(input.topSize),
+    bottom_size: size(input.bottomSize),
+    shoe_size: size(input.shoeSize),
+    styles: list(input.styles),
+    accepts: list(input.accepts),
+    refuses: list(input.refuses),
+  })
+  if (error) return { ok: false, error: messageFor(error) }
+  revalidatePath("/studio", "layout")
+  revalidatePath("/pros")
+  return { ok: true, data: undefined }
+}
+
+// Photo & video: terms, delivery, combos ------------------------------------------
+
+/** The customer says what the pictures are for, before the session starts. */
+export async function setBookingTerms(bookingId: string, usageScope: UsageScope, consentRepost: boolean) {
+  return rpc<void>(
+    "set_booking_terms",
+    { p_booking: bookingId, p_usage_scope: usageScope, p_consent_repost: consentRepost },
+    ["/bookings", "/studio/jobs"],
+  )
+}
+
+/** The freelancer hands over the files: a link (Drive, Google Photos...) and a note. */
+export async function deliverBooking(bookingId: string, url: string, note = "") {
+  return rpc<void>("deliver_booking", { p_booking: bookingId, p_url: url, p_note: note }, ["/bookings", "/studio/jobs"])
+}
+
+export async function acceptDelivery(bookingId: string) {
+  return rpc<void>("accept_delivery", { p_booking: bookingId }, ["/bookings", "/studio/jobs"])
+}
+
+/** Two or three of the customer's bookings, starting within an hour: a combo. Returns the group id. */
+export async function linkBookings(bookingIds: string[]) {
+  return rpc<string>("link_bookings", { p_bookings: bookingIds }, ["/bookings"])
+}
+
+/** The freelancer's review of the customer, once, after a completed job. */
+export async function reviewCustomer(bookingId: string, rating: number, body = "") {
+  return rpc<void>("review_customer", { p_booking: bookingId, p_rating: rating, p_body: body }, ["/bookings", "/studio/jobs"])
+}
+
+// Feed ----------------------------------------------------------------------------
+
+/**
+ * Reports what the feed showed and what was tapped. Called in the background:
+ * it never revalidates (a page must not re-render because someone looked at it)
+ * and never throws. `work` is the post's database id, or its slug.
+ */
+export async function logWorkEvents(events: { work: string; kind: WorkEventKind }[]): Promise<ActionResult<number>> {
+  if (!events.length) return { ok: true, data: 0 }
+  try {
+    const supabase = await supabaseServer()
+    const { data, error } = await supabase.rpc("log_work_events" as never, { p_events: events.slice(0, 60) } as never)
+    if (error) return { ok: false, error: messageFor(error) }
+    return { ok: true, data: (data as number | null) ?? 0 }
+  } catch (error) {
+    console.error("logWorkEvents failed:", error)
+    return { ok: false, error: GENERIC }
+  }
+}
+
+/** "Bạn quan tâm gì?": up to six categories. */
+export async function setInterests(categories: CategoryId[]) {
+  return rpc<void>("set_interests", { p_categories: categories }, ["/"])
+}
+
+// Casting calls ("Tuyển mẫu") -----------------------------------------------------
+
+export async function createCasting(input: {
+  category: CategoryId
+  title: string
+  description?: string
+  startsAt: string
+  city: string
+  district: string
+  slots: number
+  compensation: CastingCompensation
+  /** For "discount": percent off the freelancer's listed price. */
+  discountPercent?: number | null
+  /** For "paid": what the model receives, in đồng. */
+  fee?: number | null
+}) {
+  return rpc<string>(
+    "create_casting",
+    {
+      p_category: input.category,
+      p_title: input.title,
+      p_description: input.description ?? "",
+      p_starts_at: input.startsAt,
+      p_city: input.city,
+      p_district: input.district,
+      p_slots: input.slots,
+      p_compensation: input.compensation,
+      p_discount_percent: input.compensation === "discount" ? (input.discountPercent ?? null) : null,
+      p_fee: input.compensation === "paid" ? (input.fee ?? null) : null,
+    },
+    ["/tuyen-mau", "/studio"],
+  )
+}
+
+export async function closeCasting(castingId: string) {
+  return rpc<void>("close_casting", { p_casting: castingId }, ["/tuyen-mau", "/studio"])
+}
+
+/** Returns the application id. */
+export async function applyCasting(castingId: string, message = "") {
+  return rpc<string>("apply_casting", { p_casting: castingId, p_message: message }, ["/tuyen-mau"])
+}
+
+export async function withdrawApplication(applicationId: string) {
+  return rpc<void>("withdraw_application", { p_application: applicationId }, ["/tuyen-mau"])
+}
+
+/** Returns the chat thread with the applicant when accepted, null when turned down. */
+export async function decideApplication(applicationId: string, accept: boolean) {
+  return rpc<string | null>(
+    "decide_application",
+    { p_application: applicationId, p_accept: accept },
+    ["/tuyen-mau", "/studio", "/tin-nhan"],
+  )
 }
