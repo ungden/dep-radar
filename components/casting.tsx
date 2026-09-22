@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { CalendarDays, MapPin } from "lucide-react"
+import { CalendarDays, MapPin, ShieldCheck } from "lucide-react"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar } from "@/components/ui"
 import { categoryLabel } from "@/lib/catalog"
@@ -82,3 +82,28 @@ export function CastingStrip({ className }: { className?: string }) {
     </section>
   )
 }
+
+/**
+ * The warning every casting board needs. The most common scam asks the model
+ * to pay first -- a "deposit", a "profile fee" -- so say plainly that it never
+ * happens here.
+ */
+export function SafetyNote({ className }: { className?: string }) {
+  return (
+    <div className={className}>
+      <div className="flex gap-3 rounded-[var(--radius-lg)] bg-subtle p-4">
+        <ShieldCheck className="mt-0.5 size-5 shrink-0" />
+        <div className="text-[14px] text-ink-soft">
+          <p className="font-bold text-ink">Làm mẫu an toàn</p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-4">
+            <li>Người tuyển không bao giờ được yêu cầu bạn chuyển tiền: không cọc, không phí hồ sơ.</li>
+            <li>Tin có thù lao và tin tuyển mẫu ảnh chỉ mở cho người đã xác minh danh tính.</li>
+            <li>360dep không nhận tin chụp nội y, khoả thân hay nội dung nhạy cảm.</li>
+            <li>Gặp ở nơi công khai hoặc studio có địa chỉ; báo cho người thân lịch của bạn.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  )
+}
+

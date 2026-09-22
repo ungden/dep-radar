@@ -5,7 +5,7 @@ import * as api from "./api/actions"
 import * as auth from "./auth/actions"
 import { useAnnounce } from "@/components/live-region"
 import { useRefresh } from "./store"
-import type { BookingStatus, CategoryId, CustomerAddress, PaymentMethod, WorkEventKind } from "./types"
+import type { BookingStatus, CastingCompensation, CategoryId, CustomerAddress, PaymentMethod, WorkEventKind } from "./types"
 import { toTimestamptz } from "./utils"
 
 /**
@@ -220,6 +220,33 @@ export const actions = {
   },
   async logWorkEvents(_events: { work: string; kind: WorkEventKind }[]): Promise<Result> {
     return done
+  },
+  async createCasting(_input: {
+    category: CategoryId
+    title: string
+    description: string
+    date: string
+    time: string
+    city: string
+    district: string
+    slots: number
+    compensation: CastingCompensation
+    discountPercent?: number
+    fee?: number
+  }): Promise<{ id: string } | { error: string }> {
+    return { error: "Chưa hỗ trợ." }
+  },
+  async closeCasting(_castingId: string): Promise<Result> {
+    return { error: "Chưa hỗ trợ." }
+  },
+  async applyCasting(_castingId: string, _message: string): Promise<Result> {
+    return { error: "Chưa hỗ trợ." }
+  },
+  async withdrawApplication(_applicationId: string): Promise<Result> {
+    return { error: "Chưa hỗ trợ." }
+  },
+  async decideApplication(_applicationId: string, _accept: boolean): Promise<Result> {
+    return { error: "Chưa hỗ trợ." }
   },
 }
 
