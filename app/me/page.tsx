@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Ticket,
   UserRound,
+  Users,
 } from "lucide-react"
 import { Avatar, ButtonLink, Card, Toggle } from "@/components/ui"
 import { formatPhone } from "@/lib/auth/phone"
@@ -35,17 +36,17 @@ export default function MePage() {
   if (!session) {
     return (
       <div className="mx-auto max-w-2xl pt-6">
-        <h1 className="text-[28px] font-extrabold tracking-tight">Cá nhân</h1>
+        <h1 className="text-[28px] font-extrabold tracking-tight">Tôi</h1>
         <Card className="mt-4 p-5 text-center">
           <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-subtle text-accent">
             <UserRound className="size-7" />
           </span>
           <p className="mt-3 font-semibold">Bạn chưa đăng nhập</p>
-          <p className="mt-1 text-sm text-muted">Đăng nhập để đặt lịch, lưu mẫu và nhận báo giá từ freelancer.</p>
+          <p className="mt-1 text-[15px] text-ink-soft">Đăng nhập để đặt lịch, lưu mẫu và nhận báo giá.</p>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <ButtonLink href="/login">Đăng nhập</ButtonLink>
             <ButtonLink href="/login?role=pro" variant="outline">
-              Tôi là freelancer
+              Tôi nhận khách
             </ButtonLink>
           </div>
         </Card>
@@ -64,7 +65,7 @@ export default function MePage() {
   return (
     <div className="mx-auto max-w-2xl pt-4 md:pt-8">
       <div className="flex h-12 items-center justify-between">
-        <h1 className="text-[28px] font-extrabold tracking-tight">Cá nhân</h1>
+        <h1 className="text-[28px] font-extrabold tracking-tight">Tôi</h1>
       </div>
 
       <Link href={isPro && pro ? `/pros/${pro.id}` : "/me"} className="mt-3 flex items-center gap-4">
@@ -83,9 +84,9 @@ export default function MePage() {
           <ArrowLeftRight className="size-5" />
         </span>
         <div className="flex-1">
-          <p className="text-sm font-semibold">{isPro ? "Đang ở chế độ freelancer" : "Đang ở chế độ đặt lịch"}</p>
+          <p className="text-[15px] font-bold">{isPro ? "Đang ở chế độ làm việc" : "Đang ở chế độ đặt lịch"}</p>
           <p className="text-xs text-muted">
-            {isPro ? "Chuyển sang để đặt lịch làm đẹp cho bản thân" : "Chuyển sang để nhận job làm đẹp"}
+            {isPro ? "Chuyển sang để đặt lịch cho bản thân" : "Chuyển sang để nhận khách"}
           </p>
         </div>
         <button
@@ -125,6 +126,7 @@ export default function MePage() {
               { href: "/studio/jobs", icon: BriefcaseBusiness, label: "Việc mới quanh bạn" },
               { href: "/studio/services", icon: Ticket, label: "Dịch vụ & bảng giá" },
               { href: "/studio/works", icon: ImagePlus, label: "Tác phẩm" },
+              { href: "/studio/tuyen-mau", icon: Users, label: "Tuyển mẫu", sub: "Tìm mẫu luyện tay, chụp portfolio" },
               { href: "/studio/wallet", icon: Wallet, label: "Ví & thu nhập" },
               { href: "/studio/profile/edit", icon: UserRound, label: "Hồ sơ, giờ làm & khu vực" },
               { href: "/studio/profile", icon: ShieldCheck, label: "Xác minh & đánh giá" },
@@ -136,7 +138,8 @@ export default function MePage() {
       ) : (
         <Menu
           items={[
-            { href: "/saved", icon: Heart, label: "Đã lưu", sub: `${state.savedWorks.length} mẫu · ${state.followedPros.length} chuyên viên` },
+            { href: "/saved", icon: Heart, label: "Đã lưu", sub: `${state.savedWorks.length} mẫu · đang theo dõi ${state.followedPros.length} người` },
+            { href: "/tuyen-mau", icon: Users, label: "Làm mẫu", sub: "Được làm đẹp miễn phí hoặc có thù lao" },
             { href: "/requests", icon: Megaphone, label: "Yêu cầu đã đăng", sub: `${state.jobs.filter((j) => j.mine).length} yêu cầu` },
             {
               href: "/me/dia-chi",
@@ -156,7 +159,7 @@ export default function MePage() {
             await actions.signOut()
             router.push("/")
           }}
-          className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm text-danger"
+          className="flex min-h-14 w-full items-center gap-3.5 px-4 py-3 text-left text-[15px] font-medium text-danger"
         >
           <LogOut className="size-5" /> Đăng xuất
         </button>
@@ -181,11 +184,11 @@ function Menu({ items }: { items: MenuItem[] }) {
       {items.map((it) => {
         const Icon = it.icon
         return (
-          <Link key={it.label} href={it.href} className="flex items-center gap-3 px-4 py-3.5 hover:bg-subtle/40">
-            <Icon className="size-5 text-ink-soft" />
+          <Link key={it.label} href={it.href} className="flex min-h-14 items-center gap-3.5 px-4 py-3 hover:bg-subtle/60">
+            <Icon className="size-5 text-ink" />
             <span className="min-w-0 flex-1">
-              <span className="block text-sm">{it.label}</span>
-              {it.sub && <span className="block truncate text-xs text-muted">{it.sub}</span>}
+              <span className="block text-[15px] font-medium">{it.label}</span>
+              {it.sub && <span className="block truncate text-[13px] text-muted">{it.sub}</span>}
             </span>
             <ChevronRight className="size-4 text-muted" />
           </Link>
