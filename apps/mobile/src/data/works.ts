@@ -1,5 +1,6 @@
 import * as Crypto from "expo-crypto"
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
+import { stripVideoLocation } from "@/shared"
 import { messageFor, supabase, type Result } from "./supabase"
 
 /**
@@ -21,24 +22,39 @@ export async function reencodePhoto(uri: string, width: number, height: number):
   return saved.uri
 }
 
-async function upload(uid: string, localUri: string, ext: "jpg" | "mp4"): Promise<string> {
-  const body = await (await fetch(localUri)).arrayBuffer()
+export async function uploadPhoto(uid: string, jpegUri: string): Promise<string> {
+  const body = await (await fetch(jpegUri)).arrayBuffer()
   // The first path segment is the owner: the storage policies check it.
-  const path = `${uid}/${Crypto.randomUUID()}.${ext}`
+  const path = `${uid}/${Crypto.randomUUID()}.jpg`
   const { error } = await supabase.storage.from("works").upload(path, body, {
-    contentType: ext === "jpg" ? "image/jpeg" : "video/mp4",
+    contentType: "image/jpeg",
     cacheControl: "31536000",
     upsert: false,
   })
-  if (error) {
-    if (ext === "mp4") throw new Error("Máy chủ chưa nhận video. Bạn đăng ảnh trước nhé.")
-    throw new Error("Tải ảnh lên không thành công, thử lại nhé.")
-  }
+  if (error) throw new Error("Tải ảnh lên không thành công, thử lại nhé.")
   return supabase.storage.from("works").getPublicUrl(path).data.publicUrl
 }
 
-export const uploadPhoto = (uid: string, jpegUri: string) => upload(uid, jpegUri, "jpg")
-export const uploadVideo = (uid: string, uri: string) => upload(uid, uri, "mp4")
+/**
+ * Clips go to their own `videos` bucket (50 MB), with the place they were
+ * filmed removed first: phones write GPS into MP4/MOV metadata, and the same
+ * pure function the web uses (lib/video-meta.ts) neutralises those boxes in
+ * place without re-encoding.
+ */
+export async function uploadVideo(uid: string, uri: string): Promise<string> {
+  const raw = await (await fetch(uri)).arrayBuffer()
+  if (raw.byteLength > 50 * 1024 * 1024) throw new Error("Clip quá 50 MB. Cắt ngắn lại nhé.")
+  const { buffer } = stripVideoLocation(raw)
+  const mov = uri.toLowerCase().endsWith(".mov")
+  const path = `${uid}/${Crypto.randomUUID()}.${mov ? "mov" : "mp4"}`
+  const { error } = await supabase.storage.from("videos").upload(path, buffer, {
+    contentType: mov ? "video/quicktime" : "video/mp4",
+    cacheControl: "31536000",
+    upsert: false,
+  })
+  if (error) throw new Error("Máy chủ chưa nhận clip. Bạn đăng ảnh trước nhé.")
+  return supabase.storage.from("videos").getPublicUrl(path).data.publicUrl
+}
 
 /** Whether the database has the columns for clips yet (being added in parallel). */
 export async function worksSupportVideo(): Promise<boolean> {
