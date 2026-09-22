@@ -111,7 +111,7 @@ export default function PolicyPage() {
 
         <Section title="9. Chụp ảnh & quay clip">
           <ul className="list-disc space-y-1 pl-5">
-            <li>Mỗi dịch vụ ghi rõ bạn nhận được gì và hạn giao file. Hạn tính từ lúc buổi chụp hoàn thành; quá hạn, người chụp được nhắc và việc giao trễ được ghi nhận.</li>
+            <li>Mỗi dịch vụ ghi rõ bạn nhận được gì và hạn giao file. Hạn tính từ lúc buổi chụp hoàn thành; quá hạn, hệ thống nhắc người chụp.</li>
             <li>Khi đặt, bạn chọn ảnh dùng cho cá nhân hay kinh doanh, và có cho người làm đăng lại làm tác phẩm hay không. Mặc định là không.</li>
             <li>Clip đăng lên 360dep được xoá thông tin vị trí quay (GPS) trước khi tải lên; ảnh cũng vậy.</li>
             <li>Đặt chung một buổi (ví dụ makeup rồi chụp): mỗi người là một lịch hẹn riêng, tự gọi xác nhận và tính giá riêng. Nếu một bên huỷ, bạn được báo để quyết định giữ hay huỷ bên còn lại.</li>
