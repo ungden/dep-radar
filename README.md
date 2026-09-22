@@ -77,11 +77,13 @@ Migration trên production được áp bằng `supabase db push` hoặc MCP; t�
 
 ## Vận hành
 
+**Địa chỉ Supabase:** project dùng vanity subdomain `https://360dep.supabase.co` (bật 22/09/2026, miễn phí với gói Pro). Auth **không còn chạy** trên `ohjrocksurzkypcbfkha.supabase.co`, nên mọi client (web, mobile, `NEXT_PUBLIC_SUPABASE_URL` trên Vercel, `EXPO_PUBLIC_SUPABASE_URL`) phải dùng địa chỉ mới.
+
 **Đăng nhập Google (làm một lần):**
 
 1. Google Cloud Console → APIs & Services → Credentials → *Create OAuth client ID*, loại **Web application**.
    - Authorized JavaScript origins: `https://www.360dep.vn`
-   - Authorized redirect URIs: `https://ohjrocksurzkypcbfkha.supabase.co/auth/v1/callback`
+   - Authorized redirect URIs: `https://360dep.supabase.co/auth/v1/callback` (và địa chỉ cũ `https://ohjrocksurzkypcbfkha.supabase.co/auth/v1/callback`)
    - OAuth consent screen: tên app 360dep, email hỗ trợ, domain `360dep.vn`; scope chỉ cần `email`, `profile`, `openid`.
 2. Supabase → Authentication → Sign In / Providers → **Google**: bật, dán Client ID và Client Secret, lưu.
 3. Supabase → Authentication → URL Configuration: Site URL `https://www.360dep.vn`; Redirect URLs thêm
