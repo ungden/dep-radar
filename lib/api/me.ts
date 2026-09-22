@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { supabaseServer } from "@/lib/supabase/server"
+import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
 import type { ActionResult } from "./actions"
 import type { NotificationItem, WalletSummary } from "./types"
 
@@ -230,9 +230,42 @@ export async function deleteAccount(): Promise<ActionResult> {
 
   const { error } = await supabase.rpc("delete_my_account")
   if (error) return { ok: false, error: "Không xoá được tài khoản. Liên hệ hỗ trợ giúp bạn." }
+  // Only once the account is gone: a refused deletion must not cost anyone photos.
+  await removeOwnFiles(auth.user.id)
   await supabase.auth.signOut()
   revalidatePath("/", "layout")
   return { ok: true, data: undefined }
+}
+
+/**
+ * Every file an account uploaded lives under `<account id>/` in one of these
+ * buckets. Postgres may not delete storage rows directly, so this goes through the
+ * Storage API with the service key. Best effort: the account is already gone, and
+ * a leftover file is logged for a person to remove rather than blocking the user.
+ */
+const OWN_BUCKETS = ["avatars", "works", "reviews", "chat"] as const
+
+async function removeOwnFiles(accountId: string) {
+  const admin = supabaseAdmin()
+  for (const bucket of OWN_BUCKETS) {
+    // Removing a page makes the next list start over; the cap stops a file that
+    // will not delete from turning this into an endless loop.
+    for (let page = 0; page < 50; page++) {
+      const { data, error } = await admin.storage.from(bucket).list(accountId, { limit: 100 })
+      if (error) {
+        console.error(`account deletion: could not list ${bucket}/${accountId}:`, error.message)
+        break
+      }
+      if (!data?.length) break
+      const { error: removeError } = await admin.storage
+        .from(bucket)
+        .remove(data.map((file) => `${accountId}/${file.name}`))
+      if (removeError) {
+        console.error(`account deletion: could not remove files in ${bucket}/${accountId}:`, removeError.message)
+        break
+      }
+    }
+  }
 }
 
 // Reports ---------------------------------------------------------------------
