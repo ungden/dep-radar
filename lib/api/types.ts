@@ -121,6 +121,21 @@ export interface BookingItem {
   pro: { id: string; slug: string; name: string; avatar: string | null; phone: string | null }
 }
 
+/** A freelancer's review of a customer, after a completed job. Never public. */
+export interface CustomerReviewItem {
+  bookingId: string
+  /** Account id of the customer it is about. */
+  customerId: string
+  /** Slug of the freelancer who wrote it. */
+  proId: string
+  proName: string
+  rating: number
+  body: string
+  createdAt: string
+  /** Written by the signed-in freelancer. */
+  mine: boolean
+}
+
 export interface AddressItem {
   id: string
   label: string

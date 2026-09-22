@@ -21,6 +21,7 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          interests: Database["public"]["Enums"]["category_id"][]
           is_admin: boolean
           phone: string
         }
@@ -30,6 +31,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id: string
+          interests?: Database["public"]["Enums"]["category_id"][]
           is_admin?: boolean
           phone?: string
         }
@@ -39,6 +41,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          interests?: Database["public"]["Enums"]["category_id"][]
           is_admin?: boolean
           phone?: string
         }
@@ -100,6 +103,7 @@ export type Database = {
           address_note: string
           at_home: boolean
           blocked_range: unknown
+          booking_group_id: string | null
           buffer_min: number
           cancel_reason: string | null
           cancelled_at: string | null
@@ -110,8 +114,14 @@ export type Database = {
           completed_at: string | null
           confirm_by: string
           confirmed_at: string | null
+          consent_repost: boolean
           created_at: string
           customer_id: string
+          delivered_at: string | null
+          delivery_accepted_at: string | null
+          delivery_due_at: string | null
+          delivery_note: string | null
+          delivery_url: string | null
           distance_km: number | null
           district: string
           duration_min: number
@@ -138,6 +148,7 @@ export type Database = {
           total: number | null
           travel_fee: number
           urgent_fee: number
+          usage_scope: string
           variant_id: string
         }
         Insert: {
@@ -145,6 +156,7 @@ export type Database = {
           address_note?: string
           at_home: boolean
           blocked_range?: unknown
+          booking_group_id?: string | null
           buffer_min?: number
           cancel_reason?: string | null
           cancelled_at?: string | null
@@ -155,8 +167,14 @@ export type Database = {
           completed_at?: string | null
           confirm_by: string
           confirmed_at?: string | null
+          consent_repost?: boolean
           created_at?: string
           customer_id: string
+          delivered_at?: string | null
+          delivery_accepted_at?: string | null
+          delivery_due_at?: string | null
+          delivery_note?: string | null
+          delivery_url?: string | null
           distance_km?: number | null
           district: string
           duration_min: number
@@ -183,6 +201,7 @@ export type Database = {
           total?: number | null
           travel_fee?: number
           urgent_fee?: number
+          usage_scope?: string
           variant_id: string
         }
         Update: {
@@ -190,6 +209,7 @@ export type Database = {
           address_note?: string
           at_home?: boolean
           blocked_range?: unknown
+          booking_group_id?: string | null
           buffer_min?: number
           cancel_reason?: string | null
           cancelled_at?: string | null
@@ -200,8 +220,14 @@ export type Database = {
           completed_at?: string | null
           confirm_by?: string
           confirmed_at?: string | null
+          consent_repost?: boolean
           created_at?: string
           customer_id?: string
+          delivered_at?: string | null
+          delivery_accepted_at?: string | null
+          delivery_due_at?: string | null
+          delivery_note?: string | null
+          delivery_url?: string | null
           distance_km?: number | null
           district?: string
           duration_min?: number
@@ -228,6 +254,7 @@ export type Database = {
           total?: number | null
           travel_fee?: number
           urgent_fee?: number
+          usage_scope?: string
           variant_id?: string
         }
         Relationships: [
@@ -258,6 +285,165 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "service_variants"
             referencedColumns: ["template_id", "id"]
+          },
+        ]
+      }
+      casting_applications: {
+        Row: {
+          account_id: string
+          applicant_name: string
+          casting_id: string
+          created_at: string
+          decided_at: string | null
+          id: string
+          message: string
+          status: string
+        }
+        Insert: {
+          account_id: string
+          applicant_name?: string
+          casting_id: string
+          created_at?: string
+          decided_at?: string | null
+          id?: string
+          message?: string
+          status?: string
+        }
+        Update: {
+          account_id?: string
+          applicant_name?: string
+          casting_id?: string
+          created_at?: string
+          decided_at?: string | null
+          id?: string
+          message?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "casting_applications_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "casting_applications_casting_id_fkey"
+            columns: ["casting_id"]
+            isOneToOne: false
+            referencedRelation: "castings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      castings: {
+        Row: {
+          accepted_count: number
+          category: Database["public"]["Enums"]["category_id"]
+          city: string
+          compensation: string
+          created_at: string
+          description: string
+          discount_percent: number | null
+          district: string
+          fee: number | null
+          id: string
+          pro_id: string
+          slots: number
+          starts_at: string
+          status: string
+          title: string
+        }
+        Insert: {
+          accepted_count?: number
+          category: Database["public"]["Enums"]["category_id"]
+          city: string
+          compensation: string
+          created_at?: string
+          description?: string
+          discount_percent?: number | null
+          district: string
+          fee?: number | null
+          id?: string
+          pro_id: string
+          slots?: number
+          starts_at: string
+          status?: string
+          title: string
+        }
+        Update: {
+          accepted_count?: number
+          category?: Database["public"]["Enums"]["category_id"]
+          city?: string
+          compensation?: string
+          created_at?: string
+          description?: string
+          discount_percent?: number | null
+          district?: string
+          fee?: number | null
+          id?: string
+          pro_id?: string
+          slots?: number
+          starts_at?: string
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "castings_pro_id_fkey"
+            columns: ["pro_id"]
+            isOneToOne: false
+            referencedRelation: "pros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_reviews: {
+        Row: {
+          body: string
+          booking_id: string
+          created_at: string
+          customer_id: string
+          pro_id: string
+          rating: number
+        }
+        Insert: {
+          body?: string
+          booking_id: string
+          created_at?: string
+          customer_id: string
+          pro_id: string
+          rating: number
+        }
+        Update: {
+          body?: string
+          booking_id?: string
+          created_at?: string
+          customer_id?: string
+          pro_id?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_reviews_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_reviews_pro_id_fkey"
+            columns: ["pro_id"]
+            isOneToOne: false
+            referencedRelation: "pros"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -575,6 +761,50 @@ export type Database = {
           },
         ]
       }
+      model_profiles: {
+        Row: {
+          accepts: string[]
+          bottom_size: string
+          height_cm: number | null
+          pro_id: string
+          refuses: string[]
+          shoe_size: string
+          styles: string[]
+          top_size: string
+          updated_at: string
+        }
+        Insert: {
+          accepts?: string[]
+          bottom_size?: string
+          height_cm?: number | null
+          pro_id: string
+          refuses?: string[]
+          shoe_size?: string
+          styles?: string[]
+          top_size?: string
+          updated_at?: string
+        }
+        Update: {
+          accepts?: string[]
+          bottom_size?: string
+          height_cm?: number | null
+          pro_id?: string
+          refuses?: string[]
+          shoe_size?: string
+          styles?: string[]
+          top_size?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_profiles_pro_id_fkey"
+            columns: ["pro_id"]
+            isOneToOne: true
+            referencedRelation: "pros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           account_id: string
@@ -746,6 +976,7 @@ export type Database = {
           created_at: string
           display_name: string
           district: string
+          equipment: string | null
           highlights: string[]
           home_service: boolean
           id: string
@@ -777,6 +1008,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           district: string
+          equipment?: string | null
           highlights?: string[]
           home_service?: boolean
           id: string
@@ -808,6 +1040,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           district?: string
+          equipment?: string | null
           highlights?: string[]
           home_service?: boolean
           id?: string
@@ -1025,30 +1258,42 @@ export type Database = {
         Row: {
           active: boolean
           category: Database["public"]["Enums"]["category_id"]
+          deliverable: string | null
+          delivery_days: number | null
           description: string
           id: string
           includes: string[]
           name: string
+          on_location: boolean
+          requires_verification: boolean
           sort_order: number
           studio_only: boolean
         }
         Insert: {
           active?: boolean
           category: Database["public"]["Enums"]["category_id"]
+          deliverable?: string | null
+          delivery_days?: number | null
           description?: string
           id: string
           includes?: string[]
           name: string
+          on_location?: boolean
+          requires_verification?: boolean
           sort_order?: number
           studio_only?: boolean
         }
         Update: {
           active?: boolean
           category?: Database["public"]["Enums"]["category_id"]
+          deliverable?: string | null
+          delivery_days?: number | null
           description?: string
           id?: string
           includes?: string[]
           name?: string
+          on_location?: boolean
+          requires_verification?: boolean
           sort_order?: number
           studio_only?: boolean
         }
@@ -1240,11 +1485,13 @@ export type Database = {
           id: string
           image_paths: string[]
           is_cover: boolean
+          kind: string
           pro_id: string
           slug: string
           sort_order: number
           template_id: string
           title: string
+          video_path: string | null
         }
         Insert: {
           created_at?: string
@@ -1252,11 +1499,13 @@ export type Database = {
           id?: string
           image_paths: string[]
           is_cover?: boolean
+          kind?: string
           pro_id: string
           slug: string
           sort_order?: number
           template_id: string
           title: string
+          video_path?: string | null
         }
         Update: {
           created_at?: string
@@ -1264,11 +1513,13 @@ export type Database = {
           id?: string
           image_paths?: string[]
           is_cover?: boolean
+          kind?: string
           pro_id?: string
           slug?: string
           sort_order?: number
           template_id?: string
           title?: string
+          video_path?: string | null
         }
         Relationships: [
           {
@@ -1287,13 +1538,54 @@ export type Database = {
           },
         ]
       }
+      work_stats_daily: {
+        Row: {
+          book_clicks: number
+          day: string
+          impressions: number
+          opens: number
+          saves: number
+          work_id: string
+        }
+        Insert: {
+          book_clicks?: number
+          day: string
+          impressions?: number
+          opens?: number
+          saves?: number
+          work_id: string
+        }
+        Update: {
+          book_clicks?: number
+          day?: string
+          impressions?: number
+          opens?: number
+          saves?: number
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_stats_daily_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      accept_delivery: { Args: { p_booking: string }; Returns: undefined }
       accept_offer: { Args: { p_offer: string }; Returns: string }
       app_timezone: { Args: never; Returns: string }
+      applied_to_casting: { Args: { p_casting: string }; Returns: boolean }
+      apply_casting: {
+        Args: { p_casting: string; p_message?: string }
+        Returns: string
+      }
       availability_problem: {
         Args: {
           p_at_home: boolean
@@ -1308,6 +1600,7 @@ export type Database = {
         }
         Returns: string
       }
+      banned_content: { Args: { p_text: string }; Returns: boolean }
       booking_for_caller: {
         Args: {
           p_as: Database["public"]["Enums"]["app_role"]
@@ -1385,6 +1678,7 @@ export type Database = {
         Args: { p_booking: string; p_reason?: string }
         Returns: undefined
       }
+      close_casting: { Args: { p_casting: string }; Returns: undefined }
       commission_for: {
         Args: { rate: number; service_price: number }
         Returns: number
@@ -1405,6 +1699,25 @@ export type Database = {
         }
         Returns: string
       }
+      create_casting: {
+        Args: {
+          p_category: Database["public"]["Enums"]["category_id"]
+          p_city: string
+          p_compensation: string
+          p_description: string
+          p_discount_percent?: number
+          p_district: string
+          p_fee?: number
+          p_slots: number
+          p_starts_at: string
+          p_title: string
+        }
+        Returns: string
+      }
+      decide_application: {
+        Args: { p_accept: boolean; p_application: string }
+        Returns: string
+      }
       decide_identity_check: {
         Args: { p_approve: boolean; p_check: string; p_reason?: string }
         Returns: undefined
@@ -1414,6 +1727,10 @@ export type Database = {
         Returns: undefined
       }
       delete_my_account: { Args: never; Returns: undefined }
+      deliver_booking: {
+        Args: { p_booking: string; p_note?: string; p_url: string }
+        Returns: undefined
+      }
       enforce_wallet_threshold: { Args: { p_limit?: number }; Returns: number }
       expire_stale_bookings: { Args: never; Returns: number }
       expire_stale_jobs: { Args: never; Returns: number }
@@ -1434,10 +1751,12 @@ export type Database = {
       is_privileged: { Args: never; Returns: boolean }
       is_pro: { Args: never; Returns: boolean }
       is_urgent: { Args: { at?: string; starts_at: string }; Returns: boolean }
+      link_bookings: { Args: { p_bookings: string[] }; Returns: string }
       listed_price: {
         Args: { p_pro: string; p_template: string; p_variant: string }
         Returns: number
       }
+      log_work_events: { Args: { p_events: Json }; Returns: number }
       mark_no_show: {
         Args: { p_booking: string; p_reason?: string }
         Returns: undefined
@@ -1475,6 +1794,7 @@ export type Database = {
       }
       recompute_pro_metrics: { Args: never; Returns: undefined }
       refresh_pro_rating: { Args: { p_pro: string }; Returns: undefined }
+      remind_overdue_deliveries: { Args: never; Returns: number }
       reply_review: {
         Args: { p_booking: string; p_reply: string }
         Returns: undefined
@@ -1491,6 +1811,10 @@ export type Database = {
         Args: { p_accept: boolean; p_booking: string }
         Returns: undefined
       }
+      review_customer: {
+        Args: { p_body?: string; p_booking: string; p_rating: number }
+        Returns: undefined
+      }
       send_booking_reminders: { Args: never; Returns: number }
       send_offer: {
         Args: { p_job: string; p_message: string; p_price: number }
@@ -1499,6 +1823,18 @@ export type Database = {
       service_duration_min: {
         Args: { p_quantity?: number; p_template: string; p_variant: string }
         Returns: number
+      }
+      set_booking_terms: {
+        Args: {
+          p_booking: string
+          p_consent_repost: boolean
+          p_usage_scope: string
+        }
+        Returns: undefined
+      }
+      set_interests: {
+        Args: { p_categories: Database["public"]["Enums"]["category_id"][] }
+        Returns: undefined
       }
       set_pro_suspended: {
         Args: { p_pro: string; p_reason?: string; p_suspended: boolean }
@@ -1522,10 +1858,21 @@ export type Database = {
       }
       travel_fee: { Args: { distance_km: number }; Returns: number }
       wallet_balance: { Args: { p_pro: string }; Returns: number }
+      withdraw_application: { Args: { p_application: string }; Returns: undefined }
       withdraw_offer: { Args: { p_offer: string }; Returns: undefined }
       within_working_hours: {
         Args: { p_minutes: number; p_pro: string; p_starts_at: string }
         Returns: boolean
+      }
+      work_stats_30d: {
+        Args: never
+        Returns: {
+          book_clicks: number
+          impressions: number
+          opens: number
+          saves: number
+          work_id: string
+        }[]
       }
       write_review: {
         Args: {
@@ -1556,6 +1903,12 @@ export type Database = {
         | "hair"
         | "lash-brow"
         | "massage"
+        | "photophone"
+        | "camera"
+        | "short-video"
+        | "product-photo"
+        | "model-photo"
+        | "model-video"
       job_status: "open" | "booked" | "expired" | "closed"
       offer_status: "pending" | "accepted" | "rejected" | "withdrawn"
       payment_method: "online" | "cash"
@@ -1714,6 +2067,12 @@ export const Constants = {
         "hair",
         "lash-brow",
         "massage",
+        "photophone",
+        "camera",
+        "short-video",
+        "product-photo",
+        "model-photo",
+        "model-video",
       ],
       job_status: ["open", "booked", "expired", "closed"],
       offer_status: ["pending", "accepted", "rejected", "withdrawn"],
