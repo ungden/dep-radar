@@ -44,7 +44,7 @@ function ServicesManager() {
           </Button>
         }
       />
-      <div className="mb-4 rounded-2xl bg-subtle px-4 py-3 text-[13px] text-accent-dark">
+      <div className="mb-4 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px] text-ink-soft">
         <p>
           Bạn chỉ chọn dịch vụ từ danh mục chuẩn của 360dep và đặt giá trong khung cho phép, để khách so sánh công bằng. Giá đã gồm vật tư, không thu thêm phụ phí ngoài
           phí di chuyển / đặt gấp do hệ thống tính.
@@ -69,6 +69,7 @@ function ServicesManager() {
                     <p className="text-xs text-muted">
                       {categoryLabel(tpl.category)}
                       {tpl.studioOnly && " · chỉ tại studio"}
+                      {tpl.deliveryDays ? ` · giao file trong ${tpl.deliveryDays} ngày` : ""}
                     </p>
                   </div>
                   <button
@@ -108,23 +109,28 @@ function ServicesManager() {
         <Sheet title="Thêm dịch vụ từ danh mục" onClose={() => setAdding(false)}>
           <ul className="space-y-2">
             {available.map((t) => {
+              // Model services open only after identity verification; the
+              // database refuses the listing otherwise, so say why up front.
+              const locked = Boolean(t.requiresVerification) && pro.identity !== "verified"
               return (
                 <li key={t.id}>
                   <button
                     type="button"
+                    disabled={locked}
                     onClick={() => {
                       setAdding(false)
                       setEditing(t.id)
                     }}
-                    className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3.5 text-left hover:border-accent disabled:opacity-60"
+                    className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3.5 text-left hover:border-ink/30 disabled:opacity-60"
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block font-medium">{t.name}</span>
+                      {locked && <span className="block text-[13px] font-medium text-warning">Cần xác minh danh tính trước</span>}
                       <span className="block text-xs text-muted">
                         {t.variants.length} gói · khung {formatPrice(Math.min(...t.variants.map((v) => v.minPrice)))} – {formatPrice(Math.max(...t.variants.map((v) => v.maxPrice)))}
                       </span>
                     </span>
-                    {t.studioOnly ? <Store className="size-4 text-muted" /> : <Plus className="size-4 text-accent" />}
+                    {t.studioOnly ? <Store className="size-4 text-muted" /> : <Plus className="size-4 text-ink" />}
                   </button>
                 </li>
               )
