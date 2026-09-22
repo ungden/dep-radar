@@ -31,7 +31,7 @@ export function WorkDetail({ workId }: { workId: string }) {
     return (
       <div className="py-24 text-center text-sm text-ink-soft">
         Tác phẩm này không còn hiển thị.{" "}
-        <Link href="/" className="text-rose underline underline-offset-2">
+        <Link href="/" className="text-accent underline underline-offset-2">
           Về trang khám phá
         </Link>
       </div>
@@ -77,7 +77,7 @@ export function WorkDetail({ workId }: { workId: string }) {
             className="no-scrollbar flex aspect-[4/5] snap-x snap-mandatory overflow-x-auto md:aspect-square"
           >
             {work.images.map((src, i) => (
-              <div key={src + i} className="relative h-full w-full shrink-0 snap-center bg-blush">
+              <div key={src + i} className="relative h-full w-full shrink-0 snap-center bg-subtle">
                 <Image src={src} alt={`${work.title} ${i + 1}`} fill priority={i === 0} sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
               </div>
             ))}
@@ -147,7 +147,7 @@ export function WorkDetail({ workId }: { workId: string }) {
               className="inline-flex items-center gap-1.5"
               aria-pressed={saved}
             >
-              <Bookmark className={cn("size-5", saved && "fill-rose text-rose")} /> {saved ? "Đã lưu" : "Lưu mẫu"}
+              <Bookmark className={cn("size-5", saved && "fill-accent text-accent")} /> {saved ? "Đã lưu" : "Lưu mẫu"}
             </button>
             <button type="button" onClick={share} className="ml-auto inline-flex items-center gap-1.5">
               <Share2 className="size-5" /> {copied ? "Đã chép link" : "Chia sẻ"}
@@ -169,7 +169,7 @@ export function WorkDetail({ workId }: { workId: string }) {
                         {formatDuration(v.durationMin)}
                       </span>
                     </span>
-                    <Link href={`/book/${pro.id}?service=${tpl.id}&variant=${v.id}`} className="font-semibold text-rose">
+                    <Link href={`/book/${pro.id}?service=${tpl.id}&variant=${v.id}`} className="font-semibold text-accent">
                       {formatPrice(listing.prices[v.id])} →
                     </Link>
                   </li>

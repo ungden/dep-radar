@@ -45,7 +45,7 @@ export function ProProfile({ proId }: { proId: string }) {
 
   return (
     <div className="-mx-4 md:mx-0 md:pt-6">
-      <div className="relative h-44 overflow-hidden bg-blush md:h-64 md:rounded-3xl">
+      <div className="relative h-44 overflow-hidden bg-subtle md:h-64 md:rounded-3xl">
         <Image src={cover} alt="" fill priority sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-canvas/70" />
         <button
@@ -153,7 +153,7 @@ export function ProProfile({ proId }: { proId: string }) {
               <div className="mt-4 grid grid-cols-3 gap-1.5 md:gap-3">
                 {works.flatMap((w) =>
                   w.images.slice(0, 2).map((src, i) => (
-                    <Link key={w.id + i} href={`/works/${w.id}`} className="relative aspect-square overflow-hidden rounded-xl bg-blush">
+                    <Link key={w.id + i} href={`/works/${w.id}`} className="relative aspect-square overflow-hidden rounded-xl bg-subtle">
                       <Image src={src} alt={w.title} fill sizes="(min-width: 768px) 20vw, 33vw" className="object-cover transition-transform hover:scale-105" />
                     </Link>
                   )),
@@ -196,7 +196,7 @@ export function ProProfile({ proId }: { proId: string }) {
                 <div className="flex flex-wrap gap-2">
                   {pro.highlights.map((t) => (
                     <span key={t} className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-[13px] text-ink-soft shadow-[var(--shadow-soft)]">
-                      <Sparkles className="size-3.5 text-rose" />
+                      <Sparkles className="size-3.5 text-accent" />
                       {t}
                     </span>
                   ))}
@@ -240,7 +240,7 @@ function ShareButton({ name }: { name: string }) {
           // dismissed
         }
       }}
-      className={cn("inline-flex size-9 items-center justify-center rounded-full border border-line bg-surface text-ink-soft hover:text-rose")}
+      className={cn("inline-flex size-9 items-center justify-center rounded-full border border-line bg-surface text-ink-soft hover:text-accent")}
     >
       <Share2 className="size-4" />
     </button>

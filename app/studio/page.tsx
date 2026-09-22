@@ -153,12 +153,12 @@ function Dashboard() {
 
 function Stat({ icon, label, value, sub, highlight }: { icon: React.ReactNode; label: string; value: string; sub?: string; highlight?: boolean }) {
   return (
-    <Card className={cn("p-4", highlight && "ring-1 ring-rose")}>
+    <Card className={cn("p-4", highlight && "ring-1 ring-accent")}>
       <p className="flex items-center gap-1.5 text-xs text-muted">
         {icon}
         {label}
       </p>
-      <p className={cn("mt-1.5 text-xl font-semibold", highlight && "text-rose")}>{value}</p>
+      <p className={cn("mt-1.5 text-xl font-semibold", highlight && "text-accent")}>{value}</p>
       {sub && <p className="text-[11px] leading-snug text-muted">{sub}</p>}
     </Card>
   )
@@ -169,9 +169,9 @@ function SectionTitle({ title, href, count }: { title: string; href: string; cou
     <div className="mb-3 flex items-center justify-between">
       <h2 className="flex items-center gap-2 font-semibold">
         {title}
-        {count ? <span className="rounded-full bg-rose px-2 py-0.5 text-[11px] text-white">{count}</span> : null}
+        {count ? <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] text-white">{count}</span> : null}
       </h2>
-      <Link href={href} className="inline-flex items-center text-sm text-rose">
+      <Link href={href} className="inline-flex items-center text-sm text-accent">
         Xem tất cả <ChevronRight className="size-4" />
       </Link>
     </div>
@@ -187,15 +187,15 @@ function SetupNudge() {
         Cần ít nhất một dịch vụ có giá, giờ làm việc và một ảnh tác phẩm. Sau đó bật hiển thị trong trang hồ sơ.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Link href="/studio/services" className="rounded-full bg-blush px-3 py-1.5 text-[13px] font-medium text-rose-dark">
+        <Link href="/studio/services" className="rounded-full bg-subtle px-3 py-1.5 text-[13px] font-medium text-accent-dark">
           Dịch vụ & giá
         </Link>
-        <Link href="/studio/works" className="rounded-full bg-blush px-3 py-1.5 text-[13px] font-medium text-rose-dark">
+        <Link href="/studio/works" className="rounded-full bg-subtle px-3 py-1.5 text-[13px] font-medium text-accent-dark">
           Tác phẩm
         </Link>
         <Link
           href="/studio/profile/edit"
-          className="rounded-full bg-blush px-3 py-1.5 text-[13px] font-medium text-rose-dark"
+          className="rounded-full bg-subtle px-3 py-1.5 text-[13px] font-medium text-accent-dark"
         >
           Hồ sơ & giờ làm
         </Link>
@@ -208,8 +208,8 @@ function VerifyNudge({ pro }: { pro: Pro }) {
   if (pro.identity === "verified") return null
   return (
     <Link href="/studio/verify" className="block">
-      <Card className="flex items-center gap-3 p-4 ring-1 ring-rose/40 transition-shadow hover:shadow-md">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-blush text-rose">
+      <Card className="flex items-center gap-3 p-4 ring-1 ring-accent/40 transition-shadow hover:shadow-md">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-subtle text-accent">
           <IdCard className="size-5" />
         </span>
         <div className="min-w-0 flex-1">

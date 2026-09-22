@@ -4,6 +4,7 @@ import { supabaseServer } from "@/lib/supabase/server"
 import type {
   Booking,
   BookingStatus,
+  Casting,
   CategoryId,
   CustomerAddress,
   JobPost,
@@ -15,6 +16,7 @@ import type {
   Session,
   VerificationStatus,
   Work,
+  WorkStats,
 } from "@/lib/types"
 import { localDate, localTime } from "@/lib/utils"
 import type { AddressItem } from "./types"
@@ -49,6 +51,12 @@ export interface AppSnapshot {
   myIdentity: VerificationStatus
   acceptingJobs: boolean
   unreadNotifications: number
+  /** Work slug -> interest over the last 30 days, for ranking the feed. */
+  workStats: Record<string, WorkStats>
+  /** Open casting calls, plus the signed-in freelancer's own closed ones. */
+  castings: Casting[]
+  /** Categories the signed-in person told us they care about. */
+  interests: CategoryId[]
 }
 
 export const emptySnapshot: AppSnapshot = {
@@ -68,6 +76,9 @@ export const emptySnapshot: AppSnapshot = {
   myIdentity: "none",
   acceptingJobs: true,
   unreadNotifications: 0,
+  workStats: {},
+  castings: [],
+  interests: [],
 }
 
 /**
@@ -180,6 +191,9 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       title: row.title,
       description: row.description ?? "",
       images: row.image_paths ?? [],
+      kind: row.kind === "before_after" ? "before_after" : "work",
+      video: row.video_path ?? undefined,
+      createdAt: row.created_at ?? new Date(0).toISOString(),
     }
   })
 
@@ -311,6 +325,9 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       rescheduleTo: row.reschedule_to ?? undefined,
       rescheduleBy: row.reschedule_by ?? undefined,
       createdAt: row.created_at,
+      usageScope: row.usage_scope === "commercial" ? "commercial" : "personal",
+      consentRepost: Boolean(row.consent_repost),
+      groupId: row.booking_group_id ?? undefined,
     }
   })
 

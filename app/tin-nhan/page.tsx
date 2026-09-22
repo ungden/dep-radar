@@ -41,7 +41,7 @@ export default async function InboxPage() {
                       <span className="mt-0.5 flex items-center gap-2">
                         <span className="truncate text-[13px] text-ink-soft">{t.lastMessage}</span>
                         {t.unread > 0 && (
-                          <span className="ml-auto shrink-0 rounded-full bg-rose px-1.5 text-[11px] font-semibold text-white">
+                          <span className="ml-auto shrink-0 rounded-full bg-accent px-1.5 text-[11px] font-semibold text-white">
                             {t.unread}
                           </span>
                         )}

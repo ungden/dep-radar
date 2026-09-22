@@ -21,7 +21,7 @@ export function FollowButton({ proId, className }: { proId: string; className?: 
       }}
       className={cn(
         "h-9 shrink-0 rounded-full px-4 text-[13px] font-medium transition-colors",
-        following ? "border border-line bg-surface text-ink-soft" : "bg-rose text-white hover:bg-rose-dark",
+        following ? "border border-line bg-surface text-ink-soft" : "bg-accent text-white hover:bg-accent-dark",
         className,
       )}
     >

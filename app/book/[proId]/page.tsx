@@ -216,7 +216,7 @@ function BookingFlow({ proId }: { proId: string }) {
                   <div
                     className={cn(
                       "rounded-2xl border bg-surface p-3.5 transition-colors",
-                      selected ? "border-rose ring-1 ring-rose" : "border-line",
+                      selected ? "border-accent ring-1 ring-accent" : "border-line",
                     )}
                   >
                     <button
@@ -233,7 +233,7 @@ function BookingFlow({ proId }: { proId: string }) {
                         <span className="block truncate text-xs text-muted">{t.description}</span>
                       </span>
                       <span className="text-sm text-ink-soft">từ {formatPrice(Math.min(...Object.values(s.prices)))}</span>
-                      <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full border", selected ? "border-rose bg-rose text-white" : "border-line")}>
+                      <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full border", selected ? "border-accent bg-accent text-white" : "border-line")}>
                         {selected && <Check className="size-3.5" />}
                       </span>
                     </button>
@@ -274,7 +274,7 @@ function BookingFlow({ proId }: { proId: string }) {
                             }}
                             className={cn(
                               "rounded-xl border px-3 py-2 text-left text-[13px]",
-                              v.id === variantId ? "border-rose bg-blush text-rose-dark" : "border-line bg-canvas text-ink-soft",
+                              v.id === variantId ? "border-accent bg-subtle text-accent-dark" : "border-line bg-canvas text-ink-soft",
                             )}
                           >
                             <span className="block font-medium">{v.label}</span>
@@ -337,7 +337,7 @@ function BookingFlow({ proId }: { proId: string }) {
                     }}
                     className={cn(
                       "flex w-12 shrink-0 flex-col items-center gap-1.5 rounded-xl border py-2.5 text-sm transition-colors",
-                      active ? "border-rose bg-blush text-rose-dark" : "border-transparent text-ink-soft hover:bg-surface",
+                      active ? "border-accent bg-subtle text-accent-dark" : "border-transparent text-ink-soft hover:bg-surface",
                     )}
                   >
                     <span className="text-[11px] text-muted">{d === todayISO() ? "Nay" : weekdayShort(d)}</span>
@@ -374,8 +374,8 @@ function BookingFlow({ proId }: { proId: string }) {
                       className={cn(
                         "relative h-12 rounded-xl border text-sm transition-colors",
                         active
-                          ? "border-rose bg-blush font-semibold text-rose-dark"
-                          : "border-line bg-surface text-ink hover:border-blush-strong",
+                          ? "border-accent bg-subtle font-semibold text-accent-dark"
+                          : "border-line bg-surface text-ink hover:border-subtle-strong",
                       )}
                     >
                       {slot.time}
@@ -489,10 +489,10 @@ function BookingFlow({ proId }: { proId: string }) {
                   onClick={() => available && setPayment(value)}
                   className={cn(
                     "flex gap-2.5 rounded-xl border p-3 text-left disabled:opacity-50",
-                    payment === value ? "border-rose bg-blush" : "border-line bg-surface",
+                    payment === value ? "border-accent bg-subtle" : "border-line bg-surface",
                   )}
                 >
-                  <Icon className={cn("mt-0.5 size-4 shrink-0", payment === value ? "text-rose" : "text-muted")} />
+                  <Icon className={cn("mt-0.5 size-4 shrink-0", payment === value ? "text-accent" : "text-muted")} />
                   <span>
                     <span className="block text-sm font-medium">{label}</span>
                     <span className="block text-xs text-muted">{hint}</span>
@@ -509,7 +509,7 @@ function BookingFlow({ proId }: { proId: string }) {
             <span>
               Không cần đặt cọc. {pro.name} sẽ gọi điện xác nhận trước khi nhận job. Huỷ miễn phí trước {POLICY.freeCancelHours} giờ
               {payment === "online" ? "; tiền online do 360dep giữ và chỉ chuyển cho chuyên viên sau khi hoàn thành" : ""}.{" "}
-              <Link href="/chinh-sach" className="text-rose underline underline-offset-2">
+              <Link href="/chinh-sach" className="text-accent underline underline-offset-2">
                 Chính sách phí
               </Link>
             </span>
@@ -560,11 +560,11 @@ function Stepper({ step, onJump }: { step: number; onJump: (s: number) => void }
         const active = n === step
         return (
           <li key={label} className="relative flex flex-1 flex-col items-center">
-            {i > 0 && <span className={cn("absolute right-1/2 top-3.5 h-px w-full", n <= step ? "bg-rose" : "bg-line")} />}
+            {i > 0 && <span className={cn("absolute right-1/2 top-3.5 h-px w-full", n <= step ? "bg-accent" : "bg-line")} />}
             <button
               type="button"
               onClick={() => onJump(n)}
-              className={cn("relative z-10 flex size-7 items-center justify-center rounded-full text-xs font-semibold", active || done ? "bg-rose text-white" : "bg-line text-muted")}
+              className={cn("relative z-10 flex size-7 items-center justify-center rounded-full text-xs font-semibold", active || done ? "bg-accent text-white" : "bg-line text-muted")}
             >
               {done ? <Check className="size-3.5" /> : n}
             </button>
@@ -611,7 +611,7 @@ function PlaceOption({
       onClick={onClick}
       className={cn(
         "flex h-10 items-center justify-center gap-2 rounded-xl border text-sm transition-colors disabled:opacity-40",
-        active ? "border-rose bg-blush font-medium text-rose-dark" : "border-line text-ink-soft",
+        active ? "border-accent bg-subtle font-medium text-accent-dark" : "border-line text-ink-soft",
       )}
     >
       {icon}

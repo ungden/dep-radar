@@ -12,7 +12,7 @@ import { cn, parseISODate } from "@/lib/utils"
 /** Blue-check style mark next to the name: shown once identity is verified. */
 export function VerifiedMark({ pro, className }: { pro: Pro; className?: string }) {
   if (!isVerified(pro)) return null
-  return <BadgeCheck className={cn("size-4 shrink-0 fill-rose text-white", className)} aria-label="Đã xác minh danh tính" />
+  return <BadgeCheck className={cn("size-4 shrink-0 fill-accent text-white", className)} aria-label="Đã xác minh danh tính" />
 }
 
 /** Pill badge used on profiles and offers. */
@@ -73,7 +73,7 @@ export function ReviewItem({ review, onReply }: { review: Review; onReply?: (tex
       {review.tags.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {review.tags.map((t) => (
-            <span key={t} className="rounded-full bg-blush px-2 py-0.5 text-[11px] text-rose-dark">
+            <span key={t} className="rounded-full bg-subtle px-2 py-0.5 text-[11px] text-accent-dark">
               {t}
             </span>
           ))}
@@ -81,7 +81,7 @@ export function ReviewItem({ review, onReply }: { review: Review; onReply?: (tex
       )}
       <p className="mt-2 text-sm leading-relaxed text-ink-soft">{review.text}</p>
       {review.photo && (
-        <div className="relative mt-2 size-20 overflow-hidden rounded-xl bg-blush">
+        <div className="relative mt-2 size-20 overflow-hidden rounded-xl bg-subtle">
           <Image src={review.photo} alt="Ảnh khách gửi kèm đánh giá" fill sizes="80px" className="object-cover" />
         </div>
       )}
@@ -110,14 +110,14 @@ export function ReviewItem({ review, onReply }: { review: Review; onReply?: (tex
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Cảm ơn khách, giải thích nếu có vấn đề…"
-              className="h-9 flex-1 rounded-xl border border-line bg-surface px-3 text-sm focus:border-rose focus:outline-none"
+              className="h-9 flex-1 rounded-xl border border-line bg-surface px-3 text-sm focus:border-accent focus:outline-none"
             />
-            <button type="submit" className="h-9 rounded-xl bg-rose px-3 text-[13px] font-medium text-white">
+            <button type="submit" className="h-9 rounded-xl bg-accent px-3 text-[13px] font-medium text-white">
               Gửi
             </button>
           </form>
         ) : (
-          <button type="button" onClick={() => setReplying(true)} className="mt-2 text-[13px] font-medium text-rose">
+          <button type="button" onClick={() => setReplying(true)} className="mt-2 text-[13px] font-medium text-accent">
             Phản hồi
           </button>
         ))}

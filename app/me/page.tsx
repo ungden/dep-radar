@@ -37,7 +37,7 @@ export default function MePage() {
       <div className="mx-auto max-w-2xl pt-6">
         <h1 className="text-2xl font-semibold">Cá nhân</h1>
         <Card className="mt-4 p-5 text-center">
-          <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-blush text-rose">
+          <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-subtle text-accent">
             <UserRound className="size-7" />
           </span>
           <p className="mt-3 font-semibold">Bạn chưa đăng nhập</p>
@@ -79,7 +79,7 @@ export default function MePage() {
       </Link>
 
       <Card className="mt-5 flex items-center gap-3 p-4">
-        <span className="flex size-10 items-center justify-center rounded-full bg-blush text-rose">
+        <span className="flex size-10 items-center justify-center rounded-full bg-subtle text-accent">
           <ArrowLeftRight className="size-5" />
         </span>
         <div className="flex-1">
@@ -95,7 +95,7 @@ export default function MePage() {
             await actions.switchRole(isPro ? "customer" : "pro")
             router.push(isPro ? "/" : "/studio")
           }}
-          className="rounded-full bg-rose px-4 py-2 text-[13px] font-medium text-white hover:bg-rose-dark"
+          className="rounded-full bg-accent px-4 py-2 text-[13px] font-medium text-white hover:bg-accent-dark"
         >
           {!isPro && !session.proId ? "Mở hồ sơ" : "Chuyển"}
         </button>
@@ -181,7 +181,7 @@ function Menu({ items }: { items: MenuItem[] }) {
       {items.map((it) => {
         const Icon = it.icon
         return (
-          <Link key={it.label} href={it.href} className="flex items-center gap-3 px-4 py-3.5 hover:bg-blush/40">
+          <Link key={it.label} href={it.href} className="flex items-center gap-3 px-4 py-3.5 hover:bg-subtle/40">
             <Icon className="size-5 text-ink-soft" />
             <span className="min-w-0 flex-1">
               <span className="block text-sm">{it.label}</span>

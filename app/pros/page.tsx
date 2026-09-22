@@ -42,7 +42,7 @@ export default function ProsPage() {
             aria-label="Khu vực"
             value={city ?? ""}
             onChange={(e) => void actions.setCity(e.target.value || null)}
-            className="h-9 rounded-full border border-line bg-surface px-3 text-[13px] focus:border-rose focus:outline-none"
+            className="h-9 rounded-full border border-line bg-surface px-3 text-[13px] focus:border-accent focus:outline-none"
           >
             <option value="">Toàn quốc</option>
             {CITIES.map((c) => (
@@ -66,7 +66,7 @@ export default function ProsPage() {
           aria-label="Sắp xếp"
           value={sort}
           onChange={(e) => setSort(e.target.value as Sort)}
-          className="h-9 shrink-0 rounded-full border border-line bg-surface px-3 text-[13px] focus:border-rose focus:outline-none"
+          className="h-9 shrink-0 rounded-full border border-line bg-surface px-3 text-[13px] focus:border-accent focus:outline-none"
         >
           <option value="match">Phù hợp nhất</option>
           <option value="rating">Đánh giá cao</option>

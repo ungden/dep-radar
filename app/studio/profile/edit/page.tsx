@@ -78,7 +78,7 @@ function ProfileEditor() {
           ) : (
             <Avatar name={displayName} tone={pro.tone} size={64} />
           )}
-          <label className="absolute -bottom-1 -right-1 inline-flex size-7 cursor-pointer items-center justify-center rounded-full bg-rose text-white">
+          <label className="absolute -bottom-1 -right-1 inline-flex size-7 cursor-pointer items-center justify-center rounded-full bg-accent text-white">
             <Camera className="size-3.5" />
             <input
               type="file"
@@ -141,7 +141,7 @@ function ProfileEditor() {
             step={1}
             value={maxTravelKm}
             onChange={(e) => setMaxTravelKm(Number(e.target.value))}
-            className="w-full accent-[var(--color-rose)]"
+            className="w-full accent-[var(--color-ink)]"
           />
         </Field>
         <Field label="Địa chỉ studio (nếu có)" hint="Có studio thì bạn nhận được cả dịch vụ chỉ làm tại chỗ.">
@@ -193,7 +193,7 @@ function PublishBox({ hasService, hasWork }: { hasService: boolean; hasWork: boo
             {done ? (
               <span className="text-ink-soft">{text}</span>
             ) : (
-              <Link href={href} className="text-rose underline underline-offset-2">
+              <Link href={href} className="text-accent underline underline-offset-2">
                 {text}
               </Link>
             )}

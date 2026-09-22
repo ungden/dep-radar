@@ -15,13 +15,13 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           gap: 12,
           padding: 24,
           textAlign: "center",
-          background: "#faf6f4",
+          background: "#FAFAF8",
           color: "#2b2322",
           fontFamily: "system-ui, -apple-system, sans-serif",
         }}
       >
         <p style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>
-          dep<span style={{ color: "#a8535d" }}>360</span>
+          dep<span style={{ color: "#161413" }}>360</span>
         </p>
         <h1 style={{ fontSize: 18, margin: 0 }}>Ứng dụng gặp sự cố</h1>
         <p style={{ fontSize: 14, color: "#5b4f4d", maxWidth: 360, margin: 0 }}>
@@ -30,7 +30,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
         <button
           type="button"
           onClick={reset}
-          style={{ marginTop: 8, padding: "12px 20px", borderRadius: 14, border: 0, background: "#a8535d", color: "#fff", fontSize: 15 }}
+          style={{ marginTop: 8, padding: "12px 20px", borderRadius: 14, border: 0, background: "#161413", color: "#fff", fontSize: 15 }}
         >
           Tải lại
         </button>

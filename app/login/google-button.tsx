@@ -20,7 +20,7 @@ export function GoogleButton({ disabled }: { disabled: boolean }) {
     <button
       type="submit"
       disabled={disabled || pending}
-      className="inline-flex h-13 w-full items-center justify-center gap-3 rounded-2xl border border-line bg-surface px-6 text-[15px] font-medium text-ink shadow-sm transition-colors hover:bg-blush/60 disabled:pointer-events-none disabled:opacity-45"
+      className="inline-flex h-13 w-full items-center justify-center gap-3 rounded-2xl border border-line bg-surface px-6 text-[15px] font-medium text-ink shadow-sm transition-colors hover:bg-subtle/60 disabled:pointer-events-none disabled:opacity-45"
     >
       <GoogleMark />
       {pending ? "Đang chuyển tới Google…" : "Tiếp tục với Google"}

@@ -137,7 +137,7 @@ function SearchView() {
               type="search"
               aria-label="Tìm kiếm"
               placeholder="Nail trơn, makeup tiệc, nối mi..."
-              className="h-11 w-full rounded-full border border-line bg-surface pl-10 pr-10 text-sm focus:border-rose focus:outline-none"
+              className="h-11 w-full rounded-full border border-line bg-surface pl-10 pr-10 text-sm focus:border-accent focus:outline-none"
             />
             {q && (
               <button
@@ -185,11 +185,11 @@ function SearchView() {
               ))}
             </SelectFilter>
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={topRated} onChange={(e) => setParam("rating", e.target.checked ? "1" : null)} className="size-4 accent-[var(--color-rose)]" />
+              <input type="checkbox" checked={topRated} onChange={(e) => setParam("rating", e.target.checked ? "1" : null)} className="size-4 accent-[var(--color-ink)]" />
               Đánh giá từ 4.8
             </label>
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={atHome} onChange={(e) => setParam("home", e.target.checked ? "1" : null)} className="size-4 accent-[var(--color-rose)]" />
+              <input type="checkbox" checked={atHome} onChange={(e) => setParam("home", e.target.checked ? "1" : null)} className="size-4 accent-[var(--color-ink)]" />
               Nhận làm tại nhà
             </label>
             {/* "Đang nhận job", not "rảnh hôm nay": this is a fact on the
@@ -199,7 +199,7 @@ function SearchView() {
                 type="checkbox"
                 checked={openOnly}
                 onChange={(e) => setParam("open", e.target.checked ? "1" : null)}
-                className="size-4 accent-[var(--color-rose)]"
+                className="size-4 accent-[var(--color-ink)]"
               />
               Đang nhận job
             </label>
@@ -261,7 +261,7 @@ function SelectFilter({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={cn("mt-1 h-10 w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink focus:border-rose focus:outline-none")}
+        className={cn("mt-1 h-10 w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink focus:border-accent focus:outline-none")}
       >
         {children}
       </select>
@@ -276,7 +276,7 @@ function NoResults() {
       title="Không tìm thấy kết quả"
       text="Thử bỏ bớt bộ lọc, hoặc đăng yêu cầu để freelancer chủ động báo giá cho bạn."
       action={
-        <Link href="/requests/new" className="text-sm font-medium text-rose underline underline-offset-2">
+        <Link href="/requests/new" className="text-sm font-medium text-accent underline underline-offset-2">
           Đăng yêu cầu
         </Link>
       }

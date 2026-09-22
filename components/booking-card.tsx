@@ -26,7 +26,7 @@ export function BookingCard({ booking }: { booking: Booking }) {
   return (
     <Card className="p-3.5">
       <Link href={`/bookings/${booking.id}`} className="flex gap-3">
-        <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-blush">
+        <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-subtle">
           {image && <Image src={image} alt="" fill sizes="80px" className="object-cover" />}
         </div>
         <div className="min-w-0 flex-1">
@@ -88,7 +88,7 @@ export function JobBookingRow({ booking, actions }: { booking: Booking; actions?
   return (
     <Card className="p-3.5">
       <Link href={`/bookings/${booking.id}`} className="flex gap-3">
-        <div className="flex w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-blush py-2 text-rose-dark">
+        <div className="flex w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-subtle py-2 text-accent-dark">
           <span className="text-base font-semibold">{booking.time}</span>
           <span className="text-[10px]">{Math.round(booking.durationMin)}′</span>
         </div>

@@ -119,7 +119,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
         </ul>
         <p className="mt-2 text-xs text-muted">
           Chuyên viên tự đặt giá trong khung này, nên bạn so sánh được giữa các hồ sơ.{" "}
-          <Link href="/chinh-sach" className="text-rose underline underline-offset-2">
+          <Link href="/chinh-sach" className="text-accent underline underline-offset-2">
             Chính sách phí
           </Link>
         </p>
@@ -173,6 +173,8 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
                   title: w.title,
                   description: w.description,
                   images: w.images,
+                  kind: "work",
+                  createdAt: "",
                 }}
               />
             ))}

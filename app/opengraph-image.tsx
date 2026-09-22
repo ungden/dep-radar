@@ -14,7 +14,7 @@ export default function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#faf6f4",
+          background: "#FAFAF8",
           padding: 72,
           fontFamily: "sans-serif",
         }}
@@ -25,8 +25,8 @@ export default function OpengraphImage() {
               width: 84,
               height: 84,
               borderRadius: 24,
-              background: "#a8535d",
-              color: "#faf6f4",
+              background: "#161413",
+              color: "#FAFAF8",
               fontSize: 60,
               fontWeight: 800,
               display: "flex",
@@ -37,7 +37,7 @@ export default function OpengraphImage() {
             d
           </div>
           <div style={{ display: "flex", fontSize: 64, fontWeight: 800, color: "#2b2322", letterSpacing: -1 }}>
-            dep<span style={{ color: "#a8535d" }}>360</span>
+            dep<span style={{ color: "#161413" }}>360</span>
           </div>
         </div>
 

@@ -34,9 +34,9 @@ export default async function NotificationsPage() {
           <ul className="space-y-2">
             {items.map((n) => {
               const body = (
-                <Card className={n.readAt ? "p-3.5" : "p-3.5 ring-1 ring-rose/40"}>
+                <Card className={n.readAt ? "p-3.5" : "p-3.5 ring-1 ring-accent/40"}>
                   <p className="flex items-start gap-2 text-sm font-semibold">
-                    {!n.readAt && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-rose" />}
+                    {!n.readAt && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-accent" />}
                     {n.title}
                   </p>
                   {n.body && <p className="mt-0.5 text-[13px] text-ink-soft">{n.body}</p>}

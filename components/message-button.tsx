@@ -46,7 +46,7 @@ export function MessageButton({
           router.push(`/tin-nhan/${result.data}`)
         }}
         className={cn(
-          "inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink transition-colors hover:border-rose hover:text-rose disabled:opacity-60",
+          "inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent disabled:opacity-60",
           className,
         )}
       >

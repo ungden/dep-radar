@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 className={cn(
                   "rounded-full px-4 py-2 text-sm transition-colors",
-                  isActive(item) ? "bg-blush font-semibold text-rose-dark" : "text-ink-soft hover:text-ink",
+                  isActive(item) ? "bg-subtle font-semibold text-accent-dark" : "text-ink-soft hover:text-ink",
                 )}
               >
                 {item.label}
@@ -84,18 +84,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 href="/tin-nhan"
                 aria-label="Tin nhắn"
-                className="inline-flex size-9 items-center justify-center rounded-full hover:bg-blush/60"
+                className="inline-flex size-9 items-center justify-center rounded-full hover:bg-subtle/60"
               >
                 <MessageSquare className="size-[18px]" />
               </Link>
               <Link
                 href="/thong-bao"
                 aria-label="Thông báo"
-                className="relative inline-flex size-9 items-center justify-center rounded-full hover:bg-blush/60"
+                className="relative inline-flex size-9 items-center justify-center rounded-full hover:bg-subtle/60"
               >
                 <Bell className="size-[18px]" />
                 {state.unreadNotifications > 0 && (
-                  <span className="absolute right-1 top-1 min-w-4 rounded-full bg-rose px-1 text-[10px] font-semibold leading-4 text-white">
+                  <span className="absolute right-1 top-1 min-w-4 rounded-full bg-accent px-1 text-[10px] font-semibold leading-4 text-white">
                     {state.unreadNotifications > 9 ? "9+" : state.unreadNotifications}
                   </span>
                 )}
@@ -107,18 +107,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   await actions.switchRole(isPro ? "customer" : "pro")
                   router.push(isPro ? "/" : "/studio")
                 }}
-                className="rounded-full border border-line px-4 py-2 text-[13px] text-ink-soft hover:border-rose hover:text-rose"
+                className="rounded-full border border-line px-4 py-2 text-[13px] text-ink-soft hover:border-accent hover:text-accent"
               >
                 {isPro ? "Chuyển sang đặt lịch" : "Chế độ chuyên viên"}
               </button>
-              <Link href="/me" className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 hover:bg-blush/60">
+              <Link href="/me" className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 hover:bg-subtle/60">
                 <Avatar name={session.name} size={32} />
                 <span className="text-sm font-medium">{session.name}</span>
               </Link>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/login" className="rounded-full bg-rose px-5 py-2 text-sm font-medium text-white hover:bg-rose-dark">
+              <Link href="/login" className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-white hover:bg-accent-dark">
                 Đăng nhập
               </Link>
             </div>
@@ -150,7 +150,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       // A tab bar is the most-tapped thing in the app: 44px tall
                       // and a label you can read without squinting.
                       "flex min-h-11 flex-col items-center justify-center gap-0.5 py-2 text-[11.5px]",
-                      active ? "font-semibold text-rose" : "text-muted",
+                      active ? "font-semibold text-accent" : "text-muted",
                     )}
                   >
                     <Icon className="size-[22px]" />

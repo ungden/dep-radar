@@ -41,9 +41,9 @@ function BookingsView() {
     <>
       <Link
         href="/requests"
-        className="mb-4 flex items-center gap-3 rounded-2xl bg-surface p-3.5 shadow-[var(--shadow-soft)] hover:bg-blush/40"
+        className="mb-4 flex items-center gap-3 rounded-2xl bg-surface p-3.5 shadow-[var(--shadow-soft)] hover:bg-subtle/40"
       >
-        <span className="flex size-10 items-center justify-center rounded-full bg-blush text-rose">
+        <span className="flex size-10 items-center justify-center rounded-full bg-subtle text-accent">
           <Megaphone className="size-5" />
         </span>
         <span className="flex-1">
@@ -52,7 +52,7 @@ function BookingsView() {
             {openJobs.length} yêu cầu đang mở{newOffers ? ` · ${newOffers} báo giá mới` : ""}
           </span>
         </span>
-        {newOffers > 0 && <span className="rounded-full bg-rose px-2 py-0.5 text-xs font-semibold text-white">{newOffers}</span>}
+        {newOffers > 0 && <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-white">{newOffers}</span>}
         <ChevronRight className="size-4 text-muted" />
       </Link>
 

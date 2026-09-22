@@ -3,7 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Brush, Droplets, Eye, Flower2, Hand, Heart, MapPin, Scissors } from "lucide-react"
+import { Brush, Camera, Clapperboard, Droplets, Eye, Flower2, Hand, Heart, MapPin, Package, Scissors, Smartphone, UserRound, Video } from "lucide-react"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar, Rating } from "@/components/ui"
 import { CATEGORIES } from "@/lib/catalog"
@@ -19,6 +19,12 @@ export const CATEGORY_ICON: Record<CategoryId, React.ComponentType<{ className?:
   hair: Scissors,
   "lash-brow": Eye,
   massage: Flower2,
+  photophone: Smartphone,
+  camera: Camera,
+  "short-video": Clapperboard,
+  "product-photo": Package,
+  "model-photo": UserRound,
+  "model-video": Video,
 }
 
 export function CategoryRow({ className }: { className?: string }) {
@@ -28,7 +34,7 @@ export function CategoryRow({ className }: { className?: string }) {
         const Icon = CATEGORY_ICON[c.id]
         return (
           <Link key={c.id} href={`/search?category=${c.id}`} className="group flex flex-col items-center gap-2 text-center md:w-20">
-            <span className="flex size-12 items-center justify-center rounded-full bg-blush text-rose transition-colors group-hover:bg-blush-strong md:size-14">
+            <span className="flex size-12 items-center justify-center rounded-full bg-subtle text-accent transition-colors group-hover:bg-subtle-strong md:size-14">
               <Icon className="size-5 md:size-6" />
             </span>
             <span className="text-[11px] leading-tight text-ink-soft md:text-xs">{c.label}</span>
@@ -61,7 +67,7 @@ export function SaveWorkButton({ workId, className }: { workId: string; classNam
       }}
       className={cn("inline-flex size-8 items-center justify-center rounded-full transition-colors", className)}
     >
-      <Heart className={cn("size-[18px]", saved ? "fill-rose text-rose" : "text-ink-soft")} />
+      <Heart className={cn("size-[18px]", saved ? "fill-accent text-accent" : "text-ink-soft")} />
     </button>
   )
 }
@@ -73,7 +79,7 @@ export function WorkFeedCard({ work, priority }: { work: Work; priority?: boolea
   if (!pro) return null
   return (
     <Link href={`/works/${work.id}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-blush">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-subtle">
         <Image
           src={work.images[0]}
           alt={work.title}
@@ -111,7 +117,7 @@ export function WorkCard({ work }: { work: Work }) {
   if (!pro) return null
   return (
     <Link href={`/works/${work.id}`} className="group block">
-      <div className="relative aspect-square overflow-hidden rounded-2xl bg-blush">
+      <div className="relative aspect-square overflow-hidden rounded-2xl bg-subtle">
         <Image src={work.images[0]} alt={work.title} fill sizes="(min-width: 768px) 25vw, 50vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
       </div>
       <div className="mt-2 flex items-start gap-1">

@@ -84,7 +84,7 @@ function BookingDetail() {
       </Card>
 
       <Card className="flex items-center gap-3 p-3">
-        <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-blush">
+        <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-subtle">
           {image && <Image src={image} alt="" fill sizes="64px" className="object-cover" />}
         </div>
         <div>
@@ -92,7 +92,7 @@ function BookingDetail() {
           <p className="text-sm text-ink-soft">
             {booking.variantLabel} · {formatPrice(booking.quote.servicePrice)} · {formatDuration(booking.durationMin)}
           </p>
-          {booking.source === "job" && <p className="mt-0.5 text-xs text-rose">Từ yêu cầu đã đăng</p>}
+          {booking.source === "job" && <p className="mt-0.5 text-xs text-accent">Từ yêu cầu đã đăng</p>}
         </div>
       </Card>
 
@@ -108,7 +108,7 @@ function BookingDetail() {
         <div className="flex gap-4 py-3.5">
           <span className="w-20 shrink-0 text-[13px] text-muted">Địa điểm</span>
           <span className="font-medium">
-            <span className="mb-0.5 flex items-center gap-1 text-xs font-normal text-rose">
+            <span className="mb-0.5 flex items-center gap-1 text-xs font-normal text-accent">
               {booking.atHome ? <Home className="size-3.5" /> : <Store className="size-3.5" />}
               {booking.atHome ? "Làm tại nhà khách" : "Tại studio"}
             </span>
@@ -140,7 +140,7 @@ function BookingDetail() {
       )}
 
       {isCustomer && booking.status === "pending" && (
-        <p className="flex gap-2 rounded-xl bg-blush px-3.5 py-2.5 text-[13px] text-rose-dark">
+        <p className="flex gap-2 rounded-xl bg-subtle px-3.5 py-2.5 text-[13px] text-accent-dark">
           <Phone className="mt-0.5 size-4 shrink-0" />
           {pro.name} sẽ gọi cho bạn qua số {formatPhone(booking.customerPhone)} để xác nhận trong{" "}
           {POLICY.confirmWithinHours} giờ

@@ -85,7 +85,7 @@ function NewRequestForm() {
         router.replace(`/requests/${result.id}`)
       }}
     >
-      <p className="rounded-2xl bg-blush px-4 py-3 text-[13px] text-rose-dark">
+      <p className="rounded-2xl bg-subtle px-4 py-3 text-[13px] text-accent-dark">
         Chọn dịch vụ theo danh mục chuẩn của 360dep. Freelancer phù hợp quanh bạn sẽ báo giá trong khung giá quy định, bạn so sánh hồ sơ, đánh giá và chọn người ưng ý.
       </p>
 
@@ -103,7 +103,7 @@ function NewRequestForm() {
                 onClick={() => pickCategory(c.id)}
                 className={cn(
                   "flex flex-col items-center gap-1.5 rounded-2xl border py-3 text-[11.5px] transition-colors",
-                  active ? "border-rose bg-blush font-semibold text-rose-dark" : "border-line bg-surface text-ink-soft",
+                  active ? "border-accent bg-subtle font-semibold text-accent-dark" : "border-line bg-surface text-ink-soft",
                 )}
               >
                 <Icon className="size-5" />
@@ -143,7 +143,7 @@ function NewRequestForm() {
               onClick={() => setVariantId(v.id)}
               className={cn(
                 "rounded-xl border px-3 py-2.5 text-left text-sm",
-                v.id === variant.id ? "border-rose bg-blush text-rose-dark" : "border-line bg-surface text-ink-soft",
+                v.id === variant.id ? "border-accent bg-subtle text-accent-dark" : "border-line bg-surface text-ink-soft",
               )}
             >
               <span className="block font-medium">
@@ -197,7 +197,7 @@ function NewRequestForm() {
               onClick={() => setAtHome(o.v)}
               className={cn(
                 "h-11 rounded-xl border text-sm disabled:opacity-40",
-                atHome === o.v ? "border-rose bg-blush font-medium text-rose-dark" : "border-line bg-surface text-ink-soft",
+                atHome === o.v ? "border-accent bg-subtle font-medium text-accent-dark" : "border-line bg-surface text-ink-soft",
               )}
             >
               {o.l}
@@ -235,7 +235,7 @@ function NewRequestForm() {
               onClick={() => m === "cash" && setPaymentMethod(m)}
               className={cn(
                 "h-11 rounded-xl border text-sm disabled:opacity-50",
-                paymentMethod === m ? "border-rose bg-blush font-medium text-rose-dark" : "border-line bg-surface text-ink-soft",
+                paymentMethod === m ? "border-accent bg-subtle font-medium text-accent-dark" : "border-line bg-surface text-ink-soft",
               )}
             >
               {m === "online" ? "Thanh toán online (sắp có)" : PAYMENT_LABEL[m]}

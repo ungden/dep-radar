@@ -71,11 +71,11 @@ export function Conversation({
         back="/tin-nhan"
         action={
           header.bookingId ? (
-            <Link href={`/bookings/${header.bookingId}`} className="text-[13px] text-rose">
+            <Link href={`/bookings/${header.bookingId}`} className="text-[13px] text-accent">
               Xem lịch hẹn
             </Link>
           ) : header.proSlug && !header.iAmPro ? (
-            <Link href={`/pros/${header.proSlug}`} className="text-[13px] text-rose">
+            <Link href={`/pros/${header.proSlug}`} className="text-[13px] text-accent">
               Xem hồ sơ
             </Link>
           ) : undefined
@@ -93,11 +93,11 @@ export function Conversation({
             <div
               className={cn(
                 "max-w-[78%] rounded-2xl px-3.5 py-2.5 text-sm",
-                m.mine ? "bg-rose text-white" : "bg-surface text-ink shadow-[var(--shadow-soft)]",
+                m.mine ? "bg-accent text-white" : "bg-surface text-ink shadow-[var(--shadow-soft)]",
               )}
             >
               {m.images.map((src) => (
-                <span key={src} className="relative mb-1.5 block aspect-square w-40 overflow-hidden rounded-xl bg-blush">
+                <span key={src} className="relative mb-1.5 block aspect-square w-40 overflow-hidden rounded-xl bg-subtle">
                   <Image src={src} alt="" fill sizes="160px" className="object-cover" />
                 </span>
               ))}
@@ -125,7 +125,7 @@ export function Conversation({
         }}
       >
         <label
-          className="inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted hover:bg-blush hover:text-rose"
+          className="inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted hover:bg-subtle hover:text-accent"
           aria-label="Gửi ảnh"
         >
           <ImagePlus className="size-5" />

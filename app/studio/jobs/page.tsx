@@ -126,7 +126,7 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
 
   if (existing) {
     const tone =
-      existing.status === "accepted" ? "bg-success-soft text-success" : existing.status === "rejected" ? "bg-canvas text-muted" : "bg-blush text-rose-dark"
+      existing.status === "accepted" ? "bg-success-soft text-success" : existing.status === "rejected" ? "bg-canvas text-muted" : "bg-subtle text-accent-dark"
     return (
       <div className={cn("mt-3 flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-[13px]", tone)}>
         <span>
@@ -196,11 +196,11 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
           step={5000}
           value={price}
           onChange={(e) => setPrice(Number(e.target.value))}
-          className="mt-2 w-full accent-[var(--color-rose)]"
+          className="mt-2 w-full accent-[var(--color-ink)]"
         />
         <div className="flex justify-between text-[11px] text-muted">
           <span>{formatPrice(floor)}</span>
-          <button type="button" className="text-rose" onClick={() => setPrice(Math.max(floor, variant.suggestedPrice))}>
+          <button type="button" className="text-accent" onClick={() => setPrice(Math.max(floor, variant.suggestedPrice))}>
             Giá niêm yết {formatPrice(floor)}
           </button>
           <span>{formatPrice(variant.maxPrice)}</span>

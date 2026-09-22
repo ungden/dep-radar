@@ -27,7 +27,7 @@ export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: 
     <Card className="p-4">
       <Link href={href} className="block">
         <div className="flex items-start gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blush text-rose">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-subtle text-accent">
             <Icon className="size-5" />
           </span>
           <div className="min-w-0 flex-1">
@@ -50,7 +50,7 @@ export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: 
               </span>
               {extra}
               {job.mine && (
-                <span className="ml-auto inline-flex items-center gap-0.5 text-rose">
+                <span className="ml-auto inline-flex items-center gap-0.5 text-accent">
                   {job.offers.length} báo giá{pendingOffers && job.status === "open" ? " mới" : ""}
                   <ChevronRight className="size-4" />
                 </span>

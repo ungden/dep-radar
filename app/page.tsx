@@ -63,7 +63,7 @@ export default function ExplorePage() {
           <Link href="/thong-bao" aria-label="Thông báo" className="relative inline-flex size-10 items-center justify-center">
             <Bell className="size-5" />
             {state.unreadNotifications > 0 && (
-              <span className="absolute right-1.5 top-1.5 min-w-4 rounded-full bg-rose px-1 text-[10px] font-semibold leading-4 text-white">
+              <span className="absolute right-1.5 top-1.5 min-w-4 rounded-full bg-accent px-1 text-[10px] font-semibold leading-4 text-white">
                 {state.unreadNotifications > 9 ? "9+" : state.unreadNotifications}
               </span>
             )}
@@ -99,7 +99,7 @@ export default function ExplorePage() {
           type="search"
           placeholder="Tìm mẫu nail, makeup, chăm sóc da..."
           aria-label="Tìm kiếm"
-          className="h-12 w-full rounded-full border border-line bg-surface pl-11 pr-4 text-[15px] placeholder:text-muted focus:border-rose focus:outline-none md:h-14"
+          className="h-12 w-full rounded-full border border-line bg-surface pl-11 pr-4 text-[15px] placeholder:text-muted focus:border-accent focus:outline-none md:h-14"
         />
       </form>
 
@@ -114,16 +114,16 @@ export default function ExplorePage() {
 
       <Link
         href={session?.role === "pro" ? "/studio/jobs" : "/requests/new"}
-        className="mt-6 flex items-center gap-3 rounded-[var(--radius-card)] bg-blush p-4 transition-colors hover:bg-blush-strong"
+        className="mt-6 flex items-center gap-3 rounded-[var(--radius-card)] bg-subtle p-4 transition-colors hover:bg-subtle-strong"
       >
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface text-rose">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface text-accent">
           <Megaphone className="size-5" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-semibold">Chưa tìm được mẫu ưng ý?</span>
           <span className="block text-[13px] text-ink-soft">Đăng yêu cầu, freelancer gần bạn sẽ gửi báo giá trong ít phút.</span>
         </span>
-        <span className="hidden rounded-full bg-rose px-4 py-2 text-[13px] font-medium text-white sm:inline">Đăng yêu cầu</span>
+        <span className="hidden rounded-full bg-accent px-4 py-2 text-[13px] font-medium text-white sm:inline">Đăng yêu cầu</span>
       </Link>
 
       <Tabs
@@ -152,7 +152,7 @@ export default function ExplorePage() {
       <section className="mt-10">
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-lg font-semibold">Chuyên viên nổi bật</h2>
-          <Link href="/pros" className="text-sm text-rose">
+          <Link href="/pros" className="text-sm text-accent">
             Xem tất cả
           </Link>
         </div>

@@ -9,7 +9,7 @@ export function MarkAllRead({ count, action }: { count: number; action: () => Pr
   const [busy, setBusy] = React.useState(false)
 
   return (
-    <div className="mb-3 flex items-center justify-between rounded-xl bg-blush px-3.5 py-2.5 text-[13px] text-rose-dark">
+    <div className="mb-3 flex items-center justify-between rounded-xl bg-subtle px-3.5 py-2.5 text-[13px] text-accent-dark">
       <span>{count} thông báo mới</span>
       <button
         type="button"

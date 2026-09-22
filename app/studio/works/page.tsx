@@ -34,7 +34,7 @@ function WorksManager() {
 
   return (
     <>
-      <p className="mb-4 rounded-2xl bg-blush px-4 py-3 text-[13px] text-rose-dark">
+      <p className="mb-4 rounded-2xl bg-subtle px-4 py-3 text-[13px] text-accent-dark">
         Ảnh tác phẩm là thứ khách xem đầu tiên. Chỉ đăng ảnh do chính bạn làm — ảnh lấy trên mạng sẽ bị gỡ và có thể bị
         khoá hồ sơ. Ảnh được nén và xoá toàn bộ thông tin vị trí trước khi tải lên.
       </p>
@@ -79,7 +79,7 @@ function WorksManager() {
           {works.map((work) => (
             <li key={work.id}>
               <Card className="overflow-hidden">
-                <div className="relative aspect-square bg-blush">
+                <div className="relative aspect-square bg-subtle">
                   <Image src={work.images[0]} alt={work.title} fill sizes="200px" className="object-cover" />
                 </div>
                 <div className="p-2.5">
@@ -173,12 +173,12 @@ function WorkForm({
         <p className="mb-1.5 text-[13px] font-medium">Ảnh ({images.length}/5)</p>
         <div className="flex flex-wrap gap-2">
           {images.map((src) => (
-            <span key={src} className="relative size-20 overflow-hidden rounded-xl bg-blush">
+            <span key={src} className="relative size-20 overflow-hidden rounded-xl bg-subtle">
               <Image src={src} alt="" fill sizes="80px" className="object-cover" />
             </span>
           ))}
           {images.length < 5 && (
-            <label className="flex size-20 cursor-pointer items-center justify-center rounded-xl border border-dashed border-line text-muted hover:border-rose hover:text-rose">
+            <label className="flex size-20 cursor-pointer items-center justify-center rounded-xl border border-dashed border-line text-muted hover:border-accent hover:text-accent">
               <ImagePlus className="size-5" />
               <input
                 type="file"

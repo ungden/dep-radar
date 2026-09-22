@@ -1,8 +1,37 @@
-export type CategoryId = "nail" | "makeup" | "skincare" | "hair" | "lash-brow" | "massage"
+/**
+ * 360dep books people who help you look good on camera, in three trades:
+ * beauty (the original business), photo & video, and models.
+ */
+export type VerticalId = "beauty" | "photo" | "model"
+
+export type CategoryId =
+  // beauty
+  | "nail"
+  | "makeup"
+  | "skincare"
+  | "hair"
+  | "lash-brow"
+  | "massage"
+  // photo & video
+  | "photophone"
+  | "camera"
+  | "short-video"
+  | "product-photo"
+  // models
+  | "model-photo"
+  | "model-video"
+
+export interface Vertical {
+  id: VerticalId
+  label: string
+  /** What someone in this trade is called on a card: "thợ", "người chụp", "mẫu". */
+  person: string
+}
 
 export interface Category {
   id: CategoryId
   label: string
+  vertical: VerticalId
 }
 
 // ---------------------------------------------------------------------------
@@ -32,6 +61,17 @@ export interface ServiceTemplate {
   variants: ServiceVariant[]
   /** Only offered at the freelancer's studio (equipment not portable). */
   studioOnly?: boolean
+  /**
+   * Done at a place the customer picks (a café, a park, the shop) rather than
+   * at their home. Same booking rules as home service; different words.
+   */
+  onLocation?: boolean
+  /** What the customer receives afterwards, e.g. "Toàn bộ ảnh gốc + 20 ảnh chỉnh". */
+  deliverable?: string
+  /** Days the freelancer has, after the session, to hand the files over. */
+  deliveryDays?: number
+  /** Only an identity-verified freelancer may list it (models). */
+  requiresVerification?: boolean
 }
 
 /** A freelancer's listing of one catalogue service. */
@@ -89,6 +129,27 @@ export interface Pro {
   identity: VerificationStatus
   stats: ProStats
   rating: RatingSummary
+  /** Photo & video: what they shoot with, e.g. "iPhone 16 Pro Max". */
+  equipment?: string
+  /** Present when the freelancer works as a model. */
+  model?: ModelProfile
+}
+
+/**
+ * What a client needs to cast a model. Body measurements are deliberately not
+ * collected: they are not needed to book, and they are the data most often
+ * abused on casting boards.
+ */
+export interface ModelProfile {
+  heightCm: number | null
+  topSize: string
+  bottomSize: string
+  shoeSize: string
+  styles: string[]
+  /** Kinds of work they take, in their own words ("Lookbook", "Mẫu tay"). */
+  accepts: string[]
+  /** Kinds of work they turn down. Shown so nobody has to ask. */
+  refuses: string[]
 }
 
 export interface Work {
@@ -102,7 +163,24 @@ export interface Work {
   title: string
   description: string
   images: string[]
+  /** before_after: images[0] is before, images[1] is after. */
+  kind: WorkKind
+  /** A clip of up to 60 seconds, shown instead of the first image. */
+  video?: string
+  createdAt: string
 }
+
+export type WorkKind = "work" | "before_after"
+
+/** Interest a post has earned in the last 30 days. Counts only, no people. */
+export interface WorkStats {
+  impressions: number
+  opens: number
+  saves: number
+  bookClicks: number
+}
+
+export type WorkEventKind = "impression" | "open" | "save" | "book_click"
 
 export interface Review {
   id: string
@@ -194,6 +272,25 @@ export interface Booking {
   rescheduleTo?: string
   rescheduleBy?: Role
   createdAt: string
+  /** Personal use, or the images/clips will be used to sell something. */
+  usageScope: UsageScope
+  /** The customer agreed the freelancer may post the result as their work. */
+  consentRepost: boolean
+  /** Bookings made together (makeup + photos at the same time and place). */
+  groupId?: string
+  /** Photo & video only: the files owed after the session. */
+  delivery?: Delivery
+}
+
+export type UsageScope = "personal" | "commercial"
+
+export interface Delivery {
+  /** Set when the session is completed: completed + the service's delivery days. */
+  dueAt: string | null
+  deliveredAt?: string
+  url?: string
+  note?: string
+  acceptedAt?: string
 }
 
 export type OfferStatus = "pending" | "accepted" | "rejected"
@@ -237,4 +334,50 @@ export interface Session {
   phone: string
   /** freelancer profile the pro-mode session manages */
   proId?: string
+}
+
+// ---------------------------------------------------------------------------
+// Casting calls ("Tuyển mẫu").
+// A freelancer needs a model: a nail artist who wants hands to practise on and
+// photograph, a photographer building a portfolio. The model is paid in kind
+// (a free or discounted service) or in money. Customers apply; the freelancer
+// picks. It is the request board turned around.
+
+export type CastingCompensation = "free" | "discount" | "paid"
+export type CastingStatus = "open" | "closed"
+export type ApplicationStatus = "pending" | "accepted" | "rejected" | "withdrawn"
+
+export interface CastingApplication {
+  id: string
+  castingId: string
+  applicantName: string
+  message: string
+  status: ApplicationStatus
+  createdAt: string
+}
+
+export interface Casting {
+  id: string
+  proId: string
+  category: CategoryId
+  title: string
+  description: string
+  date: string
+  time: string
+  city: string
+  district: string
+  /** How many models are wanted. */
+  slots: number
+  compensation: CastingCompensation
+  /** For "discount": percent off the freelancer's listed price. */
+  discountPercent?: number
+  /** For "paid": what the model receives, in đồng. */
+  fee?: number
+  status: CastingStatus
+  /** Only the freelancer who posted it sees these. */
+  applications: CastingApplication[]
+  /** The signed-in customer's own application, if any. */
+  myApplication?: CastingApplication
+  acceptedCount: number
+  createdAt: string
 }
