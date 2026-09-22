@@ -1,3 +1,5 @@
+import * as Linking from "expo-linking"
+import * as WebBrowser from "expo-web-browser"
 import { supabase } from "@/lib/supabase"
 
 export class ApiError extends Error {
@@ -15,28 +17,35 @@ export async function listPros() {
   return data
 }
 
-// Password sign-in, same as the web. The phone number goes to Auth as metadata
-// and the database normalises it (normalize_vn_phone in handle_new_user), so this
-// app does not keep its own copy of the rules. Signing in by phone number needs
-// the server-side lookup the web app has, so here it is email only for now.
-export async function signInWithEmail(email: string, password: string) {
-  const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
-  if (error) throw new ApiError("Sai email hoặc mật khẩu.", "INVALID_CREDENTIALS")
+// Google sign-in, same as the web. The browser session comes back through the
+// dep360:// scheme, which has to be listed under Redirect URLs in Supabase Auth.
+export async function signInWithGoogle() {
+  const redirectTo = Linking.createURL("auth/callback")
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: "select_account" } },
+  })
+  if (error || !data.url) throw new ApiError("Đăng nhập Google chưa khả dụng. Vui lòng thử lại sau.", "OAUTH_UNAVAILABLE")
+  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo)
+  if (result.type !== "success") throw new ApiError("Đã huỷ đăng nhập Google.", "CANCELLED")
+  const code = new URL(result.url).searchParams.get("code")
+  if (!code) throw new ApiError("Chưa đăng nhập được bằng Google. Thử lại nhé.", "NO_CODE")
+  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+  if (exchangeError) throw new ApiError("Chưa đăng nhập được bằng Google. Thử lại nhé.", "EXCHANGE_FAILED")
 }
 
-export async function signUpWithEmail(input: { fullName: string; phone: string; email: string; password: string }) {
-  if (input.password.length < 8) throw new ApiError("Mật khẩu cần ít nhất 8 ký tự.", "WEAK_PASSWORD")
-  const { error } = await supabase.auth.signUp({
-    email: input.email.trim().toLowerCase(),
-    password: input.password,
-    options: { data: { full_name: input.fullName.trim(), phone: input.phone } },
-  })
+/** Empty string when the account has no phone number yet (every new Google account). */
+export async function myPhone(): Promise<string> {
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return ""
+  const { data } = await supabase.from("accounts").select("phone").eq("id", auth.user.id).maybeSingle()
+  return data?.phone ?? ""
+}
+
+/** Once per account; the database normalises the number and refuses one already in use. */
+export async function setMyPhone(phone: string) {
+  const { error } = await supabase.rpc("set_my_phone", { p_phone: phone })
   if (error) {
-    throw new ApiError(
-      error.code === "user_already_exists" || error.code === "email_exists"
-        ? "Email này đã có tài khoản."
-        : "Không tạo được tài khoản. Kiểm tra số điện thoại (mỗi số một tài khoản) rồi thử lại.",
-      "SIGN_UP_FAILED",
-    )
+    throw new ApiError(/[ạ-ỹđ]/i.test(error.message) ? error.message : "Không lưu được số điện thoại.", "PHONE_REFUSED")
   }
 }

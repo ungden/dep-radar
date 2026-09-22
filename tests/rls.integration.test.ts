@@ -170,11 +170,12 @@ describe.skipIf(!configured)("row level security over the API", () => {
     expect(error).toBeNull()
   })
 
-  it("keeps the phone-to-email lookup on the server", async () => {
-    const { error } = await client(tokenFor(customerId)).rpc("account_email_for_phone" as never, {
-      p_phone: "0968112233",
+  it("will not let an account swap its phone number for someone else's", async () => {
+    // set_my_phone() is the only way to write a phone number, and only once.
+    const { error } = await client(tokenFor(customerId)).rpc("set_my_phone" as never, {
+      p_phone: "0900000777",
     } as never)
-    expect(error).toBeTruthy()
+    expect(error?.message).toMatch(/đã có số điện thoại/)
   })
 
   it("refuses a listing price outside the catalogue band", async () => {

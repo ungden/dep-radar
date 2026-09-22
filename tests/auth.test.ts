@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isEmail, parseIdentifier, passwordProblem, safeNext } from "@/lib/auth/credentials"
+import { safeNext } from "@/lib/auth/credentials"
 import { formatPhone, toE164 } from "@/lib/auth/phone"
 
 // Accounts are keyed by phone number: if two spellings of one number normalise
@@ -32,41 +32,6 @@ describe("toE164", () => {
 
   it("formats for a Vietnamese reader", () => {
     expect(formatPhone("+84968112233")).toBe("0968 112 233")
-  })
-})
-
-describe("parseIdentifier", () => {
-  it("reads a phone number in any spelling", () => {
-    expect(parseIdentifier("0968 112 233")).toEqual({ kind: "phone", phone: "+84968112233" })
-  })
-
-  it("reads an email, trimmed and lowercased", () => {
-    expect(parseIdentifier("  Thu.Anh@Example.com ")).toEqual({ kind: "email", email: "thu.anh@example.com" })
-  })
-
-  it("refuses something that is neither", () => {
-    expect(parseIdentifier("thu@")).toBeNull()
-    expect(parseIdentifier("12345")).toBeNull()
-    expect(parseIdentifier("")).toBeNull()
-  })
-
-  it("knows an email", () => {
-    expect(isEmail("a@b.vn")).toBe(true)
-    expect(isEmail("a@b")).toBe(false)
-    expect(isEmail("a b@c.vn")).toBe(false)
-  })
-})
-
-describe("passwordProblem", () => {
-  it("wants at least eight characters", () => {
-    expect(passwordProblem("1234567")).toMatch(/ít nhất 8/)
-    expect(passwordProblem("12345678")).toBeNull()
-  })
-
-  it("counts bytes, not characters, against the 72 bcrypt reads", () => {
-    // "ệ" is three bytes in UTF-8: 25 of them is 75 bytes in 25 characters.
-    expect(passwordProblem("ệ".repeat(25))).toMatch(/dài quá/)
-    expect(passwordProblem("a".repeat(72))).toBeNull()
   })
 })
 

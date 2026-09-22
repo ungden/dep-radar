@@ -5,6 +5,8 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL, backendEnabled } from "@/lib/supabase/
 /** Signed-in-only areas. The server decides, not the rendered page. */
 const PRIVATE = ["/studio", "/bookings", "/requests", "/me", "/book", "/tin-nhan", "/thong-bao"]
 const ADMIN = "/admin"
+/** Signed-in areas that assume the account has a phone number. */
+const NEEDS_PHONE = ["/studio", "/bookings", "/requests", "/book", "/tin-nhan"]
 
 export async function middleware(request: NextRequest) {
   // Without a backend the app is the labelled browser demo: nothing to guard.
@@ -31,6 +33,18 @@ export async function middleware(request: NextRequest) {
     login.pathname = "/login"
     login.search = `?next=${encodeURIComponent(path + request.nextUrl.search)}`
     return NextResponse.redirect(login)
+  }
+
+  // Google never provides a phone number, and everything past this point can end
+  // in a call. /me stays open so settings and account deletion are reachable.
+  if (data.user && NEEDS_PHONE.some((p) => path === p || path.startsWith(`${p}/`))) {
+    const { data: account } = await supabase.from("accounts").select("phone").eq("id", data.user.id).maybeSingle()
+    if (account && !account.phone) {
+      const ask = request.nextUrl.clone()
+      ask.pathname = "/me/so-dien-thoai"
+      ask.search = `?next=${encodeURIComponent(path + request.nextUrl.search)}`
+      return NextResponse.redirect(ask)
+    }
   }
 
   if (path === ADMIN || path.startsWith(`${ADMIN}/`)) {

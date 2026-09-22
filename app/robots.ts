@@ -20,7 +20,6 @@ export default function robots(): MetadataRoute.Robots {
         "/admin",
         "/api",
         "/auth",
-        "/dat-lai-mat-khau",
       ],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,

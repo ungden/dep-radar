@@ -11,7 +11,7 @@ do $$
 declare
   linh uuid; thu uuid; customer uuid; addr uuid; booking uuid; other uuid;
   msg text; km numeric; q public.quote; n int; slot timestamptz; thread uuid;
-  other_phone text; other_avatar text; leaving uuid;
+  other_phone text; other_avatar text; leaving uuid; google_user uuid; google_addr uuid;
   -- Every date below is anchored to the next Monday, so the tests never land on
   -- the Sunday the demo freelancers take off.
   monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
@@ -296,20 +296,59 @@ begin
   assert (select email from auth.users where id = leaving) is null, 'the email survived deletion';
   assert coalesce(current_setting('app.deleting_account', true), '') = '', 'the deletion flag outlived the deletion';
 
-  raise notice 'a phone number is required, normalised and unique';
+  raise notice 'a Google account starts without a phone number and cannot book until it has one';
+  insert into auth.users (instance_id, id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          'google@example.invalid', '{"provider":"google","providers":["google"]}',
+          jsonb_build_object('name', 'Khách Google'), now(), now())
+  returning id into google_user;
+  assert (select phone from public.accounts where id = google_user) = '', 'a Google account got a phone number';
+  assert (select full_name from public.accounts where id = google_user) = 'Khách Google', 'Google''s name was lost';
+
+  perform set_config('request.jwt.claim.sub', google_user::text, true);
   begin
-    insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
-    values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
-            'nophone@example.invalid', jsonb_build_object('full_name', 'Không số'), now(), now());
-    assert false, 'an account without a phone number was created';
+    insert into public.pros (id, slug, city, district) values (google_user, 'khach-google-test', 'Hà Nội', 'Đống Đa');
+    assert false, 'an account without a phone opened a freelancer profile';
   exception when check_violation then null;
   end;
+  -- Everything else about this booking is valid (same address, a free slot), so
+  -- the missing phone number is the only reason left to refuse it.
+  insert into public.addresses (account_id, city, district, detail, lat, lng)
+  select google_user, city, district, detail, lat, lng from public.addresses where id = addr
+  returning id into google_addr;
+  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, slot + interval '3 days', true, 21.0181, 105.829);
+  assert msg is null, format('the control slot is not bookable: %s', msg);
+  begin
+    perform public.create_booking(linh, 'nail-design', 'simple', slot + interval '3 days', true, google_addr, 1, '');
+    assert false, 'an account without a phone booked';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg like 'Cần thêm số điện thoại%', format('refused for another reason: %s', msg);
+  end;
+
+  raise notice 'a phone number is set once, normalised, and never shared';
+  begin
+    perform public.set_my_phone(other_phone);
+    assert false, 'two accounts share a phone number';
+  exception when check_violation then null;
+  end;
+  assert public.set_my_phone('0900 000 321') = '+84900000321', 'the number was not normalised';
+  assert public.set_my_phone('+84900000321') = '+84900000321', 'repeating the same number is harmless';
+  begin
+    perform public.set_my_phone('0900 000 322');
+    assert false, 'a phone number was changed without support';
+  exception when check_violation then null;
+  end;
+  update public.accounts set phone = '+84900000999' where id = google_user;
+  assert (select phone from public.accounts where id = google_user) = '+84900000321', 'a plain update changed the phone';
+  assert coalesce(current_setting('app.setting_phone', true), '') = '', 'the phone flag outlived the call';
+
   begin
     insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
     values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
-            'twin@example.invalid', jsonb_build_object('full_name', 'Trùng số', 'phone', other_phone), now(), now());
-    assert false, 'two accounts share a phone number';
-  exception when unique_violation then null;
+            'badphone@example.invalid', jsonb_build_object('full_name', 'Số sai', 'phone', '12345'), now(), now());
+    assert false, 'an account with a malformed phone number was created';
+  exception when check_violation then null;
   end;
   assert public.normalize_vn_phone('0968 112 233') = '+84968112233', 'local form';
   assert public.normalize_vn_phone('84968112233') = '+84968112233', 'country code without plus';
@@ -363,6 +402,7 @@ begin
       'mark_no_show', 'cancel_booking', 'request_reschedule', 'respond_reschedule', 'post_job',
       'send_offer', 'accept_offer', 'withdraw_offer', 'write_review', 'reply_review', 'open_thread',
       'send_message', 'replace_working_hours', 'my_wallet_balance', 'mark_thread_read', 'delete_my_account',
+      'set_my_phone',
       -- admin decisions, which check is_admin() themselves
       'decide_identity_check', 'decide_no_show_compensation', 'set_pro_suspended', 'set_review_hidden', 'resolve_report'
     ]);
