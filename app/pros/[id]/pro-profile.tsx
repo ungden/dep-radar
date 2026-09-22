@@ -4,226 +4,537 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Briefcase, CalendarDays, Car, ChevronLeft, Home, MapPin, Share2, Sparkles, Store } from "lucide-react"
+import {
+  CalendarDays,
+  Camera,
+  Car,
+  Check,
+  ChevronLeft,
+  Columns2,
+  Home,
+  Layers,
+  MapPin,
+  Play,
+  Ruler,
+  Share2,
+  Store,
+  X,
+} from "lucide-react"
+import { whereLabel } from "@/components/beauty"
 import { FollowButton } from "@/components/follow-button"
 import { MessageButton } from "@/components/message-button"
 import { ServiceMenu } from "@/components/service-menu"
+import { TradeDot } from "@/components/trade"
 import { RatingSummaryBlock, ReviewItem, VerifiedBadge, VerifiedMark } from "@/components/trust"
-import { Avatar, Button, Card, Chip, EmptyState, Tabs } from "@/components/ui"
+import { Avatar, ButtonLink, Chip, EmptyState, Tabs } from "@/components/ui"
+import { categoryLabel, verticalOf } from "@/lib/catalog"
 import { POLICY, travelFeeFor } from "@/lib/pricing"
 import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp, worksOf } from "@/lib/store"
+import { personWord, tradesOf } from "@/lib/trade"
+import type { ModelProfile, Pro, Work } from "@/lib/types"
 import { cn, formatPrice, formatResponseTime, parseISODate } from "@/lib/utils"
 
-type Tab = "services" | "works" | "reviews" | "about"
+type Tab = "works" | "services" | "reviews" | "about"
+const TABS: Tab[] = ["works", "services", "reviews", "about"]
+const REVIEWS_ANCHOR = "danh-gia"
+
+/** The URL hash, read without a hydration mismatch (the server has none). */
+function useHash() {
+  return React.useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener("hashchange", onChange)
+      return () => window.removeEventListener("hashchange", onChange)
+    },
+    () => window.location.hash,
+    () => "",
+  )
+}
 
 export function ProProfile({ proId }: { proId: string }) {
   const router = useRouter()
   const params = useSearchParams()
   const state = useApp()
+  const hash = useHash()
   const pro = proView(state, proId)!
   const works = worksOf(state, pro.id)
   const services = servicesOf(state, pro.id)
   const reviews = reviewsOf(state, pro.id)
   const from = fromPrice(state, pro.id)
-  const km = state.session?.role !== "pro" ? distanceToCustomer(state, pro.id) : null
-  const [tab, setTab] = React.useState<Tab>((params.get("tab") as Tab | null) ?? "services")
+  const own = state.session?.proId === pro.id
+
+  const asked = params.get("tab") as Tab | null
+  const fallback: Tab = hash === `#${REVIEWS_ANCHOR}` ? "reviews" : asked && TABS.includes(asked) ? asked : works.length ? "works" : "services"
+  const [chosen, setChosen] = React.useState<Tab | null>(null)
+  const tab = chosen ?? fallback
   const [withPhotos, setWithPhotos] = React.useState(false)
   const shownReviews = withPhotos ? reviews.filter((r) => r.photo) : reviews
   const tabsRef = React.useRef<HTMLDivElement>(null)
 
+  // Arriving from a link to the price list or the reviews: go straight there.
   React.useEffect(() => {
-    if (params.get("tab")) tabsRef.current?.scrollIntoView({ block: "start" })
-  }, [params])
+    if (asked || hash === `#${REVIEWS_ANCHOR}`) tabsRef.current?.scrollIntoView({ block: "start" })
+  }, [asked, hash])
 
-  const openServices = () => {
-    setTab("services")
+  const openTab = (t: Tab) => {
+    setChosen(t)
     tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
   }
 
-  const cover = works[0]?.images[0] ?? "/images/works/nail-milky-1.webp"
-  const joined = parseISODate(pro.joinedAt)
+  const covers = works
+    .map((w) => (w.kind === "before_after" && w.images[1] ? w.images[1] : w.images[0]))
+    .filter(Boolean)
+    .slice(0, 3)
+  const back = () => (window.history.length > 1 ? router.back() : router.push("/"))
+  const firstName = pro.name.split(" ").slice(-1)[0]
 
   return (
-    <div className="-mx-4 md:mx-0 md:pt-6">
-      <div className="relative h-44 overflow-hidden bg-subtle md:h-64 md:rounded-3xl">
-        <Image src={cover} alt="" fill priority sizes="100vw" className="object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-canvas/70" />
+    <div className="md:pt-8">
+      {/* Cover: real work, one photo on the phone, three on a computer. */}
+      <div className="relative -mx-4 md:mx-0">
+        <div
+          className={cn(
+            "grid h-44 overflow-hidden bg-subtle md:h-60 md:gap-1.5 md:rounded-[var(--radius-xl)]",
+            covers.length >= 3 ? "md:grid-cols-3" : covers.length === 2 ? "md:grid-cols-2" : "grid-cols-1",
+          )}
+        >
+          {covers.map((src, i) => (
+            <div key={src + i} className={cn("relative h-full", i > 0 && "hidden md:block")}>
+              <Image src={src} alt="" fill priority={i === 0} sizes="(min-width: 768px) 400px, 100vw" className="object-cover" />
+            </div>
+          ))}
+        </div>
         <button
           type="button"
           aria-label="Quay lại"
-          onClick={() => router.back()}
-          className="absolute left-4 top-4 inline-flex size-10 items-center justify-center rounded-full bg-white/85 backdrop-blur md:hidden"
+          onClick={back}
+          className="absolute left-2 top-2 inline-flex size-11 items-center justify-center md:hidden"
         >
-          <ChevronLeft className="size-5" />
+          <span className="inline-flex size-[34px] items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur">
+            <ChevronLeft className="size-5" />
+          </span>
         </button>
       </div>
 
-      <div className="px-4 md:grid md:grid-cols-[340px_1fr] md:gap-10 md:px-0">
-        <aside className="md:sticky md:top-24 md:self-start">
-          <div className="-mt-12 flex items-end justify-between">
-            <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={96} className="border-4 border-canvas" />
-            <div className="flex gap-2 pb-1">
-              <ShareButton name={pro.name} />
-              <FollowButton proId={pro.id} />
-            </div>
+      {/* Who */}
+      <div className="md:px-6">
+        <div className="flex items-end justify-between gap-3">
+          <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={96} className="-mt-12 ring-4 ring-canvas md:hidden" />
+          <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={120} className="-mt-16 hidden ring-4 ring-canvas md:block" />
+          <div className="flex items-center gap-1 pb-1">
+            <ShareButton name={pro.name} />
+            {!own && <FollowButton proId={pro.id} />}
           </div>
-          <h1 className="mt-3 flex flex-wrap items-center gap-1.5 text-[28px] font-extrabold tracking-tight">
-            {pro.name}
-            <VerifiedMark pro={pro} className="size-5" />
-          </h1>
-          <p className="text-sm text-muted">
-            {pro.title}
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => setTab("reviews")} className="inline-flex items-center gap-1 text-sm">
-              <span className="text-[#e0a33a]">★</span>
-              <b>{pro.rating.average.toFixed(1)}</b>
-              <span className="text-muted underline underline-offset-2">({pro.rating.count} đánh giá)</span>
-            </button>
-          </div>
+        </div>
 
-          <VerifiedBadge pro={pro} className="mt-3" />
-          <ul className="mt-4 grid grid-cols-3 gap-2 text-center">
-            {[
-              [pro.stats.completedJobs.toLocaleString("vi-VN"), "Job hoàn thành"],
-              [`${pro.yearsExp} năm`, "Kinh nghiệm"],
-              [formatResponseTime(pro.stats.responseMinutes) ?? "—", "Phản hồi"],
-            ].map(([value, label]) => (
-              <li key={label} className="rounded-2xl bg-surface px-2 py-3 shadow-[var(--shadow-soft)]">
-                <p className="text-sm font-semibold">{value}</p>
-                <p className="text-xs text-muted">{label}</p>
-              </li>
+        <h1 className="mt-3 flex flex-wrap items-center gap-x-2 text-[28px] font-extrabold leading-tight tracking-tight md:text-[36px]">
+          {pro.name}
+          <VerifiedMark pro={pro} className="size-6" />
+        </h1>
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] text-ink-soft">
+          <span className="inline-flex items-center gap-1.5">
+            {tradesOf(pro.categories).map((v) => (
+              <TradeDot key={v} vertical={v} />
             ))}
-          </ul>
+            {pro.title || pro.categories.map(categoryLabel).join(" · ")}
+          </span>
+          <span aria-hidden className="text-subtle-strong">•</span>
+          <span className="inline-flex items-center gap-1">
+            <MapPin className="size-4 text-muted" />
+            {whereLabel(state, pro)}
+            {whereLabel(state, pro) === pro.district ? `, ${pro.city}` : ""}
+          </span>
+        </p>
+        <VerifiedBadge pro={pro} className="mt-3" />
 
-          <ul className="mt-4 space-y-2 text-[13px] text-ink-soft">
-            <li className="flex items-center gap-2">
-              <MapPin className="size-4 text-muted" />
-              {pro.district}, {pro.city}
-              {km !== null && <span className="text-muted">· cách bạn ~{km.toLocaleString("vi-VN")} km</span>}
-            </li>
-            <li className="flex items-center gap-2">
-              {pro.homeService ? <Home className="size-4 text-muted" /> : <Store className="size-4 text-muted" />}
-              {pro.homeService ? `Làm tại nhà trong bán kính ${pro.maxTravelKm} km` : "Chỉ làm tại studio"}
-              {pro.studioAddress && pro.homeService && " · có studio"}
-            </li>
-            {pro.homeService && (
-              <li className="flex items-center gap-2">
-                <Car className="size-4 text-muted" />
-                {km !== null && km <= pro.maxTravelKm
-                  ? travelFeeFor(km) === 0
-                    ? "Miễn phí di chuyển tới địa chỉ của bạn"
-                    : `Phí di chuyển tới bạn: ${formatPrice(travelFeeFor(km))}`
-                  : `Miễn phí di chuyển trong ${POLICY.freeTravelKm} km`}
-              </li>
-            )}
-            <li className="flex items-center gap-2">
-              <CalendarDays className="size-4 text-muted" />
-              Tham gia 360dep từ tháng {joined.getMonth() + 1}/{joined.getFullYear()}
-            </li>
-          </ul>
+        <Stats pro={pro} onReviews={() => openTab("reviews")} />
 
-          <Button size="lg" className="mt-5 w-full" onClick={openServices} disabled={!services.length}>
-            Xem bảng giá & đặt lịch{from !== null ? ` · từ ${formatPrice(from)}` : ""}
-          </Button>
-          {/* Asking before booking is often the difference between booking and
-              not: "tóc tôi đã tẩy, có uốn được không?" */}
-          {state.session?.proId !== pro.id && (
-            <MessageButton proId={pro.id} label={`Nhắn tin cho ${pro.name.split(" ").slice(-1)[0]}`} className="mt-2 w-full" />
-          )}
-        </aside>
+        {!own && (
+          <div className="mt-5 grid grid-cols-2 gap-2 md:hidden">
+            <MessageButton proId={pro.id} className="w-full" />
+            <BookButton pro={pro} disabled={!services.length} />
+          </div>
+        )}
+      </div>
 
-        <div ref={tabsRef} className="scroll-mt-4 md:scroll-mt-24">
+      <div className="mt-6 md:mt-10 md:grid md:grid-cols-[minmax(0,1fr)_340px] md:gap-10 lg:gap-14">
+        <div ref={tabsRef} className="scroll-mt-2 md:scroll-mt-20">
+          {/* No counts in the labels: the four have to fit a phone, and the numbers are just above. */}
           <Tabs
-            className="mt-6 md:mt-4"
+            className="gap-5 md:gap-7"
             value={tab}
-            onChange={setTab}
+            onChange={setChosen}
             items={[
-              { value: "services", label: `Bảng giá (${services.length})` },
-              { value: "works", label: `Tác phẩm (${works.length})` },
-              { value: "reviews", label: `Đánh giá (${pro.rating.count})` },
+              { value: "works", label: "Tác phẩm" },
+              { value: "services", label: "Bảng giá" },
+              { value: "reviews", label: "Đánh giá" },
               { value: "about", label: "Giới thiệu" },
             ]}
           />
 
-          {tab === "services" && <ServiceMenu proId={pro.id} bookable={state.session?.proId !== pro.id} />}
-
-          {tab === "works" &&
-            (works.length ? (
-              <div className="mt-4 grid grid-cols-3 gap-1.5 md:gap-3">
-                {works.flatMap((w) =>
-                  w.images.slice(0, 2).map((src, i) => (
-                    <Link key={w.id + i} href={`/works/${w.id}`} className="relative aspect-square overflow-hidden rounded-xl bg-subtle">
-                      <Image src={src} alt={w.title} fill sizes="(min-width: 768px) 20vw, 33vw" className="object-cover transition-transform hover:scale-105" />
-                    </Link>
-                  )),
-                )}
-              </div>
-            ) : (
-              <EmptyState title="Chưa có tác phẩm" />
-            ))}
-
-          {tab === "reviews" && (
-            <div className="mt-5">
-              <Card className="p-4">
-                <RatingSummaryBlock rating={pro.rating} />
-              </Card>
-              <div className="mt-3 flex items-center gap-2">
-                <p className="flex-1 text-xs text-muted">Chỉ khách đã hoàn thành lịch hẹn qua 360dep mới được đánh giá.</p>
-                {reviews.some((r) => r.photo) && (
-                  <Chip active={withPhotos} onClick={() => setWithPhotos((v) => !v)}>
-                    Có ảnh
-                  </Chip>
-                )}
-              </div>
-              {shownReviews.length ? (
-                <ul className="mt-2 divide-y divide-line">
-                  {shownReviews.map((r) => (
-                    <ReviewItem key={r.id} review={r} />
-                  ))}
-                </ul>
+          <div role="tabpanel" aria-labelledby={`tab-${tab}`}>
+            {tab === "works" &&
+              (works.length ? (
+                <WorkGrid works={works} />
               ) : (
-                <EmptyState title={withPhotos ? "Chưa có đánh giá kèm ảnh" : "Chưa có đánh giá"} />
-              )}
-            </div>
-          )}
+                <EmptyState title="Chưa có tác phẩm" text={`${pro.name} chưa đăng tác phẩm nào.`} />
+              ))}
 
-          {tab === "about" && (
-            <div className="mt-5 space-y-6">
-              <p className="text-[15px] leading-relaxed text-ink-soft">{pro.bio}</p>
-              <div>
-                <p className="mb-2 text-sm font-semibold">Điểm nổi bật</p>
-                <div className="flex flex-wrap gap-2">
-                  {pro.highlights.map((t) => (
-                    <span key={t} className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-[13px] text-ink-soft shadow-[var(--shadow-soft)]">
-                      <Sparkles className="size-3.5 text-accent" />
-                      {t}
-                    </span>
-                  ))}
+            {tab === "services" && <ServiceMenu proId={pro.id} bookable={!own} />}
+
+            {tab === "reviews" && (
+              <div id={REVIEWS_ANCHOR} className="mt-5 scroll-mt-24">
+                {pro.rating.count > 0 && (
+                  <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
+                    <RatingSummaryBlock rating={pro.rating} />
+                  </div>
+                )}
+                <div className="mt-3 flex items-center gap-3">
+                  <p className="flex-1 text-[13px] text-muted">Chỉ khách đã hoàn thành lịch hẹn qua 360dep mới đánh giá được.</p>
+                  {reviews.some((r) => r.photo) && (
+                    <Chip active={withPhotos} onClick={() => setWithPhotos((v) => !v)}>
+                      Có ảnh
+                    </Chip>
+                  )}
                 </div>
+                {shownReviews.length ? (
+                  <ul className="mt-2 divide-y divide-line">
+                    {shownReviews.map((r) => (
+                      <ReviewItem key={r.id} review={r} />
+                    ))}
+                  </ul>
+                ) : (
+                  <EmptyState title={withPhotos ? "Chưa có đánh giá kèm ảnh" : "Chưa có đánh giá"} />
+                )}
               </div>
-              <Card className="px-4 py-3 text-sm">
-                <p className="font-semibold">Xác minh bởi 360dep</p>
-                <p className="mt-1 text-ink-soft">
-                  {pro.identity === "verified"
-                    ? "Đã đối chiếu ảnh CCCD với ảnh chân dung của chuyên viên."
-                    : "Chuyên viên chưa xác minh danh tính."}
-                </p>
-              </Card>
-              <div>
-                <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold">
-                  <Briefcase className="size-4" /> Khu vực nhận job
-                </p>
-                <p className="text-sm text-ink-soft">
-                  {pro.areas.join(", ")} ({pro.city})
-                </p>
-                {pro.studioAddress && <p className="mt-1 text-sm text-ink-soft">Studio: {pro.studioAddress}</p>}
-              </div>
-            </div>
-          )}
+            )}
+
+            {tab === "about" && <About pro={pro} />}
+          </div>
         </div>
+
+        {/* A computer has the room: the booking card stays in view while you browse. */}
+        <aside className="hidden md:block">
+          <div className="sticky top-24 rounded-[var(--radius-lg)] border border-line bg-surface p-5">
+            {own ? (
+              <>
+                <p className="text-[17px] font-bold">Đây là hồ sơ của bạn</p>
+                <p className="mt-1 text-[15px] text-ink-soft">Khách thấy trang này khi tìm {personWord(pro.categories)}.</p>
+                <ButtonLink href="/studio/profile" variant="outline" className="mt-4 w-full">
+                  Sửa hồ sơ
+                </ButtonLink>
+              </>
+            ) : (
+              <>
+                {from !== null ? (
+                  <p className="text-[14px] text-muted">
+                    Từ <span className="text-[24px] font-extrabold tracking-tight text-ink">{formatPrice(from)}</span>
+                  </p>
+                ) : (
+                  <p className="text-[15px] font-semibold">Chưa có bảng giá</p>
+                )}
+                <p className={cn("mt-1 text-[14px] font-semibold", pro.acceptingJobs ? "text-success" : "text-warning")}>
+                  {pro.acceptingJobs ? "Đang nhận lịch" : "Tạm nghỉ nhận lịch mới"}
+                </p>
+                <WhereFacts pro={pro} className="mt-4" />
+                <BookButton pro={pro} disabled={!services.length} className="mt-5 w-full" />
+                <MessageButton proId={pro.id} label={`Nhắn tin cho ${firstName}`} className="mt-2 w-full" />
+                {services.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => openTab("services")}
+                    className="mt-2 inline-flex min-h-11 items-center text-[14px] font-semibold underline-offset-4 hover:underline"
+                  >
+                    Xem bảng giá ({services.length} dịch vụ)
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </aside>
       </div>
     </div>
+  )
+}
+
+function BookButton({ pro, disabled, className }: { pro: Pro; disabled?: boolean; className?: string }) {
+  if (disabled)
+    return (
+      <span
+        aria-disabled
+        className={cn("inline-flex h-11 items-center justify-center rounded-full bg-subtle px-5 text-sm font-semibold text-muted", className)}
+      >
+        Chưa nhận đặt
+      </span>
+    )
+  return (
+    <ButtonLink href={`/book/${pro.id}`} className={className}>
+      Đặt lịch
+    </ButtonLink>
+  )
+}
+
+/** Three numbers, each shown only when there is something real behind it. */
+function Stats({ pro, onReviews }: { pro: Pro; onReviews: () => void }) {
+  const response = formatResponseTime(pro.stats.responseMinutes)
+  const items: React.ReactNode[] = []
+  if (pro.stats.completedJobs > 0)
+    items.push(
+      <li key="jobs">
+        <p className="text-[20px] font-extrabold tracking-tight">{pro.stats.completedJobs.toLocaleString("vi-VN")}</p>
+        <p className="text-[13px] text-ink-soft">lịch đã làm</p>
+      </li>,
+    )
+  if (pro.rating.count > 0)
+    items.push(
+      <li key="rating">
+        <button type="button" onClick={onReviews} className="text-left">
+          <p className="text-[20px] font-extrabold tracking-tight">★ {pro.rating.average.toFixed(1)}</p>
+          <p className="text-[13px] text-ink-soft underline decoration-line underline-offset-2">{pro.rating.count} đánh giá</p>
+        </button>
+      </li>,
+    )
+  if (response)
+    items.push(
+      <li key="response">
+        <p className="text-[20px] font-extrabold tracking-tight">{response}</p>
+        <p className="text-[13px] text-ink-soft">phản hồi</p>
+      </li>,
+    )
+  if (!items.length) return <p className="mt-4 text-[14px] text-ink-soft">Mới trên 360dep, chưa có lịch hẹn hay đánh giá nào.</p>
+  return <ul className="mt-5 flex gap-8 md:gap-12">{items}</ul>
+}
+
+function WorkBadge({ work }: { work: Work }) {
+  const Icon = work.video ? Play : work.kind === "before_after" ? Columns2 : work.images.length > 1 ? Layers : null
+  if (!Icon) return null
+  const label = work.video ? "Có clip" : work.kind === "before_after" ? "Ảnh trước và sau" : `${work.images.length} ảnh`
+  return (
+    <span className="absolute right-1.5 top-1.5 inline-flex size-7 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur">
+      <Icon className={cn("size-3.5", work.video && "fill-white")} />
+      <span className="sr-only">{label}</span>
+    </span>
+  )
+}
+
+/** Instagram-style: one tile per post, three across, nothing written on the photos. */
+function WorkGrid({ works }: { works: Work[] }) {
+  return (
+    <ul className="-mx-4 mt-1 grid grid-cols-3 gap-0.5 md:mx-0 md:mt-5 md:gap-2">
+      {works.map((w) => {
+        const cover = w.kind === "before_after" && w.images[1] ? w.images[1] : w.images[0]
+        return (
+          <li key={w.id}>
+            <Link href={`/works/${w.id}`} className="group relative block aspect-[4/5] overflow-hidden bg-subtle md:rounded-[var(--radius-md)]">
+              {cover && (
+                <Image
+                  src={cover}
+                  alt={w.title}
+                  fill
+                  sizes="(min-width: 1200px) 260px, (min-width: 768px) 22vw, 33vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+              )}
+              <WorkBadge work={w} />
+            </Link>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+/** Where and how they work, in the trade's own words. */
+function WhereFacts({ pro, className }: { pro: Pro; className?: string }) {
+  const state = useApp()
+  const km = state.session?.role !== "pro" ? distanceToCustomer(state, pro.id) : null
+  const beauty = pro.categories.some((c) => verticalOf(c) === "beauty")
+  const onlyOnLocation = !beauty && pro.categories.length > 0
+  return (
+    <ul className={cn("space-y-2.5 text-[14px] text-ink", className)}>
+      <li className="flex items-start gap-2.5">
+        <MapPin className="mt-0.5 size-4 shrink-0 text-muted" />
+        <span>
+          {pro.district}, {pro.city}
+          {km !== null && <span className="text-ink-soft"> · cách bạn khoảng {km.toLocaleString("vi-VN")} km</span>}
+        </span>
+      </li>
+      {pro.homeService ? (
+        <li className="flex items-start gap-2.5">
+          <Home className="mt-0.5 size-4 shrink-0 text-muted" />
+          {onlyOnLocation
+            ? `Đến địa điểm bạn chọn, trong bán kính ${pro.maxTravelKm} km`
+            : `Làm tại nhà bạn, trong bán kính ${pro.maxTravelKm} km`}
+        </li>
+      ) : (
+        <li className="flex items-start gap-2.5">
+          <Store className="mt-0.5 size-4 shrink-0 text-muted" />
+          Chỉ làm tại studio
+        </li>
+      )}
+      {pro.studioAddress && pro.homeService && (
+        <li className="flex items-start gap-2.5">
+          <Store className="mt-0.5 size-4 shrink-0 text-muted" />
+          Có studio riêng
+        </li>
+      )}
+      {pro.homeService && (
+        <li className="flex items-start gap-2.5">
+          <Car className="mt-0.5 size-4 shrink-0 text-muted" />
+          {km !== null && km <= pro.maxTravelKm
+            ? travelFeeFor(km) === 0
+              ? "Miễn phí di chuyển tới địa chỉ của bạn"
+              : `Phí di chuyển tới bạn: ${formatPrice(travelFeeFor(km))}`
+            : `Miễn phí di chuyển trong ${POLICY.freeTravelKm} km đầu`}
+        </li>
+      )}
+    </ul>
+  )
+}
+
+function About({ pro }: { pro: Pro }) {
+  const joined = parseISODate(pro.joinedAt)
+  return (
+    <div className="mt-5 space-y-7">
+      {pro.bio && <p className="whitespace-pre-line text-[15px] leading-relaxed text-ink">{pro.bio}</p>}
+
+      {pro.highlights.length > 0 && (
+        <ul className="flex flex-wrap gap-2">
+          {pro.highlights.map((t) => (
+            <li key={t} className="inline-flex items-center gap-1.5 rounded-full bg-subtle px-3 py-1.5 text-[13px] font-medium text-ink">
+              <Check className="size-3.5" />
+              {t}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <AboutSection title="Làm việc">
+        <WhereFacts pro={pro} />
+        <ul className="mt-2.5 space-y-2.5 text-[14px] text-ink">
+          {pro.areas.length > 0 && (
+            <li className="flex items-start gap-2.5">
+              <MapPin className="mt-0.5 size-4 shrink-0 text-muted" />
+              Nhận lịch ở {pro.areas.join(", ")}
+            </li>
+          )}
+          {pro.studioAddress && (
+            <li className="flex items-start gap-2.5">
+              <Store className="mt-0.5 size-4 shrink-0 text-muted" />
+              Studio: {pro.studioAddress}
+            </li>
+          )}
+          <li className="flex items-start gap-2.5">
+            <CalendarDays className="mt-0.5 size-4 shrink-0 text-muted" />
+            {pro.yearsExp > 0 ? `${pro.yearsExp} năm kinh nghiệm · ` : ""}
+            Trên 360dep từ tháng {joined.getUTCMonth() + 1}/{joined.getUTCFullYear()}
+          </li>
+        </ul>
+      </AboutSection>
+
+      {pro.equipment && (
+        <AboutSection title="Thiết bị">
+          <p className="flex items-start gap-2.5 text-[15px] text-ink">
+            <Camera className="mt-0.5 size-4 shrink-0 text-muted" />
+            {pro.equipment}
+          </p>
+        </AboutSection>
+      )}
+
+      {pro.model && <ModelCard model={pro.model} />}
+
+      <AboutSection title="Xác minh">
+        <p className="text-[15px] text-ink-soft">
+          {pro.identity === "verified"
+            ? "360dep đã đối chiếu ảnh CCCD với ảnh chân dung của người này."
+            : "Chưa xác minh danh tính với 360dep."}
+        </p>
+      </AboutSection>
+    </div>
+  )
+}
+
+function AboutSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h2 className="mb-3 text-[17px] font-extrabold tracking-tight">{title}</h2>
+      {children}
+    </section>
+  )
+}
+
+/** What someone casting a model needs. Body measurements are deliberately not here. */
+function ModelCard({ model }: { model: ModelProfile }) {
+  const sizes = [
+    model.topSize && `áo ${model.topSize}`,
+    model.bottomSize && `quần ${model.bottomSize}`,
+    model.shoeSize && `giày ${model.shoeSize}`,
+  ].filter(Boolean)
+  return (
+    <AboutSection title="Hồ sơ mẫu">
+      <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
+        {(model.heightCm || sizes.length > 0) && (
+          <dl className="grid grid-cols-2 gap-4">
+            {model.heightCm ? (
+              <div>
+                <dt className="flex items-center gap-1.5 text-[13px] text-muted">
+                  <Ruler className="size-3.5" /> Chiều cao
+                </dt>
+                <dd className="mt-0.5 text-[17px] font-bold">{model.heightCm} cm</dd>
+              </div>
+            ) : null}
+            {sizes.length > 0 && (
+              <div>
+                <dt className="text-[13px] text-muted">Size</dt>
+                <dd className="mt-0.5 text-[15px] font-semibold">{sizes.join(" · ")}</dd>
+              </div>
+            )}
+          </dl>
+        )}
+        {model.styles.length > 0 && (
+          <div className="mt-4">
+            <p className="text-[13px] text-muted">Phong cách</p>
+            <ul className="mt-1.5 flex flex-wrap gap-1.5">
+              {model.styles.map((s) => (
+                <li key={s} className="rounded-full bg-subtle px-3 py-1 text-[13px] font-medium">
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {(model.accepts.length > 0 || model.refuses.length > 0) && (
+          <div className="mt-4 grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
+            {model.accepts.length > 0 && (
+              <div>
+                <p className="text-[14px] font-bold">Nhận</p>
+                <ul className="mt-1.5 space-y-1.5">
+                  {model.accepts.map((s) => (
+                    <li key={s} className="flex items-start gap-2 text-[14px]">
+                      <Check className="mt-0.5 size-4 shrink-0 text-success" />
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {model.refuses.length > 0 && (
+              <div>
+                <p className="text-[14px] font-bold">Không nhận</p>
+                <ul className="mt-1.5 space-y-1.5">
+                  {model.refuses.map((s) => (
+                    <li key={s} className="flex items-start gap-2 text-[14px]">
+                      <X className="mt-0.5 size-4 shrink-0 text-danger" />
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      <p className="mt-2 text-[13px] text-muted">360dep không thu thập số đo cơ thể của mẫu.</p>
+    </AboutSection>
   )
 }
 
@@ -237,12 +548,12 @@ function ShareButton({ name }: { name: string }) {
           if (navigator.share) await navigator.share({ title: name, url: window.location.href })
           else await navigator.clipboard.writeText(window.location.href)
         } catch {
-          // dismissed
+          // The share sheet was dismissed.
         }
       }}
-      className={cn("inline-flex size-9 items-center justify-center rounded-full border border-line bg-surface text-ink-soft hover:text-accent")}
+      className="inline-flex size-11 items-center justify-center rounded-full text-ink hover:bg-subtle"
     >
-      <Share2 className="size-4" />
+      <Share2 className="size-5" />
     </button>
   )
 }
