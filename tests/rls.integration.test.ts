@@ -137,6 +137,46 @@ describe.skipIf(!configured)("row level security over the API", () => {
     expect(updated ?? []).toHaveLength(0)
   })
 
+  it("will not make a signed-in customer an admin, whatever else the update says", async () => {
+    // The account-deletion tombstone used to switch the guard off. Send it
+    // alongside is_admin, exactly as the exploit did.
+    const as = client(tokenFor(customerId))
+    const { error } = await as
+      .from("accounts")
+      .update({ full_name: "Người dùng đã xoá", phone: "", avatar_path: null, is_admin: true })
+      .eq("id", customerId)
+    expect(error?.message).toMatch(/permission denied/)
+
+    const admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } })
+    const { data } = await admin.from("accounts").select("is_admin, phone, full_name").eq("id", customerId).single()
+    expect(data!.is_admin).toBe(false)
+    expect(data!.phone).not.toBe("")
+    expect(data!.full_name).toBe("Ngọc Hân")
+  })
+
+  it("will not let a freelancer hand themselves a badge, a rating or a way out of a suspension", async () => {
+    const as = client(tokenFor(proId))
+    for (const change of [
+      { identity_status: "verified" },
+      { rating_count: 999 },
+      { suspended_at: null },
+      { display_name: "Chuyên viên đã rời nền tảng", published: false, avatar_path: null, identity_status: "verified" },
+    ]) {
+      const { error } = await as.from("pros").update(change as never).eq("id", proId)
+      expect(error?.message, JSON.stringify(change)).toMatch(/permission denied/)
+    }
+    // What a freelancer does own still saves.
+    const { error } = await as.from("pros").update({ accepting_jobs: true }).eq("id", proId)
+    expect(error).toBeNull()
+  })
+
+  it("keeps the phone-to-email lookup on the server", async () => {
+    const { error } = await client(tokenFor(customerId)).rpc("account_email_for_phone" as never, {
+      p_phone: "0968112233",
+    } as never)
+    expect(error).toBeTruthy()
+  })
+
   it("refuses a listing price outside the catalogue band", async () => {
     const { error } = await client(tokenFor(proId))
       .from("pro_service_prices")

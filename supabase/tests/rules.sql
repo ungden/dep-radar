@@ -11,6 +11,7 @@ do $$
 declare
   linh uuid; thu uuid; customer uuid; addr uuid; booking uuid; other uuid;
   msg text; km numeric; q public.quote; n int; slot timestamptz; thread uuid;
+  other_phone text; other_avatar text; leaving uuid;
   -- Every date below is anchored to the next Monday, so the tests never land on
   -- the Sunday the demo freelancers take off.
   monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
@@ -177,12 +178,21 @@ begin
   -- update, which RLS silently dropped, so the unread badge never cleared.
   perform set_config('request.jwt.claim.sub', customer::text, true);
   thread := public.open_thread(linh, booking);
-  insert into public.messages (thread_id, sender_id, body) values (thread, customer, 'Chị tới lúc 3h nhé');
+  perform public.send_message(thread, 'Chị tới lúc 3h nhé');
+
+  raise notice 'a photo in chat is accepted from its owner, refused from anyone else''s folder';
+  -- The path check once had a doubled backslash and refused every photo.
+  perform public.send_message(thread, '', array[customer::text || '/' || gen_random_uuid()::text || '.jpg']);
+  begin
+    perform public.send_message(thread, '', array[linh::text || '/' || gen_random_uuid()::text || '.jpg']);
+    assert false, 'a photo from somebody else''s folder was accepted';
+  exception when check_violation then null;
+  end;
 
   perform set_config('request.jwt.claim.sub', linh::text, true);
   select count(*) into n from public.messages
    where thread_id = thread and sender_id <> linh and read_at is null;
-  assert n = 1, format('unread before reading: %s', n);
+  assert n = 2, format('unread before reading: %s', n);
 
   perform public.mark_thread_read(thread);
   select count(*) into n from public.messages
@@ -192,7 +202,7 @@ begin
   -- Somebody outside the thread neither reads it nor clears it. The count has
   -- to be taken back as a party: read from the outsider it is zero either way.
   perform set_config('request.jwt.claim.sub', customer::text, true);
-  insert into public.messages (thread_id, sender_id, body) values (thread, customer, 'Em đợi chị ạ');
+  perform public.send_message(thread, 'Em đợi chị ạ');
   perform set_config('request.jwt.claim.sub', thu::text, true);
   perform public.mark_thread_read(thread);
 
@@ -238,6 +248,75 @@ begin
   assert (select rating_count from public.pros where id = linh) < 999, 'the rating was writable';
   assert (select completed_jobs from public.pros where id = linh) < 9999, 'the job count was writable';
 
+  raise notice 'the account-deletion tombstone is not a way past the guards';
+  -- 20260919111530 skipped every guard when the new row looked deleted, and any
+  -- client can send those values. These two updates were the whole exploit.
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  select full_name, phone into msg, other_phone from public.accounts where id = customer;
+  update public.accounts set full_name = 'Người dùng đã xoá', phone = '', avatar_path = null, is_admin = true
+    where id = customer;
+  assert not (select is_admin from public.accounts where id = customer), 'the tombstone made a customer an admin';
+  assert (select phone from public.accounts where id = customer) = other_phone, 'the tombstone cleared a phone number';
+  update public.accounts set full_name = msg where id = customer;
+
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  select display_name, avatar_path into msg, other_avatar from public.pros where id = linh;
+  update public.pros set display_name = 'Chuyên viên đã rời nền tảng', published = false, avatar_path = null,
+    identity_status = 'verified', identity_name = 'NGUYEN VAN A', rating_count = 999, suspended_at = null
+    where id = linh;
+  assert (select identity_status from public.pros where id = linh) = 'none', 'the tombstone handed out a badge';
+  assert (select rating_count from public.pros where id = linh) < 999, 'the tombstone set a rating';
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.pros set display_name = msg, avatar_path = other_avatar, published = true where id = linh;
+
+  raise notice 'a client holds no write privilege on the platform''s columns';
+  assert not has_column_privilege('authenticated', 'public.accounts', 'is_admin', 'UPDATE'), 'is_admin is writable';
+  assert not has_column_privilege('authenticated', 'public.accounts', 'phone', 'UPDATE'), 'phone is writable';
+  assert has_column_privilege('authenticated', 'public.accounts', 'full_name', 'UPDATE'), 'a name is no longer editable';
+  foreach msg in array array['identity_status', 'identity_name', 'suspended_at', 'rating_avg', 'rating_count',
+                             'completed_jobs', 'response_minutes', 'slug', 'id'] loop
+    assert not has_column_privilege('authenticated', 'public.pros', msg, 'UPDATE'), format('pros.%s is writable', msg);
+  end loop;
+  foreach msg in array array['display_name', 'bio', 'avatar_path', 'published', 'accepting_jobs', 'max_travel_km'] loop
+    assert has_column_privilege('authenticated', 'public.pros', msg, 'UPDATE'), format('pros.%s is no longer editable', msg);
+  end loop;
+  assert not has_table_privilege('anon', 'public.accounts', 'UPDATE'), 'anon can update accounts';
+  assert not has_table_privilege('anon', 'public.pros', 'UPDATE'), 'anon can update pros';
+
+  raise notice 'deleting an account still anonymises it';
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          'leaving@example.invalid', jsonb_build_object('full_name', 'Sắp rời đi', 'phone', '0900 000 123'), now(), now())
+  returning id into leaving;
+  assert (select phone from public.accounts where id = leaving) = '+84900000123', 'a new account stores E.164';
+  perform set_config('request.jwt.claim.sub', leaving::text, true);
+  perform public.delete_my_account();
+  assert (select full_name from public.accounts where id = leaving) = 'Người dùng đã xoá', 'the name survived deletion';
+  assert (select phone from public.accounts where id = leaving) = '', 'the phone survived deletion';
+  assert (select email from auth.users where id = leaving) is null, 'the email survived deletion';
+  assert coalesce(current_setting('app.deleting_account', true), '') = '', 'the deletion flag outlived the deletion';
+
+  raise notice 'a phone number is required, normalised and unique';
+  begin
+    insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+    values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+            'nophone@example.invalid', jsonb_build_object('full_name', 'Không số'), now(), now());
+    assert false, 'an account without a phone number was created';
+  exception when check_violation then null;
+  end;
+  begin
+    insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+    values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+            'twin@example.invalid', jsonb_build_object('full_name', 'Trùng số', 'phone', other_phone), now(), now());
+    assert false, 'two accounts share a phone number';
+  exception when unique_violation then null;
+  end;
+  assert public.normalize_vn_phone('0968 112 233') = '+84968112233', 'local form';
+  assert public.normalize_vn_phone('84968112233') = '+84968112233', 'country code without plus';
+  assert public.normalize_vn_phone('0084968112233') = '+84968112233', 'international prefix';
+  assert public.normalize_vn_phone('012345') is null, 'not a mobile number';
+
+  perform set_config('request.jwt.claim.sub', linh::text, true);
   raise notice 'and cannot publish an empty profile';
   insert into public.pros (id, slug, city, district) values (customer, 'ngoc-han-test', 'Hà Nội', 'Đống Đa');
   perform set_config('request.jwt.claim.sub', customer::text, true);
