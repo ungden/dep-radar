@@ -100,6 +100,30 @@ export default function PolicyPage() {
             <li>Chỉ khách có lịch hẹn hoàn thành mới được đánh giá (số sao, tag, nhận xét). Freelancer không thể xoá, chỉ phản hồi công khai.</li>
             <li>Thứ tự “Phù hợp nhất”: freelancer đã xác minh danh tính được xếp trước, sau đó theo điểm đánh giá (có trọng số theo số lượt) và số job. Không bán vị trí.</li>
             <li>Điểm đánh giá hiển thị được tính từ chính các đánh giá có trên hồ sơ, không nhập tay.</li>
+            <li>
+              Trang chủ “Dành cho bạn” xếp theo dịch vụ bạn quan tâm, khoảng cách, đánh giá, độ mới và lượt lưu/đặt của từng tác
+              phẩm; không ai xuất hiện quá một lần trong sáu thẻ liên tiếp, và người mới được dành chỗ hiển thị. “Mới nhất” và “Đang
+              theo dõi” đúng thứ tự đăng. Lượt xem chỉ được đếm theo tác phẩm, không gắn với tài khoản của bạn.
+            </li>
+            <li>Sau lịch hoàn thành, người làm cũng đánh giá khách. Đánh giá này không sửa được, và người làm khác thấy trước khi nhận lịch.</li>
+          </ul>
+        </Section>
+
+        <Section title="9. Chụp ảnh & quay clip">
+          <ul className="list-disc space-y-1 pl-5">
+            <li>Mỗi dịch vụ ghi rõ bạn nhận được gì và hạn giao file. Hạn tính từ lúc buổi chụp hoàn thành; quá hạn, người chụp được nhắc và việc giao trễ được ghi nhận.</li>
+            <li>Khi đặt, bạn chọn ảnh dùng cho cá nhân hay kinh doanh, và có cho người làm đăng lại làm tác phẩm hay không. Mặc định là không.</li>
+            <li>Clip đăng lên 360dep được xoá thông tin vị trí quay (GPS) trước khi tải lên; ảnh cũng vậy.</li>
+            <li>Đặt chung một buổi (ví dụ makeup rồi chụp): mỗi người là một lịch hẹn riêng, tự gọi xác nhận và tính giá riêng. Nếu một bên huỷ, bạn được báo để quyết định giữ hay huỷ bên còn lại.</li>
+          </ul>
+        </Section>
+
+        <Section title="10. Người mẫu & tuyển mẫu">
+          <ul className="list-disc space-y-1 pl-5">
+            <li>Dịch vụ người mẫu, tin tuyển mẫu có thù lao và tin tuyển mẫu ảnh chỉ mở cho tài khoản đã xác minh danh tính.</li>
+            <li>Không nhận nội dung nội y, khoả thân, ảnh nhạy cảm hay tương tự; tin vi phạm bị chặn khi đăng và có thể bị khoá hồ sơ.</li>
+            <li>Người tuyển mẫu không bao giờ được thu tiền của mẫu (đặt cọc, phí hồ sơ…). Gặp trường hợp này, hãy báo cáo ngay.</li>
+            <li>Hồ sơ người mẫu không thu thập số đo cơ thể. Dùng hình ảnh của một người để kinh doanh cần sự đồng ý của người đó.</li>
           </ul>
         </Section>
       </div>
@@ -110,7 +134,7 @@ export default function PolicyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2 text-base font-semibold text-ink">{title}</h2>
+      <h2 className="mb-2 text-[17px] font-extrabold tracking-tight text-ink">{title}</h2>
       {children}
     </section>
   )
