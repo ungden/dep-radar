@@ -1,24 +1,24 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Hourglass, IdCard, Star, Wallet } from "lucide-react"
+import { ChevronRight, IdCard, ImagePlus, Navigation, Phone, Tags, UserRoundPen, Users } from "lucide-react"
 import { JobBookingRow } from "@/components/booking-card"
 import { RequestCard } from "@/components/request-card"
 import { RequireSession } from "@/components/require-session"
-import { Card, EmptyState, Logo, Toggle } from "@/components/ui"
+import { buttonClass, Card, LogoMark, Toggle } from "@/components/ui"
 import { getTemplate } from "@/lib/catalog"
 import { POLICY } from "@/lib/pricing"
 import { actions, useAct } from "@/lib/client-actions"
 import { distanceToCustomer, proView, useApp } from "@/lib/store"
 import type { Pro } from "@/lib/types"
-import { cn, formatDateLong, formatPrice, todayISO } from "@/lib/utils"
+import { addDays, cn, formatDateLong, formatPrice, parseISODate, todayISO } from "@/lib/utils"
 
 export default function StudioPage() {
   return (
-    <div className="mx-auto max-w-3xl pt-2 md:pt-8">
-      <div className="flex h-12 items-center md:hidden">
-        <Logo />
-        <span className="ml-2 rounded-full bg-ink px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Studio</span>
+    <div className="mx-auto max-w-4xl pt-2 md:pt-8">
+      <div className="flex h-12 items-center gap-2 md:hidden">
+        <LogoMark size={28} />
+        <span className="text-[15px] font-extrabold tracking-tight">Studio</span>
       </div>
       <RequireSession role="pro">
         <Dashboard />
@@ -55,56 +55,50 @@ function Dashboard() {
     )
   })
 
+  // Photo & video sessions whose files are still owed, soonest deadline first.
+  const toDeliver = mine
+    .filter((b) => b.status === "completed" && b.delivery && !b.delivery.deliveredAt)
+    .sort((a, b) => (a.delivery?.dueAt ?? "").localeCompare(b.delivery?.dueAt ?? ""))
+  const weekStart = addDays(today, -((parseISODate(today).getUTCDay() + 6) % 7))
+  const doneThisWeek = mine.filter((b) => b.status === "completed" && b.date >= weekStart && b.date <= today)
+  const weekNet = doneThisWeek.reduce((s, b) => s + b.quote.payout, 0)
+  const myCastings = state.castings.filter((c) => c.proId === proId && c.status === "open")
+  const waitingApplicants = myCastings.reduce((n, c) => n + c.applications.filter((a) => a.status === "pending").length, 0)
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <p className="text-sm text-muted">{formatDateLong(today)}</p>
-        <h1 className="text-2xl font-semibold">
-          Chào {pro.name}, hôm nay có {todays.length} lịch làm
+        <p className="text-[13px] font-medium text-muted">{formatDateLong(today)}</p>
+        <h1 className="mt-1 text-[28px] font-extrabold leading-tight tracking-tight md:text-[34px]">
+          {pending.length
+            ? `${pending.length} khách đang chờ bạn gọi`
+            : todays.length
+              ? `Hôm nay có ${todays.length} lịch`
+              : `Chào ${pro.name}`}
         </h1>
       </div>
 
-      <Card className={cn("flex items-center gap-3 p-4", !state.acceptingJobs && "bg-warning-soft")}>
+      <div className={cn("flex items-center gap-3 rounded-[var(--radius-lg)] border p-4", state.acceptingJobs ? "border-line bg-surface" : "border-warning/30 bg-warning-soft")}>
         <span className={cn("size-2.5 rounded-full", state.acceptingJobs ? "bg-success" : "bg-warning")} />
         <div className="flex-1">
-          <p className="text-sm font-semibold">{state.acceptingJobs ? "Đang nhận job mới" : "Đang tạm nghỉ"}</p>
-          <p className="text-xs text-muted">
-            {state.acceptingJobs ? `Nhận khách trong bán kính ${pro.maxTravelKm} km quanh ${pro.district}` : "Hồ sơ vẫn hiển thị nhưng khách không đặt được lịch mới"}
+          <p className="text-[15px] font-bold">{state.acceptingJobs ? "Đang nhận khách mới" : "Đang tạm nghỉ"}</p>
+          <p className="text-[13px] text-ink-soft">
+            {state.acceptingJobs ? `Trong bán kính ${pro.maxTravelKm} km quanh ${pro.district}` : "Hồ sơ vẫn hiện nhưng khách không đặt được lịch mới"}
           </p>
         </div>
         <Toggle
-          label="Nhận job mới"
+          label="Nhận khách mới"
           checked={state.acceptingJobs}
-          onChange={(value) => void act(() => actions.setAcceptingJobs(value), value ? "Đang nhận job mới" : "Đã tạm nghỉ nhận job")}
+          onChange={(value) => void act(() => actions.setAcceptingJobs(value), value ? "Đang nhận khách mới" : "Đã tạm nghỉ nhận khách")}
         />
-      </Card>
-
-      {!pro.published && <SetupNudge />}
-
-      <VerifyNudge pro={pro} />
-
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat
-          icon={<Wallet className="size-4" />}
-          label="Thực nhận tháng này"
-          value={formatPrice(net)}
-          sub={`Khách trả ${formatPrice(gross)} · hoa hồng ${formatPrice(commission)}`}
-        />
-        <Link href="/studio/wallet" className="contents">
-          <Stat
-            icon={<Wallet className="size-4" />}
-            label="Ví & thu nhập"
-            value={String(doneThisMonth.length) + " job"}
-            sub={`Tổng cộng ${pro.stats.completedJobs} job · xem sổ ví`}
-          />
-        </Link>
-        <Stat icon={<Hourglass className="size-4" />} label="Chờ bạn xác nhận" value={String(pending.length)} highlight={pending.length > 0} sub={`Gọi khách & trả lời trong ${POLICY.confirmWithinHours} giờ`} />
-        <Stat icon={<Star className="size-4" />} label="Đánh giá" value={pro.rating.average.toFixed(2)} sub={`${pro.rating.count} lượt`} />
       </div>
 
-      <section>
-        <SectionTitle title="Yêu cầu đặt lịch mới" href="/studio/schedule?tab=pending" count={pending.length} />
-        {pending.length ? (
+      {!pro.published && <SetupNudge />}
+      <VerifyNudge pro={pro} />
+
+      {pending.length > 0 && (
+        <section>
+          <SectionTitle title="Cần gọi xác nhận" href="/studio/schedule?tab=pending" count={pending.length} />
           <ul className="space-y-3">
             {pending.slice(0, 3).map((b) => (
               <li key={b.id}>
@@ -112,11 +106,11 @@ function Dashboard() {
               </li>
             ))}
           </ul>
-        ) : (
-          <p className="rounded-2xl bg-surface px-4 py-5 text-center text-sm text-muted">Không có yêu cầu nào đang chờ.</p>
-        )}
-        <p className="mt-2 text-xs text-muted">Gọi cho khách xác nhận giờ, địa chỉ, yêu cầu rồi mới nhận job. Từ chối hoặc để quá {POLICY.confirmWithinHours} giờ không tính là huỷ, nhưng làm giảm tỉ lệ phản hồi.</p>
-      </section>
+          <p className="mt-2 text-[13px] text-ink-soft">
+            Gọi cho khách xác nhận giờ, địa chỉ, yêu cầu rồi mới nhận. Quá {POLICY.confirmWithinHours} giờ, yêu cầu tự hết hạn và khung giờ được trả lại.
+          </p>
+        </section>
+      )}
 
       <section>
         <SectionTitle title="Lịch hôm nay" href="/studio/schedule" />
@@ -124,13 +118,67 @@ function Dashboard() {
           <ul className="space-y-3">
             {todays.map((b) => (
               <li key={b.id}>
-                <JobBookingRow booking={b} />
+                <JobBookingRow
+                  booking={b}
+                  actions={
+                    <>
+                      <a href={`tel:${b.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "sm")}>
+                        <Phone className="size-4" /> Gọi khách
+                      </a>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.address)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={buttonClass("primary", "sm")}
+                      >
+                        <Navigation className="size-4" /> Chỉ đường
+                      </a>
+                    </>
+                  }
+                />
               </li>
             ))}
           </ul>
         ) : (
-          <EmptyState title="Hôm nay trống lịch" text="Xem các yêu cầu mới quanh bạn để lấp khung giờ trống." />
+          <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-6 text-center text-[15px] text-ink-soft">Hôm nay trống lịch.</p>
         )}
+      </section>
+
+      {toDeliver.length > 0 && (
+        <section>
+          <SectionTitle title="Cần giao file" href="/studio/schedule?tab=done" count={toDeliver.length} />
+          <ul className="space-y-3">
+            {toDeliver.slice(0, 3).map((b) => (
+              <li key={b.id}>
+                <JobBookingRow booking={b} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat label="Thực nhận tuần này" value={formatPrice(weekNet)} sub={`${doneThisWeek.length} lịch hoàn thành`} />
+        <Stat label="Tháng này" value={formatPrice(net)} sub={`Khách trả ${formatPrice(gross)} · hoa hồng ${formatPrice(commission)}`} />
+        <Stat label="Đánh giá" value={pro.rating.count ? `★ ${pro.rating.average.toFixed(1)}` : "—"} sub={pro.rating.count ? `${pro.rating.count} lượt` : "Chưa có đánh giá"} />
+        <Link href="/studio/wallet" className="contents">
+          <Stat label="Ví & sổ thu" value="Xem" sub={`Tổng ${pro.stats.completedJobs} lịch đã làm`} />
+        </Link>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-[20px] font-extrabold tracking-tight">Làm nhanh</h2>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Shortcut href="/studio/works" icon={<ImagePlus className="size-5" />} title="Đăng tác phẩm" text="Ảnh, trước/sau, clip" />
+          <Shortcut
+            href="/studio/tuyen-mau"
+            icon={<Users className="size-5" />}
+            title="Tuyển mẫu"
+            text={waitingApplicants ? `${waitingApplicants} người đang chờ bạn chọn` : myCastings.length ? `${myCastings.length} tin đang mở` : "Tìm mẫu luyện tay, chụp portfolio"}
+          />
+          <Shortcut href="/studio/services" icon={<Tags className="size-5" />} title="Bảng giá" text="Dịch vụ và giá của bạn" />
+          <Shortcut href="/studio/profile/edit" icon={<UserRoundPen className="size-5" />} title="Hồ sơ & giờ làm" text="Giới thiệu, khu vực, lịch tuần" />
+        </div>
       </section>
 
       <section>
@@ -144,34 +192,41 @@ function Dashboard() {
             ))}
           </ul>
         ) : (
-          <p className="rounded-2xl bg-surface px-4 py-5 text-center text-sm text-muted">Bạn đã báo giá hết các việc phù hợp.</p>
+          <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-6 text-center text-[15px] text-ink-soft">Chưa có yêu cầu mới phù hợp với bạn.</p>
         )}
       </section>
     </div>
   )
 }
 
-function Stat({ icon, label, value, sub, highlight }: { icon: React.ReactNode; label: string; value: string; sub?: string; highlight?: boolean }) {
+function Shortcut({ href, icon, title, text }: { href: string; icon: React.ReactNode; title: string; text: string }) {
   return (
-    <Card className={cn("p-4", highlight && "ring-1 ring-accent")}>
-      <p className="flex items-center gap-1.5 text-xs text-muted">
-        {icon}
-        {label}
-      </p>
-      <p className={cn("mt-1.5 text-xl font-semibold", highlight && "text-accent")}>{value}</p>
-      {sub && <p className="text-[11px] leading-snug text-muted">{sub}</p>}
-    </Card>
+    <Link href={href} className="block rounded-[var(--radius-lg)] border border-line bg-surface p-4 transition-colors hover:border-ink/30">
+      <span className="flex size-10 items-center justify-center rounded-xl bg-subtle">{icon}</span>
+      <p className="mt-3 text-[15px] font-bold">{title}</p>
+      <p className="mt-0.5 text-[13px] text-ink-soft">{text}</p>
+    </Link>
+  )
+}
+
+function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
+      <p className="text-[13px] font-medium text-muted">{label}</p>
+      <p className="mt-1 text-[22px] font-extrabold tracking-tight">{value}</p>
+      {sub && <p className="mt-0.5 text-[12.5px] leading-snug text-ink-soft">{sub}</p>}
+    </div>
   )
 }
 
 function SectionTitle({ title, href, count }: { title: string; href: string; count?: number }) {
   return (
     <div className="mb-3 flex items-center justify-between">
-      <h2 className="flex items-center gap-2 font-semibold">
+      <h2 className="flex items-center gap-2 text-[20px] font-extrabold tracking-tight">
         {title}
-        {count ? <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] text-white">{count}</span> : null}
+        {count ? <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold text-white">{count}</span> : null}
       </h2>
-      <Link href={href} className="inline-flex items-center text-sm text-accent">
+      <Link href={href} className="inline-flex items-center text-[14px] font-semibold text-ink">
         Xem tất cả <ChevronRight className="size-4" />
       </Link>
     </div>
@@ -182,20 +237,20 @@ function SectionTitle({ title, href, count }: { title: string; href: string; cou
 function SetupNudge() {
   return (
     <Card className="p-4 ring-1 ring-warning/40">
-      <p className="text-sm font-semibold">Hồ sơ của bạn chưa hiển thị với khách</p>
-      <p className="mt-1 text-xs text-ink-soft">
+      <p className="text-[15px] font-bold">Hồ sơ của bạn chưa hiển thị với khách</p>
+      <p className="mt-1 text-[13px] text-ink-soft">
         Cần ít nhất một dịch vụ có giá, giờ làm việc và một ảnh tác phẩm. Sau đó bật hiển thị trong trang hồ sơ.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Link href="/studio/services" className="rounded-full bg-subtle px-3 py-1.5 text-[13px] font-medium text-accent-dark">
+        <Link href="/studio/services" className="rounded-full bg-ink px-3.5 py-2 text-[13px] font-semibold text-white">
           Dịch vụ & giá
         </Link>
-        <Link href="/studio/works" className="rounded-full bg-subtle px-3 py-1.5 text-[13px] font-medium text-accent-dark">
+        <Link href="/studio/works" className="rounded-full bg-ink px-3.5 py-2 text-[13px] font-semibold text-white">
           Tác phẩm
         </Link>
         <Link
           href="/studio/profile/edit"
-          className="rounded-full bg-subtle px-3 py-1.5 text-[13px] font-medium text-accent-dark"
+          className="rounded-full bg-ink px-3.5 py-2 text-[13px] font-semibold text-white"
         >
           Hồ sơ & giờ làm
         </Link>
@@ -208,13 +263,13 @@ function VerifyNudge({ pro }: { pro: Pro }) {
   if (pro.identity === "verified") return null
   return (
     <Link href="/studio/verify" className="block">
-      <Card className="flex items-center gap-3 p-4 ring-1 ring-accent/40 transition-shadow hover:shadow-md">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-subtle text-accent">
+      <Card className="flex items-center gap-3 p-4 transition-colors hover:border-ink/30">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-subtle text-ink">
           <IdCard className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">{pro.identity === "pending" ? "Đang xác minh danh tính" : "Xác minh danh tính để được ưu tiên"}</p>
-          <p className="text-xs text-ink-soft">
+          <p className="text-[15px] font-bold">{pro.identity === "pending" ? "Đang xác minh danh tính" : "Xác minh danh tính để được ưu tiên"}</p>
+          <p className="text-[13px] text-ink-soft">
             {pro.identity === "rejected"
               ? "Lần trước chưa thành công, chụp lại CCCD và selfie nhé."
               : "Chụp CCCD 2 mặt + 1 ảnh selfie. Có dấu tick và được xếp trước khi khách tìm kiếm."}
