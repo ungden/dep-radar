@@ -222,6 +222,32 @@ describe("serviceOffers", async () => {
   })
 })
 
+describe("categoryRow", async () => {
+  const { categoryRow } = await import("@/lib/offers")
+  const { CATEGORIES } = await import("@/lib/catalog")
+  const offer = (category: string) => ({ template: { category } }) as never
+
+  it("keeps one row: most offered first, then the rest behind 'Xem thêm'", () => {
+    const r = categoryRow(CATEGORIES, [offer("photophone"), offer("photophone"), offer("makeup")], "all")
+    expect(r.row.map((c) => c.id)).toEqual(["photophone", "makeup", "nail", "skincare"])
+    expect(r.more).toBe(true)
+    expect(r.ordered).toHaveLength(CATEGORIES.length)
+    expect([...r.offered].sort()).toEqual(["makeup", "photophone"])
+  })
+
+  it("keeps a category chosen from the rest in sight", () => {
+    const r = categoryRow(CATEGORIES, [offer("nail")], "model-video")
+    expect(r.row.map((c) => c.id)).toEqual(["nail", "makeup", "skincare", "model-video"])
+  })
+
+  it("shows a small trade whole, with nothing behind 'Xem thêm'", () => {
+    const photo = CATEGORIES.filter((c) => c.vertical === "photo")
+    const r = categoryRow(photo, [], "all")
+    expect(r.row).toHaveLength(photo.length)
+    expect(r.more).toBe(false)
+  })
+})
+
 describe("serviceOffers photos", async () => {
   const { serviceOffers } = await import("@/lib/offers")
   it("never shows the same borrowed photo on two services", () => {

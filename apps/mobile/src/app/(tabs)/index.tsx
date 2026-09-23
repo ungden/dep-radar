@@ -14,6 +14,7 @@ import {
   getVertical,
   interestsFrom,
   rankFeed,
+  categoryRow,
   serviceOffers,
   type CategoryId,
   type ServiceOffer,
@@ -56,6 +57,7 @@ export default function Explore() {
   const [vertical, setVertical] = React.useState<VerticalFilter>("all")
   const [category, setCategory] = React.useState<CategoryId | "all">("all")
   const [expanded, setExpanded] = React.useState(false)
+  const [allCategories, setAllCategories] = React.useState(false)
   const [stuck, setStuck] = React.useState(false)
   const switchY = React.useRef(Number.POSITIVE_INFINITY)
 
@@ -67,6 +69,7 @@ export default function Explore() {
     setVertical(v)
     setCategory("all")
     setExpanded(false)
+    setAllCategories(false)
   }
   React.useEffect(() => setExpanded(false), [app.city])
 
@@ -75,10 +78,12 @@ export default function Explore() {
     () => (app.data ? serviceOffers({ pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical }) : []),
     [app.data, browse, app.city, vertical],
   )
-  // Every category of the trade is shown; ones nobody offers here yet are "Sắp có" (as on the web).
+  // One row of the categories with the most on offer here; the rest (and the
+  // ones nobody offers yet, "Sắp có") behind "Xem thêm". Same as the web.
   const categories = CATEGORIES.filter((c) => vertical === "all" || c.vertical === vertical)
-  const offered = new Set(offers.map((o) => o.template.category))
   const shownCategory = categories.some((c) => c.id === category) ? category : "all"
+  const tiles = categoryRow(categories, offers, shownCategory)
+  const shownCategoryInfo = CATEGORIES.find((c) => c.id === shownCategory)
   const shown = offers.filter((o) => shownCategory === "all" || o.template.category === shownCategory)
   const visible = expanded || shownCategory !== "all" ? shown : shown.slice(0, SERVICES_FIRST)
   // A service with no work of its own borrows one from its category. Never the
@@ -130,7 +135,7 @@ export default function Explore() {
     if (past !== stuck) setStuck(past)
   }
 
-  const title = `${vertical === "all" ? "Dịch vụ" : getVertical(vertical).label}${app.city ? ` ở ${app.city}` : ""}`
+  const title = `${shownCategoryInfo ? shownCategoryInfo.label : vertical === "all" ? "Dịch vụ" : getVertical(vertical).label}${app.city ? ` ở ${app.city}` : ""}`
 
   let services: React.ReactNode
   if (loadingFirst) {
@@ -149,7 +154,7 @@ export default function Explore() {
     services = (
       <EmptySupply
         city={app.city}
-        label={CATEGORIES.find((c) => c.id === shownCategory)?.label}
+        label={shownCategoryInfo?.label}
         onAllCities={() => app.setCity(null)}
       />
     )
@@ -211,16 +216,22 @@ export default function Explore() {
             <TextTabs items={TRADES} value={vertical} onChange={chooseTrade} />
           </View>
 
-          {/* Categories that someone here offers */}
+          {/* Categories: one row, the rest behind "Xem thêm" */}
           {categories.length > 1 ? (
             <View style={{ paddingHorizontal: gutter - 4 }}>
               <CategoryTiles
-                items={[
-                  { id: "all", label: "Tất cả" },
-                  ...categories.map((c) => ({ id: c.id, label: c.short ?? c.label, soon: !offered.has(c.id) })),
-                ]}
+                items={(allCategories ? tiles.ordered : tiles.row).map((c) => ({
+                  id: c.id,
+                  label: c.short ?? c.label,
+                  soon: !tiles.offered.has(c.id),
+                }))}
                 value={shownCategory}
-                onChange={(id) => setCategory(id as CategoryId | "all")}
+                // Tapping the chosen category again goes back to everything.
+                onChange={(id) => {
+                  setCategory(id === shownCategory ? "all" : (id as CategoryId))
+                  setAllCategories(false)
+                }}
+                more={tiles.more ? { open: allCategories, onToggle: () => setAllCategories((v) => !v) } : undefined}
               />
             </View>
           ) : null}
@@ -231,7 +242,18 @@ export default function Explore() {
               <Txt v="h2" style={{ flexShrink: 1 }}>
                 {title}
               </Txt>
-              {shown.length > 0 ? (
+              {shownCategoryInfo ? (
+                <Press
+                  onPress={() => setCategory("all")}
+                  accessibilityLabel="Xem tất cả dịch vụ"
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 34, paddingLeft: 12, paddingRight: 10, borderRadius: radius.full, backgroundColor: colors.subtle }}
+                >
+                  <Txt v="meta" w={600}>
+                    Tất cả
+                  </Txt>
+                  <Icon name="close" size={12} color={colors.ink} />
+                </Press>
+              ) : shown.length > 0 ? (
                 <Txt v="meta" color={colors.muted}>
                   {shown.length} dịch vụ
                 </Txt>

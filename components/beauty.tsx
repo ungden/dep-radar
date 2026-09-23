@@ -48,31 +48,11 @@ export function VerticalSwitch({
   className?: string
 }) {
   const items: { id: VerticalFilter; label: string }[] = [{ id: "all", label: "Tất cả" }, ...VERTICALS]
-  const ref = React.useRef<HTMLDivElement>(null)
-  const state = useApp()
-  // A trade nobody offers anywhere yet is still listed (it is part of what
-  // 360dep is), but says so before the tap rather than after.
-  const opening = React.useMemo(() => {
-    const empty = new Set<VerticalFilter>()
-    for (const v of VERTICALS) {
-      const offers = serviceOffers({ pros: state.pros, proServices: state.proServices, works: [], city: null, vertical: v.id })
-      if (!offers.length) empty.add(v.id)
-    }
-    return empty
-  }, [state.pros, state.proServices])
-  // On a phone the last trade sits off-screen; keep the chosen one in view
-  // without moving the page vertically.
-  React.useEffect(() => {
-    const row = ref.current
-    const chosen = row?.querySelector<HTMLElement>('[aria-checked="true"]')
-    if (!row || !chosen) return
-    const left = chosen.offsetLeft - row.offsetLeft
-    if (left < row.scrollLeft || left + chosen.offsetWidth > row.scrollLeft + row.clientWidth) {
-      row.scrollTo({ left: Math.max(0, left - 16), behavior: "smooth" })
-    }
-  }, [value])
   return (
-    <div ref={ref} role="radiogroup" aria-label="Ngành" className={cn("no-scrollbar flex gap-2 overflow-x-auto", className)}>
+    // Four equal places on a phone, so all trades fit without a sideways
+    // scroll. A trade nobody offers yet is not flagged here: its category
+    // tiles say "Sắp có".
+    <div role="radiogroup" aria-label="Ngành" className={cn("grid grid-cols-4 gap-1 sm:flex sm:gap-2", className)}>
       {items.map((it) => {
         const active = value === it.id
         return (
@@ -83,7 +63,7 @@ export function VerticalSwitch({
             aria-checked={active}
             onClick={() => onChange(it.id)}
             className={cn(
-              "inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[14px] font-semibold transition-colors",
+              "inline-flex h-10 min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-full px-0.5 text-[clamp(12px,3.5vw,13px)] font-semibold tracking-[-0.01em] transition-colors sm:shrink-0 sm:px-4 sm:text-[14px] sm:tracking-normal",
               active ? "bg-accent text-white" : "bg-subtle text-ink hover:bg-subtle-strong",
             )}
           >
@@ -91,7 +71,7 @@ export function VerticalSwitch({
               <span
                 aria-hidden
                 className={cn(
-                  "size-2 rounded-full",
+                  "hidden size-2 rounded-full sm:block",
                   it.id === "beauty" && "bg-beauty",
                   it.id === "photo" && "bg-photo",
                   it.id === "model" && "bg-model",
@@ -100,9 +80,6 @@ export function VerticalSwitch({
               />
             )}
             {it.label}
-            {opening.has(it.id) && (
-              <span className={cn("text-[12px] font-medium", active ? "text-white" : "text-muted")}>Sắp mở</span>
-            )}
           </button>
         )
       })}
