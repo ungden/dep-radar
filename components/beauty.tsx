@@ -3,23 +3,8 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import {
-  Brush,
-  Camera,
-  Clapperboard,
-  Droplets,
-  Eye,
-  Flower2,
-  Hand,
-  Heart,
-  Layers,
-  Package,
-  Play,
-  Scissors,
-  Smartphone,
-  UserRound,
-  Video,
-} from "lucide-react"
+import { Heart, Layers, Play } from "lucide-react"
+import { CategoryIcon } from "@/components/category-icon"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar } from "@/components/ui"
 import { CATEGORIES, VERTICALS, categoryLabel } from "@/lib/catalog"
@@ -30,20 +15,14 @@ import { distanceToCustomer, fromPrice, proView, useApp, worksOf, type AppState 
 import type { CategoryId, Pro, Work } from "@/lib/types"
 import { cn, formatPrice } from "@/lib/utils"
 
-export const CATEGORY_ICON: Record<CategoryId, React.ComponentType<{ className?: string }>> = {
-  nail: Hand,
-  makeup: Brush,
-  skincare: Droplets,
-  hair: Scissors,
-  "lash-brow": Eye,
-  massage: Flower2,
-  photophone: Smartphone,
-  camera: Camera,
-  "short-video": Clapperboard,
-  "product-photo": Package,
-  "model-photo": UserRound,
-  "model-video": Video,
-}
+/** Each category's icon as a component, for places that take one (lib/design/category-icons.ts). */
+export const CATEGORY_ICON = Object.fromEntries(
+  CATEGORIES.map((c) => {
+    const Icon = ({ className }: { className?: string }) => <CategoryIcon id={c.id} className={className} />
+    Icon.displayName = `CategoryIcon(${c.id})`
+    return [c.id, Icon]
+  }),
+) as Record<CategoryId, React.ComponentType<{ className?: string }>>
 
 /** "2,4 km" when we know where the customer is, otherwise the district. */
 export function whereLabel(state: AppState, pro: Pro) {
@@ -131,7 +110,7 @@ export function CategoryBubbles({ vertical = "all", className }: { vertical?: Ve
               {src ? (
                 <Image src={src} alt="" fill sizes="64px" className="object-cover" />
               ) : (
-                <Icon className="size-6 text-ink-soft" />
+                <Icon className="size-7 text-accent" />
               )}
             </span>
             <span className="text-[12.5px] font-medium leading-tight text-ink">{c.label}</span>

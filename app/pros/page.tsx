@@ -5,6 +5,7 @@ import { Suspense } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { ChevronDown, MapPin } from "lucide-react"
 import { ProCard, VerticalSwitch } from "@/components/beauty"
+import { CategoryTiles } from "@/components/category-icon"
 import { sortPros } from "@/components/trust"
 import { ButtonLink, Chip, EmptyState, PageSkeleton } from "@/components/ui"
 import { CATEGORIES, isVertical, verticalOf } from "@/lib/catalog"
@@ -96,16 +97,12 @@ function ProsView() {
         <VerticalSwitch value={vertical} onChange={setVertical} />
       </div>
 
-      <div className="no-scrollbar -mx-4 mt-2 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0">
-        <Chip active={!category} onClick={() => setParams({ category: null })}>
-          Tất cả
-        </Chip>
-        {categoriesInTrade(vertical).map((c) => (
-          <Chip key={c.id} active={category === c.id} onClick={() => setParams({ category: category === c.id ? null : c.id })}>
-            {c.label}
-          </Chip>
-        ))}
-      </div>
+      <CategoryTiles
+        className="mt-3"
+        items={[{ id: "all", label: "Tất cả" }, ...categoriesInTrade(vertical).map((c) => ({ id: c.id, label: c.label }))]}
+        value={category ?? "all"}
+        onChange={(id) => setParams({ category: id === "all" ? null : id })}
+      />
 
       <div className="no-scrollbar -mx-4 mt-3 flex items-center gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
         <label className="relative inline-flex h-10 shrink-0 items-center gap-1 rounded-full border border-line bg-surface pl-4 pr-3 text-[13px] font-medium">

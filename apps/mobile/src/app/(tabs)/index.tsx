@@ -31,8 +31,9 @@ import { useApp } from "@/state/app"
 import { useBrowse } from "@/state/derived"
 import { card, colors, gutter, radius } from "@/theme"
 import { Button } from "@/ui/button"
-import { Chip, EmptyState, ErrorNote, Photo, SectionHeader, Skeleton } from "@/ui/bits"
-import { CATEGORY_ICON, Icon } from "@/ui/icon"
+import { EmptyState, ErrorNote, Photo, SectionHeader, Skeleton } from "@/ui/bits"
+import { Icon } from "@/ui/icon"
+import { CategoryIcon, CategoryTiles } from "@/components/category-icon"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
 
@@ -209,12 +210,13 @@ export default function Explore() {
 
           {/* Categories that someone here offers */}
           {categories.length > 1 ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: gutter, gap: 8 }}>
-              <Chip label="Tất cả" selected={shownCategory === "all"} onPress={() => setCategory("all")} />
-              {categories.map((c) => (
-                <Chip key={c.id} label={c.label} selected={shownCategory === c.id} onPress={() => setCategory(c.id)} />
-              ))}
-            </ScrollView>
+            <View style={{ paddingHorizontal: gutter - 4 }}>
+              <CategoryTiles
+                items={[{ id: "all", label: "Tất cả" }, ...categories.map((c) => ({ id: c.id, label: c.label }))]}
+                value={shownCategory}
+                onChange={(id) => setCategory(id as CategoryId | "all")}
+              />
+            </View>
           ) : null}
 
           {/* Services */}
@@ -303,7 +305,7 @@ const ServiceCard = React.memo(function ServiceCard({ offer, photo, width }: { o
           <Photo uri={photo} ratio={4 / 5} rounded={0} recyclingKey={template.id} />
         ) : (
           <View style={{ aspectRatio: 4 / 5, backgroundColor: colors.subtle, alignItems: "center", justifyContent: "center" }}>
-            <Icon name={CATEGORY_ICON[template.category]} size={40} color={colors.inkSoft} />
+            <CategoryIcon id={template.category} size={44} />
           </View>
         )}
       </View>
