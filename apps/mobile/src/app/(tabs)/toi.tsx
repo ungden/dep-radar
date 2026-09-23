@@ -100,6 +100,8 @@ export default function Me() {
         <Row icon="chat" label="Tin nhắn" onPress={() => router.push("/tin-nhan")} />
         <Divider style={{ marginLeft: 52 }} />
         <Row icon="bell" label="Thông báo" onPress={() => router.push("/thong-bao")} />
+        <Divider style={{ marginLeft: 52 }} />
+        <Row icon="gift" label="Giới thiệu bạn bè và voucher" onPress={() => router.push("/gioi-thieu")} />
       </Section>
 
       <Section>

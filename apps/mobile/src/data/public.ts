@@ -90,7 +90,9 @@ export function toWork(row: Row, slugOf: Map<string, string>): AppWork {
   }
 }
 
-const REVIEW_COLUMNS = "booking_id, pro_id, author_name, service_label, rating, tags, body, photo_paths, reply, created_at"
+const REVIEW_COLUMNS_OLD = "booking_id, pro_id, author_name, service_label, rating, tags, body, photo_paths, reply, created_at"
+// published_at (20260925100200): an author also reads their own blind review; it is not public yet.
+const REVIEW_COLUMNS = [`${REVIEW_COLUMNS_OLD}, published_at`, REVIEW_COLUMNS_OLD]
 const PRICE_COLUMNS = "pro_id, template_id, variant_id, price"
 const LISTING_COLUMNS = "pro_id, template_id, active"
 
@@ -143,7 +145,7 @@ export async function loadPublic(ownId: string | null, city: string | null): Pro
 
   const [workRows, reviewRows, priceRows, listingRows, statRows] = await Promise.all([
     forPros("works", ids, (c) => supabase.from("works").select(c).order("sort_order"), [WORK_FULL, WORK_BASE]),
-    forPros("reviews", ids, (c) => supabase.from("reviews").select(c).is("hidden_at", null).order("created_at", { ascending: false }), [REVIEW_COLUMNS]),
+    forPros("reviews", ids, (c) => supabase.from("reviews").select(c).is("hidden_at", null).order("created_at", { ascending: false }), REVIEW_COLUMNS),
     forPros("prices", ids, (c) => supabase.from("pro_service_prices").select(c), [PRICE_COLUMNS]),
     forPros("listings", ids, (c) => supabase.from("pro_services").select(c), [LISTING_COLUMNS]),
     loadStats(),
@@ -168,7 +170,7 @@ export async function loadOnePro(slugOrId: string): Promise<PublicData | null> {
   const ids = [String(row.id)]
   const [workRows, reviewRows, priceRows, listingRows] = await Promise.all([
     forPros("works", ids, (c) => supabase.from("works").select(c).order("sort_order"), [WORK_FULL, WORK_BASE]),
-    forPros("reviews", ids, (c) => supabase.from("reviews").select(c).is("hidden_at", null).order("created_at", { ascending: false }), [REVIEW_COLUMNS]),
+    forPros("reviews", ids, (c) => supabase.from("reviews").select(c).is("hidden_at", null).order("created_at", { ascending: false }), REVIEW_COLUMNS),
     forPros("prices", ids, (c) => supabase.from("pro_service_prices").select(c), [PRICE_COLUMNS]),
     forPros("listings", ids, (c) => supabase.from("pro_services").select(c), [LISTING_COLUMNS]),
   ])
@@ -208,7 +210,7 @@ function assemble(proRows: Row[], workRows: Row[], reviewRows: Row[], priceRows:
   const works = workRows.filter((w) => slugOf.has(w.pro_id)).map((w) => toWork(w, slugOf))
   const workSlug = new Map(works.map((w) => [w.dbId, w.id]))
 
-  const reviews: Review[] = reviewRows.filter((row) => slugOf.has(row.pro_id)).map((row) => ({
+  const reviews: Review[] = reviewRows.filter((row) => slugOf.has(row.pro_id) && row.published_at !== null).map((row) => ({
     id: row.booking_id,
     proId: slugOf.get(row.pro_id) ?? row.pro_id,
     bookingId: row.booking_id,

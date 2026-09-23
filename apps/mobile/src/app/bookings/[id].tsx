@@ -2,20 +2,26 @@ import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet"
 import { Alert, Linking, Platform, ScrollView, View } from "react-native"
-import { POLICY, verticalOf } from "@/shared"
+import { BLIND_NOTE, POLICY, customerJobActions, reviewWindow, verticalOf } from "@/shared"
 import {
   cancelBooking,
   completeBooking,
   confirmBooking,
+  confirmBookingDone,
   declineBooking,
+  disputeNoShow,
   getBooking,
+  hasDisputedNoShow,
+  reportProNoShow,
   startBooking,
   type BookingItem,
 } from "@/data/bookings"
 import { openThread } from "@/data/chat"
-import { formatCountdown, formatDateLong, formatDuration, formatPhone, formatPrice, localDate } from "@/data/format"
+import { formatCountdown, formatDateLong, formatDuration, formatPhone, formatPrice, localDate, localTime } from "@/data/format"
 import type { Result } from "@/data/supabase"
+import { VoucherCard } from "@/components/booking-voucher"
 import { StatusPill } from "@/components/booking-row"
+import { CustomerReviewCard } from "@/components/customer-review"
 import { useSafetyMenu } from "@/components/safety"
 import { Timeline, type TimelineStep } from "@/components/timeline"
 import { useApp } from "@/state/app"
@@ -62,12 +68,17 @@ export default function BookingDetail() {
   const app = useApp()
   const booking = useAsync(app.uid ? () => getBooking(id, app.uid!) : null, [id, app.uid])
   const reasonSheet = useSheet()
-  const [reasonFor, setReasonFor] = React.useState<"cancel" | "decline">("cancel")
+  const [reasonFor, setReasonFor] = React.useState<"cancel" | "decline" | "noshow" | "dispute">("cancel")
   const [reason, setReason] = React.useState("")
   const [busy, setBusy] = React.useState<string | null>(null)
-  // Ticks only while the confirmation countdown is on screen.
-  const now = useNow(booking.value?.status === "pending")
   const bv = booking.value
+  const customerView = Boolean(bv && app.uid && bv.customer.id === app.uid && bv.pro.id !== app.uid)
+  // Ticks while the confirmation countdown is on screen, or while a customer's
+  // buttons for finishing the job may appear by the clock.
+  const startsSoon = Boolean(bv && Date.parse(bv.startsAt) - Date.now() < 3_600_000)
+  const now = useNow(bv?.status === "pending" || (customerView && startsSoon && (bv?.status === "confirmed" || bv?.status === "in_progress")))
+  const noShowOpen = Boolean(customerView && bv?.status === "no_show" && bv.cancelledAt && now <= Date.parse(bv.cancelledAt) + 24 * 3_600_000)
+  const disputed = useAsync(noShowOpen && bv && app.uid ? () => hasDisputedNoShow(bv.id, app.uid!) : null, [noShowOpen, bv?.id, app.uid])
   const safety = useSafetyMenu(
     bv && app.uid
       ? {
@@ -122,9 +133,42 @@ export default function BookingDetail() {
   const canCancel = ["pending", "confirmed"].includes(b.status)
   const phone = iAmPro ? b.customer.phone : b.pro.phone
   const other = iAmPro ? b.customer.name : b.pro.name
+  const active = b.status === "confirmed" || b.status === "in_progress"
+  const job = customerJobActions({ status: b.status, startsAt: new Date(b.startsAt), endsAt: new Date(b.endsAt) }, new Date(now))
+  const at = (d: Date | string) => `${localTime(d)} ${formatDateLong(localDate(d))}`
+  const review = reviewWindow(b.completedAt, new Date(now))
+  const voucherOpen = !iAmPro && ["pending", "confirmed"].includes(b.status) && Date.parse(b.startsAt) > now
+  const confirmDone = () =>
+    Alert.alert("Xác nhận đã xong?", `Lịch hẹn với ${b.pro.name} sẽ chuyển sang hoàn thành, và bạn đánh giá được trong 14 ngày.`, [
+      { text: "Chưa", style: "cancel" },
+      { text: "Đã xong", onPress: () => void run("done", () => confirmBookingDone(b.id), "Đã xác nhận hoàn thành") },
+    ])
+  const openSheet = (mode: typeof reasonFor) => {
+    setReasonFor(mode)
+    setReason("")
+    reasonSheet.open()
+  }
+  const SHEET: Record<typeof reasonFor, { title: string; action: string; done: string; placeholder: string; min: number }> = {
+    cancel: { title: "Huỷ lịch hẹn", action: "Xác nhận huỷ", done: "Đã huỷ lịch hẹn", placeholder: "Lý do", min: 1 },
+    decline: { title: "Từ chối lịch này", action: "Xác nhận từ chối", done: "Đã từ chối lịch", placeholder: "Lý do", min: 1 },
+    noshow: {
+      title: "Người làm không đến",
+      action: "Báo người làm không đến",
+      done: "Đã báo 360dep. Lịch hẹn đã huỷ.",
+      placeholder: "Bạn đã chờ tới mấy giờ, có gọi được người làm không… (không bắt buộc)",
+      min: 0,
+    },
+    dispute: { title: "Khiếu nại báo vắng mặt", action: "Gửi khiếu nại", done: "Đã gửi khiếu nại. 360dep sẽ xem xét.", placeholder: "Chuyện gì đã xảy ra?", min: 10 },
+  }
+  const sheet = SHEET[reasonFor]
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.canvas }} contentContainerStyle={{ padding: gutter, gap: 16, paddingBottom: 48 }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.canvas }}
+      contentContainerStyle={{ padding: gutter, gap: 16, paddingBottom: 48 }}
+      automaticallyAdjustKeyboardInsets
+      keyboardShouldPersistTaps="handled"
+    >
       <Stack.Screen options={{ headerRight: () => <IconButton name="more" label="Báo cáo hoặc chặn" onPress={safety.open} /> }} />
       {safety.element}
       <View style={{ gap: 6 }}>
@@ -187,14 +231,29 @@ export default function BookingDetail() {
         <Line label="Dịch vụ" value={formatPrice(b.quote.servicePrice)} />
         {b.quote.travelFee ? <Line label="Phí di chuyển" value={formatPrice(b.quote.travelFee)} /> : null}
         {b.quote.urgentFee ? <Line label="Phí gấp" value={formatPrice(b.quote.urgentFee)} /> : null}
-        <Line label={b.paymentMethod === "cash" ? "Khách trả sau khi làm xong" : "Khách đã trả qua 360dep"} value={formatPrice(b.quote.total)} strong />
+        {b.discount > 0 ? (
+          <>
+            <Line label="Tổng" value={formatPrice(b.quote.total)} />
+            <Line label="Voucher 360dep" value={`−${formatPrice(b.discount)}`} />
+            <Line label="Khách trả người làm" value={formatPrice(Math.max(0, b.quote.total - b.discount))} strong />
+          </>
+        ) : (
+          <Line label={b.paymentMethod === "cash" ? "Khách trả sau khi làm xong" : "Khách đã trả qua 360dep"} value={formatPrice(b.quote.total)} strong />
+        )}
         {iAmPro ? (
           <>
             <Line label={`Hoa hồng ${Math.round(b.quote.commissionRate * 100)}%`} value={`−${formatPrice(b.quote.commission)}`} />
             <Line label="Bạn nhận" value={formatPrice(b.quote.payout)} strong />
+            {b.discount > 0 ? (
+              <Txt v="meta" color={colors.muted}>
+                Khách dùng voucher 360dep: khách trả bạn {formatPrice(Math.max(0, b.quote.total - b.discount))}, 360dep cộng {formatPrice(b.discount)} vào ví khi job hoàn thành.
+              </Txt>
+            ) : null}
           </>
         ) : null}
       </Card>
+
+      {voucherOpen && app.uid ? <VoucherCard booking={b} uid={app.uid} onChanged={() => void booking.reload()} /> : null}
 
       <Card>
         <Txt w={700} style={{ marginBottom: 6 }}>
@@ -209,17 +268,35 @@ export default function BookingDetail() {
         {iAmPro && b.status === "pending" ? (
           <>
             <Button label="Đã gọi khách, nhận lịch" full busy={busy === "confirm"} onPress={() => void run("confirm", () => confirmBooking(b.id), "Đã nhận lịch")} />
-            <Button
-              label="Từ chối"
-              variant="danger"
-              full
-              onPress={() => {
-                setReasonFor("decline")
-                setReason("")
-                reasonSheet.open()
-              }}
-            />
+            <Button label="Từ chối" variant="danger" full onPress={() => openSheet("decline")} />
           </>
+        ) : null}
+        {!iAmPro && job.confirmDone ? (
+          <Button label="Xác nhận đã xong" icon="check" full busy={busy === "done"} onPress={confirmDone} />
+        ) : null}
+        {!iAmPro && job.reportNoShow ? <Button label="Người làm không đến" variant="danger" full onPress={() => openSheet("noshow")} /> : null}
+        {active && Date.parse(b.startsAt) <= now ? (
+          <Txt v="meta" color={colors.muted} center>
+            Nếu không ai bấm hoàn thành, lịch tự hoàn thành lúc {at(job.autoCompleteAt)}
+            {!iAmPro ? ". Người làm không đến thì báo trước lúc đó." : "."}
+          </Txt>
+        ) : null}
+        {noShowOpen && disputed.value === false ? (
+          <Card style={{ backgroundColor: colors.warningSoft }}>
+            <Txt w={700} color={colors.warning}>
+              {b.pro.name} báo bạn vắng mặt
+            </Txt>
+            <Txt v="meta" color={colors.warning}>
+              Nếu không đúng, khiếu nại trước {at(new Date(Date.parse(b.cancelledAt!) + 24 * 3_600_000))}.
+              {b.quote.travelFee > 0 ? " Khi bạn khiếu nại, khoản bù phí di chuyển cho người làm được giữ lại tới khi 360dep xem xét xong." : ""}
+            </Txt>
+            <Button label="Khiếu nại" size="sm" variant="secondary" onPress={() => openSheet("dispute")} />
+          </Card>
+        ) : null}
+        {noShowOpen && disputed.value === true ? (
+          <Txt v="meta" color={colors.muted} center>
+            Bạn đã khiếu nại. 360dep sẽ xem xét và liên hệ nếu cần thêm thông tin.
+          </Txt>
         ) : null}
         {iAmPro && b.status === "confirmed" && hoursToStart < 1 ? (
           <Button label="Bắt đầu làm" full busy={busy === "start"} onPress={() => void run("start", () => startBooking(b.id), "Đã bắt đầu")} />
@@ -227,21 +304,36 @@ export default function BookingDetail() {
         {iAmPro && b.status === "in_progress" ? (
           <Button label="Hoàn thành" full busy={busy === "complete"} onPress={() => void run("complete", () => completeBooking(b.id), "Đã hoàn thành")} />
         ) : null}
-        {!iAmPro && b.status === "completed" && !b.reviewed ? (
-          <Button label="Viết đánh giá" icon="star" full onPress={() => router.push({ pathname: "/danh-gia/[bookingId]", params: { bookingId: b.id } })} />
+        {!iAmPro && b.status === "completed" ? (
+          b.reviewed && b.reviewPublishedAt ? (
+            <Txt v="meta" color={colors.muted} center>
+              Đánh giá của bạn đã hiện trên hồ sơ {b.pro.name}.
+            </Txt>
+          ) : review.open ? (
+            <>
+              <Button
+                label={b.reviewed ? "Sửa đánh giá" : "Viết đánh giá"}
+                icon={b.reviewed ? "edit" : "star"}
+                variant={b.reviewed ? "secondary" : "primary"}
+                full
+                onPress={() => router.push({ pathname: "/danh-gia/[bookingId]", params: { bookingId: b.id } })}
+              />
+              <Txt v="meta" color={colors.muted} center>
+                {b.reviewed ? BLIND_NOTE : `Còn ${review.daysLeft} ngày để đánh giá.`}
+              </Txt>
+            </>
+          ) : b.reviewed ? (
+            <Txt v="meta" color={colors.muted} center>
+              Bạn đã đánh giá lịch hẹn này.
+            </Txt>
+          ) : (
+            <Txt v="meta" color={colors.muted} center>
+              Đã quá 14 ngày kể từ khi hoàn thành, không đánh giá được nữa.
+            </Txt>
+          )
         ) : null}
-        {canCancel ? (
-          <Button
-            label={iAmPro ? "Huỷ lịch đã nhận" : "Huỷ lịch"}
-            variant="danger"
-            full
-            onPress={() => {
-              setReasonFor("cancel")
-              setReason("")
-              reasonSheet.open()
-            }}
-          />
-        ) : null}
+        {iAmPro && b.status === "completed" ? <CustomerReviewCard booking={b} now={now} onDone={() => void booking.reload()} /> : null}
+        {canCancel ? <Button label={iAmPro ? "Huỷ lịch đã nhận" : "Huỷ lịch"} variant="danger" full onPress={() => openSheet("cancel")} /> : null}
         {canCancel && !iAmPro ? (
           <Txt v="meta" color={colors.muted} center>
             {hoursToStart >= POLICY.freeCancelHours
@@ -253,35 +345,47 @@ export default function BookingDetail() {
 
       <Sheet
         sheet={reasonSheet}
-        title={reasonFor === "decline" ? "Từ chối lịch này" : "Huỷ lịch hẹn"}
+        title={sheet.title}
         footer={
           <Button
-            label={reasonFor === "decline" ? "Xác nhận từ chối" : "Xác nhận huỷ"}
-            variant="danger"
+            label={sheet.action}
+            variant={reasonFor === "dispute" ? "primary" : "danger"}
             full
             busy={busy === "reason"}
-            disabled={!reason.trim()}
+            disabled={reason.trim().length < sheet.min}
             onPress={async () => {
               reasonSheet.close()
-              await run(
-                "reason",
-                () => (reasonFor === "decline" ? declineBooking(b.id, reason.trim()) : cancelBooking(b.id, reason.trim())),
-                reasonFor === "decline" ? "Đã từ chối lịch" : "Đã huỷ lịch hẹn",
-              )
+              const text = reason.trim()
+              const task =
+                reasonFor === "decline"
+                  ? () => declineBooking(b.id, text)
+                  : reasonFor === "noshow"
+                    ? () => reportProNoShow(b.id, text)
+                    : reasonFor === "dispute"
+                      ? () => disputeNoShow(b.id, text)
+                      : () => cancelBooking(b.id, text)
+              await run("reason", task, sheet.done)
+              if (reasonFor === "dispute") void disputed.reload()
             }}
           />
         }
       >
         <Txt color={colors.inkSoft}>
-          {iAmPro ? `Lý do sẽ gửi cho ${b.customer.name}. Huỷ nhiều ảnh hưởng tới thứ hạng hiển thị của bạn.` : `Lý do sẽ gửi cho ${b.pro.name}.`}
+          {reasonFor === "noshow"
+            ? `Lịch hẹn sẽ được huỷ (tính là ${b.pro.name} huỷ) và 360dep nhận báo cáo để xem xét. Chỉ báo khi người làm thật sự không đến.`
+            : reasonFor === "dispute"
+              ? "Kể ngắn gọn chuyện đã xảy ra (ít nhất 10 ký tự). 360dep sẽ xem xét và liên hệ nếu cần."
+              : iAmPro
+                ? `Lý do sẽ gửi cho ${b.customer.name}. Huỷ nhiều ảnh hưởng tới thứ hạng hiển thị của bạn.`
+                : `Lý do sẽ gửi cho ${b.pro.name}.`}
         </Txt>
         <BottomSheetTextInput
           value={reason}
           onChangeText={setReason}
-          placeholder="Lý do"
+          placeholder={sheet.placeholder}
           placeholderTextColor={colors.muted}
           multiline
-          maxLength={300}
+          maxLength={reasonFor === "dispute" || reasonFor === "noshow" ? 1000 : 300}
           style={{ minHeight: 88, backgroundColor: colors.subtle, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
         />
       </Sheet>

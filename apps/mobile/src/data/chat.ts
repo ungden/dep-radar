@@ -1,3 +1,4 @@
+import * as Crypto from "expo-crypto"
 import { imageUrl } from "./links"
 import { one, rpc, supabase, type Row } from "./supabase"
 
@@ -20,7 +21,7 @@ export interface ChatMessage {
   id: string
   mine: boolean
   body: string
-  /** Signed URLs; empty when the private image could not be signed for this device. */
+  /** Signed URLs; empty when the private image could not be signed. */
   images: string[]
   hasImages: boolean
   createdAt: string
@@ -58,12 +59,30 @@ export async function listThreads(uid: string): Promise<ThreadSummary[]> {
     .filter((t) => t.lastMessage !== "")
 }
 
-export async function threadHeader(threadId: string, uid: string) {
-  const { data } = await supabase
+export interface ThreadHeader {
+  name: string
+  proSlug: string
+  /** The freelancer's account id, for booking them again. */
+  proId: string
+  bookingId: string | null
+  /** The booked service, for "Đặt lại". */
+  templateId: string | null
+  iAmPro: boolean
+  otherId: string
+  /** When the conversation stops taking messages; null while it is open for good. */
+  closesAt: string | null
+}
+
+export async function threadHeader(threadId: string, uid: string): Promise<ThreadHeader | null> {
+  const base = "pro_id, customer_id, booking_id, customer_name, pro:pros!threads_pro_id_fkey (slug, display_name)"
+  // closes_at is a computed field (20260925100000_chat_lifecycle.sql). If the
+  // server does not have it yet, the chat reads as open, as it did before.
+  let { data, error } = await supabase
     .from("threads")
-    .select("pro_id, customer_id, booking_id, customer_name, pro:pros!threads_pro_id_fkey (slug, display_name)")
+    .select(`${base}, closes_at, booking:bookings!threads_booking_id_fkey (template_id)`)
     .eq("id", threadId)
     .maybeSingle()
+  if (error) ({ data } = await supabase.from("threads").select(base).eq("id", threadId).maybeSingle())
   const row = data as Row | null
   if (!row) return null
   const iAmPro = row.pro_id === uid
@@ -71,19 +90,24 @@ export async function threadHeader(threadId: string, uid: string) {
   return {
     name: String((iAmPro ? row.customer_name : pro.display_name) || "Người dùng"),
     proSlug: String(pro.slug ?? ""),
+    proId: String(row.pro_id),
     bookingId: (row.booking_id ?? null) as string | null,
+    templateId: (one(row.booking).template_id ?? null) as string | null,
     iAmPro,
     otherId: String(iAmPro ? row.customer_id : row.pro_id),
+    closesAt: (row.closes_at ?? null) as string | null,
   }
 }
 
 async function sign(paths: string[]): Promise<Map<string, string>> {
   if (!paths.length) return new Map()
-  // Chat media is private. The web signs it on the server; here the user's own
-  // session asks, which storage only allows where its policies do.
-  const { data } = await supabase.storage.from("chat").createSignedUrls(paths, 5 * 60)
+  // Chat media is private. The user's own session signs it: storage lets the
+  // two people in a thread read its photos ("thread parties read chat media").
+  const { data } = await supabase.storage.from("chat").createSignedUrls(paths, 60 * 60)
   return new Map((data ?? []).filter((d) => d.signedUrl).map((d) => [d.path ?? "", d.signedUrl as string]))
 }
+
+const privatePaths = (m: Row) => ((m.image_paths ?? []) as string[]).filter((p) => !p.startsWith("http"))
 
 export async function listMessages(threadId: string, uid: string): Promise<ChatMessage[]> {
   const { data, error } = await supabase
@@ -93,8 +117,14 @@ export async function listMessages(threadId: string, uid: string): Promise<ChatM
     .order("created_at")
   if (error) throw new Error("Không tải được tin nhắn.")
   const rows = (data ?? []) as Row[]
-  const urls = await sign(rows.flatMap((m) => ((m.image_paths ?? []) as string[]).filter((p) => !p.startsWith("http"))))
+  const urls = await sign(rows.flatMap(privatePaths)).catch(() => new Map<string, string>())
   return rows.map((m) => toMessage(m, uid, urls))
+}
+
+/** A message pushed by Realtime, with its photos signed. */
+export async function messageFromRow(m: Row, uid: string): Promise<ChatMessage> {
+  const urls = await sign(privatePaths(m)).catch(() => new Map<string, string>())
+  return toMessage(m, uid, urls)
 }
 
 export function toMessage(m: Row, uid: string, urls: Map<string, string> = new Map()): ChatMessage {
@@ -109,11 +139,38 @@ export function toMessage(m: Row, uid: string, urls: Map<string, string> = new M
   }
 }
 
-export async function sendMessage(threadId: string, body: string) {
+/** Photos per message and bytes per photo, as send_message and the `chat` bucket allow. */
+export const CHAT_MAX_PHOTOS = 6
+const CHAT_MAX_BYTES = 5 * 1024 * 1024
+
+/**
+ * A photo for a message, already re-encoded to JPEG by reencodePhoto() (no
+ * EXIF, so no GPS). Private bucket, under the sender's own folder:
+ * send_message accepts only `<uid>/<uuid>.jpg`. Returns the storage path.
+ */
+export async function uploadChatPhoto(uid: string, jpegUri: string): Promise<string> {
+  const body = await (await fetch(jpegUri)).arrayBuffer()
+  if (body.byteLength > CHAT_MAX_BYTES) throw new Error("Ảnh quá lớn (tối đa 5 MB).")
+  const path = `${uid}/${Crypto.randomUUID()}.jpg`
+  const { error } = await supabase.storage.from("chat").upload(path, body, { contentType: "image/jpeg", upsert: false })
+  if (error) throw new Error("Tải ảnh lên không thành công, thử lại nhé.")
+  return path
+}
+
+/**
+ * send_message. `masked` is true when the database hid a phone number, link or
+ * e-mail ("[đã ẩn]") because the two have no confirmed booking yet. Its
+ * refusals (chat closed, three questions already sent) are written for people.
+ */
+export async function sendMessage(
+  threadId: string,
+  body: string,
+  imagePaths: string[] = [],
+): Promise<{ ok: true; masked: boolean } | { ok: false; error: string }> {
   const text = body.trim().slice(0, 2000)
-  if (!text) return { ok: false as const, error: "Nhập tin nhắn." }
-  const res = await rpc("send_message", { p_thread: threadId, p_body: text, p_image_paths: [] })
-  return res.ok ? res : { ok: false as const, error: "Không gửi được tin nhắn." }
+  if (!text && !imagePaths.length) return { ok: false, error: "Nhập tin nhắn." }
+  const res = await rpc<boolean | null>("send_message", { p_thread: threadId, p_body: text, p_image_paths: imagePaths.slice(0, CHAT_MAX_PHOTOS) })
+  return res.ok ? { ok: true, masked: res.data === true } : { ok: false, error: res.error === "Có lỗi xảy ra, vui lòng thử lại." ? "Không gửi được tin nhắn." : res.error }
 }
 
 export const markThreadRead = (threadId: string) => rpc("mark_thread_read", { p_thread: threadId })
@@ -139,3 +196,13 @@ export function subscribeThread(threadId: string, onInsert: (row: Row) => void) 
     void supabase.removeChannel(channel)
   }
 }
+
+/**
+ * The conversation open on screen, so a push about it is not shown on top of
+ * it (data/push.ts reads this).
+ */
+let openThreadId: string | null = null
+export const setOpenThread = (id: string | null) => {
+  openThreadId = id
+}
+export const isThreadOpen = (id: string) => openThreadId === id
