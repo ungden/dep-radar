@@ -12,7 +12,7 @@ export function StudioHeader({ title, subtitle }: { title: string; subtitle?: st
     <View style={{ paddingHorizontal: gutter, paddingBottom: 8 }}>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Txt v="label" w={700} color={colors.muted} style={{ letterSpacing: 1 }}>
-          STUDIO
+          360dep Đối tác
         </Txt>
         <View style={{ flexDirection: "row" }}>
           <IconButton name="chat" label="Tin nhắn" badge={me.unreadMessages} onPress={() => router.push("/tin-nhan")} />
