@@ -3,6 +3,8 @@ import { Image } from "expo-image"
 import { Text, View, type StyleProp, type ViewStyle } from "react-native"
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated"
 import { initials, formatRating } from "@/data/format"
+import Svg, { Path, Rect } from "react-native-svg"
+import { LOGO_GLYPH_PATH, LOGO_RADIUS } from "@/shared"
 import { aspect, colors, radius, wordmarkFont } from "@/theme"
 import { Button } from "./button"
 import { Icon } from "./icon"
@@ -158,36 +160,13 @@ export function Divider({ style }: { style?: StyleProp<ViewStyle> }) {
   return <View style={[{ height: 1, backgroundColor: colors.line }, style]} />
 }
 
-/** The 360dep mark: a ring (the 360) and the one accent dot. Same geometry as components/ui.tsx LogoMark. */
+/** The 360dep mark: a white serif "đ" on rose. Same outline as the web (lib/design/brand.ts). */
 export function LogoMark({ size = 28 }: { size?: number }) {
-  const u = size / 32
-  const ring = 7.6 * 2 * u + 3 * u
   return (
-    <View style={{ width: size, height: size, borderRadius: 9 * u, backgroundColor: colors.accent }}>
-      <View
-        style={{
-          position: "absolute",
-          left: 15.5 * u - ring / 2,
-          top: 16.5 * u - ring / 2,
-          width: ring,
-          height: ring,
-          borderRadius: ring / 2,
-          borderWidth: 3 * u,
-          borderColor: colors.surface,
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          left: (24 - 2.8) * u,
-          top: (8 - 2.8) * u,
-          width: 5.6 * u,
-          height: 5.6 * u,
-          borderRadius: 2.8 * u,
-          backgroundColor: colors.accentSoft,
-        }}
-      />
-    </View>
+    <Svg width={size} height={size} viewBox="0 0 32 32">
+      <Rect width={32} height={32} rx={LOGO_RADIUS} fill={colors.accent} />
+      <Path d={LOGO_GLYPH_PATH} fill={colors.surface} />
+    </Svg>
   )
 }
 

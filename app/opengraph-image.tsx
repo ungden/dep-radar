@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og"
+import { LOGO_GLYPH_PATH, LOGO_RADIUS } from "@/lib/design/brand"
 
 export const alt = "360dep — Đặt thợ làm đẹp, người chụp ảnh và người mẫu gần bạn"
 export const size = { width: 1200, height: 630 }
@@ -27,9 +28,8 @@ export default function OpengraphImage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <svg width="84" height="84" viewBox="0 0 32 32">
-            <rect width="32" height="32" rx="9" fill={ACCENT} />
-            <circle cx="15.5" cy="16.5" r="7.6" fill="none" stroke="#fff" strokeWidth="3.4" />
-            <circle cx="24" cy="8" r="2.8" fill="#F6E6E6" />
+            <rect width="32" height="32" rx={LOGO_RADIUS} fill={ACCENT} />
+            <path d={LOGO_GLYPH_PATH} fill="#fff" />
           </svg>
           <div style={{ display: "flex", fontSize: 60, fontWeight: 700, color: ACCENT, letterSpacing: -1 }}>360dep</div>
         </div>
