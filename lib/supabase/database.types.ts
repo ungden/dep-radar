@@ -519,6 +519,7 @@ export type Database = {
           updated_at: string
           urgent_fee: number
           urgent_within_hours: number
+          wallet_floor: number
         }
         Insert: {
           commission_rate?: number
@@ -535,6 +536,7 @@ export type Database = {
           updated_at?: string
           urgent_fee?: number
           urgent_within_hours?: number
+          wallet_floor?: number
         }
         Update: {
           commission_rate?: number
@@ -551,6 +553,7 @@ export type Database = {
           updated_at?: string
           urgent_fee?: number
           urgent_within_hours?: number
+          wallet_floor?: number
         }
         Relationships: []
       }
@@ -894,6 +897,42 @@ export type Database = {
           },
         ]
       }
+      platform_settings: {
+        Row: {
+          company_address: string | null
+          company_name: string | null
+          company_tax_id: string | null
+          id: boolean
+          support_email: string | null
+          support_zalo: string | null
+          topup_account_name: string | null
+          topup_account_no: string | null
+          topup_bank_bin: string | null
+        }
+        Insert: {
+          company_address?: string | null
+          company_name?: string | null
+          company_tax_id?: string | null
+          id?: boolean
+          support_email?: string | null
+          support_zalo?: string | null
+          topup_account_name?: string | null
+          topup_account_no?: string | null
+          topup_bank_bin?: string | null
+        }
+        Update: {
+          company_address?: string | null
+          company_name?: string | null
+          company_tax_id?: string | null
+          id?: boolean
+          support_email?: string | null
+          support_zalo?: string | null
+          topup_account_name?: string | null
+          topup_account_no?: string | null
+          topup_bank_bin?: string | null
+        }
+        Relationships: []
+      }
       pro_service_prices: {
         Row: {
           price: number
@@ -966,9 +1005,11 @@ export type Database = {
       pros: {
         Row: {
           accepting_jobs: boolean
+          adult: boolean | null
           areas: string[]
           avatar_path: string | null
           bio: string
+          birth_year: number | null
           buffer_min: number
           categories: Database["public"]["Enums"]["category_id"][]
           city: string
@@ -998,9 +1039,11 @@ export type Database = {
         }
         Insert: {
           accepting_jobs?: boolean
+          adult?: boolean | null
           areas?: string[]
           avatar_path?: string | null
           bio?: string
+          birth_year?: number | null
           buffer_min?: number
           categories?: Database["public"]["Enums"]["category_id"][]
           city: string
@@ -1030,9 +1073,11 @@ export type Database = {
         }
         Update: {
           accepting_jobs?: boolean
+          adult?: boolean | null
           areas?: string[]
           avatar_path?: string | null
           bio?: string
+          birth_year?: number | null
           buffer_min?: number
           categories?: Database["public"]["Enums"]["category_id"][]
           city?: string
@@ -1065,6 +1110,38 @@ export type Database = {
             foreignKeyName: "pros_id_fkey"
             columns: ["id"]
             isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_tokens: {
+        Row: {
+          account_id: string
+          created_at: string
+          last_seen_at: string
+          platform: string
+          token: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          last_seen_at?: string
+          platform: string
+          token: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          last_seen_at?: string
+          platform?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_tokens_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
@@ -1398,6 +1475,74 @@ export type Database = {
           },
         ]
       }
+      time_blocks: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          note: string
+          pro_id: string
+          starts_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          note?: string
+          pro_id: string
+          starts_at: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          note?: string
+          pro_id?: string
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_blocks_pro_id_fkey"
+            columns: ["pro_id"]
+            isOneToOne: false
+            referencedRelation: "pros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_blocks: {
+        Row: {
+          blocked: string
+          blocker: string
+          created_at: string
+        }
+        Insert: {
+          blocked: string
+          blocker: string
+          created_at?: string
+        }
+        Update: {
+          blocked?: string
+          blocker?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_blocks_blocked_fkey"
+            columns: ["blocked"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocker_fkey"
+            columns: ["blocker"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wallet_entries: {
         Row: {
           amount: number
@@ -1580,6 +1725,10 @@ export type Database = {
     Functions: {
       accept_delivery: { Args: { p_booking: string }; Returns: undefined }
       accept_offer: { Args: { p_offer: string }; Returns: string }
+      add_time_block: {
+        Args: { p_ends_at: string; p_note?: string; p_starts_at: string }
+        Returns: string
+      }
       app_timezone: { Args: never; Returns: string }
       applied_to_casting: { Args: { p_casting: string }; Returns: boolean }
       apply_casting: {
@@ -1601,6 +1750,7 @@ export type Database = {
         Returns: string
       }
       banned_content: { Args: { p_text: string }; Returns: boolean }
+      block_user: { Args: { p_account: string }; Returns: undefined }
       booking_for_caller: {
         Args: {
           p_as: Database["public"]["Enums"]["app_role"]
@@ -1731,9 +1881,27 @@ export type Database = {
         Args: { p_booking: string; p_note?: string; p_url: string }
         Returns: undefined
       }
+      dispute_no_show: {
+        Args: { p_booking: string; p_reason: string }
+        Returns: string
+      }
       enforce_wallet_threshold: { Args: { p_limit?: number }; Returns: number }
       expire_stale_bookings: { Args: never; Returns: number }
       expire_stale_jobs: { Args: never; Returns: number }
+      free_days: {
+        Args: {
+          p_at_home?: boolean
+          p_days: number
+          p_from: string
+          p_lat?: number
+          p_lng?: number
+          p_pro: string
+          p_quantity: number
+          p_template: string
+          p_variant: string
+        }
+        Returns: string[]
+      }
       free_slots: {
         Args: {
           p_at_home?: boolean
@@ -1795,6 +1963,11 @@ export type Database = {
       recompute_pro_metrics: { Args: never; Returns: undefined }
       refresh_pro_rating: { Args: { p_pro: string }; Returns: undefined }
       remind_overdue_deliveries: { Args: never; Returns: number }
+      register_push_token: {
+        Args: { p_platform: string; p_token: string }
+        Returns: undefined
+      }
+      remove_time_block: { Args: { p_id: string }; Returns: undefined }
       reply_review: {
         Args: { p_booking: string; p_reply: string }
         Returns: undefined
@@ -1860,6 +2033,7 @@ export type Database = {
       wallet_balance: { Args: { p_pro: string }; Returns: number }
       withdraw_application: { Args: { p_application: string }; Returns: undefined }
       withdraw_offer: { Args: { p_offer: string }; Returns: undefined }
+      unblock_user: { Args: { p_account: string }; Returns: undefined }
       within_working_hours: {
         Args: { p_minutes: number; p_pro: string; p_starts_at: string }
         Returns: boolean

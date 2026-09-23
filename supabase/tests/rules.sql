@@ -115,8 +115,13 @@ begin
   booking := public.create_booking(linh, 'nail-design', 'simple', slot, true, addr, 1, 'Ghi chú test');
   assert (select status from public.bookings where id = booking) = 'pending', 'a new booking waits for the call';
   assert (select travel_fee from public.bookings where id = booking) >= 0, 'travel fee snapshotted';
-  assert (select confirm_by from public.bookings where id = booking) <= now() + interval '2 hours',
+  -- The deadline depends on the hour the booking is made (20260924100600), and CI
+  -- runs at any hour, so compare with the rule itself; its hours are tested below.
+  assert (select confirm_by from public.bookings where id = booking) = public.confirm_deadline(slot),
     'the freelancer has a deadline to call';
+  assert (select confirm_by from public.bookings where id = booking) <= slot, 'the deadline is after the appointment';
+  assert exists (select 1 from public.notifications where account_id = linh and kind = 'booking_new'
+                 and link = '/bookings/' || booking), 'the new-booking notification does not open the booking';
 
   raise notice 'the same slot cannot be sold twice';
   begin
@@ -210,6 +215,23 @@ begin
   select count(*) into n from public.messages
    where thread_id = thread and sender_id <> linh and read_at is null;
   assert n = 1, 'an outsider cleared somebody else''s unread count';
+
+  raise notice 'the freelancer opens the chat about their own booking, too';
+  -- They pass themselves as the thread's freelancer; that used to be refused as
+  -- "messaging yourself" before the booking was looked at.
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  assert public.open_thread(linh, booking) = thread, 'the freelancer got another thread for the same booking';
+  begin
+    perform public.open_thread(linh, null);
+    assert false, 'a freelancer opened a chat with themselves';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  begin
+    perform public.open_thread(thu, booking);
+    assert false, 'a freelancer opened a chat about somebody else''s booking';
+  exception when insufficient_privilege then null;
+  end;
 
   raise notice 'nobody books themselves';
   perform set_config('request.jwt.claim.sub', linh::text, true);
@@ -382,7 +404,7 @@ begin
     and p.proname <> all (array[
       'app_timezone', 'travel_distance_km', 'travel_fee', 'commission_for', 'is_urgent', 'build_quote',
       'service_duration_min', 'listed_price', 'within_working_hours', 'availability_problem', 'free_slots',
-      'slugify', 'is_admin', 'is_pro',
+      'slugify', 'is_admin', 'is_pro', 'free_days',
       -- the feed: reporting and reading interest counts, and the content check
       'log_work_events', 'work_stats_30d', 'banned_content',
       -- called by a row level security policy
@@ -401,6 +423,7 @@ begin
       'app_timezone', 'travel_distance_km', 'travel_fee', 'commission_for', 'is_urgent', 'build_quote',
       'service_duration_min', 'listed_price', 'within_working_hours', 'availability_problem', 'free_slots',
       'slugify', 'is_admin', 'is_pro', 'log_work_events', 'work_stats_30d', 'banned_content', 'applied_to_casting',
+      'free_days',
       -- the state machine and the things a person does to their own account
       'create_booking', 'confirm_booking', 'decline_booking', 'start_booking', 'complete_booking',
       'mark_no_show', 'cancel_booking', 'request_reschedule', 'respond_reschedule', 'post_job',
@@ -411,6 +434,9 @@ begin
       'set_booking_terms', 'deliver_booking', 'accept_delivery', 'link_bookings',
       'create_casting', 'close_casting', 'apply_casting', 'withdraw_application', 'decide_application',
       'review_customer',
+      -- busy time, disputes, blocks, push, and the clip cap a storage policy asks
+      'add_time_block', 'remove_time_block', 'dispute_no_show', 'block_user', 'unblock_user',
+      'register_push_token', 'video_quota_ok',
       -- admin decisions, which check is_admin() themselves
       'decide_identity_check', 'decide_no_show_compensation', 'set_pro_suspended', 'set_review_hidden', 'resolve_report'
     ]);
@@ -443,14 +469,14 @@ begin
     where id in (linh, thu);
 
   ---------------------------------------------------------------------------
-  raise notice 'model services are for verified accounts only';
+  raise notice 'model services are for verified adults only';
   perform set_config('request.jwt.claim.sub', linh::text, true);
   begin
     insert into public.pro_services (pro_id, template_id) values (linh, 'model-hand');
     assert false, 'an unverified freelancer listed a model service';
   exception when check_violation then
     get stacked diagnostics msg = message_text;
-    assert msg like 'Dịch vụ người mẫu chỉ mở%', format('refused for another reason: %s', msg);
+    assert msg = 'Dịch vụ người mẫu chỉ dành cho tài khoản đã xác minh và đủ 18 tuổi.', format('refused for another reason: %s', msg);
   end;
   -- Listing it switched off is harmless and allowed.
   insert into public.pro_services (pro_id, template_id, active) values (linh, 'model-hand', false);
@@ -460,6 +486,21 @@ begin
   exception when check_violation then null;
   end;
 
+  -- Verified, but the card was never read for an age: not yet.
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  begin
+    insert into public.pro_services (pro_id, template_id) values (thu, 'model-hand');
+    assert false, 'a verified freelancer of unknown age listed a model service';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg like 'Dịch vụ người mẫu chỉ dành cho%', format('refused for another reason: %s', msg);
+  end;
+  -- Nor can a freelancer say it about themselves: the age is the platform's to write.
+  update public.pros set adult = true, birth_year = 1990 where id = thu;
+  assert (select adult is null and birth_year is null from public.pros where id = thu), 'a freelancer set their own age';
+  -- /api/identity read the card: 18 or over.
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.pros set adult = true, birth_year = 1998 where id = thu;
   perform set_config('request.jwt.claim.sub', thu::text, true);
   insert into public.pro_services (pro_id, template_id) values (thu, 'model-hand');
   insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values (thu, 'model-hand', '60m', 350000);
@@ -471,7 +512,7 @@ begin
   perform set_config('request.jwt.claim.sub', '', true);
   update public.pros set identity_status = 'pending' where id = thu;
   msg := public.availability_problem(thu, 'model-hand', '60m', 1, at_, true, 21.0181, 105.829);
-  assert msg like 'Dịch vụ người mẫu chỉ mở%', format('an unverified model was bookable: %s', msg);
+  assert msg = 'Dịch vụ người mẫu chỉ dành cho tài khoản đã xác minh và đủ 18 tuổi.', format('an unverified model was bookable: %s', msg);
   perform set_config('request.jwt.claim.sub', customer::text, true);
   begin
     perform public.create_booking(thu, 'model-hand', '60m', at_, true, addr, 1, '');
@@ -480,6 +521,14 @@ begin
   end;
   perform set_config('request.jwt.claim.sub', '', true);
   update public.pros set identity_status = 'verified' where id = thu;
+
+  -- Verified but under 18: the same refusal.
+  update public.pros set adult = false, birth_year = 2010 where id = thu;
+  msg := public.availability_problem(thu, 'model-hand', '60m', 1, at_, true, 21.0181, 105.829);
+  assert msg like 'Dịch vụ người mẫu chỉ dành cho%', format('a minor was bookable as a model: %s', msg);
+  update public.pros set adult = true, birth_year = 1998 where id = thu;
+  msg := public.availability_problem(thu, 'model-hand', '60m', 1, at_, true, 21.0181, 105.829);
+  assert msg is null, format('a verified adult model is not bookable: %s', msg);
 
   ---------------------------------------------------------------------------
   raise notice 'a photo session owes files, on a clock that starts at completion';
@@ -689,7 +738,18 @@ begin
     assert false, 'an unverified freelancer posted a model call';
   exception when check_violation then null;
   end;
-  -- Free, for their own trade: fine without the badge.
+  -- Free and for their own trade is not enough any more: every call needs the badge.
+  begin
+    perform public.create_casting('nail', 'Cần 2 mẫu tay làm gel miễn phí', 'Cho phép chụp và đăng ảnh.',
+      now() + interval '3 days', p_city, p_district, 2, 'free');
+    assert false, 'an unverified freelancer posted a free call';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg = 'Tuyển mẫu chỉ mở cho tài khoản đã xác minh danh tính.', format('refused for another reason: %s', msg);
+  end;
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.pros set identity_status = 'verified' where id = linh;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
   nail_call := public.create_casting('nail', 'Cần 2 mẫu tay làm gel miễn phí', 'Cho phép chụp và đăng ảnh.',
     now() + interval '3 days', p_city, p_district, 2, 'free');
 
@@ -786,6 +846,8 @@ begin
     format('impressions: %s', (select impressions from public.work_stats_daily where work_id = w1));
   assert (select opens from public.work_stats_daily where work_id = w1) = 0, 'the 61st event was counted';
 
+  -- Signed in: a tap on "book" only counts from a person (20260924100000).
+  perform set_config('request.jwt.claim.sub', customer::text, true);
   n := public.log_work_events(jsonb_build_array(
     jsonb_build_object('work', w1::text, 'kind', 'open'),
     jsonb_build_object('work', w1_slug, 'kind', 'book_click'),
@@ -794,6 +856,7 @@ begin
     jsonb_build_object('work', w1::text, 'kind', 'like'),
     '"not an object"'::jsonb));
   assert n = 1, format('rows written: %s', n);
+  perform set_config('request.jwt.claim.sub', '', true);
   assert public.log_work_events('{"not": "an array"}') = 0, 'a malformed batch was not ignored';
   assert (select opens + book_clicks from public.work_stats_daily where work_id = w1) = 2, 'id and slug both count';
   assert (select impressions from public.work_stats_30d() where work_id = w1) = 1, '30-day totals';
@@ -829,6 +892,598 @@ begin
   perform public.delete_my_account();
   assert not exists (select 1 from public.casting_applications where account_id = nobody), 'an application survived deletion';
   assert (select accepted_count from public.castings where id = nail_call) = 0, 'a deleted account still holds a place';
+
+  perform set_config('request.jwt.claim.sub', '', true);
+end $$;
+
+
+-- What the review of the release found (20260924*): who may read what, money
+-- held until it is fair to pay, and the rules around time.
+--
+-- Row level security does not apply to the superuser this file runs as, so the
+-- reads that test a policy switch to the API's role (`set local role`) for the
+-- one query, and switch back before asserting.
+do $$
+declare
+  linh uuid; thu uuid; customer uuid; other_customer uuid; addr uuid; stranger_pro uuid; admin_id uuid;
+  leaving uuid; b1 uuid; b2 uuid; terms_booking uuid; blk uuid; debt uuid; thread uuid; report uuid;
+  c1 uuid; app uuid; w uuid;
+  msg text; n int; i int; total int; at_ timestamptz; today date; d date;
+  p_city text; p_district text; extra uuid[] := '{}'; fake uuid := gen_random_uuid();
+  claim public.no_show_compensation_requests;
+  tz text := public.app_timezone();
+  monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
+begin
+  select id into linh from public.pros where slug = 'linh-pham';
+  select id into thu from public.pros where slug = 'thu-anh';
+  select a.id into customer from public.accounts a where a.full_name = 'Ngọc Hân';
+  select a.id into other_customer from public.accounts a where a.full_name = 'Thảo Vy';
+  select id into addr from public.addresses where account_id = customer;
+  -- A published freelancer with posts who has never had a booking with the customer.
+  select p.id into stranger_pro from public.pros p
+  where p.published and p.suspended_at is null and p.id not in (linh, thu)
+    and not exists (select 1 from public.bookings b where b.pro_id = p.id and b.customer_id = customer)
+    and exists (select 1 from public.works k where k.pro_id = p.id)
+  order by p.slug limit 1;
+  assert stranger_pro is not null, 'the demo data has no freelancer the customer never booked';
+
+  ---------------------------------------------------------------------------
+  raise notice 'a review of a customer is for the freelancers who meet them, not for every freelancer';
+  assert exists (select 1 from public.customer_reviews where customer_id = customer), 'no review of the customer to test with';
+
+  perform set_config('request.jwt.claim.sub', stranger_pro::text, true);
+  set local role authenticated;
+  select count(*) into n from public.customer_reviews where customer_id = customer;
+  reset role;
+  assert n = 0, format('a freelancer who never met the customer read %s reviews of them', n);
+
+  -- thu has had bookings with the customer (above), but did not write the review.
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  set local role authenticated;
+  select count(*) into n from public.customer_reviews where customer_id = customer;
+  reset role;
+  assert n > 0, 'a freelancer with a booking with the customer cannot read their reviews';
+
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  set local role authenticated;
+  select count(*) into n from public.customer_reviews where customer_id = customer;
+  reset role;
+  assert n > 0, 'the customer cannot read what was written about them';
+
+  perform set_config('request.jwt.claim.sub', other_customer::text, true);
+  set local role authenticated;
+  select count(*) into n from public.customer_reviews where customer_id = customer;
+  reset role;
+  assert n = 0, 'another customer read reviews of someone else';
+
+  ---------------------------------------------------------------------------
+  raise notice 'a suspended freelancer leaves the marketplace: profile, posts and feed numbers';
+  select count(*) into total from public.works where pro_id = stranger_pro;
+  select id into w from public.works where pro_id = stranger_pro order by created_at limit 1;
+  perform set_config('request.jwt.claim.sub', '', true);
+  perform public.log_work_events(jsonb_build_array(jsonb_build_object('work', w::text, 'kind', 'impression')));
+  assert exists (select 1 from public.work_stats_30d() s where s.work_id = w), 'a listed post has no numbers';
+  update public.pros set suspended_at = now() where id = stranger_pro;
+  assert not exists (select 1 from public.work_stats_30d() s where s.work_id = w), 'a suspended freelancer''s post still ranks';
+
+  set local role anon;
+  select count(*) into n from public.pros where id = stranger_pro;
+  reset role;
+  assert n = 0, 'an anonymous visitor still sees a suspended profile';
+  set local role anon;
+  select count(*) into n from public.works where pro_id = stranger_pro;
+  reset role;
+  assert n = 0, format('an anonymous visitor still sees %s posts of a suspended freelancer', n);
+
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  set local role authenticated;
+  select count(*) into n from public.pros where id = stranger_pro;
+  reset role;
+  assert n = 0, 'a signed-in stranger still sees a suspended profile';
+
+  perform set_config('request.jwt.claim.sub', stranger_pro::text, true);
+  set local role authenticated;
+  select count(*) into n from public.works where pro_id = stranger_pro;
+  reset role;
+  assert n = total, format('the suspended freelancer sees %s of their own %s posts', n, total);
+
+  -- A customer's own booking keeps its freelancer, suspended or not.
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.pros set suspended_at = now() where id = linh;
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  set local role authenticated;
+  select count(*) into n from public.pros where id = linh;
+  reset role;
+  assert n = 1, 'a customer lost the freelancer on their own booking to a suspension';
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.pros set suspended_at = null where id in (linh, stranger_pro);
+
+  ---------------------------------------------------------------------------
+  raise notice 'an anonymous caller''s saves and book taps are not counted';
+  today := (now() at time zone tz)::date;
+  select id into w from public.works where pro_id = linh order by created_at limit 1;
+  perform set_config('request.jwt.claim.sub', '', true);
+  perform public.log_work_events(jsonb_build_array(jsonb_build_object('work', w::text, 'kind', 'open')));
+  select saves + book_clicks, opens into total, n from public.work_stats_daily where work_id = w and day = today;
+  perform public.log_work_events(jsonb_build_array(
+    jsonb_build_object('work', w::text, 'kind', 'save'),
+    jsonb_build_object('work', w::text, 'kind', 'book_click'),
+    jsonb_build_object('work', w::text, 'kind', 'open')));
+  assert (select saves + book_clicks from public.work_stats_daily where work_id = w and day = today) = total,
+    'an anonymous save or book tap was counted';
+  assert (select opens from public.work_stats_daily where work_id = w and day = today) = n + 1,
+    'an anonymous open was not counted';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  perform public.log_work_events(jsonb_build_array(
+    jsonb_build_object('work', w::text, 'kind', 'save'),
+    jsonb_build_object('work', w::text, 'kind', 'book_click')));
+  assert (select saves + book_clicks from public.work_stats_daily where work_id = w and day = today) = total + 2,
+    'a signed-in save and book tap were not counted';
+
+  ---------------------------------------------------------------------------
+  raise notice 'a paid call needs a poster who is 18 or over';
+  select city, district into p_city, p_district from public.pros where id = thu;
+  -- linh was verified for the casting tests above, but her age was never read.
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.create_casting('nail', 'Cần mẫu tay có thù lao', '', now() + interval '3 days',
+      p_city, p_district, 1, 'paid', null, 200000);
+    assert false, 'a paid call was posted by someone whose age is unknown';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg like 'Tin tuyển mẫu có thù lao chỉ dành cho%', format('refused for another reason: %s', msg);
+  end;
+
+  raise notice 'the poster hears about an applicant once, not on every re-apply';
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  c1 := public.create_casting('makeup', 'Cần mẫu makeup tiệc tối', '', now() + interval '4 days',
+    p_city, p_district, 2, 'free');
+  extra := extra || c1;
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  app := public.apply_casting(c1, 'Em muốn thử ạ');
+  perform public.withdraw_application(app);
+  assert public.apply_casting(c1, 'Em đổi ý, vẫn muốn làm ạ') = app, 're-applying made a new application';
+  perform public.withdraw_application(app);
+  perform public.apply_casting(c1, 'Lần cuối ạ');
+  select count(*) into n from public.notifications
+  where account_id = thu and kind = 'casting_application' and link = '/tuyen-mau/' || c1;
+  assert n = 1, format('the poster was notified %s times about one applicant', n);
+
+  raise notice 'at most five calls a week, and closing one does not make room';
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  select count(*) into n from public.castings where pro_id = thu and created_at > now() - interval '7 days';
+  while n < 5 loop
+    c1 := public.create_casting('makeup', 'Cần mẫu makeup buổi ' || n, '', now() + interval '5 days',
+      p_city, p_district, 1, 'free');
+    extra := extra || c1;
+    perform public.close_casting(c1);
+    n := n + 1;
+  end loop;
+  begin
+    perform public.create_casting('makeup', 'Cần mẫu makeup thêm một buổi', '', now() + interval '5 days',
+      p_city, p_district, 1, 'free');
+    assert false, 'a sixth call in a week was posted';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg like 'Mỗi tuần đăng tối đa 5%', format('refused for another reason: %s', msg);
+  end;
+  -- Leave thu's week as the rest of the suite expects: the API tests post a call too.
+  perform set_config('request.jwt.claim.sub', '', true);
+  delete from public.castings where id = any (extra);
+
+  ---------------------------------------------------------------------------
+  raise notice 'the terms are fixed once the freelancer has accepted them';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  terms_booking := public.create_booking(linh, 'photo-phone', '60m',
+    ((monday + 1) + time '11:00') at time zone tz, true, addr, 1, '');
+  assert exists (select 1 from public.notifications where account_id = linh and kind = 'booking_new'
+                 and link = '/bookings/' || terms_booking), 'the new-booking notification does not open the booking';
+  perform public.set_booking_terms(terms_booking, 'commercial', false);
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.confirm_booking(terms_booking);
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  begin
+    perform public.set_booking_terms(terms_booking, 'personal', true);
+    assert false, 'the terms changed after the freelancer accepted them';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg like 'Chỉ đổi được thoả thuận khi lịch còn chờ%', format('refused for another reason: %s', msg);
+  end;
+  assert (select usage_scope = 'commercial' and not consent_repost from public.bookings where id = terms_booking),
+    'the accepted terms moved';
+  perform public.cancel_booking(terms_booking, 'Xong phần kiểm tra');
+
+  ---------------------------------------------------------------------------
+  raise notice 'a booking made at night gives the freelancer until the morning';
+  d := monday + 7;
+  -- Daytime: two hours, as before.
+  assert public.confirm_deadline(((d + 1) + time '15:00') at time zone tz, (d + time '14:00') at time zone tz)
+       = ((d + time '16:00') at time zone tz), 'daytime: two hours';
+  assert public.confirm_deadline(((d + 1) + time '15:00') at time zone tz, (d + time '20:59') at time zone tz)
+       = ((d + time '22:59') at time zone tz), '20:59 is still daytime';
+  -- Overnight: ten the next morning.
+  assert public.confirm_deadline(((d + 1) + time '15:00') at time zone tz, (d + time '21:00') at time zone tz)
+       = (((d + 1) + time '10:00') at time zone tz), '21:00 waits for the morning';
+  assert public.confirm_deadline(((d + 1) + time '15:00') at time zone tz, (d + time '23:00') at time zone tz)
+       = (((d + 1) + time '10:00') at time zone tz), '23:00 waits for the morning';
+  assert public.confirm_deadline(((d + 1) + time '15:00') at time zone tz, ((d + 1) + time '02:00') at time zone tz)
+       = (((d + 1) + time '10:00') at time zone tz), 'after midnight, the same morning';
+  assert public.confirm_deadline((d + time '15:00') at time zone tz, (d + time '07:30') at time zone tz)
+       = ((d + time '10:00') at time zone tz), '07:30 is still night';
+  -- Never later than an hour before the start.
+  assert public.confirm_deadline(((d + 1) + time '09:00') at time zone tz, (d + time '23:00') at time zone tz)
+       = (((d + 1) + time '08:00') at time zone tz), 'an early start is answered an hour before';
+  -- Never less time than the old rule gave.
+  assert public.confirm_deadline((d + time '09:30') at time zone tz, (d + time '07:00') at time zone tz)
+       = ((d + time '09:00') at time zone tz), 'the two hours still hold before an early start';
+  assert public.confirm_deadline(((d + 1) + time '00:30') at time zone tz, (d + time '23:00') at time zone tz)
+       = (((d + 1) + time '00:30') at time zone tz), 'never past the start';
+
+  ---------------------------------------------------------------------------
+  raise notice 'a no-show pays the travel fee after 24 hours, unless the customer disputes it';
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          'admin-test@example.invalid', jsonb_build_object('full_name', 'Quản trị thử'), now(), now())
+  returning id into admin_id;
+  update public.accounts set is_admin = true where id = admin_id;
+
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  b1 := public.create_booking(linh, 'nail-design', 'simple', ((monday + 2) + time '10:00') at time zone tz, true, addr, 1, '');
+  b2 := public.create_booking(linh, 'nail-design', 'simple', ((monday + 2) + time '14:00') at time zone tz, true, addr, 1, '');
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.confirm_booking(b1);
+  perform public.confirm_booking(b2);
+  -- Into the past, each with a travel fee to pay back.
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.bookings set starts_at = now() - interval '1 hour', travel_fee = 30000 where id = b1;
+  update public.bookings set starts_at = now() - interval '4 hours', travel_fee = 20000 where id = b2;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.mark_no_show(b1, 'Khách không nghe máy');
+  perform public.mark_no_show(b2, 'Khách không có nhà');
+
+  select * into claim from public.no_show_compensation_requests where booking_id = b1;
+  assert claim.status = 'pending' and claim.amount = 30000, 'the no-show claim was not filed';
+  assert claim.release_at between now() + interval '23 hours' and now() + interval '25 hours',
+    'the credit is not held for 24 hours';
+  assert not exists (select 1 from public.wallet_entries where booking_id in (b1, b2) and kind = 'no_show_comp'),
+    'the credit was paid before the 24 hours';
+  perform set_config('request.jwt.claim.sub', '', true);
+  assert public.release_no_show_credits() = 0, 'a claim was released inside its 24 hours';
+
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.dispute_no_show(b1, 'Tôi có mặt đúng giờ mà.');
+    assert false, 'the freelancer disputed their own report';
+  exception when insufficient_privilege then null;
+  end;
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  begin
+    perform public.dispute_no_show(b1, 'Sai');
+    assert false, 'a dispute without a reason was filed';
+  exception when check_violation then null;
+  end;
+  report := public.dispute_no_show(b1, 'Em có ở nhà, chị ấy không gọi cửa.');
+  assert (select reason = 'no_show_dispute' and target_account_id = linh and status = 'open'
+          from public.reports where id = report), 'the dispute left no report for the admins';
+  assert (select disputed_at is not null and dispute_report_id = report
+          from public.no_show_compensation_requests where booking_id = b1), 'the dispute did not hold the credit';
+  assert exists (select 1 from public.notifications where account_id = admin_id and kind = 'no_show_disputed'),
+    'the admins were not told about the dispute';
+  assert exists (select 1 from public.notifications where account_id = linh and kind = 'no_show_disputed'
+                 and link = '/bookings/' || b1), 'the freelancer was not told about the dispute';
+  begin
+    perform public.dispute_no_show(b1, 'Em khiếu nại thêm lần nữa.');
+    assert false, 'the same no-show was disputed twice';
+  exception when check_violation then null;
+  end;
+
+  -- b2: more than 24 hours ago and never disputed. It can no longer be disputed,
+  -- and the credit is paid; b1's stays held although its 24 hours are up too.
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.bookings set cancelled_at = now() - interval '25 hours' where id = b2;
+  update public.no_show_compensation_requests set release_at = now() - interval '1 hour' where booking_id in (b1, b2);
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  begin
+    perform public.dispute_no_show(b2, 'Em có ở nhà, chị ấy không gọi cửa.');
+    assert false, 'a no-show was disputed after 24 hours';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg like 'Đã quá 24 giờ%', format('refused for another reason: %s', msg);
+  end;
+  perform set_config('request.jwt.claim.sub', '', true);
+  assert public.release_no_show_credits() = 1, 'the undisputed claim was not released';
+  assert public.release_no_show_credits() = 0, 'a claim was released twice';
+  assert (select amount from public.wallet_entries where booking_id = b2 and kind = 'no_show_comp') = 20000,
+    'the undisputed credit did not reach the wallet';
+  assert not exists (select 1 from public.wallet_entries where booking_id = b1 and kind = 'no_show_comp'),
+    'a disputed credit was paid without an admin';
+
+  -- An admin decides the disputed one, and the dispute closes with it.
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.decide_no_show_compensation(
+    (select id from public.no_show_compensation_requests where booking_id = b1), false, 'Khách gửi ảnh có ở nhà.');
+  assert not exists (select 1 from public.wallet_entries where booking_id = b1 and kind = 'no_show_comp'),
+    'a rejected claim was paid';
+  assert (select status from public.reports where id = report) = 'resolved', 'the dispute stayed open after the decision';
+
+  ---------------------------------------------------------------------------
+  raise notice 'a wallet past its limit takes no new booking and cannot switch itself back on';
+  at_ := ((monday + 1) + time '10:00') at time zone tz;
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  msg := public.availability_problem(thu, 'makeup-party', 'makeup', 1, at_, true, 21.0181, 105.829);
+  assert msg is null, format('the control slot is not bookable: %s', msg);
+
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into public.wallet_entries (pro_id, kind, amount, note)
+  values (thu, 'adjustment', -5000000, 'Kiểm tra hạn mức ví')
+  returning id into debt;
+
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  msg := public.availability_problem(thu, 'makeup-party', 'makeup', 1, at_, true, 21.0181, 105.829);
+  assert msg = 'Chuyên viên đang tạm không nhận job mới.', format('a freelancer in debt was bookable: %s', msg);
+  begin
+    perform public.create_booking(thu, 'makeup-party', 'makeup', at_, true, addr, 1, '');
+    assert false, 'a freelancer past the wallet limit was booked';
+  exception when check_violation then null;
+  end;
+  -- The freelancer asking is told why.
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  msg := public.availability_problem(thu, 'makeup-party', 'makeup', 1, at_, true, 21.0181, 105.829);
+  assert msg = 'Ví đang âm quá hạn mức, nạp ví để nhận lịch lại.', format('the freelancer was not told why: %s', msg);
+
+  perform set_config('request.jwt.claim.sub', '', true);
+  perform public.enforce_wallet_threshold();
+  assert not (select accepting_jobs from public.pros where id = thu), 'the hourly check did not stop the freelancer';
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  begin
+    update public.pros set accepting_jobs = true where id = thu;
+    assert false, 'a freelancer past the wallet limit switched jobs back on';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg = 'Ví đang âm quá hạn mức, nạp ví để nhận lịch lại.', format('refused for another reason: %s', msg);
+  end;
+  -- Topped up, they can.
+  perform set_config('request.jwt.claim.sub', '', true);
+  delete from public.wallet_entries where id = debt;
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  update public.pros set accepting_jobs = true where id = thu;
+  assert (select accepting_jobs from public.pros where id = thu), 'a topped-up freelancer could not switch jobs back on';
+
+  ---------------------------------------------------------------------------
+  raise notice 'a time block is busy time: nothing is booked or offered inside it';
+  at_ := ((monday + 1) + time '15:00') at time zone tz;
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, at_, true, 21.0181, 105.829);
+  assert msg is null, format('the control slot is not bookable: %s', msg);
+  begin
+    perform public.add_time_block(at_, at_ + interval '1 hour', '');
+    assert false, 'a customer blocked time';
+  exception when insufficient_privilege then null;
+  end;
+
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.add_time_block(at_, at_ - interval '1 hour', '');
+    assert false, 'a block that ends before it starts was accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    perform public.add_time_block(now() - interval '3 hours', now() - interval '1 hour', '');
+    assert false, 'a block in the past was accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    perform public.add_time_block(now() + interval '61 days', now() + interval '62 days', '');
+    assert false, 'a block beyond 60 days was accepted';
+  exception when check_violation then null;
+  end;
+  blk := public.add_time_block(at_ - interval '30 minutes', at_ + interval '1 hour', 'Đi khám răng');
+
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, at_, true, 21.0181, 105.829);
+  assert msg = 'Khung giờ này đã có lịch khác.', format('a slot inside a block: %s', msg);
+  -- 75 minutes and the 30-minute travel buffer from 13:00 run into a block at 14:30.
+  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, at_ - interval '2 hours', true, 21.0181, 105.829);
+  assert msg = 'Khung giờ này đã có lịch khác.', format('the travel buffer ran into a block: %s', msg);
+  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, at_ + interval '1 hour', true, 21.0181, 105.829);
+  assert msg is null, format('the slot right after a block: %s', msg);
+  select count(*) into n
+  from public.free_slots(linh, 'nail-design', 'simple', 1, monday + 1, true, 21.0181, 105.829) s
+  where s >= at_ - interval '30 minutes' and s < at_ + interval '1 hour';
+  assert n = 0, format('%s slots were offered inside a block', n);
+
+  -- Private to its owner.
+  set local role authenticated;
+  select count(*) into n from public.time_blocks where id = blk;
+  reset role;
+  assert n = 0, 'a customer read a freelancer''s time block';
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  begin
+    perform public.remove_time_block(blk);
+    assert false, 'another freelancer removed a time block';
+  exception when no_data_found then null;
+  end;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  set local role authenticated;
+  select count(*) into n from public.time_blocks where id = blk;
+  reset role;
+  assert n = 1, 'the freelancer cannot read their own time block';
+  perform public.remove_time_block(blk);
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, at_, true, 21.0181, 105.829);
+  assert msg is null, format('a removed block still blocks: %s', msg);
+
+  ---------------------------------------------------------------------------
+  raise notice 'free days are the days free_slots fills, never a Sunday or the past';
+  select count(*) into n from public.free_days(linh, 'nail-design', 'simple', 1, monday, 7, true, 21.0181, 105.829);
+  assert n between 1 and 6, format('free days in a week: %s', n);
+  assert not exists (
+    select 1 from public.free_days(linh, 'nail-design', 'simple', 1, monday, 7, true, 21.0181, 105.829) f
+    where extract(dow from f) = 0
+  ), 'a Sunday was listed as free';
+  select count(*) into n from public.free_days(linh, 'nail-design', 'simple', 1, current_date, 60, true, 21.0181, 105.829);
+  assert n <= 21, format('%s days came back; the cap is 21', n);
+  select count(*) into n from public.free_days(linh, 'nail-design', 'simple', 1, current_date - 10, 5, true, 21.0181, 105.829);
+  assert n = 0, 'days in the past were listed';
+  select f into d from public.free_days(linh, 'nail-design', 'simple', 1, monday, 7, true, 21.0181, 105.829) f limit 1;
+  assert exists (select 1 from public.free_slots(linh, 'nail-design', 'simple', 1, d, true, 21.0181, 105.829)),
+    'a day listed as free has no slot';
+
+  ---------------------------------------------------------------------------
+  raise notice 'platform settings: one row, anyone reads it, only an admin writes it';
+  assert (select count(*) from public.platform_settings) = 1, 'platform settings is not one row';
+  begin
+    insert into public.platform_settings (id) values (false);
+    assert false, 'a second settings row was accepted';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', '', true);
+  set local role anon;
+  select count(*) into n from public.platform_settings;
+  reset role;
+  assert n = 1, 'an anonymous visitor cannot read the platform settings';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  set local role authenticated;
+  update public.platform_settings set support_zalo = '0900000000';
+  get diagnostics n = row_count;
+  reset role;
+  assert n = 0, 'a customer changed the platform settings';
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  set local role authenticated;
+  update public.platform_settings set support_zalo = '0900000000';
+  get diagnostics n = row_count;
+  reset role;
+  assert n = 1, 'an admin cannot change the platform settings';
+  update public.platform_settings set support_zalo = null;
+
+  ---------------------------------------------------------------------------
+  raise notice 'a block stops messages both ways, and only the blocker sees it';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  thread := public.open_thread(linh, null);
+  perform public.send_message(thread, 'Chị ơi cho em hỏi giá');
+  begin
+    perform public.block_user(customer);
+    assert false, 'an account blocked itself';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.block_user(customer);
+  perform public.block_user(customer);
+  begin
+    perform public.send_message(thread, 'Chào em');
+    assert false, 'the blocker still sent a message';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  begin
+    perform public.send_message(thread, 'Chị ơi?');
+    assert false, 'a blocked account sent a message';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg = 'Không thể nhắn tin với tài khoản này.', format('refused for another reason: %s', msg);
+  end;
+  begin
+    perform public.open_thread(linh, null);
+    assert false, 'a blocked account opened a conversation';
+  exception when check_violation then null;
+  end;
+  set local role authenticated;
+  select count(*) into n from public.user_blocks where blocked = customer;
+  reset role;
+  assert n = 0, 'the blocked side can see who blocked them';
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  set local role authenticated;
+  select count(*) into n from public.user_blocks where blocked = customer;
+  reset role;
+  assert n = 1, 'the blocker cannot see their own block';
+  perform public.unblock_user(customer);
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  perform public.send_message(thread, 'Chị ơi cho em hỏi lại');
+
+  ---------------------------------------------------------------------------
+  raise notice 'push tokens: Expo only, one account per token, and a notification queues a push';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  begin
+    perform public.register_push_token('https://example.com/hook', 'ios');
+    assert false, 'a token that is not Expo''s was accepted';
+  exception when check_violation then null;
+  end;
+  perform public.register_push_token('ExponentPushToken[rules-test-0000000001]', 'ios');
+  assert (select account_id from public.push_tokens where token = 'ExponentPushToken[rules-test-0000000001]') = customer,
+    'the token was not registered';
+  -- The same phone, now signed in as someone else.
+  perform set_config('request.jwt.claim.sub', other_customer::text, true);
+  perform public.register_push_token('ExponentPushToken[rules-test-0000000001]', 'android');
+  assert (select account_id = other_customer and platform = 'android' from public.push_tokens
+          where token = 'ExponentPushToken[rules-test-0000000001]'), 'the token did not move to the account signed in now';
+  for i in 2..12 loop
+    perform public.register_push_token(format('ExponentPushToken[rules-test-%s]', lpad(i::text, 10, '0')), 'ios');
+  end loop;
+  assert (select count(*) from public.push_tokens where account_id = other_customer) = 10, 'more than ten tokens were kept';
+
+  perform set_config('request.jwt.claim.sub', '', true);
+  perform public.notify(other_customer, 'push_test', 'Thử thông báo', 'Nội dung thử', '/me');
+  assert exists (select 1 from public.notifications where account_id = other_customer and kind = 'push_test'),
+    'a notification with a phone to push to was not written';
+  if to_regclass('net.http_request_queue') is not null then
+    execute 'select count(*) from net.http_request_queue where url = $1'
+      into n using 'https://exp.host/--/api/v2/push/send';
+    assert n > 0, 'no push was queued for the notification';
+  else
+    raise notice 'pg_net is not installed here; the push itself is not exercised';
+  end if;
+  -- Nothing real to send to: leave no tokens behind for the API tests' notifications.
+  delete from public.push_tokens where token like 'ExponentPushToken[rules-test-%';
+
+  ---------------------------------------------------------------------------
+  raise notice 'storage: nobody lists other people''s files, and 30 clips is the ceiling';
+  assert not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname in ('public can view images', 'public can view videos')
+  ), 'the public listing policies are back';
+  begin
+    begin
+      insert into storage.objects (bucket_id, name)
+      select 'videos', fake::text || '/' || g || '.mp4' from generate_series(1, 29) g;
+    exception when others then
+      raise notice 'storage.objects is not writable here (%); the clip cap is not exercised', sqlerrm;
+      raise sqlstate 'U0002';
+    end;
+    perform set_config('request.jwt.claim.sub', fake::text, true);
+    assert public.video_quota_ok(), 'the 30th clip was refused';
+    insert into storage.objects (bucket_id, name) values ('videos', fake::text || '/30.mp4');
+    begin
+      perform public.video_quota_ok();
+      assert false, 'a 31st clip was allowed';
+    exception when check_violation then
+      get stacked diagnostics msg = message_text;
+      assert msg like 'Mỗi tài khoản lưu tối đa 30 clip%', format('refused for another reason: %s', msg);
+    end;
+    -- Undo the fake rows: nothing else should ever see them.
+    raise sqlstate 'U0001';
+  exception when sqlstate 'U0001' or sqlstate 'U0002' then null;
+  end;
+  perform set_config('request.jwt.claim.sub', '', true);
+
+  assert to_regclass('public.notifications_unread_idx') is not null, 'the unread-notifications index is missing';
+  assert to_regclass('public.no_show_compensation_requests_pro_idx') is not null
+     and to_regclass('public.no_show_compensation_requests_decided_by_idx') is not null,
+    'a foreign key on no-show claims is not indexed';
+
+  ---------------------------------------------------------------------------
+  raise notice 'deleting an account takes its push tokens and blocks with it';
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          'leaving-2@example.invalid', jsonb_build_object('full_name', 'Rời đi lần hai', 'phone', '0900 000 789'), now(), now())
+  returning id into leaving;
+  perform set_config('request.jwt.claim.sub', leaving::text, true);
+  perform public.register_push_token('ExponentPushToken[rules-test-leaving01]', 'ios');
+  perform public.block_user(linh);
+  perform public.delete_my_account();
+  assert not exists (select 1 from public.push_tokens where account_id = leaving), 'a push token survived deletion';
+  assert not exists (select 1 from public.user_blocks where blocker = leaving or blocked = leaving), 'a block survived deletion';
 
   perform set_config('request.jwt.claim.sub', '', true);
   raise notice 'ALL DATABASE RULES PASS';
