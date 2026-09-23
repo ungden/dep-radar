@@ -1833,10 +1833,10 @@ begin
   end;
   perform set_config('request.jwt.claim.sub', '', true);
   code := (select pay_code from public.pros where id = linh);
-  assert public.record_bank_topup('CT NAP ' || code || ' FT123', -bal, 'sepay:TEST-1'), 'the transfer was not credited';
-  assert not public.record_bank_topup('CT NAP ' || code || ' FT123', -bal, 'sepay:TEST-1'), 'the same transfer was credited twice';
+  assert public.record_bank_topup('CT DEN DEP' || code || ' FT123', -bal, 'sepay:TEST-1'), 'the transfer was not credited';
+  assert not public.record_bank_topup('CT DEN DEP' || code || ' FT123', -bal, 'sepay:TEST-1'), 'the same transfer was credited twice';
   assert not public.record_bank_topup('chuyen tien', 100000, 'sepay:TEST-2'), 'a transfer without a code was credited';
-  assert public.record_bank_topup('IBFT NAPAS2479 nap ' || lower(code), 1000, 'sepay:TEST-3'), 'a NAPAS memo hid the code';
+  assert public.record_bank_topup('DEPOSIT dep ' || lower(code), 1000, 'sepay:TEST-3'), 'a word before the code hid it';
   assert public.wallet_balance(linh) >= 0, 'paid, still owing';
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.confirm_booking(b3);

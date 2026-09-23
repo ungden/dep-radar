@@ -29,21 +29,24 @@ export function checkApiKey(header: string | null | undefined, expected: string 
 }
 
 /**
- * The memos worth trying, best first. record_bank_topup takes the first
- * "NAP" followed by six code characters anywhere in the text, and bank memos
- * often carry "NAPAS" (the interbank network) before the freelancer's own
- * words: "IBFT NAPAS2479 NAP AB23CD" would be read as code AS2479 and credit
- * nobody. So each whole-word candidate is offered as its own clean memo, then
- * the text as it came, and the webhook stops at the first one credited.
+ * The memos worth trying, best first. A freelancer's memo is "DEP" + their six
+ * character pay code, written together ("DEPAB23CD"), which is also the
+ * payment-code pattern registered in SePay (Cấu hình công ty → Cấu trúc mã
+ * thanh toán: prefix DEP, 6 letters/digits), so SePay hands it over as `code`.
+ * That comes first; then every DEP code found in the memo, cleaned up (banks
+ * add their own words, and "DEPOSIT" must not pass for a code); then the text
+ * as it came. The webhook stops at the first one credited.
  */
-export function memoCandidates(content: string): string[] {
-  const codes = [...content.matchAll(/NAP[^A-Za-z0-9]*([A-HJ-NP-Z2-9]{6})(?![A-Za-z0-9])/gi)].map((m) => m[1].toUpperCase())
-  return [...new Set([...codes.map((code) => `NAP ${code}`), content])].slice(0, 4)
+export function memoCandidates(content: string, code?: string | null): string[] {
+  const found = [code ?? "", content]
+    .flatMap((text) => [...text.matchAll(/DEP[^A-Za-z0-9]*([A-HJ-NP-Z2-9]{6})(?![A-Za-z0-9])/gi)])
+    .map((m) => `DEP${m[1].toUpperCase()}`)
+  return [...new Set([...found, content])].filter(Boolean).slice(0, 4)
 }
 
 export type SepayTransaction =
   /** Money in: credit it, if the memo names a freelancer. */
-  | { kind: "in"; ref: string; content: string; amount: number }
+  | { kind: "in"; ref: string; content: string; code: string; amount: number }
   /** Nothing to do (money out, zero amount), but not an error: answer 200 so SePay does not retry. */
   | { kind: "ignore"; reason: string }
   /** Not a SePay transaction at all. */
@@ -68,8 +71,9 @@ export function parseSepay(body: unknown): SepayTransaction {
   if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
     return { kind: "ignore", reason: "no positive whole amount" }
   }
-  // The memo the freelancer typed ("NAP AB23CD"). Banks sometimes put it only
-  // in the full description, so fall back to that.
+  // The memo the freelancer typed ("DEPAB23CD"). Banks sometimes put it only
+  // in the full description, so fall back to that. `code` is the payment code
+  // SePay itself recognised in it, if any.
   const content = [text(b.content), text(b.description)].map((s) => s.trim()).find(Boolean) ?? ""
-  return { kind: "in", ref: `sepay:${id}`, content, amount }
+  return { kind: "in", ref: `sepay:${id}`, content, code: text(b.code).trim(), amount }
 }

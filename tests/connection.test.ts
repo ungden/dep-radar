@@ -16,7 +16,7 @@ describe("chatState", () => {
     expect(bookingChatOpen("pending")).toBe(false)
   })
   it("writes the transfer memo the bank webhook reads", () => {
-    expect(payMemo("AB23CD")).toBe("NAP AB23CD")
+    expect(payMemo("AB23CD")).toBe("DEPAB23CD")
   })
 })
 

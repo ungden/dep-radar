@@ -42,8 +42,12 @@ export function chatState(status: ChatStatus | null | undefined): ChatState {
 /** Whether a booking in this status has a chat to open. */
 export const bookingChatOpen = (status: string) => status === "confirmed" || status === "in_progress"
 
-/** Memo on the bank transfer that pays a freelancer's fee: matched automatically by the bank webhook. */
-export const payMemo = (payCode: string) => `NAP ${payCode}`
+/**
+ * Memo on the bank transfer that pays a freelancer's fee, matched by the bank
+ * webhook. Prefix and code written together: SePay's payment codes are 2-5
+ * letters plus a suffix, no space ("DEP" is registered there for 360dep).
+ */
+export const payMemo = (payCode: string) => `DEP${payCode}`
 
 export interface ReviewWindow {
   open: boolean
