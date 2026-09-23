@@ -76,7 +76,8 @@ language sql stable security definer set search_path = '' as $$
   where b.id = t.booking_id
 $$;
 
-grant execute on function public.closes_at(public.threads) to anon, authenticated;
+revoke all on function public.closes_at(public.threads) from public, anon;
+grant execute on function public.closes_at(public.threads) to authenticated;
 
 -- Same as 20260924100900, plus: a closed conversation takes no more messages,
 -- contact details are hidden until they are allowed, and a customer who has not
