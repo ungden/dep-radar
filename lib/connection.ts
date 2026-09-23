@@ -72,8 +72,9 @@ export function customerJobActions(input: { status: string; startsAt: Date; ends
   const t = now.getTime()
   return {
     confirmDone: active && t >= input.startsAt.getTime(),
+    // Not once the freelancer pressed "Bắt đầu": they say they are there.
     reportNoShow:
-      active && t >= input.startsAt.getTime() + NO_SHOW_AFTER_MIN * 60_000 && t <= input.endsAt.getTime() + AUTO_COMPLETE_HOURS * HOUR,
+      input.status === "confirmed" && t >= input.startsAt.getTime() + NO_SHOW_AFTER_MIN * 60_000 && t <= input.endsAt.getTime() + AUTO_COMPLETE_HOURS * HOUR,
     /** When it completes by itself if nobody acts. */
     autoCompleteAt: new Date(input.endsAt.getTime() + AUTO_COMPLETE_HOURS * HOUR),
   }

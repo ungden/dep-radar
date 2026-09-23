@@ -9,8 +9,8 @@
 -- 2. Nobody does anything: 24 hours after the booked end, the job completes on
 --    its own and both are told. A customer who was let down reports it within
 --    those 24 hours instead (3.).
--- 3. The freelancer did not come: the customer reports it from 15 minutes after
---    the start until 24 hours after the end. The booking is cancelled on the
+-- 3. The freelancer did not come (and never pressed "Bắt đầu"): the customer
+--    reports it from 15 minutes after the start until 24 hours after the end. The booking is cancelled on the
 --    freelancer, no commission is charged, 360dep gets a report to look at, and
 --    a second one in 30 days is flagged to the admins as a pattern.
 
@@ -91,8 +91,10 @@ declare b public.bookings; recent int;
 begin
   perform 1 from public.bookings where id = p_booking for update;
   b := public.booking_for_caller(p_booking, 'customer');
-  if b.status not in ('confirmed', 'in_progress') then
-    raise exception 'Chỉ báo được lịch hẹn đã xác nhận.' using errcode = 'check_violation';
+  -- Once the freelancer has pressed "Bắt đầu" they say they are there; a
+  -- dispute about that is for support, not a button.
+  if b.status <> 'confirmed' then
+    raise exception 'Chỉ báo được lịch hẹn đã xác nhận mà người làm chưa bắt đầu. Liên hệ hỗ trợ nếu cần.' using errcode = 'check_violation';
   end if;
   if now() < b.starts_at + interval '15 minutes' then
     raise exception 'Đợi ít nhất 15 phút sau giờ hẹn rồi hãy báo.' using errcode = 'check_violation';

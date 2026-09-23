@@ -188,8 +188,7 @@ create policy "thread parties read chat media" on storage.objects
     )
   );
 
-create index if not exists messages_image_paths_idx on public.messages using gin (image_paths)
-  where image_paths <> '{}';
+create index if not exists messages_image_paths_idx on public.messages using gin (image_paths);
 
 -- 5. Castings respect blocks ---------------------------------------------------------
 

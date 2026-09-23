@@ -1648,6 +1648,7 @@ begin
   assert (select rating from public.reviews where booking_id = b) = 4, 'a blind review could not be changed';
 
   -- The public, and the freelancer, do not see it yet.
+  perform set_config('request.jwt.claim.sub', '', true);
   set local role anon;
   select count(*) into n from public.reviews where booking_id = b;
   reset role;
