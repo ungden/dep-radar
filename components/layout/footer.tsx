@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Logo } from "@/components/ui"
 import { CATEGORIES, VERTICALS } from "@/lib/catalog"
+import { OCCASIONS } from "@/lib/occasions"
 import { CITIES } from "@/lib/geo"
 import { POLICY } from "@/lib/pricing"
 
@@ -50,6 +51,16 @@ export function Footer() {
           </nav>
 
           <nav>
+            <h2 className="text-sm font-bold">Theo dịp</h2>
+            <ul className="mb-5 mt-2 space-y-1.5 text-[13px] text-ink-soft">
+              {OCCASIONS.map((o) => (
+                <li key={o.id}>
+                  <Link href={`/dip/${o.id}`} className="hover:text-ink">
+                    {o.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
             <h2 className="text-sm font-bold">Khu vực</h2>
             <ul className="mt-3 space-y-1.5 text-[13px] text-ink-soft">
               {CITIES.map((city) => (

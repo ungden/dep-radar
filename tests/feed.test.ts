@@ -177,3 +177,47 @@ describe("occasions", async () => {
     expect(occasionsFor(new Date("2026-09-23T09:00:00+07:00"))[0].id).not.toBe("ao-dai-tet")
   })
 })
+
+describe("serviceOffers", async () => {
+  const { serviceOffers } = await import("@/lib/offers")
+  const listing = (proId: string, templateId: string, prices: Record<string, number>, active = true) => ({
+    id: `${proId}:${templateId}`,
+    proId,
+    templateId,
+    prices,
+    active,
+  })
+
+  it("only lists services someone in the city offers, most offered first, with the real lowest price", () => {
+    const pros = [pro("a"), pro("b"), pro("c", { city: "Đà Nẵng" }), pro("d", { acceptingJobs: false })]
+    const offers = serviceOffers({
+      pros,
+      proServices: [
+        listing("a", "nail-gel", { hand: 150000 }),
+        listing("b", "nail-gel", { hand: 130000, "hand-foot": 300000 }),
+        listing("a", "makeup-daily", { single: 350000 }),
+        listing("c", "photo-phone", { "60m": 300000 }),
+        listing("d", "massage-foot", { "60m": 300000 }),
+        listing("b", "hair-cut", { women: 200000 }, false),
+      ],
+      works: [work("a", { templateId: "nail-gel" })],
+      city: "Hà Nội",
+      vertical: "all",
+    })
+    expect(offers.map((o) => o.template.id)).toEqual(["nail-gel", "makeup-daily"])
+    expect(offers[0].fromPrice).toBe(130000)
+    expect(offers[0].pros.map((p) => p.id).sort()).toEqual(["a", "b"])
+    expect(offers[0].photo).toBe("/x.jpg")
+  })
+
+  it("filters by trade", () => {
+    const offers = serviceOffers({
+      pros: [pro("a")],
+      proServices: [listing("a", "nail-gel", { hand: 150000 }), listing("a", "photo-phone", { "60m": 300000 })],
+      works: [],
+      city: null,
+      vertical: "photo",
+    })
+    expect(offers.map((o) => o.template.id)).toEqual(["photo-phone"])
+  })
+})
