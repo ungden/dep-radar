@@ -24,6 +24,8 @@ const KIND_LABEL: Record<string, string> = {
   adjustment: "Điều chỉnh",
   refund: "Hoàn lại",
   no_show_comp: "Bù phí di chuyển khi khách vắng mặt",
+  voucher: "Voucher 360dep khách dùng",
+  referral: "Thưởng giới thiệu",
 }
 
 export default async function WalletPage() {
@@ -41,7 +43,7 @@ export default async function WalletPage() {
           </p>
           <p className="mt-1 text-[13px] text-ink-soft">
             Khách trả tiền trực tiếp cho bạn. Mỗi job hoàn thành trừ {Math.round(POLICY.commissionRate * 100)}% giá dịch
-            vụ vào ví này.
+            vụ vào ví này. Phần voucher 360dep khách dùng và thưởng giới thiệu được cộng vào đây.
           </p>
           {blocked ? (
             <p className="mt-2 rounded-xl bg-danger-soft px-3 py-2 text-[13px] text-danger">

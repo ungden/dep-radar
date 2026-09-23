@@ -107,13 +107,17 @@ function ProfileTrust() {
         <Card className="p-4">
           <RatingSummaryBlock rating={pro.rating} />
         </Card>
+        {/* Only published reviews are here (the snapshot leaves out blind ones), so every one can be answered. */}
         <ul className="mt-2 divide-y divide-line">
           {reviews.map((r) => (
             // A review is identified by the booking it belongs to.
-            <ReviewItem key={r.id} review={r} onReply={(text) => void act(() => actions.replyReview(r.id, text), "Đã gửi phản hồi")} />
+            <ReviewItem key={r.id} review={r} onReply={(text) => act(() => actions.replyReview(r.id, text), "Đã gửi phản hồi")} />
           ))}
         </ul>
-        <p className="mt-2 text-xs text-muted">Bạn không thể xoá hay sửa đánh giá, chỉ phản hồi công khai. Đánh giá vi phạm có thể báo cáo cho 360dep.</p>
+        <p className="mt-2 text-xs text-muted">
+          Đánh giá hiện khi bạn cũng đã đánh giá khách, hoặc sau 14 ngày. Bạn không thể xoá hay sửa đánh giá, chỉ trả lời công khai một lần.
+          Đánh giá vi phạm có thể báo cáo cho 360dep.
+        </p>
       </section>
     </div>
   )

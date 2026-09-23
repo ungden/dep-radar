@@ -94,6 +94,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/gioi-thieu" className="hover:text-ink">
+                  Giới thiệu bạn bè
+                </Link>
+              </li>
+              <li>
                 <Link href="/login?role=pro" className="hover:text-ink">
                   Nhận khách trên 360dep
                 </Link>

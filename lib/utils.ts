@@ -1,8 +1,19 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { showsAverage } from "./connection"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+/**
+ * A freelancer's rating as the product may show it. The average only from
+ * MIN_REVIEWS_FOR_AVERAGE reviews on (lib/connection.ts): a 5.0 from one review
+ * says nothing. Before that, "Mới" and how many there are.
+ */
+export function ratingText(rating: { average: number; count: number }) {
+  if (showsAverage(rating.count)) return `★ ${rating.average.toFixed(1)} (${rating.count})`
+  return rating.count > 0 ? `Mới · ${rating.count} đánh giá` : "Mới"
 }
 
 export function formatPrice(value: number) {

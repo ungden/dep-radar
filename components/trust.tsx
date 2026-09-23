@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui"
 import { proView, type AppState } from "@/lib/store"
 import { bayesianRating, isVerified, rankScore } from "@/lib/trust"
 import type { Pro, RatingSummary, Review } from "@/lib/types"
+import { showsAverage } from "@/lib/connection"
 import { cn, parseISODate } from "@/lib/utils"
 
 /** Blue-check style mark next to the name: shown once identity is verified. */
@@ -38,7 +39,18 @@ export function Stars({ value, className }: { value: number; className?: string 
   )
 }
 
+/** The big number on a profile. Under three reviews there is no number to show: "Mới". */
 export function RatingSummaryBlock({ rating }: { rating: RatingSummary }) {
+  if (!showsAverage(rating.count))
+    return (
+      <div className="flex items-center gap-4">
+        <p className="text-4xl font-bold leading-none tracking-tight">Mới</p>
+        <p className="text-[13px] text-ink-soft">
+          {rating.count > 0 ? `${rating.count} đánh giá từ khách đã đặt lịch. ` : "Chưa có đánh giá. "}
+          Điểm trung bình hiện từ 3 đánh giá.
+        </p>
+      </div>
+    )
   return (
     <div className="flex items-center gap-4">
       <p className="text-5xl font-bold leading-none tracking-tight">{rating.average.toFixed(1)}</p>
@@ -50,9 +62,16 @@ export function RatingSummaryBlock({ rating }: { rating: RatingSummary }) {
   )
 }
 
-export function ReviewItem({ review, onReply }: { review: Review; onReply?: (text: string) => void }) {
+/**
+ * One review. `onReply` offers the freelancer's public answer: once per review
+ * (the database refuses a second), so the box goes as soon as there is one.
+ * It resolves to an error sentence, or null.
+ */
+export function ReviewItem({ review, onReply }: { review: Review; onReply?: (text: string) => Promise<string | null> }) {
   const [replying, setReplying] = React.useState(false)
   const [text, setText] = React.useState("")
+  const [error, setError] = React.useState<string | null>(null)
+  const [busy, setBusy] = React.useState(false)
   return (
     <li className="py-4">
       <div className="flex items-center gap-3">
@@ -97,24 +116,33 @@ export function ReviewItem({ review, onReply }: { review: Review; onReply?: (tex
         !review.reply &&
         (replying ? (
           <form
-            className="mt-3 flex gap-2"
-            onSubmit={(e) => {
+            className="mt-3"
+            onSubmit={async (e) => {
               e.preventDefault()
-              if (text.trim().length < 2) return
-              onReply(text.trim())
-              setReplying(false)
+              if (text.trim().length < 2 || busy) return
+              setBusy(true)
+              const message = await onReply(text.trim())
+              setBusy(false)
+              setError(message)
+              if (!message) setReplying(false)
             }}
           >
-            <input
-              autoFocus
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Cảm ơn khách, giải thích nếu có vấn đề…"
-              className="h-11 flex-1 rounded-full border border-line bg-surface px-4 text-[15px] focus:border-accent focus:outline-none"
-            />
-            <button type="submit" className="h-11 rounded-full bg-accent px-5 text-[14px] font-semibold text-white">
-              Gửi
-            </button>
+            <div className="flex gap-2">
+              <input
+                autoFocus
+                value={text}
+                maxLength={1000}
+                onChange={(e) => setText(e.target.value)}
+                aria-label="Trả lời đánh giá"
+                placeholder="Cảm ơn khách, giải thích nếu có vấn đề…"
+                className="h-11 min-w-0 flex-1 rounded-full border border-line bg-surface px-4 text-[15px] focus:border-accent focus:outline-none"
+              />
+              <button type="submit" disabled={busy} className="h-11 rounded-full bg-accent px-5 text-[14px] font-semibold text-white disabled:opacity-40">
+                Gửi
+              </button>
+            </div>
+            <p className="mt-1.5 text-xs text-muted">Trả lời công khai, một lần, không sửa được. Khách được báo khi bạn trả lời.</p>
+            {error && <p className="mt-1 text-[13px] text-danger">{error}</p>}
           </form>
         ) : (
           <button type="button" onClick={() => setReplying(true)} className="mt-2 min-h-11 text-[14px] font-semibold text-ink underline underline-offset-4">

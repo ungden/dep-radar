@@ -14,6 +14,9 @@ export function MobileLinks({ className }: { className?: string }) {
       <Link href="/tro-giup" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
         Trợ giúp
       </Link>
+      <Link href="/gioi-thieu" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
+        Giới thiệu bạn bè
+      </Link>
       <Link href="/login?role=pro" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
         Nhận khách trên 360dep
       </Link>

@@ -24,12 +24,18 @@ export function ReportButton({
   bookingId,
   targetAccountId,
   label = "Báo cáo vấn đề",
+  startOpen = false,
+  onClose,
 }: {
   bookingId?: string | null
   targetAccountId?: string | null
   label?: string
+  /** Show the form straight away, e.g. inside a menu that was opened to report. */
+  startOpen?: boolean
+  /** Called when the form is dismissed with "Huỷ". */
+  onClose?: () => void
 }) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(startOpen)
   const [reason, setReason] = React.useState(REASONS[0])
   const [detail, setDetail] = React.useState("")
   const [state, setState] = React.useState<"form" | "sent">("form")
@@ -86,7 +92,14 @@ export function ReportButton({
         </p>
       )}
       <div className="flex gap-2">
-        <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            setOpen(false)
+            onClose?.()
+          }}
+        >
           Huỷ
         </Button>
         <Button

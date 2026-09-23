@@ -2,6 +2,7 @@ import { cache } from "react"
 import { backendEnabled } from "@/lib/supabase/env"
 import { supabaseServer } from "@/lib/supabase/server"
 import { toProDetail, toProSummary, toReviewItem, toWorkItem } from "./map"
+import { orLegacy } from "./errors"
 import type { ListedService, ProDetail, ProSummary, ReviewItem, WorkItem } from "./types"
 
 /**
@@ -44,10 +45,13 @@ export async function listPros(filter: { city?: string; category?: string } = {}
 export const getProBySlug = cache(async function getProBySlug(slug: string): Promise<ProDetail | null> {
   if (!backendEnabled) return null
   const supabase = await supabaseServer()
+  // Links the database writes into notifications ("/pros/" || pro_id) carry the
+  // row id, not the slug; the page redirects those to the slug.
+  const byId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug)
   const { data, error } = await supabase
     .from("pros")
     .select(PRO_PUBLIC)
-    .eq("slug", slug)
+    .eq(byId ? "id" : "slug", slug)
     .is("suspended_at", null)
     .maybeSingle()
   if (error) throw error
@@ -90,14 +94,18 @@ export async function listWorks(filter: { proId?: string; category?: string; lim
 export async function listReviews(proId: string): Promise<ReviewItem[]> {
   if (!backendEnabled) return []
   const supabase = await supabaseServer()
-  const { data, error } = await supabase
-    .from("reviews")
-    // No join: `bookings` is private, so joining it would hide every review
-    // from anyone who is not a party to it.
-    .select("booking_id, pro_id, author_name, service_label, rating, tags, body, photo_paths, reply, created_at")
-    .eq("pro_id", proId)
-    .is("hidden_at", null)
-    .order("created_at", { ascending: false })
+  // A blind review is readable by its own author, but it is not public yet;
+  // before the review rules migration there is no such thing.
+  const { data, error } = await orLegacy((legacy) => {
+    const query = supabase
+      .from("reviews")
+      // No join: `bookings` is private, so joining it would hide every review
+      // from anyone who is not a party to it.
+      .select("booking_id, pro_id, author_name, service_label, rating, tags, body, photo_paths, reply, created_at")
+      .eq("pro_id", proId)
+      .is("hidden_at", null)
+    return (legacy ? query : query.not("published_at", "is", null)).order("created_at", { ascending: false })
+  })
   if (error) throw error
   return (data ?? []).map((row) => toReviewItem(row as never))
 }

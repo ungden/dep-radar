@@ -282,6 +282,30 @@ export interface Booking {
   groupId?: string
   /** Photo & video only: the files owed after the session. */
   delivery?: Delivery
+  /** When the job was completed; both reviews are due within 14 days of it. */
+  completedAt?: string
+  /** When it was cancelled, declined or marked a no-show. */
+  cancelledAt?: string
+  /**
+   * A 360dep voucher on this booking. The customer pays the freelancer
+   * total - discount; 360dep adds the discount to the freelancer's wallet when
+   * the job is completed. 0 without one.
+   */
+  discount: number
+  voucherId?: string
+  /** The customer's review of this job, as far as the viewer may see it (a freelancer: once published). */
+  review?: BookingReview
+  /** The customer has disputed the freelancer's no-show report. */
+  disputed?: boolean
+}
+
+export interface BookingReview {
+  rating: number
+  tags: string[]
+  text: string
+  photos: string[]
+  /** Null while blind: written, but not shown to anyone else yet. */
+  publishedAt: string | null
 }
 
 export type UsageScope = "personal" | "commercial"

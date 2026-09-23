@@ -13,7 +13,7 @@ import { categoryLabel, getVertical, verticalOf } from "@/lib/catalog"
 import { actions, useAct } from "@/lib/client-actions"
 import { getPro, useApp, worksOf } from "@/lib/store"
 import type { ApplicationStatus } from "@/lib/types"
-import { cn, formatDateLong } from "@/lib/utils"
+import { cn, formatDateLong, ratingText } from "@/lib/utils"
 
 const APPLICATION_LABEL: Record<ApplicationStatus, string> = {
   pending: "Đã gửi, đang chờ chọn",
@@ -96,7 +96,7 @@ export default function CastingPage() {
                   </p>
                   <p className="text-[13px] text-ink-soft">
                     {pro.title || trade.label}
-                    {pro.rating.count ? ` · ★ ${pro.rating.average.toFixed(1)} (${pro.rating.count})` : ""}
+                    {pro.rating.count ? ` · ${ratingText(pro.rating)}` : ""}
                   </p>
                   <VerifiedBadge pro={pro} className="mt-1.5" />
                 </div>
