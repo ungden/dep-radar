@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo-google-fonts/be-vietnam-pro": "^0.4.1",
+    "@expo-google-fonts/playfair-display": "^0.4.2",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@shopify/flash-list": "2.0.2",
     "@supabase/supabase-js": "^2.116.0",

@@ -33,7 +33,14 @@ export const metadata: Metadata = {
   },
   description:
     "Đặt thợ nail, makeup, chăm sóc da, người chụp ảnh bằng điện thoại, quay clip ngắn và người mẫu gần bạn. Xem tác phẩm thật, giá rõ ràng, đặt lịch nhanh.",
-  icons: { icon: [{ url: "/brand/favicon.svg", type: "image/svg+xml" }] },
+  icons: {
+    icon: [
+      { url: "/brand/favicon.svg", type: "image/svg+xml" },
+      { url: "/brand/favicon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    // iPhone "Add to Home Screen" uses this; without it iOS shows a screenshot.
+    apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180" }],
+  },
   twitter: { card: "summary_large_image" },
   openGraph: {
     type: "website",
