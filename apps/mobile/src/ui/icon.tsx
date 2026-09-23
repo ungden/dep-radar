@@ -1,5 +1,6 @@
 import { SymbolView } from "expo-symbols"
 import type { StyleProp, ViewStyle } from "react-native"
+import type { CategoryId } from "@/shared"
 import { colors } from "@/theme"
 
 /** SF Symbols on iOS, Material Symbols on Android, one name for both. */
@@ -39,9 +40,36 @@ const ICONS = {
   check: { ios: "checkmark", android: "check" },
   shop: { ios: "storefront", android: "storefront" },
   info: { ios: "info.circle", android: "info" },
+  box: { ios: "shippingbox", android: "inventory_2" },
+  // One per category, for a service with no photo yet.
+  hand: { ios: "hand.raised", android: "back_hand" },
+  brush: { ios: "paintbrush.pointed", android: "brush" },
+  drop: { ios: "drop", android: "water_drop" },
+  scissors: { ios: "scissors", android: "content_cut" },
+  eye: { ios: "eye", android: "visibility" },
+  leaf: { ios: "leaf", android: "spa" },
+  iphone: { ios: "iphone", android: "smartphone" },
+  film: { ios: "film", android: "movie" },
+  portrait: { ios: "person.crop.rectangle", android: "portrait" },
 } as const
 
 export type IconName = keyof typeof ICONS
+
+/** Same pictures as CATEGORY_ICON on the web (components/beauty.tsx). */
+export const CATEGORY_ICON: Record<CategoryId, IconName> = {
+  nail: "hand",
+  makeup: "brush",
+  skincare: "drop",
+  hair: "scissors",
+  "lash-brow": "eye",
+  massage: "leaf",
+  photophone: "iphone",
+  camera: "camera",
+  "short-video": "film",
+  "product-photo": "box",
+  "model-photo": "portrait",
+  "model-video": "video",
+}
 
 export function Icon({
   name,
