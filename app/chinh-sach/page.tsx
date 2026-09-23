@@ -120,7 +120,7 @@ export default function PolicyPage() {
 
         <Section title="10. Người mẫu & tuyển mẫu">
           <ul className="list-disc space-y-1 pl-5">
-            <li>Dịch vụ người mẫu, tin tuyển mẫu có thù lao và tin tuyển mẫu ảnh chỉ mở cho tài khoản đã xác minh danh tính.</li>
+            <li>Mọi tin tuyển mẫu chỉ mở cho tài khoản đã xác minh danh tính. Dịch vụ người mẫu và tin tuyển mẫu có thù lao còn cần đủ 18 tuổi (đọc từ ngày sinh trên CCCD; 360dep chỉ lưu năm sinh).</li>
             <li>Không nhận nội dung nội y, khoả thân, ảnh nhạy cảm hay tương tự; tin vi phạm bị chặn khi đăng và có thể bị khoá hồ sơ.</li>
             <li>Người tuyển mẫu không bao giờ được thu tiền của mẫu (đặt cọc, phí hồ sơ…). Gặp trường hợp này, hãy báo cáo ngay.</li>
             <li>Hồ sơ người mẫu không thu thập số đo cơ thể. Dùng hình ảnh của một người để kinh doanh cần sự đồng ý của người đó.</li>

@@ -181,7 +181,7 @@ function CastingForm({ onDone }: { onDone: () => void }) {
             </button>
           ))}
         </div>
-        {!verified && <p className="mt-2 text-[13px] text-ink-soft">Tin có thù lao chỉ mở khi bạn đã xác minh danh tính.</p>}
+        {!verified && <p className="mt-2 text-[13px] text-ink-soft">Đăng tin tuyển mẫu cần xác minh danh tính; tin có thù lao cần thêm đủ 18 tuổi.</p>}
       </fieldset>
 
       {compensation === "discount" && (
