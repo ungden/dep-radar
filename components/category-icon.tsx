@@ -45,10 +45,11 @@ export function CategoryTiles({
   className,
 }: {
   /** `soon`: nobody offers it in scope yet; shown muted with "Sắp có". */
-  items: { id: CategoryIconId; label: string; soon?: boolean }[]
+  /** `className`: e.g. "hidden lg:flex" for a tile only wide screens have room for. */
+  items: { id: CategoryIconId; label: string; soon?: boolean; className?: string }[]
   value: CategoryIconId
   onChange: (id: CategoryIconId) => void
-  more?: { open: boolean; onToggle: () => void }
+  more?: { open: boolean; onToggle: () => void; className?: string }
   row?: boolean
   className?: string
 }) {
@@ -57,7 +58,7 @@ export function CategoryTiles({
       role="radiogroup"
       aria-label="Danh mục"
       className={cn(
-        "grid grid-cols-5 gap-x-1 gap-y-3 sm:grid-cols-7 sm:gap-x-2 lg:flex lg:flex-wrap lg:gap-x-5 lg:gap-y-4",
+        "grid grid-cols-5 gap-x-1 gap-y-3 sm:grid-cols-7 sm:gap-x-2 lg:flex lg:flex-wrap lg:gap-x-3 lg:gap-y-4",
         className,
       )}
     >
@@ -71,7 +72,7 @@ export function CategoryTiles({
             aria-checked={active}
             onClick={() => onChange(it.id)}
             aria-label={it.soon ? `${it.label}, sắp có` : it.label}
-            className={cn("group relative flex min-w-0 flex-col items-center gap-1 text-center", !row && "lg:w-[84px]")}
+            className={cn("group relative flex min-w-0 flex-col items-center gap-1 text-center", !row && "lg:w-[80px]", it.className)}
           >
             <span
               className={cn(
@@ -109,7 +110,7 @@ export function CategoryTiles({
           type="button"
           onClick={more.onToggle}
           aria-expanded={more.open}
-          className={cn("group flex min-w-0 flex-col items-center gap-1 text-center", !row && "lg:w-[84px]")}
+          className={cn("group flex min-w-0 flex-col items-center gap-1 text-center", !row && "lg:w-[80px]", more.className)}
         >
           <span
             className={cn(
