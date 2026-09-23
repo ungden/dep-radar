@@ -176,7 +176,10 @@ begin
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.review_customer(booking, 5, 'Khách dễ thương, đúng giờ.');
   assert (select published_at is not null from public.reviews where booking_id = booking), 'both written, still blind';
-  assert (select rating_count from public.pros where id = linh) = n + 1, 'the rating does not follow published reviews';
+  -- The demo data sets rating_count by hand; once recomputed it is the published reviews.
+  assert (select rating_count from public.pros where id = linh)
+       = (select count(*) from public.reviews where pro_id = linh and published_at is not null and hidden_at is null),
+    'the rating does not follow published reviews';
 
   perform set_config('request.jwt.claim.sub', thu::text, true);
   begin
