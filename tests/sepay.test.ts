@@ -39,30 +39,29 @@ const sample = {
 }
 
 describe("memoCandidates", () => {
-  it("puts the freelancer's code first, clean", () => {
-    expect(memoCandidates("CT DEN:123 NAP AB23CD chuyen tien")).toEqual(["NAP AB23CD", "CT DEN:123 NAP AB23CD chuyen tien"])
-    expect(memoCandidates("nap ab23cd")).toEqual(["NAP AB23CD", "nap ab23cd"])
+  it("puts SePay's recognised code first, then codes in the memo, clean", () => {
+    expect(memoCandidates("CT DEN:123 DEPAB23CD chuyen tien", "DEPAB23CD")).toEqual(["DEPAB23CD", "CT DEN:123 DEPAB23CD chuyen tien"])
+    expect(memoCandidates("dep ab23cd")).toEqual(["DEPAB23CD", "dep ab23cd"])
   })
 
-  it("does not let the interbank word NAPAS hide the real code", () => {
-    const memo = "IBFT NAPAS2479 NAP AB23CD"
-    expect(memoCandidates(memo)).toEqual(["NAP AS2479", "NAP AB23CD", memo])
+  it("does not take DEPOSIT or a longer word for a code", () => {
+    expect(memoCandidates("DEPOSIT DEPAB23CD")).toEqual(["DEPAB23CD", "DEPOSIT DEPAB23CD"])
+    expect(memoCandidates("DEPAB23CDXYZ")).toEqual(["DEPAB23CDXYZ"])
   })
 
-  it("still passes a memo with no clean code on as it came", () => {
+  it("still passes a memo with no code on as it came", () => {
     expect(memoCandidates("chuyen tien an trua")).toEqual(["chuyen tien an trua"])
-    expect(memoCandidates("NAPAB23CDXYZ")).toEqual(["NAPAB23CDXYZ"])
   })
 })
 
 describe("parseSepay", () => {
   it("reads a transfer in, with SePay's id as the reference", () => {
-    expect(parseSepay(sample)).toEqual({ kind: "in", ref: "sepay:92704", content: sample.content, amount: 250000 })
+    expect(parseSepay(sample)).toMatchObject({ kind: "in", ref: "sepay:92704", content: sample.content, amount: 250000 })
   })
 
   it("falls back to the description when the content is empty", () => {
-    const tx = parseSepay({ ...sample, content: "", description: "NAP AB23CD" })
-    expect(tx).toMatchObject({ kind: "in", content: "NAP AB23CD" })
+    const tx = parseSepay({ ...sample, content: "", description: "DEPAB23CD" })
+    expect(tx).toMatchObject({ kind: "in", content: "DEPAB23CD" })
   })
 
   it("ignores money going out and amounts that are not a positive whole number", () => {

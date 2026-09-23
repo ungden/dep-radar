@@ -40,7 +40,7 @@ export interface AdminPro {
   rating: number
   ratingCount: number
   wallet: number
-  /** The code on their fee transfers ("NAP AB23CD"); null before the match-then-chat migration. */
+  /** The code on their fee transfers ("DEPAB23CD"); null before the match-then-chat migration. */
   payCode: string | null
 }
 

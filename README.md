@@ -125,18 +125,22 @@ ví người làm và gửi thông báo "Thanh toán phí …". Khi ví còn âm
 khách không đặt được lịch với họ; nạp đủ là tự mở lại, không phải bật gì.
 
 **Ghi nhận nạp ví bằng tay:** `/admin` → tab **Nạp ví**: tìm người làm theo mã nạp (nội dung chuyển khoản
-`NAP AB23CD`, mỗi người một mã, xem ở tab Chuyên viên), slug hoặc tên; nhập số tiền và mã giao dịch ngân hàng. Cùng
+`DEPAB23CD`, mỗi người một mã, xem ở tab Chuyên viên), slug hoặc tên; nhập số tiền và mã giao dịch ngân hàng. Cùng
 một mã giao dịch không cộng hai lần.
 
 **Tự cộng ví khi có tiền về (SePay):** web có sẵn webhook `POST /api/payments/sepay`. Chưa đặt khoá thì webhook trả
 503 (đang tắt) và app nói với người làm là nhân viên ghi nhận bằng tay. Bật một lần:
 
-1. Tạo tài khoản [SePay](https://sepay.vn), liên kết đúng tài khoản ngân hàng đã điền ở `platform_settings.topup_account_no`.
-2. SePay → Webhooks → Thêm webhook: sự kiện **Có tiền vào**, URL `https://www.360dep.vn/api/payments/sepay`,
-   kiểu chứng thực **API Key**, tự đặt một chuỗi dài ngẫu nhiên làm khoá.
-3. Vercel → Project → Settings → Environment Variables: thêm `SEPAY_WEBHOOK_KEY` = đúng chuỗi đó (Production), cùng
+1. Tạo tài khoản [SePay](https://sepay.vn), liên kết đúng tài khoản ngân hàng đã điền ở `platform_settings.topup_account_no`
+   (hiện là MBBank 9999977977 của công ty).
+2. SePay → Cấu hình công ty → Cấu hình chung → Cấu trúc mã thanh toán: mẫu **tiền tố `DEP`, hậu tố 6–6 ký tự số và
+   chữ** (đã thêm ngày 23/09/2026). Nội dung chuyển khoản là `DEP` + mã nạp, viết liền.
+3. SePay → Webhooks → Thêm webhook: **Tiền vào**, URL `https://www.360dep.vn/api/payments/sepay`, chỉ tài khoản MBBank
+   trên, bật "Dùng để xác thực thanh toán" + "Chỉ gửi khi có mã thanh toán" lọc `DEP` (tài khoản này nhận tiền cho
+   nhiều dự án khác), kiểu chứng thực **API Key**, tự đặt một chuỗi dài ngẫu nhiên làm khoá (đã tạo: webhook #58998).
+4. Vercel → Project → Settings → Environment Variables: thêm `SEPAY_WEBHOOK_KEY` = đúng chuỗi đó (Production), cùng
    `SUPABASE_SERVICE_ROLE_KEY` nếu chưa có, rồi deploy lại.
-4. Chuyển thử 10.000đ với nội dung `NAP <mã nạp của một người làm>`: ví người đó được cộng và họ nhận thông báo.
+5. Chuyển thử 10.000đ với nội dung `DEP<mã nạp của một người làm>`: ví người đó được cộng và họ nhận thông báo.
    Giao dịch không có mã (hoặc mã sai) thì không cộng cho ai; ghi nhận tay ở `/admin`.
 
 Webhook kiểm tra header `Authorization: Apikey <khoá>`, bỏ qua tiền ra, và dùng mã giao dịch của SePay làm tham

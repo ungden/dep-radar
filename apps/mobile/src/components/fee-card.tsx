@@ -21,7 +21,7 @@ export const OWING_NOTE = "Thanh toán phí của đơn trước để nhận đ
 
 /**
  * Shown while the wallet is below zero: the fee of the last completed job,
- * and how to pay it. A transfer with the memo "NAP <code>" is credited by
+ * and how to pay it. A transfer with the memo "DEP<code>" is credited by
  * 360dep (staff or the bank's notice) and accepting works again by itself.
  * Nothing is shown when nothing is owed.
  */

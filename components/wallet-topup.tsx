@@ -25,7 +25,7 @@ export function useTopupMemo(): string | null {
   const state = useApp()
   const code = state.myWallet?.payCode
   if (code) return payMemo(code)
-  return state.session?.proId ? `NAP ${state.session.proId}` : null
+  return null
 }
 
 /** How the money reaches the wallet, said as it is. */

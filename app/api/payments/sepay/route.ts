@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/server"
 
 /**
  * SePay's webhook: every transaction on 360dep's bank account. A transfer in
- * whose memo carries a freelancer's pay code ("NAP AB23CD", see payMemo in
+ * whose memo carries a freelancer's pay code ("DEPAB23CD", see payMemo in
  * lib/connection.ts) is credited to their wallet by record_bank_topup, which
  * only the service role may call. Turning it on: README, "Vận hành".
  *
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
   // One transaction, one reference: whichever memo credits first, the others
   // can no longer (the ref is unique among top-ups).
-  for (const memo of memoCandidates(tx.content)) {
+  for (const memo of memoCandidates(tx.content, tx.code)) {
     const { data, error } = await admin.rpc("record_bank_topup", { p_content: memo, p_amount: tx.amount, p_ref: tx.ref })
     if (error) {
       // Logged without the memo or the amount: the reference is enough to find it.

@@ -155,7 +155,7 @@ export function AdminDesk({
 
 /**
  * Staff record a transfer they saw on the bank statement: find the freelancer
- * by the code in the memo ("NAP AB23CD"), their slug or name, then the amount
+ * by the code in the memo ("DEPAB23CD"), their slug or name, then the amount
  * and the bank's reference. record_topup checks is_admin() again.
  */
 function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
@@ -166,8 +166,8 @@ function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
   const [busy, setBusy] = React.useState(false)
   const [result, setResult] = React.useState<{ ok: boolean; text: string } | null>(null)
 
-  // "NAP AB23CD" pasted whole works too.
-  const q = query.trim().replace(/^nap\s*/i, "").toLowerCase()
+  // The memo pasted whole ("DEPAB23CD") works too.
+  const q = query.trim().replace(/^dep\s*(?=[a-z0-9]{6}$)/i, "").toLowerCase()
   const matches = q
     ? pros
         .filter(
