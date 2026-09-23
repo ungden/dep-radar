@@ -221,3 +221,20 @@ describe("serviceOffers", async () => {
     expect(offers.map((o) => o.template.id)).toEqual(["photo-phone"])
   })
 })
+
+describe("serviceOffers photos", async () => {
+  const { serviceOffers } = await import("@/lib/offers")
+  it("never shows the same borrowed photo on two services", () => {
+    const offers = serviceOffers({
+      pros: [pro("a")],
+      proServices: [
+        { id: "1", proId: "a", templateId: "makeup-daily", prices: { single: 300000 }, active: true },
+        { id: "2", proId: "a", templateId: "makeup-party", prices: { makeup: 500000 }, active: true },
+      ],
+      works: [work("a", { templateId: "makeup-photo", category: "makeup", images: ["/only.jpg"] })],
+      city: null,
+      vertical: "all",
+    })
+    expect(offers.map((o) => o.photo).filter(Boolean)).toEqual(["/only.jpg"])
+  })
+})

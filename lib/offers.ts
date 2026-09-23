@@ -42,23 +42,38 @@ export function serviceOffers(input: {
     byTemplate.set(listing.templateId, entry)
   }
 
-  // Prefer work by someone the customer can book, then any work of this
-  // service, then real work in the same category; a before/after shows its "after".
-  const photoOf = (template: ServiceTemplate) => {
+  // A service's own work first (by someone bookable, then anyone). Without
+  // any, it may borrow real work from its category -- but never a photo
+  // another card already shows, or two services look like the same thing.
+  const coverOf = (w: Work) => (w.kind === "before_after" ? (w.images[1] ?? w.images[0]) : w.images[0])
+  const ownPhoto = (template: ServiceTemplate) => {
     const work =
       input.works.find((w) => w.templateId === template.id && inScope.has(w.proId) && w.images[0]) ??
-      input.works.find((w) => w.templateId === template.id && w.images[0]) ??
-      input.works.find((w) => w.category === template.category && inScope.has(w.proId) && w.images[0])
-    return work ? (work.kind === "before_after" ? (work.images[1] ?? work.images[0]) : work.images[0]) : undefined
+      input.works.find((w) => w.templateId === template.id && w.images[0])
+    return work ? coverOf(work) : undefined
   }
 
-  return CATALOG.map((template, order) => ({ template, order, entry: byTemplate.get(template.id) }))
+  const offers = CATALOG.map((template, order) => ({ template, order, entry: byTemplate.get(template.id) }))
     .filter((x) => x.entry && (input.vertical === "all" || verticalOf(x.template.category) === input.vertical))
     .sort((a, b) => b.entry!.pros.length - a.entry!.pros.length || a.order - b.order)
     .map(({ template, entry }) => ({
       template,
       pros: entry!.pros,
       fromPrice: Math.min(...entry!.prices),
-      photo: photoOf(template),
+      photo: ownPhoto(template),
     }))
+
+  const used = new Set(offers.map((o) => o.photo).filter(Boolean))
+  for (const offer of offers) {
+    if (offer.photo) continue
+    const borrowed = input.works
+      .filter((w) => w.category === offer.template.category && inScope.has(w.proId) && w.images[0])
+      .map(coverOf)
+      .find((src) => src && !used.has(src))
+    if (borrowed) {
+      offer.photo = borrowed
+      used.add(borrowed)
+    }
+  }
+  return offers
 }
