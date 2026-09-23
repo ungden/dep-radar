@@ -61,8 +61,8 @@ function RequestDetail() {
         {job.offers.length === 0 ? (
           <EmptyState
             icon={<Hourglass className="size-6" />}
-            title="Đang chờ freelancer báo giá"
-            text="Yêu cầu đã được gửi tới freelancer phù hợp trong khu vực. Thường có báo giá đầu tiên sau 15-30 phút."
+            title="Đang chờ người làm báo giá"
+            text="Người làm phù hợp trong khu vực thấy yêu cầu này và gửi báo giá tại đây."
           />
         ) : (
           <ul className="space-y-3">
@@ -90,7 +90,7 @@ function RequestDetail() {
                           <VerifiedMark pro={pro} />
                         </Link>
                         <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
-                          <Rating value={pro.rating.average} count={pro.rating.count} className="text-xs" /> · {pro.stats.completedJobs} job
+                          <Rating value={pro.rating.average} count={pro.rating.count} className="text-xs" /> · {pro.stats.completedJobs} lịch đã làm
                         </p>
                       </div>
                       <div className="text-right">

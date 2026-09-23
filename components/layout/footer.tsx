@@ -103,12 +103,17 @@ export function Footer() {
                   Tất cả người làm
                 </Link>
               </li>
+              <li>
+                <Link href="/tuyen-mau" className="hover:text-ink">
+                  Tuyển mẫu
+                </Link>
+              </li>
             </ul>
           </nav>
         </div>
 
         <p className="mt-8 border-t border-line pt-5 text-xs text-muted">
-          Bản demo: chuyên viên và tác phẩm hiện là dữ liệu mẫu, thanh toán online chưa hoạt động.
+          Bản demo: nhiều hồ sơ người làm và tác phẩm là dữ liệu mẫu, thanh toán online chưa hoạt động.
         </p>
       </div>
     </footer>

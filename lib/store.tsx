@@ -100,7 +100,7 @@ export function homeAvailability(
   address: CustomerAddress,
 ): HomeAvailability {
   const pro = getPro(s, proId)
-  if (!pro) return { ok: false, reason: "Không tìm thấy chuyên viên." }
+  if (!pro) return { ok: false, reason: "Không tìm thấy người làm." }
   const template = getTemplate(templateId)
   if (!pro.homeService) return { ok: false, reason: `${pro.name} chỉ nhận làm tại studio.` }
   if (template?.studioOnly) return { ok: false, reason: "Dịch vụ này cần thiết bị tại studio." }

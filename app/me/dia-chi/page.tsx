@@ -27,7 +27,7 @@ function Addresses() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-ink-soft">
-        Chuyên viên đi tới đây, và khoảng cách quyết định phí di chuyển. Địa chỉ chỉ bạn và chuyên viên đã nhận job của
+        Người làm đi tới đây, và khoảng cách quyết định phí di chuyển. Địa chỉ chỉ bạn và người làm đã nhận lịch của
         bạn nhìn thấy.
       </p>
 

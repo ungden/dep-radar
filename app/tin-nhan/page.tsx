@@ -24,7 +24,7 @@ export default async function InboxPage() {
           <EmptyState
             icon={<MessageSquare className="size-6" />}
             title="Chưa có tin nhắn nào"
-            text="Nhắn cho chuyên viên từ hồ sơ của họ, hoặc từ một lịch hẹn đã đặt."
+            text="Nhắn cho người làm từ hồ sơ của họ, hoặc từ một lịch hẹn đã đặt."
           />
         ) : (
           <ul className="space-y-2">

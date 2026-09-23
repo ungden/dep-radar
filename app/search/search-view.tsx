@@ -7,12 +7,14 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { ChevronLeft, Search, SlidersHorizontal, X } from "lucide-react"
 import { PostCard, ProCard, VerticalSwitch } from "@/components/beauty"
 import { CategoryTiles } from "@/components/category-icon"
+import { ServiceCard } from "@/components/service-card"
 import { Sheet } from "@/components/sheet"
 import { sortPros } from "@/components/trust"
 import { Button, ButtonLink, Chip, PageSkeleton, Tabs, Toggle } from "@/components/ui"
-import { CATEGORIES, getTemplate, getVertical, isVertical, verticalOf } from "@/lib/catalog"
+import { CATEGORIES, categoryLabel, getTemplate, getVertical, isVertical, verticalOf } from "@/lib/catalog"
 import { interestsFrom, rankFeed, type VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
+import { serviceOffers } from "@/lib/offers"
 import { categoryTerms, matchesQuery } from "@/lib/search"
 import { distanceToCustomer, fromPrice, proView, servicesOf, useApp, type AppState } from "@/lib/store"
 import { categoriesInTrade } from "@/lib/trade"
@@ -28,7 +30,7 @@ const PRICE_OPTIONS = [
 ]
 
 type Sort = "match" | "price" | "near"
-type Mode = "works" | "pros"
+type Mode = "services" | "works" | "pros"
 
 export function SearchPageView() {
   return (
@@ -73,7 +75,8 @@ function SearchView() {
   const rawSort = (params.get("sort") as Sort | null) ?? "match"
   // Distance only means something once we know where the customer is.
   const sort: Sort = rawSort === "near" && !hasAddress ? "match" : rawSort
-  const mode: Mode = params.get("tab") === "pros" ? "pros" : "works"
+  const rawTab = params.get("tab")
+  const mode: Mode = rawTab === "pros" || rawTab === "works" ? rawTab : "services"
 
   const setParams = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams(params.toString())
@@ -97,6 +100,20 @@ function SearchView() {
     [city, verifiedOnly, openOnly, comesToYou],
   )
 
+  // What is for sale, as on the home page: a service somebody in scope lists,
+  // matched on the service itself -- its name, description and category.
+  const services = React.useMemo(() => {
+    const pros = state.pros.filter(proOk)
+    const list = serviceOffers({ pros, proServices: state.proServices, works: state.works, city: city || null, vertical }).filter(
+      (o) =>
+        (!category || o.template.category === category) &&
+        (!comesToYou || !o.template.studioOnly) &&
+        (!maxPrice || o.fromPrice <= maxPrice) &&
+        matchesQuery(`${o.template.name} ${o.template.description} ${categoryLabel(o.template.category)}`, query),
+    )
+    return sort === "price" ? [...list].sort((a, b) => a.fromPrice - b.fromPrice) : list
+  }, [state.pros, state.proServices, state.works, proOk, city, vertical, category, comesToYou, maxPrice, query, sort])
+
   const works = React.useMemo(() => {
     const list = state.works.filter((w) => {
       const pro = proView(state, w.proId)
@@ -107,7 +124,9 @@ function SearchView() {
       if (comesToYou && tpl?.studioOnly) return false
       const price = fromPrice(state, w.proId, w.templateId)
       if (maxPrice && (price === null || price > maxPrice)) return false
-      return matchesQuery(`${w.title} ${w.description} ${tpl?.name ?? ""} ${categoryTerms(w.category)} ${pro.name} ${pro.title} ${pro.district}`, query)
+      // The work itself, not the person: "nail" should not return a makeup
+      // photo because its author also does nails.
+      return matchesQuery(`${w.title} ${w.description} ${tpl?.name ?? ""} ${categoryLabel(w.category)}`, query)
     })
     if (sort === "price")
       return [...list].sort(
@@ -149,7 +168,7 @@ function SearchView() {
   const active = [cityParam !== null && city !== (state.city ?? ""), maxPrice, verifiedOnly, openOnly, comesToYou, sort !== "match"].filter(
     Boolean,
   ).length
-  const resultCount = mode === "works" ? works.length : pros.length
+  const resultCount = mode === "services" ? services.length : mode === "works" ? works.length : pros.length
   const clearFilters = () => setParams({ city: null, price: null, verified: null, open: null, home: null, sort: null })
 
   const filters = (
@@ -194,7 +213,7 @@ function SearchView() {
             enterKeyHint="search"
             aria-label="Tìm kiếm"
             placeholder="Nail, makeup, chụp ảnh, thuê mẫu…"
-            className="h-13 w-full rounded-full border border-line bg-surface pl-12 pr-12 text-[16px] shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-accent focus:outline-none md:h-14 [&::-webkit-search-cancel-button]:hidden"
+            className="h-13 w-full rounded-full border border-line-strong bg-surface pl-12 pr-12 text-[16px] shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-accent focus:outline-none md:h-14 [&::-webkit-search-cancel-button]:hidden"
           />
           {q && (
             <button
@@ -215,8 +234,10 @@ function SearchView() {
       <div className="sticky top-0 z-30 -mx-4 mt-3 bg-canvas/95 px-4 py-2.5 backdrop-blur md:top-16 md:mx-0 md:mt-5 md:px-0">
         <VerticalSwitch value={vertical} onChange={setVertical} />
       </div>
+      {/* With a query the results matter more than the categories: one row. */}
       <CategoryTiles
         className="mt-3"
+        row={Boolean(query)}
         items={[{ id: "all", label: "Tất cả" }, ...categoriesInTrade(vertical).map((c) => ({ id: c.id, label: c.label }))]}
         value={category ?? "all"}
         onChange={(id) => setParams({ category: id === "all" ? null : id })}
@@ -235,8 +256,9 @@ function SearchView() {
         <div>
           <Tabs
             value={mode}
-            onChange={(m) => setParams({ tab: m === "pros" ? "pros" : null })}
+            onChange={(m) => setParams({ tab: m === "services" ? null : m })}
             items={[
+              { value: "services", label: `Dịch vụ (${services.length})` },
               { value: "works", label: `Tác phẩm (${works.length})` },
               { value: "pros", label: `Người làm (${pros.length})` },
             ]}
@@ -247,7 +269,17 @@ function SearchView() {
             </p>
           )}
 
-          {mode === "works" ? (
+          {mode === "services" ? (
+            services.length ? (
+              <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:gap-x-5">
+                {services.map((o, i) => (
+                  <ServiceCard key={o.template.id} offer={o} priority={i < 4} />
+                ))}
+              </div>
+            ) : (
+              <NoResults vertical={vertical} filtered={active > 0} onClear={clearFilters} />
+            )
+          ) : mode === "works" ? (
             works.length ? (
               <WorkResults works={works} />
             ) : (
@@ -339,7 +371,7 @@ function Filters({
           aria-label="Khu vực"
           value={city}
           onChange={(e) => onChange({ city: e.target.value || "all" })}
-          className="h-11 w-full rounded-full border border-line bg-surface px-4 text-[15px] focus:border-accent focus:outline-none"
+          className="h-11 w-full rounded-full border border-line-strong bg-surface px-4 text-[15px] focus:border-accent focus:outline-none"
         >
           <option value="">Toàn quốc</option>
           {CITIES.map((c) => (

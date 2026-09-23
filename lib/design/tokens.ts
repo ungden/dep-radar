@@ -18,9 +18,16 @@ export const colors = {
   subtle: "#F5ECE9",
   subtleStrong: "#EADBD7",
   line: "#EFE3DF",
+  /**
+   * Borders that have to be seen to be used: text fields, unselected time
+   * slots and date chips. 3.3:1 on surface, 3.1:1 on canvas (WCAG 1.4.11).
+   * `line` stays for dividers and card edges, which are decoration.
+   */
+  lineStrong: "#A5877F",
   ink: "#3A2A2C",
   inkSoft: "#65575A",
-  muted: "#7D6C6E",
+  /** 5.3:1 on canvas, 4.9:1 on subtle, 4.7:1 on accentSoft. */
+  muted: "#736366",
   /** Hồng đất: buttons, selected chips and tabs, links, the saved heart. */
   accent: "#A8535D",
   accentDark: "#8F434C",
@@ -47,7 +54,7 @@ export const radius = {
   full: 999,
 } as const
 
-/** px. Body copy is 15; nothing a person needs to read goes under 13. */
+/** px. Body copy is 15; nothing a person needs to read goes under 13, and nothing at all under 12. */
 export const fontSize = {
   label: 12,
   meta: 13,

@@ -15,9 +15,9 @@ export function ShareBooking({ booking }: { booking: Booking }) {
   const [copied, setCopied] = React.useState(false)
 
   const text = [
-    `Mình có hẹn làm đẹp qua 360dep:`,
+    `Mình có lịch hẹn qua 360dep:`,
     `• ${booking.serviceName} · ${booking.variantLabel}`,
-    `• Chuyên viên: ${booking.proName}`,
+    `• Người làm: ${booking.proName}`,
     `• ${formatDateLong(booking.date, true)}, ${booking.time}–${addMinutes(booking.time, booking.durationMin)}`,
     booking.atHome ? `• Tại: ${booking.address}` : `• Tại studio: ${booking.address}`,
   ].join("\n")

@@ -5,20 +5,25 @@ import { Suspense } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Bell, ChevronDown, MapPin, MessageCircle, Search, X } from "lucide-react"
-import { CATEGORY_ICON, PostCard, VerticalSwitch } from "@/components/beauty"
+import { Bell, ChevronDown, MapPin, MessageCircle, RotateCcw, Search, X } from "lucide-react"
+import { bookingImage } from "@/components/booking-card"
+import { PostCard, VerticalSwitch } from "@/components/beauty"
 import { CategoryTiles } from "@/components/category-icon"
-import { Avatar, ButtonLink, PageSkeleton } from "@/components/ui"
+import { MobileLinks } from "@/components/mobile-links"
+import { ServiceCard } from "@/components/service-card"
+import { ButtonLink, PageSkeleton } from "@/components/ui"
 import { CATEGORIES, getVertical, isVertical } from "@/lib/catalog"
 import { actions } from "@/lib/client-actions"
 import { rankFeed, type VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
-import { serviceOffers, type ServiceOffer } from "@/lib/offers"
+import { serviceOffers } from "@/lib/offers"
 import { distanceToCustomer, getPro, useApp } from "@/lib/store"
-import type { CategoryId } from "@/lib/types"
-import { cn, formatDuration, formatPrice } from "@/lib/utils"
+import type { Booking, CategoryId } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 const DEMO_KEY = "dep360_demo_notice"
+/** Set once the visitor has answered "Bạn ở đâu?" (or picked a city some other way). */
+const CITY_ASKED_KEY = "dep360_city_asked"
 const SERVICES_FIRST = 8
 
 export function HomeView() {
@@ -53,6 +58,11 @@ function Explore() {
     () => serviceOffers({ pros: state.pros, proServices: state.proServices, works: state.works, city, vertical }),
     [state.pros, state.proServices, state.works, city, vertical],
   )
+  // How many services of this trade exist in other cities, for "Xem cả nước".
+  const elsewhere = React.useMemo(
+    () => (city ? serviceOffers({ pros: state.pros, proServices: state.proServices, works: [], city: null, vertical }).length : 0),
+    [state.pros, state.proServices, city, vertical],
+  )
   const categories = CATEGORIES.filter((c) => offers.some((o) => o.template.category === c.id))
   const shownCategory = categories.some((c) => c.id === category) ? category : "all"
   const shown = offers.filter((o) => shownCategory === "all" || o.template.category === shownCategory)
@@ -83,7 +93,7 @@ function Explore() {
       <TopBar />
 
       <div className="md:max-w-2xl">
-        <h1 className="hidden text-[40px] font-bold leading-[1.05] tracking-[-0.03em] md:block">
+        <h1 className="mt-1 text-[24px] font-bold leading-tight tracking-[-0.02em] md:mt-0 md:text-[40px] md:leading-[1.05] md:tracking-[-0.03em]">
           Đặt dịch vụ, xem giá ngay.
         </h1>
         <p className="mt-3 hidden text-[17px] text-ink-soft md:block">
@@ -92,12 +102,16 @@ function Explore() {
         <SearchBox className="mt-3 md:mt-6" large />
       </div>
 
+      <CityChooser city={city} />
+
       {/* Sticky under the mobile top bar, so the trade is always one tap away. */}
       <div className="sticky top-0 z-30 -mx-4 mt-4 bg-canvas/95 px-4 py-2.5 backdrop-blur md:top-16 md:mx-0 md:mt-8 md:px-0">
         <VerticalSwitch value={vertical} onChange={(v) => { setVertical(v); setCategory("all") }} />
       </div>
 
       <DemoNotice />
+
+      <Rebook />
 
       <section className="mt-5">
         <div className="mb-4 flex items-baseline justify-between gap-4">
@@ -118,7 +132,7 @@ function Explore() {
         )}
 
         {shown.length === 0 ? (
-          <EmptySupply vertical={vertical} />
+          <EmptySupply vertical={vertical} city={city} elsewhere={elsewhere} />
         ) : (
           <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:gap-x-5 lg:grid-cols-4">
             {visible.map((o, i) => (
@@ -139,7 +153,7 @@ function Explore() {
 
       {proof.length > 0 && (
         <section className="mt-14">
-          <SectionTitle title="Tác phẩm thật từ người làm" href="/search" />
+          <SectionTitle title="Tác phẩm thật từ người làm" href="/search?tab=works" />
           <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 md:gap-x-5 lg:grid-cols-4">
             {proof.map((w) => (
               <PostCard key={w.id} work={w} />
@@ -157,64 +171,110 @@ function Explore() {
           Đăng yêu cầu
         </ButtonLink>
       </section>
+
+      {/* The footer is desktop-only; on a phone these are the links it would have given. */}
+      <MobileLinks className="mt-10" />
     </div>
   )
 }
 
 /**
- * One thing for sale: the service, a real photo of it, the lowest real price
- * near the customer, and who offers it. The whole card opens the service,
- * where the customer picks a person and books.
+ * First visit, no city chosen yet: ask once, lightly. Everything on the page
+ * is filtered by the answer, so it is worth one tap -- but "Toàn quốc" is a
+ * fine answer and the page works without one.
  */
-function ServiceCard({ offer, priority }: { offer: ServiceOffer; priority?: boolean }) {
-  const { template, pros, fromPrice, photo } = offer
-  const shortest = Math.min(...template.variants.map((v) => v.durationMin))
-  const Icon = CATEGORY_ICON[template.category]
+function CityChooser({ city }: { city: string | null }) {
+  const [answered, setAnswered] = React.useState(false)
+  const asked = React.useSyncExternalStore(
+    () => () => {},
+    () => {
+      try {
+        return localStorage.getItem(CITY_ASKED_KEY) === "1"
+      } catch {
+        return true
+      }
+    },
+    // The server cannot know; render nothing there rather than flash it.
+    () => true,
+  )
+  if (city || asked || answered) return null
+  const choose = (next: string | null) => {
+    setAnswered(true)
+    try {
+      localStorage.setItem(CITY_ASKED_KEY, "1")
+    } catch {}
+    void actions.setCity(next)
+  }
   return (
-    <Link
-      href={`/dich-vu/${template.id}`}
-      className="group block animate-fade-up overflow-hidden rounded-[var(--radius-lg)] bg-surface shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-raised)]"
-    >
-      <div className="relative aspect-[4/5] overflow-hidden bg-subtle">
-        {photo ? (
-          <Image
-            src={photo}
-            alt={template.name}
-            fill
-            priority={priority}
-            sizes="(min-width: 1024px) 290px, (min-width: 640px) 33vw, 50vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-          />
-        ) : (
-          <span className="absolute inset-0 flex items-center justify-center">
-            <Icon className="size-12 text-accent" />
-          </span>
-        )}
+    <section aria-label="Chọn khu vực" className="mt-4 rounded-[var(--radius-lg)] bg-surface px-4 py-3 shadow-[var(--shadow-soft)] md:max-w-2xl">
+      <p className="text-[15px] font-semibold">
+        Bạn ở đâu? <span className="text-[13px] font-normal text-ink-soft">Để hiện giá của người làm gần bạn.</span>
+      </p>
+      <div className="mt-2.5 grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
+        {[...CITIES, null].map((c) => (
+          <button
+            key={c ?? "all"}
+            type="button"
+            onClick={() => choose(c)}
+            className={cn(
+              "relative inline-flex h-9 items-center justify-center whitespace-nowrap rounded-full px-1 text-[13px] sm:px-4 font-semibold transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
+              c ? "bg-accent-soft text-accent-dark hover:bg-subtle-strong" : "border border-line-strong bg-surface text-ink hover:border-accent",
+            )}
+          >
+            {c ?? "Toàn quốc"}
+          </button>
+        ))}
       </div>
-      <div className="p-3">
-        <p className="line-clamp-2 text-[15px] font-semibold leading-snug">{template.name}</p>
-        <p className="mt-0.5 text-[14px]">
-          <span className="text-muted">Từ </span>
-          <span className="font-semibold text-accent-dark">{formatPrice(fromPrice)}</span>
-          <span className="text-muted"> · {formatDuration(shortest)}</span>
-        </p>
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="flex min-w-0 items-center gap-1.5 text-[13px] text-ink-soft">
-            <span className="hidden -space-x-1.5 sm:flex">
-              {pros.slice(0, 3).map((p) => (
-                <Avatar key={p.id} name={p.name} tone={p.tone} src={p.avatar} size={20} className="ring-2 ring-surface" />
-              ))}
-            </span>
-            <span className="truncate">
-              {pros.length === 1 ? pros[0].name : `${pros.length} người nhận`}
-            </span>
-          </span>
-          <span className="shrink-0 rounded-full bg-accent px-3.5 py-1.5 text-[13px] font-semibold text-white transition-colors group-hover:bg-accent-dark">
-            Đặt
-          </span>
-        </div>
-      </div>
-    </Link>
+    </section>
+  )
+}
+
+/** A signed-in customer's past services, one tap from booking the same again. */
+function Rebook() {
+  const state = useApp()
+  const { session, bookings } = state
+  if (session?.role !== "customer") return null
+  const seen = new Set<string>()
+  const list: Booking[] = []
+  const done = bookings
+    .filter((x) => x.mine && x.status === "completed")
+    .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`))
+  for (const b of done) {
+    const key = `${b.proId}|${b.templateId}`
+    if (seen.has(key) || !getPro(state, b.proId)?.acceptingJobs) continue
+    seen.add(key)
+    list.push(b)
+    if (list.length === 4) break
+  }
+  if (!list.length) return null
+  return (
+    <section className="mt-5">
+      <h2 className="mb-3 text-[17px] font-bold tracking-tight">Đặt lại</h2>
+      <ul className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 md:mx-0 md:grid md:grid-cols-4 md:px-0">
+        {list.map((b) => {
+          const image = bookingImage(state, b)
+          return (
+            <li key={b.id} className="w-[240px] shrink-0 md:w-auto">
+              <Link
+                href={`/book/${b.proId}?service=${b.templateId}&variant=${b.variantId}`}
+                className="flex items-center gap-3 rounded-[var(--radius-lg)] bg-surface p-2.5 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-raised)]"
+              >
+                <span className="relative size-14 shrink-0 overflow-hidden rounded-[var(--radius-md)] bg-subtle">
+                  {image && <Image src={image} alt="" fill sizes="56px" className="object-cover" />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[14px] font-semibold">{b.serviceName}</span>
+                  <span className="block truncate text-[13px] text-ink-soft">{b.proName}</span>
+                  <span className="mt-0.5 inline-flex items-center gap-1 text-[13px] font-semibold text-accent">
+                    <RotateCcw className="size-3.5" aria-hidden /> Đặt lại
+                  </span>
+                </span>
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }
 
@@ -274,7 +334,7 @@ function SearchBox({ className, large }: { className?: string; large?: boolean }
         placeholder="Bạn muốn làm gì hôm nay?"
         aria-label="Tìm kiếm"
         className={cn(
-          "w-full rounded-full border border-line bg-surface pl-12 pr-4 text-[16px] shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-accent focus:outline-none",
+          "w-full rounded-full border border-line-strong bg-surface pl-12 pr-4 text-[16px] shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-accent focus:outline-none",
           large ? "h-14" : "h-12",
         )}
       />
@@ -327,25 +387,40 @@ function DemoNotice() {
   )
 }
 
-function EmptySupply({ vertical }: { vertical: VerticalFilter }) {
+/**
+ * Nobody offers this here. What a customer can do comes first -- ask, or look
+ * further afield -- and the invitation to providers is a small line under it.
+ */
+function EmptySupply({ vertical, city, elsewhere }: { vertical: VerticalFilter; city: string | null; elsewhere: number }) {
   const label = vertical === "all" ? null : getVertical(vertical).label
+  const where = city ? ` ở ${city}` : ""
   return (
-    <div className="mt-5 rounded-[var(--radius-lg)] border border-dashed border-line px-6 py-10 text-center">
-      <p className="text-[17px] font-bold">{label ? `${label}: chưa có ai ở khu vực này` : "Chưa có tác phẩm ở khu vực này"}</p>
+    <div className="mt-5 rounded-[var(--radius-lg)] border border-dashed border-line-strong px-6 py-10 text-center">
+      <p className="text-[17px] font-bold">{label ? `${label}: chưa có ai nhận lịch${where}` : `Chưa có dịch vụ nào${where}`}</p>
       <p className="mx-auto mt-1.5 max-w-sm text-[15px] text-ink-soft">
-        {vertical === "photo"
-          ? "Bạn chụp ảnh bằng điện thoại hoặc quay clip? Mở hồ sơ để là những người đầu tiên nhận khách ở đây."
-          : vertical === "model"
-            ? "Bạn làm mẫu ảnh, mẫu livestream? Xác minh danh tính rồi mở hồ sơ để nhận việc an toàn."
-            : "Thử đổi khu vực, hoặc đăng yêu cầu để người làm gần bạn gửi báo giá."}
+        {elsewhere > 0
+          ? `Có ${elsewhere} dịch vụ ở thành phố khác. Hoặc đăng yêu cầu để người làm quanh bạn gửi báo giá.`
+          : "Đăng yêu cầu: khi có người nhận việc này quanh bạn, họ thấy yêu cầu và gửi báo giá. Không mất phí."}
       </p>
-      <div className="mt-5 flex justify-center gap-2">
-        {vertical === "photo" || vertical === "model" ? (
-          <ButtonLink href="/login?role=pro">Mở hồ sơ</ButtonLink>
-        ) : (
-          <ButtonLink href="/requests/new">Đăng yêu cầu</ButtonLink>
+      <div className="mt-5 flex flex-wrap justify-center gap-2">
+        <ButtonLink href={vertical === "all" ? "/requests/new" : `/requests/new?category=${CATEGORIES.find((c) => c.vertical === vertical)?.id}`}>
+          Đăng yêu cầu
+        </ButtonLink>
+        {elsewhere > 0 && (
+          <button
+            type="button"
+            onClick={() => void actions.setCity(null)}
+            className="inline-flex h-11 items-center rounded-full border border-line-strong bg-surface px-5 text-sm font-semibold hover:border-accent"
+          >
+            Xem cả nước
+          </button>
         )}
       </div>
+      <p className="mt-4 text-[13px] text-ink-soft">
+        <Link href="/login?role=pro" className="inline-flex min-h-11 items-center underline underline-offset-2 hover:text-ink">
+          Bạn làm nghề này? Mở hồ sơ
+        </Link>
+      </p>
     </div>
   )
 }
@@ -372,7 +447,12 @@ function CityPicker({ value }: { value: string | null }) {
       <select
         aria-label="Chọn khu vực"
         value={value ?? ""}
-        onChange={(e) => void actions.setCity(e.target.value || null)}
+        onChange={(e) => {
+          try {
+            localStorage.setItem(CITY_ASKED_KEY, "1")
+          } catch {}
+          void actions.setCity(e.target.value || null)
+        }}
         className="absolute inset-0 cursor-pointer opacity-0"
       >
         <option value="">Toàn quốc</option>

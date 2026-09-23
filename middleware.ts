@@ -2,10 +2,17 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 import { SUPABASE_ANON_KEY, SUPABASE_URL, backendEnabled } from "@/lib/supabase/env"
 
-/** Signed-in-only areas. The server decides, not the rendered page. */
-const PRIVATE = ["/studio", "/bookings", "/requests", "/me", "/book", "/tin-nhan", "/thong-bao"]
+/**
+ * Signed-in-only areas. The server decides, not the rendered page.
+ *
+ * Not here: /book, which a visitor can walk through (service, place, time,
+ * total) before being asked to sign in at "Gửi yêu cầu"; creating the booking
+ * is still a signed-in RPC. And /me itself, whose signed-out view is the way
+ * in (sign in, help, policy) -- everything under it stays private.
+ */
+const PRIVATE = ["/studio", "/bookings", "/requests", "/me/", "/tin-nhan", "/thong-bao"]
 const ADMIN = "/admin"
-/** Signed-in areas that assume the account has a phone number. */
+/** Signed-in areas that assume the account has a phone number (for /book: only once signed in). */
 const NEEDS_PHONE = ["/studio", "/bookings", "/requests", "/book", "/tin-nhan"]
 
 export async function middleware(request: NextRequest) {
@@ -28,7 +35,7 @@ export async function middleware(request: NextRequest) {
   const { data } = await supabase.auth.getUser()
   const path = request.nextUrl.pathname
 
-  if (!data.user && PRIVATE.some((p) => path === p || path.startsWith(`${p}/`))) {
+  if (!data.user && PRIVATE.some((p) => (p.endsWith("/") ? path.startsWith(p) : path === p || path.startsWith(`${p}/`)))) {
     const login = request.nextUrl.clone()
     login.pathname = "/login"
     login.search = `?next=${encodeURIComponent(path + request.nextUrl.search)}`
