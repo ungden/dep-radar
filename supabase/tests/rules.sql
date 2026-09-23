@@ -438,7 +438,7 @@ begin
       'app_timezone', 'travel_distance_km', 'travel_fee', 'commission_for', 'is_urgent', 'build_quote',
       'service_duration_min', 'listed_price', 'within_working_hours', 'availability_problem', 'free_slots',
       'slugify', 'is_admin', 'is_pro', 'log_work_events', 'work_stats_30d', 'banned_content', 'applied_to_casting',
-      'free_days', 'new_pay_code',
+      'free_days',
       -- the state machine and the things a person does to their own account
       'create_booking', 'confirm_booking', 'decline_booking', 'start_booking', 'complete_booking',
       'mark_no_show', 'cancel_booking', 'request_reschedule', 'respond_reschedule', 'post_job',

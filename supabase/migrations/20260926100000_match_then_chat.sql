@@ -389,8 +389,6 @@ end $$;
 -- Paying: a short code on the transfer, recorded by staff or by the bank's webhook.
 alter table public.pros add column pay_code text unique check (pay_code ~ '^[A-HJ-NP-Z2-9]{6}$');
 
--- Executable by anyone: a profile may be created by the signed-in user, and a
--- column default runs as them. It only returns an unused random code.
 create function public.new_pay_code() returns text
 language plpgsql volatile set search_path = '' as $$
 declare code text; alphabet text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -406,8 +404,18 @@ begin
 end $$;
 
 update public.pros set pay_code = public.new_pay_code() where pay_code is null;
-alter table public.pros alter column pay_code set default public.new_pay_code();
 alter table public.pros alter column pay_code set not null;
+
+-- A trigger rather than a column default: a profile is inserted by its owner,
+-- and a default would need them to be allowed to call new_pay_code().
+create function public.set_pay_code() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if new.pay_code is null then new.pay_code := public.new_pay_code(); end if;
+  return new;
+end $$;
+create trigger pros_pay_code before insert on public.pros
+  for each row execute function public.set_pay_code();
 
 -- One bank transaction is credited once. Only references written by the
 -- functions below ("sepay:<id>" from the webhook, "staff:<ref>" by hand) are
@@ -462,6 +470,8 @@ end $$;
 
 revoke all on function
   public.job_problem(uuid, public.jobs),
+  public.new_pay_code(),
+  public.set_pay_code(),
   public.credit_topup(uuid, int, text, text),
   public.record_bank_topup(text, int, text),
   public.record_topup(uuid, int, text),
