@@ -171,8 +171,8 @@ export default function Search() {
         title={query.trim() ? `Chưa có kết quả cho “${query.trim()}”` : "Không có gì khớp"}
         text={
           active.length
-            ? "Thử bỏ bớt bộ lọc, hoặc đăng yêu cầu để người làm gửi báo giá cho bạn."
-            : `Đăng yêu cầu, người làm${app.city ? ` ở ${app.city}` : ""} sẽ gửi báo giá. Không mất phí.`
+            ? "Thử bỏ bớt bộ lọc, hoặc đăng yêu cầu để người làm nhận việc."
+            : `Đăng yêu cầu, người làm${app.city ? ` ở ${app.city}` : ""} sẽ thấy và nhận việc. Không mất phí đăng.`
         }
         action="Đăng yêu cầu"
         onAction={() => router.push("/yeu-cau/moi")}

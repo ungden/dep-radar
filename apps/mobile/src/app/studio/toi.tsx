@@ -63,7 +63,7 @@ export default function StudioMe() {
           <View style={{ flex: 1 }}>
             <Txt w={700}>Nhận lịch mới</Txt>
             <Txt v="meta" color={colors.inkSoft}>
-              {accepting ? "Khách đặt được lịch và bạn báo giá được." : "Tạm nghỉ: khách không đặt được, lịch đã nhận vẫn giữ."}
+              {accepting ? "Khách đặt được lịch và bạn nhận được việc mới." : "Tạm nghỉ: khách không đặt được, lịch đã nhận vẫn giữ."}
             </Txt>
           </View>
           <Switch value={accepting} onValueChange={(v) => void toggle(v)} trackColor={{ true: colors.accent, false: colors.subtleStrong }} accessibilityLabel="Nhận lịch mới" />

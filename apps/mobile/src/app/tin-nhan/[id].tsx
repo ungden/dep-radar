@@ -6,7 +6,7 @@ import * as ImagePicker from "expo-image-picker"
 import * as WebBrowser from "expo-web-browser"
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { MASKED_NOTE, chatState, questionsLeft } from "@/shared"
+import { chatState, vnTime } from "@/shared"
 import {
   CHAT_MAX_PHOTOS,
   listMessages,
@@ -37,9 +37,9 @@ type Picked = { uri: string; width: number; height: number }
 
 /**
  * One conversation. New messages arrive over Supabase Realtime; reading marks
- * them read via mark_thread_read. A booking's chat closes on its own
- * (threads.closes_at); before a booking, contact details are hidden and a
- * customer can ask three questions until the freelancer answers.
+ * them read via mark_thread_read. A chat exists only around a match: it opens
+ * when the freelancer accepts the booking and closes when the job ends
+ * (threads.chat_status). While it is not open, a note replaces the box.
  */
 export default function Conversation() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -54,8 +54,6 @@ export default function Conversation() {
   const [photos, setPhotos] = React.useState<Picked[]>([])
   const [error, setError] = React.useState<string | null>(null)
   const [sending, setSending] = React.useState(false)
-  const [masked, setMasked] = React.useState(false)
-  const [now, setNow] = React.useState(() => Date.now())
   const { refreshMe } = app
   const keyboard = useKeyboardVisible()
   const blocked = header ? app.blocked.has(header.otherId) : false
@@ -85,38 +83,23 @@ export default function Conversation() {
     }
   }, [id, uid, refreshMe])
 
-  // Pushes about this conversation stay quiet while it is on screen.
+  // Pushes about this conversation stay quiet while it is on screen. Coming
+  // back to it re-reads whether it is open: the booking may have been
+  // accepted, or the job finished, meanwhile.
   useFocusEffect(
     React.useCallback(() => {
       setOpenThread(id ?? null)
-      setNow(Date.now())
+      if (uid && id) void threadHeader(id, uid).then((h) => h && setHeader(h))
       return () => setOpenThread(null)
-    }, [id]),
+    }, [id, uid]),
   )
-
-  // Close the box to write in at the moment the conversation ends, if that is soon.
-  const closesAt = header?.closesAt ? Date.parse(header.closesAt) : null
-  React.useEffect(() => {
-    if (closesAt === null) return
-    const wait = closesAt - Date.now()
-    if (wait <= 0 || wait > 24 * 3_600_000) return
-    const t = setTimeout(() => setNow(Date.now()), wait + 500)
-    return () => clearTimeout(t)
-  }, [closesAt])
 
   React.useEffect(() => {
     if (messages.length) setTimeout(() => list.current?.scrollToEnd({ animated: true }), 50)
   }, [messages.length])
 
-  const state = chatState(header?.closesAt, new Date(now))
-  const left = header && loaded
-    ? questionsLeft({
-        isBookingThread: Boolean(header.bookingId),
-        iAmCustomer: !header.iAmPro,
-        proHasReplied: messages.some((m) => !m.mine),
-        mySent: messages.filter((m) => m.mine).length,
-      })
-    : null
+  // A server without chat_status yet: leave the box open, send_message decides.
+  const state = header?.chatStatus ? chatState(header.chatStatus) : { open: true, note: undefined }
 
   const pick = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -143,12 +126,10 @@ export default function Conversation() {
         setError(res.error)
         // The conversation may have closed meanwhile.
         void threadHeader(id, uid).then(setHeader)
-        setNow(Date.now())
         return
       }
       setText("")
       setPhotos([])
-      setMasked(res.masked)
       // Realtime delivers our own message too; reload in case it is late.
       void listMessages(id, uid).then(setMessages).catch(() => {})
     } catch (e) {
@@ -186,43 +167,30 @@ export default function Conversation() {
       </View>
     )
   } else if (header && !state.open) {
+    const closed = header.chatStatus === "closed"
     footer = (
       <View style={barStyle}>
         <Txt color={colors.inkSoft} center>
           {state.note}
         </Txt>
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          {!header.iAmPro && (header.bookingId || header.proSlug) ? <Button label="Đặt lại" icon="calendar" full style={{ flex: 1 }} onPress={bookAgain} /> : null}
-          <Button label="Liên hệ hỗ trợ" variant="secondary" full style={{ flex: 1 }} onPress={support} />
-        </View>
-      </View>
-    )
-  } else if (left === 0) {
-    footer = (
-      <View style={barStyle}>
-        <Txt color={colors.inkSoft} center>
-          Bạn đã gửi 3 tin. Đợi {header?.name ?? "người làm"} trả lời rồi nhắn tiếp nhé.
-        </Txt>
+        {closed && header.closesAt ? (
+          <Txt v="meta" color={colors.muted} center>
+            Đã đóng lúc {vnTime(new Date(header.closesAt))}
+          </Txt>
+        ) : null}
+        {closed ? (
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            {!header.iAmPro && (header.bookingId || header.proSlug) ? <Button label="Đặt lại" icon="calendar" full style={{ flex: 1 }} onPress={bookAgain} /> : null}
+            <Button label="Liên hệ hỗ trợ" variant="secondary" full style={{ flex: 1 }} onPress={support} />
+          </View>
+        ) : header.bookingId ? (
+          <Button label="Xem lịch hẹn" variant="secondary" full onPress={() => router.push({ pathname: "/bookings/[id]", params: { id: header.bookingId! } })} />
+        ) : null}
       </View>
     )
   } else {
     footer = (
       <View style={{ backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line }}>
-        {masked ? (
-          <View style={{ flexDirection: "row", gap: 8, alignItems: "flex-start", marginHorizontal: gutter, marginTop: 10, padding: 12, borderRadius: radius.md, backgroundColor: colors.warningSoft }}>
-            <Txt v="meta" color={colors.warning} style={{ flex: 1 }}>
-              {MASKED_NOTE}
-            </Txt>
-            <Press onPress={() => setMasked(false)} accessibilityLabel="Đóng" hitSlop={10}>
-              <Icon name="close" size={14} color={colors.warning} />
-            </Press>
-          </View>
-        ) : null}
-        {state.note || left !== null ? (
-          <Txt v="meta" color={colors.muted} center style={{ paddingHorizontal: gutter, paddingTop: 8 }}>
-            {[state.note, left !== null ? `Còn ${left} tin trước khi ${header?.name ?? "người làm"} trả lời.` : null].filter(Boolean).join(" ")}
-          </Txt>
-        ) : null}
         {photos.length ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: gutter, paddingTop: 10 }}>
             {photos.map((p, i) => (
@@ -342,7 +310,7 @@ export default function Conversation() {
         }}
         ListEmptyComponent={
           <Txt color={colors.inkSoft} center style={{ paddingTop: 40 }}>
-            {blocked ? "Tin nhắn đã ẩn vì bạn đã chặn người này." : header ? `Bắt đầu trò chuyện với ${header.name}.` : ""}
+            {blocked ? "Tin nhắn đã ẩn vì bạn đã chặn người này." : header && loaded && state.open ? `Bắt đầu trò chuyện với ${header.name}.` : ""}
           </Txt>
         }
       />

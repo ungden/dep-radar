@@ -144,7 +144,7 @@ export default function ServiceScreen() {
             <Txt color={colors.inkSoft} center style={{ maxWidth: 320 }}>
               {elsewhere
                 ? `Có ${elsewhere} người nhận ở nơi khác.`
-                : "Đăng yêu cầu để người làm gần bạn gửi báo giá, hoặc quay lại sau."}
+                : "Đăng yêu cầu để người làm gần bạn nhận việc, hoặc quay lại sau."}
             </Txt>
             <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
               {elsewhere ? <Button label="Xem cả nước" onPress={() => app.setCity(null)} /> : null}

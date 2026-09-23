@@ -85,7 +85,7 @@ export default function Me() {
             Thêm số điện thoại để đặt lịch
           </Txt>
           <Txt v="meta" color={colors.warning}>
-            Người làm gọi số này để xác nhận lịch hẹn.
+            Người làm thấy số này khi đã nhận lịch của bạn.
           </Txt>
         </Press>
       ) : null}
