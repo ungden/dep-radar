@@ -15,6 +15,7 @@ const ICONS = {
   plus: { ios: "plus", android: "add" },
   person: { ios: "person", android: "person" },
   down: { ios: "chevron.down", android: "expand_more" },
+  up: { ios: "chevron.up", android: "expand_less" },
   right: { ios: "chevron.right", android: "chevron_right" },
   back: { ios: "chevron.left", android: "arrow_back" },
   close: { ios: "xmark", android: "close" },

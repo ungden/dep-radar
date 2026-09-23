@@ -16,7 +16,7 @@ import { CATEGORIES, getVertical, isVertical } from "@/lib/catalog"
 import { actions } from "@/lib/client-actions"
 import { rankFeed, type VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
-import { serviceOffers } from "@/lib/offers"
+import { categoryRow, serviceOffers } from "@/lib/offers"
 import { distanceToCustomer, getPro, useApp } from "@/lib/store"
 import type { Booking, Category, CategoryId } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -63,11 +63,12 @@ function Explore() {
     () => (city ? serviceOffers({ pros: state.pros, proServices: state.proServices, works: [], city: null, vertical }).length : 0),
     [state.pros, state.proServices, city, vertical],
   )
-  // Every category of the trade is shown, so people see all that 360dep does;
-  // the ones nobody offers here yet are marked "Sắp có" and lead to a request.
+  // One row of the categories with the most on offer here; the rest (and the
+  // ones nobody offers yet, marked "Sắp có") one tap away behind "Xem thêm".
   const categories = CATEGORIES.filter((c) => vertical === "all" || c.vertical === vertical)
-  const offered = new Set(offers.map((o) => o.template.category))
   const shownCategory = categories.some((c) => c.id === category) ? category : "all"
+  const tiles = categoryRow(categories, offers, shownCategory)
+  const [allCategories, setAllCategories] = React.useState(false)
   const shownCategoryInfo = CATEGORIES.find((c) => c.id === shownCategory)
   const shown = offers.filter((o) => shownCategory === "all" || o.template.category === shownCategory)
   // The most offered first; the rest one tap away, so the first screen stays short.
@@ -110,7 +111,7 @@ function Explore() {
 
       {/* Sticky under the mobile top bar, so the trade is always one tap away. */}
       <div className="sticky top-0 z-30 -mx-4 mt-4 bg-canvas/95 px-4 py-2.5 backdrop-blur md:top-16 md:mx-0 md:mt-8 md:px-0">
-        <VerticalSwitch value={vertical} onChange={(v) => { setVertical(v); setCategory("all") }} />
+        <VerticalSwitch value={vertical} onChange={(v) => { setVertical(v); setCategory("all"); setAllCategories(false) }} />
       </div>
 
       <DemoNotice />
@@ -118,25 +119,41 @@ function Explore() {
       <Rebook />
 
       <section className="mt-5">
-        <div className="mb-4 flex items-baseline justify-between gap-4">
-          <h2 className="text-[22px] font-bold tracking-tight md:text-[26px]">
-            {vertical === "all" ? "Dịch vụ" : getVertical(vertical).label}
-            {city ? ` ở ${city}` : ""}
-          </h2>
-          {shown.length > 0 && <span className="shrink-0 text-[14px] text-muted">{shown.length} dịch vụ</span>}
-        </div>
-
         {categories.length > 1 && (
           <CategoryTiles
-            className="mb-7"
-            items={[
-              { id: "all", label: "Tất cả" },
-              ...categories.map((c) => ({ id: c.id, label: c.short ?? c.label, soon: !offered.has(c.id) })),
-            ]}
+            className="mb-6"
+            items={(allCategories ? tiles.ordered : tiles.row).map((c) => ({
+              id: c.id,
+              label: c.short ?? c.label,
+              soon: !tiles.offered.has(c.id),
+            }))}
             value={shownCategory}
-            onChange={(id) => setCategory(id as CategoryId | "all")}
+            // Tapping the chosen category again goes back to everything.
+            onChange={(id) => {
+              setCategory(id === shownCategory ? "all" : (id as CategoryId))
+              setAllCategories(false)
+            }}
+            more={tiles.more ? { open: allCategories, onToggle: () => setAllCategories((v) => !v) } : undefined}
           />
         )}
+
+        <div className="mb-4 flex items-baseline justify-between gap-4">
+          <h2 className="text-[22px] font-bold tracking-tight md:text-[26px]">
+            {shownCategoryInfo ? shownCategoryInfo.label : vertical === "all" ? "Dịch vụ" : getVertical(vertical).label}
+            {city ? ` ở ${city}` : ""}
+          </h2>
+          {shownCategoryInfo ? (
+            <button
+              type="button"
+              onClick={() => setCategory("all")}
+              className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-subtle pl-3 pr-2.5 text-[13px] font-semibold text-ink hover:bg-subtle-strong"
+            >
+              Tất cả <X className="size-3.5" aria-hidden />
+            </button>
+          ) : (
+            shown.length > 0 && <span className="shrink-0 text-[14px] text-muted">{shown.length} dịch vụ</span>
+          )}
+        </div>
 
         {shown.length === 0 ? (
           <EmptySupply vertical={vertical} city={city} elsewhere={elsewhere} category={shownCategoryInfo} />

@@ -1,6 +1,6 @@
 import { CATALOG, verticalOf } from "./catalog"
 import type { VerticalFilter } from "./feed"
-import type { Pro, ProService, ServiceTemplate, Work } from "./types"
+import type { Category, CategoryId, Pro, ProService, ServiceTemplate, Work } from "./types"
 
 /**
  * What the home page sells: catalogue services that somebody near the
@@ -76,4 +76,31 @@ export function serviceOffers(input: {
     }
   }
   return offers
+}
+
+/**
+ * The one row of category tiles on the home page. Twelve tiles in three rows
+ * pushed the services off the first screen, so the row holds `size` tiles:
+ * the categories with the most on offer here, then the ones coming soon, and
+ * a last "Xem thêm" tile that opens the rest. A category chosen from the rest
+ * takes the last place, so the choice stays in sight.
+ */
+export function categoryRow(
+  categories: readonly Category[],
+  offers: readonly ServiceOffer[],
+  selected: CategoryId | "all",
+  size = 5,
+): { ordered: Category[]; row: Category[]; more: boolean; offered: Set<CategoryId> } {
+  const count = new Map<CategoryId, number>()
+  for (const o of offers) count.set(o.template.category, (count.get(o.template.category) ?? 0) + 1)
+  const ordered = categories
+    .map((c, order) => ({ c, order, n: count.get(c.id) ?? 0 }))
+    .sort((a, b) => b.n - a.n || a.order - b.order)
+    .map((x) => x.c)
+  const offered = new Set(count.keys())
+  if (ordered.length <= size) return { ordered, row: ordered, more: false, offered }
+  const row = ordered.slice(0, size - 1)
+  const chosen = ordered.find((c) => c.id === selected)
+  if (chosen && !row.includes(chosen)) row[row.length - 1] = chosen
+  return { ordered, row, more: true, offered }
 }

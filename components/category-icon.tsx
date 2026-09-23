@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { ChevronUp } from "lucide-react"
 import { CATEGORY_ICONS, ICON_SOFT_OPACITY, ICON_STROKE, type CategoryIconId } from "@/lib/design/category-icons"
 import { cn } from "@/lib/utils"
 
@@ -29,24 +30,17 @@ export function CategoryIcon({ id, className }: { id: CategoryIconId; className?
 }
 
 /**
- * Categories as icon tiles rather than a row of text: each choice is a picture.
- *
- * On a phone they are one scrolling row of 52px tiles with one-line labels, so
- * the list is one short band and the first price shows sooner; from `sm` up
- * they become a grid. `row` keeps the single row at every width (search, once
- * there is a query and the results matter more than the categories).
- */
-/**
- * Categories as a grid of icon tiles, never a row to swipe (the owner's call):
- * everything visible at once, each choice a picture. On a phone the tiles are
- * compact (5 across, one-line labels) so the first service price still shows
- * early. `row` is kept for the search page's compact mode and means the same
- * grid with smaller tiles.
+ * Categories as a grid of icon tiles, never a row to swipe (the owner's call).
+ * On a phone the tiles are compact (5 across, one-line labels) so the first
+ * service price still shows early. `more` adds a last tile that opens or
+ * closes the rest (the home page keeps one row). `row` is the search page's
+ * compact mode: the same grid with smaller tiles.
  */
 export function CategoryTiles({
   items,
   value,
   onChange,
+  more,
   row = false,
   className,
 }: {
@@ -54,6 +48,7 @@ export function CategoryTiles({
   items: { id: CategoryIconId; label: string; soon?: boolean }[]
   value: CategoryIconId
   onChange: (id: CategoryIconId) => void
+  more?: { open: boolean; onToggle: () => void }
   row?: boolean
   className?: string
 }) {
@@ -109,6 +104,28 @@ export function CategoryTiles({
           </button>
         )
       })}
+      {more && (
+        <button
+          type="button"
+          onClick={more.onToggle}
+          aria-expanded={more.open}
+          className={cn("group flex min-w-0 flex-col items-center gap-1 text-center", !row && "lg:w-[84px]")}
+        >
+          <span
+            className={cn(
+              "flex items-center justify-center border border-line bg-surface text-ink-soft transition-colors group-hover:border-accent group-hover:text-accent",
+              row ? "size-11 rounded-[14px]" : "size-[52px] rounded-[18px] lg:size-[60px] lg:rounded-[20px]",
+            )}
+          >
+            {more.open ? (
+              <ChevronUp className={cn(row ? "size-5" : "size-6")} aria-hidden />
+            ) : (
+              <CategoryIcon id="all" className={cn(row ? "size-5" : "size-6 lg:size-7")} />
+            )}
+          </span>
+          <span className="w-full truncate text-[12px] font-medium leading-tight text-ink">{more.open ? "Thu gọn" : "Xem thêm"}</span>
+        </button>
+      )}
     </div>
   )
 }
