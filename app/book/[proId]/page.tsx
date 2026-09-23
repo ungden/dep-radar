@@ -257,10 +257,9 @@ function BookingFlow({ proId }: { proId: string }) {
         </span>
         <h1 className="mt-5 text-[28px] font-bold tracking-tight">Đã gửi yêu cầu đặt lịch</h1>
         <p className="mt-2 text-[15px] text-ink-soft">
-          {pro.name} sẽ gọi cho bạn qua số {formatPhone(session?.phone ?? "")} để xác nhận lịch {time} ·{" "}
-          {formatDateLong(date)}
-          {responseTime ? `, thường trong ${responseTime}` : ""}. Nếu không được xác nhận trong{" "}
-          {POLICY.confirmWithinHours} giờ, lịch tự huỷ{payment === "online" ? " và tiền được hoàn 100%" : ""}.
+          {pro.name} xem lịch {time} · {formatDateLong(date)} và bấm nhận trong app
+          {responseTime ? `, thường trong ${responseTime}` : ""}. Nhận rồi thì hai bên nhắn tin, gọi được cho nhau trong lịch hẹn.
+          Nếu không được nhận trong {POLICY.confirmWithinHours} giờ, lịch tự huỷ{payment === "online" ? " và tiền được hoàn 100%" : ""}.
         </p>
         {linkError && <p className="mt-4 rounded-xl bg-warning-soft px-3.5 py-2.5 text-[14px] text-warning">{linkError}</p>}
         {!partner && <ComboSuggestions bookingId={doneId} templateId={templateId} city={pro.city} className="mt-8 w-full text-left" />}
@@ -311,7 +310,7 @@ function BookingFlow({ proId }: { proId: string }) {
         <p className="mb-4 rounded-xl bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning">
           {isOwnProfile
             ? "Bạn đang xem dịch vụ của chính mình ở chế độ nhận khách. Chuyển sang chế độ đặt lịch để thử luồng khách hàng."
-            : `${pro.name} đang tạm nghỉ nhận lịch mới. Bạn có thể đăng yêu cầu để người làm khác báo giá.`}
+            : `${pro.name} đang tạm nghỉ nhận lịch mới. Bạn có thể đăng yêu cầu để người làm khác nhận việc.`}
         </p>
       )}
 
@@ -668,7 +667,7 @@ function BookingFlow({ proId }: { proId: string }) {
                   <p className="mt-2 text-[13px] text-ink-soft">
                     {trade === "model"
                       ? `Dùng hình ảnh một người để kinh doanh cần sự đồng ý của họ. ${pro.name} sẽ thấy mục đích này trước khi nhận lịch.`
-                      : `${pro.name} sẽ thấy mục đích này khi gọi xác nhận, và có thể trao đổi thêm về quyền sử dụng.`}
+                      : `${pro.name} sẽ thấy mục đích này trước khi nhận lịch, và hai bên trao đổi thêm về quyền sử dụng qua tin nhắn sau đó.`}
                   </p>
                 )}
               </div>
@@ -736,8 +735,8 @@ function BookingFlow({ proId }: { proId: string }) {
               <Phone className="mt-0.5 size-4 shrink-0 text-accent" />
               {session ? (
                 <span>
-                  {pro.name} sẽ gọi số <b>{formatPhone(session.phone)}</b> để xác nhận
-                  {responseTime ? `, thường trong ${responseTime}` : ""}.{" "}
+                  {pro.name} nhận lịch trong app{responseTime ? `, thường trong ${responseTime}` : ""}; nhận rồi thì thấy số{" "}
+                  <b>{formatPhone(session.phone)}</b> của bạn để liên hệ.{" "}
                   {/* TODO(db): there is no self-service number change yet (set_my_phone
                       only sets the first number); settings explains how to ask support. */}
                   <Link href="/me/cai-dat" className="font-semibold text-accent underline underline-offset-2">
@@ -746,8 +745,8 @@ function BookingFlow({ proId }: { proId: string }) {
                 </span>
               ) : (
                 <span>
-                  Bước tiếp theo: đăng nhập bằng Google và thêm số điện thoại để {pro.name} gọi xác nhận. Lựa chọn của bạn
-                  được giữ nguyên.
+                  Bước tiếp theo: đăng nhập bằng Google và thêm số điện thoại để {pro.name} liên hệ khi đã nhận lịch. Lựa chọn
+                  của bạn được giữ nguyên.
                 </span>
               )}
             </p>

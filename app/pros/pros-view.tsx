@@ -152,7 +152,7 @@ function ProsView() {
               : newTrade
                 ? "Ngành này vừa mở trên 360dep. Bạn làm nghề này? Mở hồ sơ để là những người đầu tiên nhận khách."
                 : city
-                  ? `Chưa có ai ở ${city} nhận việc này. Thử khu vực khác, hoặc đăng yêu cầu để người làm quanh bạn báo giá.`
+                  ? `Chưa có ai ở ${city} nhận việc này. Thử khu vực khác, hoặc đăng yêu cầu để người làm quanh bạn nhận việc.`
                   : "Thử đổi ngành hoặc danh mục."
           }
           action={

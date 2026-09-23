@@ -32,7 +32,7 @@ export function BookingTimeline({ booking }: { booking: Booking }) {
             booking.status === "declined"
               ? "Bị từ chối"
               : booking.status === "expired"
-                ? "Hết hạn chờ gọi"
+                ? "Hết hạn chờ nhận"
                 : booking.status === "no_show"
                   ? "Khách vắng mặt"
                   : booking.cancelledBy === "pro" && booking.cancelReason === "Người làm không đến"
@@ -41,7 +41,7 @@ export function BookingTimeline({ booking }: { booking: Booking }) {
           done: true,
           bad: true,
         }
-      : { label: "Đã gọi xác nhận, nhận lịch", done: accepted, current: booking.status === "pending" },
+      : { label: "Người làm nhận lịch, mở nhắn tin", done: accepted, current: booking.status === "pending" },
     ...(ended
       ? []
       : [

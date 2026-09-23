@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import { Check, ChevronLeft, Clock, MapPin, PackageCheck, Share2, X } from "lucide-react"
 import { FollowButton } from "@/components/follow-button"
 import { Gallery } from "@/components/gallery"
-import { MessageButton } from "@/components/message-button"
 import { CategoryTag } from "@/components/trade"
 import { VerifiedMark } from "@/components/trust"
 import { PostCard, SaveWorkButton, whereLabel } from "@/components/beauty"
@@ -182,20 +181,18 @@ export function WorkDetail({ workId }: { workId: string }) {
                 <ButtonLink href={bookHref} onClick={onBook} size="lg" className="mt-4 hidden w-full md:flex">
                   Đặt lịch · {formatPrice(listing.prices[variant.id])}
                 </ButtonLink>
-                <MessageButton proId={pro.id} label="Nhắn tin hỏi trước" className="mt-2 w-full" />
                 <p className="mt-3 text-[13px] leading-relaxed text-muted">
-                  Sau khi bạn đặt, {pro.name} gọi xác nhận trong {POLICY.confirmWithinHours} giờ. Phí di chuyển, nếu có, hiện rõ
-                  trước khi bạn xác nhận.
+                  Sau khi bạn đặt, {pro.name} nhận lịch trong app trong vòng {POLICY.confirmWithinHours} giờ; nhận rồi thì hai bên
+                  nhắn tin với nhau. Phí di chuyển, nếu có, hiện rõ trước khi bạn xác nhận.
                 </p>
               </>
             ) : (
               <>
                 <p className="text-[17px] font-bold">{pro.name} tạm ngưng dịch vụ này</p>
-                <p className="mt-1 text-[15px] text-ink-soft">Xem các dịch vụ khác {pro.name} đang nhận, hoặc nhắn tin để hỏi.</p>
+                <p className="mt-1 text-[15px] text-ink-soft">Xem các dịch vụ khác {pro.name} đang nhận để đặt lịch.</p>
                 <ButtonLink href={`/pros/${pro.id}?tab=services`} className="mt-4 w-full">
                   Xem bảng giá
                 </ButtonLink>
-                <MessageButton proId={pro.id} className="mt-2 w-full" />
               </>
             )}
           </div>

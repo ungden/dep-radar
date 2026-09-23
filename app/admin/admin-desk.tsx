@@ -3,13 +3,13 @@
 import * as React from "react"
 import Link from "next/link"
 import { Button, Card, EmptyState, PageHeader, StatusBadge, Tabs, inputClass } from "@/components/ui"
-import { decideCheck, resolveReport, setSuspended } from "@/lib/api/admin"
+import { decideCheck, recordTopup, resolveReport, setSuspended } from "@/lib/api/admin"
 import type { AdminBooking, AdminPro, AdminReport, PendingCheck } from "@/lib/api/admin"
 import { useRefresh } from "@/lib/store"
 import type { BookingStatus } from "@/lib/types"
 import { cn, formatPrice, timeAgo } from "@/lib/utils"
 
-type Tab = "checks" | "pros" | "bookings" | "reports"
+type Tab = "checks" | "pros" | "topup" | "bookings" | "reports"
 
 /**
  * The operations desk: the queue of verifications a vision model was unsure
@@ -48,6 +48,7 @@ export function AdminDesk({
         items={[
           { value: "checks", label: `Xác minh (${checks.length})` },
           { value: "pros", label: `Chuyên viên (${pros.length})` },
+          { value: "topup", label: "Nạp ví" },
           { value: "bookings", label: "Lịch hẹn" },
           { value: "reports", label: `Báo cáo (${openReports.length})` },
         ]}
@@ -84,7 +85,8 @@ export function AdminDesk({
                   </p>
                   <p className="text-xs text-muted">
                     {pro.district}, {pro.city} · {pro.completedJobs} job · ★ {pro.rating.toFixed(2)} ({pro.ratingCount}) ·
-                    ví {formatPrice(pro.wallet)}
+                    ví <span className={pro.wallet < 0 ? "font-semibold text-danger" : undefined}>{formatPrice(pro.wallet)}</span>
+                    {pro.payCode && <> · mã nạp {pro.payCode}</>}
                   </p>
                 </div>
                 <Button
@@ -99,6 +101,8 @@ export function AdminDesk({
           ))}
         </ul>
       )}
+
+      {tab === "topup" && <TopupForm pros={pros} onDone={refresh} />}
 
       {tab === "bookings" && (
         <ul className="mt-4 space-y-2">
@@ -146,6 +150,140 @@ export function AdminDesk({
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * Staff record a transfer they saw on the bank statement: find the freelancer
+ * by the code in the memo ("NAP AB23CD"), their slug or name, then the amount
+ * and the bank's reference. record_topup checks is_admin() again.
+ */
+function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
+  const [query, setQuery] = React.useState("")
+  const [picked, setPicked] = React.useState<AdminPro | null>(null)
+  const [amount, setAmount] = React.useState("")
+  const [reference, setReference] = React.useState("")
+  const [busy, setBusy] = React.useState(false)
+  const [result, setResult] = React.useState<{ ok: boolean; text: string } | null>(null)
+
+  // "NAP AB23CD" pasted whole works too.
+  const q = query.trim().replace(/^nap\s*/i, "").toLowerCase()
+  const matches = q
+    ? pros
+        .filter(
+          (p) =>
+            p.payCode?.toLowerCase() === q ||
+            p.slug.toLowerCase().includes(q) ||
+            p.name.toLowerCase().includes(q) ||
+            (q.length >= 3 && p.payCode?.toLowerCase().includes(q)),
+        )
+        .slice(0, 8)
+    : []
+  const value = Number(amount.replace(/\D/g, ""))
+  // Fresh numbers after a refresh: the roster is re-read on the server.
+  const current = picked ? (pros.find((p) => p.id === picked.id) ?? picked) : null
+
+  return (
+    <Card className="mt-4 space-y-4 p-4">
+      <div>
+        <p className="font-semibold">Ghi nhận nạp ví</p>
+        <p className="text-[13px] text-muted">
+          Dùng khi thấy tiền chuyển vào tài khoản 360dep mà ví chưa tự cộng. Nhập mã giao dịch của ngân hàng để cùng một khoản không
+          bị cộng hai lần.
+        </p>
+      </div>
+
+      {current ? (
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-canvas px-3 py-2.5 text-sm">
+          <span className="min-w-0">
+            <span className="block font-semibold">{current.name}</span>
+            <span className="block text-xs text-muted">
+              {current.slug}
+              {current.payCode ? ` · mã nạp ${current.payCode}` : ""} · ví {formatPrice(current.wallet)}
+            </span>
+          </span>
+          <Button size="sm" variant="ghost" onClick={() => setPicked(null)}>
+            Đổi
+          </Button>
+        </div>
+      ) : (
+        <div>
+          <input
+            className={cn(inputClass, "text-sm")}
+            placeholder="Mã nạp (VD: AB23CD), slug hoặc tên"
+            aria-label="Tìm người làm"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          {q && (
+            <ul className="mt-2 divide-y divide-line rounded-xl border border-line">
+              {matches.length === 0 && <li className="px-3 py-2.5 text-sm text-muted">Không tìm thấy ai.</li>}
+              {matches.map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPicked(p)
+                      setResult(null)
+                    }}
+                    className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm hover:bg-subtle"
+                  >
+                    <span className="min-w-0 truncate">
+                      <b>{p.name}</b> <span className="text-muted">· {p.slug}</span>
+                    </span>
+                    <span className="shrink-0 text-xs text-muted">{p.payCode ?? "—"}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <input
+          className={cn(inputClass, "text-sm")}
+          inputMode="numeric"
+          placeholder="Số tiền (đ)"
+          aria-label="Số tiền"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+        <input
+          className={cn(inputClass, "text-sm")}
+          placeholder="Mã giao dịch ngân hàng"
+          aria-label="Mã giao dịch ngân hàng"
+          value={reference}
+          onChange={(e) => setReference(e.target.value)}
+        />
+      </div>
+
+      <Button
+        disabled={!current || !value || busy}
+        onClick={async () => {
+          if (!current) return
+          setBusy(true)
+          const outcome = await recordTopup(current.id, value, reference)
+          setBusy(false)
+          if (!outcome.ok) return setResult({ ok: false, text: outcome.error })
+          setResult({ ok: true, text: `Đã cộng ${formatPrice(value)} vào ví của ${current.name}. Người làm được báo trong app.` })
+          setAmount("")
+          setReference("")
+          onDone()
+        }}
+      >
+        {busy ? "Đang ghi…" : value ? `Cộng ${formatPrice(value)} vào ví` : "Cộng vào ví"}
+      </Button>
+
+      {result && (
+        <p
+          role={result.ok ? "status" : "alert"}
+          className={cn("rounded-xl px-3.5 py-2.5 text-sm", result.ok ? "bg-success-soft text-success" : "bg-danger-soft text-danger")}
+        >
+          {result.text}
+        </p>
+      )}
+    </Card>
   )
 }
 

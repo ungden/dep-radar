@@ -15,12 +15,9 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"
 
-/** How far the wallet may go below zero before new jobs stop. One source: POLICY. */
-const OVERDRAFT_LIMIT = -POLICY.walletOverdraftLimit
-
 const KIND_LABEL: Record<string, string> = {
   topup: "Nạp ví",
-  commission: "Hoa hồng job hoàn thành",
+  commission: "Phí dịch vụ 360dep",
   adjustment: "Điều chỉnh",
   refund: "Hoàn lại",
   no_show_comp: "Bù phí di chuyển khi khách vắng mặt",
@@ -30,7 +27,8 @@ const KIND_LABEL: Record<string, string> = {
 
 export default async function WalletPage() {
   const [wallet, months] = await Promise.all([walletSummary(), earningsByMonth()])
-  const blocked = wallet.balance < OVERDRAFT_LIMIT
+  // fee_policy.wallet_floor is 0: a completed job's fee is owed before the next one.
+  const blocked = wallet.balance < 0
 
   return (
     <div className="mx-auto max-w-2xl md:pt-4">
@@ -42,17 +40,18 @@ export default async function WalletPage() {
             {formatPrice(wallet.balance)}
           </p>
           <p className="mt-1 text-[13px] text-ink-soft">
-            Khách trả tiền trực tiếp cho bạn. Mỗi job hoàn thành trừ {Math.round(POLICY.commissionRate * 100)}% giá dịch
-            vụ vào ví này. Phần voucher 360dep khách dùng và thưởng giới thiệu được cộng vào đây.
+            Khách trả tiền trực tiếp cho bạn. Mỗi lịch hoàn thành trừ phí dịch vụ 360dep ({Math.round(POLICY.commissionRate * 100)}% giá
+            dịch vụ) vào ví này. Phần voucher 360dep khách dùng và thưởng giới thiệu được cộng vào đây.
           </p>
           {blocked ? (
             <p className="mt-2 rounded-xl bg-danger-soft px-3 py-2 text-[13px] text-danger">
-              Ví đã âm quá {formatPrice(POLICY.walletOverdraftLimit)} nên bạn tạm không nhận được job mới. Nạp ví để tiếp
-              tục.
+              Thanh toán phí {formatPrice(-wallet.balance)} để nhận đơn tiếp. Khi ví còn âm, bạn chưa nhận được lịch mới hay
+              việc mới; trả xong là nhận lại được ngay.
             </p>
           ) : (
             <p className="mt-2 text-[13px] text-ink-soft">
-              Ví âm quá {formatPrice(POLICY.walletOverdraftLimit)} thì tạm dừng nhận job mới cho tới khi nạp lại.
+              Phí được trả trước đơn tiếp theo: ví âm thì tạm chưa nhận đơn mới cho tới khi thanh toán. Nạp dư để lần sau khỏi
+              chờ.
             </p>
           )}
           <WalletTopUp balance={wallet.balance} />
@@ -101,7 +100,7 @@ export default async function WalletPage() {
                     <span className="block text-xs text-muted">
                       {formatDateLong(localDate(e.createdAt), true)} · {localTime(e.createdAt)}
                     </span>
-                    {e.note && <span className="block truncate text-xs text-muted">{e.note}</span>}
+                    {e.note && e.note !== KIND_LABEL[e.kind] && <span className="block truncate text-xs text-muted">{e.note}</span>}
                     {e.bookingId && (
                       <Link href={`/bookings/${e.bookingId}`} className="text-xs text-accent underline underline-offset-2">
                         Xem lịch hẹn

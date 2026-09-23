@@ -51,7 +51,7 @@ function Settings() {
       </Field>
 
       {session?.phone ? (
-        <Field label="Số điện thoại" hint="Người làm gọi số này để xác nhận lịch hẹn. Muốn đổi số, liên hệ hỗ trợ.">
+        <Field label="Số điện thoại" hint="Người làm thấy số này khi đã nhận lịch của bạn, cho tới khi lịch kết thúc. Muốn đổi số, liên hệ hỗ trợ.">
           <input className={inputClass} value={formatPhone(session.phone)} disabled />
         </Field>
       ) : (

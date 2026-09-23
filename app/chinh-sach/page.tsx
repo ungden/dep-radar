@@ -1,21 +1,15 @@
 import type { Metadata } from "next"
 import { PageHeader } from "@/components/ui"
 import { CATALOG, CATEGORIES } from "@/lib/catalog"
-import {
-  AUTO_COMPLETE_HOURS,
-  MASKED,
-  MIN_REVIEWS_FOR_AVERAGE,
-  NO_SHOW_AFTER_MIN,
-  QUESTION_LIMIT,
-  REVIEW_WINDOW_DAYS,
-} from "@/lib/connection"
+import { AUTO_COMPLETE_HOURS, MIN_REVIEWS_FOR_AVERAGE, NO_SHOW_AFTER_MIN, REVIEW_WINDOW_DAYS } from "@/lib/connection"
 import { POLICY } from "@/lib/pricing"
 import { formatPrice } from "@/lib/utils"
+import { TopupPolicy } from "./fee-policy"
 import { ReferralPolicy } from "./referral-policy"
 
 export const metadata: Metadata = {
   title: "Chính sách phí & đặt lịch",
-  description: "Cách 360dep tính giá, phí di chuyển, phí đặt gấp và hoa hồng; quy trình xác nhận, huỷ lịch và đánh giá.",
+  description: "Cách 360dep tính giá, phí di chuyển, phí đặt gấp và phí dịch vụ; cách khách và người làm được ghép, nhắn tin, huỷ lịch và đánh giá.",
   alternates: { canonical: "/chinh-sach" },
 }
 
@@ -64,12 +58,17 @@ export default function PolicyPage() {
           </p>
         </Section>
 
-        <Section title="4. Thanh toán, xác nhận & huỷ">
+        <Section title="4. Đặt lịch, đăng yêu cầu & huỷ">
           <ul className="list-disc space-y-1 pl-5">
             <li>Không cần đặt cọc. Hiện tại khách trả trực tiếp cho người làm sau khi làm.</li>
             <li>
-              Sau khi khách đặt, người làm gọi điện xác nhận giờ, địa chỉ, yêu cầu rồi mới nhận lịch, trong vòng {POLICY.confirmWithinHours} giờ. Quá hạn, lịch tự huỷ và khung
-              giờ được trả lại cho người khác đặt.
+              Khách chọn người làm và đặt lịch: người làm xem giờ, địa chỉ, yêu cầu rồi bấm nhận lịch trong app, trong vòng{" "}
+              {POLICY.confirmWithinHours} giờ. Quá hạn, lịch tự huỷ và khung giờ được trả lại cho người khác đặt.
+            </li>
+            <li>
+              Hoặc khách đăng yêu cầu: giá cố định theo giá gợi ý của danh mục (khách có thể trả thêm để có người nhận nhanh hơn, không
+              quá giá trần). 360dep báo cho mọi người làm phù hợp quanh khách; ai bấm “Nhận việc” trước thì được việc, lịch hẹn được xác
+              nhận ngay. Không có báo giá hay trả giá.
             </li>
             <li>Khách huỷ trước giờ hẹn từ {POLICY.freeCancelHours} tiếng: miễn phí.</li>
             <li>Chúng tôi nhắc lịch cho cả hai bên trước 24 giờ và trước 2 giờ.</li>
@@ -97,7 +96,7 @@ export default function PolicyPage() {
             <li>Không ai bấm: lịch tự hoàn thành {AUTO_COMPLETE_HOURS} giờ sau giờ kết thúc, và cả hai được báo.</li>
             <li>
               Người làm không đến: khách bấm “Người làm không đến” trong chi tiết lịch hẹn, từ {NO_SHOW_AFTER_MIN} phút sau giờ hẹn tới{" "}
-              {AUTO_COMPLETE_HOURS} giờ sau giờ kết thúc. Lịch được huỷ về phía người làm, khách không mất phí, không tính hoa hồng, và 360dep nhận
+              {AUTO_COMPLETE_HOURS} giờ sau giờ kết thúc. Lịch được huỷ về phía người làm, khách không mất phí, không tính phí dịch vụ, và 360dep nhận
               báo cáo để xem xét. Người làm không đến nhiều lần có thể bị tạm khoá nhận lịch.
             </li>
             <li>
@@ -139,17 +138,13 @@ export default function PolicyPage() {
         <Section title="8. Tin nhắn & thông tin liên hệ">
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              Trước khi đặt lịch, khách hỏi người làm được qua tin nhắn: tối đa {QUESTION_LIMIT} tin cho tới khi người làm trả lời, để không ai bị
-              làm phiền.
+              Ghép trước, nhắn tin sau: không nhắn tin được từ hồ sơ hay trước khi đặt. Tin nhắn mở khi người làm nhận lịch (hoặc nhận
+              việc từ yêu cầu), ngay trong lịch hẹn đó.
             </li>
+            <li>Từ lúc đó, hai bên cũng thấy số điện thoại của nhau để gọi khi cần.</li>
             <li>
-              Số điện thoại, email, đường link và tài khoản mạng xã hội trong tin nhắn được ẩn thành “{MASKED}” cho tới khi hai bên có lịch hẹn đã
-              xác nhận. Giữ việc hẹn trên 360dep thì cả hai có nhắc lịch, đánh giá và hỗ trợ khi có sự cố.
-            </li>
-            <li>
-              Tin nhắn của một lịch hẹn tự đóng khi không còn gì cần trao đổi: 72 giờ sau khi xong (chụp ảnh, quay clip: sau khi khách nhận file),
-              72 giờ sau khi báo vắng mặt, 24 giờ sau khi lịch bị huỷ, từ chối hoặc hết hạn. Lịch sử vẫn đọc được; cần gì thêm thì đặt lịch mới
-              hoặc liên hệ hỗ trợ.
+              Tin nhắn đóng ngay khi lịch hẹn kết thúc: hoàn thành, bị huỷ, bị từ chối, hết hạn hoặc vắng mặt. Lịch sử vẫn đọc được; cần gì
+              thêm thì đặt lịch mới hoặc liên hệ hỗ trợ.
             </li>
             <li>Chặn một người trong tin nhắn thì hai bên không nhắn được cho nhau nữa; bỏ chặn được bất cứ lúc nào.</li>
           </ul>
@@ -157,7 +152,7 @@ export default function PolicyPage() {
 
         <Section title="9. An toàn">
           <ul className="list-disc space-y-1 pl-5">
-            <li>Số điện thoại của người làm hiện cho bạn sau khi họ nhận lịch; trước đó họ gọi bạn để xác nhận.</li>
+            <li>Số điện thoại của hai bên chỉ hiện cho nhau khi người làm đã nhận lịch và lịch chưa kết thúc.</li>
             <li>Chia sẻ lịch hẹn cho người thân bằng nút “Chia sẻ lịch hẹn” trong chi tiết lịch.</li>
             <li>Có vấn đề thì bấm “Báo cáo vấn đề” trong chi tiết lịch hẹn. Báo cáo không hiển thị với phía bên kia.</li>
           </ul>
@@ -169,7 +164,7 @@ export default function PolicyPage() {
             <li>Khi đặt, bạn chọn ảnh dùng cho cá nhân hay kinh doanh, và có cho người làm đăng lại làm tác phẩm hay không. Mặc định là không.</li>
             <li>Clip đăng lên 360dep được xoá thông tin vị trí quay (GPS) trước khi tải lên; ảnh cũng vậy.</li>
             <li>
-              Đặt chung một buổi (ví dụ makeup rồi chụp): mỗi người là một lịch hẹn riêng, tự gọi xác nhận và tính giá riêng. Nếu một bên huỷ, bạn được báo để quyết định giữ
+              Đặt chung một buổi (ví dụ makeup rồi chụp): mỗi người là một lịch hẹn riêng, tự nhận lịch và tính giá riêng. Nếu một bên huỷ, bạn được báo để quyết định giữ
               hay huỷ bên còn lại.
             </li>
           </ul>
@@ -198,20 +193,25 @@ export default function PolicyPage() {
           </p>
         </Section>
 
-        <Section title="14. Dành cho người nhận khách: hoa hồng & ví">
+        <Section title="14. Dành cho người nhận khách: phí dịch vụ & ví">
           <p>
-            360dep thu <b className="text-ink">{pct(POLICY.commissionRate)}</b> trên giá dịch vụ của mỗi lịch hoàn thành, một mức duy nhất cho mọi người làm. Không có phí đăng
-            ký, phí duy trì hay phí đẩy top.
+            360dep thu phí dịch vụ <b className="text-ink">{pct(POLICY.commissionRate)}</b> trên giá dịch vụ của mỗi lịch hoàn thành, một mức duy nhất cho mọi người làm. Không
+            có phí đăng ký, phí duy trì hay phí đẩy top.
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-5">
-            <li>Không tính hoa hồng trên phí di chuyển và phí đặt gấp: 100% thuộc về người làm.</li>
-            <li>Khách trả trực tiếp cho người làm (tiền mặt hoặc chuyển khoản). Mỗi lịch hoàn thành tự trừ hoa hồng vào ví của người làm.</li>
+            <li>Không tính phí trên phí di chuyển và phí đặt gấp: 100% thuộc về người làm.</li>
             <li>
-              Khách dùng voucher 360dep: khách trả bạn ít hơn đúng số tiền voucher, và 360dep cộng số tiền đó vào ví của bạn khi lịch hoàn thành.
-              Hoa hồng vẫn tính trên giá dịch vụ như thường.
+              Khách trả trực tiếp cho người làm (tiền mặt hoặc chuyển khoản). Hoàn thành lịch chỉ cần một lần bấm; phí dịch vụ tự trừ vào ví
+              của người làm ngay lúc đó.
             </li>
             <li>
-              Ví âm quá hạn mức sẽ tạm ngưng nhận lịch mới cho tới khi nạp lại. <b className="text-ink">Sắp áp dụng:</b> nạp ví bằng chuyển khoản VietQR.
+              Thanh toán phí trước đơn tiếp theo: khi ví còn âm, người làm chưa nhận được lịch mới hay việc mới, và khách chưa đặt được lịch
+              với người đó. Trả xong là nhận lại được ngay. Nạp dư để lần sau khỏi chờ.
+            </li>
+            <TopupPolicy />
+            <li>
+              Khách dùng voucher 360dep: khách trả bạn ít hơn đúng số tiền voucher, và 360dep cộng số tiền đó vào ví của bạn khi lịch hoàn thành.
+              Phí dịch vụ vẫn tính trên giá dịch vụ như thường.
             </li>
             <li>
               <b className="text-ink">Sắp áp dụng:</b> khách thanh toán online toàn bộ qua cổng thanh toán.

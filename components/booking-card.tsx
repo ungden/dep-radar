@@ -4,6 +4,8 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Car, Clock, CreditCard, HandCoins, Home, MapPin, Phone, Store, Timer, Zap } from "lucide-react"
+import { FEE_BLOCK_REASON, useFeeOwed } from "@/components/fee-due"
+import { MessageButton } from "@/components/message-button"
 import { Avatar, Button, ButtonLink, Card, StatusBadge, buttonClass, inputClass } from "@/components/ui"
 import { actions as store, useAct } from "@/lib/client-actions"
 import { type AppState, getPro, useApp, worksOf } from "@/lib/store"
@@ -58,16 +60,17 @@ export function BookingCard({ booking }: { booking: Booking }) {
           <ButtonLink href={`/bookings/${booking.id}`} variant="outline" size="sm">
             Xem chi tiết
           </ButtonLink>
-          {/* Before the freelancer accepts, calling is their move, not the
-              customer's -- even if a past job means the number is already known. */}
-          {booking.status !== "pending" && booking.proPhone ? (
+          {/* The number and the chat come once the freelancer accepts. */}
+          {booking.status === "pending" ? (
+            <span className="flex items-center justify-center rounded-full bg-subtle px-3 text-center text-[13px] text-ink-soft">
+              Chờ {booking.proName} nhận lịch
+            </span>
+          ) : booking.proPhone ? (
             <a href={`tel:${booking.proPhone.replace(/\s/g, "")}`} className={buttonClass("soft", "sm")}>
               <Phone className="size-3.5" /> Gọi {booking.proName}
             </a>
           ) : (
-            <span className="flex items-center justify-center rounded-full bg-subtle px-3 text-center text-[13px] text-ink-soft">
-              Chờ {booking.proName} gọi
-            </span>
+            <MessageButton booking={booking} className="h-9 px-3 text-[13px]" />
           )}
         </div>
       )}
@@ -157,28 +160,38 @@ export function JobBookingRow({ booking, actions }: { booking: Booking; actions?
   )
 }
 
-/** Freelancer calls the customer to confirm details, then accepts. */
+/**
+ * The freelancer reads the details and accepts in the app; the phone number
+ * and the chat come after. Refused while a fee is owed, and said here first.
+ */
 export function PendingJobActions({ booking }: { booking: Booking }) {
   const act = useAct()
+  const owed = useFeeOwed()
   const [error, setError] = React.useState<string | null>(null)
   const [declining, setDeclining] = React.useState(false)
   if (declining) return <DeclineForm booking={booking} size="sm" onCancel={() => setDeclining(false)} className="mt-3" />
   return (
     <>
-      <div className="mt-3 grid grid-cols-[auto_1fr_1fr] gap-2">
+      <div className="mt-3 grid grid-cols-[auto_1fr] gap-2">
         <Button variant="ghost" size="sm" onClick={() => setDeclining(true)}>
           Từ chối
         </Button>
-        <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "sm")}>
-          <Phone className="size-3.5" /> Gọi khách
-        </a>
         <Button
           size="sm"
-          onClick={() => void act(() => store.setBookingStatus(booking.id, "confirmed"), "Đã nhận job").then(setError)}
+          disabled={owed > 0}
+          onClick={() => void act(() => store.setBookingStatus(booking.id, "confirmed"), "Đã nhận lịch").then(setError)}
         >
-          Đã gọi, nhận job
+          Nhận lịch
         </Button>
       </div>
+      {owed > 0 && (
+        <p className="mt-2 text-xs text-danger">
+          {FEE_BLOCK_REASON}{" "}
+          <Link href="/studio/wallet" className="font-semibold underline underline-offset-2">
+            Thanh toán
+          </Link>
+        </p>
+      )}
       {error && (
         <p role="alert" className="mt-2 text-xs text-danger">
           {error}
@@ -188,7 +201,7 @@ export function PendingJobActions({ booking }: { booking: Booking }) {
   )
 }
 
-const DECLINE_REASONS = ["Trùng lịch khác", "Không làm được dịch vụ này", "Quá xa", "Không liên lạc được khách"]
+const DECLINE_REASONS = ["Trùng lịch khác", "Không làm được dịch vụ này", "Quá xa"]
 
 /**
  * Declining is final for the customer, so it takes a second tap. The reason is
@@ -265,7 +278,7 @@ export function DeclineForm({
 }
 
 /**
- * The freelancer has until confirm_by to call and accept, after which the
+ * The freelancer has until confirm_by to accept, after which the
  * database expires the request and frees the slot. Show the real deadline.
  */
 export function ConfirmCountdown({ booking }: { booking: Booking }) {
@@ -282,8 +295,8 @@ export function ConfirmCountdown({ booking }: { booking: Booking }) {
     <p className={cn("mt-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold", urgent ? "bg-danger-soft text-danger" : "bg-warning-soft text-warning")}>
       <Timer className="size-4" />
       {minutes === 0
-        ? "Đã quá hạn gọi xác nhận"
-        : `Còn ${minutes >= 60 ? `${Math.floor(minutes / 60)} giờ ${minutes % 60} phút` : `${minutes} phút`} để gọi và nhận`}
+        ? "Đã quá hạn nhận lịch"
+        : `Còn ${minutes >= 60 ? `${Math.floor(minutes / 60)} giờ ${minutes % 60} phút` : `${minutes} phút`} để nhận lịch`}
     </p>
   )
 }

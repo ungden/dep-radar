@@ -3,7 +3,9 @@
 import Link from "next/link"
 import { ChevronRight, Contact, Gift, IdCard, ImagePlus, Navigation, Phone, Tags, UserRoundPen, Users } from "lucide-react"
 import { JobBookingRow } from "@/components/booking-card"
+import { MessageButton } from "@/components/message-button"
 import { BookingLink } from "@/components/booking-link"
+import { FeeDueCard } from "@/components/fee-due"
 import { PublishProgress } from "@/components/publish-progress"
 import { RequestCard } from "@/components/request-card"
 import { RequireSession } from "@/components/require-session"
@@ -53,8 +55,7 @@ function Dashboard() {
       j.status === "open" &&
       pro.categories.includes(getTemplate(j.templateId)?.category ?? "nail") &&
       km !== null &&
-      km <= pro.maxTravelKm &&
-      !j.offers.some((o) => o.proId === proId)
+      km <= pro.maxTravelKm
     )
   })
 
@@ -75,7 +76,7 @@ function Dashboard() {
         <p className="text-[13px] font-medium text-muted">{formatDateLong(today)}</p>
         <h1 className="mt-1 text-[28px] font-bold leading-tight tracking-tight md:text-[34px]">
           {pending.length
-            ? `${pending.length} khách đang chờ bạn gọi`
+            ? `${pending.length} khách đang chờ bạn nhận lịch`
             : todays.length
               ? `Hôm nay có ${todays.length} lịch`
               : `Chào ${pro.name}`}
@@ -97,12 +98,15 @@ function Dashboard() {
         />
       </div>
 
+      {/* The fee comes before the next job: first thing on the page while it is owed. */}
+      <FeeDueCard />
+
       <PublishProgress />
       <VerifyNudge pro={pro} />
 
       {pending.length > 0 && (
         <section>
-          <SectionTitle title="Cần gọi xác nhận" href="/studio/schedule?tab=pending" count={pending.length} />
+          <SectionTitle title="Chờ bạn nhận lịch" href="/studio/schedule?tab=pending" count={pending.length} />
           <ul className="space-y-3">
             {pending.slice(0, 3).map((b) => (
               <li key={b.id}>
@@ -111,7 +115,8 @@ function Dashboard() {
             ))}
           </ul>
           <p className="mt-2 text-[13px] text-ink-soft">
-            Gọi cho khách xác nhận giờ, địa chỉ, yêu cầu rồi mới nhận. Quá {POLICY.confirmWithinHours} giờ, yêu cầu tự hết hạn và khung giờ được trả lại.
+            Xem giờ, địa chỉ, yêu cầu rồi bấm Nhận lịch; nhận rồi thì hai bên nhắn tin, gọi được cho nhau. Quá{" "}
+            {POLICY.confirmWithinHours} giờ, yêu cầu tự hết hạn và khung giờ được trả lại.
           </p>
         </section>
       )}
@@ -126,9 +131,13 @@ function Dashboard() {
                   booking={b}
                   actions={
                     <>
-                      <a href={`tel:${b.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "sm")}>
-                        <Phone className="size-4" /> Gọi khách
-                      </a>
+                      {b.customerPhone ? (
+                        <a href={`tel:${b.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "sm")}>
+                          <Phone className="size-4" /> Gọi khách
+                        </a>
+                      ) : (
+                        <MessageButton booking={b} label="Nhắn khách" className="h-9 text-[13px]" />
+                      )}
                       <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.address)}`}
                         target="_blank"

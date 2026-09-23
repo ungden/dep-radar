@@ -192,6 +192,12 @@ export interface PlatformSettings {
   topupBankBin: string | null
   topupAccountNo: string | null
   topupAccountName: string | null
+  /**
+   * The bank's webhook is switched on (SEPAY_WEBHOOK_KEY is set and there is an
+   * account to pay into): a transfer with the right memo credits the wallet by
+   * itself. False means staff record it by hand.
+   */
+  bankLinked: boolean
   supportZalo: string | null
   supportEmail: string | null
   companyName: string | null

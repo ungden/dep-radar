@@ -3,14 +3,14 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Ban, Flag, ImagePlus, Info, MoreHorizontal, Send } from "lucide-react"
+import { Ban, Flag, ImagePlus, MoreHorizontal, Send } from "lucide-react"
 import { ReportButton } from "@/components/report-button"
 import { Sheet } from "@/components/sheet"
 import { SupportLink } from "@/components/support-link"
 import { Button, ButtonLink, PageHeader, inputClass } from "@/components/ui"
 import { listMessages, sendMessage, type ChatMessage, type ThreadHeader } from "@/lib/api/chat"
 import { actions, useAct } from "@/lib/client-actions"
-import { MASKED_NOTE, chatState, questionsLeft } from "@/lib/connection"
+import { chatState } from "@/lib/connection"
 import { useApp } from "@/lib/store"
 import { supabaseBrowser } from "@/lib/supabase/client"
 import { uploadImage } from "@/lib/uploads"
@@ -24,9 +24,8 @@ import { cn, localTime } from "@/lib/utils"
  * visible.
  *
  * What the box to write in says follows the database's rules
- * (lib/connection.ts): a booking's chat ends a while after the job, a question
- * before booking gets three messages until the freelancer answers, and contact
- * details are hidden until there is a confirmed booking.
+ * (lib/connection.ts): the chat opens when the freelancer accepts and closes
+ * when the job ends. The history stays readable either way.
  */
 export function Conversation({
   threadId,
@@ -42,27 +41,14 @@ export function Conversation({
   const [draft, setDraft] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
-  // Under the composer once, after a message had contact details hidden.
-  const [masked, setMasked] = React.useState(false)
   const [menu, setMenu] = React.useState(false)
   const bottom = React.useRef<HTMLDivElement>(null)
 
-  // A chat can close while it is open on screen; a minute is close enough.
-  const [now, setNow] = React.useState(() => Date.now())
-  React.useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 60_000)
-    return () => clearInterval(t)
-  }, [])
-
-  const chat = chatState(header.closesAt, new Date(now))
+  // The status is read with the page; a job that ends while this is open is
+  // refused by send_message with the reason, which shows below.
+  const chat = chatState(header.chatStatus)
   const blocked = state.blockedAccounts.includes(header.otherId)
-  const left = questionsLeft({
-    isBookingThread: Boolean(header.bookingId),
-    iAmCustomer: !header.iAmPro,
-    proHasReplied: messages.some((m) => !m.mine),
-    mySent: messages.filter((m) => m.mine).length,
-  })
-  const canSend = chat.open && !blocked && left !== 0
+  const canSend = chat.open && !blocked
 
   const reload = React.useCallback(async () => {
     setMessages(await listMessages(threadId))
@@ -92,7 +78,6 @@ export function Conversation({
     const result = await sendMessage(threadId, body, images)
     setBusy(false)
     if (!result.ok) return setError(result.error)
-    setMasked(result.data)
     setDraft("")
     await reload()
   }
@@ -136,7 +121,9 @@ export function Conversation({
       <div className="flex-1 space-y-2 pb-4">
         {messages.length === 0 && (
           <p className="py-10 text-center text-sm text-muted">
-            Hỏi về mẫu, tình trạng da/móng/tóc hoặc thời gian phù hợp. Đừng gửi thông tin thanh toán qua tin nhắn.
+            {chat.open
+              ? "Trao đổi về giờ, địa chỉ, mẫu mong muốn cho lịch hẹn này. Đừng gửi thông tin thanh toán qua tin nhắn."
+              : "Chưa có tin nhắn nào."}
           </p>
         )}
         {messages.map((m) => (
@@ -174,21 +161,22 @@ export function Conversation({
         // The history stays readable; the box to write in goes.
         <div className="sticky bottom-0 space-y-3 border-t border-line bg-canvas/95 py-3 backdrop-blur">
           <p className="text-[14px] text-ink-soft">{chat.note}</p>
-          <div className={cn("grid gap-2", !header.iAmPro && rebook ? "grid-cols-2" : "grid-cols-1")}>
-            {!header.iAmPro && rebook && <ButtonLink href={rebook}>Đặt lại</ButtonLink>}
-            <SupportLink />
-          </div>
+          {/* Waiting: the booking page is where it moves on. Closed: book again, or ask 360dep. */}
+          {header.chatStatus === "waiting" ? (
+            header.bookingId && (
+              <ButtonLink href={`/bookings/${header.bookingId}`} variant="outline" className="w-full">
+                Xem lịch hẹn
+              </ButtonLink>
+            )
+          ) : (
+            <div className={cn("grid gap-2", !header.iAmPro && rebook ? "grid-cols-2" : "grid-cols-1")}>
+              {!header.iAmPro && rebook && <ButtonLink href={rebook}>Đặt lại</ButtonLink>}
+              <SupportLink />
+            </div>
+          )}
         </div>
       ) : (
         <div className="sticky bottom-0 border-t border-line bg-canvas/95 py-3 backdrop-blur">
-          {chat.note && <p className="mb-2 text-xs text-muted">{chat.note}</p>}
-          {left !== null && (
-            <p className={cn("mb-2 text-xs", left === 0 ? "text-warning" : "text-muted")}>
-              {left === 0
-                ? "Bạn đã gửi 3 tin. Đợi người làm trả lời rồi nhắn tiếp nhé."
-                : `Còn ${left} tin trước khi người làm trả lời.`}
-            </p>
-          )}
           <form
             className="flex items-end gap-2"
             onSubmit={(e) => {
@@ -235,19 +223,13 @@ export function Conversation({
                   if (draft.trim() && canSend) void send(draft)
                 }
               }}
-              placeholder={canSend ? "Nhập tin nhắn…" : "Đợi người làm trả lời…"}
+              placeholder="Nhập tin nhắn…"
               className={cn(inputClass, "max-h-32 min-h-11 flex-1 resize-none py-3 text-sm")}
             />
             <Button type="submit" size="lg" className="size-11 shrink-0 p-0" disabled={busy || !draft.trim() || !canSend} aria-label="Gửi">
               <Send className="size-4" />
             </Button>
           </form>
-          {masked && (
-            <p role="status" className="mt-2 flex gap-2 text-xs text-ink-soft">
-              <Info className="mt-0.5 size-3.5 shrink-0" />
-              {MASKED_NOTE}
-            </p>
-          )}
         </div>
       )}
 

@@ -24,7 +24,7 @@ export default async function InboxPage() {
           <EmptyState
             icon={<MessageSquare className="size-6" />}
             title="Chưa có tin nhắn nào"
-            text="Nhắn cho người làm từ hồ sơ của họ, hoặc từ một lịch hẹn đã đặt."
+            text="Nhắn tin mở khi người làm nhận lịch của bạn, trong trang lịch hẹn. Cuộc trò chuyện đóng khi lịch hẹn kết thúc."
           />
         ) : (
           <ul className="space-y-2">
@@ -36,6 +36,10 @@ export default async function InboxPage() {
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
                         <span className="truncate text-sm font-semibold">{t.otherName}</span>
+                        {/* Kept as history: readable, no longer writable. */}
+                        {t.chatStatus === "closed" && (
+                          <span className="shrink-0 rounded-full bg-canvas px-2 py-0.5 text-[11px] font-medium text-muted">Đã kết thúc</span>
+                        )}
                         <span className="ml-auto shrink-0 text-xs text-muted">{timeAgo(t.lastMessageAt)}</span>
                       </span>
                       <span className="mt-0.5 flex items-center gap-2">

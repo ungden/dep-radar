@@ -36,7 +36,6 @@ function BookingsView() {
     .sort((a, b) => (tab === "upcoming" ? 1 : -1) * `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
   const myJobs = jobs.filter((j) => j.mine)
   const openJobs = myJobs.filter((j) => j.status === "open")
-  const newOffers = openJobs.reduce((n, j) => n + j.offers.filter((o) => o.status === "pending").length, 0)
 
   return (
     <>
@@ -52,11 +51,9 @@ function BookingsView() {
           <span className="flex-1">
             <span className="block text-sm font-semibold">Yêu cầu đã đăng</span>
             <span className="block text-xs text-muted">
-              {openJobs.length ? `${openJobs.length} yêu cầu đang mở` : `${myJobs.length} yêu cầu đã đóng`}
-              {newOffers ? ` · ${newOffers} báo giá mới` : ""}
+              {openJobs.length ? `${openJobs.length} yêu cầu đang tìm người làm` : `${myJobs.length} yêu cầu đã đăng`}
             </span>
           </span>
-          {newOffers > 0 && <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-white">{newOffers}</span>}
           <ChevronRight className="size-4 text-muted" />
         </Link>
       )}
