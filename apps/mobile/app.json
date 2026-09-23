@@ -12,10 +12,17 @@
       "bundleIdentifier": "vn.dep360.app",
       "supportsTablet": false,
       "infoPlist": {
-        "NSCameraUsageDescription": "360dep dùng camera để bạn chụp ảnh và quay clip tác phẩm.",
-        "NSPhotoLibraryUsageDescription": "360dep mở thư viện để bạn chọn ảnh, clip tác phẩm.",
-        "NSMicrophoneUsageDescription": "360dep cần micro khi bạn quay clip tác phẩm có tiếng.",
-        "LSApplicationQueriesSchemes": ["tel", "comgooglemaps"]
+        "NSCameraUsageDescription": "360dep dùng camera để bạn chụp ảnh, quay clip tác phẩm.",
+        "NSPhotoLibraryUsageDescription": "360dep mở thư viện ảnh để bạn chọn ảnh, clip tác phẩm và ảnh kết quả khi viết đánh giá.",
+        "NSMicrophoneUsageDescription": "360dep dùng micro để ghi tiếng khi bạn quay clip tác phẩm.",
+        "LSApplicationQueriesSchemes": [
+          "tel",
+          "comgooglemaps"
+        ]
+      },
+      "usesAppleSignIn": true,
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
@@ -43,12 +50,13 @@
       "expo-secure-store",
       "expo-video",
       "expo-web-browser",
+      "expo-apple-authentication",
       [
         "expo-image-picker",
         {
-          "photosPermission": "360dep mở thư viện để bạn chọn ảnh, clip tác phẩm.",
-          "cameraPermission": "360dep dùng camera để bạn chụp ảnh và quay clip tác phẩm.",
-          "microphonePermission": "360dep cần micro khi bạn quay clip tác phẩm có tiếng."
+          "photosPermission": "360dep mở thư viện ảnh để bạn chọn ảnh, clip tác phẩm và ảnh kết quả khi viết đánh giá.",
+          "cameraPermission": "360dep dùng camera để bạn chụp ảnh, quay clip tác phẩm.",
+          "microphonePermission": "360dep dùng micro để ghi tiếng khi bạn quay clip tác phẩm."
         }
       ],
       [

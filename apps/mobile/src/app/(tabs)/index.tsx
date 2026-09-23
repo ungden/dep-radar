@@ -2,7 +2,6 @@ import * as React from "react"
 import { router } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import {
-  RefreshControl,
   ScrollView,
   View,
   useWindowDimensions,
@@ -26,6 +25,7 @@ import { webLink } from "@/data/links"
 import type { AppWork } from "@/data/public"
 import { PostCard, PostCardSkeleton } from "@/components/cards"
 import { TextTabs } from "@/components/switches"
+import { OfflineNote } from "@/components/offline-note"
 import { TopBar } from "@/components/top-bar"
 import { useApp } from "@/state/app"
 import { useBrowse } from "@/state/derived"
@@ -35,6 +35,7 @@ import { EmptyState, ErrorNote, Photo, SectionHeader, Skeleton } from "@/ui/bits
 import { Icon } from "@/ui/icon"
 import { CategoryIcon, CategoryTiles } from "@/components/category-icon"
 import { Press } from "@/ui/press"
+import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
 
 const TRADES: { value: VerticalFilter; label: string }[] = [{ value: "all", label: "Tất cả" }, ...VERTICALS.map((v) => ({ value: v.id, label: v.label }))]
@@ -42,11 +43,7 @@ const TRADES: { value: VerticalFilter; label: string }[] = [{ value: "all", labe
 const SERVICES_FIRST = 8
 const COLUMN_GAP = 12
 
-const openRequestForm = () =>
-  void WebBrowser.openBrowserAsync(webLink("/requests/new"), {
-    presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-    controlsColor: colors.ink,
-  })
+const openRequestForm = () => router.push("/yeu-cau/moi")
 
 /**
  * Khám phá sells services: what someone in the customer's city actually
@@ -75,12 +72,10 @@ export default function Explore() {
   }
   React.useEffect(() => setExpanded(false), [app.city])
 
+  // browse.* leaves out people this person blocked.
   const offers = React.useMemo(
-    () =>
-      app.data
-        ? serviceOffers({ pros: app.data.pros, proServices: app.data.services, works: app.data.works, city: app.city, vertical })
-        : [],
-    [app.data, app.city, vertical],
+    () => (app.data ? serviceOffers({ pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical }) : []),
+    [app.data, browse, app.city, vertical],
   )
   const categories = CATEGORIES.filter((c) => offers.some((o) => o.template.category === c.id))
   const shownCategory = categories.some((c) => c.id === category) ? category : "all"
@@ -126,7 +121,8 @@ export default function Explore() {
     ).slice(0, 8)
   }, [app, browse, vertical, now])
 
-  const loadingFirst = !app.data && !app.dataError && app.configured
+  // Nothing yet, or the city just changed and its catalogue is on the way.
+  const loadingFirst = (!app.data || app.stale) && !app.dataError && app.configured
   const cardWidth = (width - gutter * 2 - COLUMN_GAP) / 2
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -174,8 +170,9 @@ export default function Explore() {
           onScroll={onScroll}
           scrollEventThrottle={32}
           contentContainerStyle={{ paddingBottom: 40, gap: 20 }}
-          refreshControl={<RefreshControl refreshing={app.loading && Boolean(app.data)} onRefresh={() => void app.refresh()} />}
+          refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}
         >
+          <OfflineNote />
           {/* Search */}
           <View style={{ paddingHorizontal: gutter, paddingTop: 4 }}>
             <Press
@@ -270,6 +267,22 @@ export default function Explore() {
             <Txt color={colors.inkSoft}>Đăng yêu cầu, người làm gần bạn gửi báo giá. Bạn chọn, không mất phí.</Txt>
             <Button label="Đăng yêu cầu" onPress={openRequestForm} style={{ marginTop: 6 }} />
           </View>
+
+          {/* The request board turned around: freelancers looking for models */}
+          <Press
+            onPress={() => router.push("/tuyen-mau")}
+            accessibilityLabel="Tuyển mẫu: làm mẫu cho thợ"
+            style={{ marginHorizontal: gutter, flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, padding: 16 }}
+          >
+            <CategoryIcon id="model-photo" size={36} />
+            <View style={{ flex: 1, gap: 2 }}>
+              <Txt w={700}>Tuyển mẫu</Txt>
+              <Txt v="meta" color={colors.inkSoft}>
+                Làm mẫu cho thợ, được làm đẹp miễn phí hoặc có thù lao.
+              </Txt>
+            </View>
+            <Icon name="right" size={14} color={colors.muted} />
+          </Press>
         </ScrollView>
         {stuck ? (
           <View style={{ position: "absolute", top: 0, left: 0, right: 0, backgroundColor: colors.canvas, borderBottomWidth: 1, borderBottomColor: colors.line }}>

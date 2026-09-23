@@ -90,36 +90,125 @@ export function toWork(row: Row, slugOf: Map<string, string>): AppWork {
   }
 }
 
-export async function loadPublic(ownId: string | null): Promise<PublicData> {
-  const [proRows, ownPro, workRows, reviewRows, priceRows, listingRows, statRows] = await Promise.all([
-    selectWithFallback("pros", (c) => supabase.from("pros").select(c).eq("published", true).is("suspended_at", null), [PRO_SELECT]),
+const REVIEW_COLUMNS = "booking_id, pro_id, author_name, service_label, rating, tags, body, photo_paths, reply, created_at"
+const PRICE_COLUMNS = "pro_id, template_id, variant_id, price"
+const LISTING_COLUMNS = "pro_id, template_id, active"
+
+/** A PostgREST select builder, filtered further by forPros(). */
+type Build = (columns: string) => any
+
+/**
+ * Rows that belong to some freelancers. `null` means everyone (the customer
+ * browses the whole country); otherwise the ids go in chunks, so a URL never
+ * grows past what the gateway accepts.
+ */
+async function forPros(label: string, ids: string[] | null, build: Build, columns: string[]): Promise<Row[]> {
+  if (ids === null) return selectWithFallback(label, build, columns)
+  if (!ids.length) return []
+  const chunks: string[][] = []
+  for (let i = 0; i < ids.length; i += 80) chunks.push(ids.slice(i, i + 80))
+  const parts = await Promise.all(chunks.map((part) => selectWithFallback(label, (c) => build(c).in("pro_id", part), columns)))
+  return parts.flat()
+}
+
+/** Interest over 30 days: an RPC on the web (work_stats_30d()). Without it every post ranks as "average appeal". */
+async function loadStats(): Promise<Row[]> {
+  const viaRpc = await supabase.rpc("work_stats_30d")
+  if (!viaRpc.error) return (viaRpc.data ?? []) as Row[]
+  const viaView = await supabase.from("work_stats_30d").select("*")
+  return viaView.error ? [] : ((viaView.data ?? []) as Row[])
+}
+
+/**
+ * The public catalogue for one city: its listed freelancers, filtered on the
+ * server, and only their works, prices and reviews. `city` null is the whole
+ * country. The viewer's own profile always comes along, listed or not.
+ */
+export async function loadPublic(ownId: string | null, city: string | null): Promise<PublicData> {
+  const [proRows, ownPro] = await Promise.all([
+    selectWithFallback(
+      "pros",
+      (c) => {
+        const q = supabase.from("pros").select(c).eq("published", true).is("suspended_at", null)
+        return city ? q.eq("city", city) : q
+      },
+      [PRO_SELECT],
+    ),
     // The freelancer's own profile, which is not listed until it is published.
     ownId ? supabase.from("pros").select(PRO_SELECT).eq("id", ownId).maybeSingle() : Promise.resolve({ data: null }),
-    selectWithFallback("works", (c) => supabase.from("works").select(c).order("sort_order"), [WORK_FULL, WORK_BASE]),
-    selectWithFallback(
-      "reviews",
-      (c) => supabase.from("reviews").select(c).is("hidden_at", null).order("created_at", { ascending: false }),
-      ["booking_id, pro_id, author_name, service_label, rating, tags, body, photo_paths, reply, created_at"],
-    ),
-    selectWithFallback("prices", (c) => supabase.from("pro_service_prices").select(c), ["pro_id, template_id, variant_id, price"]),
-    selectWithFallback("listings", (c) => supabase.from("pro_services").select(c), ["pro_id, template_id, active"]),
-    // A view being added for ranking. Without it every post ranks as "average appeal".
-    supabase
-      .from("work_stats_30d")
-      .select("*")
-      .then(({ data, error }) => (error ? [] : ((data ?? []) as Row[]))),
   ])
-
-  const pros = proRows.map(toPro)
   const own = (ownPro as { data: Row | null }).data
-  if (own && !pros.some((p) => p.uuid === own.id)) pros.push(toPro(own))
+  if (own && !proRows.some((p) => p.id === own.id)) proRows.push(own)
+  const ids = city ? proRows.map((p) => String(p.id)) : null
+
+  const [workRows, reviewRows, priceRows, listingRows, statRows] = await Promise.all([
+    forPros("works", ids, (c) => supabase.from("works").select(c).order("sort_order"), [WORK_FULL, WORK_BASE]),
+    forPros("reviews", ids, (c) => supabase.from("reviews").select(c).is("hidden_at", null).order("created_at", { ascending: false }), [REVIEW_COLUMNS]),
+    forPros("prices", ids, (c) => supabase.from("pro_service_prices").select(c), [PRICE_COLUMNS]),
+    forPros("listings", ids, (c) => supabase.from("pro_services").select(c), [LISTING_COLUMNS]),
+    loadStats(),
+  ])
+  return assemble(proRows, workRows, reviewRows, priceRows, listingRows, statRows)
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * One freelancer from outside the loaded city (a link in a notification, a
+ * chat, a quote), with their works, prices and reviews. Null when not listed.
+ */
+export async function loadOnePro(slugOrId: string): Promise<PublicData | null> {
+  const { data } = await supabase
+    .from("pros")
+    .select(PRO_SELECT)
+    .eq(UUID.test(slugOrId) ? "id" : "slug", slugOrId)
+    .maybeSingle()
+  const row = data as Row | null
+  if (!row) return null
+  const ids = [String(row.id)]
+  const [workRows, reviewRows, priceRows, listingRows] = await Promise.all([
+    forPros("works", ids, (c) => supabase.from("works").select(c).order("sort_order"), [WORK_FULL, WORK_BASE]),
+    forPros("reviews", ids, (c) => supabase.from("reviews").select(c).is("hidden_at", null).order("created_at", { ascending: false }), [REVIEW_COLUMNS]),
+    forPros("prices", ids, (c) => supabase.from("pro_service_prices").select(c), [PRICE_COLUMNS]),
+    forPros("listings", ids, (c) => supabase.from("pro_services").select(c), [LISTING_COLUMNS]),
+  ])
+  return assemble([row], workRows, reviewRows, priceRows, listingRows, [])
+}
+
+/** Which freelancer a work link (slug or id) belongs to. */
+export async function proOfWork(slugOrId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("works")
+    .select("pro_id")
+    .eq(UUID.test(slugOrId) ? "id" : "slug", slugOrId)
+    .maybeSingle()
+  return ((data as Row | null)?.pro_id as string | undefined) ?? null
+}
+
+/** Adds what `extra` has that `base` lacks. */
+export function mergePublic(base: PublicData, extra: PublicData): PublicData {
+  const pros = new Set(base.pros.map((p) => p.uuid))
+  const works = new Set(base.works.map((w) => w.dbId))
+  const reviews = new Set(base.reviews.map((r) => r.id))
+  const services = new Set(base.services.map((s) => s.id))
+  return {
+    pros: [...base.pros, ...extra.pros.filter((p) => !pros.has(p.uuid))],
+    works: [...base.works, ...extra.works.filter((w) => !works.has(w.dbId))],
+    reviews: [...base.reviews, ...extra.reviews.filter((r) => !reviews.has(r.id))],
+    services: [...base.services, ...extra.services.filter((s) => !services.has(s.id))],
+    stats: { ...extra.stats, ...base.stats },
+  }
+}
+
+function assemble(proRows: Row[], workRows: Row[], reviewRows: Row[], priceRows: Row[], listingRows: Row[], statRows: Row[]): PublicData {
+  const pros = proRows.map(toPro)
   const slugOf = new Map(pros.map((p) => [p.uuid, p.id]))
 
   // Works of freelancers who are neither listed nor the viewer are not shown.
   const works = workRows.filter((w) => slugOf.has(w.pro_id)).map((w) => toWork(w, slugOf))
   const workSlug = new Map(works.map((w) => [w.dbId, w.id]))
 
-  const reviews: Review[] = reviewRows.map((row) => ({
+  const reviews: Review[] = reviewRows.filter((row) => slugOf.has(row.pro_id)).map((row) => ({
     id: row.booking_id,
     proId: slugOf.get(row.pro_id) ?? row.pro_id,
     bookingId: row.booking_id,
@@ -133,7 +222,7 @@ export async function loadPublic(ownId: string | null): Promise<PublicData> {
     reply: row.reply ?? undefined,
   }))
 
-  const services: ProService[] = listingRows.map((row) => {
+  const services: ProService[] = listingRows.filter((row) => slugOf.has(row.pro_id)).map((row) => {
     const slug = slugOf.get(row.pro_id) ?? row.pro_id
     return {
       id: `${slug}:${row.template_id}`,

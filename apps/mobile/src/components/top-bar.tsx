@@ -2,7 +2,7 @@ import { router } from "expo-router"
 import { View } from "react-native"
 import { CITIES } from "@/shared"
 import { useApp } from "@/state/app"
-import { colors, gutter } from "@/theme"
+import { colors, gutter, radius } from "@/theme"
 import { Wordmark } from "@/ui/bits"
 import { IconButton } from "@/ui/button"
 import { Icon } from "@/ui/icon"
@@ -37,26 +37,46 @@ export function TopBar() {
         <IconButton name="bell" label="Thông báo" badge={me.unreadNotifications} onPress={() => needSignIn("/thong-bao")} />
       </View>
 
-      <Sheet sheet={sheet} title="Bạn đang ở đâu?">
-        {[null, ...CITIES].map((c) => {
-          const selected = c === city
-          return (
-            <Press
-              key={c ?? "all"}
-              onPress={() => {
-                setCity(c)
-                sheet.close()
-              }}
-              accessibilityState={{ selected }}
-              style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 12 }}
-            >
-              <Txt v="lead" w={selected ? 700 : 500}>
-                {c ?? "Cả nước"}
-              </Txt>
-              {selected ? <Icon name="check" size={18} /> : null}
-            </Press>
-          )
-        })}
+      <Sheet sheet={sheet} title="Bạn đang ở đâu?" size="medium">
+        <Txt color={colors.inkSoft}>
+          Đang xem:{" "}
+          <Txt w={700} color={colors.accentDark}>
+            {city ?? "Cả nước"}
+          </Txt>
+        </Txt>
+        <View style={{ gap: 6 }} accessibilityRole="radiogroup">
+          {[...CITIES, null].map((c) => {
+            const selected = c === city
+            return (
+              <Press
+                key={c ?? "all"}
+                haptic="select"
+                onPress={() => {
+                  setCity(c)
+                  sheet.close()
+                }}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: selected }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingVertical: 12,
+                  paddingHorizontal: 14,
+                  borderRadius: radius.md,
+                  backgroundColor: selected ? colors.accentSoft : colors.surface,
+                  borderWidth: 1.5,
+                  borderColor: selected ? colors.accent : colors.line,
+                }}
+              >
+                <Txt v="lead" w={selected ? 700 : 500} color={selected ? colors.accentDark : colors.ink}>
+                  {c ?? "Cả nước"}
+                </Txt>
+                {selected ? <Icon name="check" size={18} color={colors.accent} /> : null}
+              </Press>
+            )
+          })}
+        </View>
       </Sheet>
     </View>
   )

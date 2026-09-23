@@ -1,27 +1,20 @@
 import * as React from "react"
 import { FlashList } from "@shopify/flash-list"
 import { router } from "expo-router"
-import * as WebBrowser from "expo-web-browser"
 import { View } from "react-native"
 import { timeAgo } from "@/data/format"
-import { webLink } from "@/data/links"
+import { openLink } from "@/data/routes"
 import { listNotifications, markNotificationsRead, type NotificationItem } from "@/data/me"
 import { useApp } from "@/state/app"
 import { useAsync } from "@/state/use-async"
 import { colors, gutter } from "@/theme"
 import { EmptyState, ErrorNote, Skeleton } from "@/ui/bits"
 import { Press } from "@/ui/press"
+import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
 
-/** Links in notifications are web paths; open the native screen when there is one. */
-function open(link: string | null) {
-  if (!link) return
-  const booking = link.match(/^\/bookings\/([0-9a-f-]{36})/)
-  if (booking) return router.push({ pathname: "/bookings/[id]", params: { id: booking[1] } })
-  const thread = link.match(/^\/tin-nhan\/([0-9a-f-]{36})/)
-  if (thread) return router.push({ pathname: "/tin-nhan/[id]", params: { id: thread[1] } })
-  if (link.startsWith("/")) void WebBrowser.openBrowserAsync(webLink(link))
-}
+/** Links in notifications are web paths; open the native screen when there is one (data/routes.ts). */
+const open = openLink
 
 export default function Notifications() {
   const { uid, refreshMe } = useApp()
@@ -43,8 +36,7 @@ export default function Notifications() {
       style={{ backgroundColor: colors.canvas }}
       data={notes.value ?? []}
       keyExtractor={(n) => n.id}
-      refreshing={notes.refreshing}
-      onRefresh={() => void notes.refresh()}
+      refreshControl={refreshControl(notes.refreshing, () => void notes.refresh())}
       renderItem={({ item }) => {
         const unread = !item.readAt && !readBefore.has(item.id)
         return (

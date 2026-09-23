@@ -69,6 +69,7 @@ export function Chip({ label, selected, onPress, icon }: { label: string; select
   return (
     <Press
       onPress={onPress}
+      haptic="select"
       accessibilityState={{ selected }}
       style={{
         height: 36,

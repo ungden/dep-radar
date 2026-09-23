@@ -51,6 +51,14 @@ const ICONS = {
   iphone: { ios: "iphone", android: "smartphone" },
   film: { ios: "film", android: "movie" },
   portrait: { ios: "person.crop.rectangle", android: "portrait" },
+  more: { ios: "ellipsis", android: "more_horiz" },
+  flag: { ios: "flag", android: "flag" },
+  block: { ios: "hand.raised.slash", android: "block" },
+  trash: { ios: "trash", android: "delete" },
+  edit: { ios: "pencil", android: "edit" },
+  megaphone: { ios: "megaphone", android: "campaign" },
+  wifiOff: { ios: "wifi.slash", android: "wifi_off" },
+  starEmpty: { ios: "star", android: "star_outline" },
 } as const
 
 export type IconName = keyof typeof ICONS

@@ -24,7 +24,6 @@ export function TextTabs<T extends string>({
         return (
           <Press
             key={item.value}
-            quiet
             onPress={() => onChange(item.value)}
             accessibilityRole="tab"
             accessibilityState={{ selected }}

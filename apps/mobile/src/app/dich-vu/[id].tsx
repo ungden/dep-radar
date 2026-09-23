@@ -1,10 +1,8 @@
 import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
-import * as WebBrowser from "expo-web-browser"
-import { RefreshControl, ScrollView, View, useWindowDimensions } from "react-native"
+import { ScrollView, View, useWindowDimensions } from "react-native"
 import { categoryLabel, excludes, getTemplate, placeLabel, rankScore } from "@/shared"
 import { formatDuration, formatKm, formatPrice } from "@/data/format"
-import { webLink } from "@/data/links"
 import { fromPrice, type AppPro, type AppWork } from "@/data/public"
 import { PostCard, ProCardSkeleton } from "@/components/cards"
 import { useApp } from "@/state/app"
@@ -13,6 +11,7 @@ import { Button } from "@/ui/button"
 import { Avatar, Card, Divider, EmptyState, ErrorNote, Photo, Rating, VerifiedMark } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
+import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
 
 const COLUMN_GAP = 12
@@ -33,7 +32,7 @@ export default function ServiceScreen() {
     if (!data || !template) return { ranked: [] as AppPro[], elsewhere: 0, works: [] as AppWork[] }
     const offers = (p: AppPro) =>
       data.services.some((s) => s.proId === p.id && s.templateId === template.id && s.active && Object.keys(s.prices).length > 0)
-    const all = data.pros.filter((p) => p.published && offers(p))
+    const all = data.pros.filter((p) => p.published && offers(p) && !app.blocked.has(p.uuid))
     const near = all.filter((p) => !city || p.city === city)
     const ranked = [...near].sort((a, b) => {
       if (a.acceptingJobs !== b.acceptingJobs) return a.acceptingJobs ? -1 : 1
@@ -49,7 +48,7 @@ export default function ServiceScreen() {
 
   if (!template) return <EmptyState title="Không có dịch vụ này" text="Có thể dịch vụ đã đổi tên." action="Về Khám phá" onAction={() => router.replace("/")} />
 
-  const loadingFirst = !data && !app.dataError && app.configured
+  const loadingFirst = (!data || app.stale) && !app.dataError && app.configured
   const cardWidth = (width - gutter * 2 - COLUMN_GAP) / 2
   const where = city ? ` ở ${city}` : ""
 
@@ -57,7 +56,7 @@ export default function ServiceScreen() {
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.canvas }}
       contentContainerStyle={{ paddingTop: 8, paddingBottom: 48, gap: 28 }}
-      refreshControl={<RefreshControl refreshing={app.loading && Boolean(data)} onRefresh={() => void app.refresh()} />}
+      refreshControl={refreshControl(app.loading && Boolean(data), () => void app.refresh())}
     >
       <Stack.Screen options={{ title: "" }} />
 
@@ -152,12 +151,7 @@ export default function ServiceScreen() {
               <Button
                 label="Đăng yêu cầu"
                 variant={elsewhere ? "secondary" : "primary"}
-                onPress={() =>
-                  void WebBrowser.openBrowserAsync(webLink("/requests/new"), {
-                    presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-                    controlsColor: colors.ink,
-                  })
-                }
+                onPress={() => router.push("/yeu-cau/moi")}
               />
             </View>
           </View>

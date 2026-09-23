@@ -14,6 +14,7 @@ import { colors, fonts, gutter, radius } from "@/theme"
 import { Button } from "@/ui/button"
 import { Card, Chip, EmptyState, ErrorNote, Skeleton } from "@/ui/bits"
 import { Sheet, useSheet } from "@/ui/sheet"
+import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
 
 type Scope = "match" | "all" | "offered"
@@ -102,8 +103,7 @@ export default function NewJobs() {
         data={list}
         keyExtractor={(j) => j.id}
         contentContainerStyle={{ paddingHorizontal: gutter, paddingBottom: 24 }}
-        refreshing={jobs.refreshing}
-        onRefresh={() => void jobs.refresh()}
+        refreshControl={refreshControl(jobs.refreshing, () => void jobs.refresh())}
         renderItem={({ item: j }) => {
           const t = getTemplate(j.templateId)
           const v = getVariant(j.templateId, j.variantId)
@@ -164,7 +164,7 @@ export default function NewJobs() {
       <Sheet
         sheet={sheet}
         title="Báo giá"
-        footer={<Button label="Gửi báo giá" full busy={busy} disabled={!price} onPress={() => void submit()} />}
+        footer={<Button label="Gửi báo giá" full busy={busy} disabled={!price || message.trim().length < 10} onPress={() => void submit()} />}
       >
         {quoting ? (
           <Txt color={colors.inkSoft}>
@@ -190,7 +190,7 @@ export default function NewJobs() {
           ) : null}
         </View>
         <View style={{ gap: 6 }}>
-          <Txt w={700}>Lời nhắn cho khách</Txt>
+          <Txt w={700}>Lời nhắn cho khách (ít nhất 10 ký tự)</Txt>
           <BottomSheetTextInput
             value={message}
             onChangeText={setMessage}
