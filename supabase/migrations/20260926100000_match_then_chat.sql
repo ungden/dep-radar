@@ -386,6 +386,156 @@ begin
   return n;
 end $$;
 
+-- The same two checks, in the new words: it is a fee owed, not an overdraft.
+-- availability_problem as in 20260924100400:
+create or replace function public.availability_problem(
+  p_pro uuid,
+  p_template text,
+  p_variant text,
+  p_quantity int,
+  p_starts_at timestamptz,
+  p_at_home boolean,
+  p_lat double precision default null,
+  p_lng double precision default null,
+  p_ignore_booking uuid default null
+) returns text
+language plpgsql stable security definer set search_path = '' as $$
+declare
+  pro record; policy record; tpl record; minutes int; km numeric; lead_min numeric; day_count int;
+begin
+  select * into pro from public.pros where id = p_pro;
+  if pro is null then return 'Không tìm thấy chuyên viên.'; end if;
+  if pro.suspended_at is not null then return 'Hồ sơ chuyên viên đang tạm khoá.'; end if;
+  if not pro.published then return 'Chuyên viên chưa mở hồ sơ nhận lịch.'; end if;
+  if not pro.accepting_jobs then return 'Chuyên viên đang tạm không nhận job mới.'; end if;
+  if public.wallet_below_floor(p_pro) then
+    return case when auth.uid() = p_pro
+      then 'Thanh toán phí của đơn trước để nhận lịch mới.'
+      else 'Chuyên viên đang tạm không nhận job mới.' end;
+  end if;
+
+  select * into policy from public.fee_policy where id;
+  select * into tpl from public.service_templates where id = p_template and active;
+  if tpl is null then return 'Dịch vụ không còn được cung cấp.'; end if;
+  if tpl.requires_verification and not (pro.identity_status = 'verified' and coalesce(pro.adult, false)) then
+    return 'Dịch vụ người mẫu chỉ dành cho tài khoản đã xác minh và đủ 18 tuổi.';
+  end if;
+
+  if public.listed_price(p_pro, p_template, p_variant) is null then
+    return 'Chuyên viên không nhận dịch vụ/gói này.';
+  end if;
+
+  minutes := public.service_duration_min(p_template, p_variant, p_quantity);
+  if minutes is null then return 'Gói dịch vụ không hợp lệ.'; end if;
+
+  lead_min := extract(epoch from (p_starts_at - now())) / 60;
+  if lead_min < policy.min_lead_minutes then
+    return format('Cần đặt trước ít nhất %s phút.', policy.min_lead_minutes);
+  end if;
+
+  if tpl.studio_only and p_at_home then
+    return 'Dịch vụ này chỉ thực hiện tại studio.';
+  end if;
+  if p_at_home and not pro.home_service then
+    return 'Chuyên viên không nhận làm tại nhà.';
+  end if;
+  if not p_at_home and coalesce(pro.studio_address, '') = '' then
+    return 'Chuyên viên không có studio.';
+  end if;
+
+  if p_at_home then
+    km := public.travel_distance_km(pro.lat, pro.lng, p_lat, p_lng, policy.road_factor);
+    if km is null then
+      return 'Cần địa chỉ có toạ độ để tính đường đi.';
+    end if;
+    if km > pro.max_travel_km then
+      return format('Ngoài phạm vi di chuyển (%s km, tối đa %s km).', km, pro.max_travel_km);
+    end if;
+  end if;
+
+  if not public.within_working_hours(p_pro, p_starts_at, minutes) then
+    return 'Ngoài giờ làm việc của chuyên viên.';
+  end if;
+
+  select count(*) into day_count from public.bookings b
+  where b.pro_id = p_pro
+    and b.status in ('pending', 'confirmed', 'in_progress', 'completed')
+    and (b.starts_at at time zone public.app_timezone())::date
+        = (p_starts_at at time zone public.app_timezone())::date
+    and (p_ignore_booking is null or b.id <> p_ignore_booking);
+  if day_count >= pro.max_jobs_per_day then
+    return 'Chuyên viên đã đủ số job trong ngày.';
+  end if;
+
+  if exists (
+    select 1 from public.bookings b
+    where b.pro_id = p_pro
+      and b.status in ('pending', 'confirmed', 'in_progress')
+      and (p_ignore_booking is null or b.id <> p_ignore_booking)
+      and b.blocked_range && tstzrange(
+            p_starts_at,
+            p_starts_at + make_interval(mins => minutes + pro.buffer_min), '[)')
+  ) then
+    return 'Khung giờ này đã có lịch khác.';
+  end if;
+
+  -- Same words as a booking: the customer does not need to know it is not one.
+  if exists (
+    select 1 from public.time_blocks t
+    where t.pro_id = p_pro
+      and t.starts_at < p_starts_at + make_interval(mins => minutes + pro.buffer_min)
+      and t.ends_at > p_starts_at
+  ) then
+    return 'Khung giờ này đã có lịch khác.';
+  end if;
+
+  return null;
+end $$;
+
+-- guard_pro_update as in 20260925100200:
+create or replace function public.guard_pro_update() returns trigger
+language plpgsql security definer set search_path = '' as $$
+declare
+  deleting boolean := coalesce(current_setting('app.deleting_account', true), '') = old.id::text;
+  system boolean := coalesce(current_setting('app.system_write', true), '') = 'on';
+begin
+  -- delete_my_account() writes the tombstone itself; nothing below applies to it.
+  if deleting or system then
+    return new;
+  end if;
+  if not public.is_privileged() then
+    new.identity_status := old.identity_status;
+    new.identity_name := old.identity_name;
+    new.adult := old.adult;
+    new.birth_year := old.birth_year;
+    new.suspended_at := old.suspended_at;
+    new.completed_jobs := old.completed_jobs;
+    new.response_minutes := old.response_minutes;
+    new.rating_avg := old.rating_avg;
+    new.rating_count := old.rating_count;
+    new.slug := old.slug;
+    if new.published and not old.published then
+      if not exists (select 1 from public.pro_services s where s.pro_id = new.id and s.active)
+         or not exists (select 1 from public.working_hours w where w.pro_id = new.id)
+         or not exists (select 1 from public.works k where k.pro_id = new.id) then
+        raise exception 'Cần ít nhất 1 dịch vụ, giờ làm việc và 1 ảnh tác phẩm trước khi mở hồ sơ.'
+          using errcode = 'check_violation';
+      end if;
+    end if;
+    if new.accepting_jobs and not old.accepting_jobs and public.wallet_below_floor(new.id) then
+      raise exception 'Thanh toán phí của đơn trước để nhận lịch mới.' using errcode = 'check_violation';
+    end if;
+  end if;
+  -- A verified freelancer is shown under the name on their ID card.
+  if coalesce(new.identity_name, '') <> '' and new.identity_status = 'verified' then
+    new.display_name := new.identity_name;
+  end if;
+  if coalesce(new.display_name, '') = '' then
+    new.display_name := old.display_name;
+  end if;
+  return new;
+end $$;
+
 -- Paying: a short code on the transfer, recorded by staff or by the bank's webhook.
 alter table public.pros add column pay_code text unique check (pay_code ~ '^[A-HJ-NP-Z2-9]{6}$');
 

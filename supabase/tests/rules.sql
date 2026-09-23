@@ -1250,7 +1250,7 @@ begin
   -- The freelancer asking is told why.
   perform set_config('request.jwt.claim.sub', thu::text, true);
   msg := public.availability_problem(thu, 'makeup-party', 'makeup', 1, at_, true, 21.0181, 105.829);
-  assert msg = 'Ví đang âm quá hạn mức, nạp ví để nhận lịch lại.', format('the freelancer was not told why: %s', msg);
+  assert msg = 'Thanh toán phí của đơn trước để nhận lịch mới.', format('the freelancer was not told why: %s', msg);
 
   perform set_config('request.jwt.claim.sub', '', true);
   perform public.enforce_wallet_threshold();
@@ -1264,7 +1264,7 @@ begin
     assert false, 'a freelancer past the wallet limit switched jobs back on';
   exception when check_violation then
     get stacked diagnostics msg = message_text;
-    assert msg = 'Ví đang âm quá hạn mức, nạp ví để nhận lịch lại.', format('refused for another reason: %s', msg);
+    assert msg = 'Thanh toán phí của đơn trước để nhận lịch mới.', format('refused for another reason: %s', msg);
   end;
   -- Topped up, they can.
   perform set_config('request.jwt.claim.sub', '', true);
