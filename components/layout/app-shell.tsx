@@ -34,7 +34,7 @@ const PRO_NAV: NavItem[] = [
   { href: "/studio/jobs", label: "Việc mới", icon: BriefcaseBusiness },
   { href: "/dang", label: "Đăng", icon: Plus, primary: true, match: /^\/(dang|studio\/works|studio\/tuyen-mau)/ },
   { href: "/studio/schedule", label: "Lịch", icon: ListChecks },
-  { href: "/me", label: "Tôi", icon: User, match: /^\/(me|studio\/(services|profile|wallet|verify))/ },
+  { href: "/me", label: "Tôi", icon: User, match: /^\/(me|studio\/(services|profile|wallet|verify|khach))/ },
 ]
 
 /** Desktop has room for words; it shows the places, not the post button. */

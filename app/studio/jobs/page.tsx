@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { BriefcaseBusiness, Car, Send } from "lucide-react"
+import { PriceInput } from "@/components/price-input"
 import { RequestCard } from "@/components/request-card"
 import { RequireSession } from "@/components/require-session"
 import { Button, Chip, EmptyState, PageHeader, inputClass } from "@/components/ui"
@@ -131,10 +132,10 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
       <div className={cn("mt-3 flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-[13px]", tone)}>
         <span>
           {existing.status === "accepted"
-            ? `Khách đã chọn bạn · ${formatPrice(existing.price)}`
+            ? `Khách đã chọn bạn · ${formatPrice(existing.price)}${job.quantity > 1 ? ` × ${job.quantity} người` : ""}`
             : existing.status === "rejected"
-              ? "Khách đã chọn freelancer khác"
-              : `Đã gửi báo giá ${formatPrice(existing.price)}`}
+              ? "Khách đã chọn người làm khác"
+              : `Đã gửi báo giá ${formatPrice(existing.price)}${job.quantity > 1 ? ` × ${job.quantity} người` : ""}`}
         </span>
         {existing.status === "pending" && (
           <button
@@ -152,7 +153,7 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
   if (!open) {
     return (
       <div className="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3">
-        <span className="text-xs text-muted">{reason ?? (others ? `${others} freelancer đã báo giá` : "Chưa có ai báo giá")}</span>
+        <span className="text-xs text-muted">{reason ?? (others ? `${others} người làm đã báo giá` : "Chưa có ai báo giá")}</span>
         <Button size="sm" disabled={disabled} onClick={() => setOpen(true)}>
           Gửi báo giá
         </Button>
@@ -161,9 +162,13 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
   }
 
   const allowed = isPriceAllowed(variant, price) && price >= floor
+  const suggested = Math.max(floor, variant.suggestedPrice)
+  // accept_offer builds the booking with build_quote(unit price, quantity, ...):
+  // the offer is per person and the customer pays it once per head.
+  const heads = Math.max(1, job.quantity)
   const quote = quoteFor(state, {
     proId,
-    price: allowed ? price : Math.max(floor, variant.suggestedPrice),
+    price: (allowed ? price : suggested) * heads,
     atHome: job.atHome,
     address: { city: job.city, district: job.district, detail: "" },
     date: job.date,
@@ -182,14 +187,21 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
       }}
     >
       <div>
-        <div className="flex items-center justify-between text-[13px]">
+        <div className="flex items-center justify-between gap-3 text-[13px]">
           <label htmlFor={`price-${job.id}`} className="text-muted">
-            Giá dịch vụ
+            Giá dịch vụ{heads > 1 ? " mỗi người" : ""}
           </label>
-          <span className="font-semibold">{formatPrice(price)}</span>
+          <PriceInput
+            value={price}
+            onChange={setPrice}
+            min={floor}
+            max={variant.maxPrice}
+            label={`Nhập giá${heads > 1 ? " mỗi người" : ""}`}
+          />
         </div>
         <input
           id={`price-${job.id}`}
+          aria-label="Kéo để chọn giá"
           type="range"
           min={floor}
           max={variant.maxPrice}
@@ -200,14 +212,25 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
         />
         <div className="flex justify-between text-xs text-muted">
           <span>{formatPrice(floor)}</span>
-          <button type="button" className="text-accent" onClick={() => setPrice(Math.max(floor, variant.suggestedPrice))}>
-            Giá niêm yết {formatPrice(floor)}
+          <button type="button" className="text-accent" onClick={() => setPrice(suggested)}>
+            Dùng giá gợi ý {formatPrice(suggested)}
           </button>
           <span>{formatPrice(variant.maxPrice)}</span>
         </div>
+        {!allowed && (
+          <p className="mt-1 text-xs text-danger">
+            Giá cần từ {formatPrice(floor)} đến {formatPrice(variant.maxPrice)}, chẵn 5.000đ.
+          </p>
+        )}
       </div>
 
       <div className="rounded-xl bg-canvas px-3 py-2.5 text-xs text-ink-soft">
+        {heads > 1 && (
+          <div className="flex justify-between">
+            <span>Giá dịch vụ × {heads} người</span>
+            <span>{formatPrice(quote.servicePrice)}</span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span>Khách trả (gồm phí di chuyển/gấp)</span>
           <b className="text-ink">{formatPrice(quote.total)}</b>
@@ -235,7 +258,7 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
         <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
           Huỷ
         </Button>
-        <Button type="submit" size="sm">
+        <Button type="submit" size="sm" disabled={!allowed}>
           <Send className="size-3.5" /> Gửi báo giá
         </Button>
       </div>

@@ -5,8 +5,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { CalendarDays, Home, Info, Phone, Store } from "lucide-react"
-import { bookingImage } from "@/components/booking-card"
-import { BookingTimeline, ComboPartners, DeliveryPanel, ReviewCustomer } from "@/components/booking-extras"
+import { bookingImage, DeclineForm } from "@/components/booking-card"
+import { BookingTimeline, ComboPartners, CustomerHistory, DeliveryPanel, ReviewCustomer } from "@/components/booking-extras"
 import { PriceBreakdown } from "@/components/price-breakdown"
 import { MessageButton } from "@/components/message-button"
 import { ReportButton } from "@/components/report-button"
@@ -19,7 +19,10 @@ import { getTemplate } from "@/lib/catalog"
 import { getPro, useApp } from "@/lib/store"
 import { POLICY, hoursUntilStart } from "@/lib/pricing"
 import type { Booking } from "@/lib/types"
-import { addMinutes, cn, formatDateLong, formatDuration, formatPrice, localDate, localTime, todayISO } from "@/lib/utils"
+import { addMinutes, cn, formatDateLong, formatDuration, formatPrice, localDate, localTime, toTimestamptz, todayISO } from "@/lib/utils"
+
+/** Same wait as mark_no_show() in the database. */
+const NO_SHOW_WAIT_MINUTES = 15
 
 export default function BookingDetailPage() {
   return (
@@ -39,6 +42,7 @@ function BookingDetail() {
   const act = useAct()
   const booking = bookings.find((b) => b.id === id)
   const [confirmCancel, setConfirmCancel] = React.useState(false)
+  const [confirmDecline, setConfirmDecline] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
   const isPro = session?.role === "pro" && booking?.proId === session.proId
@@ -98,7 +102,9 @@ function BookingDetail() {
         <div>
           <p className="font-semibold">{booking.serviceName}</p>
           <p className="text-sm text-ink-soft">
-            {booking.variantLabel} · {formatPrice(booking.quote.servicePrice)} · {formatDuration(booking.durationMin)}
+            {booking.variantLabel}
+            {booking.quantity > 1 ? ` · ${booking.quantity} người` : ""} · {formatPrice(booking.quote.servicePrice)} ·{" "}
+            {formatDuration(booking.durationMin)}
           </p>
           {booking.source === "job" && <p className="mt-0.5 text-xs text-accent">Từ yêu cầu đã đăng</p>}
         </div>
@@ -156,6 +162,7 @@ function BookingDetail() {
           Cần phản hồi trong {POLICY.confirmWithinHours} giờ.
         </p>
       )}
+      {isPro && booking.status === "pending" && <CustomerHistory booking={booking} />}
 
       {isCustomer && booking.status === "pending" && (
         <p className="flex gap-2 rounded-xl bg-subtle px-3.5 py-2.5 text-[13px] text-accent-dark">
@@ -173,7 +180,7 @@ function BookingDetail() {
             ? `Huỷ miễn phí trước giờ hẹn ${POLICY.freeCancelHours} tiếng${booking.paymentMethod === "online" ? ", hoàn 100% tiền đã thanh toán" : ""}.`
             : booking.paymentMethod === "online"
               ? `Đã quá hạn huỷ miễn phí. Nếu huỷ, ${Math.round(POLICY.lateCancelRate * 100)}% giá trị lịch hẹn được chuyển cho chuyên viên để bù thời gian giữ lịch.`
-              : "Đã quá hạn huỷ miễn phí. Huỷ muộn nhiều lần có thể bị tạm khoá hình thức trả sau."}
+              : `Đã quá ${POLICY.freeCancelHours} tiếng trước giờ hẹn. Nếu cần huỷ, báo ${booking.proName} sớm để họ sắp xếp lại.`}
         </p>
       )}
 
@@ -214,9 +221,12 @@ function BookingDetail() {
               </div>
             )
           )}
-          {isPro && booking.status === "pending" && (
+          {isPro && booking.status === "pending" && confirmDecline && (
+            <DeclineForm booking={booking} onCancel={() => setConfirmDecline(false)} />
+          )}
+          {isPro && booking.status === "pending" && !confirmDecline && (
             <div className="grid grid-cols-[auto_1fr_1fr] gap-2">
-              <Button variant="ghost" size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "declined"), "Đã từ chối lịch")}>
+              <Button variant="ghost" size="lg" onClick={() => setConfirmDecline(true)}>
                 Từ chối
               </Button>
               <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "lg")}>
@@ -297,8 +307,16 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
       if (!message) setMode("none")
     })
 
-  // Reporting a no-show only makes sense once the appointment has started.
-  const started = hoursUntilStart(booking.date, booking.time) < 0
+  // mark_no_show refuses until 15 minutes after the start, so the button waits
+  // as long. A clock keeps it appearing without a reload.
+  const [now, setNow] = React.useState(() => Date.now())
+  React.useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(t)
+  }, [])
+  const noShowFrom = Date.parse(toTimestamptz(booking.date, booking.time)) + NO_SHOW_WAIT_MINUTES * 60_000
+  const canReportNoShow = booking.status !== "pending" && now >= noShowFrom
+  const travelFee = booking.quote.travelFee
 
   if (mode === "none") {
     return (
@@ -309,9 +327,9 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
         <button type="button" className="text-muted underline underline-offset-2" onClick={() => setMode("cancel")}>
           Huỷ job này
         </button>
-        {started && booking.status !== "pending" && (
+        {canReportNoShow && (
           <button type="button" className="text-muted underline underline-offset-2" onClick={() => setMode("noshow")}>
-            Khách không có mặt
+            Khách vắng mặt
           </button>
         )}
       </div>
@@ -348,12 +366,16 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
       {mode !== "reschedule" && (
         <>
           <p className="text-sm font-semibold">
-            {mode === "cancel" ? "Huỷ job đã nhận" : "Báo khách không có mặt"}
+            {mode === "cancel" ? "Huỷ job đã nhận" : "Báo khách vắng mặt"}
           </p>
           <p className="text-xs text-muted">
             {mode === "cancel"
-              ? "Khách không mất phí. Huỷ nhiều lần sẽ ảnh hưởng tới thứ hạng hiển thị của bạn."
-              : `Chỉ báo khi bạn đã tới nơi và chờ. 360dep bù phí di chuyển ${formatPrice(booking.quote.travelFee)} vào ví bạn.`}
+              ? "Khách không mất phí. Lý do gửi kèm cho khách."
+              : `Chỉ báo khi bạn đã tới nơi và chờ quá ${NO_SHOW_WAIT_MINUTES} phút.${
+                  travelFee > 0
+                    ? ` Phí di chuyển ${formatPrice(travelFee)} được gửi để 360dep xem xét bù vào ví bạn.`
+                    : ""
+                }`}
           </p>
           <input
             className={cn(inputClass, "text-sm")}

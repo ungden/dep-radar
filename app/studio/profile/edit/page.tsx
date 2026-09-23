@@ -14,6 +14,7 @@ import { actions, useAct } from "@/lib/client-actions"
 import { proView, servicesOf, useApp, useRefresh, worksOf } from "@/lib/store"
 import { uploadImage } from "@/lib/uploads"
 import { cn, todayISO } from "@/lib/utils"
+import { DEFAULT_WORKING_WINDOWS } from "@/lib/working-hours"
 
 const DAYS = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]
 const HOURS = Array.from({ length: 25 }, (_, i) => i * 60)
@@ -53,8 +54,11 @@ function ProfileEditor() {
   // A verified freelancer is shown under the name on their ID card.
   const nameLocked = pro.identity === "verified"
 
-  const hasService = servicesOf(state, proId, true).length > 0
+  // The same three things pros_guard checks before a profile may go public:
+  // an active listing, a saved week, a work.
+  const hasService = servicesOf(state, proId).length > 0
   const hasWork = worksOf(state, proId).length > 0
+  const hours = useWorkingWeek()
 
   const save = async () => {
     setBusy(true)
@@ -118,8 +122,8 @@ function ProfileEditor() {
         />
       </Field>
 
-      <Field label="Bạn làm nghề gì?">
-        <input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} />
+      <Field label="Dòng giới thiệu dưới tên" hint="VD: Thợ nail tại nhà · Chụp ảnh sự kiện · Mẫu ảnh thời trang">
+        <input className={inputClass} value={title} maxLength={80} onChange={(e) => setTitle(e.target.value)} />
       </Field>
 
       <Field label="Giới thiệu" hint="Bạn làm mạnh kiểu gì, dùng sản phẩm gì, khách thường khen điều gì.">
@@ -163,7 +167,7 @@ function ProfileEditor() {
 
       {models && <ModelCardEditor />}
 
-      <WorkingHoursEditor onError={setError} />
+      <WorkingHoursEditor hours={hours} onError={setError} />
 
       <DaysOffEditor onError={setError} />
 
@@ -178,86 +182,44 @@ function ProfileEditor() {
         {busy ? "Đang lưu…" : "Lưu hồ sơ"}
       </Button>
 
-      <PublishBox hasService={hasService} hasWork={hasWork} />
+      <PublishBox hasService={hasService} hasWork={hasWork} hours={hours} />
     </div>
   )
 }
 
-/** A profile only goes public when it can actually take a booking. */
-function PublishBox({ hasService, hasWork }: { hasService: boolean; hasWork: boolean }) {
-  const state = useApp()
-  const refresh = useRefresh()
-  const pro = proView(state, state.session!.proId!)!
-  const [error, setError] = React.useState<string | null>(null)
-  const [busy, setBusy] = React.useState(false)
+type Week = Record<number, { on: boolean; start: number; end: number }>
 
-  const ready = hasService && hasWork
-  const items: [boolean, string, string][] = [
-    [hasService, "Ít nhất một dịch vụ có giá", "/studio/services"],
-    [hasWork, "Ít nhất một ảnh tác phẩm", "/studio/works"],
-  ]
-
-  return (
-    <Card className="p-4">
-      <p className="font-semibold">{pro.published ? "Hồ sơ đang hiển thị với khách" : "Hồ sơ chưa hiển thị với khách"}</p>
-      <ul className="mt-2 space-y-1.5 text-[13px]">
-        {items.map(([done, text, href]) => (
-          <li key={text} className="flex items-center gap-2">
-            {done ? <CheckCircle2 className="size-4 text-success" /> : <Circle className="size-4 text-muted" />}
-            {done ? (
-              <span className="text-ink-soft">{text}</span>
-            ) : (
-              <Link href={href} className="text-accent underline underline-offset-2">
-                {text}
-              </Link>
-            )}
-          </li>
-        ))}
-        <li className="flex items-center gap-2">
-          <CheckCircle2 className="size-4 text-success" />
-          <span className="text-ink-soft">Giờ làm việc (đặt ở trên)</span>
-        </li>
-      </ul>
-      {error && (
-        <p role="alert" className="mt-2 text-xs text-danger">
-          {error}
-        </p>
-      )}
-      <Button
-        className="mt-3"
-        variant={pro.published ? "ghost" : "primary"}
-        disabled={busy || (!pro.published && !ready)}
-        onClick={async () => {
-          setBusy(true)
-          const result = await saveProProfile({ published: !pro.published })
-          setBusy(false)
-          if (!result.ok) return setError(result.error)
-          setError(null)
-          refresh()
-        }}
-      >
-        {pro.published ? "Ẩn hồ sơ" : "Mở hồ sơ cho khách"}
-      </Button>
-    </Card>
+/** The editor's starting point: the default windows, as toggles. */
+const defaultWeek = (): Week =>
+  Object.fromEntries(
+    [0, 1, 2, 3, 4, 5, 6].map((d) => {
+      const window = DEFAULT_WORKING_WINDOWS.find((w) => w.weekday === d)
+      return [d, window ? { on: true, start: window.startMin, end: window.endMin } : { on: false, start: 540, end: 1140 }]
+    }),
   )
-}
 
-function WorkingHoursEditor({ onError }: { onError: (message: string | null) => void }) {
+const windowsOf = (week: Week) =>
+  Object.entries(week)
+    .filter(([, d]) => d.on)
+    .map(([weekday, d]) => ({ weekday: Number(weekday), startMin: d.start, endMin: d.end }))
+
+/**
+ * The week as saved in the database, plus the editor's unsaved copy. `saved`
+ * is what the publish check reads: the defaults on screen are not hours until
+ * they are stored.
+ */
+function useWorkingWeek() {
   const refresh = useRefresh()
-  // Six days, nine to seven, is where most freelancers start; they edit from here.
-  const [days, setDays] = React.useState<Record<number, { on: boolean; start: number; end: number }>>(() =>
-    Object.fromEntries([0, 1, 2, 3, 4, 5, 6].map((d) => [d, { on: d !== 0, start: 540, end: 1140 }])),
-  )
-  const [busy, setBusy] = React.useState(false)
-  const [saved, setSaved] = React.useState(false)
+  const [week, setWeek] = React.useState<Week>(defaultWeek)
   const [loaded, setLoaded] = React.useState(false)
+  const [saved, setSaved] = React.useState(false)
 
   React.useEffect(() => {
     let live = true
     void listWorkingHours().then((windows) => {
       if (!live) return
       if (windows.length) {
-        setDays((current) => {
+        setWeek((current) => {
           const next = { ...current }
           for (const day of [0, 1, 2, 3, 4, 5, 6]) next[day] = { ...next[day], on: false }
           for (const window of windows) {
@@ -271,17 +233,119 @@ function WorkingHoursEditor({ onError }: { onError: (message: string | null) => 
           return next
         })
       }
+      setSaved(windows.length > 0)
       setLoaded(true)
     })
-    return () => { live = false }
+    return () => {
+      live = false
+    }
   }, [])
 
+  /** Store the week as shown. Returns an error sentence, or null. */
+  const save = async (): Promise<string | null> => {
+    const windows = windowsOf(week)
+    const result = await saveWorkingHours(windows)
+    if (!result.ok) return result.error
+    setSaved(windows.length > 0)
+    refresh()
+    return null
+  }
+
+  return { week, setWeek, loaded, saved, save, anyDay: windowsOf(week).length > 0 }
+}
+
+type WorkingWeek = ReturnType<typeof useWorkingWeek>
+
+/** A profile only goes public when it can actually take a booking. */
+function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWork: boolean; hours: WorkingWeek }) {
+  const state = useApp()
+  const refresh = useRefresh()
+  const pro = proView(state, state.session!.proId!)!
+  const [error, setError] = React.useState<string | null>(null)
+  const [busy, setBusy] = React.useState(false)
+
+  // Hours that are only on screen are saved on the way to publishing, so the
+  // database's check (pros_guard) sees them.
+  const hoursReady = hours.saved || (hours.loaded && hours.anyDay)
+  const ready = hasService && hasWork && hoursReady
+  const items: [boolean, string, string][] = [
+    [hasService, "Ít nhất một dịch vụ đang bật, có giá", "/studio/services"],
+    [hasWork, "Ít nhất một ảnh tác phẩm", "/studio/works"],
+    [
+      hours.saved,
+      hours.saved
+        ? "Giờ làm việc đã lưu"
+        : hours.anyDay
+          ? "Giờ làm việc chưa lưu: sẽ lưu giờ đang hiện ở trên khi bạn mở hồ sơ"
+          : "Giờ làm việc: bật ít nhất một ngày ở trên",
+      "#gio-lam",
+    ],
+  ]
+
   return (
-    <Card className="p-4">
+    <Card id="mo-ho-so" className="scroll-mt-20 p-4">
+      <p className="font-semibold">{pro.published ? "Hồ sơ đang hiển thị với khách" : "Hồ sơ chưa hiển thị với khách"}</p>
+      <ul className="mt-2 space-y-1.5 text-[13px]">
+        {items.map(([done, text, href]) => (
+          <li key={href} className="flex items-center gap-2">
+            {done ? <CheckCircle2 className="size-4 shrink-0 text-success" /> : <Circle className="size-4 shrink-0 text-muted" />}
+            {done ? (
+              <span className="text-ink-soft">{text}</span>
+            ) : (
+              <Link href={href} className="text-accent underline underline-offset-2">
+                {text}
+              </Link>
+            )}
+          </li>
+        ))}
+      </ul>
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-danger">
+          {error}
+        </p>
+      )}
+      <Button
+        className="mt-3"
+        variant={pro.published ? "ghost" : "primary"}
+        disabled={busy || (!pro.published && !ready)}
+        onClick={async () => {
+          setBusy(true)
+          setError(null)
+          if (!pro.published && !hours.saved) {
+            const problem = await hours.save()
+            if (problem) {
+              setBusy(false)
+              return setError(problem)
+            }
+          }
+          const result = await saveProProfile({ published: !pro.published })
+          setBusy(false)
+          if (!result.ok) return setError(result.error)
+          refresh()
+        }}
+      >
+        {busy ? "Đang lưu…" : pro.published ? "Ẩn hồ sơ" : "Mở hồ sơ cho khách"}
+      </Button>
+    </Card>
+  )
+}
+
+function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (message: string | null) => void }) {
+  const { week: days, setWeek: setDays, loaded, saved: stored } = hours
+  const [busy, setBusy] = React.useState(false)
+  const [saved, setSaved] = React.useState(false)
+
+  return (
+    <Card id="gio-lam" className="scroll-mt-20 p-4">
       <p className="font-semibold">Giờ làm việc</p>
       <p className="mt-0.5 text-xs text-muted">
         Khách chỉ thấy khung giờ nằm trong đây, đã trừ thời lượng dịch vụ và thời gian di chuyển.
       </p>
+      {loaded && !stored && (
+        <p className="mt-2 rounded-[var(--radius-md)] bg-warning-soft px-3 py-2 text-[13px] text-warning">
+          Chưa lưu. Giờ bên dưới là gợi ý (Thứ 2 – Thứ 7, 9:00 – 19:00); khách chưa đặt được cho tới khi bạn lưu.
+        </p>
+      )}
       <ul className="mt-3 space-y-2">
         {[1, 2, 3, 4, 5, 6, 0].map((weekday) => {
           const day = days[weekday]
@@ -333,14 +397,10 @@ function WorkingHoursEditor({ onError }: { onError: (message: string | null) => 
         onClick={async () => {
           setBusy(true)
           onError(null)
-          const windows = Object.entries(days)
-            .filter(([, d]) => d.on)
-            .map(([weekday, d]) => ({ weekday: Number(weekday), startMin: d.start, endMin: d.end }))
-          const result = await saveWorkingHours(windows)
+          const problem = await hours.save()
           setBusy(false)
-          if (!result.ok) return onError(result.error)
+          if (problem) return onError(problem)
           setSaved(true)
-          refresh()
         }}
       >
         {busy ? "Đang lưu…" : loaded ? "Lưu giờ làm việc" : "Đang tải giờ làm việc…"}

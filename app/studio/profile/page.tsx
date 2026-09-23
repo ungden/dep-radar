@@ -2,9 +2,11 @@
 
 import Link from "next/link"
 import { BadgeCheck, ChevronRight, Eye, IdCard, TrendingUp } from "lucide-react"
+import { BookingLink } from "@/components/booking-link"
 import { RequireSession } from "@/components/require-session"
 import { RatingSummaryBlock, ReviewItem, VerifiedMark } from "@/components/trust"
 import { Avatar, ButtonLink, Card, PageHeader } from "@/components/ui"
+import { verticalOf } from "@/lib/catalog"
 import { actions, useAct } from "@/lib/client-actions"
 import { proView, reviewsOf, useApp } from "@/lib/store"
 import type { VerificationStatus } from "@/lib/types"
@@ -56,9 +58,16 @@ function ProfileTrust() {
         <ChevronRight className="size-5 text-muted" />
       </Link>
 
+      <BookingLink slug={pro.id} published={pro.published} />
+
       <section>
         <h2 className="font-semibold">Xác minh danh tính</h2>
-        <p className="mt-1 text-sm text-ink-soft">Không bắt buộc. Chụp CCCD 2 mặt và 1 ảnh selfie, khoảng 2 phút.</p>
+        <p className="mt-1 text-sm text-ink-soft">
+          {pro.categories.some((c) => verticalOf(c) === "model")
+            ? "Bắt buộc với dịch vụ người mẫu: chưa xác minh thì chưa đăng được dịch vụ đó."
+            : "Không bắt buộc với nghề của bạn (chỉ bắt buộc khi nhận làm mẫu)."}{" "}
+          Chụp CCCD 2 mặt và 1 ảnh selfie, khoảng 2 phút.
+        </p>
         <ul className="mt-3 grid gap-2 sm:grid-cols-3">
           {BENEFITS.map(({ icon: Icon, title, text }) => (
             <li key={title} className="rounded-2xl bg-subtle px-3 py-3">

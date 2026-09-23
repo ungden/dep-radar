@@ -6,13 +6,16 @@ import { useSearchParams } from "next/navigation"
 import { CalendarDays } from "lucide-react"
 import { JobBookingRow } from "@/components/booking-card"
 import { RequireSession } from "@/components/require-session"
+import { TimeBlocks } from "@/components/time-blocks"
 import { Button, EmptyState, PageHeader, Tabs, PageSkeleton } from "@/components/ui"
 import { actions, useAct } from "@/lib/client-actions"
 import { useApp } from "@/lib/store"
 import type { Booking } from "@/lib/types"
 import { addDays, cn, formatDateLong, parseISODate, todayISO, weekdayShort } from "@/lib/utils"
 
-type Tab = "calendar" | "pending" | "history"
+const TABS = ["calendar", "pending", "deliver", "history"] as const
+type Tab = (typeof TABS)[number]
+const isTab = (value: string | null): value is Tab => TABS.includes(value as Tab)
 
 export default function SchedulePage() {
   return (
@@ -30,9 +33,10 @@ export default function SchedulePage() {
 function Schedule() {
   const params = useSearchParams()
   const state = useApp()
-  const act = useAct()
   const proId = state.session!.proId!
-  const [tab, setTab] = React.useState<Tab>((params.get("tab") as Tab | null) ?? "calendar")
+  const asked = params.get("tab")
+  // "done" was the old name the studio used for the files tab; keep those links working.
+  const [tab, setTab] = React.useState<Tab>(asked === "done" ? "deliver" : isTab(asked) ? asked : "calendar")
   const today = todayISO()
   const [day, setDay] = React.useState(today)
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i))
@@ -44,7 +48,14 @@ function Schedule() {
   const byTime = (a: Booking, b: Booking) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)
 
   const pending = mine.filter((b) => b.status === "pending").sort(byTime)
-  const history = mine.filter((b) => ["completed", "cancelled", "declined"].includes(b.status)).sort((a, b) => byTime(b, a))
+  // Photo & video sessions whose files are still owed, soonest deadline first.
+  const toDeliver = mine
+    .filter((b) => b.status === "completed" && b.delivery && !b.delivery.deliveredAt)
+    .sort((a, b) => (a.delivery?.dueAt ?? "").localeCompare(b.delivery?.dueAt ?? ""))
+  // Every job that is over, however it ended.
+  const history = mine
+    .filter((b) => ["completed", "cancelled", "declined", "expired", "no_show"].includes(b.status))
+    .sort((a, b) => byTime(b, a))
   const dayList = active.filter((b) => b.date === day).sort(byTime)
 
   return (
@@ -55,6 +66,7 @@ function Schedule() {
         items={[
           { value: "calendar", label: "Theo ngày" },
           { value: "pending", label: `Chờ xác nhận (${pending.length})` },
+          ...(toDeliver.length || tab === "deliver" ? [{ value: "deliver" as const, label: `Cần giao file (${toDeliver.length})` }] : []),
           { value: "history", label: "Lịch sử" },
         ]}
       />
@@ -91,11 +103,16 @@ function Schedule() {
           ) : (
             <EmptyState icon={<CalendarDays className="size-6" />} title="Ngày này còn trống" text="Khách có thể đặt các khung giờ trống của bạn." />
           )}
+          <TimeBlocks />
         </>
       )}
 
       {tab === "pending" && (
         <div className="mt-4">{pending.length ? <List bookings={pending} /> : <EmptyState title="Không có yêu cầu chờ xác nhận" />}</div>
+      )}
+
+      {tab === "deliver" && (
+        <div className="mt-4">{toDeliver.length ? <List bookings={toDeliver} /> : <EmptyState title="Không còn file nào cần giao" />}</div>
       )}
 
       {tab === "history" && (

@@ -4,7 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Car, Clock, CreditCard, HandCoins, Home, MapPin, Phone, Store, Timer, Zap } from "lucide-react"
-import { Avatar, Button, ButtonLink, Card, StatusBadge, buttonClass } from "@/components/ui"
+import { Avatar, Button, ButtonLink, Card, StatusBadge, buttonClass, inputClass } from "@/components/ui"
 import { actions as store, useAct } from "@/lib/client-actions"
 import { type AppState, getPro, useApp, worksOf } from "@/lib/store"
 import { getTemplate } from "@/lib/catalog"
@@ -98,6 +98,7 @@ export function JobBookingRow({ booking, actions }: { booking: Booking; actions?
           <div className="flex items-start justify-between gap-2">
             <p className="truncate text-[15px] font-bold">
               {booking.serviceName} <span className="font-normal text-muted">· {booking.variantLabel}</span>
+              {booking.quantity > 1 && <span className="font-normal text-muted"> · {booking.quantity} người</span>}
             </p>
             <StatusBadge status={booking.status} />
           </div>
@@ -143,14 +144,12 @@ export function JobBookingRow({ booking, actions }: { booking: Booking; actions?
 export function PendingJobActions({ booking }: { booking: Booking }) {
   const act = useAct()
   const [error, setError] = React.useState<string | null>(null)
+  const [declining, setDeclining] = React.useState(false)
+  if (declining) return <DeclineForm booking={booking} size="sm" onCancel={() => setDeclining(false)} className="mt-3" />
   return (
     <>
       <div className="mt-3 grid grid-cols-[auto_1fr_1fr] gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => void act(() => store.setBookingStatus(booking.id, "declined"), "Đã từ chối job").then(setError)}
-        >
+        <Button variant="ghost" size="sm" onClick={() => setDeclining(true)}>
           Từ chối
         </Button>
         <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "sm")}>
@@ -169,6 +168,82 @@ export function PendingJobActions({ booking }: { booking: Booking }) {
         </p>
       )}
     </>
+  )
+}
+
+const DECLINE_REASONS = ["Trùng lịch khác", "Không làm được dịch vụ này", "Quá xa", "Không liên lạc được khách"]
+
+/**
+ * Declining is final for the customer, so it takes a second tap. The reason is
+ * optional and goes to the customer with the notice (decline_booking's p_reason).
+ */
+export function DeclineForm({
+  booking,
+  onCancel,
+  size = "md",
+  className,
+}: {
+  booking: Booking
+  onCancel: () => void
+  size?: "sm" | "md" | "lg"
+  className?: string
+}) {
+  const act = useAct()
+  const [reason, setReason] = React.useState("")
+  const [busy, setBusy] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+  return (
+    <div className={cn("rounded-[var(--radius-md)] border border-danger/30 bg-surface p-3", className)}>
+      <p className="text-[15px] font-semibold">Từ chối lịch của {booking.customerName}?</p>
+      <p className="text-[13px] text-ink-soft">Khách được báo ngay. Lý do (tuỳ chọn) gửi kèm cho khách.</p>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {DECLINE_REASONS.map((r) => (
+          <button
+            key={r}
+            type="button"
+            aria-pressed={reason === r}
+            onClick={() => setReason(reason === r ? "" : r)}
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-[13px]",
+              reason === r ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink",
+            )}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
+      <input
+        aria-label="Lý do từ chối"
+        value={reason}
+        maxLength={300}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="Hoặc tự viết lý do"
+        className={cn(inputClass, "mt-2 py-2.5 text-[14px]")}
+      />
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-danger">
+          {error}
+        </p>
+      )}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <Button variant="outline" size={size} onClick={onCancel} disabled={busy}>
+          Quay lại
+        </Button>
+        <Button
+          variant="danger"
+          size={size}
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true)
+            const problem = await act(() => store.setBookingStatus(booking.id, "declined", reason.trim()), "Đã từ chối lịch")
+            setBusy(false)
+            setError(problem)
+          }}
+        >
+          {busy ? "Đang gửi…" : "Xác nhận từ chối"}
+        </Button>
+      </div>
+    </div>
   )
 }
 
