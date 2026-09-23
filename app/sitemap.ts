@@ -36,23 +36,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.6,
     })),
-    // The searches people actually type, one page per city and category in
-    // every trade: "nail tại nhà Hà Nội", "chụp ảnh điện thoại ở Hà Nội".
+  ]
+  if (!backendEnabled) return base
+
+  // Only what is actually published: an unlisted profile has nothing to index.
+  const { pros, works, offered } = await listPublishedSlugs()
+  return [
+    ...base,
+    // The searches people actually type, "nail tại nhà Hà Nội": one page per
+    // city and category, but only where somebody offers it (an empty one is
+    // marked noindex, see app/[city]/[category]).
     ...CITIES.flatMap((city) =>
-      CATEGORIES.map((c) => ({
+      CATEGORIES.filter((c) => offered.has(`${city}|${c.id}`)).map((c) => ({
         url: `${SITE_URL}/${citySlug(city)}/${c.id}`,
         lastModified,
         changeFrequency: "weekly" as const,
         priority: 0.6,
       })),
     ),
-  ]
-  if (!backendEnabled) return base
-
-  // Only what is actually published: an unlisted profile has nothing to index.
-  const { pros, works } = await listPublishedSlugs()
-  return [
-    ...base,
     ...pros.map((slug) => ({
       url: `${SITE_URL}/pros/${slug}`,
       lastModified,

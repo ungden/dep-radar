@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { openGraph } from "@/lib/seo"
 import { notFound } from "next/navigation"
 import { getOccasion, occasionTemplates } from "@/lib/occasions"
 import { OccasionView } from "./occasion-view"
@@ -14,7 +15,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     title,
     description: `${occasion.subtitle}. Đặt ${services.join(", ")} với người làm gần bạn trên 360dep: xem tác phẩm thật, giá rõ trước khi đặt.`,
     alternates: { canonical: `/dip/${occasion.id}` },
-    openGraph: { title, url: `/dip/${occasion.id}` },
+    openGraph: openGraph({ title, url: `/dip/${occasion.id}` }),
   }
 }
 

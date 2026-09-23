@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { openGraph } from "@/lib/seo"
 import { notFound } from "next/navigation"
 import { getWorkBySlug } from "@/lib/api/pros"
 import { WorkDetail } from "./work-detail"
@@ -9,7 +10,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `${work.title} · ${work.proName}`,
     description: work.description,
-    openGraph: { images: work.images.slice(0, 1) },
+    alternates: { canonical: `/works/${work.slug}` },
+    openGraph: openGraph({ images: work.images.slice(0, 1), url: `/works/${work.slug}` }),
   }
 }
 

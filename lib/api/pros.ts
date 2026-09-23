@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { backendEnabled } from "@/lib/supabase/env"
 import { supabaseServer } from "@/lib/supabase/server"
 import { toProDetail, toProSummary, toReviewItem, toWorkItem } from "./map"
@@ -35,13 +36,14 @@ export async function listPros(filter: { city?: string; category?: string } = {}
   return (data ?? []).map((row) => toProSummary(row as never))
 }
 
-export async function getProBySlug(slug: string): Promise<ProDetail | null> {
+/** Cached per request: generateMetadata and the page both ask for it. */
+export const getProBySlug = cache(async function getProBySlug(slug: string): Promise<ProDetail | null> {
   if (!backendEnabled) return null
   const supabase = await supabaseServer()
   const { data, error } = await supabase.from("pros").select(PRO_PUBLIC).eq("slug", slug).maybeSingle()
   if (error) throw error
   return data ? toProDetail(data as never) : null
-}
+})
 
 export async function listProServices(proId: string): Promise<ListedService[]> {
   if (!backendEnabled) return []
@@ -141,7 +143,7 @@ export async function availabilityProblem(input: {
 }
 
 /** For a work's own page: enough for metadata, without loading the whole feed. */
-export async function getWorkBySlug(slug: string) {
+export const getWorkBySlug = cache(async function getWorkBySlug(slug: string) {
   if (!backendEnabled) return null
   const supabase = await supabaseServer()
   const { data, error } = await supabase
@@ -163,18 +165,20 @@ export async function getWorkBySlug(slug: string) {
     proSlug: pro?.slug ?? "",
     proName: pro?.display_name ?? "Chuyên viên",
   }
-}
+})
 
 /** Slugs for the sitemap, so it lists what is actually published. */
 export async function listPublishedSlugs() {
-  if (!backendEnabled) return { pros: [], works: [] }
+  if (!backendEnabled) return { pros: [], works: [], offered: new Set<string>() }
   const supabase = await supabaseServer()
   const [pros, works] = await Promise.all([
-    supabase.from("pros").select("slug").eq("published", true).is("suspended_at", null),
+    supabase.from("pros").select("slug, city, categories").eq("published", true).is("suspended_at", null),
     supabase.from("works").select("slug, pros!works_pro_id_fkey!inner (published)").eq("pros.published", true),
   ])
   return {
     pros: (pros.data ?? []).map((p) => p.slug),
+    /** "city|category" for every city and category someone offers: the landing pages worth indexing. */
+    offered: new Set((pros.data ?? []).flatMap((p) => (p.categories ?? []).map((c: string) => `${p.city}|${c}`))),
     works: (works.data ?? []).map((w) => w.slug),
   }
 }
