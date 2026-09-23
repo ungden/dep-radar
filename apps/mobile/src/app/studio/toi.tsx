@@ -87,6 +87,8 @@ export default function StudioMe() {
         </Txt>
 
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.md }}>
+          <Row icon="gift" label="Giới thiệu bạn bè" internal onPress={() => router.push("/gioi-thieu")} />
+          <Divider style={{ marginLeft: 52 }} />
           <Row
             icon="swap"
             label="Chuyển sang chế độ khách"

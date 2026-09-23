@@ -1,5 +1,28 @@
 import * as Crypto from "expo-crypto"
-import { rpc, supabase } from "./supabase"
+import { rpc, supabase, type Row } from "./supabase"
+
+export interface MyReview {
+  rating: number
+  tags: string[]
+  body: string
+  /** Public URLs in the `reviews` bucket. */
+  photos: string[]
+  /** Null while blind: the author can still change it. */
+  publishedAt: string | null
+}
+
+/** The customer's own review of a booking; row level security shows it to its author, blind or not. */
+export async function getMyReview(bookingId: string): Promise<MyReview | null> {
+  const { data, error } = await supabase.from("reviews").select("rating, tags, body, photo_paths, published_at").eq("booking_id", bookingId).maybeSingle()
+  if (error) {
+    // Before 20260925100200 there is no published_at: everything written was public.
+    const { data: old } = await supabase.from("reviews").select("rating, tags, body, photo_paths, created_at").eq("booking_id", bookingId).maybeSingle()
+    const r = old as Row | null
+    return r ? { rating: r.rating, tags: r.tags ?? [], body: r.body ?? "", photos: r.photo_paths ?? [], publishedAt: r.created_at } : null
+  }
+  const r = data as Row | null
+  return r ? { rating: r.rating, tags: r.tags ?? [], body: r.body ?? "", photos: r.photo_paths ?? [], publishedAt: r.published_at ?? null } : null
+}
 
 /** Same RPC and arguments as writeReview() in lib/api/actions.ts. */
 export const writeReview = (input: { bookingId: string; rating: number; tags: string[]; body: string; photos: string[] }) =>

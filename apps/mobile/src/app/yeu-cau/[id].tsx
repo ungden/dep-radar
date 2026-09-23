@@ -1,7 +1,7 @@
 import * as React from "react"
 import { router, useLocalSearchParams } from "expo-router"
 import { Alert, ScrollView, View } from "react-native"
-import { buildQuote, getTemplate, getVariant, isUrgent, travelDistanceKm } from "@/shared"
+import { buildQuote, getTemplate, getVariant, isUrgent, showsAverage, travelDistanceKm } from "@/shared"
 import { formatDateLong, formatDuration, formatKm, formatPrice, formatRating, timeAgo } from "@/data/format"
 import { acceptOffer, bookingForRequest, closeJob, getMyRequest, type RequestOffer } from "@/data/requests"
 import { REQUEST_STATUS } from "@/components/request-status"
@@ -145,7 +145,12 @@ export default function RequestDetail() {
                     {o.pro.verified ? <VerifiedMark /> : null}
                   </View>
                   <Txt v="meta" color={colors.muted}>
-                    {o.pro.rating.count ? `★ ${formatRating(o.pro.rating.average)} (${o.pro.rating.count})` : "Chưa có đánh giá"} · {o.pro.completedJobs} lịch đã xong
+                    {showsAverage(o.pro.rating.count)
+                      ? `★ ${formatRating(o.pro.rating.average)} (${o.pro.rating.count})`
+                      : o.pro.rating.count
+                        ? `Mới · ${o.pro.rating.count} đánh giá`
+                        : "Mới"}{" "}
+                    · {o.pro.completedJobs} lịch đã xong
                   </Txt>
                 </View>
                 <View style={{ alignItems: "flex-end" }}>

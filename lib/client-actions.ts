@@ -154,6 +154,30 @@ export const actions = {
     return asResult(await api.disputeNoShow(bookingId, reason))
   },
 
+  /** The customer closes the job themselves ("Xác nhận đã xong"). */
+  async confirmBookingDone(bookingId: string): Promise<Result> {
+    return asResult(await api.confirmBookingDone(bookingId))
+  },
+
+  /** The customer reports that the freelancer did not come. Cancels the booking on them. */
+  async reportProNoShow(bookingId: string, detail = ""): Promise<Result> {
+    return asResult(await api.reportProNoShow(bookingId, detail.trim()))
+  },
+
+  async applyVoucher(bookingId: string, voucherId: string): Promise<Result> {
+    return asResult(await api.applyVoucher(bookingId, voucherId))
+  },
+
+  async removeVoucher(bookingId: string): Promise<Result> {
+    return asResult(await api.removeVoucher(bookingId))
+  },
+
+  /** Returns the name of the friend whose code it was. */
+  async claimReferral(code: string): Promise<{ name: string } | { error: string }> {
+    const result = await api.claimReferral(code)
+    return result.ok ? { name: result.data } : { error: result.error }
+  },
+
   async requestReschedule(bookingId: string, date: string, time: string): Promise<Result> {
     return asResult(await api.requestReschedule(bookingId, toTimestamptz(date, time)))
   },

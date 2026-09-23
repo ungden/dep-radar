@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { POLICY, buildQuote, commissionFor, hoursUntilStart, isTooSoon, isUrgent, payoutFor, travelFeeFor } from "@/lib/pricing"
 import { addDays, formatResponseTime, localDate, localTime, toTimestamptz, todayISO } from "@/lib/utils"
 
-const NOW = new Date(2026, 8, 18, 10, 0) // 18/09/2026 10:00 local
+const NOW = new Date("2026-09-18T10:00:00+07:00") // 18/09/2026 10:00 in Vietnam
 
 describe("travelFeeFor", () => {
   it("is free inside the free radius", () => {

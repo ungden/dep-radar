@@ -16,7 +16,40 @@ import { cn } from "@/lib/utils"
  * and falls back to copying the link where there is no share sheet.
  */
 export function BookingLink({ slug, published, className }: { slug: string; published: boolean; className?: string }) {
-  const url = proBookingUrl(slug)
+  return (
+    <ShareLinkCard
+      url={proBookingUrl(slug)}
+      title="Link đặt lịch của bạn"
+      text={
+        published
+          ? "Gửi cho khách quen: họ xem tác phẩm, bảng giá và đặt giờ trống của bạn."
+          : "Link chạy khi bạn đã mở hồ sơ. Trước đó, khách mở link sẽ không thấy trang của bạn."
+      }
+      shareTitle="Đặt lịch với mình trên 360dep"
+      qrFile={`360dep-${slug}-qr.png`}
+      className={className}
+    />
+  )
+}
+
+/** A link to hand out: shown, copied, shared, and as a QR code drawn in the browser. */
+export function ShareLinkCard({
+  url,
+  title,
+  text,
+  shareTitle,
+  qrFile,
+  className,
+}: {
+  url: string
+  title: string
+  text: string
+  /** What the share sheet says with the link. */
+  shareTitle: string
+  /** File name for "Tải mã QR". */
+  qrFile: string
+  className?: string
+}) {
   const [qr, setQr] = React.useState<string | null>(null)
   const [note, setNote] = React.useState<string | null>(null)
 
@@ -45,7 +78,7 @@ export function BookingLink({ slug, published, className }: { slug: string; publ
   const share = async () => {
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
-        await navigator.share({ title: "Đặt lịch với mình trên 360dep", url })
+        await navigator.share({ title: shareTitle, url })
         return
       } catch (error) {
         // Closing the share sheet is not a failure worth a message.
@@ -57,12 +90,8 @@ export function BookingLink({ slug, published, className }: { slug: string; publ
 
   return (
     <Card className={cn("p-4", className)}>
-      <p className="text-[17px] font-bold tracking-tight">Link đặt lịch của bạn</p>
-      <p className="mt-0.5 text-[13px] text-ink-soft">
-        {published
-          ? "Gửi cho khách quen: họ xem tác phẩm, bảng giá và đặt giờ trống của bạn."
-          : "Link chạy khi bạn đã mở hồ sơ. Trước đó, khách mở link sẽ không thấy trang của bạn."}
-      </p>
+      <p className="text-[17px] font-bold tracking-tight">{title}</p>
+      <p className="mt-0.5 text-[13px] text-ink-soft">{text}</p>
       <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start">
         <div className="min-w-0 flex-1">
           <p className="select-all break-all rounded-[var(--radius-md)] bg-subtle px-3 py-2.5 text-[14px] font-medium">{url}</p>
@@ -85,7 +114,7 @@ export function BookingLink({ slug, published, className }: { slug: string; publ
             {/* A data: URL made in this browser; next/image has nothing to optimise. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={qr} alt={`Mã QR mở ${url}`} width={128} height={128} className="size-32 rounded-[var(--radius-md)] border border-line" />
-            <a href={qr} download={`360dep-${slug}-qr.png`} className="inline-flex items-center gap-1 text-[13px] font-semibold text-accent">
+            <a href={qr} download={qrFile} className="inline-flex items-center gap-1 text-[13px] font-semibold text-accent">
               <Download className="size-3.5" /> Tải mã QR
             </a>
           </div>

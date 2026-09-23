@@ -18,7 +18,8 @@ import { proView, servicesOf, useApp, worksOf } from "@/lib/store"
 import { excludes, personWord, placeLabel } from "@/lib/trade"
 import { rankScore } from "@/lib/trust"
 import type { Pro, ServiceTemplate } from "@/lib/types"
-import { cn, formatDuration, formatPrice } from "@/lib/utils"
+import { showsAverage } from "@/lib/connection"
+import { cn, formatDuration, formatPrice, ratingText } from "@/lib/utils"
 
 export function WorkDetail({ workId }: { workId: string }) {
   const router = useRouter()
@@ -279,12 +280,12 @@ function ProRow({ pro, own }: { pro: Pro; own: boolean }) {
             <VerifiedMark pro={pro} />
           </span>
           <span className="block truncate text-[13px] text-ink-soft">
-            {pro.rating.count > 0 ? (
+            {showsAverage(pro.rating.count) ? (
               <>
                 <span className="font-semibold text-ink">★ {pro.rating.average.toFixed(1)}</span> ({pro.rating.count})
               </>
             ) : (
-              "Chưa có đánh giá"
+              ratingText(pro.rating)
             )}
             {" · "}
             {whereLabel(state, pro)}

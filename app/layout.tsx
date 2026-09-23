@@ -5,6 +5,7 @@ import "./globals.css"
 import { AppShell } from "@/components/layout/app-shell"
 import { SITE_URL } from "@/lib/env"
 import { UnregisterServiceWorker } from "@/components/register-sw"
+import { ReferralCapture } from "@/components/referral-capture"
 import { StoreProvider } from "@/lib/store"
 import { emptySnapshot, loadSnapshot } from "@/lib/api/snapshot"
 import { backendEnabled } from "@/lib/supabase/env"
@@ -75,6 +76,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <UnregisterServiceWorker />
         <StoreProvider snapshot={snapshot}>
           <AppShell>{children}</AppShell>
+          <ReferralCapture />
         </StoreProvider>
       </body>
     </html>

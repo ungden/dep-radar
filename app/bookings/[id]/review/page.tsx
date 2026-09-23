@@ -2,14 +2,15 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { useParams, useRouter } from "next/navigation"
-import { ImagePlus, Star } from "lucide-react"
+import { useParams } from "next/navigation"
+import { ImagePlus, Star, X } from "lucide-react"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, inputClass } from "@/components/ui"
-import { actions } from "@/lib/client-actions"
+import { actions, useAct } from "@/lib/client-actions"
+import { BLIND_NOTE, reviewWindow } from "@/lib/connection"
 import { proView, useApp } from "@/lib/store"
 import { uploadImage } from "@/lib/uploads"
-import { REVIEW_TAGS } from "@/lib/trust"
+import { REVIEW_ISSUE_TAGS, reviewTagsFor } from "@/lib/trust"
 import { cn, formatDateLong } from "@/lib/utils"
 
 export default function ReviewPage() {
@@ -23,30 +24,72 @@ export default function ReviewPage() {
   )
 }
 
+/**
+ * The customer's review. Blind until the freelancer has reviewed them too (or
+ * 14 days pass), and theirs to change until then; after that it is a record.
+ */
 function ReviewForm() {
-  const router = useRouter()
+  const act = useAct()
   const { id } = useParams<{ id: string }>()
   const state = useApp()
   const booking = state.bookings.find((b) => b.id === id && b.mine)
-  const [rating, setRating] = React.useState(0)
-  const [tags, setTags] = React.useState<string[]>([])
-  const [text, setText] = React.useState("")
-  const [photos, setPhotos] = React.useState<string[]>([])
+  const existing = booking?.review
+  const [rating, setRating] = React.useState(existing?.rating ?? 0)
+  const [tags, setTags] = React.useState<string[]>(existing?.tags ?? [])
+  const [text, setText] = React.useState(existing?.text ?? "")
+  const [photos, setPhotos] = React.useState<string[]>(existing?.photos ?? [])
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
+  // Just sent: say what happens next instead of showing the form again.
+  const [sent, setSent] = React.useState(false)
 
   if (!booking || booking.status !== "completed") {
     return <EmptyState title="Chưa thể đánh giá" text="Chỉ đánh giá được lịch hẹn đã hoàn thành." action={<ButtonLink href="/bookings">Về lịch hẹn</ButtonLink>} />
   }
-  if (booking.reviewed) {
-    return <EmptyState title="Bạn đã đánh giá lịch hẹn này" action={<ButtonLink href={`/pros/${booking.proId}?tab=reviews`}>Xem đánh giá</ButtonLink>} />
+  if (existing?.publishedAt) {
+    return (
+      <EmptyState
+        title={sent ? "Đã gửi đánh giá" : "Đánh giá đã hiện công khai"}
+        text="Đánh giá đã hiện trên hồ sơ người làm và không sửa được nữa."
+        action={<ButtonLink href={`/pros/${booking.proId}#danh-gia`}>Xem đánh giá</ButtonLink>}
+      />
+    )
+  }
+  const period = reviewWindow(booking.completedAt, new Date())
+  if (!period.open) {
+    return (
+      <EmptyState
+        title="Hết hạn đánh giá"
+        text="Đánh giá chỉ viết được trong 14 ngày sau khi lịch hẹn hoàn thành."
+        action={<ButtonLink href={`/bookings/${booking.id}`}>Về lịch hẹn</ButtonLink>}
+      />
+    )
+  }
+  if (sent) {
+    return (
+      <EmptyState
+        title="Đã lưu đánh giá"
+        text={BLIND_NOTE}
+        action={
+          <div className="flex flex-wrap justify-center gap-2">
+            <ButtonLink href={`/bookings/${booking.id}`}>Về lịch hẹn</ButtonLink>
+            <Button variant="outline" onClick={() => setSent(false)}>
+              Sửa lại
+            </Button>
+          </div>
+        }
+      />
+    )
   }
 
   const pro = proView(state, booking.proId)
   if (!pro) {
     return <EmptyState title="Người làm không còn hoạt động" action={<ButtonLink href="/bookings">Về lịch hẹn</ButtonLink>} />
   }
-  const valid = rating > 0 && text.trim().length >= 10
+  const options = reviewTagsFor(rating || 5)
+  // Three stars or fewer says what went wrong; the database refuses it otherwise.
+  const needsIssue = rating > 0 && rating <= 3 && !tags.some((t) => REVIEW_ISSUE_TAGS.includes(t))
+  const valid = rating > 0 && text.trim().length >= 10 && !needsIssue
 
   return (
     <form
@@ -56,10 +99,11 @@ function ReviewForm() {
         if (!valid || busy) return
         setBusy(true)
         setError(null)
-        const result = await actions.submitReview(booking.id, { rating, tags, text: text.trim(), photos })
+        const message = await act(() => actions.submitReview(booking.id, { rating, tags, text: text.trim(), photos }), "Đã lưu đánh giá")
         setBusy(false)
-        if (result.error) return setError(result.error)
-        router.replace(`/pros/${booking.proId}?tab=reviews`)
+        if (message) return setError(message)
+        setSent(true)
+        window.scrollTo({ top: 0 })
       }}
     >
       <Card className="flex items-center gap-3 p-3">
@@ -74,13 +118,23 @@ function ReviewForm() {
 
       <div className="text-center">
         <p className="font-semibold">Trải nghiệm của bạn thế nào?</p>
-        <StarInput value={rating} onChange={setRating} label="Đánh giá chung" />
+        <StarInput
+          value={rating}
+          onChange={(n) => {
+            setRating(n)
+            // Good points and problems are different lists; keep only what still applies.
+            setTags((current) => current.filter((t) => reviewTagsFor(n).includes(t)))
+          }}
+          label="Đánh giá chung"
+        />
       </div>
 
       <div>
-        <p className="mb-2 text-[13px] font-medium text-ink-soft">Điểm bạn thích (tuỳ chọn)</p>
+        <p className="mb-2 text-[13px] font-medium text-ink-soft">
+          {rating > 0 && rating <= 3 ? "Điều chưa tốt (chọn ít nhất một)" : "Điểm bạn thích (tuỳ chọn)"}
+        </p>
         <div className="flex flex-wrap gap-2">
-          {REVIEW_TAGS.map((t) => (
+          {options.map((t) => (
             <button
               key={t}
               type="button"
@@ -92,6 +146,7 @@ function ReviewForm() {
             </button>
           ))}
         </div>
+        {needsIssue && <p className="mt-2 text-xs text-warning">Từ 3 sao trở xuống, chọn ít nhất một điều chưa tốt để người sau biết.</p>}
       </div>
 
       <label className="block">
@@ -111,6 +166,14 @@ function ReviewForm() {
           {photos.map((src) => (
             <span key={src} className="relative size-20 overflow-hidden rounded-xl bg-subtle">
               <Image src={src} alt="" fill sizes="80px" className="object-cover" />
+              <button
+                type="button"
+                aria-label="Bỏ ảnh này"
+                onClick={() => setPhotos((current) => current.filter((p) => p !== src))}
+                className="absolute right-1 top-1 inline-flex size-6 items-center justify-center rounded-full bg-black/60 text-white"
+              >
+                <X className="size-3.5" />
+              </button>
             </span>
           ))}
           {photos.length < 3 && (
@@ -143,12 +206,18 @@ function ReviewForm() {
         </p>
       </div>
 
-      <p className="text-xs text-muted">Đánh giá được gắn nhãn “Đã đặt qua 360dep” và người làm không thể xoá, chỉ có thể phản hồi công khai.</p>
+      <div className="space-y-1.5 text-xs text-muted">
+        <p>{BLIND_NOTE}</p>
+        <p>
+          Bạn sửa được tới khi đánh giá hiện (còn {period.daysLeft} ngày). Đánh giá được gắn nhãn “Đã đặt qua 360dep”; người làm không thể xoá, chỉ
+          trả lời công khai một lần.
+        </p>
+      </div>
       {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
 
       <BottomBar>
         <Button type="submit" size="lg" className="w-full" disabled={!valid || busy}>
-          Gửi đánh giá
+          {existing ? "Lưu thay đổi" : "Gửi đánh giá"}
         </Button>
       </BottomBar>
     </form>

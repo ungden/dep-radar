@@ -7,7 +7,19 @@ import { useParams } from "next/navigation"
 import { CalendarDays, CalendarPlus, Home, Info, MapPinned, Phone, Store, Timer } from "lucide-react"
 import { ProCard } from "@/components/beauty"
 import { bookingImage, DeclineForm } from "@/components/booking-card"
-import { BookingTimeline, ComboPartners, CustomerHistory, DeliveryPanel, ReviewCustomer } from "@/components/booking-extras"
+import {
+  BookingTimeline,
+  bookingTimes,
+  ComboPartners,
+  CustomerFinish,
+  CustomerHistory,
+  CustomerReviewStatus,
+  DeliveryPanel,
+  NoShowDispute,
+  ReviewCustomer,
+  VoucherPanel,
+  useNow,
+} from "@/components/booking-extras"
 import { PriceBreakdown } from "@/components/price-breakdown"
 import { MessageButton } from "@/components/message-button"
 import { ReportButton } from "@/components/report-button"
@@ -19,6 +31,7 @@ import { actions, useAct } from "@/lib/client-actions"
 import { getTemplate } from "@/lib/catalog"
 import { getPro, servicesOf, useApp, type AppState } from "@/lib/store"
 import { POLICY, hoursUntilStart } from "@/lib/pricing"
+import { reviewWindow } from "@/lib/connection"
 import { rankScore } from "@/lib/trust"
 import type { Booking, Pro } from "@/lib/types"
 import { addMinutes, cn, formatDateLong, formatDuration, formatPrice, localDate, localTime, toTimestamptz, todayISO } from "@/lib/utils"
@@ -46,6 +59,7 @@ function BookingDetail() {
   const [confirmCancel, setConfirmCancel] = React.useState(false)
   const [confirmDecline, setConfirmDecline] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const now = useNow()
 
   const isPro = session?.role === "pro" && booking?.proId === session.proId
   const isCustomer = session?.role === "customer" && booking?.mine
@@ -76,6 +90,7 @@ function BookingDetail() {
   const active = booking.status === "pending" || booking.status === "confirmed"
   const run = (fn: () => Promise<{ error?: string }>, done?: string) =>
     void act(fn, done).then((message) => setError(message))
+  const started = bookingTimes(booking).startsAt.getTime() <= now
   const freeCancel = hoursUntilStart(booking.date, booking.time) >= POLICY.freeCancelHours
 
   const onLocation = Boolean(getTemplate(booking.templateId)?.onLocation)
@@ -149,7 +164,8 @@ function BookingDetail() {
         )}
       </Card>
 
-      <PriceBreakdown quote={booking.quote} paymentMethod={booking.paymentMethod} forPro={isPro} />
+      <PriceBreakdown quote={booking.quote} paymentMethod={booking.paymentMethod} forPro={isPro} discount={booking.discount} />
+      {isCustomer && <VoucherPanel booking={booking} />}
 
       {error && (
         <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
@@ -167,6 +183,8 @@ function BookingDetail() {
       {isPro && booking.status === "pending" && <CustomerHistory booking={booking} />}
 
       {isCustomer && booking.status === "pending" && <CustomerConfirmWait booking={booking} proName={pro.name} />}
+      {isCustomer && <CustomerFinish booking={booking} />}
+      {isCustomer && <NoShowDispute booking={booking} />}
 
       {isCustomer && active && (
         <div className="flex flex-wrap gap-2">
@@ -186,7 +204,9 @@ function BookingDetail() {
         </div>
       )}
 
-      {isCustomer && active && (
+      {/* Once the time has come, the job is done or the freelancer did not
+          come (CustomerFinish above); cancelling is for before. */}
+      {isCustomer && active && !started && (
         <div className="space-y-2">
           <p className="flex gap-2 text-xs text-muted">
             <Info className="mt-0.5 size-3.5 shrink-0" />
@@ -278,11 +298,13 @@ function BookingDetail() {
         <Alternatives state={state} booking={booking} pro={pro} />
       )}
 
+      {isCustomer && <CustomerReviewStatus booking={booking} />}
       {!active && isCustomer && booking.status !== "declined" && booking.status !== "expired" && (
         <div className="grid grid-cols-2 gap-2">
-          {booking.status === "completed" && !booking.reviewed ? (
+          {/* Written but still blind: it can be changed until it is published or the 14 days end. */}
+          {booking.status === "completed" && !booking.review?.publishedAt && reviewWindow(booking.completedAt, new Date()).open ? (
             <ButtonLink href={`/bookings/${booking.id}/review`} variant="outline">
-              ★ Đánh giá
+              {booking.review ? "Sửa đánh giá" : "★ Đánh giá"}
             </ButtonLink>
           ) : (
             <ButtonLink href={`/pros/${pro.id}`} variant="outline">

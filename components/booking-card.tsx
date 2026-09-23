@@ -8,6 +8,7 @@ import { Avatar, Button, ButtonLink, Card, StatusBadge, buttonClass, inputClass 
 import { actions as store, useAct } from "@/lib/client-actions"
 import { type AppState, getPro, useApp, worksOf } from "@/lib/store"
 import { getTemplate } from "@/lib/catalog"
+import { reviewWindow } from "@/lib/connection"
 import type { Booking } from "@/lib/types"
 import { addMinutes, cn, formatDateLong, formatPrice, localDate } from "@/lib/utils"
 
@@ -42,8 +43,13 @@ export function BookingCard({ booking }: { booking: Booking }) {
           <p className="mt-0.5 flex items-center gap-1 text-[13px] text-ink-soft">
             <Clock className="size-3.5" />
             {booking.time} – {addMinutes(booking.time, booking.durationMin)}
-            <span className="ml-auto text-[15px] font-bold text-ink">{formatPrice(booking.quote.total)}</span>
+            <span className="ml-auto text-[15px] font-bold text-ink">{formatPrice(booking.quote.total - booking.discount)}</span>
           </p>
+          {booking.discount > 0 && (
+            <p className="mt-0.5 text-right text-xs text-success">
+              Voucher −{formatPrice(booking.discount)} · tổng {formatPrice(booking.quote.total)}
+            </p>
+          )}
           <DeliveryLine booking={booking} />
         </div>
       </Link>
@@ -67,13 +73,18 @@ export function BookingCard({ booking }: { booking: Booking }) {
       )}
       {booking.status === "completed" && (
         <div className="mt-3 grid grid-cols-2 gap-2">
-          {booking.reviewed ? (
+          {booking.review?.publishedAt ? (
             <ButtonLink href={`/pros/${pro.id}#danh-gia`} variant="outline" size="sm">
               Xem đánh giá
             </ButtonLink>
-          ) : (
+          ) : reviewWindow(booking.completedAt, new Date()).open ? (
+            // Written but blind: still the author's to change.
             <ButtonLink href={`/bookings/${booking.id}/review`} variant="outline" size="sm">
-              ★ Đánh giá
+              {booking.review ? "Sửa đánh giá" : "★ Đánh giá"}
+            </ButtonLink>
+          ) : (
+            <ButtonLink href={`/bookings/${booking.id}`} variant="outline" size="sm">
+              Xem chi tiết
             </ButtonLink>
           )}
           <ButtonLink href={`/book/${booking.proId}?service=${booking.templateId}&variant=${booking.variantId}`} variant="soft" size="sm">
@@ -130,6 +141,12 @@ export function JobBookingRow({ booking, actions }: { booking: Booking; actions?
               Bạn nhận <b className="text-[15px] text-success">{formatPrice(booking.quote.payout)}</b>
             </span>
           </p>
+          {booking.discount > 0 && (
+            <p className="mt-1 text-xs text-ink-soft">
+              Khách dùng voucher −{formatPrice(booking.discount)}: khách trả bạn {formatPrice(booking.quote.total - booking.discount)}, 360dep cộng{" "}
+              {formatPrice(booking.discount)} vào ví khi xong.
+            </p>
+          )}
         </div>
       </Link>
       {booking.status === "pending" && <ConfirmCountdown booking={booking} />}

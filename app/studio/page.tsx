@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Contact, IdCard, ImagePlus, Navigation, Phone, Tags, UserRoundPen, Users } from "lucide-react"
+import { ChevronRight, Contact, Gift, IdCard, ImagePlus, Navigation, Phone, Tags, UserRoundPen, Users } from "lucide-react"
 import { JobBookingRow } from "@/components/booking-card"
 import { BookingLink } from "@/components/booking-link"
 import { PublishProgress } from "@/components/publish-progress"
@@ -13,6 +13,7 @@ import { POLICY } from "@/lib/pricing"
 import { actions, useAct } from "@/lib/client-actions"
 import { distanceToCustomer, proView, useApp } from "@/lib/store"
 import type { Pro } from "@/lib/types"
+import { showsAverage } from "@/lib/connection"
 import { addDays, cn, formatDateLong, formatPrice, parseISODate, todayISO } from "@/lib/utils"
 
 export default function StudioPage() {
@@ -163,7 +164,15 @@ function Dashboard() {
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Thực nhận tuần này" value={formatPrice(weekNet)} sub={`${doneThisWeek.length} lịch hoàn thành`} />
         <Stat label="Tháng này" value={formatPrice(net)} sub={`Khách trả ${formatPrice(gross)} · hoa hồng ${formatPrice(commission)}`} />
-        <Stat label="Đánh giá" value={pro.rating.count ? `★ ${pro.rating.average.toFixed(1)}` : "—"} sub={pro.rating.count ? `${pro.rating.count} lượt` : "Chưa có đánh giá"} />
+        <Stat
+          label="Đánh giá"
+          value={showsAverage(pro.rating.count) ? `★ ${pro.rating.average.toFixed(1)}` : "Mới"}
+          sub={
+            showsAverage(pro.rating.count)
+              ? `${pro.rating.count} lượt`
+              : `${pro.rating.count ? `${pro.rating.count} đánh giá · ` : ""}điểm hiện từ 3 đánh giá`
+          }
+        />
         <Link href="/studio/wallet" className="contents">
           <Stat label="Ví & sổ thu" value="Xem" sub={`Tổng ${pro.stats.completedJobs} lịch đã làm`} />
         </Link>
@@ -187,6 +196,15 @@ function Dashboard() {
             title="Khách của bạn"
             text={clientCount ? `${clientCount} khách đã làm xong` : "Khách đã làm xong sẽ hiện ở đây"}
           />
+          {/* Only while the programme runs, with the amount the owner set. */}
+          {state.platform.referralEnabled && state.platform.referralProAmount > 0 && (
+            <Shortcut
+              href="/gioi-thieu"
+              icon={<Gift className="size-5" />}
+              title="Giới thiệu người làm"
+              text={`Giới thiệu người làm khác, nhận ${formatPrice(state.platform.referralProAmount)} vào ví`}
+            />
+          )}
         </div>
       </section>
 

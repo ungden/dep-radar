@@ -32,6 +32,7 @@ import { POLICY, travelFeeFor } from "@/lib/pricing"
 import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp, worksOf } from "@/lib/store"
 import { personWord, tradesOf } from "@/lib/trade"
 import type { ModelProfile, Pro, Work } from "@/lib/types"
+import { showsAverage } from "@/lib/connection"
 import { cn, formatPrice, formatResponseTime, parseISODate } from "@/lib/utils"
 
 type Tab = "works" | "services" | "reviews" | "about"
@@ -334,7 +335,8 @@ function Stats({ pro, onReviews }: { pro: Pro; onReviews: () => void }) {
     items.push(
       <li key="rating">
         <button type="button" onClick={onReviews} className="text-left">
-          <p className="text-[20px] font-bold tracking-tight">★ {pro.rating.average.toFixed(1)}</p>
+          {/* An average of one or two reviews is not a number worth showing. */}
+          <p className="text-[20px] font-bold tracking-tight">{showsAverage(pro.rating.count) ? `★ ${pro.rating.average.toFixed(1)}` : "Mới"}</p>
           <p className="text-[13px] text-ink-soft underline decoration-line underline-offset-2">{pro.rating.count} đánh giá</p>
         </button>
       </li>,

@@ -14,7 +14,8 @@ import type { VerticalFilter } from "@/lib/feed"
 import { serviceOffers } from "@/lib/offers"
 import { distanceToCustomer, fromPrice, proView, useApp, worksOf, type AppState } from "@/lib/store"
 import type { CategoryId, Pro, Work } from "@/lib/types"
-import { cn, formatPrice } from "@/lib/utils"
+import { showsAverage } from "@/lib/connection"
+import { cn, formatPrice, ratingText } from "@/lib/utils"
 
 /** Each category's icon as a component, for places that take one (lib/design/category-icons.ts). */
 export const CATEGORY_ICON = Object.fromEntries(
@@ -260,7 +261,7 @@ export function PostCard({ work, priority, className }: { work: Work; priority?:
               <VerifiedMark pro={pro} className="size-3.5" />
             </p>
             <p className="truncate text-[12.5px] text-ink-soft">
-              {pro.rating.count > 0 ? `★ ${pro.rating.average.toFixed(1)} (${pro.rating.count}) · ` : ""}
+              {pro.rating.count > 0 ? `${ratingText(pro.rating)} · ` : ""}
               {whereLabel(state, pro)}
             </p>
           </div>
@@ -280,12 +281,12 @@ export const WorkCard = PostCard
 function TrustLine({ pro, state }: { pro: Pro; state: AppState }) {
   return (
     <p className="flex flex-wrap items-center gap-x-1.5 text-[13px] text-ink-soft">
-      {pro.rating.count > 0 ? (
+      {showsAverage(pro.rating.count) ? (
         <span>
           <span className="font-semibold text-ink">★ {pro.rating.average.toFixed(1)}</span> ({pro.rating.count})
         </span>
       ) : (
-        <span>Chưa có đánh giá</span>
+        <span>{ratingText(pro.rating)}</span>
       )}
       {pro.stats.completedJobs > 0 && (
         <>

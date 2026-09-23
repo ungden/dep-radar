@@ -12,8 +12,9 @@ import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
 
 export default function Threads() {
-  const { uid, mode, blocked } = useApp()
-  const threads = useAsync(uid ? () => listThreads(uid) : null, [uid])
+  const { uid, mode, blocked, me } = useApp()
+  // A new message (Realtime, in state/app.tsx) changes the unread count: reload while on screen.
+  const threads = useAsync(uid ? () => listThreads(uid) : null, [uid, me.unreadMessages])
 
   if (!uid) return <EmptyState title="Cần đăng nhập" action="Đăng nhập" onAction={() => router.push("/login")} />
 

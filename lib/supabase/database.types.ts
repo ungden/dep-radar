@@ -24,6 +24,9 @@ export type Database = {
           interests: Database["public"]["Enums"]["category_id"][]
           is_admin: boolean
           phone: string
+          referral_code: string | null
+          referred_at: string | null
+          referred_by: string | null
         }
         Insert: {
           active_role?: Database["public"]["Enums"]["app_role"]
@@ -34,6 +37,9 @@ export type Database = {
           interests?: Database["public"]["Enums"]["category_id"][]
           is_admin?: boolean
           phone?: string
+          referral_code?: string | null
+          referred_at?: string | null
+          referred_by?: string | null
         }
         Update: {
           active_role?: Database["public"]["Enums"]["app_role"]
@@ -44,6 +50,9 @@ export type Database = {
           interests?: Database["public"]["Enums"]["category_id"][]
           is_admin?: boolean
           phone?: string
+          referral_code?: string | null
+          referred_at?: string | null
+          referred_by?: string | null
         }
         Relationships: []
       }
@@ -122,6 +131,7 @@ export type Database = {
           delivery_due_at: string | null
           delivery_note: string | null
           delivery_url: string | null
+          discount: number
           distance_km: number | null
           district: string
           duration_min: number
@@ -150,6 +160,7 @@ export type Database = {
           urgent_fee: number
           usage_scope: string
           variant_id: string
+          voucher_id: string | null
         }
         Insert: {
           address?: string
@@ -175,6 +186,7 @@ export type Database = {
           delivery_due_at?: string | null
           delivery_note?: string | null
           delivery_url?: string | null
+          discount?: number
           distance_km?: number | null
           district: string
           duration_min: number
@@ -203,6 +215,7 @@ export type Database = {
           urgent_fee?: number
           usage_scope?: string
           variant_id: string
+          voucher_id?: string | null
         }
         Update: {
           address?: string
@@ -228,6 +241,7 @@ export type Database = {
           delivery_due_at?: string | null
           delivery_note?: string | null
           delivery_url?: string | null
+          discount?: number
           distance_km?: number | null
           district?: string
           duration_min?: number
@@ -256,6 +270,7 @@ export type Database = {
           urgent_fee?: number
           usage_scope?: string
           variant_id?: string
+          voucher_id?: string | null
         }
         Relationships: [
           {
@@ -405,6 +420,7 @@ export type Database = {
           created_at: string
           customer_id: string
           pro_id: string
+          published_at: string | null
           rating: number
         }
         Insert: {
@@ -413,6 +429,7 @@ export type Database = {
           created_at?: string
           customer_id: string
           pro_id: string
+          published_at?: string | null
           rating: number
         }
         Update: {
@@ -421,6 +438,7 @@ export type Database = {
           created_at?: string
           customer_id?: string
           pro_id?: string
+          published_at?: string | null
           rating?: number
         }
         Relationships: [
@@ -903,33 +921,51 @@ export type Database = {
           company_name: string | null
           company_tax_id: string | null
           id: boolean
+          referral_customer_amount: number
+          referral_enabled: boolean
+          referral_min_total: number
+          referral_monthly_cap: number
+          referral_pro_amount: number
           support_email: string | null
           support_zalo: string | null
           topup_account_name: string | null
           topup_account_no: string | null
           topup_bank_bin: string | null
+          voucher_days: number
         }
         Insert: {
           company_address?: string | null
           company_name?: string | null
           company_tax_id?: string | null
           id?: boolean
+          referral_customer_amount?: number
+          referral_enabled?: boolean
+          referral_min_total?: number
+          referral_monthly_cap?: number
+          referral_pro_amount?: number
           support_email?: string | null
           support_zalo?: string | null
           topup_account_name?: string | null
           topup_account_no?: string | null
           topup_bank_bin?: string | null
+          voucher_days?: number
         }
         Update: {
           company_address?: string | null
           company_name?: string | null
           company_tax_id?: string | null
           id?: boolean
+          referral_customer_amount?: number
+          referral_enabled?: boolean
+          referral_min_total?: number
+          referral_monthly_cap?: number
+          referral_pro_amount?: number
           support_email?: string | null
           support_zalo?: string | null
           topup_account_name?: string | null
           topup_account_no?: string | null
           topup_bank_bin?: string | null
+          voucher_days?: number
         }
         Relationships: []
       }
@@ -1147,6 +1183,58 @@ export type Database = {
           },
         ]
       }
+      referral_rewards: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          kind: string
+          referee: string
+          referee_amount: number
+          referrer: string
+          referrer_amount: number
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          kind: string
+          referee: string
+          referee_amount: number
+          referrer: string
+          referrer_amount: number
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          kind?: string
+          referee?: string
+          referee_amount?: number
+          referrer?: string
+          referrer_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_rewards_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_rewards_referee_fkey"
+            columns: ["referee"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_rewards_referrer_fkey"
+            columns: ["referrer"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           booking_id: string | null
@@ -1238,6 +1326,7 @@ export type Database = {
           hidden_at: string | null
           photo_paths: string[]
           pro_id: string
+          published_at: string | null
           rating: number
           replied_at: string | null
           reply: string | null
@@ -1253,6 +1342,7 @@ export type Database = {
           hidden_at?: string | null
           photo_paths?: string[]
           pro_id: string
+          published_at?: string | null
           rating: number
           replied_at?: string | null
           reply?: string | null
@@ -1268,6 +1358,7 @@ export type Database = {
           hidden_at?: string | null
           photo_paths?: string[]
           pro_id?: string
+          published_at?: string | null
           rating?: number
           replied_at?: string | null
           reply?: string | null
@@ -1543,6 +1634,60 @@ export type Database = {
           },
         ]
       }
+      vouchers: {
+        Row: {
+          account_id: string
+          amount: number
+          booking_id: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          min_total: number
+          note: string
+          source: string
+          used_at: string | null
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          booking_id?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          min_total?: number
+          note?: string
+          source?: string
+          used_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          min_total?: number
+          note?: string
+          source?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vouchers_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wallet_entries: {
         Row: {
           amount: number
@@ -1735,6 +1880,10 @@ export type Database = {
         Args: { p_casting: string; p_message?: string }
         Returns: string
       }
+      apply_voucher: {
+        Args: { p_booking: string; p_voucher: string }
+        Returns: undefined
+      }
       availability_problem: {
         Args: {
           p_at_home: boolean
@@ -1828,6 +1977,7 @@ export type Database = {
         Args: { p_booking: string; p_reason?: string }
         Returns: undefined
       }
+      claim_referral: { Args: { p_code: string }; Returns: string }
       close_casting: { Args: { p_casting: string }; Returns: undefined }
       commission_for: {
         Args: { rate: number; service_price: number }
@@ -1835,6 +1985,7 @@ export type Database = {
       }
       complete_booking: { Args: { p_booking: string }; Returns: undefined }
       confirm_booking: { Args: { p_booking: string }; Returns: undefined }
+      confirm_booking_done: { Args: { p_booking: string }; Returns: undefined }
       create_booking: {
         Args: {
           p_address_id?: string
@@ -1933,6 +2084,7 @@ export type Database = {
         Args: { p_thread: string }
         Returns: undefined
       }
+      my_referral_code: { Args: never; Returns: string }
       notify: {
         Args: {
           p_account: string
@@ -1962,14 +2114,19 @@ export type Database = {
       }
       recompute_pro_metrics: { Args: never; Returns: undefined }
       refresh_pro_rating: { Args: { p_pro: string }; Returns: undefined }
-      remind_overdue_deliveries: { Args: never; Returns: number }
       register_push_token: {
         Args: { p_platform: string; p_token: string }
         Returns: undefined
       }
+      remind_overdue_deliveries: { Args: never; Returns: number }
       remove_time_block: { Args: { p_id: string }; Returns: undefined }
+      remove_voucher: { Args: { p_booking: string }; Returns: undefined }
       reply_review: {
         Args: { p_booking: string; p_reply: string }
+        Returns: undefined
+      }
+      report_pro_no_show: {
+        Args: { p_booking: string; p_detail?: string }
         Returns: undefined
       }
       request_reschedule: {
@@ -1989,6 +2146,10 @@ export type Database = {
         Returns: undefined
       }
       send_booking_reminders: { Args: never; Returns: number }
+      send_message: {
+        Args: { p_body?: string; p_image_paths?: string[]; p_thread: string }
+        Returns: boolean
+      }
       send_offer: {
         Args: { p_job: string; p_message: string; p_price: number }
         Returns: string
@@ -2030,10 +2191,10 @@ export type Database = {
         Returns: number
       }
       travel_fee: { Args: { distance_km: number }; Returns: number }
+      unblock_user: { Args: { p_account: string }; Returns: undefined }
       wallet_balance: { Args: { p_pro: string }; Returns: number }
       withdraw_application: { Args: { p_application: string }; Returns: undefined }
       withdraw_offer: { Args: { p_offer: string }; Returns: undefined }
-      unblock_user: { Args: { p_account: string }; Returns: undefined }
       within_working_hours: {
         Args: { p_minutes: number; p_pro: string; p_starts_at: string }
         Returns: boolean

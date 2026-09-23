@@ -30,4 +30,31 @@ export function rankScore(pro: Pro, rating: RatingSummary = pro.rating) {
   return 0.5 * quality + 0.35 * (isVerified(pro) ? 1 : 0) + 0.15 * experience
 }
 
-export const REVIEW_TAGS = ["Đúng giờ", "Tay nghề tốt", "Dụng cụ sạch sẽ", "Tư vấn kỹ", "Nhẹ nhàng", "Giá hợp lý", "Bền đẹp"]
+/**
+ * Review tags. The database accepts only these (review_tags_ok in
+ * supabase/migrations/20260925100200_review_rules.sql); keep the two in step.
+ * Three stars or fewer needs at least one REVIEW_ISSUE_TAGS entry.
+ */
+export const REVIEW_TAGS = [
+  "Đúng giờ",
+  "Tay nghề tốt",
+  "Dụng cụ sạch sẽ",
+  "Tư vấn kỹ",
+  "Nhẹ nhàng",
+  "Giá hợp lý",
+  "Bền đẹp",
+  "Ảnh đẹp",
+  "Giao ảnh đúng hẹn",
+  "Chuyên nghiệp",
+]
+export const REVIEW_ISSUE_TAGS = [
+  "Trễ giờ",
+  "Tay nghề chưa tốt",
+  "Dụng cụ chưa sạch",
+  "Thái độ chưa tốt",
+  "Giá khác báo giá",
+  "Giao ảnh trễ",
+  "Không giống mô tả",
+]
+/** The tags to offer for a star rating: what went well, or what did not. */
+export const reviewTagsFor = (rating: number) => (rating <= 3 ? REVIEW_ISSUE_TAGS : REVIEW_TAGS)

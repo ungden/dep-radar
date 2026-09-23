@@ -8,6 +8,7 @@ export interface BookingItem {
   id: string
   status: BookingStatus
   startsAt: string
+  endsAt: string
   date: string
   time: string
   durationMin: number
@@ -28,7 +29,18 @@ export interface BookingItem {
   confirmBy: string
   cancelReason: string | null
   cancelledBy: "customer" | "pro" | null
+  /**
+   * A review of the freelancer exists. The customer sees their own, blind or
+   * not; the freelancer sees it only once it is published.
+   */
   reviewed: boolean
+  /** When that review went public; null while it is blind (or unknown). */
+  reviewPublishedAt: string | null
+  /** The freelancer's review of the customer, as far as row level security shows it. */
+  customerReview: { rating: number; body: string; publishedAt: string | null } | null
+  /** A 360dep voucher on this booking: the customer pays total − discount. */
+  voucherId: string | null
+  discount: number
   createdAt: string
   confirmedAt: string | null
   startedAt: string | null
@@ -54,6 +66,10 @@ const BASE = `
   reviews (booking_id)
 `
 const WITH_DELIVERY = `${BASE}, delivery_due_at, delivered_at, delivery_url, delivery_accepted_at`
+// 20260925100200_review_rules.sql and 20260925100300_referrals.sql.
+const WITH_CONNECTION = `${WITH_DELIVERY.replace("reviews (booking_id)", "reviews (booking_id, published_at)")},
+  voucher_id, discount, customer_reviews (booking_id, rating, body, published_at)`
+const COLUMN_SETS = [WITH_CONNECTION, WITH_DELIVERY, BASE]
 
 function toBooking(row: Row, viewer: "customer" | "pro"): BookingItem {
   const template = getTemplate(row.template_id)
@@ -63,10 +79,13 @@ function toBooking(row: Row, viewer: "customer" | "pro"): BookingItem {
   const status = (row.status ?? "pending") as BookingStatus
   const category = (template?.category ?? "nail") as CategoryId
   const hasDelivery = "delivery_due_at" in row && verticalOf(category) === "photo"
+  const review = Array.isArray(row.reviews) ? (row.reviews[0] as Row | undefined) : (row.reviews as Row | null | undefined)
+  const customerReview = Array.isArray(row.customer_reviews) ? (row.customer_reviews[0] as Row | undefined) : (row.customer_reviews as Row | null | undefined)
   return {
     id: row.id,
     status,
     startsAt: row.starts_at,
+    endsAt: row.ends_at ?? new Date(Date.parse(row.starts_at) + (row.duration_min ?? 0) * 60_000).toISOString(),
     date: localDate(row.starts_at),
     time: localTime(row.starts_at),
     durationMin: row.duration_min ?? 0,
@@ -96,7 +115,13 @@ function toBooking(row: Row, viewer: "customer" | "pro"): BookingItem {
     confirmBy: row.confirm_by,
     cancelReason: row.cancel_reason ?? null,
     cancelledBy: row.cancelled_by ?? null,
-    reviewed: Array.isArray(row.reviews) ? row.reviews.length > 0 : Boolean(row.reviews),
+    reviewed: Boolean(review),
+    reviewPublishedAt: review?.published_at ?? null,
+    customerReview: customerReview
+      ? { rating: Number(customerReview.rating ?? 0), body: customerReview.body ?? "", publishedAt: customerReview.published_at ?? null }
+      : null,
+    voucherId: row.voucher_id ?? null,
+    discount: Number(row.discount ?? 0),
     createdAt: row.created_at,
     confirmedAt: row.confirmed_at ?? null,
     startedAt: row.started_at ?? null,
@@ -131,13 +156,13 @@ export async function listBookings(uid: string, as: "customer" | "pro"): Promise
         .eq(as === "customer" ? "customer_id" : "pro_id", uid)
         .order("starts_at", { ascending: false })
         .limit(200),
-    [WITH_DELIVERY, BASE],
+    COLUMN_SETS,
   )
   return rows.map((r) => toBooking(r, as))
 }
 
 export async function getBooking(id: string, uid: string): Promise<BookingItem | null> {
-  const rows = await selectWithFallback("booking", (c) => supabase.from("bookings").select(c).eq("id", id).limit(1), [WITH_DELIVERY, BASE])
+  const rows = await selectWithFallback("booking", (c) => supabase.from("bookings").select(c).eq("id", id).limit(1), COLUMN_SETS)
   const row = rows[0]
   if (!row) return null
   return toBooking(row, row.pro_id === uid ? "pro" : "customer")
@@ -210,6 +235,32 @@ export const confirmBooking = (id: string) => rpc("confirm_booking", { p_booking
 export const declineBooking = (id: string, reason: string) => rpc("decline_booking", { p_booking: id, p_reason: reason })
 export const startBooking = (id: string) => rpc("start_booking", { p_booking: id })
 export const completeBooking = (id: string) => rpc("complete_booking", { p_booking: id })
+
+// How a job ends from the customer's side (20260925100100_booking_finish.sql).
+export const confirmBookingDone = (id: string) => rpc("confirm_booking_done", { p_booking: id })
+export const reportProNoShow = (id: string, detail: string) => rpc("report_pro_no_show", { p_booking: id, p_detail: detail })
+/** The customer's answer to being marked absent, within 24 hours (20260924100700_no_show_hold.sql). */
+export const disputeNoShow = (id: string, reason: string) => rpc<string>("dispute_no_show", { p_booking: id, p_reason: reason })
+
+/** Whether the caller already disputed this no-show: their own reports are readable to them. */
+export async function hasDisputedNoShow(bookingId: string, uid: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("reports")
+    .select("id")
+    .eq("booking_id", bookingId)
+    .eq("reporter_id", uid)
+    .eq("reason", "no_show_dispute")
+    .limit(1)
+  return Boolean(data?.length)
+}
+
+/** The freelancer's review of the customer: blind until the customer's is in, or 14 days. */
+export const reviewCustomer = (id: string, rating: number, body: string) =>
+  rpc("review_customer", { p_booking: id, p_rating: rating, p_body: body })
+
+// Vouchers (20260925100300_referrals.sql).
+export const applyVoucher = (bookingId: string, voucherId: string) => rpc("apply_voucher", { p_booking: bookingId, p_voucher: voucherId })
+export const removeVoucher = (bookingId: string) => rpc("remove_voucher", { p_booking: bookingId })
 
 export const STATUS_LABEL: Record<BookingStatus, string> = {
   pending: "Chờ xác nhận",

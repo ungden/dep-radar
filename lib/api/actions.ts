@@ -14,6 +14,7 @@ import type {
   WorkKind,
 } from "@/lib/types"
 import { localTime } from "@/lib/utils"
+import { GENERIC, messageFor } from "./errors"
 
 /**
  * Every write the app makes. Each one calls a database RPC that re-checks the
@@ -24,17 +25,6 @@ import { localTime } from "@/lib/utils"
  * not an error page.
  */
 export type ActionResult<T = void> = { ok: true; data: T } | { ok: false; error: string }
-
-const GENERIC = "Có lỗi xảy ra, vui lòng thử lại."
-
-/** Postgres messages from our RPCs are written for the user; the rest are not. */
-function messageFor(error: { message?: string; code?: string } | null): string {
-  const raw = error?.message?.trim()
-  if (!raw) return GENERIC
-  if (/^(duplicate key|permission denied|JWT|new row violates|invalid input)/i.test(raw)) return GENERIC
-  // Anything our own functions raise is already a sentence in Vietnamese.
-  return /[àáâãèéêìíòóôõùúýăđĩũơưạảấầẩậắằẵặẹẻẽếềểệỉịọỏốồổộớờởợụủứừửữựỳỵỷỹ]/i.test(raw) ? raw : GENERIC
-}
 
 async function rpc<T>(fn: string, args: Record<string, unknown>, paths: string[] = []): Promise<ActionResult<T>> {
   const supabase = await supabaseServer()
@@ -280,6 +270,33 @@ export async function markNoShow(bookingId: string, reason: string) {
 /** The customer says a no-show report is wrong, within 24 hours. Returns the report id. */
 export async function disputeNoShow(bookingId: string, reason: string) {
   return rpc<string>("dispute_no_show", { p_booking: bookingId, p_reason: reason }, ["/bookings"])
+}
+
+// Customer: finishing a job ------------------------------------------------------
+
+/** The customer says the job is done, from its start time on. */
+export async function confirmBookingDone(bookingId: string) {
+  return rpc<void>("confirm_booking_done", { p_booking: bookingId }, ["/bookings", "/studio", "/studio/jobs"])
+}
+
+/** The freelancer did not come: from 15 minutes after the start to 24 hours after the end. */
+export async function reportProNoShow(bookingId: string, detail: string) {
+  return rpc<void>("report_pro_no_show", { p_booking: bookingId, p_detail: detail }, ["/bookings", "/studio/jobs"])
+}
+
+// Vouchers & referrals ------------------------------------------------------------
+
+export async function applyVoucher(bookingId: string, voucherId: string) {
+  return rpc<void>("apply_voucher", { p_booking: bookingId, p_voucher: voucherId }, ["/bookings", "/gioi-thieu"])
+}
+
+export async function removeVoucher(bookingId: string) {
+  return rpc<void>("remove_voucher", { p_booking: bookingId }, ["/bookings", "/gioi-thieu"])
+}
+
+/** A friend's code, once, in the first 30 days. Returns the friend's name. */
+export async function claimReferral(code: string) {
+  return rpc<string>("claim_referral", { p_code: code.trim().toUpperCase() }, ["/gioi-thieu"])
 }
 
 /** Busy time outside 360dep. Timestamps, not local strings: the client converts. Returns the block id. */

@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import { Suspense } from "react"
 import { PageSkeleton } from "@/components/ui"
 import { getProBySlug, listProServices, listReviews } from "@/lib/api/pros"
 import { absoluteUrl } from "@/lib/env"
-import { serializeJsonLd } from "@/lib/json-ld"
+import { aggregateRatingFor, serializeJsonLd } from "@/lib/json-ld"
 import { getTemplate, verticalOf } from "@/lib/catalog"
 import { SHOWING_SAMPLE_DATA } from "@/lib/sample-data"
 import { openGraph } from "@/lib/seo"
@@ -22,16 +22,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function ProPage({ params }: { params: Promise<{ id: string }> }) {
-  const pro = await getProBySlug((await params).id)
+  const id = (await params).id
+  const pro = await getProBySlug(id)
   if (!pro) notFound()
+  // A notification's link carries the row id; the address people share is the slug.
+  if (id !== pro.slug) permanentRedirect(`/pros/${pro.slug}`)
 
   const [listings, reviews] = await Promise.all([listProServices(pro.id), listReviews(pro.id)])
 
   /**
    * Structured data for the profile. The rating is only included when there are
-   * real reviews behind it: an aggregateRating of nothing is exactly the kind of
-   * invented number this product is trying to stop showing.
+   * enough real reviews behind it (three, as on the page): an aggregateRating of
+   * nothing, or of one review, is exactly the kind of invented number this
+   * product is trying to stop showing.
    */
+  const aggregateRating = aggregateRatingFor(pro.rating, SHOWING_SAMPLE_DATA)
   const jsonLd = {
     "@context": "https://schema.org",
     // A makeup artist is a beauty business; a photographer or a model is not.
@@ -42,17 +47,7 @@ export default async function ProPage({ params }: { params: Promise<{ id: string
     image: pro.avatar ? absoluteUrl(pro.avatar) : undefined,
     address: { "@type": "PostalAddress", addressLocality: pro.district, addressRegion: pro.city, addressCountry: "VN" },
     areaServed: pro.areas.map((area) => ({ "@type": "Place", name: area })),
-    ...(pro.rating.count > 0 && !SHOWING_SAMPLE_DATA
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: pro.rating.average.toFixed(2),
-            reviewCount: pro.rating.count,
-            bestRating: 5,
-            worstRating: 1,
-          },
-        }
-      : {}),
+    ...(aggregateRating ? { aggregateRating } : {}),
     makesOffer: listings.flatMap((listing) => {
       const template = getTemplate(listing.templateId)
       if (!template) return []

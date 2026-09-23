@@ -2,7 +2,7 @@ import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import { Alert, ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { categoryLabel, getTemplate, verticalOf, type Pro } from "@/shared"
+import { categoryLabel, getTemplate, showsAverage, verticalOf, type Pro } from "@/shared"
 import { openThread } from "@/data/chat"
 import { formatDuration, formatKm, formatPrice, formatRating, formatResponseTime } from "@/data/format"
 import { loadProExtras } from "@/data/public"
@@ -117,7 +117,10 @@ export default function ProProfile() {
         {/* Three real numbers, or the honest absence of one */}
         <View style={{ flexDirection: "row", backgroundColor: colors.surface, borderRadius: radius.md, paddingVertical: 14 }}>
           <Stat value={pro.stats.completedJobs > 0 ? String(pro.stats.completedJobs) : "0"} label="lịch đã xong" />
-          <Stat value={pro.rating.count > 0 ? `★ ${formatRating(pro.rating.average)}` : "—"} label={pro.rating.count > 0 ? `${pro.rating.count} đánh giá` : "chưa có đánh giá"} />
+          <Stat
+            value={showsAverage(pro.rating.count) ? `★ ${formatRating(pro.rating.average)}` : "Mới"}
+            label={pro.rating.count > 0 ? `${pro.rating.count} đánh giá` : "chưa có đánh giá"}
+          />
           <Stat value={response ?? "—"} label={response ? "phản hồi" : "chưa đủ dữ liệu"} />
         </View>
 
