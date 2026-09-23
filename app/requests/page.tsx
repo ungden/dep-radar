@@ -33,7 +33,7 @@ function RequestList() {
       <EmptyState
         icon={<Megaphone className="size-6" />}
         title="Bạn chưa đăng yêu cầu nào"
-        text="Mô tả dịch vụ bạn cần, người làm gần bạn sẽ gửi báo giá."
+        text="Chọn dịch vụ và giờ, người làm gần bạn được báo. Ai nhận trước sẽ làm với giá niêm yết."
         action={<ButtonLink href="/requests/new">Đăng yêu cầu</ButtonLink>}
       />
     )

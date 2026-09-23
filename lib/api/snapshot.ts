@@ -12,7 +12,6 @@ import type {
   CustomerAddress,
   JobPost,
   ModelProfile,
-  Offer,
   PaymentMethod,
   Pro,
   ProService,
@@ -23,6 +22,7 @@ import type {
   Work,
   WorkStats,
 } from "@/lib/types"
+import { bookingChatOpen } from "@/lib/connection"
 import { localDate, localTime } from "@/lib/utils"
 import { orLegacy } from "./errors"
 import type { AddressItem, CustomerReviewItem, PlatformSettings, TimeBlock, VoucherItem } from "./types"
@@ -82,12 +82,20 @@ export interface AppSnapshot {
    * signed out, or before the referral migration (so nothing is claimed).
    */
   referral: { referredBy: string | null; joinedAt: string } | null
+  /**
+   * The signed-in freelancer's wallet: below zero means a fee is owed and no
+   * new job can be accepted until it is paid. `payCode` is what the transfer
+   * memo carries (payMemo); null before the match-then-chat migration. Null
+   * for a customer, or when the balance could not be read.
+   */
+  myWallet: { balance: number; payCode: string | null } | null
 }
 
 export const emptyPlatform: PlatformSettings = {
   topupBankBin: null,
   topupAccountNo: null,
   topupAccountName: null,
+  bankLinked: false,
   supportZalo: null,
   supportEmail: null,
   companyName: null,
@@ -127,6 +135,7 @@ export const emptySnapshot: AppSnapshot = {
   blockedAccounts: [],
   vouchers: [],
   referral: null,
+  myWallet: null,
 }
 
 /**
@@ -409,6 +418,8 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
         topupBankBin: settings.topup_bank_bin,
         topupAccountNo: settings.topup_account_no,
         topupAccountName: settings.topup_account_name,
+        // The key is what app/api/payments/sepay checks; without it that route answers 503.
+        bankLinked: Boolean(process.env.SEPAY_WEBHOOK_KEY) && Boolean(settings.topup_account_no),
         supportZalo: settings.support_zalo,
         supportEmail: settings.support_email,
         companyName: settings.company_name,
@@ -439,6 +450,8 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     blockedRes,
     vouchersRes,
     disputesRes,
+    walletRes,
+    payCodeRes,
   ] = await Promise.all([
     orLegacy(
       (legacy) =>
@@ -471,14 +484,17 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
           .order("starts_at", { ascending: false }),
       2,
     ),
-    supabase
-      .from("jobs")
-      .select(`
-        id, customer_id, template_id, variant_id, quantity, description, starts_at,
-        at_home, address_id, city, district, customer_name, payment_method, status, created_at,
-        offers (id, pro_id, price, message, status, expires_at, created_at)
-      `)
-      .order("created_at", { ascending: false }),
+    // Generation 1 = the 2026-09-26 match-then-chat columns (price, booking, call-out).
+    orLegacy((legacy) =>
+      supabase
+        .from("jobs")
+        .select(`
+          id, customer_id, template_id, variant_id, quantity, description, starts_at,
+          at_home, address_id, city, district, customer_name, payment_method, status, created_at
+          ${legacy ? "" : ", price, booking_id, notified"}
+        `)
+        .order("created_at", { ascending: false }),
+    ),
     supabase.from("addresses").select("*").eq("account_id", me).order("created_at"),
     supabase.from("saved_works").select("work_id").eq("account_id", me),
     supabase.from("follows").select("pro_id").eq("account_id", me),
@@ -502,6 +518,12 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       .limit(100),
     // The customer's own no-show disputes, so the form is not offered twice.
     supabase.from("reports").select("booking_id").eq("reporter_id", me).eq("reason", "no_show_dispute"),
+    // A freelancer's wallet and the code their fee transfers carry. Only the
+    // caller's own: my_wallet_balance reads auth.uid().
+    ownProRes.data ? supabase.rpc("my_wallet_balance" as never, {} as never) : Promise.resolve({ data: null, error: null }),
+    ownProRes.data
+      ? supabase.from("pros").select("pay_code").eq("id", me).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ])
 
   // Loose on purpose: the select differs by whether the migrations are in.
@@ -552,11 +574,11 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       status: row.status as BookingStatus,
       customerId: row.customer_id,
       customerName: customer.full_name ?? "Khách hàng",
-      // Present for the freelancer, who has to make the call; a customer only
-      // ever sees their own number here.
-      customerPhone: customer.phone ?? "",
-      // Row level security releases this once the job has been accepted.
-      proPhone: first(proRow.accounts).phone ?? "",
+      // The other side's number only while the two are matched (accepted and
+      // not yet over), the same window as the chat. A customer always has
+      // their own.
+      customerPhone: mine || bookingChatOpen(row.status) ? (customer.phone ?? "") : "",
+      proPhone: !mine || bookingChatOpen(row.status) ? (first(proRow.accounts).phone ?? "") : "",
       proName: proRow.display_name ?? "Chuyên viên",
       mine,
       source: row.source as Booking["source"],
@@ -630,7 +652,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     }
   })
 
-  const jobs: JobPost[] = rowsOf("jobs", jobsRes).map((row: Row) => ({
+  const jobs: JobPost[] = rowsOf<Row>("jobs", jobsRes).map((row: Row) => ({
     id: row.id,
     templateId: row.template_id,
     variantId: row.variant_id,
@@ -645,19 +667,10 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     customerName: row.customer_name ?? "Khách hàng",
     status: row.status === "expired" ? "closed" : (row.status as JobPost["status"]),
     quantity: row.quantity ?? 1,
+    price: row.price ?? null,
+    bookingId: row.booking_id ?? null,
+    notified: row.notified ?? null,
     mine: row.customer_id === me,
-    offers: ((row.offers ?? []) as Row[])
-      .filter((o) => o.status !== "withdrawn")
-      .map(
-        (o): Offer => ({
-          id: o.id,
-          proId: slugOf.get(o.pro_id) ?? o.pro_id,
-          price: o.price,
-          message: o.message,
-          status: o.status === "rejected" ? "rejected" : (o.status as Offer["status"]),
-          createdAt: o.created_at,
-        }),
-      ),
     createdAt: row.created_at,
   }))
 
@@ -713,5 +726,9 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     })),
     // Without the referral columns there is nothing to claim against.
     referral: account && "referred_by" in account ? { referredBy: account.referred_by ?? null, joinedAt: account.created_at } : null,
+    myWallet:
+      ownProRes.data && !walletRes.error
+        ? { balance: Number(walletRes.data ?? 0), payCode: ((payCodeRes.data as Row | null)?.pay_code as string | undefined) ?? null }
+        : null,
   }
 }

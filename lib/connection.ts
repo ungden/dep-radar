@@ -7,49 +7,43 @@
 
 /** Days after completion in which both sides may review; reviews are blind until then. */
 export const REVIEW_WINDOW_DAYS = 14
-/** Messages a customer may send before the freelancer's first answer. */
-export const QUESTION_LIMIT = 3
 /** How long after the booked end a forgotten job completes on its own. */
 export const AUTO_COMPLETE_HOURS = 24
 /** From when after the start a customer may report that the freelancer did not come. */
 export const NO_SHOW_AFTER_MIN = 15
-/** Contact details in a message are replaced by this until a booking is confirmed. */
-export const MASKED = "[đã ẩn]"
-
 const HOUR = 3_600_000
 const DAY = 24 * HOUR
 
-const vnTime = (d: Date) => {
+export const vnTime = (d: Date) => {
   const vn = new Date(d.getTime() + 7 * HOUR)
   const p = (n: number) => String(n).padStart(2, "0")
   return `${p(vn.getUTCHours())}:${p(vn.getUTCMinutes())} ${p(vn.getUTCDate())}/${p(vn.getUTCMonth() + 1)}`
 }
 
+/** From the thread's computed `chat_status`: see 20260926100000_match_then_chat.sql. */
+export type ChatStatus = "waiting" | "open" | "closed"
+
 export interface ChatState {
   open: boolean
-  /** A line to show above the composer (open, closing soon) or instead of it (closed). */
+  /** Shown instead of the composer when the chat is not open. */
   note?: string
 }
 
-/** The chat's state from the thread's `closes_at` (null: open for good). */
-export function chatState(closesAt: string | null | undefined, now: Date): ChatState {
-  if (!closesAt) return { open: true }
-  const ends = new Date(closesAt)
-  if (now.getTime() >= ends.getTime()) {
-    return { open: false, note: "Cuộc trò chuyện đã kết thúc. Cần gì thêm, hãy đặt lịch mới hoặc liên hệ hỗ trợ." }
-  }
-  return { open: true, note: `Trò chuyện sẽ đóng lúc ${vnTime(ends)}.` }
+/**
+ * Chat exists only around a live match: it opens when the freelancer accepts
+ * the booking (or takes the request) and ends with the job.
+ */
+export function chatState(status: ChatStatus | null | undefined): ChatState {
+  if (status === "open") return { open: true }
+  if (status === "waiting") return { open: false, note: "Nhắn tin mở khi người làm nhận lịch." }
+  return { open: false, note: "Lịch hẹn đã kết thúc nên cuộc trò chuyện đã đóng. Cần gì thêm, hãy đặt lịch mới hoặc liên hệ hỗ trợ." }
 }
 
-/** Shown once under a message that had contact details hidden. */
-export const MASKED_NOTE =
-  "Số điện thoại, link và email được ẩn cho tới khi lịch hẹn được xác nhận, để hai bên luôn có nhắc lịch, đánh giá và hỗ trợ khi có sự cố."
+/** Whether a booking in this status has a chat to open. */
+export const bookingChatOpen = (status: string) => status === "confirmed" || status === "in_progress"
 
-/** Before the freelancer answers a question, the customer may send QUESTION_LIMIT messages. */
-export function questionsLeft(input: { isBookingThread: boolean; iAmCustomer: boolean; proHasReplied: boolean; mySent: number }) {
-  if (input.isBookingThread || !input.iAmCustomer || input.proHasReplied) return null
-  return Math.max(0, QUESTION_LIMIT - input.mySent)
-}
+/** Memo on the bank transfer that pays a freelancer's fee: matched automatically by the bank webhook. */
+export const payMemo = (payCode: string) => `NAP ${payCode}`
 
 export interface ReviewWindow {
   open: boolean

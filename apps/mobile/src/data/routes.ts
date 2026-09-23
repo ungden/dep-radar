@@ -28,8 +28,11 @@ export function routeForLink(link: string): Href | null {
   if (path === "/thong-bao") return "/thong-bao"
   if (path === "/gioi-thieu") return "/gioi-thieu"
   if (path === "/me/dia-chi") return "/dia-chi"
-  if (path === "/studio" || path === "/studio/jobs") return "/studio"
-  if (path === "/studio/requests" || path === "/studio/viec-moi") return "/studio/viec-moi"
+  // 'job_new': the board of requests, where "Nhận việc" is.
+  if (path === "/studio/jobs" || path === "/studio/requests" || path === "/studio/viec-moi") return "/studio/viec-moi"
+  // 'fee_due' / 'wallet_topup': "Hôm nay" shows what is owed and how to pay it
+  // (the wallet's history stays on the web, one tap from there).
+  if (path === "/studio" || path === "/studio/wallet") return "/studio"
   if (path === "/") return "/"
   return null
 }

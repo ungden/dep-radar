@@ -148,7 +148,7 @@ export function Rating({ value, count, className }: { value: number; count?: num
 }
 
 const STATUS: Record<BookingStatus, { label: string; className: string }> = {
-  pending: { label: "Chờ gọi xác nhận", className: "bg-warning-soft text-warning" },
+  pending: { label: "Chờ nhận lịch", className: "bg-warning-soft text-warning" },
   confirmed: { label: "Đã xác nhận", className: "bg-success-soft text-success" },
   in_progress: { label: "Đang làm", className: "bg-success-soft text-success" },
   completed: { label: "Hoàn thành", className: "bg-subtle text-ink" },

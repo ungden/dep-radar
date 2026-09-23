@@ -17,7 +17,7 @@ export const REPORT_REASONS = [
   "Nội dung phản cảm hoặc lừa đảo",
   "Chất lượng không như cam kết",
   "Không đến / không liên lạc được",
-  "Giá khác với báo giá",
+  "Giá khác với lịch hẹn",
   "Ảnh tác phẩm không phải của họ",
   "Khác",
 ] as const

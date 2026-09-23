@@ -198,8 +198,11 @@ export const actions = {
     quantity?: number
     description: string
     paymentMethod: PaymentMethod
+    /** Per person; omitted means the catalogue price. */
+    price?: number | null
   }): Promise<{ id: string } | { error: string }> {
     const result = await api.postJob({
+      price: input.price,
       templateId: input.templateId,
       variantId: input.variantId,
       startsAt: toTimestamptz(input.date, input.time),
@@ -216,16 +219,9 @@ export const actions = {
     return asResult(await api.closeJob(jobId))
   },
 
-  async sendOffer(jobId: string, price: number, message: string): Promise<Result> {
-    return asResult(await api.sendOffer(jobId, price, message))
-  },
-
-  async withdrawOffer(jobId: string): Promise<Result> {
-    return asResult(await api.withdrawMyOfferOn(jobId))
-  },
-
-  async acceptOffer(offerId: string): Promise<{ id: string } | { error: string }> {
-    const result = await api.acceptOffer(offerId)
+  /** Freelancer: take a request. Returns the booking it became. */
+  async takeJob(jobId: string): Promise<{ id: string } | { error: string }> {
+    const result = await api.takeJob(jobId)
     return result.ok ? { id: result.data } : { error: result.error }
   },
 

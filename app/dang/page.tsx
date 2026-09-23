@@ -19,10 +19,10 @@ export default function PostPage() {
     ? [
         { href: "/studio/works", title: "Đăng tác phẩm", text: "Ảnh, ảnh trước/sau hoặc một clip ngắn. Tác phẩm thật là thứ khách xem đầu tiên.", icon: ImagePlus },
         { href: "/studio/tuyen-mau", title: "Tuyển mẫu", text: "Cần mẫu để luyện tay hoặc chụp portfolio? Đăng tin, khách ứng tuyển, bạn chọn.", icon: Users },
-        { href: "/studio/jobs", title: "Báo giá việc mới", text: "Khách gần bạn đang cần người. Gửi báo giá trong khung giá chuẩn.", icon: BriefcaseBusiness },
+        { href: "/studio/jobs", title: "Nhận việc mới", text: "Khách gần bạn đăng yêu cầu với giá sẵn. Ai bấm nhận trước được việc.", icon: BriefcaseBusiness },
       ]
     : [
-        { href: "/requests/new", title: "Đăng yêu cầu", text: "Nói bạn cần gì, khi nào, ở đâu. Người làm gần bạn gửi báo giá, bạn chọn.", icon: Megaphone },
+        { href: "/requests/new", title: "Đăng yêu cầu", text: "Nói bạn cần gì, khi nào, ở đâu. Người làm gần bạn được báo, ai nhận trước sẽ làm.", icon: Megaphone },
         { href: "/tuyen-mau", title: "Làm mẫu", text: "Thợ nail, makeup, người chụp đang tìm mẫu. Được làm đẹp miễn phí hoặc có thù lao.", icon: UserRoundSearch },
       ]
 

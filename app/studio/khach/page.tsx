@@ -6,6 +6,7 @@ import { Contact, Phone } from "lucide-react"
 import { MessageButton } from "@/components/message-button"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, Card, EmptyState, PageHeader, buttonClass, inputClass } from "@/components/ui"
+import { bookingChatOpen } from "@/lib/connection"
 import { useApp } from "@/lib/store"
 import type { Booking } from "@/lib/types"
 import { cn, formatDateLong, formatPrice } from "@/lib/utils"
@@ -24,16 +25,19 @@ export default function StudioClientsPage() {
 interface Client {
   id: string
   name: string
-  phone: string
   visits: number
   spent: number
   last: Booking
+  /** A booking with them that is accepted and not over: the only time to call or message. */
+  live?: Booking
 }
 
 /**
  * Everyone this freelancer has finished a job for, most recent first. Built
  * from the bookings already in the snapshot: nothing here is a new query, and
- * only completed jobs count as a visit.
+ * only completed jobs count as a visit. A phone number and a chat come with a
+ * live booking only (lib/connection.ts), so a past client is reached by
+ * booking again, not from this list.
  */
 function Clients() {
   const state = useApp()
@@ -50,23 +54,25 @@ function Clients() {
       if (known) {
         known.visits += 1
         known.spent += b.quote.total
-        if (!known.phone && b.customerPhone) known.phone = b.customerPhone
       } else {
         byCustomer.set(b.customerId, {
           id: b.customerId,
           name: b.customerName,
-          phone: b.customerPhone,
           visits: 1,
           spent: b.quote.total,
           last: b,
         })
       }
     }
+    for (const b of state.bookings) {
+      const client = byCustomer.get(b.customerId)
+      if (client && !b.mine && b.proId === proId && bookingChatOpen(b.status)) client.live = b
+    }
     return [...byCustomer.values()]
   }, [state.bookings, proId])
 
   const q = query.trim().toLowerCase()
-  const shown = q ? clients.filter((c) => c.name.toLowerCase().includes(q) || c.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""))) : clients
+  const shown = q ? clients.filter((c) => c.name.toLowerCase().includes(q)) : clients
   const returning = clients.filter((c) => c.visits > 1).length
 
   if (!clients.length) {
@@ -74,7 +80,7 @@ function Clients() {
       <EmptyState
         icon={<Contact className="size-6" />}
         title="Chưa có khách nào"
-        text="Khách bạn đã làm xong sẽ hiện ở đây, kèm số lần quay lại và số điện thoại để hẹn lần sau."
+        text="Khách bạn đã làm xong sẽ hiện ở đây, kèm số lần quay lại và số tiền đã chi."
       />
     )
   }
@@ -88,7 +94,7 @@ function Clients() {
         <input
           type="search"
           aria-label="Tìm khách"
-          placeholder="Tìm theo tên hoặc số điện thoại"
+          placeholder="Tìm theo tên"
           className={inputClass}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -119,17 +125,22 @@ function Clients() {
                   </p>
                 </div>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {c.phone ? (
-                  <a href={`tel:${c.phone.replace(/\s/g, "")}`} className={buttonClass("outline", "sm")}>
-                    <Phone className="size-4" /> Gọi
-                  </a>
-                ) : (
-                  <span className={cn(buttonClass("soft", "sm"), "pointer-events-none opacity-60")}>Không có số</span>
-                )}
-                {/* A thread is tied to a booking the two of them share; the last one will do. */}
-                <MessageButton proId={proId} bookingId={c.last.id} label="Nhắn tin" className="h-9 text-[13px]" />
-              </div>
+              {c.live ? (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {c.live.customerPhone ? (
+                    <a href={`tel:${c.live.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "sm")}>
+                      <Phone className="size-4" /> Gọi
+                    </a>
+                  ) : (
+                    <Link href={`/bookings/${c.live.id}`} className={buttonClass("outline", "sm")}>
+                      Xem lịch hẹn
+                    </Link>
+                  )}
+                  <MessageButton booking={c.live} label="Nhắn tin" className="h-9 text-[13px]" />
+                </div>
+              ) : (
+                <p className={cn("mt-3 text-[13px] text-muted")}>Gọi và nhắn tin mở lại khi khách đặt lịch mới với bạn.</p>
+              )}
             </Card>
           </li>
         ))}

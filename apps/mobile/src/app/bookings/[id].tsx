@@ -2,7 +2,7 @@ import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet"
 import { Alert, Linking, Platform, ScrollView, View } from "react-native"
-import { BLIND_NOTE, POLICY, customerJobActions, reviewWindow, verticalOf } from "@/shared"
+import { BLIND_NOTE, POLICY, bookingChatOpen, customerJobActions, reviewWindow, verticalOf } from "@/shared"
 import {
   cancelBooking,
   completeBooking,
@@ -20,6 +20,7 @@ import { openThread } from "@/data/chat"
 import { formatCountdown, formatDateLong, formatDuration, formatPhone, formatPrice, localDate, localTime } from "@/data/format"
 import type { Result } from "@/data/supabase"
 import { VoucherCard } from "@/components/booking-voucher"
+import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
 import { StatusPill } from "@/components/booking-row"
 import { CustomerReviewCard } from "@/components/customer-review"
 import { useSafetyMenu } from "@/components/safety"
@@ -37,7 +38,7 @@ import { Txt } from "@/ui/text"
 function stepsFor(b: BookingItem): TimelineStep[] {
   const steps: TimelineStep[] = [
     { label: "Đã gửi lịch", at: b.createdAt },
-    { label: "Đã gọi xác nhận, nhận lịch", at: b.confirmedAt },
+    { label: "Người làm nhận lịch", at: b.confirmedAt },
     { label: "Bắt đầu làm", at: b.startedAt },
     { label: verticalOf(b.category) === "photo" ? "Xong buổi chụp" : "Hoàn thành", at: b.completedAt },
   ]
@@ -79,6 +80,8 @@ export default function BookingDetail() {
   const now = useNow(bv?.status === "pending" || (customerView && startsSoon && (bv?.status === "confirmed" || bv?.status === "in_progress")))
   const noShowOpen = Boolean(customerView && bv?.status === "no_show" && bv.cancelledAt && now <= Date.parse(bv.cancelledAt) + 24 * 3_600_000)
   const disputed = useAsync(noShowOpen && bv && app.uid ? () => hasDisputedNoShow(bv.id, app.uid!) : null, [noShowOpen, bv?.id, app.uid])
+  // A freelancer who owes the last job's fee cannot accept this one (confirm_booking refuses).
+  const fee = useFee(app.uid, Boolean(bv && bv.status === "pending" && bv.pro.id === app.uid))
   const safety = useSafetyMenu(
     bv && app.uid
       ? {
@@ -131,9 +134,12 @@ export default function BookingDetail() {
   const confirmLeft = Date.parse(b.confirmBy) - now
   const hoursToStart = (Date.parse(b.startsAt) - now) / 3_600_000
   const canCancel = ["pending", "confirmed"].includes(b.status)
-  const phone = iAmPro ? b.customer.phone : b.pro.phone
+  const active = bookingChatOpen(b.status)
+  // Each side's number only while the job is live (data/bookings.ts reads it that way too).
+  const phone = active ? (iAmPro ? b.customer.phone : b.pro.phone) : null
   const other = iAmPro ? b.customer.name : b.pro.name
-  const active = b.status === "confirmed" || b.status === "in_progress"
+  const phoneNote =
+    b.status === "pending" ? (iAmPro ? "Số hiện khi bạn nhận lịch" : "Số hiện khi người làm nhận lịch") : active ? "Chưa có số" : "Lịch hẹn đã kết thúc"
   const job = customerJobActions({ status: b.status, startsAt: new Date(b.startsAt), endsAt: new Date(b.endsAt) }, new Date(now))
   const at = (d: Date | string) => `${localTime(d)} ${formatDateLong(localDate(d))}`
   const review = reviewWindow(b.completedAt, new Date(now))
@@ -190,11 +196,13 @@ export default function BookingDetail() {
           </Txt>
           <Txt v="meta" color={colors.warning}>
             {iAmPro
-              ? "Gọi cho khách để chốt chi tiết rồi bấm nhận lịch. Quá hạn, lịch tự huỷ."
-              : `${b.pro.name} sẽ gọi cho bạn trước khi nhận lịch. Quá ${POLICY.confirmWithinHours} giờ không xác nhận, lịch tự huỷ.`}
+              ? "Xem giờ, địa chỉ rồi bấm nhận lịch. Nhận xong, bạn và khách nhắn tin, gọi được cho nhau. Quá hạn, lịch tự huỷ."
+              : `${b.pro.name} sẽ xem và nhận lịch. Nhận xong, hai bên nhắn tin, gọi được cho nhau. Quá ${POLICY.confirmWithinHours} giờ không nhận, lịch tự huỷ.`}
           </Txt>
         </Card>
       ) : null}
+
+      {iAmPro && b.status === "pending" && fee.owing ? <FeeCard fee={fee.value} /> : null}
 
       <Card>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
@@ -202,15 +210,22 @@ export default function BookingDetail() {
           <View style={{ flex: 1 }}>
             <Txt w={700}>{other}</Txt>
             <Txt v="meta" color={colors.inkSoft}>
-              {phone ? formatPhone(phone) : iAmPro ? "Chưa có số" : "Số hiện khi người làm đã nhận lịch"}
+              {phone ? formatPhone(phone) : phoneNote}
             </Txt>
           </View>
         </View>
-        <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-          {phone ? <Button label="Gọi" icon="phone" size="sm" onPress={() => call(phone)} /> : null}
-          {!iAmPro ? <Button label="Nhắn tin" icon="chat" size="sm" variant="secondary" busy={busy === "chat"} onPress={() => void message()} /> : null}
-          {iAmPro && b.atHome ? <Button label="Chỉ đường" icon="directions" size="sm" variant="secondary" onPress={directions} /> : null}
-        </View>
+        {phone || active || (iAmPro && b.atHome) ? (
+          <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+            {phone ? <Button label="Gọi" icon="phone" size="sm" onPress={() => call(phone)} /> : null}
+            {active ? <Button label="Nhắn tin" icon="chat" size="sm" variant="secondary" busy={busy === "chat"} onPress={() => void message()} /> : null}
+            {iAmPro && b.atHome ? <Button label="Chỉ đường" icon="directions" size="sm" variant="secondary" onPress={directions} /> : null}
+          </View>
+        ) : null}
+        {b.status === "pending" ? (
+          <Txt v="meta" color={colors.muted}>
+            {iAmPro ? "Nhắn tin mở khi bạn nhận lịch." : "Nhắn tin mở khi người làm nhận lịch."}
+          </Txt>
+        ) : null}
       </Card>
 
       <Card>
@@ -267,7 +282,24 @@ export default function BookingDetail() {
       <View style={{ gap: 10 }}>
         {iAmPro && b.status === "pending" ? (
           <>
-            <Button label="Đã gọi khách, nhận lịch" full busy={busy === "confirm"} onPress={() => void run("confirm", () => confirmBooking(b.id), "Đã nhận lịch")} />
+            <Button
+              label="Nhận lịch"
+              full
+              busy={busy === "confirm"}
+              disabled={fee.owing}
+              onPress={() =>
+                void run("confirm", async () => {
+                  const res = await confirmBooking(b.id)
+                  if (!res.ok) void fee.reload()
+                  return res
+                }, "Đã nhận lịch. Giờ bạn nhắn tin được với khách.")
+              }
+            />
+            {fee.owing ? (
+              <Txt v="meta" color={colors.warning} center>
+                {OWING_NOTE}
+              </Txt>
+            ) : null}
             <Button label="Từ chối" variant="danger" full onPress={() => openSheet("decline")} />
           </>
         ) : null}

@@ -44,6 +44,11 @@ export default function Threads() {
               <Txt v="meta" color={item.unread ? colors.ink : colors.inkSoft} w={item.unread ? 600 : 400} numberOfLines={1} style={{ flex: 1 }}>
                 {item.lastMessage}
               </Txt>
+              {item.chatStatus === "closed" || item.chatStatus === "waiting" ? (
+                <Txt v="meta" color={colors.muted}>
+                  {item.chatStatus === "closed" ? "Đã đóng" : "Chờ nhận lịch"}
+                </Txt>
+              ) : null}
               {item.unread ? <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: colors.accent }} /> : null}
             </View>
           </View>
@@ -66,9 +71,13 @@ export default function Threads() {
         ) : threads.error ? null : (
           <EmptyState
             title="Chưa có tin nhắn"
-            text={mode === "pro" ? "Khách nhắn cho bạn sẽ hiện ở đây." : "Nhắn cho người làm từ hồ sơ của họ hoặc từ lịch hẹn."}
-            action={mode === "pro" ? undefined : "Khám phá"}
-            onAction={() => router.navigate("/")}
+            text={
+              mode === "pro"
+                ? "Nhận lịch hoặc nhận việc xong, bạn nhắn tin được với khách trong lịch hẹn đó."
+                : "Nhắn tin mở khi người làm nhận lịch của bạn: vào lịch hẹn và bấm Nhắn tin."
+            }
+            action={mode === "pro" ? undefined : "Xem lịch hẹn"}
+            onAction={() => router.navigate("/lich-hen")}
           />
         )
       }

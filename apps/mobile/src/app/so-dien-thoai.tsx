@@ -10,8 +10,8 @@ import { ErrorNote } from "@/ui/bits"
 import { Txt } from "@/ui/text"
 
 /**
- * Google gives no phone number, and a freelancer calls the customer before
- * accepting. The database refuses a booking without one (require_phone), so it
+ * Google gives no phone number, and the two sides of a booking can call each
+ * other once the freelancer accepts. The database refuses a booking without one (require_phone), so it
  * is asked once, set through set_my_phone(), and changed only through support.
  */
 export default function Phone() {
@@ -35,7 +35,7 @@ export default function Phone() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas, padding: gutter, gap: 16 }}>
       <Txt v="h2">Số điện thoại của bạn</Txt>
-      <Txt color={colors.inkSoft}>Người làm gọi số này để xác nhận lịch hẹn. Mỗi số chỉ dùng cho một tài khoản; muốn đổi sau này, liên hệ hỗ trợ.</Txt>
+      <Txt color={colors.inkSoft}>Người làm thấy số này khi đã nhận lịch của bạn, để liên lạc trong lịch hẹn. Mỗi số chỉ dùng cho một tài khoản; muốn đổi sau này, liên hệ hỗ trợ.</Txt>
       <TextInput
         value={phone}
         onChangeText={setPhone}

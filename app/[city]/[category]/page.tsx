@@ -97,7 +97,7 @@ function intro(category: Category, city: string, count: number) {
   if (category.vertical === "beauty")
     return count
       ? `${count} ${person} ${label} nhận làm tại nhà ở ${city}. Giá theo khung chuẩn của 360dep, khách không trả phí nền tảng, miễn phí di chuyển trong ${POLICY.freeTravelKm} km đầu.`
-      : `360dep chưa có ${person} ${label} ở ${city}. Bạn có thể đăng yêu cầu để ${person} quanh khu vực báo giá.`
+      : `360dep chưa có ${person} ${label} ở ${city}. Bạn có thể đăng yêu cầu để ${person} quanh khu vực nhận việc.`
   if (!count)
     return `360dep chưa có ${person} nào nhận việc này ở ${city}. Ngành này vừa mở; bạn có thể đăng yêu cầu để người phù hợp liên hệ.`
   return `${count} ${person} ở ${city} nhận việc này trên 360dep, làm tại địa điểm bạn chọn. Giá ${
@@ -206,7 +206,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
                     : `Chưa có ${person} nào ở ${city}`}
                 </p>
                 <p className="mx-auto mt-1.5 max-w-sm text-[15px] text-ink-soft">
-                  Đăng yêu cầu và {person} quanh bạn sẽ gửi báo giá khi có người nhận.
+                  Đăng yêu cầu: {person} quanh bạn được báo, ai nhận trước sẽ làm.
                 </p>
                 <div className="mt-5 flex flex-wrap justify-center gap-2">
                   <ButtonLink href="/requests/new">Đăng yêu cầu</ButtonLink>

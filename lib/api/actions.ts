@@ -216,6 +216,8 @@ export async function postJob(input: {
   quantity?: number
   description?: string
   paymentMethod?: PaymentMethod
+  /** Per person, when the customer offers more than the catalogue price. */
+  price?: number | null
 }) {
   return rpc<string>(
     "post_job",
@@ -228,6 +230,8 @@ export async function postJob(input: {
       p_quantity: input.quantity ?? 1,
       p_description: input.description ?? "",
       p_payment: input.paymentMethod ?? "cash",
+      // Left out at the catalogue price, so a database without p_price still takes it.
+      ...(input.price ? { p_price: input.price } : {}),
     },
     ["/requests"],
   )
@@ -241,11 +245,16 @@ export async function closeJob(jobId: string): Promise<ActionResult> {
   return { ok: true, data: undefined }
 }
 
-export async function acceptOffer(offerId: string) {
-  return rpc<string>("accept_offer", { p_offer: offerId }, ["/requests", "/bookings"])
-}
-
 // Freelancer ------------------------------------------------------------------
+
+/**
+ * The first freelancer to take a request gets it: a confirmed booking at the
+ * request's price. Returns the booking id; a request someone else took first
+ * comes back as "Đã có người nhận việc này."
+ */
+export async function takeJob(jobId: string) {
+  return rpc<string>("take_job", { p_job: jobId }, ["/studio", "/studio/jobs", "/bookings", "/requests"])
+}
 
 export async function confirmBooking(bookingId: string) {
   return rpc<void>("confirm_booking", { p_booking: bookingId }, ["/studio", "/studio/jobs", "/bookings"])
@@ -310,29 +319,6 @@ export async function addTimeBlock(input: { startsAt: string; endsAt: string; no
 
 export async function removeTimeBlock(id: string) {
   return rpc<void>("remove_time_block", { p_id: id }, ["/studio/schedule"])
-}
-
-export async function sendOffer(jobId: string, price: number, message: string) {
-  return rpc<string>("send_offer", { p_job: jobId, p_price: price, p_message: message }, ["/studio/jobs"])
-}
-
-export async function withdrawOffer(offerId: string) {
-  return rpc<void>("withdraw_offer", { p_offer: offerId }, ["/studio/jobs"])
-}
-
-/** The job board holds a job id, not an offer id: find the caller's own offer. */
-export async function withdrawMyOfferOn(jobId: string): Promise<ActionResult> {
-  const supabase = await supabaseServer()
-  const { data: auth } = await supabase.auth.getUser()
-  if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
-  const { data: offer } = await supabase
-    .from("offers")
-    .select("id")
-    .eq("job_id", jobId)
-    .eq("pro_id", auth.user.id)
-    .maybeSingle()
-  if (!offer) return { ok: false, error: "Bạn chưa báo giá cho yêu cầu này." }
-  return withdrawOffer(offer.id)
 }
 
 export async function replyReview(bookingId: string, reply: string) {

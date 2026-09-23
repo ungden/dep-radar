@@ -1,23 +1,22 @@
 import { describe, expect, it } from "vitest"
-import { chatState, customerJobActions, questionsLeft, reviewWindow, showsAverage } from "@/lib/connection"
+import { bookingChatOpen, chatState, customerJobActions, payMemo, reviewWindow, showsAverage } from "@/lib/connection"
 import { REVIEW_ISSUE_TAGS, REVIEW_TAGS, reviewTagsFor } from "@/lib/trust"
 
 const now = new Date("2026-09-25T10:00:00Z")
 
 describe("chatState", () => {
-  it("is open for good without an end, closing with one, closed after it", () => {
-    expect(chatState(null, now)).toEqual({ open: true })
-    expect(chatState("2026-09-26T10:00:00Z", now).open).toBe(true)
-    expect(chatState("2026-09-26T10:00:00Z", now).note).toContain("17:00 26/09")
-    expect(chatState("2026-09-25T09:59:00Z", now).open).toBe(false)
+  it("is open only around a live match", () => {
+    expect(chatState("open")).toEqual({ open: true })
+    expect(chatState("waiting").open).toBe(false)
+    expect(chatState("waiting").note).toContain("nhận lịch")
+    expect(chatState("closed").open).toBe(false)
+    expect(chatState(null).open).toBe(false)
+    expect(bookingChatOpen("confirmed")).toBe(true)
+    expect(bookingChatOpen("completed")).toBe(false)
+    expect(bookingChatOpen("pending")).toBe(false)
   })
-})
-
-describe("questionsLeft", () => {
-  it("counts down only for a customer's unanswered question", () => {
-    expect(questionsLeft({ isBookingThread: false, iAmCustomer: true, proHasReplied: false, mySent: 2 })).toBe(1)
-    expect(questionsLeft({ isBookingThread: false, iAmCustomer: true, proHasReplied: true, mySent: 9 })).toBeNull()
-    expect(questionsLeft({ isBookingThread: true, iAmCustomer: true, proHasReplied: false, mySent: 9 })).toBeNull()
+  it("writes the transfer memo the bank webhook reads", () => {
+    expect(payMemo("AB23CD")).toBe("NAP AB23CD")
   })
 })
 

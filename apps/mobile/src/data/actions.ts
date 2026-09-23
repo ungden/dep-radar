@@ -70,13 +70,3 @@ export async function deleteMyAccount(uid: string): Promise<Result> {
   }
   return res
 }
-
-export const sendOffer =(jobId: string, price: number, message: string) =>
-  rpc<string>("send_offer", { p_job: jobId, p_price: price, p_message: message })
-
-export async function withdrawMyOfferOn(uid: string, jobId: string): Promise<Result> {
-  const { data } = await supabase.from("offers").select("id").eq("job_id", jobId).eq("pro_id", uid).maybeSingle()
-  const id = (data as { id?: string } | null)?.id
-  if (!id) return { ok: false, error: "Bạn chưa báo giá cho yêu cầu này." }
-  return rpc("withdraw_offer", { p_offer: id })
-}

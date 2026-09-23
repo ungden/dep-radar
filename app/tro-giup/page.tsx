@@ -34,8 +34,8 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
     q: "Có cần đặt cọc không?",
     a: (
       <>
-        Không. Người làm gọi điện xác nhận trước khi nhận lịch, và bạn trả trực tiếp sau khi làm. Nếu không ai xác nhận
-        trong {POLICY.confirmWithinHours} giờ, lịch tự huỷ và khung giờ được trả lại.
+        Không. Người làm xem lịch và bấm nhận trong app, và bạn trả trực tiếp sau khi làm. Nếu không ai nhận trong{" "}
+        {POLICY.confirmWithinHours} giờ, lịch tự huỷ và khung giờ được trả lại.
       </>
     ),
   },
@@ -124,7 +124,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
 
 const FAQ_JSON_ANSWERS = [
   "Khách trả trực tiếp cho người làm sau khi làm; 360dep thu hoa hồng từ ví của người làm.",
-  "Người làm gọi xác nhận trước khi nhận lịch. Lịch không được xác nhận đúng hạn sẽ tự huỷ.",
+  "Người làm nhận lịch trong app; nhận rồi hai bên nhắn tin với nhau. Lịch không được nhận đúng hạn sẽ tự huỷ.",
   "Miễn phí trong phạm vi đầu, sau đó tính theo khoảng cách và hiện trước khi gửi yêu cầu.",
   "Huỷ miễn phí nếu huỷ trước giờ hẹn đủ sớm; quy định huỷ muộn chưa áp dụng.",
   "Huy hiệu thể hiện kiểm tra giấy tờ bằng AI, không phải xác minh trực tiếp bởi con người.",

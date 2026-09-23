@@ -22,7 +22,6 @@ import {
 } from "lucide-react"
 import { whereLabel } from "@/components/beauty"
 import { FollowButton } from "@/components/follow-button"
-import { MessageButton } from "@/components/message-button"
 import { ServiceMenu } from "@/components/service-menu"
 import { TradeDot } from "@/components/trade"
 import { RatingSummaryBlock, ReviewItem, VerifiedBadge, VerifiedMark } from "@/components/trust"
@@ -38,6 +37,9 @@ import { cn, formatPrice, formatResponseTime, parseISODate } from "@/lib/utils"
 type Tab = "works" | "services" | "reviews" | "about"
 const TABS: Tab[] = ["works", "services", "reviews", "about"]
 const REVIEWS_ANCHOR = "danh-gia"
+
+/** Chat opens with a match (lib/connection.ts), so a profile says how to get one. */
+const MATCH_NOTE = (name: string) => `Đặt lịch trước. Khi ${name} nhận lịch, hai bên nhắn tin với nhau trong lịch hẹn.`
 
 /** The URL hash, read without a hydration mismatch (the server has none). */
 function useHash() {
@@ -86,7 +88,6 @@ export function ProProfile({ proId }: { proId: string }) {
     .filter(Boolean)
     .slice(0, 3)
   const back = () => (window.history.length > 1 ? router.back() : router.push("/"))
-  const firstName = pro.name.split(" ").slice(-1)[0]
 
   return (
     <div className="md:pt-8">
@@ -171,11 +172,8 @@ export function ProProfile({ proId }: { proId: string }) {
 
         <Stats pro={pro} onReviews={() => openTab("reviews")} />
 
-        {!own && (
-          <div className="mt-5 md:hidden">
-            <MessageButton proId={pro.id} label={`Nhắn tin cho ${firstName}`} className="w-full" />
-          </div>
-        )}
+        {/* No messages before a booking: the way to reach them is "Đặt lịch" below. */}
+        {!own && <p className="mt-4 text-[13px] text-muted md:hidden">{MATCH_NOTE(pro.name)}</p>}
       </div>
 
       <div className="mt-6 md:mt-10 md:grid md:grid-cols-[minmax(0,1fr)_340px] md:gap-10 lg:gap-14">
@@ -259,7 +257,7 @@ export function ProProfile({ proId }: { proId: string }) {
                 </p>
                 <WhereFacts pro={pro} className="mt-4" />
                 <BookButton pro={pro} disabled={!services.length} className="mt-5 w-full" />
-                <MessageButton proId={pro.id} label={`Nhắn tin cho ${firstName}`} className="mt-2 w-full" />
+                <p className="mt-2 text-[13px] text-muted">{MATCH_NOTE(pro.name)}</p>
                 {services.length > 0 && (
                   <button
                     type="button"

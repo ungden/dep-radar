@@ -668,13 +668,16 @@ export type Database = {
         Row: {
           address_id: string | null
           at_home: boolean
+          booking_id: string | null
           city: string
           created_at: string
           customer_id: string
           description: string
           district: string
           id: string
+          notified: number
           payment_method: Database["public"]["Enums"]["payment_method"]
+          price: number | null
           quantity: number
           starts_at: string
           status: Database["public"]["Enums"]["job_status"]
@@ -684,13 +687,16 @@ export type Database = {
         Insert: {
           address_id?: string | null
           at_home?: boolean
+          booking_id?: string | null
           city: string
           created_at?: string
           customer_id: string
           description?: string
           district: string
           id?: string
+          notified?: number
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          price?: number | null
           quantity?: number
           starts_at: string
           status?: Database["public"]["Enums"]["job_status"]
@@ -700,13 +706,16 @@ export type Database = {
         Update: {
           address_id?: string | null
           at_home?: boolean
+          booking_id?: string | null
           city?: string
           created_at?: string
           customer_id?: string
           description?: string
           district?: string
           id?: string
+          notified?: number
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          price?: number | null
           quantity?: number
           starts_at?: string
           status?: Database["public"]["Enums"]["job_status"]
@@ -1063,6 +1072,7 @@ export type Database = {
           lng: number | null
           max_jobs_per_day: number
           max_travel_km: number
+          pay_code: string
           published: boolean
           rating_avg: number
           rating_count: number
@@ -1097,6 +1107,7 @@ export type Database = {
           lng?: number | null
           max_jobs_per_day?: number
           max_travel_km?: number
+          pay_code?: string
           published?: boolean
           rating_avg?: number
           rating_count?: number
@@ -1131,6 +1142,7 @@ export type Database = {
           lng?: number | null
           max_jobs_per_day?: number
           max_travel_km?: number
+          pay_code?: string
           published?: boolean
           rating_avg?: number
           rating_count?: number
@@ -2105,12 +2117,21 @@ export type Database = {
           p_at_home: boolean
           p_description?: string
           p_payment?: Database["public"]["Enums"]["payment_method"]
+          p_price?: number
           p_quantity?: number
           p_starts_at: string
           p_template: string
           p_variant: string
         }
         Returns: string
+      }
+      record_bank_topup: {
+        Args: { p_amount: number; p_content: string; p_ref: string }
+        Returns: boolean
+      }
+      record_topup: {
+        Args: { p_amount: number; p_pro: string; p_ref?: string }
+        Returns: boolean
       }
       recompute_pro_metrics: { Args: never; Returns: undefined }
       refresh_pro_rating: { Args: { p_pro: string }; Returns: undefined }
@@ -2145,6 +2166,7 @@ export type Database = {
         Args: { p_body?: string; p_booking: string; p_rating: number }
         Returns: undefined
       }
+      take_job: { Args: { p_job: string }; Returns: string }
       send_booking_reminders: { Args: never; Returns: number }
       send_message: {
         Args: { p_body?: string; p_image_paths?: string[]; p_thread: string }

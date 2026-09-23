@@ -4,29 +4,29 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { MessageSquare } from "lucide-react"
 import { openThread } from "@/lib/api/chat"
-import { useApp } from "@/lib/store"
+import { bookingChatOpen } from "@/lib/connection"
 import { cn } from "@/lib/utils"
 
 /**
- * Opens (or reuses) the conversation with a freelancer. The thread is created by
- * a database function that checks there is a reason for it to exist, so this
- * button cannot be used to message an arbitrary account.
+ * Opens (or reuses) the conversation of one booking. Chat exists only between
+ * a customer and a freelancer who are matched, so this renders nothing unless
+ * the freelancer has accepted and the job has not ended (bookingChatOpen); the
+ * database refuses open_thread otherwise anyway.
  */
 export function MessageButton({
-  proId,
-  bookingId,
+  booking,
   label = "Nhắn tin",
   className,
 }: {
-  proId: string
-  bookingId?: string | null
+  booking: { id: string; proId: string; status: string }
   label?: string
   className?: string
 }) {
   const router = useRouter()
-  const { session } = useApp()
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+
+  if (!bookingChatOpen(booking.status)) return null
 
   return (
     <>
@@ -34,13 +34,9 @@ export function MessageButton({
         type="button"
         disabled={busy}
         onClick={async () => {
-          if (!session) {
-            router.push(`/login?next=${encodeURIComponent(window.location.pathname)}`)
-            return
-          }
           setBusy(true)
           setError(null)
-          const result = await openThread(proId, bookingId)
+          const result = await openThread(booking.proId, booking.id)
           setBusy(false)
           if (!result.ok) return setError(result.error)
           router.push(`/tin-nhan/${result.data}`)

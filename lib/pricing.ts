@@ -8,7 +8,7 @@ import type { PriceQuote } from "./types"
 export const POLICY = {
   /** Flat commission on the service price, paid by the freelancer. */
   commissionRate: 0.15,
-  /** Freelancer must call the customer and accept within this window. */
+  /** Freelancer must accept (or decline) a booking in the app within this window. */
   confirmWithinHours: 2,
   /** Share of an online payment kept for the freelancer on late cancellation. */
   lateCancelRate: 0.3,
@@ -19,12 +19,6 @@ export const POLICY = {
   urgentFee: 50000,
   minLeadMinutes: 60,
   freeCancelHours: 12,
-  /**
-   * How far below zero the prepaid wallet may go before new jobs stop.
-   * Mirrors the default of enforce_wallet_threshold(p_limit int default -200000),
-   * run hourly by cron; change both together.
-   */
-  walletOverdraftLimit: 200000,
 } as const
 
 const roundUp5k = (n: number) => Math.ceil(n / 5000) * 5000

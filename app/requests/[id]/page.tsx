@@ -3,13 +3,11 @@
 import * as React from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { Car, Hourglass, Zap } from "lucide-react"
+import { CircleCheck, Hourglass } from "lucide-react"
 import { RequireSession } from "@/components/require-session"
-import { VerifiedBadge, VerifiedMark } from "@/components/trust"
-import { Avatar, Button, ButtonLink, Card, EmptyState, PageHeader, Rating } from "@/components/ui"
+import { ButtonLink, EmptyState, PageHeader } from "@/components/ui"
 import { actions, useAct } from "@/lib/client-actions"
-import { getPro, proView, quoteFor, useApp } from "@/lib/store"
-import { cn, formatPrice, timeAgo } from "@/lib/utils"
+import { getPro, useApp } from "@/lib/store"
 import { RequestCard } from "@/components/request-card"
 
 export default function RequestDetailPage() {
@@ -23,6 +21,11 @@ export default function RequestDetailPage() {
   )
 }
 
+/**
+ * A request goes to every freelancer who can do it, and the first to press
+ * "Nhận việc" gets it at the posted price (take_job). There is nothing to
+ * choose here: the page says where it stands and, once taken, opens the booking.
+ */
 function RequestDetail() {
   const router = useRouter()
   const { id } = useParams<{ id: string }>()
@@ -34,20 +37,49 @@ function RequestDetail() {
 
   if (!job) return <EmptyState title="Không tìm thấy yêu cầu" action={<ButtonLink href="/requests">Về danh sách</ButtonLink>} />
 
-  const accepted = job.offers.find((o) => o.status === "accepted")
-  const booking = accepted && bookings.find((b) => b.source === "job" && b.proId === accepted.proId && b.date === job.date && b.time === job.time)
+  // Before the match-then-chat migration there was no booking_id on the request.
+  const booking = job.bookingId
+    ? bookings.find((b) => b.id === job.bookingId)
+    : bookings.find((b) => b.source === "job" && b.date === job.date && b.time === job.time && b.templateId === job.templateId)
+  const taker = booking ? getPro(state, booking.proId) : undefined
 
   return (
     <div className="space-y-5">
       <RequestCard job={job} href={`/requests/${job.id}`} />
 
-      {job.status === "booked" && booking && (
-        <div className="flex items-center justify-between gap-3 rounded-2xl bg-success-soft px-4 py-3 text-sm text-success">
-          Đã chốt với {getPro(state, booking.proId)?.name}.
-          <Link href={`/bookings/${booking.id}`} className="font-semibold underline underline-offset-2">
-            Xem lịch hẹn
-          </Link>
+      {job.status === "open" && (
+        <div className="rounded-2xl bg-subtle px-4 py-3.5">
+          <p className="flex items-center gap-2 text-[15px] font-semibold text-accent-dark">
+            <Hourglass className="size-4 shrink-0" />
+            Đang tìm người làm
+            {job.notified !== null && job.notified > 0 && ` · đã báo cho ${job.notified} người`}
+          </p>
+          <p className="mt-1 text-[13px] text-ink-soft">
+            {job.notified === 0
+              ? "Lúc đăng chưa có người làm nào rảnh và nhận dịch vụ này gần bạn. "
+              : "Người làm nhận trước sẽ làm với giá trên. "}
+            Người làm vào mục Việc mới vẫn thấy yêu cầu này cho tới giờ hẹn. Có người nhận, bạn được báo ngay và nhắn tin được
+            với họ trong lịch hẹn.
+          </p>
         </div>
+      )}
+
+      {job.status === "booked" && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl bg-success-soft px-4 py-3 text-sm text-success">
+          <span className="flex items-center gap-2 font-semibold">
+            <CircleCheck className="size-4 shrink-0" />
+            {taker ? `${taker.name} đã nhận việc` : "Đã có người nhận việc"}
+          </span>
+          {booking && (
+            <Link href={`/bookings/${booking.id}`} className="font-semibold underline underline-offset-2">
+              Xem lịch hẹn
+            </Link>
+          )}
+        </div>
+      )}
+
+      {job.status === "closed" && (
+        <p className="rounded-2xl bg-canvas px-4 py-3 text-sm text-muted">Yêu cầu đã đóng. Cần làm thì đăng yêu cầu mới hoặc đặt lịch trực tiếp với người làm.</p>
       )}
 
       {error && (
@@ -55,91 +87,6 @@ function RequestDetail() {
           {error}
         </p>
       )}
-
-      <section>
-        <h2 className="mb-3 font-semibold">Báo giá nhận được ({job.offers.length})</h2>
-        {job.offers.length === 0 ? (
-          <EmptyState
-            icon={<Hourglass className="size-6" />}
-            title="Đang chờ người làm báo giá"
-            text="Người làm phù hợp trong khu vực thấy yêu cầu này và gửi báo giá tại đây."
-          />
-        ) : (
-          <ul className="space-y-3">
-            {job.offers.map((o) => {
-              const pro = proView(state, o.proId)
-              if (!pro) return null
-              const quote = quoteFor(state, {
-                proId: pro.id,
-                price: o.price,
-                atHome: job.atHome,
-                address: { city: job.city, district: job.district, detail: "" },
-                date: job.date,
-                time: job.time,
-              })
-              return (
-                <li key={o.id}>
-                  <Card className={cn("p-4", o.status === "rejected" && "opacity-55")}>
-                    <div className="flex items-center gap-3">
-                      <Link href={`/pros/${pro.id}`}>
-                        <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={44} />
-                      </Link>
-                      <div className="min-w-0 flex-1">
-                        <Link href={`/pros/${pro.id}`} className="flex items-center gap-1.5 font-semibold hover:underline">
-                          {pro.name}
-                          <VerifiedMark pro={pro} />
-                        </Link>
-                        <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
-                          <Rating value={pro.rating.average} count={pro.rating.count} className="text-xs" /> · {pro.stats.completedJobs} lịch đã làm
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-semibold">{formatPrice(quote.total)}</p>
-                        <p className="text-xs text-muted">{timeAgo(o.createdAt)}</p>
-                      </div>
-                    </div>
-                    <VerifiedBadge pro={pro} className="mt-3" />
-                    <p className="mt-2 flex flex-wrap gap-x-3 text-xs text-ink-soft">
-                      <span>Dịch vụ {formatPrice(quote.servicePrice)}</span>
-                      <span className="inline-flex items-center gap-0.5">
-                        <Car className="size-3.5" />
-                        {quote.travelFee ? `+${formatPrice(quote.travelFee)}` : "Miễn phí di chuyển"}
-                        {quote.distanceKm !== null && ` (~${quote.distanceKm.toLocaleString("vi-VN")} km)`}
-                      </span>
-                      {quote.urgentFee > 0 && (
-                        <span className="inline-flex items-center gap-0.5 text-warning">
-                          <Zap className="size-3.5" />+{formatPrice(quote.urgentFee)}
-                        </span>
-                      )}
-                      <span className="text-success">Phí nền tảng 0đ</span>
-                    </p>
-                    <p className="mt-3 rounded-xl bg-canvas px-3 py-2.5 text-[13px] leading-relaxed text-ink-soft">{o.message}</p>
-                    {job.status === "open" && (
-                      <div className="mt-3 grid grid-cols-2 gap-2">
-                        <ButtonLink href={`/pros/${pro.id}`} variant="outline" size="sm" className="border-line text-ink">
-                          Xem hồ sơ
-                        </ButtonLink>
-                        <Button
-                          size="sm"
-                          onClick={async () => {
-                            setError(null)
-                            const result = await actions.acceptOffer(o.id)
-                            if ("error" in result) return setError(result.error)
-                            router.push(`/bookings/${result.id}`)
-                          }}
-                        >
-                          Chọn báo giá này
-                        </Button>
-                      </div>
-                    )}
-                    {o.status === "accepted" && <p className="mt-3 text-sm font-medium text-success">Bạn đã chọn báo giá này</p>}
-                  </Card>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
 
       {job.status === "open" && (
         <button
