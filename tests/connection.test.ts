@@ -59,7 +59,7 @@ describe("review tags match the database", () => {
   it("lists the same tags as review_tags_ok", async () => {
     const { readFileSync } = await import("node:fs")
     const sql = readFileSync("supabase/migrations/20260925100200_review_rules.sql", "utf8")
-    const fn = sql.slice(sql.indexOf("create function public.review_tags_ok"), sql.indexOf("-- Both published at once"))
+    const fn = sql.slice(sql.indexOf("<@ array["), sql.indexOf("-- Both published at once"))
     const [all, issues] = fn.split("&& array[")
     const quoted = (s: string) => [...s.matchAll(/'([^']+)'/g)].map((m) => m[1])
     expect(new Set(quoted(all))).toEqual(new Set([...REVIEW_TAGS, ...REVIEW_ISSUE_TAGS]))
