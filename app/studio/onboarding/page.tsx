@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { Button, Field, PageHeader, inputClass } from "@/components/ui"
-import { CATEGORIES } from "@/lib/catalog"
+import { CATEGORIES, VERTICALS } from "@/lib/catalog"
 import { becomePro } from "@/lib/auth/actions"
 import { CITIES, districtsOf } from "@/lib/geo"
 import { useApp } from "@/lib/store"
@@ -66,25 +66,35 @@ export default function OnboardingPage() {
         </Field>
 
         <div>
-          <p className="mb-2 text-[13px] font-medium">Chuyên môn</p>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                aria-pressed={categories.includes(c.id)}
-                onClick={() => toggle(c.id)}
-                className={cn(
-                  "rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors",
-                  categories.includes(c.id)
-                    ? "border-rose bg-rose text-white"
-                    : "border-line bg-surface text-ink-soft hover:border-blush-strong",
-                )}
-              >
-                {c.label}
-              </button>
+          <p className="mb-2 text-[13px] font-semibold">Bạn làm gì?</p>
+          <div className="space-y-3">
+            {VERTICALS.map((v) => (
+              <div key={v.id}>
+                <p className="mb-1.5 text-[13px] text-muted">{v.label}</p>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORIES.filter((c) => c.vertical === v.id).map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      aria-pressed={categories.includes(c.id)}
+                      onClick={() => toggle(c.id)}
+                      className={cn(
+                        "h-10 rounded-full border px-4 text-[14px] font-medium transition-colors",
+                        categories.includes(c.id) ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink/30",
+                      )}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
+          {categories.some((c) => c.startsWith("model-")) && (
+            <p className="mt-2 rounded-[var(--radius-md)] bg-subtle px-3 py-2 text-[13px] text-ink-soft">
+              Dịch vụ người mẫu chỉ mở sau khi bạn xác minh danh tính (CCCD + ảnh chân dung), để bên thuê và bạn đều an toàn.
+            </p>
+          )}
           <p className="mt-1.5 text-xs text-muted">Bạn chỉ đăng được dịch vụ thuộc chuyên môn đã chọn.</p>
         </div>
 

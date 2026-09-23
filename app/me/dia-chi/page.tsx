@@ -41,11 +41,11 @@ function Addresses() {
 
       {addresses.map((address) => (
         <Card key={address.id} className="flex items-start gap-3 p-4">
-          <MapPin className="mt-0.5 size-4 shrink-0 text-rose" />
+          <MapPin className="mt-0.5 size-4 shrink-0 text-accent" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold">
               {address.label}
-              {address.isDefault && <span className="ml-2 text-[11px] font-normal text-muted">Mặc định</span>}
+              {address.isDefault && <span className="ml-2 text-xs font-normal text-muted">Mặc định</span>}
             </p>
             <p className="text-xs text-muted">
               {[address.detail, address.district, address.city].filter(Boolean).join(", ")}

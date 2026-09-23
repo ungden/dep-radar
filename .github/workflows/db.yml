@@ -28,7 +28,9 @@ jobs:
       - run: npm ci
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Pinned: resolving "latest" calls the GitHub API and fails under its
+          # rate limit, which turned a green database into a red check.
+          version: 2.109.1
       # The catalogue SQL is generated from lib/catalog.ts: a stale file would mean
       # the price bands the UI shows are not the ones the database enforces.
       - run: npm run catalog:check

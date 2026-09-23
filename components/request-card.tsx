@@ -15,7 +15,7 @@ export function JobStatusLabel({ job }: { job: JobPost }) {
     closed: ["Đã đóng", "bg-canvas text-muted"],
   } as const
   const [label, cls] = map[job.status]
-  return <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold", cls)}>{label}</span>
+  return <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold", cls)}>{label}</span>
 }
 
 export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: string; footer?: React.ReactNode; extra?: React.ReactNode }) {
@@ -27,7 +27,7 @@ export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: 
     <Card className="p-4">
       <Link href={href} className="block">
         <div className="flex items-start gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blush text-rose">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-subtle text-accent">
             <Icon className="size-5" />
           </span>
           <div className="min-w-0 flex-1">
@@ -50,7 +50,7 @@ export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: 
               </span>
               {extra}
               {job.mine && (
-                <span className="ml-auto inline-flex items-center gap-0.5 text-rose">
+                <span className="ml-auto inline-flex items-center gap-0.5 text-accent">
                   {job.offers.length} báo giá{pendingOffers && job.status === "open" ? " mới" : ""}
                   <ChevronRight className="size-4" />
                 </span>

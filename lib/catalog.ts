@@ -1,17 +1,38 @@
-import type { Category, CategoryId, ServiceTemplate, ServiceVariant } from "./types"
+import type { Category, CategoryId, ServiceTemplate, ServiceVariant, Vertical, VerticalId } from "./types"
+
+export const VERTICALS: Vertical[] = [
+  { id: "beauty", label: "Làm đẹp", person: "chuyên viên" },
+  { id: "photo", label: "Chụp & quay", person: "người chụp" },
+  { id: "model", label: "Người mẫu", person: "mẫu" },
+]
 
 export const CATEGORIES: Category[] = [
-  { id: "nail", label: "Nail" },
-  { id: "makeup", label: "Makeup" },
-  { id: "skincare", label: "Chăm sóc da" },
-  { id: "hair", label: "Tóc" },
-  { id: "lash-brow", label: "Mi & mày" },
-  { id: "massage", label: "Massage" },
+  { id: "nail", label: "Nail", vertical: "beauty" },
+  { id: "makeup", label: "Makeup", vertical: "beauty" },
+  { id: "skincare", label: "Chăm sóc da", vertical: "beauty" },
+  { id: "hair", label: "Tóc", vertical: "beauty" },
+  { id: "lash-brow", label: "Mi & mày", vertical: "beauty" },
+  { id: "massage", label: "Massage", vertical: "beauty" },
+  { id: "photophone", label: "Chụp điện thoại", vertical: "photo" },
+  { id: "camera", label: "Chụp máy ảnh", vertical: "photo" },
+  { id: "short-video", label: "Quay clip ngắn", vertical: "photo" },
+  { id: "product-photo", label: "Chụp sản phẩm", vertical: "photo" },
+  { id: "model-photo", label: "Mẫu ảnh", vertical: "model" },
+  { id: "model-video", label: "Mẫu clip & livestream", vertical: "model" },
 ]
 
 export function categoryLabel(id: CategoryId) {
   return CATEGORIES.find((c) => c.id === id)?.label ?? id
 }
+
+export const verticalOf = (category: CategoryId): VerticalId =>
+  CATEGORIES.find((c) => c.id === category)?.vertical ?? "beauty"
+
+export const getVertical = (id: VerticalId) => VERTICALS.find((v) => v.id === id) ?? VERTICALS[0]
+
+export const categoriesOf = (vertical: VerticalId) => CATEGORIES.filter((c) => c.vertical === vertical)
+
+export const isVertical = (value: unknown): value is VerticalId => VERTICALS.some((v) => v.id === value)
 
 const k = (n: number) => n * 1000
 
@@ -360,10 +381,223 @@ export const CATALOG: ServiceTemplate[] = [
   },
 ]
 
+
+/**
+ * Photo & video, and models. Price bands are a starting point taken from public
+ * price lists in Hà Nội and TP.HCM (photophone by the hour, lookbook models by
+ * the hour or by outfit); they are meant to be revised after talking to the
+ * first 20-30 people who list here.
+ */
+const PHOTO_AND_MODEL: ServiceTemplate[] = [
+  // Chụp điện thoại ------------------------------------------------------
+  {
+    id: "photo-phone",
+    category: "photophone",
+    name: "Chụp ảnh bằng điện thoại",
+    description: "Chụp dạo, đi cafe, hẹn hò, sinh nhật bằng điện thoại đời mới. Có hướng dẫn tạo dáng.",
+    includes: ["Hướng dẫn tạo dáng", "Toàn bộ ảnh gốc", "Ảnh chỉnh màu theo gói"],
+    onLocation: true,
+    deliverable: "Toàn bộ ảnh gốc + ảnh chỉnh màu",
+    deliveryDays: 2,
+    variants: [
+      v("30m", "30 phút · 10 ảnh chỉnh", 30, 120, 300, 180),
+      v("60m", "60 phút · 20 ảnh chỉnh", 60, 200, 500, 300),
+      v("90m", "90 phút · 30 ảnh chỉnh", 90, 280, 700, 420),
+      v("120m", "2 giờ · 40 ảnh chỉnh", 120, 350, 900, 520),
+    ],
+  },
+  {
+    id: "photo-phone-group",
+    category: "photophone",
+    name: "Chụp đôi / nhóm bạn",
+    description: "Chụp cặp đôi, nhóm bạn, gia đình nhỏ bằng điện thoại.",
+    includes: ["Hướng dẫn tạo dáng theo nhóm", "Toàn bộ ảnh gốc", "Ảnh chỉnh màu theo gói"],
+    onLocation: true,
+    deliverable: "Toàn bộ ảnh gốc + ảnh chỉnh màu",
+    deliveryDays: 2,
+    variants: [
+      v("pair-60", "2 người · 60 phút", 60, 250, 600, 380),
+      v("group-90", "3–6 người · 90 phút", 90, 400, 1000, 600),
+    ],
+  },
+  {
+    id: "photo-tour",
+    category: "photophone",
+    name: "Photo tour du lịch",
+    description: "Đi cùng bạn một buổi ở điểm du lịch, chụp suốt hành trình.",
+    includes: ["Lên lịch trình điểm chụp", "Toàn bộ ảnh gốc", "Ảnh chỉnh màu"],
+    onLocation: true,
+    deliverable: "Toàn bộ ảnh gốc + 50–100 ảnh chỉnh",
+    deliveryDays: 4,
+    variants: [v("half", "Nửa ngày", 240, 800, 2500, 1300), v("full", "Cả ngày", 480, 1500, 4500, 2500)],
+  },
+  // Chụp máy ảnh -----------------------------------------------------------
+  {
+    id: "photo-portrait",
+    category: "camera",
+    name: "Chụp chân dung máy ảnh",
+    description: "Chân dung, áo dài, kỷ yếu, concept cá nhân bằng máy ảnh.",
+    includes: ["Tư vấn concept & trang phục", "Chụp máy ảnh", "Ảnh chỉnh da, màu"],
+    onLocation: true,
+    deliverable: "Ảnh gốc chọn lọc + ảnh chỉnh",
+    deliveryDays: 5,
+    variants: [
+      v("60m", "60 phút · 15 ảnh chỉnh", 60, 400, 1200, 700),
+      v("120m", "2 giờ · 30 ảnh chỉnh", 120, 700, 2000, 1200),
+    ],
+  },
+  {
+    id: "photo-profile",
+    category: "camera",
+    name: "Ảnh hồ sơ / CV",
+    description: "Ảnh chân dung gọn gàng cho CV, LinkedIn, hồ sơ công ty.",
+    includes: ["Hướng dẫn tư thế", "Chụp nền trơn hoặc văn phòng", "Chỉnh da nhẹ"],
+    onLocation: true,
+    deliverable: "5–10 ảnh chỉnh",
+    deliveryDays: 3,
+    variants: [v("30m", "30 phút · 5 ảnh chỉnh", 30, 150, 500, 250), v("60m", "60 phút · 10 ảnh chỉnh", 60, 250, 800, 400)],
+  },
+  {
+    id: "photo-event",
+    category: "camera",
+    name: "Chụp sự kiện nhỏ",
+    description: "Sinh nhật, tiệc công ty nhỏ, khai trương, lễ tốt nghiệp.",
+    includes: ["Chụp toàn bộ sự kiện", "Ảnh gốc chọn lọc", "Chỉnh màu"],
+    onLocation: true,
+    deliverable: "Ảnh sự kiện đã chỉnh màu",
+    deliveryDays: 5,
+    variants: [v("120m", "2 giờ", 120, 600, 2000, 1000), v("240m", "4 giờ", 240, 1000, 3500, 1800)],
+  },
+  // Quay clip ngắn ---------------------------------------------------------
+  {
+    id: "video-short",
+    category: "short-video",
+    name: "Quay & dựng clip ngắn",
+    description: "Clip 15–60 giây cho TikTok, Reels: quay, dựng, nhạc, phụ đề.",
+    includes: ["Gợi ý kịch bản ngắn", "Quay bằng điện thoại/máy ảnh", "Dựng, chèn nhạc, phụ đề"],
+    onLocation: true,
+    deliverable: "Clip dọc 9:16 đã dựng",
+    deliveryDays: 3,
+    variants: [
+      v("1", "1 clip", 90, 300, 1500, 600),
+      v("3", "3 clip", 180, 800, 3500, 1500),
+      v("5", "5 clip", 240, 1200, 5000, 2200),
+    ],
+  },
+  {
+    id: "video-event",
+    category: "short-video",
+    name: "Quay hậu trường / sự kiện",
+    description: "Quay lại buổi tiệc, buổi chụp, sự kiện nhỏ và dựng thành clip.",
+    includes: ["Quay toàn buổi", "Dựng 1 clip tổng hợp", "Nhạc & chuyển cảnh"],
+    onLocation: true,
+    deliverable: "1 clip tổng hợp 1–3 phút",
+    deliveryDays: 5,
+    variants: [v("120m", "2 giờ", 120, 500, 2000, 900), v("240m", "4 giờ", 240, 900, 3500, 1600)],
+  },
+  // Chụp sản phẩm ----------------------------------------------------------
+  {
+    id: "product-basic",
+    category: "product-photo",
+    name: "Chụp sản phẩm nền trơn",
+    description: "Ảnh sản phẩm nền trắng/nền màu cho sàn thương mại điện tử.",
+    includes: ["Setup nền & ánh sáng", "3 góc mỗi sản phẩm", "Tách nền, chỉnh màu"],
+    onLocation: true,
+    deliverable: "3 ảnh mỗi sản phẩm",
+    deliveryDays: 3,
+    variants: [
+      v("10", "10 sản phẩm", 60, 200, 800, 400),
+      v("30", "30 sản phẩm", 150, 500, 2000, 1000),
+      v("50", "50 sản phẩm", 240, 800, 3000, 1500),
+    ],
+  },
+  {
+    id: "product-lifestyle",
+    category: "product-photo",
+    name: "Chụp sản phẩm bối cảnh",
+    description: "Sản phẩm đặt trong bối cảnh sử dụng thật, hợp quảng cáo và fanpage.",
+    includes: ["Lên concept bối cảnh", "Đạo cụ cơ bản", "Chỉnh màu"],
+    onLocation: true,
+    deliverable: "2 ảnh bối cảnh mỗi sản phẩm",
+    deliveryDays: 4,
+    variants: [v("10", "10 sản phẩm", 120, 500, 2000, 900), v("30", "30 sản phẩm", 240, 1200, 4500, 2200)],
+  },
+  {
+    id: "product-video",
+    category: "product-photo",
+    name: "Quay clip sản phẩm",
+    description: "Clip ngắn giới thiệu sản phẩm cho TikTok Shop, Shopee Video.",
+    includes: ["Kịch bản ngắn theo sản phẩm", "Quay & dựng dọc 9:16", "Nhạc, phụ đề"],
+    onLocation: true,
+    deliverable: "Clip dọc đã dựng",
+    deliveryDays: 4,
+    variants: [v("3", "3 clip", 120, 600, 2500, 1200), v("5", "5 clip", 180, 900, 4000, 1800)],
+  },
+  // Mẫu ảnh ----------------------------------------------------------------
+  {
+    id: "model-lookbook",
+    category: "model-photo",
+    name: "Mẫu chụp lookbook",
+    description: "Mặc và tạo dáng cho bộ sưu tập thời trang, ảnh shop online.",
+    includes: ["Tạo dáng theo concept", "Thay trang phục của shop", "Không bao gồm makeup & người chụp"],
+    onLocation: true,
+    requiresVerification: true,
+    variants: [
+      v("60m", "1 giờ", 60, 300, 1500, 500),
+      v("120m", "2 giờ", 120, 550, 2800, 900),
+      v("240m", "4 giờ", 240, 1000, 5000, 1700),
+    ],
+  },
+  {
+    id: "model-hand",
+    category: "model-photo",
+    name: "Mẫu tay / cầm sản phẩm",
+    description: "Mẫu tay cho nail, trang sức, mỹ phẩm, sản phẩm cầm tay.",
+    includes: ["Tay được chăm sóc sẵn", "Tạo dáng tay theo góc máy"],
+    onLocation: true,
+    requiresVerification: true,
+    variants: [v("60m", "1 giờ", 60, 200, 800, 350), v("120m", "2 giờ", 120, 350, 1500, 600)],
+  },
+  {
+    id: "model-beauty",
+    category: "model-photo",
+    name: "Mẫu làm đẹp cho thương hiệu",
+    description: "Làm mẫu makeup, tóc, chăm sóc da cho thương hiệu hoặc lớp dạy nghề.",
+    includes: ["Làm mẫu theo yêu cầu", "Tạo dáng khi chụp kết quả"],
+    onLocation: true,
+    requiresVerification: true,
+    variants: [v("60m", "1 giờ", 60, 150, 600, 250), v("120m", "2 giờ", 120, 250, 1000, 450)],
+  },
+  // Mẫu clip & livestream --------------------------------------------------
+  {
+    id: "model-clip",
+    category: "model-video",
+    name: "Diễn viên clip ngắn",
+    description: "Diễn clip TikTok, Reels, video giới thiệu sản phẩm theo kịch bản.",
+    includes: ["Diễn theo kịch bản", "Nói/ lồng tiếng nếu cần"],
+    onLocation: true,
+    requiresVerification: true,
+    variants: [v("60m", "1 giờ", 60, 300, 1500, 500), v("120m", "2 giờ", 120, 500, 2500, 900)],
+  },
+  {
+    id: "model-live",
+    category: "model-video",
+    name: "Mẫu livestream / mặc thử",
+    description: "Mặc thử, giới thiệu sản phẩm trong phiên livestream bán hàng.",
+    includes: ["Mặc thử & giới thiệu", "Tương tác người xem theo kịch bản"],
+    onLocation: true,
+    requiresVerification: true,
+    variants: [v("120m", "2 giờ", 120, 400, 2000, 700), v("240m", "4 giờ", 240, 700, 3500, 1300)],
+  },
+]
+
+CATALOG.push(...PHOTO_AND_MODEL)
+
 export const getTemplate = (id: string) => CATALOG.find((t) => t.id === id)
 export const getVariant = (templateId: string, variantId: string) =>
   getTemplate(templateId)?.variants.find((x) => x.id === variantId)
 export const templatesByCategory = (category: CategoryId) => CATALOG.filter((t) => t.category === category)
+export const templatesByVertical = (vertical: VerticalId) => CATALOG.filter((t) => verticalOf(t.category) === vertical)
 
 /** Clamp and round a price into a variant's allowed band (to the nearest 5.000đ). */
 export function clampPrice(variant: ServiceVariant, price: number) {

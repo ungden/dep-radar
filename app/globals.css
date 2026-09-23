@@ -2,27 +2,52 @@
 
 @theme {
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-serif), ui-serif, Georgia, serif;
+  /* One family. Headlines are the same face at 700-800 with tighter tracking. */
+  --font-display: var(--font-body), ui-sans-serif, system-ui, sans-serif;
 
-  --color-canvas: #faf6f4;
-  --color-surface: #ffffff;
-  --color-ink: #2b2322;
-  --color-ink-soft: #5b4f4d;
-  --color-muted: #7a6c6a;
-  --color-line: #efe5e2;
-  --color-blush: #f6e8e6;
-  --color-blush-strong: #edd3d0;
-  --color-rose: #a8535d;
-  --color-rose-dark: #8f434c;
-  --color-success: #2f6f4b;
-  --color-success-soft: #e5f2ea;
-  --color-warning: #8a5410;
-  --color-warning-soft: #fbefdc;
-  --color-danger: #a13a3a;
-  --color-danger-soft: #f8e4e2;
+  /* Mirrors lib/design/tokens.ts; tests/design-tokens.test.ts keeps them equal. */
+  --color-canvas: #FAFAF8;
+  --color-surface: #FFFFFF;
+  --color-subtle: #F2F0EC;
+  --color-subtle-strong: #E6E2DB;
+  --color-line: #E8E5E0;
+  --color-ink: #161413;
+  --color-ink-soft: #4E4845;
+  --color-muted: #6F6964;
+  --color-accent: #C42D45;
+  --color-accent-dark: #A21F36;
+  --color-accent-soft: #FBE9EC;
+  --color-success: #1F7A4D;
+  --color-success-soft: #E4F2EA;
+  --color-warning: #8A5410;
+  --color-warning-soft: #FBEFDC;
+  --color-danger: #B42318;
+  --color-danger-soft: #FBE6E4;
+  --color-beauty: #C42D45;
+  --color-photo: #2F55D4;
+  --color-model: #7A3E8E;
 
-  --radius-card: 1.25rem;
-  --shadow-soft: 0 1px 2px rgb(43 35 34 / 0.04), 0 8px 24px -12px rgb(43 35 34 / 0.12);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  /* Cards are separated by space, not by a shadow; these are for things that float. */
+  --radius-card: 16px;
+  --shadow-soft: 0 1px 2px rgb(22 20 19 / 0.04), 0 1px 0 rgb(22 20 19 / 0.02);
+  --shadow-raised: 0 2px 4px rgb(22 20 19 / 0.04), 0 12px 32px -12px rgb(22 20 19 / 0.18);
+  --shadow-overlay: 0 8px 16px rgb(22 20 19 / 0.06), 0 24px 64px -16px rgb(22 20 19 / 0.28);
+
+  --animate-fade-up: fade-up 220ms ease-out both;
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 
 @layer base {
@@ -35,8 +60,13 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.015em;
+  }
   :focus-visible {
-    outline: 2px solid var(--color-rose);
+    outline: 2px solid var(--color-ink);
     outline-offset: 2px;
   }
 }

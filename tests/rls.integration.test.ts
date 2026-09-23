@@ -280,4 +280,149 @@ describe.skipIf(!configured)("row level security over the API", () => {
     const again = await as.rpc("create_booking", args)
     expect(again.error?.message).toMatch(/đã có lịch|vừa có người đặt/)
   })
+
+  // The three trades --------------------------------------------------------
+
+  it("shows open casting calls to everyone, and each application only to its two parties", async () => {
+    const admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } })
+    const { data: poster } = await admin.from("pros").select("id, city, district").eq("slug", "thu-anh").single()
+    const as = client(tokenFor(poster!.id))
+    const created = await as.rpc("create_casting", {
+      p_category: "makeup",
+      p_title: "Cần mẫu makeup kỷ yếu (test RLS)",
+      p_description: "Miễn phí, cho phép chụp và đăng ảnh.",
+      p_starts_at: new Date(Date.now() + 3 * 86400_000).toISOString(),
+      p_city: poster!.city,
+      p_district: poster!.district,
+      p_slots: 1,
+      p_compensation: "free",
+    })
+    expect(created.error, created.error?.message).toBeNull()
+    const castingId = created.data as string
+
+    try {
+      const applied = await client(tokenFor(customerId)).rpc("apply_casting", {
+        p_casting: castingId,
+        p_message: "Em muốn làm mẫu",
+      })
+      expect(applied.error, applied.error?.message).toBeNull()
+
+      const seen = await client().from("castings").select("id, accepted_count").eq("id", castingId)
+      expect(seen.data, "an anonymous visitor cannot see an open call").toHaveLength(1)
+
+      const byAnon = await client().from("casting_applications").select("id").eq("casting_id", castingId)
+      expect(byAnon.data ?? []).toHaveLength(0)
+      const byStranger = await client(tokenFor(otherCustomerId))
+        .from("casting_applications")
+        .select("id")
+        .eq("casting_id", castingId)
+      expect(byStranger.data ?? []).toHaveLength(0)
+      const byApplicant = await client(tokenFor(customerId))
+        .from("casting_applications")
+        .select("id, account_id")
+        .eq("casting_id", castingId)
+      expect(byApplicant.data?.map((a) => a.account_id)).toEqual([customerId])
+      const byPoster = await as.from("casting_applications").select("id").eq("casting_id", castingId)
+      expect(byPoster.data).toHaveLength(1)
+
+      // Every change goes through a function: a direct write is refused.
+      const direct = await client(tokenFor(customerId))
+        .from("casting_applications")
+        .update({ status: "accepted" })
+        .eq("casting_id", castingId)
+      expect(direct.error?.message).toMatch(/permission denied/)
+      const forged = await as.from("castings").update({ accepted_count: 0, slots: 10 }).eq("id", castingId)
+      expect(forged.error?.message).toMatch(/permission denied/)
+    } finally {
+      await as.rpc("close_casting", { p_casting: castingId })
+    }
+  })
+
+  it("keeps a freelancer's review of a customer away from the public", async () => {
+    const admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } })
+    const { data: booking } = await admin
+      .from("bookings")
+      .select("id, pro_id, customer_id")
+      .eq("status", "completed")
+      .eq("customer_id", customerId)
+      .limit(1)
+      .single()
+    const written = await client(tokenFor(booking!.pro_id)).rpc("review_customer", {
+      p_booking: booking!.id,
+      p_rating: 5,
+      p_body: "Khách đúng giờ.",
+    })
+    // Once per booking: a second run of this suite finds it already written.
+    if (written.error) expect(written.error.message).toMatch(/đã đánh giá/)
+
+    const byAnon = await client().from("customer_reviews").select("booking_id")
+    expect(byAnon.data ?? []).toHaveLength(0)
+    const bySubject = await client(tokenFor(customerId)).from("customer_reviews").select("customer_id")
+    expect(bySubject.data?.length).toBeGreaterThan(0)
+    expect(bySubject.data!.every((r) => r.customer_id === customerId)).toBe(true)
+    const byStranger = await client(tokenFor(otherCustomerId))
+      .from("customer_reviews")
+      .select("booking_id")
+      .eq("customer_id", customerId)
+    expect(byStranger.data ?? [], "another customer read reviews about someone").toHaveLength(0)
+    const byAnyPro = await client(tokenFor(proId)).from("customer_reviews").select("booking_id").eq("customer_id", customerId)
+    expect(byAnyPro.data?.length, "a freelancer cannot check a customer's history").toBeGreaterThan(0)
+  })
+
+  it("counts feed interest without letting anyone write the numbers", async () => {
+    const anon = client()
+    const { data: work } = await anon.from("works").select("id, slug").limit(1).single()
+    const logged = await anon.rpc("log_work_events", {
+      p_events: [
+        { work: work!.id, kind: "impression" },
+        { work: work!.slug, kind: "open" },
+      ],
+    })
+    expect(logged.error, logged.error?.message).toBeNull()
+    const totals = await anon.rpc("work_stats_30d")
+    expect(totals.error, totals.error?.message).toBeNull()
+    expect((totals.data as { work_id: string }[]).some((r) => r.work_id === work!.id)).toBe(true)
+
+    const raw = await anon.from("work_stats_daily").select("*")
+    expect(raw.data ?? []).toHaveLength(0)
+    const forged = await client(tokenFor(customerId))
+      .from("work_stats_daily")
+      .insert({ work_id: work!.id, day: todayISO(), impressions: 100000 })
+    expect(forged.error?.message).toMatch(/permission denied/)
+  })
+
+  it("lets a model edit their own casting card and nobody else's", async () => {
+    const admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } })
+    const { data: model } = await admin.from("pros").select("id").eq("slug", "thu-anh").single()
+    const own = await client(tokenFor(model!.id))
+      .from("model_profiles")
+      .upsert({ pro_id: model!.id, height_cm: 165, top_size: "S", styles: ["Thanh lịch"] })
+    expect(own.error, own.error?.message).toBeNull()
+
+    const seen = await client().from("model_profiles").select("height_cm").eq("pro_id", model!.id)
+    expect(seen.data?.[0]?.height_cm).toBe(165)
+
+    const { data: changed } = await client(tokenFor(proId))
+      .from("model_profiles")
+      .update({ height_cm: 200 })
+      .eq("pro_id", model!.id)
+      .select("pro_id")
+    expect(changed ?? []).toHaveLength(0)
+  })
+
+  it("keeps the new actions away from the anon key", async () => {
+    const anon = client()
+    for (const [fn, args] of [
+      ["create_casting", {}],
+      ["apply_casting", { p_casting: crypto.randomUUID() }],
+      ["set_interests", { p_categories: ["nail"] }],
+      ["deliver_booking", { p_booking: crypto.randomUUID(), p_url: "https://example.com" }],
+      ["link_bookings", { p_bookings: [crypto.randomUUID(), crypto.randomUUID()] }],
+      ["review_customer", { p_booking: crypto.randomUUID(), p_rating: 1 }],
+      ["remind_overdue_deliveries", {}],
+    ] as const) {
+      const { error } = await anon.rpc(fn as never, args as never)
+      expect(error, fn).toBeTruthy()
+    }
+  })
 })

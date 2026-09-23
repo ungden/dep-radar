@@ -92,7 +92,7 @@ function VerifyFlow() {
   if (phase === "checking") {
     return (
       <div className="flex min-h-[60dvh] flex-col items-center justify-center text-center">
-        <Loader2 className="size-10 animate-spin text-rose" />
+        <Loader2 className="size-10 animate-spin text-accent" />
         <p className="mt-4 font-semibold">AI đang đối chiếu CCCD với ảnh selfie</p>
         <p className="mt-1 text-sm text-muted">Đọc thẻ và so khuôn mặt, thường mất 10–20 giây.</p>
       </div>
@@ -137,10 +137,10 @@ function VerifyFlow() {
         <p className="font-semibold">Vì sao nên xác minh?</p>
         <ul className="mt-2 space-y-1.5 text-sm text-ink-soft">
           <li className="flex gap-2">
-            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-rose" /> Dấu tick cạnh tên và huy hiệu “Đã xác minh danh tính”.
+            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-accent" /> Dấu tick cạnh tên và huy hiệu “Đã xác minh danh tính”.
           </li>
           <li className="flex gap-2">
-            <TrendingUp className="mt-0.5 size-4 shrink-0 text-rose" /> Được xếp trước hồ sơ chưa xác minh khi khách tìm kiếm.
+            <TrendingUp className="mt-0.5 size-4 shrink-0 text-accent" /> Được xếp trước hồ sơ chưa xác minh khi khách tìm kiếm.
           </li>
         </ul>
         <p className="mt-2 flex items-start gap-1.5 text-xs text-muted">
@@ -159,7 +159,7 @@ function VerifyFlow() {
               <label
                 className={cn(
                   "flex cursor-pointer items-center gap-3 rounded-2xl border bg-surface p-3 transition-colors",
-                  issue ? "border-danger/50" : img ? "border-success/50" : "border-dashed border-line hover:border-rose",
+                  issue ? "border-danger/50" : img ? "border-success/50" : "border-dashed border-line hover:border-accent",
                 )}
               >
                 <span
@@ -183,7 +183,7 @@ function VerifyFlow() {
                 {img && !issue ? (
                   <CheckCircle2 className="size-5 text-success" />
                 ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-blush px-3 py-1.5 text-xs font-medium text-rose-dark">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-subtle px-3 py-1.5 text-xs font-medium text-accent-dark">
                     <Camera className="size-3.5" /> {img ? "Chụp lại" : "Chụp"}
                   </span>
                 )}
@@ -204,7 +204,7 @@ function VerifyFlow() {
       </ul>
 
       <label className="flex items-start gap-2.5 rounded-2xl bg-canvas p-3.5 text-[13px] text-ink-soft">
-        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-[var(--color-rose)]" />
+        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-[var(--color-ink)]" />
         <span>
           Tôi đồng ý cho 360dep gửi ảnh CCCD và ảnh chân dung của tôi tới dịch vụ AI (Google Gemini) chỉ để xác minh danh tính, theo Nghị định 13/2023/NĐ-CP. 360dep không
           lưu ảnh; khách hàng chỉ thấy dấu xác minh, không thấy thông tin CCCD.

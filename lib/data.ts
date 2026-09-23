@@ -256,7 +256,7 @@ export const PRO_SERVICES: ProService[] = [
 ]
 
 /** Seed rows have no database id yet; the generator assigns one. */
-export const WORKS: Omit<Work, "dbId">[] = [
+export const WORKS: Omit<Work, "dbId" | "kind" | "createdAt">[] = [
   { id: "w-milky-stone", proId: "linh-pham", templateId: "nail-design", category: "nail", title: "Nail milky đính đá nhẹ", description: "Thiết kế tinh tế, phù hợp đi làm, đi tiệc. Có thể tùy chỉnh theo tone da và độ dài móng.", images: [img("nail-milky-1"), img("nail-milky-2")] },
   { id: "w-ombre", proId: "linh-pham", templateId: "nail-design", category: "nail", title: "Nail ombre hồng", description: "Ombre hồng sữa chuyển nhẹ, form coffin mềm.", images: [img("nail-ombre"), img("nail-milky-2")] },
   { id: "w-nude-short", proId: "linh-pham", templateId: "nail-gel", category: "nail", title: "Móng ngắn tone nude", description: "Form vuông bo ngắn, hợp dân văn phòng gõ phím nhiều.", images: [img("nail-nude-short")] },

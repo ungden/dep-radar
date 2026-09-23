@@ -95,7 +95,7 @@ function RequestDetail() {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-semibold">{formatPrice(quote.total)}</p>
-                        <p className="text-[11px] text-muted">{timeAgo(o.createdAt)}</p>
+                        <p className="text-xs text-muted">{timeAgo(o.createdAt)}</p>
                       </div>
                     </div>
                     <VerifiedBadge pro={pro} className="mt-3" />

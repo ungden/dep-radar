@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google"
+import { Be_Vietnam_Pro } from "next/font/google"
 import "./globals.css"
 
 import { AppShell } from "@/components/layout/app-shell"
@@ -11,15 +11,9 @@ import { backendEnabled } from "@/lib/supabase/env"
 
 const body = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700"],
+  // 800 is the headline weight; there is no second family to download.
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-body",
-})
-
-// Only the extrabold wordmark weight is used, so nothing else is downloaded.
-const serif = Playfair_Display({
-  subsets: ["latin", "vietnamese"],
-  weight: ["800"],
-  variable: "--font-serif",
 })
 
 export const metadata: Metadata = {
@@ -27,24 +21,24 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   applicationName: "360dep",
   title: {
-    default: "360dep | Đặt lịch làm đẹp với chuyên viên freelancer",
+    default: "360dep | Đặt người làm đẹp, chụp ảnh, người mẫu gần bạn",
     template: "%s | 360dep",
   },
   description:
-    "Tìm chuyên viên nail, makeup, chăm sóc da, tóc, mi & mày làm tại nhà. Xem tác phẩm thật, đặt lịch nhanh, hoặc đăng yêu cầu để freelancer báo giá.",
+    "Đặt thợ nail, makeup, chăm sóc da, người chụp ảnh bằng điện thoại, quay clip ngắn và người mẫu gần bạn. Xem tác phẩm thật, giá rõ ràng, đặt lịch nhanh.",
   icons: { icon: [{ url: "/brand/favicon.svg", type: "image/svg+xml" }] },
   twitter: { card: "summary_large_image" },
   openGraph: {
     type: "website",
     locale: "vi_VN",
     siteName: "360dep",
-    title: "360dep | Đẹp hơn mỗi ngày, theo cách của bạn",
-    description: "Đặt lịch làm đẹp với chuyên viên freelancer gần bạn.",
+    title: "360dep | Lên hình đẹp, theo cách của bạn",
+    description: "Làm đẹp, chụp ảnh và người mẫu: đặt người giỏi gần bạn.",
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: "#faf6f4",
+  themeColor: "#FAFAF8",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -54,7 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // One server read per navigation feeds every screen; see lib/api/snapshot.ts.
   const snapshot = backendEnabled ? await loadSnapshot() : emptySnapshot
   return (
-    <html lang="vi" className={`${body.variable} ${serif.variable}`}>
+    <html lang="vi" className={body.variable}>
       <body className="min-h-dvh">
         <a
           href="#main"

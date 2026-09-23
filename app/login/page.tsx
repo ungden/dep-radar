@@ -10,7 +10,7 @@ import { GoogleButton } from "./google-button"
 
 export const metadata: Metadata = {
   title: "Đăng nhập",
-  description: "Đăng nhập 360dep bằng tài khoản Google để đặt lịch hoặc nhận job.",
+  description: "Đăng nhập 360dep bằng tài khoản Google để đặt lịch hoặc nhận khách.",
 }
 
 export default async function LoginPage({
@@ -34,18 +34,32 @@ export default async function LoginPage({
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pb-10">
       <PageHeader back />
       <Logo size="lg" />
-      <h1 className="mt-4 text-2xl font-semibold">Đăng nhập</h1>
-      <p className="mt-1 text-sm text-ink-soft">
-        Dùng tài khoản Google của bạn. Một tài khoản dùng được cả để đặt lịch và để nhận job.
+      <h1 className="mt-8 text-[32px] font-extrabold leading-tight tracking-tight">
+        {wantsPro ? "Nhận khách trên 360dep" : "Đăng nhập"}
+      </h1>
+      <p className="mt-2 text-[15px] text-ink-soft">
+        {wantsPro
+          ? "Thợ làm đẹp, người chụp ảnh, quay clip, người mẫu: mở hồ sơ miễn phí, tự đặt giá trong khung chuẩn, chỉ trả hoa hồng khi hoàn thành lịch hẹn."
+          : "Dùng tài khoản Google của bạn. Một tài khoản dùng được cả để đặt lịch và để nhận khách."}
       </p>
+      {wantsPro && (
+        <ul className="mt-5 space-y-2 text-[15px]">
+          {["Không phí đăng ký, không phí duy trì", "Khách gần bạn đặt thẳng theo lịch bạn mở", "Xác minh danh tính để được xếp trước"].map((t) => (
+            <li key={t} className="flex gap-2.5">
+              <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-accent" />
+              {t}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {params.loi === "google" && (
-        <p role="alert" className="mt-5 rounded-xl bg-danger/10 px-3.5 py-3 text-[13px] text-danger">
+        <p role="alert" className="mt-5 rounded-xl bg-danger-soft px-3.5 py-3 text-[14px] text-danger">
           Chưa đăng nhập được bằng Google. Bạn có thể đã huỷ ở bước chọn tài khoản; thử lại nhé.
         </p>
       )}
 
-      <form action={signInWithGoogle} className="mt-6">
+      <form action={signInWithGoogle} className="mt-8">
         <input type="hidden" name="next" value={next} />
         <GoogleButton disabled={!enabled} />
       </form>
@@ -56,8 +70,8 @@ export default async function LoginPage({
         </p>
       )}
 
-      <p className="mt-6 text-center text-xs text-muted">
-        Lần đầu đăng nhập, 360dep sẽ hỏi số điện thoại của bạn: chuyên viên gọi số đó để xác nhận lịch hẹn. Tiếp tục
+      <p className="mt-6 text-center text-[13px] leading-relaxed text-muted">
+        Lần đầu đăng nhập, 360dep sẽ hỏi số điện thoại của bạn: người làm gọi số đó để xác nhận lịch hẹn. Tiếp tục
         nghĩa là bạn đồng ý để 360dep xử lý tên, email và số điện thoại theo{" "}
         <Link href="/chinh-sach" className="underline">
           chính sách

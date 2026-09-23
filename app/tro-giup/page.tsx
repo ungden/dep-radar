@@ -96,7 +96,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
     a: (
       <>
         Vào{" "}
-        <Link href="/me/cai-dat" className="text-rose underline underline-offset-2">
+        <Link href="/me/cai-dat" className="text-accent underline underline-offset-2">
           Cài đặt tài khoản
         </Link>{" "}
         và bấm xoá. Tên, số điện thoại, địa chỉ, mẫu đã lưu và quyền đăng nhập bị xoá. Các job đã hoàn thành và đánh giá
@@ -108,7 +108,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
     q: "Tôi là chuyên viên, bắt đầu thế nào?",
     a: (
       <>
-        <Link href="/login?role=pro" className="text-rose underline underline-offset-2">
+        <Link href="/login?role=pro" className="text-accent underline underline-offset-2">
           Mở hồ sơ chuyên viên
         </Link>
         , chọn dịch vụ từ danh mục và đặt giá trong khung, thêm giờ làm việc và ít nhất một ảnh tác phẩm. Không có phí
@@ -156,7 +156,7 @@ export default function HelpPage() {
         ))}
       </dl>
 
-      <p className="mt-8 rounded-2xl bg-blush px-4 py-3 text-[13px] text-rose-dark">
+      <p className="mt-8 rounded-2xl bg-subtle px-4 py-3 text-[13px] text-accent-dark">
         Chưa tìm được câu trả lời? Nhắn cho chuyên viên trong lịch hẹn, hoặc dùng “Báo cáo vấn đề” để đội ngũ 360dep xem
         giúp bạn. Xem thêm{" "}
         <Link href="/chinh-sach" className="underline underline-offset-2">

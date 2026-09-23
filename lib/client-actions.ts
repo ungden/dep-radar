@@ -5,7 +5,16 @@ import * as api from "./api/actions"
 import * as auth from "./auth/actions"
 import { useAnnounce } from "@/components/live-region"
 import { useRefresh } from "./store"
-import type { BookingStatus, CustomerAddress, PaymentMethod } from "./types"
+import type {
+  BookingStatus,
+  CastingCompensation,
+  CategoryId,
+  CustomerAddress,
+  ModelProfile,
+  PaymentMethod,
+  UsageScope,
+  WorkEventKind,
+} from "./types"
 import { toTimestamptz } from "./utils"
 
 /**
@@ -212,6 +221,106 @@ export const actions = {
   /** A review is identified by the booking it belongs to. */
   async replyReview(bookingId: string, text: string): Promise<Result> {
     return asResult(await api.replyReview(bookingId, text))
+  },
+
+  /** The freelancer's review of the customer, once, after a completed job. */
+  async reviewCustomer(bookingId: string, rating: number, text = ""): Promise<Result> {
+    return asResult(await api.reviewCustomer(bookingId, rating, text))
+  },
+
+  // Photo & video: terms, delivery, combos --------------------------------------
+
+  async setBookingTerms(bookingId: string, usageScope: UsageScope, consentRepost: boolean): Promise<Result> {
+    return asResult(await api.setBookingTerms(bookingId, usageScope, consentRepost))
+  },
+
+  async deliverBooking(bookingId: string, url: string, note = ""): Promise<Result> {
+    return asResult(await api.deliverBooking(bookingId, url, note))
+  },
+
+  async acceptDelivery(bookingId: string): Promise<Result> {
+    return asResult(await api.acceptDelivery(bookingId))
+  },
+
+  /** Two or three bookings made together. Returns the combo's id. */
+  async linkBookings(bookingIds: string[]): Promise<{ id: string } | { error: string }> {
+    const result = await api.linkBookings(bookingIds)
+    return result.ok ? { id: result.data } : { error: result.error }
+  },
+
+  // Profile by trade ------------------------------------------------------------
+
+  async setEquipment(equipment: string): Promise<Result> {
+    return asResult(await api.setEquipment(equipment))
+  },
+
+  async saveModelProfile(profile: ModelProfile): Promise<Result> {
+    return asResult(await api.saveModelProfile(profile))
+  },
+
+  // Feed ------------------------------------------------------------------------
+
+  /**
+   * Fire and forget: what the feed showed and what was tapped. Not for useAct --
+   * it must not refresh the page, and a lost batch is not worth telling anyone.
+   * `work` is the post's dbId (or its slug).
+   */
+  logWorkEvents(events: { work: string; kind: WorkEventKind }[]): void {
+    if (!events.length) return
+    api.logWorkEvents(events).catch(() => undefined)
+  },
+
+  async setInterests(categories: CategoryId[]): Promise<Result> {
+    return asResult(await api.setInterests(categories))
+  },
+
+  // Casting calls ("Tuyển mẫu") -------------------------------------------------
+
+  async createCasting(input: {
+    category: CategoryId
+    title: string
+    description: string
+    date: string
+    time: string
+    city: string
+    district: string
+    slots: number
+    compensation: CastingCompensation
+    discountPercent?: number
+    fee?: number
+  }): Promise<{ id: string } | { error: string }> {
+    const result = await api.createCasting({
+      category: input.category,
+      title: input.title,
+      description: input.description,
+      startsAt: toTimestamptz(input.date, input.time),
+      city: input.city,
+      district: input.district,
+      slots: input.slots,
+      compensation: input.compensation,
+      discountPercent: input.discountPercent ?? null,
+      fee: input.fee ?? null,
+    })
+    return result.ok ? { id: result.data } : { error: result.error }
+  },
+
+  async closeCasting(castingId: string): Promise<Result> {
+    return asResult(await api.closeCasting(castingId))
+  },
+
+  async applyCasting(castingId: string, message: string): Promise<{ id: string } | { error: string }> {
+    const result = await api.applyCasting(castingId, message)
+    return result.ok ? { id: result.data } : { error: result.error }
+  },
+
+  async withdrawApplication(applicationId: string): Promise<Result> {
+    return asResult(await api.withdrawApplication(applicationId))
+  },
+
+  /** Accepting opens a chat with the applicant; `threadId` is it. */
+  async decideApplication(applicationId: string, accept: boolean): Promise<Result & { threadId?: string | null }> {
+    const result = await api.decideApplication(applicationId, accept)
+    return result.ok ? { threadId: result.data ?? null } : { error: result.error }
   },
 }
 

@@ -53,7 +53,7 @@ export default async function WalletPage() {
             <span>
               Nạp ví bằng chuyển khoản VietQR <b className="text-ink">sắp áp dụng</b>. Hiện tại đội ngũ 360dep ghi nhận
               thủ công — nhắn cho chúng tôi khi bạn đã chuyển khoản.{" "}
-              <Link href="/chinh-sach" className="text-rose underline underline-offset-2">
+              <Link href="/chinh-sach" className="text-accent underline underline-offset-2">
                 Chính sách phí
               </Link>
             </span>

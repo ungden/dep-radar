@@ -3,19 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import {
-  Bell,
-  BriefcaseBusiness,
-  CalendarDays,
-  Heart,
-  LayoutGrid,
-  ListChecks,
-  MessageSquare,
-  Scissors,
-  Search,
-  User,
-  Users,
-} from "lucide-react"
+import { Bell, BriefcaseBusiness, CalendarDays, Compass, House, ListChecks, MessageCircle, Plus, Search, User } from "lucide-react"
 import { Footer } from "@/components/layout/footer"
 import { LiveRegionProvider } from "@/components/live-region"
 import { Avatar, Logo } from "@/components/ui"
@@ -23,22 +11,47 @@ import { actions } from "@/lib/client-actions"
 import { useApp } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
-type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; match?: RegExp }
+type NavItem = {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  match?: RegExp
+  /** The raised centre button: post something. */
+  primary?: boolean
+}
 
+/** The same five places on the phone and in the app (apps/mobile). */
 const CUSTOMER_NAV: NavItem[] = [
-  { href: "/", label: "Khám phá", icon: Search, match: /^\/($|search|works)/ },
-  { href: "/pros", label: "Chuyên viên", icon: Users, match: /^\/pros/ },
-  { href: "/saved", label: "Đã lưu", icon: Heart },
+  { href: "/", label: "Khám phá", icon: Compass, match: /^\/($|works|dip|pros)/ },
+  { href: "/search", label: "Tìm", icon: Search, match: /^\/search/ },
+  { href: "/dang", label: "Đăng", icon: Plus, primary: true, match: /^\/(dang|requests\/new)/ },
   { href: "/bookings", label: "Lịch hẹn", icon: CalendarDays, match: /^\/(bookings|requests)/ },
-  { href: "/me", label: "Cá nhân", icon: User },
+  { href: "/me", label: "Tôi", icon: User, match: /^\/(me|saved)/ },
 ]
 
 const PRO_NAV: NavItem[] = [
-  { href: "/studio", label: "Tổng quan", icon: LayoutGrid, match: /^\/studio$/ },
+  { href: "/studio", label: "Hôm nay", icon: House, match: /^\/studio$/ },
   { href: "/studio/jobs", label: "Việc mới", icon: BriefcaseBusiness },
-  { href: "/studio/schedule", label: "Lịch làm", icon: ListChecks },
-  { href: "/studio/services", label: "Dịch vụ", icon: Scissors },
-  { href: "/me", label: "Cá nhân", icon: User },
+  { href: "/dang", label: "Đăng", icon: Plus, primary: true, match: /^\/(dang|studio\/works|studio\/tuyen-mau)/ },
+  { href: "/studio/schedule", label: "Lịch", icon: ListChecks },
+  { href: "/me", label: "Tôi", icon: User, match: /^\/(me|studio\/(services|profile|wallet|verify))/ },
+]
+
+/** Desktop has room for words; it shows the places, not the post button. */
+const CUSTOMER_TOP: NavItem[] = [
+  { href: "/", label: "Khám phá", icon: Compass, match: /^\/($|works|dip)/ },
+  { href: "/pros", label: "Người làm", icon: User, match: /^\/pros/ },
+  { href: "/tuyen-mau", label: "Tuyển mẫu", icon: User, match: /^\/tuyen-mau/ },
+  { href: "/bookings", label: "Lịch hẹn", icon: CalendarDays, match: /^\/(bookings|requests)/ },
+  { href: "/saved", label: "Đã lưu", icon: User, match: /^\/saved/ },
+]
+
+const PRO_TOP: NavItem[] = [
+  { href: "/studio", label: "Hôm nay", icon: House, match: /^\/studio$/ },
+  { href: "/studio/jobs", label: "Việc mới", icon: BriefcaseBusiness },
+  { href: "/studio/schedule", label: "Lịch", icon: ListChecks },
+  { href: "/studio/works", label: "Tác phẩm", icon: Plus },
+  { href: "/studio/services", label: "Bảng giá", icon: Plus },
 ]
 
 const FULLSCREEN = [/^\/login/]
@@ -51,6 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { session } = state
   const isPro = session?.role === "pro"
   const nav = isPro ? PRO_NAV : CUSTOMER_NAV
+  const top = isPro ? PRO_TOP : CUSTOMER_TOP
 
   if (FULLSCREEN.some((r) => r.test(pathname))) return <LiveRegionProvider>{children}</LiveRegionProvider>
 
@@ -61,41 +75,42 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <LiveRegionProvider>
       <div className="min-h-dvh">
       <header className="sticky top-0 z-40 hidden border-b border-line bg-canvas/90 backdrop-blur md:block">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-6">
+        <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-5 px-6">
           <Link href={isPro ? "/studio" : "/"} aria-label="360dep">
             <Logo />
           </Link>
-          <nav className="flex flex-1 items-center gap-1">
-            {nav.slice(0, 4).map((item) => (
+          <nav className="no-scrollbar flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
+            {top.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive(item) ? "page" : undefined}
                 className={cn(
-                  "rounded-full px-4 py-2 text-sm transition-colors",
-                  isActive(item) ? "bg-blush font-semibold text-rose-dark" : "text-ink-soft hover:text-ink",
+                  "shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-[14px] font-semibold transition-colors",
+                  isActive(item) ? "bg-ink text-white" : "text-ink-soft hover:bg-subtle hover:text-ink",
                 )}
               >
                 {item.label}
               </Link>
             ))}
           </nav>
+          {pathname !== "/" && !isPro && (
+            <Link
+              href="/search"
+              className="hidden h-10 w-44 shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-4 text-[14px] text-muted hover:border-ink/30 xl:inline-flex"
+            >
+              <Search className="size-4 text-ink" /> Tìm kiếm
+            </Link>
+          )}
           {session ? (
-            <div className="flex items-center gap-3">
-              <Link
-                href="/tin-nhan"
-                aria-label="Tin nhắn"
-                className="inline-flex size-9 items-center justify-center rounded-full hover:bg-blush/60"
-              >
-                <MessageSquare className="size-[18px]" />
+            <div className="flex items-center gap-1.5">
+              <Link href="/tin-nhan" aria-label="Tin nhắn" className="inline-flex size-10 items-center justify-center rounded-full hover:bg-subtle">
+                <MessageCircle className="size-5" />
               </Link>
-              <Link
-                href="/thong-bao"
-                aria-label="Thông báo"
-                className="relative inline-flex size-9 items-center justify-center rounded-full hover:bg-blush/60"
-              >
-                <Bell className="size-[18px]" />
+              <Link href="/thong-bao" aria-label="Thông báo" className="relative inline-flex size-10 items-center justify-center rounded-full hover:bg-subtle">
+                <Bell className="size-5" />
                 {state.unreadNotifications > 0 && (
-                  <span className="absolute right-1 top-1 min-w-4 rounded-full bg-rose px-1 text-[10px] font-semibold leading-4 text-white">
+                  <span className="absolute right-0.5 top-0.5 min-w-[18px] rounded-full bg-accent px-1 text-center text-xs font-bold leading-[18px] text-white">
                     {state.unreadNotifications > 9 ? "9+" : state.unreadNotifications}
                   </span>
                 )}
@@ -107,18 +122,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   await actions.switchRole(isPro ? "customer" : "pro")
                   router.push(isPro ? "/" : "/studio")
                 }}
-                className="rounded-full border border-line px-4 py-2 text-[13px] text-ink-soft hover:border-rose hover:text-rose"
+                className="ml-1 h-10 rounded-full border border-line px-4 text-[13px] font-semibold text-ink hover:border-ink/30"
               >
-                {isPro ? "Chuyển sang đặt lịch" : "Chế độ chuyên viên"}
+                {isPro ? "Chế độ đặt lịch" : session.proId ? "Chế độ làm việc" : "Nhận khách trên 360dep"}
               </button>
-              <Link href="/me" className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 hover:bg-blush/60">
-                <Avatar name={session.name} size={32} />
-                <span className="text-sm font-medium">{session.name}</span>
+              <Link href="/me" aria-label="Tài khoản" className="ml-1 rounded-full hover:opacity-85">
+                <Avatar name={session.name} size={36} />
               </Link>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/login" className="rounded-full bg-rose px-5 py-2 text-sm font-medium text-white hover:bg-rose-dark">
+              <Link href="/login?role=pro" className="hidden h-10 items-center whitespace-nowrap rounded-full px-4 text-[14px] font-semibold text-ink hover:bg-subtle xl:inline-flex">
+                Nhận khách trên 360dep
+              </Link>
+              <Link href="/login" className="inline-flex h-10 items-center rounded-full bg-ink px-5 text-[14px] font-semibold text-white hover:bg-ink/85">
                 Đăng nhập
               </Link>
             </div>
@@ -126,7 +143,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className={cn("mx-auto max-w-6xl px-4 md:px-6", showTabbar ? "pb-24" : "pb-6")} id="main">
+      <main className={cn("mx-auto max-w-[1200px] px-4 md:px-6", showTabbar ? "pb-28 md:pb-10" : "pb-6")} id="main">
         {children}
       </main>
 
@@ -142,18 +159,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {nav.map((item) => {
               const active = isActive(item)
               const Icon = item.icon
+              if (item.primary)
+                return (
+                  <li key={item.href} className="flex items-center justify-center">
+                    <Link
+                      href={item.href}
+                      aria-label={isPro ? "Đăng tác phẩm hoặc tuyển mẫu" : "Đăng yêu cầu"}
+                      aria-current={active ? "page" : undefined}
+                      className="flex size-12 items-center justify-center rounded-2xl bg-ink text-white shadow-[var(--shadow-raised)] transition-transform active:scale-95"
+                    >
+                      <Icon className="size-6" />
+                    </Link>
+                  </li>
+                )
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
                       // A tab bar is the most-tapped thing in the app: 44px tall
                       // and a label you can read without squinting.
-                      "flex min-h-11 flex-col items-center justify-center gap-0.5 py-2 text-[11.5px]",
-                      active ? "font-semibold text-rose" : "text-muted",
+                      "flex min-h-14 flex-col items-center justify-center gap-0.5 py-1.5 text-[12px]",
+                      active ? "font-bold text-ink" : "font-medium text-muted",
                     )}
                   >
-                    <Icon className="size-[22px]" />
+                    <Icon className={cn("size-6", active && "stroke-[2.4]")} />
                     {item.label}
                   </Link>
                 </li>

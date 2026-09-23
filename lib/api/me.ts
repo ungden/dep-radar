@@ -243,7 +243,7 @@ export async function deleteAccount(): Promise<ActionResult> {
  * Storage API with the service key. Best effort: the account is already gone, and
  * a leftover file is logged for a person to remove rather than blocking the user.
  */
-const OWN_BUCKETS = ["avatars", "works", "reviews", "chat"] as const
+const OWN_BUCKETS = ["avatars", "works", "videos", "reviews", "chat"] as const
 
 async function removeOwnFiles(accountId: string) {
   const admin = supabaseAdmin()

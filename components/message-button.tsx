@@ -46,7 +46,7 @@ export function MessageButton({
           router.push(`/tin-nhan/${result.data}`)
         }}
         className={cn(
-          "inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink transition-colors hover:border-rose hover:text-rose disabled:opacity-60",
+          "inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-line bg-surface px-5 text-sm font-semibold text-ink transition-[border-color,transform] duration-150 hover:border-ink/40 active:scale-[0.98] disabled:opacity-60",
           className,
         )}
       >
@@ -54,7 +54,7 @@ export function MessageButton({
         {busy ? "Đang mở…" : label}
       </button>
       {error && (
-        <p role="alert" className="mt-1.5 text-xs text-danger">
+        <p role="alert" className="mt-1.5 text-[13px] text-danger">
           {error}
         </p>
       )}

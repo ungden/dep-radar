@@ -58,7 +58,7 @@ function Settings() {
         <Card className="p-4">
           <p className="font-semibold">Chưa có số điện thoại</p>
           <p className="mt-1 text-[13px] text-ink-soft">Cần số điện thoại trước khi đặt lịch hoặc nhận job.</p>
-          <Link href="/me/so-dien-thoai?next=/me/cai-dat" className="mt-2 inline-block text-sm font-medium text-rose underline underline-offset-2">
+          <Link href="/me/so-dien-thoai?next=/me/cai-dat" className="mt-2 inline-block text-sm font-medium text-accent underline underline-offset-2">
             Thêm số điện thoại
           </Link>
         </Card>
@@ -96,7 +96,7 @@ function Settings() {
         <p className="mt-1 text-[13px] text-ink-soft">
           360dep lưu tên, số điện thoại, email, địa chỉ bạn tự nhập và lịch sử đặt lịch. Ảnh CCCD và ảnh selfie khi xác minh
           không được lưu ở đâu cả. Chi tiết trong{" "}
-          <Link href="/chinh-sach" className="text-rose underline underline-offset-2">
+          <Link href="/chinh-sach" className="text-accent underline underline-offset-2">
             chính sách
           </Link>
           .

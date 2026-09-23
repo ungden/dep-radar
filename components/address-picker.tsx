@@ -49,10 +49,10 @@ export function AddressPicker({
                 }}
                 className={cn(
                   "flex w-full gap-2.5 rounded-xl border p-3 text-left",
-                  value === address.id && !adding ? "border-rose bg-blush" : "border-line bg-surface",
+                  value === address.id && !adding ? "border-accent bg-subtle" : "border-line bg-surface",
                 )}
               >
-                <MapPin className={cn("mt-0.5 size-4 shrink-0", value === address.id ? "text-rose" : "text-muted")} />
+                <MapPin className={cn("mt-0.5 size-4 shrink-0", value === address.id ? "text-accent" : "text-muted")} />
                 <span className="min-w-0">
                   <span className="block text-sm font-medium">{address.label}</span>
                   <span className="block truncate text-xs text-muted">
@@ -80,7 +80,7 @@ export function AddressPicker({
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-rose"
+          className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-accent"
         >
           <Plus className="size-4" /> Thêm địa chỉ khác
         </button>

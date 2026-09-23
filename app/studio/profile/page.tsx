@@ -61,8 +61,8 @@ function ProfileTrust() {
         <p className="mt-1 text-sm text-ink-soft">Không bắt buộc. Chụp CCCD 2 mặt và 1 ảnh selfie, khoảng 2 phút.</p>
         <ul className="mt-3 grid gap-2 sm:grid-cols-3">
           {BENEFITS.map(({ icon: Icon, title, text }) => (
-            <li key={title} className="rounded-2xl bg-blush px-3 py-3">
-              <Icon className="size-4 text-rose" />
+            <li key={title} className="rounded-2xl bg-subtle px-3 py-3">
+              <Icon className="size-4 text-accent" />
               <p className="mt-1 text-sm font-semibold">{title}</p>
               <p className="text-xs text-ink-soft">{text}</p>
             </li>
@@ -82,9 +82,9 @@ function ProfileTrust() {
             <p className="text-xs text-muted">{STATUS_TEXT[pro.identity]}</p>
           </div>
           {pro.identity === "verified" ? (
-            <span className="rounded-full bg-success-soft px-2.5 py-1 text-[11px] font-semibold text-success">Đã xác minh</span>
+            <span className="rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">Đã xác minh</span>
           ) : pro.identity === "pending" ? (
-            <span className="rounded-full bg-warning-soft px-2.5 py-1 text-[11px] font-semibold text-warning">Đang kiểm tra</span>
+            <span className="rounded-full bg-warning-soft px-2.5 py-1 text-xs font-semibold text-warning">Đang kiểm tra</span>
           ) : (
             <ButtonLink href="/studio/verify" size="sm">
               {pro.identity === "rejected" ? "Chụp lại" : "Xác minh ngay"}

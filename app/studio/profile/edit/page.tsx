@@ -9,6 +9,8 @@ import { Avatar, Button, Card, Field, PageHeader, Toggle, inputClass } from "@/c
 import { saveProProfile, saveWorkingHours } from "@/lib/api/actions"
 import { listWorkingHours } from "@/lib/api/me"
 import { addDayOff, listDaysOff, removeDayOff, type DayOff } from "@/lib/api/me"
+import { verticalOf } from "@/lib/catalog"
+import { actions, useAct } from "@/lib/client-actions"
 import { proView, servicesOf, useApp, useRefresh, worksOf } from "@/lib/store"
 import { uploadImage } from "@/lib/uploads"
 import { cn, todayISO } from "@/lib/utils"
@@ -41,6 +43,9 @@ function ProfileEditor() {
   const [homeService, setHomeService] = React.useState(pro.homeService)
   const [maxTravelKm, setMaxTravelKm] = React.useState(pro.maxTravelKm)
   const [avatar, setAvatar] = React.useState(pro.avatar ?? null)
+  const [equipment, setEquipment] = React.useState(pro.equipment ?? "")
+  const shoots = pro.categories.some((c) => verticalOf(c) === "photo")
+  const models = pro.categories.some((c) => verticalOf(c) === "model")
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   const [saved, setSaved] = React.useState(false)
@@ -62,6 +67,7 @@ function ProfileEditor() {
       studioAddress: studio,
       homeService,
       maxTravelKm,
+      ...(shoots ? { equipment } : {}),
     })
     setBusy(false)
     if (!result.ok) return setError(result.error)
@@ -78,7 +84,7 @@ function ProfileEditor() {
           ) : (
             <Avatar name={displayName} tone={pro.tone} size={64} />
           )}
-          <label className="absolute -bottom-1 -right-1 inline-flex size-7 cursor-pointer items-center justify-center rounded-full bg-rose text-white">
+          <label className="absolute -bottom-1 -right-1 inline-flex size-7 cursor-pointer items-center justify-center rounded-full bg-ink text-white">
             <Camera className="size-3.5" />
             <input
               type="file"
@@ -125,6 +131,12 @@ function ProfileEditor() {
         />
       </Field>
 
+      {shoots && (
+        <Field label="Bạn chụp, quay bằng gì?" hint="Khách chụp ảnh hay hỏi điều này đầu tiên. VD: iPhone 16 Pro Max, Sony A7 IV + lens 35mm.">
+          <input className={inputClass} value={equipment} maxLength={120} onChange={(e) => setEquipment(e.target.value)} />
+        </Field>
+      )}
+
       <Card className="space-y-3 p-4">
         <div className="flex items-center gap-3">
           <div className="flex-1">
@@ -141,13 +153,15 @@ function ProfileEditor() {
             step={1}
             value={maxTravelKm}
             onChange={(e) => setMaxTravelKm(Number(e.target.value))}
-            className="w-full accent-[var(--color-rose)]"
+            className="w-full accent-[var(--color-ink)]"
           />
         </Field>
         <Field label="Địa chỉ studio (nếu có)" hint="Có studio thì bạn nhận được cả dịch vụ chỉ làm tại chỗ.">
           <input className={inputClass} value={studio} onChange={(e) => setStudio(e.target.value)} />
         </Field>
       </Card>
+
+      {models && <ModelCardEditor />}
 
       <WorkingHoursEditor onError={setError} />
 
@@ -193,7 +207,7 @@ function PublishBox({ hasService, hasWork }: { hasService: boolean; hasWork: boo
             {done ? (
               <span className="text-ink-soft">{text}</span>
             ) : (
-              <Link href={href} className="text-rose underline underline-offset-2">
+              <Link href={href} className="text-accent underline underline-offset-2">
                 {text}
               </Link>
             )}
@@ -436,6 +450,84 @@ function DaysOffEditor({ onError }: { onError: (message: string | null) => void 
         }}
       >
         {busy ? "Đang lưu…" : "Thêm ngày nghỉ"}
+      </Button>
+    </Card>
+  )
+}
+
+/**
+ * A model's card: what a client needs before booking. No body measurements:
+ * they are not needed to book, and they are what casting scams collect.
+ */
+function ModelCardEditor() {
+  const state = useApp()
+  const act = useAct()
+  const pro = proView(state, state.session!.proId!)!
+  const m = pro.model
+  const [height, setHeight] = React.useState(m?.heightCm ? String(m.heightCm) : "")
+  const [topSize, setTopSize] = React.useState(m?.topSize ?? "")
+  const [bottomSize, setBottomSize] = React.useState(m?.bottomSize ?? "")
+  const [shoeSize, setShoeSize] = React.useState(m?.shoeSize ?? "")
+  const [styles, setStyles] = React.useState((m?.styles ?? []).join(", "))
+  const [accepts, setAccepts] = React.useState((m?.accepts ?? []).join(", "))
+  const [refuses, setRefuses] = React.useState((m?.refuses ?? []).join(", "))
+  const [error, setError] = React.useState<string | null>(null)
+  const list = (v: string) =>
+    v
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean)
+      .slice(0, 10)
+
+  return (
+    <Card className="space-y-4 p-4">
+      <div>
+        <p className="text-[17px] font-extrabold tracking-tight">Thẻ người mẫu</p>
+        <p className="text-[13px] text-ink-soft">Hiện trên hồ sơ để bên thuê biết bạn có hợp không. Không cần số đo ba vòng.</p>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Field label="Chiều cao (cm)">
+          <input inputMode="numeric" className={inputClass} value={height} onChange={(e) => setHeight(e.target.value.replace(/\D/g, "").slice(0, 3))} />
+        </Field>
+        <Field label="Size áo">
+          <input className={inputClass} value={topSize} maxLength={10} onChange={(e) => setTopSize(e.target.value)} placeholder="S, M…" />
+        </Field>
+        <Field label="Size quần">
+          <input className={inputClass} value={bottomSize} maxLength={10} onChange={(e) => setBottomSize(e.target.value)} placeholder="26, M…" />
+        </Field>
+        <Field label="Size giày">
+          <input className={inputClass} value={shoeSize} maxLength={10} onChange={(e) => setShoeSize(e.target.value)} placeholder="37" />
+        </Field>
+      </div>
+      <Field label="Phong cách" hint="Cách nhau bằng dấu phẩy. VD: thanh lịch, năng động, Hàn Quốc">
+        <input className={inputClass} value={styles} onChange={(e) => setStyles(e.target.value)} />
+      </Field>
+      <Field label="Nhận làm" hint="VD: lookbook, mẫu tay, livestream, clip TikTok">
+        <input className={inputClass} value={accepts} onChange={(e) => setAccepts(e.target.value)} />
+      </Field>
+      <Field label="Không nhận" hint="Hiện rõ trên hồ sơ để không ai phải hỏi. VD: đồ bơi, chụp đêm">
+        <input className={inputClass} value={refuses} onChange={(e) => setRefuses(e.target.value)} />
+      </Field>
+      {error && <p className="text-[14px] text-danger">{error}</p>}
+      <Button
+        variant="outline"
+        onClick={() =>
+          void act(
+            () =>
+              actions.saveModelProfile({
+                heightCm: height ? Number(height) : null,
+                topSize: topSize.trim(),
+                bottomSize: bottomSize.trim(),
+                shoeSize: shoeSize.trim(),
+                styles: list(styles),
+                accepts: list(accepts),
+                refuses: list(refuses),
+              }),
+            "Đã lưu thẻ người mẫu",
+          ).then(setError)
+        }
+      >
+        Lưu thẻ người mẫu
       </Button>
     </Card>
   )

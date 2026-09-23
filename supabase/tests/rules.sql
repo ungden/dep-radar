@@ -382,7 +382,11 @@ begin
     and p.proname <> all (array[
       'app_timezone', 'travel_distance_km', 'travel_fee', 'commission_for', 'is_urgent', 'build_quote',
       'service_duration_min', 'listed_price', 'within_working_hours', 'availability_problem', 'free_slots',
-      'slugify', 'is_admin', 'is_pro'
+      'slugify', 'is_admin', 'is_pro',
+      -- the feed: reporting and reading interest counts, and the content check
+      'log_work_events', 'work_stats_30d', 'banned_content',
+      -- called by a row level security policy
+      'applied_to_casting'
     ]);
   assert msg is null, format('anon can execute: %s', msg);
 
@@ -396,17 +400,436 @@ begin
       -- read-only helpers
       'app_timezone', 'travel_distance_km', 'travel_fee', 'commission_for', 'is_urgent', 'build_quote',
       'service_duration_min', 'listed_price', 'within_working_hours', 'availability_problem', 'free_slots',
-      'slugify', 'is_admin', 'is_pro',
+      'slugify', 'is_admin', 'is_pro', 'log_work_events', 'work_stats_30d', 'banned_content', 'applied_to_casting',
       -- the state machine and the things a person does to their own account
       'create_booking', 'confirm_booking', 'decline_booking', 'start_booking', 'complete_booking',
       'mark_no_show', 'cancel_booking', 'request_reschedule', 'respond_reschedule', 'post_job',
       'send_offer', 'accept_offer', 'withdraw_offer', 'write_review', 'reply_review', 'open_thread',
       'send_message', 'replace_working_hours', 'my_wallet_balance', 'mark_thread_read', 'delete_my_account',
-      'set_my_phone',
+      'set_my_phone', 'set_interests',
+      -- photo & video, combos, casting calls, two-way reviews
+      'set_booking_terms', 'deliver_booking', 'accept_delivery', 'link_bookings',
+      'create_casting', 'close_casting', 'apply_casting', 'withdraw_application', 'decide_application',
+      'review_customer',
       -- admin decisions, which check is_admin() themselves
       'decide_identity_check', 'decide_no_show_compensation', 'set_pro_suspended', 'set_review_hidden', 'resolve_report'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 
+end $$;
+
+
+-- The three trades: photo & video, models, and what they changed about bookings,
+-- the feed and the request board.
+do $$
+declare
+  linh uuid; thu uuid; customer uuid; addr uuid; other_customer uuid; nobody uuid;
+  b uuid; late uuid; makeup uuid; photos uuid; far uuid; gid uuid;
+  casting uuid; nail_call uuid; first_app uuid; second_app uuid; thread uuid; beauty uuid;
+  msg text; n int; w1 uuid; w1_slug text; events jsonb;
+  p_city text; p_district text;
+  monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
+  at_ timestamptz;
+begin
+  select id into linh from public.pros where slug = 'linh-pham';          -- nail, not verified
+  select id into thu from public.pros where slug = 'thu-anh';             -- makeup, verified
+  select a.id into customer from public.accounts a where a.full_name = 'Ngọc Hân';
+  select id into addr from public.addresses where account_id = customer;
+  select a.id into other_customer from public.accounts a where a.full_name = 'Thảo Vy';
+
+  -- The platform (no JWT subject) opens the new trades on both profiles.
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.pros set categories = categories || array['photophone', 'model-photo']::public.category_id[]
+    where id in (linh, thu);
+
+  ---------------------------------------------------------------------------
+  raise notice 'model services are for verified accounts only';
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    insert into public.pro_services (pro_id, template_id) values (linh, 'model-hand');
+    assert false, 'an unverified freelancer listed a model service';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg like 'Dịch vụ người mẫu chỉ mở%', format('refused for another reason: %s', msg);
+  end;
+  -- Listing it switched off is harmless and allowed.
+  insert into public.pro_services (pro_id, template_id, active) values (linh, 'model-hand', false);
+  begin
+    update public.pro_services set active = true where pro_id = linh and template_id = 'model-hand';
+    assert false, 'an unverified freelancer switched a model service on';
+  exception when check_violation then null;
+  end;
+
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  insert into public.pro_services (pro_id, template_id) values (thu, 'model-hand');
+  insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values (thu, 'model-hand', '60m', 350000);
+  at_ := ((monday + 2) + time '10:00') at time zone public.app_timezone();
+  msg := public.availability_problem(thu, 'model-hand', '60m', 1, at_, true, 21.0181, 105.829);
+  assert msg is null, format('a verified model is bookable: %s', msg);
+
+  -- A badge that is taken away stops new bookings at once, listing or not.
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.pros set identity_status = 'pending' where id = thu;
+  msg := public.availability_problem(thu, 'model-hand', '60m', 1, at_, true, 21.0181, 105.829);
+  assert msg like 'Dịch vụ người mẫu chỉ mở%', format('an unverified model was bookable: %s', msg);
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  begin
+    perform public.create_booking(thu, 'model-hand', '60m', at_, true, addr, 1, '');
+    assert false, 'an unverified model was booked';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.pros set identity_status = 'verified' where id = thu;
+
+  ---------------------------------------------------------------------------
+  raise notice 'a photo session owes files, on a clock that starts at completion';
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  insert into public.pro_services (pro_id, template_id) values (linh, 'photo-phone');
+  insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values (linh, 'photo-phone', '60m', 300000);
+
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  b := public.create_booking(linh, 'photo-phone', '60m',
+    ((monday + 3) + time '14:00') at time zone public.app_timezone(), true, addr, 1, '');
+
+  raise notice 'the customer sets the terms, and only while nothing has happened yet';
+  perform public.set_booking_terms(b, 'commercial', true);
+  assert (select usage_scope = 'commercial' and consent_repost from public.bookings where id = b), 'terms not saved';
+  begin
+    perform public.set_booking_terms(b, 'resale', true);
+    assert false, 'an unknown usage scope was accepted';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.set_booking_terms(b, 'personal', false);
+    assert false, 'the freelancer changed the customer''s terms';
+  exception when insufficient_privilege then null;
+  end;
+
+  begin
+    perform public.deliver_booking(b, 'https://drive.google.com/x', '');
+    assert false, 'files were delivered before the session';
+  exception when check_violation then null;
+  end;
+
+  perform public.confirm_booking(b);
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.bookings set starts_at = now() - interval '2 hours' where id = b;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.complete_booking(b);
+  assert (select delivery_due_at between now() + interval '47 hours' and now() + interval '49 hours'
+          from public.bookings where id = b), 'photo-phone promises files within 2 days';
+
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  begin
+    perform public.set_booking_terms(b, 'personal', false);
+    assert false, 'terms changed after the session';
+  exception when check_violation then null;
+  end;
+
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.deliver_booking(b, 'ftp://example.com/files', '');
+    assert false, 'a non-web link was accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    perform public.deliver_booking(b, 'javascript:alert(1)', '');
+    assert false, 'a script link was accepted';
+  exception when check_violation then null;
+  end;
+  perform public.deliver_booking(b, 'https://drive.google.com/drive/folders/abc', 'Ảnh gốc và 20 ảnh chỉnh');
+  assert (select delivered_at is not null from public.bookings where id = b), 'delivery not recorded';
+  assert exists (select 1 from public.notifications where account_id = customer and kind = 'booking_delivered'
+                 and link = '/bookings/' || b), 'the customer was not told the files arrived';
+
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  perform public.accept_delivery(b);
+  assert (select delivery_accepted_at is not null from public.bookings where id = b), 'acceptance not recorded';
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.deliver_booking(b, 'https://example.com/other', '');
+    assert false, 'a delivery was changed after the customer accepted it';
+  exception when check_violation then null;
+  end;
+
+  raise notice 'a nail set has no files to deliver';
+  select id into beauty from public.bookings where pro_id = linh and status = 'completed' and template_id like 'nail-%' limit 1;
+  begin
+    perform public.deliver_booking(beauty, 'https://example.com/x', '');
+    assert false, 'a beauty booking took a delivery';
+  exception when check_violation then null;
+  end;
+
+  raise notice 'an overdue delivery is chased once';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  late := public.create_booking(linh, 'photo-phone', '60m',
+    ((monday + 3) + time '17:00') at time zone public.app_timezone(), true, addr, 1, '');
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.confirm_booking(late);
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.bookings set starts_at = now() - interval '5 hours' where id = late;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.complete_booking(late);
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.bookings set delivery_due_at = now() - interval '1 hour' where id = late;
+  perform public.remind_overdue_deliveries();
+  perform public.remind_overdue_deliveries();
+  select count(*) into n from public.notifications
+    where account_id = linh and kind = 'delivery_overdue' and link = '/bookings/' || late;
+  assert n = 1, format('overdue reminders sent: %s', n);
+
+  ---------------------------------------------------------------------------
+  raise notice 'a combo links two or three of the customer''s own bookings, close in time';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  makeup := public.create_booking(thu, 'makeup-party', 'makeup',
+    ((monday + 4) + time '10:00') at time zone public.app_timezone(), true, addr, 1, '');
+  photos := public.create_booking(linh, 'photo-phone', '60m',
+    ((monday + 4) + time '10:30') at time zone public.app_timezone(), true, addr, 1, '');
+  far := public.create_booking(linh, 'photo-phone', '60m',
+    ((monday + 4) + time '14:00') at time zone public.app_timezone(), true, addr, 1, '');
+
+  begin
+    perform public.link_bookings(array[makeup]);
+    assert false, 'a combo of one was accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    perform public.link_bookings(array[makeup, far]);
+    assert false, 'bookings four hours apart were linked';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg like '%60 phút%', format('refused for another reason: %s', msg);
+  end;
+  perform set_config('request.jwt.claim.sub', other_customer::text, true);
+  begin
+    perform public.link_bookings(array[makeup, photos]);
+    assert false, 'somebody linked another customer''s bookings';
+  exception when insufficient_privilege then null;
+  end;
+
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  gid := public.link_bookings(array[makeup, photos]);
+  assert (select count(*) from public.bookings where booking_group_id = gid) = 2, 'the combo was not recorded';
+  begin
+    perform public.link_bookings(array[photos, far]);
+    assert false, 'a booking was pulled out of a live combo';
+  exception when check_violation then null;
+  end;
+
+  raise notice 'when part of a combo falls through, the rest stands and the customer is told';
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  perform public.decline_booking(makeup, 'Trùng lịch');
+  assert (select status from public.bookings where id = photos) = 'pending', 'the other booking was cancelled for them';
+  assert exists (select 1 from public.notifications where account_id = customer and kind = 'combo_partial'
+                 and link = '/bookings/' || photos), 'the customer was not told the rest of the combo stands';
+
+  ---------------------------------------------------------------------------
+  raise notice 'a freelancer rates a customer once, after the job';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  begin
+    perform public.review_customer(b, 5, 'Tự đánh giá mình');
+    assert false, 'a customer reviewed themselves';
+  exception when insufficient_privilege then null;
+  end;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.review_customer(photos, 5, '');
+    assert false, 'a customer was reviewed before the job';
+  exception when check_violation then null;
+  end;
+  perform public.review_customer(b, 5, 'Đúng giờ, dễ thương.');
+  begin
+    perform public.review_customer(b, 1, 'Sửa lại sau khi cãi nhau');
+    assert false, 'a customer review was rewritten';
+  exception when check_violation then null;
+  end;
+  assert (select rating from public.customer_reviews where booking_id = b) = 5, 'the first review did not stand';
+
+  ---------------------------------------------------------------------------
+  raise notice 'the content filter reads past accents and capitals, and not past context';
+  assert public.banned_content('Tuyển mẫu KHOẢ THÂN nghệ thuật'), 'khoả thân';
+  assert public.banned_content('can mau khoa than'), 'khoa than without accents';
+  assert public.banned_content('Chụp ảnh nude nghệ thuật'), 'nude photos';
+  assert public.banned_content('mẫu nội y cho shop'), 'nội y';
+  assert public.banned_content('Clip 18+ thù lao cao'), '18+';
+  assert public.banned_content('Phong cách sexy'), 'sexy';
+  assert public.banned_content('Mẫu cần đóng phí hồ sơ 200k'), 'phí hồ sơ';
+  assert public.banned_content('Vui lòng đặt cọc trước 500k'), 'đặt cọc trước';
+  assert not public.banned_content('Sơn gel tone nude'), 'nude is a colour';
+  assert not public.banned_content('Phục hồi da nhạy cảm'), 'sensitive skin is a service';
+  assert not public.banned_content('Chụp lookbook bikini cho shop đồ bơi'), 'swimwear is legitimate';
+  assert not public.banned_content('Wax sugar nách'), 'sugar wax';
+  assert not public.banned_content('Họ hàng nói ý kiến về kiểu tóc'), 'everyday words that lose their accents';
+  assert not public.banned_content('Kỷ yếu lớp 12A, năm 2018+ ai cũng được'), 'a year is not 18+';
+
+  raise notice 'and it guards requests as well as casting calls';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  begin
+    perform public.post_job('nail-gel', 'hand', now() + interval '3 days', true, addr, 1, 'Thợ phải chuyển khoản trước 100k');
+    assert false, 'a request carrying a scam marker was posted';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg = 'Nội dung này không được phép trên 360dep.', format('refused for another reason: %s', msg);
+  end;
+
+  ---------------------------------------------------------------------------
+  raise notice 'a casting call: who may post it';
+  select city, district into p_city, p_district from public.pros where id = thu;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.create_casting('nail', 'Cần mẫu tay có thù lao', '', now() + interval '3 days',
+      p_city, p_district, 1, 'paid', null, 200000);
+    assert false, 'an unverified freelancer posted a paid call';
+  exception when check_violation then null;
+  end;
+  begin
+    perform public.create_casting('model-photo', 'Cần mẫu chụp lookbook', '', now() + interval '3 days',
+      p_city, p_district, 1, 'free');
+    assert false, 'an unverified freelancer posted a model call';
+  exception when check_violation then null;
+  end;
+  -- Free, for their own trade: fine without the badge.
+  nail_call := public.create_casting('nail', 'Cần 2 mẫu tay làm gel miễn phí', 'Cho phép chụp và đăng ảnh.',
+    now() + interval '3 days', p_city, p_district, 2, 'free');
+
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  begin
+    perform public.create_casting('makeup', 'Tuyển mẫu chụp ảnh nude nghệ thuật', '', now() + interval '3 days',
+      p_city, p_district, 1, 'free');
+    assert false, 'a banned call was posted';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg = 'Nội dung này không được phép trên 360dep.', format('refused for another reason: %s', msg);
+  end;
+  begin
+    perform public.create_casting('makeup', 'Cần mẫu makeup hôm qua', '', now() - interval '1 day',
+      p_city, p_district, 1, 'free');
+    assert false, 'a call in the past was posted';
+  exception when check_violation then null;
+  end;
+  casting := public.create_casting('makeup', 'Cần mẫu makeup cô dâu chụp portfolio', 'Giảm 50% gói makeup.',
+    now() + interval '3 days', p_city, p_district, 1, 'discount', 50);
+
+  raise notice 'applying needs a phone number, and never to your own call';
+  begin
+    perform public.apply_casting(casting, 'Tự ứng tuyển');
+    assert false, 'a freelancer applied to their own call';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          'nophone@example.invalid', jsonb_build_object('name', 'Chưa có số'), now(), now())
+  returning id into nobody;
+  perform set_config('request.jwt.claim.sub', nobody::text, true);
+  begin
+    perform public.apply_casting(casting, 'Em muốn làm mẫu');
+    assert false, 'an account without a phone applied';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg like 'Cần thêm số điện thoại%', format('refused for another reason: %s', msg);
+  end;
+
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  first_app := public.apply_casting(casting, 'Em rảnh cả ngày ạ');
+  begin
+    perform public.apply_casting(casting, 'Lần nữa');
+    assert false, 'the same person applied twice';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', other_customer::text, true);
+  second_app := public.apply_casting(casting, 'Mình muốn thử');
+
+  raise notice 'accepting stops at the number of models wanted, and opens a chat';
+  perform set_config('request.jwt.claim.sub', other_customer::text, true);
+  begin
+    perform public.decide_application(second_app, true);
+    assert false, 'an applicant accepted themselves';
+  exception when insufficient_privilege then null;
+  end;
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  thread := public.decide_application(first_app, true);
+  assert thread is not null, 'no chat for the accepted model';
+  assert exists (select 1 from public.messages where thread_id = thread), 'the chat is empty, so no inbox shows it';
+  assert (select accepted_count from public.castings where id = casting) = 1, 'the accepted count did not move';
+  begin
+    perform public.decide_application(second_app, true);
+    assert false, 'more models were accepted than wanted';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg = 'Đã đủ số mẫu cần tuyển.', format('refused for another reason: %s', msg);
+  end;
+
+  raise notice 'a withdrawal frees the place';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  perform public.withdraw_application(first_app);
+  assert (select accepted_count from public.castings where id = casting) = 0, 'a withdrawal kept the place';
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  perform public.decide_application(second_app, true);
+
+  raise notice 'a call closes itself when its time has passed';
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.castings set starts_at = now() - interval '1 hour' where id = casting;
+  perform public.expire_stale_jobs();
+  assert (select status from public.castings where id = casting) = 'closed', 'a past call stayed open';
+
+  ---------------------------------------------------------------------------
+  raise notice 'feed events are counted per post per call, capped, and never fail';
+  select id, slug into w1, w1_slug from public.works order by sort_order limit 1;
+  -- 60 impressions of one post (one call counts it once), then an open that is
+  -- event number 61 and must be dropped.
+  select jsonb_agg(jsonb_build_object('work', w1_slug, 'kind', 'impression')) into events from generate_series(1, 60);
+  events := events || jsonb_build_array(jsonb_build_object('work', w1::text, 'kind', 'open'));
+  perform public.log_work_events(events);
+  assert (select impressions from public.work_stats_daily where work_id = w1) = 1,
+    format('impressions: %s', (select impressions from public.work_stats_daily where work_id = w1));
+  assert (select opens from public.work_stats_daily where work_id = w1) = 0, 'the 61st event was counted';
+
+  n := public.log_work_events(jsonb_build_array(
+    jsonb_build_object('work', w1::text, 'kind', 'open'),
+    jsonb_build_object('work', w1_slug, 'kind', 'book_click'),
+    jsonb_build_object('work', 'khong-co-bai-nay', 'kind', 'open'),
+    jsonb_build_object('work', gen_random_uuid()::text, 'kind', 'open'),
+    jsonb_build_object('work', w1::text, 'kind', 'like'),
+    '"not an object"'::jsonb));
+  assert n = 1, format('rows written: %s', n);
+  assert public.log_work_events('{"not": "an array"}') = 0, 'a malformed batch was not ignored';
+  assert (select opens + book_clicks from public.work_stats_daily where work_id = w1) = 2, 'id and slug both count';
+  assert (select impressions from public.work_stats_30d() where work_id = w1) = 1, '30-day totals';
+
+  ---------------------------------------------------------------------------
+  raise notice 'interests: a few categories, once each';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  perform public.set_interests(array['nail', 'nail', 'photophone']::public.category_id[]);
+  assert (select cardinality(interests) from public.accounts where id = customer) = 2, 'duplicates were kept';
+  begin
+    perform public.set_interests(array['nail', 'makeup', 'hair', 'skincare', 'massage', 'camera', 'photophone']::public.category_id[]);
+    assert false, 'seven interests were accepted';
+  exception when check_violation then null;
+  end;
+
+  raise notice 'a model profile has sane bounds';
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  begin
+    insert into public.model_profiles (pro_id, height_cm) values (thu, 300);
+    assert false, 'a height of three metres was accepted';
+  exception when check_violation then null;
+  end;
+  insert into public.model_profiles (pro_id, height_cm, top_size, styles) values (thu, 165, 'S', array['Thanh lịch']);
+
+  raise notice 'deleting an account gives back the place it held on a call';
+  perform set_config('request.jwt.claim.sub', nobody::text, true);
+  perform public.set_my_phone('0900 000 456');
+  first_app := public.apply_casting(nail_call, 'Tay em đẹp ạ');
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.decide_application(first_app, true);
+  assert (select accepted_count from public.castings where id = nail_call) = 1, 'the nail call did not count the model';
+  perform set_config('request.jwt.claim.sub', nobody::text, true);
+  perform public.delete_my_account();
+  assert not exists (select 1 from public.casting_applications where account_id = nobody), 'an application survived deletion';
+  assert (select accepted_count from public.castings where id = nail_call) = 0, 'a deleted account still holds a place';
+
+  perform set_config('request.jwt.claim.sub', '', true);
   raise notice 'ALL DATABASE RULES PASS';
 end $$;

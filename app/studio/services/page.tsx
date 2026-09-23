@@ -44,7 +44,7 @@ function ServicesManager() {
           </Button>
         }
       />
-      <div className="mb-4 rounded-2xl bg-blush px-4 py-3 text-[13px] text-rose-dark">
+      <div className="mb-4 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px] text-ink-soft">
         <p>
           Bạn chỉ chọn dịch vụ từ danh mục chuẩn của 360dep và đặt giá trong khung cho phép, để khách so sánh công bằng. Giá đã gồm vật tư, không thu thêm phụ phí ngoài
           phí di chuyển / đặt gấp do hệ thống tính.
@@ -69,13 +69,14 @@ function ServicesManager() {
                     <p className="text-xs text-muted">
                       {categoryLabel(tpl.category)}
                       {tpl.studioOnly && " · chỉ tại studio"}
+                      {tpl.deliveryDays ? ` · giao file trong ${tpl.deliveryDays} ngày` : ""}
                     </p>
                   </div>
                   <button
                     type="button"
                     aria-label="Sửa giá"
                     onClick={() => setEditing(l.templateId)}
-                    className="inline-flex size-9 items-center justify-center rounded-full text-ink-soft hover:bg-blush"
+                    className="inline-flex size-9 items-center justify-center rounded-full text-ink-soft hover:bg-subtle"
                   >
                     <Pencil className="size-4" />
                   </button>
@@ -91,7 +92,7 @@ function ServicesManager() {
                     .map((v) => (
                       <li key={v.id} className="rounded-xl bg-canvas px-3 py-2 text-[13px]">
                         <span className="text-ink-soft">{v.label}</span> · <b>{formatPrice(l.prices[v.id])}</b>
-                        <span className="block text-[11px] text-muted">
+                        <span className="block text-xs text-muted">
                           {formatDuration(v.durationMin)} · bạn nhận {formatPrice(payoutFor(l.prices[v.id], rate))}
                         </span>
                       </li>
@@ -108,23 +109,28 @@ function ServicesManager() {
         <Sheet title="Thêm dịch vụ từ danh mục" onClose={() => setAdding(false)}>
           <ul className="space-y-2">
             {available.map((t) => {
+              // Model services open only after identity verification; the
+              // database refuses the listing otherwise, so say why up front.
+              const locked = Boolean(t.requiresVerification) && pro.identity !== "verified"
               return (
                 <li key={t.id}>
                   <button
                     type="button"
+                    disabled={locked}
                     onClick={() => {
                       setAdding(false)
                       setEditing(t.id)
                     }}
-                    className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3.5 text-left hover:border-rose disabled:opacity-60"
+                    className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3.5 text-left hover:border-ink/30 disabled:opacity-60"
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block font-medium">{t.name}</span>
+                      {locked && <span className="block text-[13px] font-medium text-warning">Cần xác minh danh tính trước</span>}
                       <span className="block text-xs text-muted">
                         {t.variants.length} gói · khung {formatPrice(Math.min(...t.variants.map((v) => v.minPrice)))} – {formatPrice(Math.max(...t.variants.map((v) => v.maxPrice)))}
                       </span>
                     </span>
-                    {t.studioOnly ? <Store className="size-4 text-muted" /> : <Plus className="size-4 text-rose" />}
+                    {t.studioOnly ? <Store className="size-4 text-muted" /> : <Plus className="size-4 text-ink" />}
                   </button>
                 </li>
               )
@@ -132,7 +138,7 @@ function ServicesManager() {
           </ul>
           <p className="mt-4 text-xs text-muted">
             Mẹo: xác minh tay nghề tại{" "}
-            <Link href="/studio/profile" className="text-rose underline underline-offset-2">
+            <Link href="/studio/profile" className="text-accent underline underline-offset-2">
               Xác minh & đánh giá
             </Link>{" "}
             để được gắn huy hiệu và ưu tiên hiển thị.
@@ -176,13 +182,13 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
           const price = prices[v.id]
           const on = price !== undefined
           return (
-            <li key={v.id} className={cn("rounded-2xl border p-3.5", on ? "border-rose/60 bg-surface" : "border-line bg-canvas")}>
+            <li key={v.id} className={cn("rounded-2xl border p-3.5", on ? "border-accent/60 bg-surface" : "border-line bg-canvas")}>
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={on}
                   onChange={(e) => setPrices((x) => ({ ...x, [v.id]: e.target.checked ? v.suggestedPrice : undefined }))}
-                  className="size-4 accent-[var(--color-rose)]"
+                  className="size-4 accent-[var(--color-ink)]"
                 />
                 <span className="flex-1 text-sm font-medium">
                   {v.label} <span className="font-normal text-muted">· {formatDuration(v.durationMin)}</span>
@@ -199,11 +205,11 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
                     step={5000}
                     value={price}
                     onChange={(e) => setPrices((x) => ({ ...x, [v.id]: Number(e.target.value) }))}
-                    className="mt-3 w-full accent-[var(--color-rose)]"
+                    className="mt-3 w-full accent-[var(--color-ink)]"
                   />
-                  <div className="flex justify-between text-[11px] text-muted">
+                  <div className="flex justify-between text-xs text-muted">
                     <span>Tối thiểu {formatPrice(v.minPrice)}</span>
-                    <button type="button" className="text-rose" onClick={() => setPrices((x) => ({ ...x, [v.id]: v.suggestedPrice }))}>
+                    <button type="button" className="text-accent" onClick={() => setPrices((x) => ({ ...x, [v.id]: v.suggestedPrice }))}>
                       Gợi ý {formatPrice(v.suggestedPrice)}
                     </button>
                     <span>Tối đa {formatPrice(v.maxPrice)}</span>
@@ -256,7 +262,7 @@ function Sheet({ title, onClose, children }: { title: string; onClose: () => voi
       >
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold">{title}</h2>
-          <button type="button" aria-label="Đóng" onClick={onClose} className="inline-flex size-9 items-center justify-center rounded-full hover:bg-blush">
+          <button type="button" aria-label="Đóng" onClick={onClose} className="inline-flex size-9 items-center justify-center rounded-full hover:bg-subtle">
             <X className="size-5" />
           </button>
         </div>
