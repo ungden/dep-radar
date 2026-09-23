@@ -152,7 +152,7 @@ export default function CastingDetail() {
             {application.status === "pending" ? <Button label="Rút ứng tuyển" variant="secondary" size="sm" onPress={withdraw} /> : null}
           </Card>
         ) : c.mine ? (
-          <Txt color={colors.inkSoft}>Đây là tin của bạn. Xem người ứng tuyển trong Studio trên web.</Txt>
+          <Txt color={colors.inkSoft}>Đây là tin của bạn. Xem người ứng tuyển trong 360dep Đối tác trên web.</Txt>
         ) : !canApply ? (
           <Txt w={700}>Tin đã đủ người hoặc đã đóng.</Txt>
         ) : app.uid ? (

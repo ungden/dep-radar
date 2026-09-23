@@ -49,7 +49,7 @@ function Navigator() {
   useNotificationTaps(ready)
   // Signed in before the terms screen existed (or on another phone): ask once.
   // A fresh sign-in is sent there by the login screen itself.
-  const inAuthFlow = ["login", "dieu-khoan", "so-dien-thoai"].includes(String(segments[0] ?? ""))
+  const inAuthFlow = ["login", "dieu-khoan", "so-dien-thoai", "them-email"].includes(String(segments[0] ?? ""))
   React.useEffect(() => {
     if (ready && uid && termsAccepted === false && !inAuthFlow) router.push("/dieu-khoan")
   }, [ready, uid, termsAccepted, inAuthFlow])
@@ -90,6 +90,9 @@ function Navigator() {
       <Stack.Screen name="dieu-khoan" options={{ title: "", presentation: "modal", gestureEnabled: false }} />
       <Stack.Screen name="login" options={{ title: "", presentation: "modal" }} />
       <Stack.Screen name="so-dien-thoai" options={{ title: "Số điện thoại", gestureEnabled: false }} />
+      <Stack.Screen name="them-email" options={{ title: "Email lấy lại mật khẩu" }} />
+      <Stack.Screen name="doi-mat-khau" options={{ title: "Mật khẩu", presentation: "modal" }} />
+      <Stack.Screen name="doi-tac" options={{ title: "360dep Đối tác" }} />
       <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
     </Stack>
   )

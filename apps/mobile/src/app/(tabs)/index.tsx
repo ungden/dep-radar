@@ -298,22 +298,7 @@ export default function Explore() {
             <Txt color={colors.inkSoft}>Đăng yêu cầu với giá theo bảng giá 360dep, người làm gần bạn nhận việc. Không mất phí đăng.</Txt>
             <Button label="Đăng yêu cầu" onPress={openRequestForm} style={{ marginTop: 6 }} />
           </View>
-
-          {/* The request board turned around: freelancers looking for models */}
-          <Press
-            onPress={() => router.push("/tuyen-mau")}
-            accessibilityLabel="Tuyển mẫu: làm mẫu cho thợ"
-            style={{ marginHorizontal: gutter, flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, padding: 16 }}
-          >
-            <CategoryIcon id="model-photo" size={36} />
-            <View style={{ flex: 1, gap: 2 }}>
-              <Txt w={700}>Tuyển mẫu</Txt>
-              <Txt v="meta" color={colors.inkSoft}>
-                Làm mẫu cho thợ, được làm đẹp miễn phí hoặc có thù lao.
-              </Txt>
-            </View>
-            <Icon name="right" size={14} color={colors.muted} />
-          </Press>
+          {/* Tuyển mẫu (working as a model) is partner work: reached from Tôi > Trở thành đối tác, not from here. */}
         </ScrollView>
         {stuck ? (
           <View style={{ position: "absolute", top: 0, left: 0, right: 0, backgroundColor: colors.canvas, borderBottomWidth: 1, borderBottomColor: colors.line }}>

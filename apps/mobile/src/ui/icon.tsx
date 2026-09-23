@@ -48,6 +48,7 @@ const ICONS = {
   drop: { ios: "drop", android: "water_drop" },
   scissors: { ios: "scissors", android: "content_cut" },
   eye: { ios: "eye", android: "visibility" },
+  eyeOff: { ios: "eye.slash", android: "visibility_off" },
   leaf: { ios: "leaf", android: "spa" },
   iphone: { ios: "iphone", android: "smartphone" },
   film: { ios: "film", android: "movie" },

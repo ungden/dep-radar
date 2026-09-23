@@ -10,8 +10,8 @@ import { ErrorNote } from "@/ui/bits"
 import { Txt } from "@/ui/text"
 
 /**
- * Google gives no phone number, and the two sides of a booking can call each
- * other once the freelancer accepts. The database refuses a booking without one (require_phone), so it
+ * Google, Apple and email sign-ups give no phone number, and the two sides of
+ * a booking can call each other while it is active. The database refuses a booking without one (require_phone), so it
  * is asked once, set through set_my_phone(), and changed only through support.
  */
 export default function Phone() {
@@ -35,7 +35,12 @@ export default function Phone() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas, padding: gutter, gap: 16 }}>
       <Txt v="h2">Số điện thoại của bạn</Txt>
-      <Txt color={colors.inkSoft}>Người làm thấy số này khi đã nhận lịch của bạn, để liên lạc trong lịch hẹn. Mỗi số chỉ dùng cho một tài khoản; muốn đổi sau này, liên hệ hỗ trợ.</Txt>
+      <Txt color={colors.inkSoft}>
+        Cần để đặt lịch. Người làm chỉ thấy số này khi đang có lịch hẹn với bạn (từ lúc họ nhận lịch tới khi xong), để liên lạc. Số không hiện công khai ở đâu cả.
+      </Txt>
+      <Txt color={colors.inkSoft}>
+        Nếu đặt mật khẩu (trong Tôi), bạn cũng đăng nhập được bằng số này. Mỗi số chỉ dùng cho một tài khoản; muốn đổi sau này, liên hệ hỗ trợ.
+      </Txt>
       <TextInput
         value={phone}
         onChangeText={setPhone}
