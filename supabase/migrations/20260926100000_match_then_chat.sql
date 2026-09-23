@@ -591,31 +591,37 @@ exception when unique_violation then
   return false;  -- the same transfer, reported twice
 end $$;
 
--- Staff, after checking the bank statement.
-create function public.record_topup(p_pro uuid, p_amount int, p_ref text default '') returns void
+-- Staff, after checking the bank statement. False when that reference was
+-- already recorded (nothing is credited twice).
+create function public.record_topup(p_pro uuid, p_amount int, p_ref text default '') returns boolean
 language plpgsql security definer set search_path = '' as $$
 begin
   if not public.is_admin() then raise exception 'Không có quyền.' using errcode = 'insufficient_privilege'; end if;
   if not exists (select 1 from public.pros where id = p_pro) then
     raise exception 'Không tìm thấy người làm.' using errcode = 'no_data_found';
   end if;
-  perform public.credit_topup(p_pro, p_amount,
+  return public.credit_topup(p_pro, p_amount,
     case when trim(coalesce(p_ref, '')) = '' then null else 'staff:' || trim(p_ref) end,
     'Nạp ví (nhân viên ghi nhận)');
 end $$;
 
 -- The bank's webhook (app/api/payments/sepay), with the server's key only.
--- Returns false when the code matches nobody or the transaction was already
--- credited.
+-- Every "NAP" + code in the memo is tried in turn: interbank memos often carry
+-- words like "NAPAS2479" before the real "NAP AB23CD". Returns false when no
+-- code matches a freelancer or the transaction was already credited.
 create function public.record_bank_topup(p_content text, p_amount int, p_ref text) returns boolean
 language plpgsql security definer set search_path = '' as $$
 declare code text; pro uuid;
 begin
-  code := upper(substring(coalesce(p_content, '') from '(?i)NAP[^A-Za-z0-9]*([A-HJ-NP-Z2-9]{6})'));
-  if code is null then return false; end if;
-  select id into pro from public.pros where pay_code = code;
-  if pro is null then return false; end if;
-  return public.credit_topup(pro, p_amount, p_ref, 'Chuyển khoản ' || code);
+  for code in
+    select (regexp_matches(upper(coalesce(p_content, '')), 'NAP[^A-Z0-9]*([A-HJ-NP-Z2-9]{6})', 'g'))[1]
+  loop
+    select id into pro from public.pros where pay_code = code;
+    if pro is not null then
+      return public.credit_topup(pro, p_amount, p_ref, 'Chuyển khoản ' || code);
+    end if;
+  end loop;
+  return false;
 end $$;
 
 revoke all on function

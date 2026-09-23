@@ -2131,7 +2131,7 @@ export type Database = {
       }
       record_topup: {
         Args: { p_amount: number; p_pro: string; p_ref?: string }
-        Returns: undefined
+        Returns: boolean
       }
       recompute_pro_metrics: { Args: never; Returns: undefined }
       refresh_pro_rating: { Args: { p_pro: string }; Returns: undefined }

@@ -228,18 +228,10 @@ export async function recordTopup(proId: string, amount: number, ref: string): P
   if (!Number.isInteger(amount) || amount <= 0) return { ok: false, error: "Nhập số tiền." }
   const supabase = await supabaseServer()
   const reference = ref.trim()
-  // record_topup quietly skips a reference it already has (credit_topup returns
-  // false), which would look like success here: say so instead.
-  if (reference) {
-    const { count } = await supabase
-      .from("wallet_entries")
-      .select("id", { count: "exact", head: true })
-      .eq("kind", "topup")
-      .eq("ref", reference)
-    if ((count ?? 0) > 0) return { ok: false, error: "Mã giao dịch này đã được ghi nhận rồi, không cộng lần nữa." }
-  }
-  const { error } = await supabase.rpc("record_topup", { p_pro: proId, p_amount: amount, p_ref: reference })
+  // False: that reference was already recorded, so nothing was credited.
+  const { data, error } = await supabase.rpc("record_topup", { p_pro: proId, p_amount: amount, p_ref: reference })
   if (error) return { ok: false, error: messageFor(error) }
+  if (data === false) return { ok: false, error: "Mã giao dịch này đã được ghi nhận rồi, không cộng lần nữa." }
   revalidatePath("/admin")
   return { ok: true, data: undefined }
 }
