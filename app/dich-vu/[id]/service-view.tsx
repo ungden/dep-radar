@@ -124,11 +124,6 @@ export function ServiceView({ templateId }: { templateId: string }) {
                     </button>
                   )}
                 </div>
-                <p className="mt-3 text-[13px] text-ink-soft">
-                  <Link href="/login?role=pro" className="inline-flex min-h-11 items-center underline underline-offset-2 hover:text-ink">
-                    Bạn làm nghề này? Mở hồ sơ
-                  </Link>
-                </p>
               </div>
             ) : (
               <ul className="mt-4 space-y-3">

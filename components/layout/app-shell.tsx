@@ -80,8 +80,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="min-h-dvh">
       <header className="sticky top-0 z-40 hidden border-b border-line bg-canvas/90 backdrop-blur md:block">
         <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-5 px-6">
-          <Link href={isPro ? "/studio" : "/"} aria-label="360dep">
+          <Link href={isPro ? "/studio" : "/"} aria-label={isPro ? "360dep Đối tác" : "360dep"} className="flex items-center gap-2">
             <Logo />
+            {isPro && <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[12px] font-semibold text-accent-dark">Đối tác</span>}
           </Link>
           <nav className="no-scrollbar flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
             {top.map((item) => (
@@ -119,26 +120,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </span>
                 )}
               </Link>
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!isPro && !session.proId) return router.push("/studio/onboarding")
-                  await actions.switchRole(isPro ? "customer" : "pro")
-                  router.push(isPro ? "/" : "/studio")
-                }}
-                className="ml-1 h-10 rounded-full border border-line px-4 text-[13px] font-semibold text-ink hover:border-ink/30"
-              >
-                {isPro ? "Chế độ đặt lịch" : session.proId ? "Chế độ làm việc" : "Nhận khách trên 360dep"}
-              </button>
+              {/* Only an account that is already a partner has two modes to switch between. */}
+              {session.proId && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await actions.switchRole(isPro ? "customer" : "pro")
+                    router.push(isPro ? "/" : "/studio")
+                  }}
+                  className="ml-1 h-10 rounded-full border border-line px-4 text-[13px] font-semibold text-ink hover:border-ink/30"
+                >
+                  {isPro ? "Chế độ đặt lịch" : "Chế độ đối tác"}
+                </button>
+              )}
               <Link href="/me" aria-label="Tài khoản" className="ml-1 rounded-full hover:opacity-85">
                 <Avatar name={session.name} size={36} />
               </Link>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/login?role=pro" className="hidden h-10 items-center whitespace-nowrap rounded-full px-4 text-[14px] font-semibold text-ink hover:bg-subtle xl:inline-flex">
-                Nhận khách trên 360dep
-              </Link>
               <Link href="/login" className="inline-flex h-10 items-center rounded-full bg-accent px-5 text-[14px] font-semibold text-white hover:bg-accent-dark">
                 Đăng nhập
               </Link>
