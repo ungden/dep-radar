@@ -36,7 +36,7 @@ export default function PartnerPage() {
     {
       icon: HandCoins,
       title: `Phí ${pct}, chỉ khi xong việc`,
-      text: `Không phí đăng ký, không phí duy trì. Khách trả thẳng cho bạn; khi bạn bấm hoàn thành, 360dep tính ${pct} trên giá dịch vụ. Phí di chuyển và phí đặt gấp là của bạn cả.`,
+      text: `Không phí đăng ký, không phí duy trì. Khách trả thẳng cho bạn; khi bạn bấm hoàn thành, 360dep tính ${pct} trên giá dịch vụ. Phí di chuyển và phí đặt gấp thuộc về bạn.`,
     },
     {
       icon: Wallet,
