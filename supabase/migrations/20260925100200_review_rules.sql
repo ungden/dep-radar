@@ -179,8 +179,15 @@ create index if not exists reviews_unpublished_idx on public.reviews (booking_id
 create index if not exists customer_reviews_unpublished_idx on public.customer_reviews (booking_id) where published_at is null;
 
 -- Ratings: published and not hidden.
+--
+-- A review is now published by whichever side writes second, and that can be
+-- the freelancer. guard_pro_update() keeps a freelancer's own writes off their
+-- rating, so the recount marks itself as the system's for the rest of the
+-- transaction (a setting only SQL running inside the database can make).
 create or replace function public.refresh_pro_rating(p_pro uuid) returns void
-language sql security definer set search_path = '' as $$
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform set_config('app.system_write', 'on', true);
   update public.pros p set
     rating_avg = coalesce(r.avg_rating, 0),
     rating_count = coalesce(r.n, 0)
@@ -188,8 +195,53 @@ language sql security definer set search_path = '' as $$
     select avg(rating)::numeric(3, 2) as avg_rating, count(*) as n
     from public.reviews where pro_id = p_pro and hidden_at is null and published_at is not null
   ) r
-  where p.id = p_pro
-$$;
+  where p.id = p_pro;
+  perform set_config('app.system_write', '', true);
+end $$;
+
+-- Same as 20260924100200, plus the system's own writes (above) pass.
+create or replace function public.guard_pro_update() returns trigger
+language plpgsql security definer set search_path = '' as $$
+declare
+  deleting boolean := coalesce(current_setting('app.deleting_account', true), '') = old.id::text;
+  system boolean := coalesce(current_setting('app.system_write', true), '') = 'on';
+begin
+  -- delete_my_account() writes the tombstone itself; nothing below applies to it.
+  if deleting or system then
+    return new;
+  end if;
+  if not public.is_privileged() then
+    new.identity_status := old.identity_status;
+    new.identity_name := old.identity_name;
+    new.adult := old.adult;
+    new.birth_year := old.birth_year;
+    new.suspended_at := old.suspended_at;
+    new.completed_jobs := old.completed_jobs;
+    new.response_minutes := old.response_minutes;
+    new.rating_avg := old.rating_avg;
+    new.rating_count := old.rating_count;
+    new.slug := old.slug;
+    if new.published and not old.published then
+      if not exists (select 1 from public.pro_services s where s.pro_id = new.id and s.active)
+         or not exists (select 1 from public.working_hours w where w.pro_id = new.id)
+         or not exists (select 1 from public.works k where k.pro_id = new.id) then
+        raise exception 'Cần ít nhất 1 dịch vụ, giờ làm việc và 1 ảnh tác phẩm trước khi mở hồ sơ.'
+          using errcode = 'check_violation';
+      end if;
+    end if;
+    if new.accepting_jobs and not old.accepting_jobs and public.wallet_below_floor(new.id) then
+      raise exception 'Ví đang âm quá hạn mức, nạp ví để nhận lịch lại.' using errcode = 'check_violation';
+    end if;
+  end if;
+  -- A verified freelancer is shown under the name on their ID card.
+  if coalesce(new.identity_name, '') <> '' and new.identity_status = 'verified' then
+    new.display_name := new.identity_name;
+  end if;
+  if coalesce(new.display_name, '') = '' then
+    new.display_name := old.display_name;
+  end if;
+  return new;
+end $$;
 
 create or replace function public.recompute_pro_metrics() returns void
 language sql security definer set search_path = '' as $$
