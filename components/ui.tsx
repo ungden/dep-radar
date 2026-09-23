@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, Star } from "lucide-react"
 import type { BookingStatus } from "@/lib/types"
+import { LOGO_GLYPH_PATH, LOGO_RADIUS } from "@/lib/design/brand"
 import { cn, initials } from "@/lib/utils"
 
 type ButtonVariant = "primary" | "outline" | "soft" | "ghost" | "danger"
@@ -51,13 +52,12 @@ export function ButtonLink({
   return <Link className={buttonClass(variant, size, className)} {...props} />
 }
 
-/** The mark: a lens ring with a red "recording" dot. Reads at 16px. */
+/** The mark: a white serif "đ" on rose (lib/design/brand.ts). Reads at 16px. */
 export function LogoMark({ size = 32, className }: { size?: number; className?: string }) {
   return (
     <svg aria-hidden width={size} height={size} viewBox="0 0 32 32" className={cn("shrink-0", className)}>
-      <rect width="32" height="32" rx="9" fill="var(--color-accent)" />
-      <circle cx="15.5" cy="16.5" r="7.6" fill="none" stroke="#fff" strokeWidth="3" />
-      <circle cx="24" cy="8" r="2.8" fill="#F6E6E6" />
+      <rect width="32" height="32" rx={LOGO_RADIUS} fill="var(--color-accent)" />
+      <path d={LOGO_GLYPH_PATH} fill="#fff" />
     </svg>
   )
 }
