@@ -1,9 +1,8 @@
 import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
-import { Alert, ScrollView, View, useWindowDimensions } from "react-native"
+import { ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { categoryLabel, getTemplate, showsAverage, verticalOf, type Pro } from "@/shared"
-import { openThread } from "@/data/chat"
 import { formatDuration, formatKm, formatPrice, formatRating, formatResponseTime } from "@/data/format"
 import { loadProExtras } from "@/data/public"
 import { FollowButton } from "@/components/follow-button"
@@ -27,7 +26,6 @@ export default function ProProfile() {
   const { width } = useWindowDimensions()
   const [tab, setTab] = React.useState<Tab>(params.tab === "gia" || params.tab === "reviews" ? params.tab : "works")
   const [extras, setExtras] = React.useState<{ equipment?: string; model?: Pro["model"] }>({})
-  const [opening, setOpening] = React.useState(false)
 
   const isMine = Boolean(pro && app.uid === pro.uuid)
   const safety = useSafetyMenu(pro && !isMine ? { accountId: pro.uuid, name: pro.name, onBlocked: () => router.back() } : null)
@@ -61,15 +59,6 @@ export default function ProProfile() {
   const response = formatResponseTime(pro.stats.responseMinutes)
   const isMe = app.uid === pro.uuid
   const photoPeople = pro.categories.some((c) => verticalOf(c) === "photo")
-
-  const message = async () => {
-    if (!app.uid) return router.push("/login")
-    setOpening(true)
-    const res = await openThread(pro.uuid)
-    setOpening(false)
-    if (res.ok) router.push({ pathname: "/tin-nhan/[id]", params: { id: res.data } })
-    else Alert.alert("Chưa mở được hội thoại", res.error)
-  }
 
   const cell = (width - gutter * 2 - 4) / 3
 
@@ -124,16 +113,21 @@ export default function ProProfile() {
           <Stat value={response ?? "—"} label={response ? "phản hồi" : "chưa đủ dữ liệu"} />
         </View>
 
+        {/* No chat before a match: booking is the way in, and messages open once they accept. */}
         {!isMe ? (
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <Button label="Nhắn tin" variant="secondary" icon="chat" onPress={() => void message()} busy={opening} style={{ flex: 1 }} full />
+          <View style={{ gap: 6 }}>
             <Button
               label={pro.acceptingJobs ? "Đặt lịch" : "Tạm nghỉ"}
+              icon={pro.acceptingJobs ? "calendar" : undefined}
               disabled={!pro.acceptingJobs || !listings.length}
               onPress={() => router.push({ pathname: "/book/[proId]", params: { proId: pro.id } })}
-              style={{ flex: 1 }}
               full
             />
+            {pro.acceptingJobs && listings.length ? (
+              <Txt v="meta" color={colors.muted} center>
+                Nhắn tin với {pro.name} mở khi họ nhận lịch của bạn.
+              </Txt>
+            ) : null}
           </View>
         ) : null}
         {!isMe ? (

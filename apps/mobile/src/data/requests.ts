@@ -1,29 +1,13 @@
+import { getVariant, type ServiceVariant } from "@/shared"
 import { localDate, localTime, toTimestamptz } from "./format"
-import { imageUrl } from "./links"
-import { messageFor, one, rpc, supabase, type Result, type Row } from "./supabase"
+import { messageFor, rpc, selectWithFallback, supabase, type Result, type Row } from "./supabase"
 
 /**
- * The customer's side of the request board: post a request (post_job), read
- * the quotes that come back, pick one (accept_offer). Same RPCs and arguments
- * as postJob() / acceptOffer() / closeJob() in lib/api/actions.ts.
+ * The customer's side of requests (20260926100000_match_then_chat.sql): post
+ * one at a fixed price (post_job), every freelancer who can do it is told, and
+ * the first to take it gets a confirmed booking. No quotes to compare. Same
+ * RPC and arguments as the web.
  */
-export interface RequestOffer {
-  id: string
-  price: number
-  message: string
-  status: "pending" | "accepted" | "rejected" | "withdrawn" | "expired"
-  createdAt: string
-  pro: {
-    uuid: string
-    slug: string
-    name: string
-    avatar?: string
-    verified: boolean
-    rating: { average: number; count: number }
-    completedJobs: number
-  }
-}
-
 export interface MyRequest {
   id: string
   templateId: string
@@ -38,8 +22,19 @@ export interface MyRequest {
   atHome: boolean
   status: "open" | "booked" | "closed" | "expired"
   createdAt: string
-  offers: RequestOffer[]
+  /** Per person, fixed when posted. */
+  price: number
+  /** How many freelancers were told when it was posted; null on a server without the column. */
+  notified: number | null
+  /** The booking it became once someone took it. */
+  bookingId: string | null
 }
+
+/** "Trả thêm để có người nhận nhanh hơn": steps per person above the suggested price. */
+export const PRICE_STEP = 20_000
+
+/** Suggested price plus `steps` extra steps, never above the catalogue's ceiling. */
+export const requestPrice = (variant: ServiceVariant, steps: number) => Math.min(variant.suggestedPrice + Math.max(0, steps) * PRICE_STEP, variant.maxPrice)
 
 export async function postJob(input: {
   templateId: string
@@ -50,6 +45,8 @@ export async function postJob(input: {
   addressId: string | null
   quantity?: number
   description: string
+  /** Per person; post_job takes the suggested price when it is left out. */
+  price?: number
 }) {
   return rpc<string>("post_job", {
     p_template: input.templateId,
@@ -60,38 +57,14 @@ export async function postJob(input: {
     p_quantity: input.quantity ?? 1,
     p_description: input.description,
     p_payment: "cash",
+    p_price: input.price,
   })
 }
 
-const SELECT = `
-  id, template_id, variant_id, quantity, description, starts_at, at_home, city, district, status, created_at,
-  offers (id, pro_id, price, message, status, created_at,
-    pros (id, slug, display_name, avatar_path, identity_status, rating_avg, rating_count, completed_jobs))
-`
+const BASE = "id, template_id, variant_id, quantity, description, starts_at, at_home, city, district, status, created_at"
+const COLUMN_SETS = [`${BASE}, price, notified, booking_id`, BASE]
 
 function toRequest(row: Row): MyRequest {
-  const offers = ((row.offers ?? []) as Row[])
-    .filter((o) => o.status !== "withdrawn")
-    .map((o) => {
-      const pro = one(o.pros)
-      return {
-        id: o.id,
-        price: Number(o.price ?? 0),
-        message: o.message ?? "",
-        status: o.status,
-        createdAt: o.created_at,
-        pro: {
-          uuid: o.pro_id,
-          slug: pro.slug ?? "",
-          name: pro.display_name || "Người làm",
-          avatar: imageUrl(pro.avatar_path, "avatars"),
-          verified: pro.identity_status === "verified",
-          rating: { average: Number(pro.rating_avg ?? 0), count: pro.rating_count ?? 0 },
-          completedJobs: pro.completed_jobs ?? 0,
-        },
-      } satisfies RequestOffer
-    })
-    .sort((a, b) => a.price - b.price)
   return {
     id: row.id,
     templateId: row.template_id,
@@ -106,42 +79,37 @@ function toRequest(row: Row): MyRequest {
     atHome: Boolean(row.at_home),
     status: row.status,
     createdAt: row.created_at,
-    offers,
+    price: Number(row.price ?? getVariant(row.template_id, row.variant_id)?.suggestedPrice ?? 0),
+    notified: row.notified == null ? null : Number(row.notified),
+    bookingId: row.booking_id ?? null,
   }
 }
 
 export async function listMyRequests(uid: string): Promise<MyRequest[]> {
-  const { data, error } = await supabase.from("jobs").select(SELECT).eq("customer_id", uid).order("created_at", { ascending: false }).limit(100)
-  if (error) throw new Error("Không tải được yêu cầu của bạn.")
-  return ((data ?? []) as Row[]).map(toRequest)
+  const rows = await selectWithFallback(
+    "requests",
+    (c) => supabase.from("jobs").select(c).eq("customer_id", uid).order("created_at", { ascending: false }).limit(100),
+    COLUMN_SETS,
+  )
+  return rows.map(toRequest)
 }
 
 export async function getMyRequest(uid: string, id: string): Promise<MyRequest | null> {
-  const { data, error } = await supabase.from("jobs").select(SELECT).eq("customer_id", uid).eq("id", id).maybeSingle()
-  if (error) throw new Error("Không tải được yêu cầu.")
-  return data ? toRequest(data as Row) : null
+  const rows = await selectWithFallback("request", (c) => supabase.from("jobs").select(c).eq("customer_id", uid).eq("id", id).limit(1), COLUMN_SETS)
+  return rows[0] ? toRequest(rows[0]) : null
 }
 
-/** Returns the new booking's id. */
-export const acceptOffer = (offerId: string) => rpc<string>("accept_offer", { p_offer: offerId })
-
+/** Only an open request can be deleted; customers no longer edit one (the price is part of the deal). */
 export async function closeJob(jobId: string): Promise<Result> {
   const { error } = await supabase.from("jobs").delete().eq("id", jobId)
   if (error) return { ok: false, error: messageFor(error, "Không xoá được yêu cầu.") }
   return { ok: true, data: undefined }
 }
 
-/** The booking a request turned into, for "Xem lịch hẹn". Matched the way the web does: same freelancer, same start. */
-export async function bookingForRequest(uid: string, request: MyRequest): Promise<string | null> {
-  const accepted = request.offers.find((o) => o.status === "accepted")
-  if (!accepted) return null
-  const { data } = await supabase
-    .from("bookings")
-    .select("id")
-    .eq("customer_id", uid)
-    .eq("pro_id", accepted.pro.uuid)
-    .eq("starts_at", request.startsAt)
-    .limit(1)
-    .maybeSingle()
-  return (data as { id?: string } | null)?.id ?? null
+/** How far along a request is, in the customer's words. */
+export function requestProgress(r: MyRequest): string {
+  if (r.status === "booked") return "Đã có người nhận việc"
+  if (r.status !== "open") return r.status === "expired" ? "Hết hạn, chưa ai nhận" : "Đã đóng"
+  if (r.notified === null) return "Đang tìm người làm"
+  return r.notified > 0 ? `Đang tìm người làm · đã báo cho ${r.notified} người` : "Đang tìm người làm · chưa báo được cho ai"
 }

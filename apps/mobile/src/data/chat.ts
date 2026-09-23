@@ -1,4 +1,5 @@
 import * as Crypto from "expo-crypto"
+import type { ChatStatus } from "@/shared"
 import { imageUrl } from "./links"
 import { one, rpc, supabase, type Row } from "./supabase"
 
@@ -15,6 +16,8 @@ export interface ThreadSummary {
   iAmPro: boolean
   /** The other person's account id, for blocking. */
   otherId: string
+  /** From the thread's computed chat_status; null when the server does not have it. */
+  chatStatus: ChatStatus | null
 }
 
 export interface ChatMessage {
@@ -27,15 +30,19 @@ export interface ChatMessage {
   createdAt: string
 }
 
+const THREADS = `
+  id, customer_id, pro_id, booking_id, customer_name, last_message_at,
+  pro:pros!threads_pro_id_fkey (slug, display_name, avatar_path),
+  messages (id, sender_id, body, image_paths, read_at, created_at)
+`
+
+const asChatStatus = (v: unknown): ChatStatus | null => (v === "waiting" || v === "open" || v === "closed" ? v : null)
+
 export async function listThreads(uid: string): Promise<ThreadSummary[]> {
-  const { data, error } = await supabase
-    .from("threads")
-    .select(`
-      id, customer_id, pro_id, booking_id, customer_name, last_message_at,
-      pro:pros!threads_pro_id_fkey (slug, display_name, avatar_path),
-      messages (id, sender_id, body, image_paths, read_at, created_at)
-    `)
-    .order("last_message_at", { ascending: false })
+  // chat_status is a computed field (20260926100000_match_then_chat.sql): PostgREST returns it only when named.
+  const read = (columns: string) => supabase.from("threads").select(columns).order("last_message_at", { ascending: false })
+  let { data, error } = await read(`${THREADS}, chat_status`)
+  if (error) ({ data, error } = await read(THREADS))
   if (error) throw new Error("Không tải được tin nhắn.")
   return ((data ?? []) as Row[])
     .map((t) => {
@@ -54,6 +61,7 @@ export async function listThreads(uid: string): Promise<ThreadSummary[]> {
         unread: messages.filter((m) => m.sender_id !== uid && !m.read_at).length,
         iAmPro,
         otherId: String(iAmPro ? t.customer_id : t.pro_id),
+        chatStatus: asChatStatus(t.chat_status),
       }
     })
     .filter((t) => t.lastMessage !== "")
@@ -69,17 +77,23 @@ export interface ThreadHeader {
   templateId: string | null
   iAmPro: boolean
   otherId: string
-  /** When the conversation stops taking messages; null while it is open for good. */
+  /**
+   * 'waiting' (the booking is not accepted yet), 'open' (a live match) or
+   * 'closed' (the job ended). Null when the server does not compute it yet;
+   * the screen then leaves the box open and send_message decides.
+   */
+  chatStatus: ChatStatus | null
+  /** When it closed; null while waiting or open. */
   closesAt: string | null
 }
 
 export async function threadHeader(threadId: string, uid: string): Promise<ThreadHeader | null> {
   const base = "pro_id, customer_id, booking_id, customer_name, pro:pros!threads_pro_id_fkey (slug, display_name)"
-  // closes_at is a computed field (20260925100000_chat_lifecycle.sql). If the
-  // server does not have it yet, the chat reads as open, as it did before.
+  // chat_status and closes_at are computed fields (20260926100000_match_then_chat.sql),
+  // returned only when selected by name.
   let { data, error } = await supabase
     .from("threads")
-    .select(`${base}, closes_at, booking:bookings!threads_booking_id_fkey (template_id)`)
+    .select(`${base}, chat_status, closes_at, booking:bookings!threads_booking_id_fkey (template_id)`)
     .eq("id", threadId)
     .maybeSingle()
   if (error) ({ data } = await supabase.from("threads").select(base).eq("id", threadId).maybeSingle())
@@ -95,6 +109,7 @@ export async function threadHeader(threadId: string, uid: string): Promise<Threa
     templateId: (one(row.booking).template_id ?? null) as string | null,
     iAmPro,
     otherId: String(iAmPro ? row.customer_id : row.pro_id),
+    chatStatus: asChatStatus(row.chat_status),
     closesAt: (row.closes_at ?? null) as string | null,
   }
 }
@@ -158,24 +173,25 @@ export async function uploadChatPhoto(uid: string, jpegUri: string): Promise<str
 }
 
 /**
- * send_message. `masked` is true when the database hid a phone number, link or
- * e-mail ("[đã ẩn]") because the two have no confirmed booking yet. Its
- * refusals (chat closed, three questions already sent) are written for people.
+ * send_message. Only an open chat (a live match) takes messages; its refusals
+ * (not accepted yet, job ended) are written for people. It still returns a
+ * boolean for older builds, always false now: nothing is hidden.
  */
-export async function sendMessage(
-  threadId: string,
-  body: string,
-  imagePaths: string[] = [],
-): Promise<{ ok: true; masked: boolean } | { ok: false; error: string }> {
+export async function sendMessage(threadId: string, body: string, imagePaths: string[] = []): Promise<{ ok: true } | { ok: false; error: string }> {
   const text = body.trim().slice(0, 2000)
   if (!text && !imagePaths.length) return { ok: false, error: "Nhập tin nhắn." }
   const res = await rpc<boolean | null>("send_message", { p_thread: threadId, p_body: text, p_image_paths: imagePaths.slice(0, CHAT_MAX_PHOTOS) })
-  return res.ok ? { ok: true, masked: res.data === true } : { ok: false, error: res.error === "Có lỗi xảy ra, vui lòng thử lại." ? "Không gửi được tin nhắn." : res.error }
+  return res.ok ? { ok: true } : { ok: false, error: res.error === "Có lỗi xảy ra, vui lòng thử lại." ? "Không gửi được tin nhắn." : res.error }
 }
 
 export const markThreadRead = (threadId: string) => rpc("mark_thread_read", { p_thread: threadId })
 
-export const openThread = (proUuid: string, bookingId?: string | null) =>
+/**
+ * The conversation of a booking the freelancer accepted (confirmed or in
+ * progress). No chat before a match: open_thread refuses a profile or a
+ * pending booking. (An accepted casting call has one without a booking.)
+ */
+export const openThread = (proUuid: string, bookingId: string | null) =>
   rpc<string>("open_thread", { p_pro: proUuid, p_booking: bookingId ?? undefined })
 
 /** Ids of the caller's threads (row level security limits the read), for a filtered Realtime listener. */

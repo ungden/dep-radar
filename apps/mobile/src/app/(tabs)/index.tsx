@@ -295,7 +295,7 @@ export default function Explore() {
             <Txt v="title" w={700}>
               Không thấy dịch vụ bạn cần?
             </Txt>
-            <Txt color={colors.inkSoft}>Đăng yêu cầu, người làm gần bạn gửi báo giá. Bạn chọn, không mất phí.</Txt>
+            <Txt color={colors.inkSoft}>Đăng yêu cầu với giá theo bảng giá 360dep, người làm gần bạn nhận việc. Không mất phí đăng.</Txt>
             <Button label="Đăng yêu cầu" onPress={openRequestForm} style={{ marginTop: 6 }} />
           </View>
 
@@ -400,7 +400,7 @@ function EmptySupply({ city, label, onAllCities }: { city: string | null; label?
     <View style={{ gap: 12 }}>
       <EmptyState
         title={title}
-        text="Đăng yêu cầu: khi có người nhận việc này quanh bạn, họ thấy yêu cầu và gửi báo giá. Không mất phí."
+        text="Đăng yêu cầu: khi có người làm việc này quanh bạn, họ thấy yêu cầu và nhận việc. Không mất phí đăng."
         action="Đăng yêu cầu"
         onAction={openRequestForm}
       />

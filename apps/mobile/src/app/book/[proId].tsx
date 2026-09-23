@@ -141,7 +141,7 @@ export default function Book() {
           Đã gửi lịch hẹn
         </Txt>
         <Txt color={colors.inkSoft} center>
-          {pro.name} sẽ gọi cho bạn để xác nhận trong vòng {POLICY.confirmWithinHours} giờ. Nếu không, lịch tự huỷ và bạn không mất gì.
+          {pro.name} sẽ xem và nhận lịch trong vòng {POLICY.confirmWithinHours} giờ. Nhận xong, hai bên nhắn tin, gọi được cho nhau. Nếu không nhận, lịch tự huỷ và bạn không mất gì.
         </Txt>
         <Button
           label="Xem lịch hẹn"

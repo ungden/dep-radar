@@ -52,8 +52,11 @@ export interface BookingItem {
   pro: { id: string; slug: string; name: string; avatar?: string; phone: string | null }
 }
 
-/** A customer sees the freelancer's number only once someone has committed. */
-const CONTACT_VISIBLE: BookingStatus[] = ["confirmed", "in_progress", "completed", "no_show"]
+/**
+ * Each side sees the other's number only while the job is live: from the
+ * freelancer accepting until it ends, the same window as the chat.
+ */
+const CONTACT_VISIBLE: BookingStatus[] = ["confirmed", "in_progress"]
 
 const BASE = `
   id, customer_id, pro_id, template_id, variant_id, quantity, source, status,
@@ -71,7 +74,7 @@ const WITH_CONNECTION = `${WITH_DELIVERY.replace("reviews (booking_id)", "review
   voucher_id, discount, customer_reviews (booking_id, rating, body, published_at)`
 const COLUMN_SETS = [WITH_CONNECTION, WITH_DELIVERY, BASE]
 
-function toBooking(row: Row, viewer: "customer" | "pro"): BookingItem {
+function toBooking(row: Row): BookingItem {
   const template = getTemplate(row.template_id)
   const variant = getVariant(row.template_id, row.variant_id)
   const customer = one(row.customer)
@@ -135,13 +138,13 @@ function toBooking(row: Row, viewer: "customer" | "pro"): BookingItem {
           acceptedAt: row.delivery_accepted_at ?? null,
         }
       : null,
-    customer: { id: row.customer_id, name: customer.full_name || "Khách hàng", phone: customer.phone || null },
+    customer: { id: row.customer_id, name: customer.full_name || "Khách hàng", phone: CONTACT_VISIBLE.includes(status) ? customer.phone || null : null },
     pro: {
       id: row.pro_id,
       slug: pro.slug ?? "",
       name: pro.display_name || "Chuyên viên",
       avatar: imageUrl(pro.avatar_path, "avatars"),
-      phone: viewer === "customer" && !CONTACT_VISIBLE.includes(status) ? null : one(pro.accounts).phone || null,
+      phone: CONTACT_VISIBLE.includes(status) ? one(pro.accounts).phone || null : null,
     },
   }
 }
@@ -158,14 +161,13 @@ export async function listBookings(uid: string, as: "customer" | "pro"): Promise
         .limit(200),
     COLUMN_SETS,
   )
-  return rows.map((r) => toBooking(r, as))
+  return rows.map((r) => toBooking(r))
 }
 
-export async function getBooking(id: string, uid: string): Promise<BookingItem | null> {
+export async function getBooking(id: string, _uid: string): Promise<BookingItem | null> {
   const rows = await selectWithFallback("booking", (c) => supabase.from("bookings").select(c).eq("id", id).limit(1), COLUMN_SETS)
   const row = rows[0]
-  if (!row) return null
-  return toBooking(row, row.pro_id === uid ? "pro" : "customer")
+  return row ? toBooking(row) : null
 }
 
 // Writes: the same RPCs, with the same arguments, as lib/api/actions.ts.

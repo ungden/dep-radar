@@ -3,8 +3,9 @@ import { router } from "expo-router"
 import { Alert, Linking, Platform, ScrollView, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { confirmBooking, listBookings, type BookingItem } from "@/data/bookings"
-import { addDays, formatCountdown, formatPhone, formatPrice, localDate, todayISO } from "@/data/format"
+import { addDays, formatCountdown, formatPrice, localDate, todayISO } from "@/data/format"
 import { askForPushPermission } from "@/data/push"
+import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
 import { StudioHeader } from "@/components/studio-header"
 import { useApp } from "@/state/app"
 import { useNow } from "@/state/keyboard"
@@ -21,26 +22,27 @@ function mapsUrl(b: BookingItem) {
   return Platform.OS === "ios" ? `http://maps.apple.com/?daddr=${q}` : `https://www.google.com/maps/dir/?api=1&destination=${q}`
 }
 
-/** The freelancer's home: who to call now, where to be today, what this week earned. */
+/** The freelancer's home: a fee to pay first, bookings to accept, where to be today, what this week earned. */
 export default function Today() {
   const app = useApp()
   const insets = useSafeAreaInsets()
   const uid = app.uid
   const bookings = useAsync(uid ? () => listBookings(uid, "pro") : null, [uid])
+  const fee = useFee(uid)
   const [busy, setBusy] = React.useState<string | null>(null)
   const all = bookings.value ?? []
   const hasPending = all.some((b) => b.status === "pending")
   // Ticks only while a confirmation countdown is on screen.
   const now = useNow(hasPending)
 
-  // A booking waiting for a call is the moment push notifications make sense.
+  // A booking waiting to be accepted is the moment push notifications make sense.
   React.useEffect(() => {
     if (hasPending && uid) void askForPushPermission(uid)
   }, [hasPending, uid])
 
   const today = todayISO()
   const monday = addDays(today, -((new Date(`${today}T00:00:00Z`).getUTCDay() + 6) % 7))
-  const toCall = all.filter((b) => b.status === "pending").sort((a, b) => a.confirmBy.localeCompare(b.confirmBy))
+  const toAccept = all.filter((b) => b.status === "pending").sort((a, b) => a.confirmBy.localeCompare(b.confirmBy))
   const todays = all.filter((b) => b.date === today && ["confirmed", "in_progress"].includes(b.status)).sort((a, b) => a.time.localeCompare(b.time))
   const week = all.filter((b) => b.status === "completed" && b.completedAt && localDate(b.completedAt) >= monday)
   const earned = week.reduce((sum, b) => sum + b.quote.payout, 0)
@@ -52,7 +54,10 @@ export default function Today() {
     setBusy(b.id)
     const res = await confirmBooking(b.id)
     setBusy(null)
-    if (!res.ok) return Alert.alert("Chưa nhận được lịch", res.error)
+    if (!res.ok) {
+      void fee.reload()
+      return Alert.alert("Chưa nhận được lịch", res.error)
+    }
     void bookings.reload()
   }
 
@@ -60,7 +65,10 @@ export default function Today() {
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.canvas }}
       contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 40, gap: 24 }}
-      refreshControl={refreshControl(bookings.refreshing, () => void bookings.refresh())}
+      refreshControl={refreshControl(bookings.refreshing || fee.refreshing, () => {
+        void bookings.refresh()
+        void fee.refresh()
+      })}
     >
       <StudioHeader title="Hôm nay" subtitle={app.myPro && !app.myPro.acceptingJobs ? "Bạn đang tạm nghỉ nhận lịch mới." : undefined} />
       {bookings.error ? (
@@ -68,12 +76,22 @@ export default function Today() {
           <ErrorNote text={bookings.error} onRetry={() => void bookings.reload()} />
         </View>
       ) : null}
+      {fee.owing ? (
+        <View style={{ paddingHorizontal: gutter }}>
+          <FeeCard fee={fee.value} />
+        </View>
+      ) : null}
 
       <View style={{ paddingHorizontal: gutter, gap: 12 }}>
-        <SectionHeader title="Cần gọi xác nhận" />
+        <SectionHeader title="Chờ bạn nhận lịch" />
         {bookings.loading ? <Skeleton style={{ height: 120, borderRadius: radius.md }} /> : null}
-        {!bookings.loading && !toCall.length ? <Txt color={colors.inkSoft}>Không có lịch nào đang chờ bạn gọi.</Txt> : null}
-        {toCall.map((b) => {
+        {!bookings.loading && !toAccept.length ? <Txt color={colors.inkSoft}>Không có lịch nào đang chờ bạn nhận.</Txt> : null}
+        {toAccept.length && fee.owing ? (
+          <Txt v="meta" color={colors.warning}>
+            {OWING_NOTE}
+          </Txt>
+        ) : null}
+        {toAccept.map((b) => {
           const left = Date.parse(b.confirmBy) - now
           return (
             <Card key={b.id}>
@@ -92,10 +110,7 @@ export default function Today() {
                 {b.time}, {b.date.split("-").reverse().join("/")} · {b.atHome ? `${b.district}` : "Tại studio"} · bạn nhận {formatPrice(b.quote.payout)}
               </Txt>
               <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
-                {b.customer.phone ? (
-                  <Button label={`Gọi ${formatPhone(b.customer.phone)}`} icon="phone" size="sm" onPress={() => void Linking.openURL(`tel:${b.customer.phone}`)} />
-                ) : null}
-                <Button label="Đã gọi, nhận lịch" size="sm" variant="secondary" busy={busy === b.id} onPress={() => void accept(b)} />
+                <Button label="Nhận lịch" size="sm" busy={busy === b.id} disabled={fee.owing} onPress={() => void accept(b)} />
                 <Button label="Chi tiết" size="sm" variant="ghost" onPress={() => router.push({ pathname: "/bookings/[id]", params: { id: b.id } })} />
               </View>
             </Card>
