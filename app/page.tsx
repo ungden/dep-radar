@@ -7,7 +7,8 @@ import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Bell, ChevronDown, MapPin, MessageCircle, Search, X } from "lucide-react"
 import { CATEGORY_ICON, PostCard, VerticalSwitch } from "@/components/beauty"
-import { Avatar, ButtonLink, Chip, PageSkeleton } from "@/components/ui"
+import { CategoryTiles } from "@/components/category-icon"
+import { Avatar, ButtonLink, PageSkeleton } from "@/components/ui"
 import { CATEGORIES, getVertical, isVertical } from "@/lib/catalog"
 import { actions } from "@/lib/client-actions"
 import { rankFeed, type VerticalFilter } from "@/lib/feed"
@@ -108,16 +109,12 @@ function Explore() {
         </div>
 
         {categories.length > 1 && (
-          <div className="no-scrollbar -mx-4 mb-5 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0">
-            <Chip active={shownCategory === "all"} onClick={() => setCategory("all")}>
-              Tất cả
-            </Chip>
-            {categories.map((c) => (
-              <Chip key={c.id} active={shownCategory === c.id} onClick={() => setCategory(c.id)}>
-                {c.label}
-              </Chip>
-            ))}
-          </div>
+          <CategoryTiles
+            className="mb-7"
+            items={[{ id: "all", label: "Tất cả" }, ...categories.map((c) => ({ id: c.id, label: c.label }))]}
+            value={shownCategory}
+            onChange={(id) => setCategory(id as CategoryId | "all")}
+          />
         )}
 
         {shown.length === 0 ? (
@@ -190,7 +187,7 @@ function ServiceCard({ offer, priority }: { offer: ServiceOffer; priority?: bool
           />
         ) : (
           <span className="absolute inset-0 flex items-center justify-center">
-            <Icon className="size-10 text-ink-soft" />
+            <Icon className="size-12 text-accent" />
           </span>
         )}
       </div>

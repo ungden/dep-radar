@@ -6,6 +6,7 @@ import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { ChevronLeft, Search, SlidersHorizontal, X } from "lucide-react"
 import { PostCard, ProCard, VerticalSwitch } from "@/components/beauty"
+import { CategoryTiles } from "@/components/category-icon"
 import { Sheet } from "@/components/sheet"
 import { sortPros } from "@/components/trust"
 import { Button, ButtonLink, Chip, PageSkeleton, Tabs, Toggle } from "@/components/ui"
@@ -214,18 +215,16 @@ function SearchView() {
       <div className="sticky top-0 z-30 -mx-4 mt-3 bg-canvas/95 px-4 py-2.5 backdrop-blur md:top-16 md:mx-0 md:mt-5 md:px-0">
         <VerticalSwitch value={vertical} onChange={setVertical} />
       </div>
-      <div className="no-scrollbar -mx-4 mt-1 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0">
-        <Chip active={active > 0} onClick={() => setFiltersOpen(true)} className="lg:hidden">
+      <CategoryTiles
+        className="mt-3"
+        items={[{ id: "all", label: "Tất cả" }, ...categoriesInTrade(vertical).map((c) => ({ id: c.id, label: c.label }))]}
+        value={category ?? "all"}
+        onChange={(id) => setParams({ category: id === "all" ? null : id })}
+      />
+      <div className="mt-4 lg:hidden">
+        <Chip active={active > 0} onClick={() => setFiltersOpen(true)}>
           <SlidersHorizontal className="size-3.5" /> Bộ lọc{active ? ` · ${active}` : ""}
         </Chip>
-        <Chip active={!category} onClick={() => setParams({ category: null })}>
-          Tất cả
-        </Chip>
-        {categoriesInTrade(vertical).map((c) => (
-          <Chip key={c.id} active={category === c.id} onClick={() => setParams({ category: category === c.id ? null : c.id })}>
-            {c.label}
-          </Chip>
-        ))}
       </div>
 
       <div className="mt-6 lg:grid lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-10">

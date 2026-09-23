@@ -8,6 +8,7 @@
  * versions live in src/data/*.
  */
 export * from "@shared/design/tokens"
+export * from "@shared/design/category-icons"
 export type * from "@shared/types"
 export * from "@shared/catalog"
 export * from "@shared/feed"

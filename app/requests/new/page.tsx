@@ -102,11 +102,11 @@ function NewRequestForm() {
                 aria-pressed={active}
                 onClick={() => pickCategory(c.id)}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 rounded-2xl border py-3 text-[11.5px] transition-colors",
-                  active ? "border-accent bg-subtle font-semibold text-accent-dark" : "border-line bg-surface text-ink-soft",
+                  "flex flex-col items-center gap-1.5 rounded-2xl py-3 text-[12.5px] transition-colors",
+                  active ? "bg-accent font-semibold text-white" : "bg-accent-soft text-ink hover:bg-subtle-strong",
                 )}
               >
-                <Icon className="size-5" />
+                <Icon className={cn("size-7", active ? "text-white" : "text-accent")} />
                 {c.label}
               </button>
             )
