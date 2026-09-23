@@ -1,38 +1,160 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { absoluteUrl } from "@/lib/env"
 import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
 import { safeNext } from "./credentials"
+import { isPhoneEmail, maskEmail, parseIdentifier } from "./identifier"
+import { detachedAuthClient, requestPasswordReset, signInWithIdentifier, signUpWithIdentifier, throttles } from "./password"
+import { MESSAGES, authErrorKind, newPasswordProblem } from "./password-rules"
 import { toE164 } from "./phone"
+import { clientIp } from "./throttle"
 
 /**
- * Signing in is Google, through Supabase Auth. No password to forget, no SMS.
+ * Signing in, through Supabase Auth: Google or Apple (when switched on in the
+ * dashboard, lib/auth/providers.ts), or a password with a phone number or an
+ * email (lib/auth/password.ts, shared with the app's /api/auth/* routes). No SMS.
  *
- * Google gives a name and an email but never a phone number, and a freelancer
- * has to call the customer before taking a job. So the first sign-in ends on
- * /me/so-dien-thoai, and the database refuses a booking, a request or a
- * freelancer profile from an account that has not set one (require_phone()).
+ * Google, Apple and an email sign-up give no phone number, and the number is
+ * how the two sides reach each other once a booking is accepted. So those
+ * sign-ins end on /me/so-dien-thoai, and the database refuses a booking, a
+ * request or a partner profile from an account that has not set one
+ * (require_phone()).
  */
 export type AuthResult = { ok: true } | { ok: false; error: string }
 
-/** Starts the Google round trip; comes back through /auth/callback. */
-export async function signInWithGoogle(formData: FormData): Promise<void> {
+/** Starts the Google or Apple round trip; comes back through /auth/callback. */
+export async function signInWithProvider(formData: FormData): Promise<void> {
+  const provider = formData.get("provider") === "apple" ? "apple" : "google"
   const next = safeNext(String(formData.get("next") ?? ""), "/")
   const supabase = await supabaseServer()
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
+    provider,
     options: {
       redirectTo: absoluteUrl(`/auth/callback?next=${encodeURIComponent(next)}`),
-      queryParams: { prompt: "select_account" },
+      queryParams: provider === "google" ? { prompt: "select_account" } : undefined,
     },
   })
   if (error || !data.url) {
-    console.error("signInWithOAuth failed:", error?.code, error?.message)
-    redirect(`/login?loi=google&next=${encodeURIComponent(next)}`)
+    console.error("signInWithOAuth failed:", provider, error?.code, error?.message)
+    redirect(`/login?loi=${provider}&next=${encodeURIComponent(next)}`)
   }
   redirect(data.url)
+}
+
+export type SignInResult = { ok: true; next: string } | { ok: false; error: string }
+
+/** Where a password sign-in lands: the phone step first if the account has no number. */
+async function landing(userId: string, next: string): Promise<string> {
+  const supabase = await supabaseServer()
+  const { data } = await supabase.from("accounts").select("phone").eq("id", userId).maybeSingle()
+  return data?.phone ? next : `/me/so-dien-thoai?next=${encodeURIComponent(next)}`
+}
+
+export async function signInWithPassword(input: { identifier: string; password: string; next?: string }): Promise<SignInResult> {
+  if (!throttles.signIn.take(clientIp(await headers()))) return { ok: false, error: MESSAGES.tooMany }
+  const next = safeNext(input.next)
+  const result = await signInWithIdentifier(await supabaseServer(), input.identifier, input.password)
+  if (!result.ok) return { ok: false, error: result.error }
+  revalidatePath("/", "layout")
+  return { ok: true, next: await landing(result.userId, next) }
+}
+
+export async function signUpWithPassword(input: {
+  identifier: string
+  password: string
+  fullName: string
+  next?: string
+}): Promise<SignInResult> {
+  if (!throttles.signUp.take(clientIp(await headers()))) return { ok: false, error: MESSAGES.tooMany }
+  const next = safeNext(input.next)
+  const result = await signUpWithIdentifier(await supabaseServer(), input)
+  if (!result.ok) return { ok: false, error: result.error }
+  revalidatePath("/", "layout")
+  // A number-only account cannot recover a forgotten password: offer an email right away.
+  if (result.kind === "phone") return { ok: true, next: `/me/email?next=${encodeURIComponent(next)}` }
+  return { ok: true, next: await landing(result.userId, next) }
+}
+
+export type ForgotResult = { sent: boolean; masked?: string; message: string; noEmail?: boolean }
+
+export async function forgotPassword(identifier: string): Promise<ForgotResult> {
+  if (!throttles.forgot.take(clientIp(await headers()))) return { sent: false, message: MESSAGES.tooMany }
+  const { sent, masked, message, noEmail } = await requestPasswordReset(identifier)
+  return { sent, masked, message, noEmail }
+}
+
+/** For password accounts, from Cài đặt: the current password first, then the new one. */
+export async function changePassword(input: { current: string; next: string }): Promise<AuthResult> {
+  const problem = newPasswordProblem(input.next)
+  if (problem) return { ok: false, error: problem }
+  const supabase = await supabaseServer()
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user?.email) return { ok: false, error: "Cần đăng nhập." }
+  if (!throttles.changePassword.take(auth.user.id)) return { ok: false, error: MESSAGES.tooMany }
+  if (input.current === input.next) return { ok: false, error: "Mật khẩu mới phải khác mật khẩu hiện tại." }
+
+  // Checked on a throwaway client, so this browser's own session is untouched.
+  const check = detachedAuthClient()
+  const { error: wrong } = await check.auth.signInWithPassword({ email: auth.user.email, password: input.current })
+  if (wrong) {
+    const kind = authErrorKind(wrong)
+    if (kind === "invalid_credentials") return { ok: false, error: "Mật khẩu hiện tại chưa đúng." }
+    if (kind === "rate_limited") return { ok: false, error: MESSAGES.tooMany }
+    console.error("changePassword check failed:", wrong.code, wrong.message)
+    return { ok: false, error: MESSAGES.failed }
+  }
+  await check.auth.signOut({ scope: "local" })
+
+  const { error } = await supabase.auth.updateUser({ password: input.next })
+  if (error) {
+    switch (authErrorKind(error)) {
+      case "same_password":
+        return { ok: false, error: "Mật khẩu mới phải khác mật khẩu hiện tại." }
+      case "weak_password":
+        return { ok: false, error: "Mật khẩu này quá dễ đoán. Chọn mật khẩu khác." }
+      case "reauth":
+        return { ok: false, error: "Vì an toàn, đăng xuất rồi đăng nhập lại trước khi đổi mật khẩu." }
+    }
+    console.error("updateUser(password) failed:", error.code, error.message)
+    return { ok: false, error: MESSAGES.failed }
+  }
+  return { ok: true }
+}
+
+/**
+ * A real email for an account made with a phone number, so a forgotten password
+ * can be recovered. Supabase mails a confirmation link to the new address; the
+ * auth email changes only when that link is opened.
+ */
+export async function addRecoveryEmail(rawEmail: string): Promise<{ ok: true; masked: string } | { ok: false; error: string }> {
+  const id = parseIdentifier(rawEmail)
+  if (id.kind !== "email" || isPhoneEmail(id.email)) return { ok: false, error: "Nhập một địa chỉ email hợp lệ." }
+  const supabase = await supabaseServer()
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
+  if (auth.user.email?.toLowerCase() === id.email) return { ok: false, error: "Đây đã là email của tài khoản." }
+
+  const { error } = await supabase.auth.updateUser(
+    { email: id.email },
+    { emailRedirectTo: absoluteUrl(`/auth/callback?loai=email&next=${encodeURIComponent("/me/cai-dat")}`) },
+  )
+  if (error) {
+    switch (authErrorKind(error)) {
+      case "user_exists":
+        return { ok: false, error: "Email này đã thuộc một tài khoản khác." }
+      case "email_invalid":
+        return { ok: false, error: "Email này không nhận được thư. Kiểm tra lại địa chỉ." }
+      case "rate_limited":
+        return { ok: false, error: "Đã gửi nhiều lần quá. Đợi một lúc rồi thử lại." }
+    }
+    console.error("updateUser(email) failed:", error.code, error.message)
+    return { ok: false, error: "Chưa gửi được email xác nhận. Thử lại sau, hoặc liên hệ hỗ trợ." }
+  }
+  revalidatePath("/", "layout")
+  return { ok: true, masked: maskEmail(id.email) }
 }
 
 /** Once per account. Changing a number later goes through support. */

@@ -358,6 +358,15 @@ export interface Session {
   phone: string
   /** freelancer profile the pro-mode session manages */
   proId?: string
+  /** How this account signs in (web only; the app reads its own auth user). */
+  login?: {
+    /** The auth email. For an account made with a phone number, a stand-in (lib/auth/identifier.ts) until a real one is confirmed. */
+    email: string | null
+    /** A new email waiting for its confirmation link to be opened. */
+    pendingEmail: string | null
+    /** Has a password (signed up with a phone number or an email), so it can change it. */
+    password: boolean
+  }
 }
 
 // ---------------------------------------------------------------------------

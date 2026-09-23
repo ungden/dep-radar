@@ -1,25 +1,32 @@
 import { SUPABASE_ANON_KEY, SUPABASE_URL, backendEnabled } from "@/lib/supabase/env"
 
+export type OAuthProvider = "google" | "apple"
+
 /**
- * Whether Google sign-in is switched on in the Supabase project.
+ * Which sign-in providers are switched on in the Supabase project.
  *
- * The provider lives in the Supabase dashboard, not in this repo. Asking Auth
- * itself means the button turns on the minute someone saves the Google client
- * there, and until then the login page says so instead of sending people to an
- * error. Cached for a minute: this is read on every visit to /login.
+ * Providers live in the Supabase dashboard, not in this repo. Asking Auth
+ * itself means a button turns on the minute someone saves the provider there:
+ * until then Google says it is being set up, and Apple is simply not shown.
+ * Cached for a minute: this is read on every visit to /login.
  */
-export async function googleSignInEnabled(): Promise<boolean> {
-  if (!backendEnabled) return false
+export async function oauthProviders(): Promise<Record<OAuthProvider, boolean>> {
+  const none = { google: false, apple: false }
+  if (!backendEnabled) return none
   try {
     const res = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
       headers: { apikey: SUPABASE_ANON_KEY },
       next: { revalidate: 60 },
       signal: AbortSignal.timeout(5000),
     })
-    if (!res.ok) return false
-    const settings = (await res.json()) as { external?: { google?: boolean } }
-    return settings.external?.google === true
+    if (!res.ok) return none
+    const settings = (await res.json()) as { external?: Partial<Record<OAuthProvider, boolean>> }
+    return { google: settings.external?.google === true, apple: settings.external?.apple === true }
   } catch {
-    return false
+    return none
   }
+}
+
+export async function googleSignInEnabled(): Promise<boolean> {
+  return (await oauthProviders()).google
 }
