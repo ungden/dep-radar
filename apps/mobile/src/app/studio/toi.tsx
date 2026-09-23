@@ -83,7 +83,7 @@ export default function StudioMe() {
           <Row icon="verified" label="Xác minh danh tính" onPress={web("/studio/verify")} />
         </View>
         <Txt v="meta" color={colors.muted}>
-          Cài đặt Studio chưa có trong app: các mục trên mở trang web 360dep ngay trong app, và bạn có thể phải đăng nhập lại ở đó.
+          Cài đặt đối tác chưa có trong app: các mục trên mở trang web 360dep ngay trong app, và bạn có thể phải đăng nhập lại ở đó.
         </Txt>
 
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.md }}>

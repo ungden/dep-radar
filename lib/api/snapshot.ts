@@ -535,6 +535,14 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
         name: account.full_name || "Bạn",
         phone: account.phone,
         proId: myPro?.id,
+        login: {
+          email: auth.user?.email ?? null,
+          pendingEmail: auth.user?.new_email ?? null,
+          password: Boolean(
+            (auth.user?.app_metadata?.providers as string[] | undefined)?.includes("email") ||
+              auth.user?.identities?.some((i) => i.provider === "email"),
+          ),
+        },
       }
     : null
 

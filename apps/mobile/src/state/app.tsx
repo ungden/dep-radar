@@ -5,8 +5,9 @@ import * as SecureStore from "expo-secure-store"
 import * as WebBrowser from "expo-web-browser"
 import { makeRedirectUri } from "expo-auth-session"
 import type { Session } from "@supabase/supabase-js"
-import { travelDistanceKm } from "@/shared"
-import { switchRole as writeRole } from "@/data/actions"
+import { parseIdentifier, phoneEmail, travelDistanceKm } from "@/shared"
+import { setMyPhone, switchRole as writeRole } from "@/data/actions"
+import { signInWithPassword as passwordSignIn, signUpWithPassword as passwordSignUp, type AuthResult } from "@/data/auth"
 import { readCache, writeCache } from "@/data/cache"
 import { myThreadIds } from "@/data/chat"
 import { emptyMe, loadMe, type MeData } from "@/data/me"
@@ -49,6 +50,9 @@ interface AppState {
   ensureWork: (slugOrId: string) => Promise<void>
   signInWithGoogle: () => Promise<SignInResult>
   signInWithApple: () => Promise<SignInResult>
+  /** Phone number or email, with a password (through the web's /api/auth). */
+  signInWithPassword: (identifier: string, password: string) => Promise<SignInResult>
+  signUpWithPassword: (identifier: string, password: string, fullName: string) => Promise<SignInResult>
   signOut: () => Promise<void>
   switchMode: (mode: "customer" | "pro") => Promise<void>
   /** Optimistic updates after a write succeeded. */
@@ -77,6 +81,21 @@ const cityKey = (city: string | null) => city ?? "*"
 async function needsPhone(uid: string) {
   const { data: account } = await supabase.from("accounts").select("phone").eq("id", uid).maybeSingle()
   return !(account as { phone?: string } | null)?.phone
+}
+
+/**
+ * An account made with a phone number already owns that number (its auth
+ * email is built from it), so it is never asked for it again: if the server
+ * has not copied it to accounts.phone, set it here.
+ */
+async function afterPassword(identifier: string, res: AuthResult): Promise<SignInResult> {
+  if (!res.ok) return { ok: false, error: res.error }
+  let missing = await needsPhone(res.user.id)
+  const typed = parseIdentifier(identifier)
+  if (missing && typed.kind === "phone" && res.user.email?.toLowerCase() === phoneEmail(typed.phone)) {
+    missing = !(await setMyPhone(typed.phone)).ok
+  }
+  return { ok: true, needsPhone: missing }
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -325,7 +344,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const off = /provider.*(not enabled|disabled)|unsupported provider|not.*configured/i.test(error?.message ?? "")
       return {
         ok: false,
-        error: off ? "Đăng nhập với Apple chưa được bật trên máy chủ. Bạn dùng Google trong lúc chờ nhé." : "Chưa đăng nhập được với Apple. Thử lại nhé.",
+        error: off ? "Đăng nhập với Apple chưa được bật trên máy chủ. Bạn dùng Google hoặc mật khẩu trong lúc chờ nhé." : "Chưa đăng nhập được với Apple. Thử lại nhé.",
       }
     }
     // Apple gives the name only on the very first sign-in: keep it if the account has none.
@@ -338,6 +357,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     return { ok: true, needsPhone: await needsPhone(signedIn.user.id) }
   }, [])
+
+  const signInWithPassword = React.useCallback(
+    async (identifier: string, password: string) => afterPassword(identifier, await passwordSignIn(identifier, password)),
+    [],
+  )
+  const signUpWithPassword = React.useCallback(
+    async (identifier: string, password: string, fullName: string) => afterPassword(identifier, await passwordSignUp(identifier, password, fullName)),
+    [],
+  )
 
   const signOut = React.useCallback(async () => {
     await forgetPushToken()
@@ -384,6 +412,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ensureWork,
     signInWithGoogle,
     signInWithApple,
+    signInWithPassword,
+    signUpWithPassword,
     signOut,
     switchMode,
     patchMe: (fn) => setMe((m) => fn(m)),

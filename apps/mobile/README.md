@@ -1,6 +1,6 @@
 # 360dep — app iOS / Android
 
-Expo Router (SDK 57), một app hai chế độ như web: **khách** và **Studio** (người làm), đổi ở tab Tôi.
+Expo Router (SDK 57), một app hai chế độ như web: **khách** và **360dep Đối tác** (thư mục `studio`, người làm). Chỉ tài khoản đã có hồ sơ đối tác mới thấy nút chuyển trong Tôi; khách chỉ thấy một dòng nhỏ cuối Tôi dẫn tới `/doi-tac`.
 App đọc/ghi cùng Supabase với web, bằng **publishable/anon key**, qua cùng bảng, RLS và RPC.
 Không có service-role key nào trong app, và không được thêm vào.
 
@@ -45,7 +45,7 @@ kéo để tải lại) · Chi tiết bài (ảnh/clip, gói giá, theo dõi, l�
 Hồ sơ người làm · Tìm + bộ lọc (bottom sheet) · Trang dịp · Đặt lịch 3 bước (`free_slots` → `create_booking`,
 lỗi của database hiện nguyên văn) · Lịch hẹn + chi tiết (dòng thời gian, huỷ có lý do qua `cancel_booking`) ·
 Tin nhắn (Realtime, `send_message`, `mark_thread_read`, `open_thread`) · Thông báo · Tôi (đã lưu, địa chỉ,
-đổi sang Studio, đăng xuất, xoá tài khoản) · Đăng nhập Google hoặc Apple + số điện thoại một lần (`set_my_phone`).
+đổi sang Đối tác, mật khẩu, đăng xuất, xoá tài khoản) · Đăng nhập bằng số điện thoại hoặc email + mật khẩu (qua `/api/auth/*` của web rồi `setSession`), Google hoặc Apple; số điện thoại hỏi một lần (`set_my_phone`); tài khoản đăng ký bằng số được mời thêm email để lấy lại mật khẩu.
 
 Studio: Hôm nay (lịch cần gọi xác nhận với đếm ngược `confirm_by` + bấm để gọi, lịch hôm nay + chỉ đường,
 thu nhập tuần từ lịch đã hoàn thành) · Việc mới (`send_offer` / `withdraw_offer`) · Đăng tác phẩm
@@ -76,7 +76,7 @@ Thêm trong bản này (thay cho link web):
 
 - **Sign in with Apple** (bắt buộc khi có Google, App Store 4.8): bật Apple trong Supabase Auth › Providers, điền
   Services ID/key từ Apple Developer, thêm `vn.dep360.app` vào Authorized Client IDs. `ios.usesAppleSignIn` đã bật.
-  Chưa bật provider thì nút Apple báo rõ "chưa được bật trên máy chủ".
+  Khi `/auth/v1/settings` báo `external.apple: false` nút Apple ẩn; gọi được mà provider tắt thì báo rõ "chưa được bật trên máy chủ".
 - **Push** cần EAS projectId của tài khoản Expo chủ sản phẩm: `npx eas init` ghi `expo.extra.eas.projectId` vào
   `app.json`. Không có thì app không đăng ký token (không lỗi). Gửi push (Edge Function/cron) là việc phía server.
 - **Universal links** cần Apple Team ID. Khi có, thêm `"ios": { "associatedDomains": ["applinks:www.360dep.vn"] }`

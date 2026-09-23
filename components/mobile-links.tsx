@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 
 /**
  * The footer is desktop-only. On a phone these are the links it would have
- * given: the rules, help, and the way in for people who want to take bookings.
+ * given: the rules, help, and the one way in for partners (/doi-tac).
  */
 export function MobileLinks({ className }: { className?: string }) {
   return (
@@ -17,8 +17,8 @@ export function MobileLinks({ className }: { className?: string }) {
       <Link href="/gioi-thieu" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
         Giới thiệu bạn bè
       </Link>
-      <Link href="/login?role=pro" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
-        Nhận khách trên 360dep
+      <Link href="/doi-tac" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
+        Dành cho đối tác
       </Link>
     </nav>
   )

@@ -27,3 +27,20 @@ export function GoogleButton({ disabled }: { disabled: boolean }) {
     </button>
   )
 }
+
+/** Apple's own button style: black, the Apple mark, "Continue with Apple" in the local language. */
+export function AppleButton() {
+  const { pending } = useFormStatus()
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="inline-flex h-13 w-full items-center justify-center gap-3 rounded-2xl bg-black px-6 text-[15px] font-medium text-white shadow-sm transition-opacity hover:opacity-90 disabled:pointer-events-none disabled:opacity-45"
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 fill-current">
+        <path d="M16.37 12.64c-.02-2.27 1.86-3.36 1.94-3.41-1.06-1.55-2.7-1.76-3.28-1.78-1.4-.14-2.73.82-3.44.82-.71 0-1.8-.8-2.96-.78-1.52.02-2.93.89-3.71 2.25-1.58 2.75-.4 6.81 1.14 9.04.75 1.09 1.65 2.31 2.82 2.27 1.13-.05 1.56-.73 2.93-.73 1.36 0 1.75.73 2.95.71 1.22-.02 1.99-1.11 2.73-2.2.86-1.26 1.22-2.49 1.24-2.55-.03-.01-2.37-.91-2.4-3.62zM14.12 5.97c.62-.76 1.05-1.81.93-2.86-.9.04-2 .6-2.64 1.35-.58.67-1.09 1.74-.95 2.77 1 .08 2.03-.51 2.66-1.26z" />
+      </svg>
+      {pending ? "Đang chuyển tới Apple…" : "Tiếp tục với Apple"}
+    </button>
+  )
+}

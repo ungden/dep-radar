@@ -3,7 +3,9 @@ import { router } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { Alert, ScrollView, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { isPhoneEmail } from "@/shared"
 import { deleteMyAccount } from "@/data/actions"
+import { hasPassword, needsRecoveryEmail } from "@/data/auth"
 import { formatPhone } from "@/data/format"
 import { webLink } from "@/data/links"
 import { SignInGate } from "@/components/sign-in-gate"
@@ -25,13 +27,14 @@ export default function Me() {
   const account = app.me.account
   const name = account?.fullName ?? "Bạn"
 
-  const toStudio = async () => {
-    if (!app.myPro) {
-      // Opening a freelancer profile picks a unique public address on the server; that lives on the web for now.
-      await WebBrowser.openBrowserAsync(webLink("/studio/onboarding"))
-      void app.refresh()
-      return
-    }
+  const user = app.session?.user ?? null
+  // A phone sign-up's auth email is a stand-in: not shown, and a real one is asked for.
+  const standIn = needsRecoveryEmail(user)
+  const pendingEmail = user?.new_email ?? null
+  const shownEmail = account?.email && !isPhoneEmail(account.email) ? account.email : null
+
+  // Only for someone who already has a partner profile; everyone else sees one quiet row at the bottom.
+  const toPartner = async () => {
     await app.switchMode("pro")
     router.replace("/studio")
   }
@@ -72,9 +75,9 @@ export default function Me() {
           <Txt v="meta" color={colors.inkSoft}>
             {account?.phone ? formatPhone(account.phone) : "Chưa có số điện thoại"}
           </Txt>
-          {account?.email ? (
+          {shownEmail ? (
             <Txt v="meta" color={colors.muted}>
-              {account.email}
+              {shownEmail}
             </Txt>
           ) : null}
         </View>
@@ -85,7 +88,17 @@ export default function Me() {
             Thêm số điện thoại để đặt lịch
           </Txt>
           <Txt v="meta" color={colors.warning}>
-            Người làm thấy số này khi đã nhận lịch của bạn.
+            Người làm chỉ thấy số này khi đang có lịch hẹn với bạn.
+          </Txt>
+        </Press>
+      ) : null}
+      {standIn ? (
+        <Press onPress={() => router.push("/them-email")} style={{ backgroundColor: colors.warningSoft, borderRadius: radius.md, padding: 14 }}>
+          <Txt w={700} color={colors.warning}>
+            Thêm email để lấy lại mật khẩu khi quên
+          </Txt>
+          <Txt v="meta" color={colors.warning}>
+            {pendingEmail ? `Đang chờ bạn xác nhận ${pendingEmail}: mở email và bấm link.` : "Bạn đăng ký bằng số điện thoại, chưa có email để nhận link đặt lại mật khẩu."}
           </Txt>
         </Press>
       ) : null}
@@ -104,13 +117,15 @@ export default function Me() {
         <Row icon="gift" label="Giới thiệu bạn bè và voucher" onPress={() => router.push("/gioi-thieu")} />
       </Section>
 
-      <Section>
-        <Row icon="portrait" label="Tuyển mẫu" detail="làm mẫu cho thợ" onPress={() => router.push("/tuyen-mau")} />
-        <Divider style={{ marginLeft: 52 }} />
-        <Row icon="swap" label={app.myPro ? "Chuyển sang Studio" : "Mở hồ sơ người làm"} detail={app.myPro ? undefined : "mở trên web"} onPress={() => void toStudio()} />
-      </Section>
+      {app.myPro ? (
+        <Section>
+          <Row icon="swap" label="Chuyển sang 360dep Đối tác" onPress={() => void toPartner()} />
+        </Section>
+      ) : null}
 
       <Section>
+        <Row icon="edit" label={hasPassword(user) ? "Đổi mật khẩu" : "Đặt mật khẩu"} onPress={() => router.push("/doi-mat-khau")} />
+        <Divider style={{ marginLeft: 52 }} />
         <Row icon="block" label="Người đã chặn" detail={app.blocked.size ? String(app.blocked.size) : undefined} onPress={() => router.push("/da-chan")} />
         <Divider style={{ marginLeft: 52 }} />
         <Row icon="info" label="Chính sách và trợ giúp" detail="mở trên web" onPress={() => void WebBrowser.openBrowserAsync(webLink("/tro-giup"))} />
@@ -130,6 +145,17 @@ export default function Me() {
       <Section>
         <Row icon="trash" label={deleting ? "Đang xoá…" : "Xoá tài khoản"} danger onPress={deleting ? () => {} : deleteAccount} />
       </Section>
+
+      {app.myPro ? null : (
+        <Press onPress={() => router.push("/doi-tac")} accessibilityRole="link" style={{ paddingVertical: 8, paddingHorizontal: 8 }}>
+          <Txt v="meta" color={colors.muted} center>
+            Bạn là thợ, người chụp ảnh hay người mẫu?{" "}
+            <Txt v="meta" w={600} color={colors.accentDark}>
+              Trở thành đối tác 360dep
+            </Txt>
+          </Txt>
+        </Press>
+      )}
     </ScrollView>
   )
 }

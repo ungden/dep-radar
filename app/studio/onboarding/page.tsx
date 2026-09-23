@@ -41,7 +41,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="mx-auto max-w-md px-5 pb-24">
-      <PageHeader title="Mở hồ sơ nhận việc" back />
+      <PageHeader title="Mở hồ sơ đối tác" back />
       <p className="text-sm text-ink-soft">
         Ba thông tin để bắt đầu. Giờ làm được đặt sẵn Thứ 2 – Thứ 7, 9:00 – 19:00 (sửa được sau). Hồ sơ hiện với khách
         khi bạn đã thêm dịch vụ, một ảnh tác phẩm và bấm mở hồ sơ.

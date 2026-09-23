@@ -32,6 +32,7 @@ export default function Terms() {
     await app.acceptTerms()
     setBusy(false)
     if (next === "phone") router.replace("/so-dien-thoai")
+    else if (next === "email") router.replace({ pathname: "/them-email", params: { first: "1" } })
     else if (router.canGoBack()) router.back()
     else router.replace("/")
   }

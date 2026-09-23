@@ -524,11 +524,6 @@ function EmptySupply({
           </button>
         )}
       </div>
-      <p className="mt-4 text-[13px] text-ink-soft">
-        <Link href="/login?role=pro" className="inline-flex min-h-11 items-center underline underline-offset-2 hover:text-ink">
-          Bạn làm nghề này? Mở hồ sơ
-        </Link>
-      </p>
     </div>
   )
 }

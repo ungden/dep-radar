@@ -309,7 +309,7 @@ function BookingFlow({ proId }: { proId: string }) {
       {(isOwnProfile || paused) && (
         <p className="mb-4 rounded-xl bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning">
           {isOwnProfile
-            ? "Bạn đang xem dịch vụ của chính mình ở chế độ nhận khách. Chuyển sang chế độ đặt lịch để thử luồng khách hàng."
+            ? "Bạn đang xem dịch vụ của chính mình ở chế độ đối tác. Chuyển sang chế độ đặt lịch để thử luồng khách hàng."
             : `${pro.name} đang tạm nghỉ nhận lịch mới. Bạn có thể đăng yêu cầu để người làm khác nhận việc.`}
         </p>
       )}
@@ -745,7 +745,7 @@ function BookingFlow({ proId }: { proId: string }) {
                 </span>
               ) : (
                 <span>
-                  Bước tiếp theo: đăng nhập bằng Google và thêm số điện thoại để {pro.name} liên hệ khi đã nhận lịch. Lựa chọn
+                  Bước tiếp theo: đăng nhập (Google, số điện thoại hoặc email) để {pro.name} liên hệ được khi đã nhận lịch. Lựa chọn
                   của bạn được giữ nguyên.
                 </span>
               )}

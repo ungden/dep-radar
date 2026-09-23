@@ -9,7 +9,7 @@ import { createClient } from "@supabase/supabase-js"
  * service-role key anywhere in this bundle, and there must never be one.
  */
 export const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? ""
-const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ""
+export const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ""
 
 /** False when .env is missing: the app says so instead of crashing. */
 export const backendConfigured = Boolean(SUPABASE_URL && SUPABASE_KEY)

@@ -25,7 +25,8 @@ Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 
 - Production (`www.360dep.vn`) đọc và ghi Supabase thật. Luật giá, phí, lịch trống và trạng thái lịch hẹn nằm trong database (RLS + RPC), trình duyệt chỉ hiển thị.
 - Chuyên viên và tác phẩm đang hiện là **dữ liệu mẫu** (sinh từ `lib/data.ts`), có nhãn trên trang.
-- **Đăng nhập bằng Google** (Supabase Auth), không mật khẩu, không OTP. Lần đầu đăng nhập, app hỏi số điện thoại một lần; database không cho đặt lịch, đăng yêu cầu hay mở hồ sơ chuyên viên khi chưa có số.
+- **Đăng nhập** (Supabase Auth, không SMS/OTP): Google; Apple (nút chỉ hiện khi provider Apple đã bật); hoặc mật khẩu với **số điện thoại hoặc email**. Tài khoản tạo bằng số điện thoại dùng một email thay thế `84…@sdt.360dep.vn` cho tới khi người dùng thêm và xác nhận email thật (để lấy lại mật khẩu). Google, Apple và đăng ký bằng email hỏi số điện thoại một lần sau lần đăng nhập đầu; database không cho đặt lịch, đăng yêu cầu hay mở hồ sơ đối tác khi chưa có số.
+- **Khách và đối tác tách riêng**: khách chỉ thấy app đặt lịch; lối vào duy nhất cho người làm là `/doi-tac` (footer và dòng cuối trang Tôi). Nút chuyển chế độ chỉ hiện với tài khoản đã có hồ sơ đối tác.
 - Chưa có: thanh toán online, xác minh danh tính khi thiếu `GEMINI_API_KEY`, nạp ví tự động. Màn hình nói rõ những chỗ đó.
 - Kế hoạch sửa còn lại: `docs/AUDIT_2026-09-22.md`.
 
@@ -40,7 +41,11 @@ npm run dev
 
 | Đường dẫn | Màn hình |
 | --- | --- |
-| `/login` | Đăng nhập & chọn vai trò |
+| `/login` | Đăng nhập: Google, Apple, số điện thoại/email + mật khẩu, tạo tài khoản (`?role=pro` cho đối tác) |
+| `/quen-mat-khau`, `/dat-lai-mat-khau` | Quên mật khẩu, đặt mật khẩu mới từ link trong email |
+| `/me/email`, `/me/cai-dat` | Thêm email cho tài khoản số điện thoại; đổi mật khẩu |
+| `/doi-tac` | Trang giới thiệu cho đối tác (người làm), lối vào hồ sơ đối tác |
+| `/api/auth/password-login`, `/api/auth/signup`, `/api/auth/forgot` | JSON cho app mobile: cùng logic với web (`lib/auth/password.ts`) |
 | `/`, `/search`, `/works/[id]` | Khám phá, tìm kiếm, chi tiết tác phẩm |
 | `/pros`, `/pros/[id]` | Danh sách & hồ sơ chuyên viên (tác phẩm, dịch vụ, giới thiệu, đánh giá) |
 | `/book/[proId]` | Luồng đặt lịch 3 bước (gói → giờ → địa điểm & phí) |
@@ -92,7 +97,23 @@ Migration trên production được áp bằng `supabase db push` hoặc MCP; t�
 
 Trang `/login` tự hỏi Supabase xem Google đã bật chưa: chưa bật thì nút bị khoá và trang nói rõ, bật xong thì nút chạy sau tối đa một phút.
 
-**Cấp quyền admin** — chỉ bằng SQL editor (service role), sau khi người đó đã đăng nhập Google một lần. Client không ghi được cột `is_admin`:
+**Đăng nhập Apple (tuỳ chọn):** Apple Developer → tạo *Services ID* (Sign in with Apple, domain `360dep.supabase.co`, return URL `https://360dep.supabase.co/auth/v1/callback`) và một key; Supabase → Authentication → Sign In / Providers → **Apple**: bật, điền Services ID và secret. Nút “Tiếp tục với Apple” tự hiện trên `/login` trong vòng một phút sau khi bật; chưa bật thì không hiện gì.
+
+**Mật khẩu (số điện thoại hoặc email):** chạy trên provider **Email** của Supabase (đã bật). Cần giữ đúng các cài đặt sau ở Authentication → Sign In / Providers → Email:
+
+- **Confirm email: tắt** (`mailer_autoconfirm`). Tài khoản tạo bằng số điện thoại có email thay thế `…@sdt.360dep.vn` không nhận được thư, nên không thể xác nhận; đăng ký phải trả về phiên đăng nhập ngay.
+- **Secure email change: tắt.** Khi bật, đổi email phải xác nhận ở *cả* địa chỉ cũ lẫn mới; địa chỉ cũ của tài khoản số điện thoại là địa chỉ thay thế, nên việc thêm email sẽ không bao giờ hoàn tất.
+- Supabase có thể từ chối địa chỉ có tên miền không nhận thư (tên miền `sdt.360dep.vn` không có bản ghi MX). Nếu đăng ký bằng số điện thoại báo lỗi, xem log `signUp failed: phone email_address_invalid` và thêm một bản ghi MX cho `sdt.360dep.vn` (thư tới đó có thể bỏ đi).
+
+**Gửi email (bắt buộc trước khi mở mật khẩu cho mọi người):** mailer mặc định của Supabase chỉ gửi tới email của thành viên trong team Supabase và khoảng 2 thư/giờ. Quên mật khẩu và thêm email đều gửi thư, nên cần SMTP riêng: Supabase → Authentication → Emails → **SMTP Settings** (Resend, Amazon SES, Postmark…), người gửi ví dụ `no-reply@360dep.vn` (thêm SPF/DKIM cho tên miền), rồi nâng giới hạn gửi ở Authentication → Rate Limits. Nên dịch hai mẫu thư *Reset Password* và *Change Email Address* sang tiếng Việt; giữ nguyên `{{ .ConfirmationURL }}`.
+
+- Link quên mật khẩu mở `/dat-lai-mat-khau` trên web (cả khi yêu cầu từ app). Địa chỉ này cùng tên miền với Site URL nên Supabase chấp nhận; chạy local thì thêm `http://localhost:3000/**` vào Redirect URLs.
+- Link xác nhận email mới quay về `/auth/callback?loai=email&next=/me/cai-dat`.
+- Đăng nhập bằng số điện thoại: server tìm email của tài khoản theo số (service role, `SUPABASE_SERVICE_ROLE_KEY` bắt buộc), rồi đăng nhập bằng email đó. Sai số hay sai mật khẩu đều báo cùng một câu.
+
+**Giới hạn tần suất:** Supabase tự giới hạn đăng nhập/đăng ký/gửi thư theo IP (Authentication → Rate Limits). Web và `/api/auth/*` gọi Auth từ server, nên mọi người dùng chung IP của Vercel: nếu thấy lỗi “thử nhiều lần quá” hàng loạt, nâng giới hạn *Sign-ups and sign-ins* ở đó. Ngoài ra mỗi instance server tự chặn một IP gửi quá nhiều (`lib/auth/throttle.ts`: 20 lần đăng nhập, 5 lần đăng ký mỗi 10 phút; 5 lần quên mật khẩu mỗi 15 phút) và từ chối body JSON lớn hơn 2KB.
+
+**Cấp quyền admin** — chỉ bằng SQL editor (service role), sau khi người đó đã đăng nhập một lần (tài khoản tạo bằng số điện thoại: tìm theo `accounts.phone` thay vì email). Client không ghi được cột `is_admin`:
 
 ```sql
 update public.accounts set is_admin = true

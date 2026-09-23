@@ -12,6 +12,7 @@ import {
   Heart,
   ImagePlus,
   LogOut,
+  Mail,
   MessageSquare,
   Settings,
   Wallet,
@@ -25,6 +26,7 @@ import {
 } from "lucide-react"
 import { MobileLinks } from "@/components/mobile-links"
 import { Avatar, ButtonLink, Card, Toggle } from "@/components/ui"
+import { isPhoneEmail, maskEmail } from "@/lib/auth/identifier"
 import { formatPhone } from "@/lib/auth/phone"
 import { actions, useAct } from "@/lib/client-actions"
 import { getPro, useApp } from "@/lib/store"
@@ -48,8 +50,8 @@ export default function MePage() {
           <p className="mt-1 text-[15px] text-ink-soft">Đăng nhập để đặt lịch, lưu mẫu và đăng yêu cầu.</p>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <ButtonLink href="/login">Đăng nhập</ButtonLink>
-            <ButtonLink href="/login?role=pro" variant="outline">
-              Tôi nhận khách
+            <ButtonLink href="/login?tao=1" variant="outline">
+              Tạo tài khoản
             </ButtonLink>
           </div>
         </Card>
@@ -84,28 +86,46 @@ export default function MePage() {
         {isPro && <ChevronRight className="size-5 text-muted" />}
       </Link>
 
-      <Card className="mt-5 flex items-center gap-3 p-4">
-        <span className="flex size-10 items-center justify-center rounded-full bg-subtle text-accent">
-          <ArrowLeftRight className="size-5" />
-        </span>
-        <div className="flex-1">
-          <p className="text-[15px] font-bold">{isPro ? "Đang ở chế độ làm việc" : "Đang ở chế độ đặt lịch"}</p>
-          <p className="text-xs text-muted">
-            {isPro ? "Chuyển sang để đặt lịch cho bản thân" : "Chuyển sang để nhận khách"}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={async () => {
-            if (!isPro && !session.proId) return router.push("/studio/onboarding")
-            await actions.switchRole(isPro ? "customer" : "pro")
-            router.push(isPro ? "/" : "/studio")
-          }}
-          className="h-10 rounded-full bg-accent px-4 text-[13px] font-semibold text-white hover:bg-accent-dark"
-        >
-          {!isPro && !session.proId ? "Mở hồ sơ" : "Chuyển"}
-        </button>
-      </Card>
+      {/* Two modes only for an account that is already a partner; a customer sees a customer app. */}
+      {session.proId && (
+        <Card className="mt-5 flex items-center gap-3 p-4">
+          <span className="flex size-10 items-center justify-center rounded-full bg-subtle text-accent">
+            <ArrowLeftRight className="size-5" />
+          </span>
+          <div className="flex-1">
+            <p className="text-[15px] font-bold">{isPro ? "Đang ở chế độ đối tác" : "Đang ở chế độ đặt lịch"}</p>
+            <p className="text-xs text-muted">{isPro ? "Chuyển sang để đặt lịch cho bản thân" : "Chuyển sang chế độ đối tác"}</p>
+          </div>
+          <button
+            type="button"
+            onClick={async () => {
+              await actions.switchRole(isPro ? "customer" : "pro")
+              router.push(isPro ? "/" : "/studio")
+            }}
+            className="h-10 rounded-full bg-accent px-4 text-[13px] font-semibold text-white hover:bg-accent-dark"
+          >
+            Chuyển
+          </button>
+        </Card>
+      )}
+
+      {/* A number-only account cannot recover a forgotten password until it has a confirmed email. */}
+      {session.login && isPhoneEmail(session.login.email) && (
+        <Link href="/me/email?next=/me" className="mt-4 flex items-center gap-3 rounded-[var(--radius-lg)] bg-warning-soft p-4">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface text-ink">
+            <Mail className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-bold">Thêm email để lấy lại mật khẩu khi quên</span>
+            <span className="block text-[13px] text-ink-soft">
+              {session.login.pendingEmail
+                ? `Đang chờ bạn bấm link xác nhận gửi tới ${maskEmail(session.login.pendingEmail)}`
+                : "Tài khoản của bạn đang chỉ có số điện thoại"}
+            </span>
+          </span>
+          <ChevronRight className="size-4 text-muted" />
+        </Link>
+      )}
 
       {isPro ? (
         <>
@@ -170,6 +190,16 @@ export default function MePage() {
           <LogOut className="size-5" /> Đăng xuất
         </button>
       </Card>
+
+      {/* The one way in to the partner side from a customer account. */}
+      {!session.proId && (
+        <Link href="/doi-tac" className="mt-6 flex min-h-14 items-center gap-3 px-1 text-[14px] text-ink-soft hover:text-ink">
+          <span className="min-w-0 flex-1">
+            Bạn là thợ, người chụp ảnh hay người mẫu? <span className="font-semibold text-ink underline underline-offset-2">Trở thành đối tác 360dep</span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-muted" />
+        </Link>
+      )}
     </div>
   )
 }

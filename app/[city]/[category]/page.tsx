@@ -210,11 +210,6 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
                 </p>
                 <div className="mt-5 flex flex-wrap justify-center gap-2">
                   <ButtonLink href="/requests/new">Đăng yêu cầu</ButtonLink>
-                  {category.vertical !== "beauty" && (
-                    <ButtonLink href="/login?role=pro" variant="outline">
-                      Bạn làm việc này? Mở hồ sơ
-                    </ButtonLink>
-                  )}
                 </div>
               </div>
             )}

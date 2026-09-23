@@ -3,12 +3,16 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { PasswordField } from "@/components/password-field"
 import { RequireSession } from "@/components/require-session"
 import { Button, Card, Field, PageHeader, inputClass } from "@/components/ui"
 import { deleteAccount, updateAccount } from "@/lib/api/me"
+import { changePassword } from "@/lib/auth/actions"
+import { MIN_PASSWORD_LENGTH, isPhoneEmail } from "@/lib/auth/identifier"
+import { newPasswordProblem } from "@/lib/auth/password-rules"
 import { formatPhone } from "@/lib/auth/phone"
 import { useApp, useRefresh } from "@/lib/store"
-import { supabaseBrowser } from "@/lib/supabase/client"
+import { EmailForm } from "../email/email-form"
 
 export default function SettingsPage() {
   return (
@@ -30,19 +34,9 @@ function Settings() {
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   const [confirmDelete, setConfirmDelete] = React.useState(false)
-  const [email, setEmail] = React.useState<string | null>(null)
-
-  React.useEffect(() => {
-    let live = true
-    void supabaseBrowser()
-      .auth.getUser()
-      .then(({ data }) => {
-        if (live) setEmail(data.user?.email ?? "")
-      })
-    return () => {
-      live = false
-    }
-  }, [])
+  const login = session?.login
+  // An account made with a phone number has a stand-in address until a real one is confirmed.
+  const realEmail = login?.email && !isPhoneEmail(login.email) ? login.email : null
 
   return (
     <div className="space-y-5">
@@ -57,16 +51,33 @@ function Settings() {
       ) : (
         <Card className="p-4">
           <p className="font-semibold">Chưa có số điện thoại</p>
-          <p className="mt-1 text-[13px] text-ink-soft">Cần số điện thoại trước khi đặt lịch hoặc nhận khách.</p>
+          <p className="mt-1 text-[13px] text-ink-soft">Cần số điện thoại trước khi đặt lịch.</p>
           <Link href="/me/so-dien-thoai?next=/me/cai-dat" className="mt-2 inline-block text-sm font-medium text-accent underline underline-offset-2">
             Thêm số điện thoại
           </Link>
         </Card>
       )}
 
-      <Field label="Email" hint="Email của tài khoản Google bạn dùng để đăng nhập.">
-        <input className={inputClass} value={email ?? "…"} disabled />
-      </Field>
+      {realEmail ? (
+        <Field
+          label="Email"
+          hint={
+            login?.password
+              ? "Dùng để đăng nhập và để lấy lại mật khẩu khi quên."
+              : "Email của tài khoản bạn dùng để đăng nhập."
+          }
+        >
+          <input className={inputClass} value={realEmail} disabled />
+        </Field>
+      ) : login ? (
+        <Card className="p-4">
+          <p className="font-semibold">Chưa có email</p>
+          <p className="mt-1 text-[13px] text-ink-soft">Thêm email để lấy lại mật khẩu khi quên. Email cần được xác nhận qua link 360dep gửi tới.</p>
+          <div className="mt-3">
+            <EmailForm pending={login.pendingEmail} embedded />
+          </div>
+        </Card>
+      ) : null}
 
       {error && (
         <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
@@ -90,6 +101,9 @@ function Settings() {
       >
         {busy ? "Đang lưu…" : "Lưu thay đổi"}
       </Button>
+
+      {/* Only accounts that have a password; Google and Apple accounts sign in without one. */}
+      {login?.password && <ChangePassword />}
 
       <Card className="p-4">
         <p className="font-semibold">Dữ liệu của bạn</p>
@@ -141,6 +155,66 @@ function Settings() {
         )}
       </Card>
     </div>
+  )
+}
+
+function ChangePassword() {
+  const [current, setCurrent] = React.useState("")
+  const [next, setNext] = React.useState("")
+  const [error, setError] = React.useState<string | null>(null)
+  const [done, setDone] = React.useState(false)
+  const [busy, setBusy] = React.useState(false)
+
+  return (
+    <Card className="p-4">
+      <p className="font-semibold">Đổi mật khẩu</p>
+      <form
+        className="mt-3 space-y-3"
+        noValidate
+        onSubmit={async (event) => {
+          event.preventDefault()
+          const problem = newPasswordProblem(next)
+          if (!current) return setError("Nhập mật khẩu hiện tại.")
+          if (problem) return setError(problem)
+          setBusy(true)
+          setError(null)
+          setDone(false)
+          const result = await changePassword({ current, next })
+          setBusy(false)
+          if (!result.ok) return setError(result.error)
+          setCurrent("")
+          setNext("")
+          setDone(true)
+        }}
+      >
+        <PasswordField label="Mật khẩu hiện tại" value={current} onChange={setCurrent} autoComplete="current-password" />
+        <PasswordField
+          label="Mật khẩu mới"
+          value={next}
+          onChange={setNext}
+          autoComplete="new-password"
+          hint={`Ít nhất ${MIN_PASSWORD_LENGTH} ký tự, không chỉ có số.`}
+        />
+        {error && (
+          <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+            {error}
+          </p>
+        )}
+        {done && (
+          <p role="status" className="text-sm text-success">
+            Đã đổi mật khẩu.
+          </p>
+        )}
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="submit" variant="outline" disabled={busy}>
+            {busy ? "Đang đổi…" : "Đổi mật khẩu"}
+          </Button>
+          <Link href="/quen-mat-khau" className="inline-flex min-h-11 items-center text-[13px] text-ink-soft underline underline-offset-2">
+            Quên mật khẩu hiện tại?
+          </Link>
+        </div>
+      </form>
+    </Card>
   )
 }
 

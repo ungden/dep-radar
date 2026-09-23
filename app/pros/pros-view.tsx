@@ -150,17 +150,13 @@ function ProsView() {
             onlyFollowing || verifiedOnly
               ? "Bỏ bớt bộ lọc để xem thêm người."
               : newTrade
-                ? "Ngành này vừa mở trên 360dep. Bạn làm nghề này? Mở hồ sơ để là những người đầu tiên nhận khách."
+                ? "Ngành này vừa mở trên 360dep. Đăng yêu cầu để người làm quanh bạn thấy và nhận việc."
                 : city
                   ? `Chưa có ai ở ${city} nhận việc này. Thử khu vực khác, hoặc đăng yêu cầu để người làm quanh bạn nhận việc.`
                   : "Thử đổi ngành hoặc danh mục."
           }
           action={
-            onlyFollowing || verifiedOnly ? undefined : newTrade ? (
-              <ButtonLink href="/login?role=pro">Mở hồ sơ</ButtonLink>
-            ) : (
-              <ButtonLink href="/requests/new">Đăng yêu cầu</ButtonLink>
-            )
+            onlyFollowing || verifiedOnly ? undefined : <ButtonLink href="/requests/new">Đăng yêu cầu</ButtonLink>
           }
         />
       )}

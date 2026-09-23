@@ -66,12 +66,19 @@ export function CastingsView() {
         ) : (
           <div className="rounded-[var(--radius-lg)] border border-dashed border-line px-6 py-10 text-center">
             <p className="text-[17px] font-bold">Chưa có tin tuyển mẫu nào đang mở</p>
-            <p className="mx-auto mt-1.5 max-w-sm text-[15px] text-ink-soft">
-              Bạn làm nail, makeup hay chụp ảnh và cần mẫu? Đăng tin trong Studio, khách quanh bạn sẽ ứng tuyển.
-            </p>
-            <ButtonLink href={state.session?.proId ? "/studio/tuyen-mau" : "/login?role=pro"} className="mt-5">
-              Đăng tin tuyển mẫu
-            </ButtonLink>
+            {/* Posting a casting is partner work: only a partner is asked to. */}
+            {state.session?.proId ? (
+              <>
+                <p className="mx-auto mt-1.5 max-w-sm text-[15px] text-ink-soft">
+                  Cần mẫu luyện tay hay chụp portfolio? Đăng tin, khách quanh bạn sẽ ứng tuyển.
+                </p>
+                <ButtonLink href="/studio/tuyen-mau" className="mt-5">
+                  Đăng tin tuyển mẫu
+                </ButtonLink>
+              </>
+            ) : (
+              <p className="mx-auto mt-1.5 max-w-sm text-[15px] text-ink-soft">Tin mới sẽ hiện ở đây. Quay lại sau nhé.</p>
+            )}
           </div>
         )}
       </section>

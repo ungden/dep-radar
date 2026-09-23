@@ -99,8 +99,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/login?role=pro" className="hover:text-ink">
-                  Nhận khách trên 360dep
+                <Link href="/doi-tac" className="hover:text-ink">
+                  Dành cho đối tác
                 </Link>
               </li>
               <li>
