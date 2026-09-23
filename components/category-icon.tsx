@@ -39,7 +39,7 @@ export function CategoryIcon({ id, className }: { id: CategoryIconId; className?
 /**
  * Categories as a grid of icon tiles, never a row to swipe (the owner's call):
  * everything visible at once, each choice a picture. On a phone the tiles are
- * compact (4 across, one-line labels) so the first service price still shows
+ * compact (5 across, one-line labels) so the first service price still shows
  * early. `row` is kept for the search page's compact mode and means the same
  * grid with smaller tiles.
  */
@@ -50,7 +50,8 @@ export function CategoryTiles({
   row = false,
   className,
 }: {
-  items: { id: CategoryIconId; label: string }[]
+  /** `soon`: nobody offers it in scope yet; shown muted with "Sắp có". */
+  items: { id: CategoryIconId; label: string; soon?: boolean }[]
   value: CategoryIconId
   onChange: (id: CategoryIconId) => void
   row?: boolean
@@ -61,7 +62,7 @@ export function CategoryTiles({
       role="radiogroup"
       aria-label="Danh mục"
       className={cn(
-        "grid grid-cols-4 gap-x-1 gap-y-3 sm:grid-cols-7 sm:gap-x-2 lg:flex lg:flex-wrap lg:gap-x-5 lg:gap-y-4",
+        "grid grid-cols-5 gap-x-1 gap-y-3 sm:grid-cols-7 sm:gap-x-2 lg:flex lg:flex-wrap lg:gap-x-5 lg:gap-y-4",
         className,
       )}
     >
@@ -74,17 +75,27 @@ export function CategoryTiles({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(it.id)}
-            className={cn("group flex min-w-0 flex-col items-center gap-1 text-center", !row && "lg:w-[84px]")}
+            aria-label={it.soon ? `${it.label}, sắp có` : it.label}
+            className={cn("group relative flex min-w-0 flex-col items-center gap-1 text-center", !row && "lg:w-[84px]")}
           >
             <span
               className={cn(
                 "flex items-center justify-center transition-colors",
                 row ? "size-11 rounded-[14px]" : "size-[52px] rounded-[18px] lg:size-[60px] lg:rounded-[20px]",
-                active ? "bg-accent text-white shadow-[var(--shadow-raised)]" : "bg-accent-soft text-accent group-hover:bg-subtle-strong",
+                active
+                  ? "bg-accent text-white shadow-[var(--shadow-raised)]"
+                  : it.soon
+                    ? "bg-subtle text-muted group-hover:bg-subtle-strong"
+                    : "bg-accent-soft text-accent group-hover:bg-subtle-strong",
               )}
             >
               <CategoryIcon id={it.id} className={cn(row ? "size-5" : "size-6 lg:size-7")} />
             </span>
+            {it.soon && (
+              <span className="absolute -top-1 right-0 rounded-full bg-surface px-1.5 py-px text-xs font-semibold leading-4 text-muted shadow-[var(--shadow-soft)]">
+                Sắp có
+              </span>
+            )}
             <span
               className={cn(
                 // One line, same height for every tile: long labels are shortened, not wrapped.

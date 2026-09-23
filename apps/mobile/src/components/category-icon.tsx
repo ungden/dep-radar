@@ -27,7 +27,8 @@ export function CategoryTiles({
   value,
   onChange,
 }: {
-  items: { id: CategoryIconId; label: string }[]
+  /** `soon`: nobody offers it here yet; muted, with a "Sắp có" badge. */
+  items: { id: CategoryIconId; label: string; soon?: boolean }[]
   value: CategoryIconId
   onChange: (id: CategoryIconId) => void
 }) {
@@ -41,22 +42,29 @@ export function CategoryTiles({
             onPress={() => onChange(it.id)}
             accessibilityRole="radio"
             accessibilityState={{ checked: active }}
-            accessibilityLabel={it.label}
-            style={{ width: "25%", alignItems: "center", gap: 6 }}
+            accessibilityLabel={it.soon ? `${it.label}, sắp có` : it.label}
+            style={{ width: "20%", alignItems: "center", gap: 5 }}
           >
             <View
               style={{
-                width: 60,
-                height: 60,
-                borderRadius: 20,
+                width: 52,
+                height: 52,
+                borderRadius: 18,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: active ? colors.accent : colors.accentSoft,
+                backgroundColor: active ? colors.accent : it.soon ? colors.subtle : colors.accentSoft,
               }}
             >
-              <CategoryIcon id={it.id} color={active ? colors.surface : colors.accent} />
+              <CategoryIcon id={it.id} size={24} color={active ? colors.surface : it.soon ? colors.muted : colors.accent} />
             </View>
-            <Txt v="meta" w={active ? 600 : 500} color={active ? colors.accentDark : colors.ink} center numberOfLines={2}>
+            {it.soon ? (
+              <View style={{ position: "absolute", top: -4, right: 2, paddingHorizontal: 5, borderRadius: 999, backgroundColor: colors.surface }}>
+                <Txt v="label" w={600} color={colors.muted}>
+                  Sắp có
+                </Txt>
+              </View>
+            ) : null}
+            <Txt v="meta" w={active ? 600 : 500} color={active ? colors.accentDark : colors.ink} center numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
               {it.label}
             </Txt>
           </Press>
