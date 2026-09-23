@@ -88,6 +88,24 @@ export default function Explore() {
   )
   const categories = vertical === "all" ? CATEGORIES : categoriesOf(vertical)
   const loadingFirst = !app.data && !app.dataError && app.configured
+  // One real photo per occasion and never the same one twice in the row (as on
+  // the web): the occasion's exact services first, then its categories.
+  const occasionCovers = React.useMemo(() => {
+    const used = new Set<string>()
+    return occasions.map((o) => {
+      const templates = new Set(o.templates)
+      const categories = new Set(occasionTemplates(o).map((t) => t.category))
+      const candidates = [
+        ...browse.works.filter((w) => templates.has(w.templateId)),
+        ...browse.works.filter((w) => !templates.has(w.templateId) && categories.has(w.category)),
+      ]
+        .map((w) => w.images[0])
+        .filter((src): src is string => Boolean(src))
+      const pick = candidates.find((src) => !used.has(src))
+      if (pick) used.add(pick)
+      return pick
+    })
+  }, [occasions, browse.works])
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const past = e.nativeEvent.contentOffset.y > switchY.current
@@ -193,8 +211,8 @@ export default function Explore() {
             <SectionHeader title="Theo dịp" />
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: gutter, gap: 12 }}>
-            {occasions.map((o) => {
-              const first = occasionTemplates(o)[0]
+            {occasions.map((o, i) => {
+              const photo = occasionCovers[i]
               return (
                 <Press
                   key={o.id}
@@ -202,7 +220,16 @@ export default function Explore() {
                   accessibilityLabel={`${o.title}. ${o.subtitle}`}
                   style={{ width: 168, gap: 6 }}
                 >
-                  <Photo uri={first ? browse.photoFor(first.category) : undefined} ratio={4 / 5} />
+                  {photo ? (
+                    <Photo uri={photo} ratio={4 / 5} />
+                  ) : (
+                    // No work in these services yet: the title, not an empty grey box.
+                    <View style={{ aspectRatio: 4 / 5, borderRadius: radius.lg, backgroundColor: colors.subtle, justifyContent: "flex-end", padding: 12 }}>
+                      <Txt w={800} style={{ fontSize: 20, lineHeight: 24, color: colors.inkSoft }}>
+                        {o.title}
+                      </Txt>
+                    </View>
+                  )}
                   <Txt w={700} numberOfLines={1}>
                     {o.title}
                   </Txt>

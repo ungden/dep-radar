@@ -19,7 +19,8 @@ const ICONS = {
   close: { ios: "xmark", android: "close" },
   star: { ios: "star.fill", android: "star" },
   verified: { ios: "checkmark.seal.fill", android: "verified" },
-  pin: { ios: "mappin.and.ellipse", android: "location_on" },
+  // Plain pin: "mappin.and.ellipse" reads as an anchor at 16pt.
+  pin: { ios: "mappin", android: "location_on" },
   play: { ios: "play.fill", android: "play_arrow" },
   phone: { ios: "phone.fill", android: "call" },
   filter: { ios: "slider.horizontal.3", android: "tune" },

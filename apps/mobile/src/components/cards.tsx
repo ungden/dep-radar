@@ -140,9 +140,10 @@ export function ProCard({
         </View>
       </View>
       <View style={{ flexDirection: "row", gap: 4 }}>
-        {[0, 1, 2].map((i) => (
-          <Photo key={i} uri={photos[i]} rounded={radius.sm} style={{ flex: 1 }} />
-        ))}
+        {/* Fewer than three works: leave the slot empty rather than show a grey box. */}
+        {[0, 1, 2].map((i) =>
+          photos[i] ? <Photo key={i} uri={photos[i]} rounded={radius.sm} style={{ flex: 1 }} /> : <View key={i} style={{ flex: 1 }} />,
+        )}
       </View>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
         {price !== null ? (
