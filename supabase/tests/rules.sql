@@ -463,7 +463,7 @@ begin
   perform set_config('request.jwt.claim.sub', thu::text, true);
   insert into public.pro_services (pro_id, template_id) values (thu, 'model-hand');
   insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values (thu, 'model-hand', '60m', 350000);
-  at_ := (monday + 2) + time '10:00' at time zone public.app_timezone();
+  at_ := ((monday + 2) + time '10:00') at time zone public.app_timezone();
   msg := public.availability_problem(thu, 'model-hand', '60m', 1, at_, true, 21.0181, 105.829);
   assert msg is null, format('a verified model is bookable: %s', msg);
 
@@ -489,7 +489,7 @@ begin
 
   perform set_config('request.jwt.claim.sub', customer::text, true);
   b := public.create_booking(linh, 'photo-phone', '60m',
-    (monday + 3) + time '14:00' at time zone public.app_timezone(), true, addr, 1, '');
+    ((monday + 3) + time '14:00') at time zone public.app_timezone(), true, addr, 1, '');
 
   raise notice 'the customer sets the terms, and only while nothing has happened yet';
   perform public.set_booking_terms(b, 'commercial', true);
@@ -564,7 +564,7 @@ begin
   raise notice 'an overdue delivery is chased once';
   perform set_config('request.jwt.claim.sub', customer::text, true);
   late := public.create_booking(linh, 'photo-phone', '60m',
-    (monday + 3) + time '17:00' at time zone public.app_timezone(), true, addr, 1, '');
+    ((monday + 3) + time '17:00') at time zone public.app_timezone(), true, addr, 1, '');
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.confirm_booking(late);
   perform set_config('request.jwt.claim.sub', '', true);
@@ -583,11 +583,11 @@ begin
   raise notice 'a combo links two or three of the customer''s own bookings, close in time';
   perform set_config('request.jwt.claim.sub', customer::text, true);
   makeup := public.create_booking(thu, 'makeup-party', 'makeup',
-    (monday + 4) + time '10:00' at time zone public.app_timezone(), true, addr, 1, '');
+    ((monday + 4) + time '10:00') at time zone public.app_timezone(), true, addr, 1, '');
   photos := public.create_booking(linh, 'photo-phone', '60m',
-    (monday + 4) + time '10:30' at time zone public.app_timezone(), true, addr, 1, '');
+    ((monday + 4) + time '10:30') at time zone public.app_timezone(), true, addr, 1, '');
   far := public.create_booking(linh, 'photo-phone', '60m',
-    (monday + 4) + time '14:00' at time zone public.app_timezone(), true, addr, 1, '');
+    ((monday + 4) + time '14:00') at time zone public.app_timezone(), true, addr, 1, '');
 
   begin
     perform public.link_bookings(array[makeup]);
