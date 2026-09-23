@@ -5,7 +5,9 @@ import { PageSkeleton } from "@/components/ui"
 import { getProBySlug, listProServices, listReviews } from "@/lib/api/pros"
 import { absoluteUrl } from "@/lib/env"
 import { serializeJsonLd } from "@/lib/json-ld"
-import { getTemplate } from "@/lib/catalog"
+import { getTemplate, verticalOf } from "@/lib/catalog"
+import { SHOWING_SAMPLE_DATA } from "@/lib/sample-data"
+import { openGraph } from "@/lib/seo"
 import { ProProfile } from "./pro-profile"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -15,6 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     title: `${pro.name} · ${pro.title} tại ${pro.city}`,
     description: pro.bio,
     alternates: { canonical: `/pros/${pro.slug}` },
+    openGraph: openGraph({ title: `${pro.name} · ${pro.title}`, url: `/pros/${pro.slug}`, images: pro.avatar ? [pro.avatar] : undefined }),
   }
 }
 
@@ -31,14 +34,15 @@ export default async function ProPage({ params }: { params: Promise<{ id: string
    */
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "BeautySalon",
+    // A makeup artist is a beauty business; a photographer or a model is not.
+    "@type": pro.categories.every((c) => verticalOf(c) === "beauty") ? "BeautySalon" : "ProfessionalService",
     name: pro.name,
     description: pro.bio,
     url: absoluteUrl(`/pros/${pro.slug}`),
     image: pro.avatar ? absoluteUrl(pro.avatar) : undefined,
     address: { "@type": "PostalAddress", addressLocality: pro.district, addressRegion: pro.city, addressCountry: "VN" },
     areaServed: pro.areas.map((area) => ({ "@type": "Place", name: area })),
-    ...(pro.rating.count > 0
+    ...(pro.rating.count > 0 && !SHOWING_SAMPLE_DATA
       ? {
           aggregateRating: {
             "@type": "AggregateRating",
@@ -62,7 +66,7 @@ export default async function ProPage({ params }: { params: Promise<{ id: string
         },
       }))
     }),
-    review: reviews.slice(0, 5).map((r) => ({
+    review: (SHOWING_SAMPLE_DATA ? [] : reviews.slice(0, 5)).map((r) => ({
       "@type": "Review",
       author: { "@type": "Person", name: r.author },
       reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5, worstRating: 1 },

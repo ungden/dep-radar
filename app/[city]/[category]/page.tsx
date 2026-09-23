@@ -1,4 +1,6 @@
 import type { Metadata } from "next"
+import { cache } from "react"
+import { openGraph } from "@/lib/seo"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ChevronRight } from "lucide-react"
@@ -62,9 +64,17 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     title,
     description,
     alternates: { canonical: `/${citySlug}/${category.id}` },
-    openGraph: { title, description, url: absoluteUrl(`/${citySlug}/${category.id}`) },
+    openGraph: openGraph({ title, description, url: absoluteUrl(`/${citySlug}/${category.id}`) }),
+    // A city page with nobody on it is a thin page: keep it out of search
+    // until someone in that city lists the service.
+    ...((await prosFor(city, category.id)).length === 0 ? { robots: { index: false, follow: true } } : {}),
   }
 }
+
+/** Shared by generateMetadata and the page in the same request. */
+const prosFor = cache((city: string, category: string) =>
+  noneIfUnknownCategory(listPros({ city, category: category as CategoryId })),
+)
 
 /**
  * A database that has not been migrated to a new trade yet rejects its
@@ -102,7 +112,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
   if (!city || !category) notFound()
 
   const [pros, works] = await Promise.all([
-    noneIfUnknownCategory(listPros({ city, category: category.id })),
+    prosFor(city, category.id),
     noneIfUnknownCategory(listWorks({ category: category.id, limit: 24 })),
   ])
   const templates = templatesByCategory(category.id as CategoryId)

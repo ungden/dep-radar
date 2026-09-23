@@ -12,7 +12,8 @@ import { backendEnabled } from "@/lib/supabase/env"
 const body = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
   // 800 is the headline weight; there is no second family to download.
-  weight: ["400", "500", "600", "700", "800"],
+  // Four weights: 800 is no longer used by any heading.
+  weight: ["400", "500", "600", "700"],
   variable: "--font-body",
 })
 
@@ -21,11 +22,12 @@ const serif = Playfair_Display({
   subsets: ["latin", "vietnamese"],
   weight: ["700"],
   variable: "--font-serif",
+  // Only the small wordmark uses it; don't let it compete with the first image.
+  preload: false,
 })
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  alternates: { canonical: "/" },
   applicationName: "360dep",
   title: {
     default: "360dep | Đặt người làm đẹp, chụp ảnh, người mẫu gần bạn",
