@@ -47,7 +47,7 @@ function Castings() {
 
       {mine.length > 0 && (
         <section className="space-y-4">
-          <h2 className="text-[20px] font-extrabold tracking-tight">Tin của bạn</h2>
+          <h2 className="text-[20px] font-bold tracking-tight">Tin của bạn</h2>
           {mine.map((c) => (
             <CastingManager key={c.id} casting={c} />
           ))}
@@ -108,7 +108,7 @@ function CastingForm({ onDone }: { onDone: () => void }) {
 
   return (
     <form onSubmit={submit} className="space-y-5 rounded-[var(--radius-lg)] border border-line bg-surface p-5">
-      <h2 className="text-[20px] font-extrabold tracking-tight">Tin tuyển mẫu mới</h2>
+      <h2 className="text-[20px] font-bold tracking-tight">Tin tuyển mẫu mới</h2>
 
       <Field label="Dịch vụ">
         <select value={category} onChange={(e) => setCategory(e.target.value as CategoryId)} className={inputClass}>
@@ -174,7 +174,7 @@ function CastingForm({ onDone }: { onDone: () => void }) {
               onClick={() => setCompensation(value)}
               className={cn(
                 "h-11 rounded-full border px-4 text-[14px] font-semibold transition-colors disabled:opacity-40",
-                compensation === value ? "border-ink bg-ink text-white" : "border-line bg-surface hover:border-ink/30",
+                compensation === value ? "border-accent bg-accent text-white" : "border-line bg-surface hover:border-ink/30",
               )}
             >
               {label}
@@ -186,7 +186,7 @@ function CastingForm({ onDone }: { onDone: () => void }) {
 
       {compensation === "discount" && (
         <Field label={`Giảm ${discount}% giá của bạn`}>
-          <input type="range" min={10} max={90} step={10} value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="w-full accent-[var(--color-ink)]" />
+          <input type="range" min={10} max={90} step={10} value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="w-full accent-[var(--color-accent)]" />
         </Field>
       )}
       {compensation === "paid" && (
@@ -287,7 +287,7 @@ function CastingManager({ casting }: { casting: Casting }) {
                     disabled={full}
                     aria-label={`Chọn ${a.applicantName}`}
                     onClick={() => void act(() => actions.decideApplication(a.id, true), "Đã chọn mẫu").then(setError)}
-                    className="inline-flex h-10 items-center gap-1 rounded-full bg-ink px-4 text-[13px] font-semibold text-white disabled:opacity-40"
+                    className="inline-flex h-10 items-center gap-1 rounded-full bg-accent px-4 text-[13px] font-semibold text-white disabled:opacity-40"
                   >
                     <Check className="size-4" /> Chọn
                   </button>

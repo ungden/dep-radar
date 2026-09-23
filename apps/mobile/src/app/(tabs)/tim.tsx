@@ -152,7 +152,7 @@ export default function Search() {
               sheet.open()
             }}
             accessibilityLabel={activeCount ? `Bộ lọc, đang bật ${activeCount}` : "Bộ lọc"}
-            style={{ height: 48, paddingHorizontal: 16, borderRadius: radius.full, backgroundColor: activeCount ? colors.ink : colors.subtle, flexDirection: "row", alignItems: "center", gap: 6 }}
+            style={{ height: 48, paddingHorizontal: 16, borderRadius: radius.full, backgroundColor: activeCount ? colors.accent : colors.subtle, flexDirection: "row", alignItems: "center", gap: 6 }}
           >
             <Icon name="filter" size={18} color={activeCount ? colors.surface : colors.ink} />
             {activeCount ? (

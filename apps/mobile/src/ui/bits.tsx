@@ -64,7 +64,7 @@ export function Avatar({ name, uri, tone = colors.subtle, size = 40 }: { name: s
   )
 }
 
-/** A chip. Selected is ink on white text; accent is reserved. */
+/** A chip. Selected is rose with white text, like every selected state. */
 export function Chip({ label, selected, onPress, icon }: { label: string; selected?: boolean; onPress?: () => void; icon?: React.ReactNode }) {
   return (
     <Press
@@ -74,7 +74,7 @@ export function Chip({ label, selected, onPress, icon }: { label: string; select
         height: 36,
         paddingHorizontal: 14,
         borderRadius: radius.full,
-        backgroundColor: selected ? colors.ink : colors.subtle,
+        backgroundColor: selected ? colors.accent : colors.subtle,
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
@@ -113,7 +113,7 @@ export function Rating({ average, count, showCount = true }: { average: number; 
 export function SectionHeader({ title, action, onAction }: { title: string; action?: string; onAction?: () => void }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-      <Txt v="title" w={800} style={{ flexShrink: 1 }}>
+      <Txt v="title" w={700} style={{ flexShrink: 1 }}>
         {title}
       </Txt>
       {action ? (
@@ -161,9 +161,9 @@ export function Divider({ style }: { style?: StyleProp<ViewStyle> }) {
 /** The 360dep mark: a ring (the 360) and the one accent dot. Same geometry as components/ui.tsx LogoMark. */
 export function LogoMark({ size = 28 }: { size?: number }) {
   const u = size / 32
-  const ring = 7.6 * 2 * u + 3.4 * u
+  const ring = 7.6 * 2 * u + 3 * u
   return (
-    <View style={{ width: size, height: size, borderRadius: 9 * u, backgroundColor: colors.ink }}>
+    <View style={{ width: size, height: size, borderRadius: 9 * u, backgroundColor: colors.accent }}>
       <View
         style={{
           position: "absolute",
@@ -172,19 +172,19 @@ export function LogoMark({ size = 28 }: { size?: number }) {
           width: ring,
           height: ring,
           borderRadius: ring / 2,
-          borderWidth: 3.4 * u,
+          borderWidth: 3 * u,
           borderColor: colors.surface,
         }}
       />
       <View
         style={{
           position: "absolute",
-          left: (24 - 3.1) * u,
-          top: (8 - 3.1) * u,
-          width: 6.2 * u,
-          height: 6.2 * u,
-          borderRadius: 3.1 * u,
-          backgroundColor: colors.accent,
+          left: (24 - 2.8) * u,
+          top: (8 - 2.8) * u,
+          width: 5.6 * u,
+          height: 5.6 * u,
+          borderRadius: 2.8 * u,
+          backgroundColor: colors.accentSoft,
         }}
       />
     </View>
@@ -195,7 +195,7 @@ export function Logo() {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }} accessibilityLabel="360dep">
       <LogoMark size={26} />
-      <Txt w={800} style={{ fontSize: 20, lineHeight: 24, letterSpacing: -0.8 }}>
+      <Txt w={700} style={{ fontSize: 20, lineHeight: 24, letterSpacing: -0.8 }}>
         360dep
       </Txt>
     </View>

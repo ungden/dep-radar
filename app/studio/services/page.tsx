@@ -188,7 +188,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
                   type="checkbox"
                   checked={on}
                   onChange={(e) => setPrices((x) => ({ ...x, [v.id]: e.target.checked ? v.suggestedPrice : undefined }))}
-                  className="size-4 accent-[var(--color-ink)]"
+                  className="size-4 accent-[var(--color-accent)]"
                 />
                 <span className="flex-1 text-sm font-medium">
                   {v.label} <span className="font-normal text-muted">· {formatDuration(v.durationMin)}</span>
@@ -205,7 +205,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
                     step={5000}
                     value={price}
                     onChange={(e) => setPrices((x) => ({ ...x, [v.id]: Number(e.target.value) }))}
-                    className="mt-3 w-full accent-[var(--color-ink)]"
+                    className="mt-3 w-full accent-[var(--color-accent)]"
                   />
                   <div className="flex justify-between text-xs text-muted">
                     <span>Tối thiểu {formatPrice(v.minPrice)}</span>
@@ -253,7 +253,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
 
 function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 md:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-accent/40 md:items-center" onClick={onClose}>
       <div
         role="dialog"
         aria-label={title}

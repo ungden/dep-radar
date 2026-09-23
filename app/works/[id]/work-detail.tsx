@@ -103,14 +103,14 @@ export function WorkDetail({ workId }: { workId: string }) {
         {/* B: what it is and who made it */}
         <header className="pt-5 md:col-start-2 md:row-start-1 md:pt-0">
           <CategoryTag category={work.category} href={`/search?category=${work.category}`} />
-          <h1 className="mt-3 text-[26px] font-extrabold leading-tight tracking-tight md:text-[34px]">{work.title}</h1>
+          <h1 className="mt-3 text-[26px] font-bold leading-tight tracking-tight md:text-[34px]">{work.title}</h1>
           <ProRow pro={pro} own={own} />
           {work.description && <p className="mt-4 whitespace-pre-line text-[15px] leading-relaxed text-ink">{work.description}</p>}
         </header>
 
         {/* C: the service behind the post. After the booking card on the phone. */}
         <section className="order-1 mt-8 md:order-none md:col-start-1 md:row-start-3 md:mt-10">
-          <h2 className="text-[20px] font-extrabold tracking-tight">Về dịch vụ</h2>
+          <h2 className="text-[20px] font-bold tracking-tight">Về dịch vụ</h2>
           <p className="mt-1 text-[15px] text-ink-soft">{tpl.description}</p>
           <ServiceFacts tpl={tpl} pro={pro} className="mt-4" />
           {tpl.includes.length > 0 && (
@@ -146,7 +146,7 @@ export function WorkDetail({ workId }: { workId: string }) {
                   <p className="text-[15px] font-bold">{tpl.name}</p>
                   {from !== null && (
                     <p className="shrink-0 text-[14px] text-muted">
-                      Từ <span className="text-[17px] font-extrabold text-ink">{formatPrice(from)}</span>
+                      Từ <span className="text-[17px] font-bold text-ink">{formatPrice(from)}</span>
                     </p>
                   )}
                 </div>
@@ -162,7 +162,7 @@ export function WorkDetail({ workId }: { workId: string }) {
                         onClick={() => setVariantId(v.id)}
                         className={cn(
                           "flex min-h-14 w-full items-center justify-between gap-3 rounded-[var(--radius-md)] border px-3.5 py-2.5 text-left transition-colors",
-                          active ? "border-ink bg-surface ring-1 ring-ink" : "border-line hover:border-ink/30",
+                          active ? "border-accent bg-surface ring-1 ring-accent" : "border-line hover:border-ink/30",
                         )}
                       >
                         <span className="min-w-0">
@@ -211,7 +211,7 @@ export function WorkDetail({ workId }: { workId: string }) {
 
       {similar.length > 0 && (
         <section className="mt-12 md:mt-16">
-          <h2 className="text-[20px] font-extrabold tracking-tight md:text-[24px]">Mẫu tương tự từ người khác</h2>
+          <h2 className="text-[20px] font-bold tracking-tight md:text-[24px]">Mẫu tương tự từ người khác</h2>
           <p className="mt-1 text-[15px] text-ink-soft">
             {tpl.name}, do {personWord([work.category])} khác làm. So tay nghề và giá trước khi đặt.
           </p>
@@ -226,7 +226,7 @@ export function WorkDetail({ workId }: { workId: string }) {
       {others.length > 0 && (
         <section className="mt-12 md:mt-16">
           <div className="flex items-baseline justify-between gap-4">
-            <h2 className="text-[20px] font-extrabold tracking-tight md:text-[24px]">Tác phẩm khác của {pro.name}</h2>
+            <h2 className="text-[20px] font-bold tracking-tight md:text-[24px]">Tác phẩm khác của {pro.name}</h2>
             <Link href={`/pros/${pro.id}`} className="shrink-0 text-[14px] font-semibold underline-offset-4 hover:underline">
               Xem hồ sơ
             </Link>

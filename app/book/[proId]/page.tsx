@@ -185,7 +185,7 @@ function BookingFlow({ proId }: { proId: string }) {
         <span className="flex size-20 items-center justify-center rounded-full bg-success-soft text-success">
           <CheckCircle2 className="size-10" />
         </span>
-        <h1 className="mt-5 text-[28px] font-extrabold tracking-tight">Đã gửi yêu cầu đặt lịch</h1>
+        <h1 className="mt-5 text-[28px] font-bold tracking-tight">Đã gửi yêu cầu đặt lịch</h1>
         <p className="mt-2 text-[15px] text-ink-soft">
           {pro.name} sẽ gọi cho bạn qua số {formatPhone(state.session?.phone ?? "")} để xác nhận lịch {time} ·{" "}
           {formatDateLong(date)}
@@ -256,7 +256,7 @@ function BookingFlow({ proId }: { proId: string }) {
                   <div
                     className={cn(
                       "rounded-2xl border bg-surface p-3.5 transition-colors",
-                      selected ? "border-ink ring-1 ring-ink" : "border-line",
+                      selected ? "border-accent ring-1 ring-accent" : "border-line",
                     )}
                   >
                     <button
@@ -273,7 +273,7 @@ function BookingFlow({ proId }: { proId: string }) {
                         <span className="block truncate text-xs text-muted">{t.description}</span>
                       </span>
                       <span className="text-sm text-ink-soft">từ {formatPrice(Math.min(...Object.values(s.prices)))}</span>
-                      <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full border", selected ? "border-ink bg-ink text-white" : "border-line")}>
+                      <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full border", selected ? "border-accent bg-accent text-white" : "border-line")}>
                         {selected && <Check className="size-3.5" />}
                       </span>
                     </button>
@@ -530,7 +530,7 @@ function BookingFlow({ proId }: { proId: string }) {
                       onClick={() => setUsageScope(value)}
                       className={cn(
                         "rounded-[var(--radius-md)] border p-3 text-left transition-colors",
-                        usageScope === value ? "border-ink bg-subtle" : "border-line bg-surface hover:border-ink/30",
+                        usageScope === value ? "border-accent bg-subtle" : "border-line bg-surface hover:border-ink/30",
                       )}
                     >
                       <span className="block text-[15px] font-semibold">{label}</span>
@@ -552,7 +552,7 @@ function BookingFlow({ proId }: { proId: string }) {
                 type="checkbox"
                 checked={consentRepost}
                 onChange={(e) => setConsentRepost(e.target.checked)}
-                className="mt-0.5 size-5 shrink-0 accent-[var(--color-ink)]"
+                className="mt-0.5 size-5 shrink-0 accent-[var(--color-accent)]"
               />
               <span className="text-[14px]">
                 <span className="font-semibold">Cho {pro.name} đăng ảnh kết quả làm tác phẩm</span>
@@ -588,7 +588,7 @@ function BookingFlow({ proId }: { proId: string }) {
                   onClick={() => available && setPayment(value)}
                   className={cn(
                     "flex gap-2.5 rounded-xl border p-3 text-left disabled:opacity-50",
-                    payment === value ? "border-ink bg-subtle" : "border-line bg-surface",
+                    payment === value ? "border-accent bg-subtle" : "border-line bg-surface",
                   )}
                 >
                   <Icon className={cn("mt-0.5 size-4 shrink-0", payment === value ? "text-ink" : "text-muted")} />
@@ -659,11 +659,11 @@ function Stepper({ step, onJump }: { step: number; onJump: (s: number) => void }
         const active = n === step
         return (
           <li key={label} className="relative flex flex-1 flex-col items-center">
-            {i > 0 && <span className={cn("absolute right-1/2 top-3.5 h-px w-full", n <= step ? "bg-ink" : "bg-line")} />}
+            {i > 0 && <span className={cn("absolute right-1/2 top-3.5 h-px w-full", n <= step ? "bg-accent" : "bg-line")} />}
             <button
               type="button"
               onClick={() => onJump(n)}
-              className={cn("relative z-10 flex size-7 items-center justify-center rounded-full text-xs font-semibold", active || done ? "bg-ink text-white" : "bg-line text-muted")}
+              className={cn("relative z-10 flex size-7 items-center justify-center rounded-full text-xs font-semibold", active || done ? "bg-accent text-white" : "bg-line text-muted")}
             >
               {done ? <Check className="size-3.5" /> : n}
             </button>
@@ -710,7 +710,7 @@ function PlaceOption({
       onClick={onClick}
       className={cn(
         "flex h-11 items-center justify-center gap-2 rounded-full border text-[14px] transition-colors disabled:opacity-40",
-        active ? "border-ink bg-ink font-semibold text-white" : "border-line text-ink hover:border-ink/30",
+        active ? "border-accent bg-accent font-semibold text-white" : "border-line text-ink hover:border-ink/30",
       )}
     >
       {icon}

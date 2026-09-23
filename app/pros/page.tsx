@@ -82,7 +82,7 @@ function ProsView() {
     <div className="pt-4 md:pt-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[28px] font-extrabold leading-tight tracking-tight md:text-[36px]">{TITLE[vertical]}</h1>
+          <h1 className="text-[28px] font-bold leading-tight tracking-tight md:text-[36px]">{TITLE[vertical]}</h1>
           {pros.length > 0 && (
             <p className="mt-1 text-[15px] text-ink-soft">
               {pros.length.toLocaleString("vi-VN")} người {city ? `ở ${city}` : "trên toàn quốc"}

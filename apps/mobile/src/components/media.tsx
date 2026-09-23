@@ -28,7 +28,7 @@ export function PhotoPager({ images, recyclingKey }: { images: string[]; recycli
       {images.length > 1 ? (
         <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6, paddingTop: 10 }}>
           {images.map((_, i) => (
-            <View key={i} style={{ width: i === page ? 16 : 6, height: 6, borderRadius: 3, backgroundColor: i === page ? colors.ink : colors.subtleStrong }} />
+            <View key={i} style={{ width: i === page ? 16 : 6, height: 6, borderRadius: 3, backgroundColor: i === page ? colors.accent : colors.subtleStrong }} />
           ))}
           <Txt v="meta" color={colors.muted} style={{ marginLeft: 6 }} tabular>
             {page + 1}/{images.length}

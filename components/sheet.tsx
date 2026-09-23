@@ -64,7 +64,7 @@ export function Sheet({
       )}
     >
       <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
-        <h2 id={titleId} className="text-[17px] font-extrabold tracking-tight">
+        <h2 id={titleId} className="text-[17px] font-bold tracking-tight">
           {title}
         </h2>
         <button

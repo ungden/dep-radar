@@ -65,12 +65,12 @@ export function BookingTimeline({ booking }: { booking: Booking }) {
       {steps.map((s, i) => (
         <li key={s.label} className="relative flex gap-3 pb-4 last:pb-0">
           {i < steps.length - 1 && (
-            <span aria-hidden className={cn("absolute left-[11px] top-6 h-[calc(100%-16px)] w-0.5", s.done ? "bg-ink" : "bg-line")} />
+            <span aria-hidden className={cn("absolute left-[11px] top-6 h-[calc(100%-16px)] w-0.5", s.done ? "bg-accent" : "bg-line")} />
           )}
           <span
             className={cn(
               "relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full border-2",
-              s.bad ? "border-danger bg-danger text-white" : s.done ? "border-ink bg-ink text-white" : s.current ? "border-ink bg-surface" : "border-line bg-surface",
+              s.bad ? "border-danger bg-danger text-white" : s.done ? "border-accent bg-accent text-white" : s.current ? "border-accent bg-surface" : "border-line bg-surface",
             )}
           >
             {s.done && !s.bad && <Check className="size-3.5" />}
@@ -99,7 +99,7 @@ export function DeliveryPanel({ booking, isPro }: { booking: Booking; isPro: boo
   if (d.deliveredAt && d.url)
     return (
       <section className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
-        <p className="text-[17px] font-extrabold tracking-tight">File đã giao</p>
+        <p className="text-[17px] font-bold tracking-tight">File đã giao</p>
         {d.note && <p className="mt-1 whitespace-pre-line text-[14px] text-ink-soft">{d.note}</p>}
         <a href={d.url} target="_blank" rel="noreferrer noopener" className={cn(buttonClass("primary", "md"), "mt-3 w-full")}>
           <Download className="size-4" /> Mở link tải file
@@ -134,7 +134,7 @@ export function DeliveryPanel({ booking, isPro }: { booking: Booking; isPro: boo
         void act(() => actions.deliverBooking(booking.id, url.trim(), note.trim()), "Đã giao file cho khách").then(setError)
       }}
     >
-      <p className="text-[17px] font-extrabold tracking-tight">Giao file cho khách</p>
+      <p className="text-[17px] font-bold tracking-tight">Giao file cho khách</p>
       <p className="mt-1 text-[14px] text-ink-soft">
         Dán link Google Drive, Google Photos hoặc iCloud đã mở quyền xem.
         {d.dueAt ? ` Hạn: ${formatDateLong(localDate(d.dueAt))}` : days ? ` Hạn: ${days} ngày sau buổi chụp` : ""}.

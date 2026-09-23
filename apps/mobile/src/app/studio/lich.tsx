@@ -54,7 +54,7 @@ export default function StudioCalendar() {
         onRefresh={() => void bookings.refresh()}
         renderItem={({ item }) =>
           item.kind === "day" ? (
-            <Txt w={800} style={{ paddingTop: 8, paddingBottom: 8 }}>
+            <Txt w={700} style={{ paddingTop: 8, paddingBottom: 8 }}>
               {formatDay(item.date)}
             </Txt>
           ) : (

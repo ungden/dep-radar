@@ -76,7 +76,7 @@ export default function Today() {
                 <Txt w={700} style={{ flex: 1 }} numberOfLines={1}>
                   {b.customer.name}
                 </Txt>
-                <Txt w={800} tabular color={left > 0 && left < 30 * 60_000 ? colors.danger : colors.warning}>
+                <Txt w={700} tabular color={left > 0 && left < 30 * 60_000 ? colors.danger : colors.warning}>
                   {left > 0 ? formatCountdown(left) : "Quá hạn"}
                 </Txt>
               </View>

@@ -22,7 +22,7 @@ export function FollowButton({ proId, className }: { proId: string; className?: 
       className={cn(
         // 40px to see, 48px to tap.
         "relative inline-flex h-10 shrink-0 items-center justify-center rounded-full px-5 text-[14px] font-semibold transition-[background-color,border-color,transform] duration-150 after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] active:scale-[0.98]",
-        following ? "border border-line bg-surface text-ink hover:border-ink/40" : "bg-ink text-white hover:bg-ink/85",
+        following ? "border border-line bg-surface text-ink hover:border-ink/40" : "bg-accent text-white hover:bg-accent-dark",
         className,
       )}
     >

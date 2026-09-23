@@ -238,12 +238,12 @@ export default function Book() {
                     }}
                     accessibilityState={{ selected }}
                     accessibilityLabel={d}
-                    style={{ width: 56, paddingVertical: 10, borderRadius: radius.md, alignItems: "center", backgroundColor: selected ? colors.ink : colors.surface }}
+                    style={{ width: 56, paddingVertical: 10, borderRadius: radius.md, alignItems: "center", backgroundColor: selected ? colors.accent : colors.surface }}
                   >
                     <Txt v="meta" color={selected ? colors.surface : colors.muted}>
                       {d === todayISO() ? "Nay" : weekdayShort(d)}
                     </Txt>
-                    <Txt v="lead" w={800} color={selected ? colors.surface : colors.ink}>
+                    <Txt v="lead" w={700} color={selected ? colors.surface : colors.ink}>
                       {Number(d.slice(8))}
                     </Txt>
                   </Press>
@@ -264,7 +264,7 @@ export default function Book() {
                       key={s.startsAt}
                       onPress={() => setTime(s)}
                       accessibilityState={{ selected }}
-                      style={{ width: "23%", height: 44, borderRadius: radius.sm, alignItems: "center", justifyContent: "center", backgroundColor: selected ? colors.ink : colors.surface }}
+                      style={{ width: "23%", height: 44, borderRadius: radius.sm, alignItems: "center", justifyContent: "center", backgroundColor: selected ? colors.accent : colors.surface }}
                     >
                       <Txt w={700} tabular color={selected ? colors.surface : colors.ink}>
                         {s.time}
@@ -394,7 +394,7 @@ function Option({ selected, title, subtitle, right, onPress }: { selected: boole
         borderRadius: radius.md,
         backgroundColor: colors.surface,
         borderWidth: 2,
-        borderColor: selected ? colors.ink : "transparent",
+        borderColor: selected ? colors.accent : "transparent",
       }}
     >
       <View style={{ flex: 1, gap: 2 }}>

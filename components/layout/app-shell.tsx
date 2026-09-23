@@ -87,7 +87,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 aria-current={isActive(item) ? "page" : undefined}
                 className={cn(
                   "shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-[14px] font-semibold transition-colors",
-                  isActive(item) ? "bg-ink text-white" : "text-ink-soft hover:bg-subtle hover:text-ink",
+                  isActive(item) ? "bg-accent-soft text-accent-dark" : "text-ink-soft hover:bg-subtle hover:text-ink",
                 )}
               >
                 {item.label}
@@ -135,7 +135,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link href="/login?role=pro" className="hidden h-10 items-center whitespace-nowrap rounded-full px-4 text-[14px] font-semibold text-ink hover:bg-subtle xl:inline-flex">
                 Nhận khách trên 360dep
               </Link>
-              <Link href="/login" className="inline-flex h-10 items-center rounded-full bg-ink px-5 text-[14px] font-semibold text-white hover:bg-ink/85">
+              <Link href="/login" className="inline-flex h-10 items-center rounded-full bg-accent px-5 text-[14px] font-semibold text-white hover:bg-accent-dark">
                 Đăng nhập
               </Link>
             </div>
@@ -166,7 +166,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       href={item.href}
                       aria-label={isPro ? "Đăng tác phẩm hoặc tuyển mẫu" : "Đăng yêu cầu"}
                       aria-current={active ? "page" : undefined}
-                      className="flex size-12 items-center justify-center rounded-2xl bg-ink text-white shadow-[var(--shadow-raised)] transition-transform active:scale-95"
+                      className="flex size-12 items-center justify-center rounded-2xl bg-accent text-white shadow-[var(--shadow-raised)] transition-transform active:scale-95"
                     >
                       <Icon className="size-6" />
                     </Link>
@@ -181,10 +181,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       // A tab bar is the most-tapped thing in the app: 44px tall
                       // and a label you can read without squinting.
                       "flex min-h-14 flex-col items-center justify-center gap-0.5 py-1.5 text-[12px]",
-                      active ? "font-bold text-ink" : "font-medium text-muted",
+                      active ? "font-semibold text-accent" : "font-medium text-muted",
                     )}
                   >
-                    <Icon className={cn("size-6", active && "stroke-[2.4]")} />
+                    <Icon className="size-6 stroke-[1.75]" />
                     {item.label}
                   </Link>
                 </li>

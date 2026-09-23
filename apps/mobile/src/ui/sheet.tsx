@@ -55,7 +55,7 @@ export function Sheet({
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: footer ? 12 : insets.bottom + 20, gap: 16 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Txt v="title" w={800}>
+        <Txt v="title" w={700}>
           {title}
         </Txt>
         {children}

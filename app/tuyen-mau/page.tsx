@@ -34,7 +34,7 @@ export default function CastingsPage() {
 
       {mine.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-3 text-[20px] font-extrabold tracking-tight">Bạn đã ứng tuyển</h2>
+          <h2 className="mb-3 text-[20px] font-bold tracking-tight">Bạn đã ứng tuyển</h2>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {mine.map((c) => (
               <CastingCard key={c.id} casting={c} />
@@ -44,7 +44,7 @@ export default function CastingsPage() {
       )}
 
       <section className="mt-8">
-        <h2 className="mb-3 text-[20px] font-extrabold tracking-tight">Đang mở{state.city ? ` ở ${state.city}` : ""}</h2>
+        <h2 className="mb-3 text-[20px] font-bold tracking-tight">Đang mở{state.city ? ` ở ${state.city}` : ""}</h2>
         {categories.length > 1 && (
           <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
             <Chip active={category === "all"} onClick={() => setCategory("all")}>

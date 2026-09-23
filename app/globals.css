@@ -2,30 +2,30 @@
 
 @theme {
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  /* One family. Headlines are the same face at 700-800 with tighter tracking. */
-  --font-display: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  /* Body and headings in Be Vietnam Pro; the serif is for the wordmark only. */
+  --font-display: var(--font-serif), ui-serif, Georgia, serif;
 
   /* Mirrors lib/design/tokens.ts; tests/design-tokens.test.ts keeps them equal. */
-  --color-canvas: #FAFAF8;
+  --color-canvas: #FAF6F4;
   --color-surface: #FFFFFF;
-  --color-subtle: #F2F0EC;
-  --color-subtle-strong: #E6E2DB;
-  --color-line: #E8E5E0;
-  --color-ink: #161413;
-  --color-ink-soft: #4E4845;
-  --color-muted: #6F6964;
-  --color-accent: #C42D45;
-  --color-accent-dark: #A21F36;
-  --color-accent-soft: #FBE9EC;
-  --color-success: #1F7A4D;
-  --color-success-soft: #E4F2EA;
+  --color-subtle: #F5ECE9;
+  --color-subtle-strong: #EADBD7;
+  --color-line: #EFE3DF;
+  --color-ink: #3A2A2C;
+  --color-ink-soft: #65575A;
+  --color-muted: #7D6C6E;
+  --color-accent: #A8535D;
+  --color-accent-dark: #8F434C;
+  --color-accent-soft: #F6E6E6;
+  --color-success: #2F6F4B;
+  --color-success-soft: #E5F2EA;
   --color-warning: #8A5410;
   --color-warning-soft: #FBEFDC;
-  --color-danger: #B42318;
-  --color-danger-soft: #FBE6E4;
-  --color-beauty: #C42D45;
-  --color-photo: #2F55D4;
-  --color-model: #7A3E8E;
+  --color-danger: #A13A3A;
+  --color-danger-soft: #F8E4E2;
+  --color-beauty: #A8535D;
+  --color-photo: #4A67C9;
+  --color-model: #86508F;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -33,9 +33,9 @@
   --radius-xl: 24px;
   /* Cards are separated by space, not by a shadow; these are for things that float. */
   --radius-card: 16px;
-  --shadow-soft: 0 1px 2px rgb(22 20 19 / 0.04), 0 1px 0 rgb(22 20 19 / 0.02);
-  --shadow-raised: 0 2px 4px rgb(22 20 19 / 0.04), 0 12px 32px -12px rgb(22 20 19 / 0.18);
-  --shadow-overlay: 0 8px 16px rgb(22 20 19 / 0.06), 0 24px 64px -16px rgb(22 20 19 / 0.28);
+  --shadow-soft: 0 1px 2px rgb(58 42 44 / 0.04), 0 6px 20px -10px rgb(58 42 44 / 0.14);
+  --shadow-raised: 0 2px 4px rgb(58 42 44 / 0.05), 0 12px 32px -12px rgb(58 42 44 / 0.2);
+  --shadow-overlay: 0 8px 16px rgb(58 42 44 / 0.06), 0 24px 64px -16px rgb(58 42 44 / 0.28);
 
   --animate-fade-up: fade-up 220ms ease-out both;
   @keyframes fade-up {
@@ -66,7 +66,7 @@
     letter-spacing: -0.015em;
   }
   :focus-visible {
-    outline: 2px solid var(--color-ink);
+    outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
 }

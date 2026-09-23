@@ -89,7 +89,7 @@ export function VerticalSwitch({
             onClick={() => onChange(it.id)}
             className={cn(
               "inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[14px] font-semibold transition-colors",
-              active ? "bg-ink text-white" : "bg-subtle text-ink hover:bg-subtle-strong",
+              active ? "bg-accent text-white" : "bg-subtle text-ink hover:bg-subtle-strong",
             )}
           >
             {it.id !== "all" && (
@@ -205,19 +205,19 @@ function useImpression(work: Work) {
 function MediaBadge({ work }: { work: Work }) {
   if (work.video)
     return (
-      <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
+      <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
         <Play className="size-3 fill-white" /> Clip
       </span>
     )
   if (work.kind === "before_after")
     return (
-      <span className="absolute left-2.5 top-2.5 rounded-full bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
+      <span className="absolute bottom-2.5 right-2.5 rounded-full bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
         Trước / sau
       </span>
     )
   if (work.images.length > 1)
     return (
-      <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
+      <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
         <Layers className="size-3" /> {work.images.length}
       </span>
     )
@@ -237,8 +237,15 @@ export function PostCard({ work, priority, className }: { work: Work; priority?:
   const price = fromPrice(state, work.proId, work.templateId)
   const cover = work.kind === "before_after" && work.images[1] ? work.images[1] : work.images[0]
   return (
-    <Link ref={ref} href={`/works/${work.id}`} className={cn("group block animate-fade-up", className)}>
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] bg-subtle">
+    <Link
+      ref={ref}
+      href={`/works/${work.id}`}
+      className={cn(
+        "group block animate-fade-up overflow-hidden rounded-[var(--radius-lg)] bg-surface shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-raised)]",
+        className,
+      )}
+    >
+      <div className="relative aspect-[4/5] overflow-hidden bg-subtle">
         {cover && (
           <Image
             src={cover}
@@ -249,22 +256,28 @@ export function PostCard({ work, priority, className }: { work: Work; priority?:
             className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           />
         )}
+        {/* A fact, not a slogan: the person has bookings switched on. */}
+        {pro.acceptingJobs && (
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-accent backdrop-blur">
+            Có thể đặt
+          </span>
+        )}
         <MediaBadge work={work} />
         <SaveWorkButton workId={work.id} className="absolute right-0.5 top-0.5" />
       </div>
-      <div className="mt-2.5 px-0.5">
+      <div className="p-3">
         <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink">{work.title}</p>
         <p className="mt-0.5 text-[14px] text-ink">
           {price !== null ? (
             <>
               <span className="text-muted">Từ </span>
-              <span className="font-semibold">{formatPrice(price)}</span>
+              <span className="font-semibold text-accent-dark">{formatPrice(price)}</span>
             </>
           ) : (
             <span className="text-muted">{categoryLabel(work.category)}</span>
           )}
         </p>
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-2.5 flex items-center gap-2">
           <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={28} />
           <div className="min-w-0 flex-1 leading-tight">
             <p className="flex items-center gap-1 text-[13px] font-semibold text-ink">
@@ -326,7 +339,7 @@ export function ProCard({ pro: basePro, className }: { pro: Pro; className?: str
   return (
     <Link
       href={`/pros/${pro.id}`}
-      className={cn("group block rounded-[var(--radius-lg)] border border-line bg-surface p-3 transition-colors hover:border-ink/25", className)}
+      className={cn("group block rounded-[var(--radius-lg)] bg-surface p-3 shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-raised)]", className)}
     >
       <div className="flex items-center gap-3">
         <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={52} />

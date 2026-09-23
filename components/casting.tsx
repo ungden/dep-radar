@@ -67,7 +67,7 @@ export function CastingStrip({ className }: { className?: string }) {
     <section className={className}>
       <div className="mb-4 flex items-baseline justify-between gap-4">
         <div>
-          <h2 className="text-[20px] font-extrabold tracking-tight md:text-[24px]">Đang tuyển mẫu</h2>
+          <h2 className="text-[20px] font-bold tracking-tight md:text-[24px]">Đang tuyển mẫu</h2>
           <p className="mt-0.5 text-[14px] text-ink-soft">Làm mẫu cho thợ, được làm đẹp miễn phí hoặc giảm giá.</p>
         </div>
         <Link href="/tuyen-mau" className="shrink-0 text-[14px] font-semibold underline-offset-4 hover:underline">

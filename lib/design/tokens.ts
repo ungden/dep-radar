@@ -3,37 +3,39 @@
  * native app (apps/mobile). One source, so a colour cannot drift between them;
  * tests/design-tokens.test.ts fails when globals.css disagrees with this file.
  *
- * Direction: "tạp chí đời thường". Real photos carry the page, text is near
- * black and confident, and there is exactly one accent colour, used sparingly:
- * a saved heart, an unread dot, the selected tab. The main action is black.
+ * Direction: "hồng đất sáng". A warm, light page where real photos sit on
+ * white cards; text is a deep warm brown rather than black; the brand rose is
+ * the colour of every action and every selected state. Nothing is black:
+ * an earlier all-black version read as heavy and dark.
  *
- * Every text colour here reaches WCAG AA (4.5:1) on canvas, surface and subtle.
+ * Every text colour here reaches WCAG AA (4.5:1) on canvas and surface, and
+ * white text reaches it on accent and accentDark.
  */
 export const colors = {
-  canvas: "#FAFAF8",
+  canvas: "#FAF6F4",
   surface: "#FFFFFF",
-  /** Quiet fill: chips, image placeholders, secondary buttons. */
-  subtle: "#F2F0EC",
-  subtleStrong: "#E6E2DB",
-  line: "#E8E5E0",
-  ink: "#161413",
-  inkSoft: "#4E4845",
-  muted: "#6F6964",
-  /** "Đỏ son". The only accent. */
-  accent: "#C42D45",
-  accentDark: "#A21F36",
-  accentSoft: "#FBE9EC",
-  success: "#1F7A4D",
-  successSoft: "#E4F2EA",
+  /** Quiet fill: unselected chips, image placeholders, secondary buttons. */
+  subtle: "#F5ECE9",
+  subtleStrong: "#EADBD7",
+  line: "#EFE3DF",
+  ink: "#3A2A2C",
+  inkSoft: "#65575A",
+  muted: "#7D6C6E",
+  /** Hồng đất: buttons, selected chips and tabs, links, the saved heart. */
+  accent: "#A8535D",
+  accentDark: "#8F434C",
+  accentSoft: "#F6E6E6",
+  success: "#2F6F4B",
+  successSoft: "#E5F2EA",
   warning: "#8A5410",
   warningSoft: "#FBEFDC",
-  danger: "#B42318",
-  dangerSoft: "#FBE6E4",
+  danger: "#A13A3A",
+  dangerSoft: "#F8E4E2",
   /** Small marks only (a dot, a label), never a large fill. */
   vertical: {
-    beauty: "#C42D45",
-    photo: "#2F55D4",
-    model: "#7A3E8E",
+    beauty: "#A8535D",
+    photo: "#4A67C9",
+    model: "#86508F",
   },
 } as const
 

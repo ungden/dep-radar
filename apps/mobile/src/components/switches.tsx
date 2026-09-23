@@ -4,8 +4,7 @@ import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
 
 /**
- * A row of text tabs. The selected one is ink and bold with a short accent bar
- * under it; the accent does nothing else here.
+ * A row of text tabs. The selected one is rose with a short rose bar under it.
  */
 export function TextTabs<T extends string>({
   items,
@@ -31,7 +30,7 @@ export function TextTabs<T extends string>({
             accessibilityState={{ selected }}
             style={{ paddingTop: 10, alignItems: "center" }}
           >
-            <Txt v={size} w={selected ? 800 : 500} color={selected ? colors.ink : colors.muted}>
+            <Txt v={size} w={selected ? 600 : 500} color={selected ? colors.accent : colors.muted}>
               {item.label}
             </Txt>
             <View style={{ height: 3, alignSelf: "stretch", marginTop: 6, borderRadius: 2, backgroundColor: selected ? colors.accent : "transparent" }} />

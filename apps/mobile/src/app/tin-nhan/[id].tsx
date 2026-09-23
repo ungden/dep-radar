@@ -98,7 +98,7 @@ export default function Conversation() {
                 <View
                   style={{
                     maxWidth: "80%",
-                    backgroundColor: item.mine ? colors.ink : colors.surface,
+                    backgroundColor: item.mine ? colors.accent : colors.surface,
                     borderRadius: radius.lg,
                     paddingHorizontal: 14,
                     paddingVertical: 9,
@@ -160,7 +160,7 @@ export default function Conversation() {
           onPress={() => void send()}
           disabled={!text.trim() || sending}
           accessibilityLabel="Gửi"
-          style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.ink, alignItems: "center", justifyContent: "center" }}
+          style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}
         >
           <Icon name="send" size={20} color={colors.surface} />
         </Press>

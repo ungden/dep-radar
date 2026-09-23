@@ -196,7 +196,7 @@ function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: strin
           step={5000}
           value={price}
           onChange={(e) => setPrice(Number(e.target.value))}
-          className="mt-2 w-full accent-[var(--color-ink)]"
+          className="mt-2 w-full accent-[var(--color-accent)]"
         />
         <div className="flex justify-between text-xs text-muted">
           <span>{formatPrice(floor)}</span>

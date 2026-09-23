@@ -68,7 +68,7 @@ export default function CastingPage() {
               {compensationLabel(casting)}
             </span>
           </div>
-          <h1 className="mt-3 text-[28px] font-extrabold leading-tight tracking-tight md:text-[34px]">{casting.title}</h1>
+          <h1 className="mt-3 text-[28px] font-bold leading-tight tracking-tight md:text-[34px]">{casting.title}</h1>
 
           <dl className="mt-5 grid gap-3 text-[15px] sm:grid-cols-3">
             <Fact icon={<CalendarDays className="size-5" />} label="Khi nào">
@@ -87,7 +87,7 @@ export default function CastingPage() {
 
           {pro && (
             <section className="mt-8">
-              <h2 className="mb-3 text-[20px] font-extrabold tracking-tight">Người tuyển</h2>
+              <h2 className="mb-3 text-[20px] font-bold tracking-tight">Người tuyển</h2>
               <Link href={`/pros/${pro.id}`} className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-line bg-surface p-4 hover:border-ink/30">
                 <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={52} />
                 <div className="min-w-0 flex-1">
@@ -126,7 +126,7 @@ export default function CastingPage() {
             ) : application && application.status !== "withdrawn" ? (
               <>
                 <p className="text-[13px] font-medium text-muted">Trạng thái</p>
-                <p className={cn("mt-1 text-[18px] font-extrabold", application.status === "accepted" && "text-success")}>
+                <p className={cn("mt-1 text-[18px] font-bold", application.status === "accepted" && "text-success")}>
                   {APPLICATION_LABEL[application.status]}
                 </p>
                 {application.status === "accepted" && (

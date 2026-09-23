@@ -34,7 +34,7 @@ export default async function LoginPage({
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pb-10">
       <PageHeader back />
       <Logo size="lg" />
-      <h1 className="mt-8 text-[32px] font-extrabold leading-tight tracking-tight">
+      <h1 className="mt-8 text-[32px] font-bold leading-tight tracking-tight">
         {wantsPro ? "Nhận khách trên 360dep" : "Đăng nhập"}
       </h1>
       <p className="mt-2 text-[15px] text-ink-soft">

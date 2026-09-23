@@ -95,7 +95,7 @@ export function OccasionView({ occasionId }: { occasionId: string }) {
               </span>
             ))}
           </p>
-          <h1 className="mt-3 text-[34px] font-extrabold leading-[1.05] tracking-[-0.03em] md:text-[48px]">{occasion.title}</h1>
+          <h1 className="mt-3 text-[34px] font-bold leading-[1.05] tracking-[-0.03em] md:text-[48px]">{occasion.title}</h1>
           <p className="mt-3 max-w-md text-[17px] leading-relaxed text-ink-soft">{occasion.subtitle}.</p>
           {occasion.months.length > 0 && (
             <p className="mt-3 text-[14px] text-muted">Mùa cao điểm: tháng {occasion.months.join(", ")}</p>
@@ -134,7 +134,7 @@ export function OccasionView({ occasionId }: { occasionId: string }) {
             <Users className="size-5" />
           </span>
           <div>
-            <h2 className="text-[17px] font-extrabold tracking-tight">Đặt nhiều người cho một buổi</h2>
+            <h2 className="text-[17px] font-bold tracking-tight">Đặt nhiều người cho một buổi</h2>
             <p className="mt-1 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
               Mỗi người làm là một lịch hẹn riêng: bạn đặt từng người cho cùng giờ, cùng địa điểm. Khi đặt, chọn “Đặt chung
               một buổi” để các lịch hẹn được gắn với nhau. Mỗi người vẫn tự gọi xác nhận lịch của mình.
@@ -144,7 +144,7 @@ export function OccasionView({ occasionId }: { occasionId: string }) {
       )}
 
       <section className="mt-10 md:mt-14">
-        <h2 className="text-[24px] font-extrabold tracking-tight md:text-[32px]">Cần những ai</h2>
+        <h2 className="text-[24px] font-bold tracking-tight md:text-[32px]">Cần những ai</h2>
         <p className="mt-1 text-[15px] text-ink-soft">
           Theo thứ tự trong buổi{city ? `, với người làm ở ${city}` : ""}.
         </p>
@@ -157,7 +157,7 @@ export function OccasionView({ occasionId }: { occasionId: string }) {
 
       {others.length > 0 && (
         <nav className="mt-14 border-t border-line pt-8" aria-label="Dịp khác">
-          <h2 className="text-[20px] font-extrabold tracking-tight">Dịp khác</h2>
+          <h2 className="text-[20px] font-bold tracking-tight">Dịp khác</h2>
           <ul className="mt-4 flex flex-wrap gap-2">
             {others.map((o) => (
               <li key={o.id}>
@@ -186,12 +186,12 @@ function Step({ index, template: t, state, city }: { index: number; template: Se
       <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-10">
         <div>
           <div className="flex items-center gap-3">
-            <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-ink text-[15px] font-bold text-white">
+            <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-[15px] font-bold text-white">
               {index}
             </span>
             <CategoryTag category={t.category} href={`/search?category=${t.category}`} />
           </div>
-          <h3 className="mt-3 text-[20px] font-extrabold leading-snug tracking-tight md:text-[24px]">{t.name}</h3>
+          <h3 className="mt-3 text-[20px] font-bold leading-snug tracking-tight md:text-[24px]">{t.name}</h3>
           <p className="mt-1 text-[15px] text-ink-soft">{t.description}</p>
           {band && (
             <p className="mt-3 text-[15px]">

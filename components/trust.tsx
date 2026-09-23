@@ -41,7 +41,7 @@ export function Stars({ value, className }: { value: number; className?: string 
 export function RatingSummaryBlock({ rating }: { rating: RatingSummary }) {
   return (
     <div className="flex items-center gap-4">
-      <p className="text-5xl font-extrabold leading-none tracking-tight">{rating.average.toFixed(1)}</p>
+      <p className="text-5xl font-bold leading-none tracking-tight">{rating.average.toFixed(1)}</p>
       <div>
         <Stars value={rating.average} />
         <p className="mt-1.5 text-[13px] text-ink-soft">{rating.count.toLocaleString("vi-VN")} đánh giá từ khách đã đặt lịch</p>
@@ -110,9 +110,9 @@ export function ReviewItem({ review, onReply }: { review: Review; onReply?: (tex
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Cảm ơn khách, giải thích nếu có vấn đề…"
-              className="h-11 flex-1 rounded-full border border-line bg-surface px-4 text-[15px] focus:border-ink focus:outline-none"
+              className="h-11 flex-1 rounded-full border border-line bg-surface px-4 text-[15px] focus:border-accent focus:outline-none"
             />
-            <button type="submit" className="h-11 rounded-full bg-ink px-5 text-[14px] font-semibold text-white">
+            <button type="submit" className="h-11 rounded-full bg-accent px-5 text-[14px] font-semibold text-white">
               Gửi
             </button>
           </form>

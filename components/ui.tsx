@@ -15,7 +15,7 @@ const buttonBase =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-[background-color,border-color,transform] duration-150 disabled:pointer-events-none disabled:opacity-40 active:scale-[0.98]"
 const buttonVariants: Record<ButtonVariant, string> = {
   // The main action is black; the accent is kept for marks, not buttons.
-  primary: "bg-ink text-white hover:bg-ink/85",
+  primary: "bg-accent text-white hover:bg-accent-dark",
   outline: "border border-line bg-surface text-ink hover:border-ink/40",
   soft: "bg-subtle text-ink hover:bg-subtle-strong",
   ghost: "text-ink-soft hover:bg-subtle",
@@ -55,9 +55,9 @@ export function ButtonLink({
 export function LogoMark({ size = 32, className }: { size?: number; className?: string }) {
   return (
     <svg aria-hidden width={size} height={size} viewBox="0 0 32 32" className={cn("shrink-0", className)}>
-      <rect width="32" height="32" rx="9" fill="var(--color-ink)" />
-      <circle cx="15.5" cy="16.5" r="7.6" fill="none" stroke="#fff" strokeWidth="3.4" />
-      <circle cx="24" cy="8" r="3.1" fill="var(--color-accent)" />
+      <rect width="32" height="32" rx="9" fill="var(--color-accent)" />
+      <circle cx="15.5" cy="16.5" r="7.6" fill="none" stroke="#fff" strokeWidth="3" />
+      <circle cx="24" cy="8" r="2.8" fill="#F6E6E6" />
     </svg>
   )
 }
@@ -67,7 +67,7 @@ export function Logo({ className, size = "md" }: { className?: string; size?: "m
   return (
     <span className={cn("inline-flex items-center", lg ? "gap-3" : "gap-2", className)}>
       <LogoMark size={lg ? 44 : 28} />
-      <span className={cn("font-extrabold leading-none tracking-[-0.04em] text-ink", lg ? "text-[34px]" : "text-[21px]")}>
+      <span className={cn("font-display font-bold leading-none tracking-[-0.02em] text-accent", lg ? "text-[36px]" : "text-[24px]")}>
         360dep
       </span>
     </span>
@@ -116,7 +116,7 @@ export function Chip({
       aria-pressed={active}
       className={cn(
         "relative inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-4 text-[13px] font-medium transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
-        active ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink/30",
+        active ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
         className,
       )}
       {...props}
@@ -189,7 +189,7 @@ export function PageHeader({
           <ChevronLeft className="size-5" />
         </button>
       )}
-      {title && <h1 className={cn("flex-1 truncate text-[17px] font-bold md:text-2xl md:font-extrabold", back && "text-center md:text-left")}>{title}</h1>}
+      {title && <h1 className={cn("flex-1 truncate text-[17px] font-bold md:text-2xl md:font-bold", back && "text-center md:text-left")}>{title}</h1>}
       {!title && <div className="flex-1" />}
       <div className={cn("flex min-w-10 justify-end", !action && back && "md:hidden")}>{action}</div>
     </div>
@@ -249,11 +249,11 @@ export function Tabs<T extends string>({
           onClick={() => onChange(it.value)}
           className={cn(
             "relative shrink-0 pb-3 pt-1 text-[15px] transition-colors",
-            value === it.value ? "font-bold text-ink" : "font-medium text-muted hover:text-ink",
+            value === it.value ? "font-semibold text-accent" : "font-medium text-muted hover:text-ink",
           )}
         >
           {it.label}
-          {value === it.value && <span className="absolute inset-x-0 -bottom-px h-[3px] rounded-full bg-ink" />}
+          {value === it.value && <span className="absolute inset-x-0 -bottom-px h-[3px] rounded-full bg-accent" />}
         </button>
       ))}
     </div>
@@ -318,7 +318,7 @@ export function Field({
 }
 
 export const inputClass =
-  "w-full rounded-xl border border-line bg-surface px-3.5 py-3 text-[15px] text-ink placeholder:text-muted focus:border-ink focus:outline-none"
+  "w-full rounded-xl border border-line bg-surface px-3.5 py-3 text-[15px] text-ink placeholder:text-muted focus:border-accent focus:outline-none"
 
 export function Toggle({
   checked,
@@ -336,7 +336,7 @@ export function Toggle({
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className={cn("relative h-7 w-12 shrink-0 rounded-full transition-colors", checked ? "bg-ink" : "bg-subtle-strong")}
+      className={cn("relative h-7 w-12 shrink-0 rounded-full transition-colors", checked ? "bg-accent" : "bg-subtle-strong")}
     >
       <span className={cn("absolute top-1 size-5 rounded-full bg-white shadow transition-all", checked ? "left-6" : "left-1")} />
     </button>

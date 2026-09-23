@@ -116,7 +116,7 @@ export function Gallery({
                   muted
                   loop
                   preload="metadata"
-                  className="h-full w-full bg-ink object-contain"
+                  className="h-full w-full bg-accent object-contain"
                 >
                   <track kind="captions" />
                 </video>
@@ -173,7 +173,7 @@ export function Gallery({
                   type="button"
                   tabIndex={-1}
                   onClick={() => go(i)}
-                  className={cn("rounded-full transition-all", i === index ? "h-2 w-5 bg-ink" : "size-2 bg-subtle-strong hover:bg-muted")}
+                  className={cn("rounded-full transition-all", i === index ? "h-2 w-5 bg-accent" : "size-2 bg-subtle-strong hover:bg-muted")}
                 />
               ))}
             </span>

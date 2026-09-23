@@ -98,7 +98,7 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
               onClick={() => setVariantId(v.id)}
               className={cn(
                 "relative h-9 shrink-0 rounded-full border px-4 text-[13px] font-semibold transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
-                v.id === variant.id ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink/30",
+                v.id === variant.id ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
               )}
             >
               {v.label}
@@ -109,7 +109,7 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
 
       <div className="mt-4 flex items-end justify-between gap-3">
         <div>
-          <p className="text-[20px] font-extrabold tracking-tight">{formatPrice(service.prices[variant.id])}</p>
+          <p className="text-[20px] font-bold tracking-tight">{formatPrice(service.prices[variant.id])}</p>
           <p className="mt-0.5 flex items-center gap-1 text-[13px] text-muted">
             <Clock className="size-3.5" />
             {variants.length === 1 && !variant.label.startsWith(`${variant.durationMin} phút`) ? `${variant.label} · ` : ""}
