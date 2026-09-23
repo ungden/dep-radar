@@ -125,7 +125,7 @@ function Explore() {
         {categories.length > 1 && (
           <CategoryTiles
             className="mb-7"
-            items={[{ id: "all", label: "Tất cả" }, ...categories.map((c) => ({ id: c.id, label: c.label }))]}
+            items={[{ id: "all", label: "Tất cả" }, ...categories.map((c) => ({ id: c.id, label: c.short ?? c.label }))]}
             value={shownCategory}
             onChange={(id) => setCategory(id as CategoryId | "all")}
           />

@@ -32,6 +32,8 @@ export interface Category {
   id: CategoryId
   label: string
   vertical: VerticalId
+  /** For a small tile, where the full label would wrap or be cut. */
+  short?: string
 }
 
 // ---------------------------------------------------------------------------

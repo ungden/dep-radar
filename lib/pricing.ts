@@ -19,6 +19,12 @@ export const POLICY = {
   urgentFee: 50000,
   minLeadMinutes: 60,
   freeCancelHours: 12,
+  /**
+   * How far below zero the prepaid wallet may go before new jobs stop.
+   * Mirrors the default of enforce_wallet_threshold(p_limit int default -200000),
+   * run hourly by cron; change both together.
+   */
+  walletOverdraftLimit: 200000,
 } as const
 
 const roundUp5k = (n: number) => Math.ceil(n / 5000) * 5000

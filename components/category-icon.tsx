@@ -36,6 +36,13 @@ export function CategoryIcon({ id, className }: { id: CategoryIconId; className?
  * they become a grid. `row` keeps the single row at every width (search, once
  * there is a query and the results matter more than the categories).
  */
+/**
+ * Categories as a grid of icon tiles, never a row to swipe (the owner's call):
+ * everything visible at once, each choice a picture. On a phone the tiles are
+ * compact (4 across, one-line labels) so the first service price still shows
+ * early. `row` is kept for the search page's compact mode and means the same
+ * grid with smaller tiles.
+ */
 export function CategoryTiles({
   items,
   value,
@@ -49,27 +56,12 @@ export function CategoryTiles({
   row?: boolean
   className?: string
 }) {
-  const ref = React.useRef<HTMLDivElement>(null)
-  // Keep the chosen one in view in the scrolling row, without moving the page.
-  React.useEffect(() => {
-    const el = ref.current
-    const chosen = el?.querySelector<HTMLElement>('[aria-checked="true"]')
-    if (!el || !chosen || el.scrollWidth <= el.clientWidth) return
-    const left = chosen.offsetLeft - el.offsetLeft
-    if (left < el.scrollLeft || left + chosen.offsetWidth > el.scrollLeft + el.clientWidth) {
-      el.scrollTo({ left: Math.max(0, left - 16) })
-    }
-  }, [value])
   return (
     <div
-      ref={ref}
       role="radiogroup"
       aria-label="Danh mục"
       className={cn(
-        "no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4",
-        row
-          ? "md:mx-0 md:px-0"
-          : "sm:mx-0 sm:grid sm:grid-cols-6 sm:gap-x-2 sm:gap-y-4 sm:overflow-visible sm:px-0 lg:flex lg:flex-wrap lg:gap-x-5",
+        "grid grid-cols-4 gap-x-1 gap-y-3 sm:grid-cols-7 sm:gap-x-2 lg:flex lg:flex-wrap lg:gap-x-5 lg:gap-y-4",
         className,
       )}
     >
@@ -82,23 +74,24 @@ export function CategoryTiles({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(it.id)}
-            className={cn("group flex min-w-[56px] shrink-0 flex-col items-center gap-1.5 text-center", !row && "lg:w-[84px]")}
+            className={cn("group flex min-w-0 flex-col items-center gap-1 text-center", !row && "lg:w-[84px]")}
           >
             <span
               className={cn(
-                "flex size-[52px] items-center justify-center rounded-[18px] transition-colors",
-                !row && "sm:size-[60px] sm:rounded-[20px]",
+                "flex items-center justify-center transition-colors",
+                row ? "size-11 rounded-[14px]" : "size-[52px] rounded-[18px] lg:size-[60px] lg:rounded-[20px]",
                 active ? "bg-accent text-white shadow-[var(--shadow-raised)]" : "bg-accent-soft text-accent group-hover:bg-subtle-strong",
               )}
             >
-              <CategoryIcon id={it.id} className={cn("size-6", !row && "sm:size-7")} />
+              <CategoryIcon id={it.id} className={cn(row ? "size-5" : "size-6 lg:size-7")} />
             </span>
             <span
               className={cn(
-                "whitespace-nowrap text-[12.5px] leading-tight",
-                !row && "sm:whitespace-normal",
+                // One line, same height for every tile: long labels are shortened, not wrapped.
+                "w-full truncate text-[12px] leading-tight",
                 active ? "font-semibold text-accent-dark" : "font-medium text-ink",
               )}
+              title={it.label}
             >
               {it.label}
             </span>

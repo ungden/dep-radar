@@ -99,7 +99,7 @@ function ProsView() {
 
       <CategoryTiles
         className="mt-3"
-        items={[{ id: "all", label: "Tất cả" }, ...categoriesInTrade(vertical).map((c) => ({ id: c.id, label: c.label }))]}
+        items={[{ id: "all", label: "Tất cả" }, ...categoriesInTrade(vertical).map((c) => ({ id: c.id, label: c.short ?? c.label }))]}
         value={category ?? "all"}
         onChange={(id) => setParams({ category: id === "all" ? null : id })}
       />

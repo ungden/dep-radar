@@ -3,9 +3,10 @@ import Link from "next/link"
 import { Info } from "lucide-react"
 import { RequireSession } from "@/components/require-session"
 import { Card, EmptyState, PageHeader } from "@/components/ui"
+import { WalletTopUp } from "@/components/wallet-topup"
 import { earningsByMonth, walletSummary } from "@/lib/api/me"
 import { POLICY } from "@/lib/pricing"
-import { formatPrice } from "@/lib/utils"
+import { formatDateLong, formatPrice, localDate, localTime } from "@/lib/utils"
 
 export const metadata: Metadata = {
   title: "Ví & thu nhập",
@@ -14,8 +15,8 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"
 
-/** How far the wallet may go below zero before new jobs stop. */
-const OVERDRAFT_LIMIT = -200_000
+/** How far the wallet may go below zero before new jobs stop. One source: POLICY. */
+const OVERDRAFT_LIMIT = -POLICY.walletOverdraftLimit
 
 const KIND_LABEL: Record<string, string> = {
   topup: "Nạp ví",
@@ -42,21 +43,22 @@ export default async function WalletPage() {
             Khách trả tiền trực tiếp cho bạn. Mỗi job hoàn thành trừ {Math.round(POLICY.commissionRate * 100)}% giá dịch
             vụ vào ví này.
           </p>
-          {blocked && (
+          {blocked ? (
             <p className="mt-2 rounded-xl bg-danger-soft px-3 py-2 text-[13px] text-danger">
-              Ví đã âm quá {formatPrice(Math.abs(OVERDRAFT_LIMIT))} nên bạn tạm không nhận được job mới. Nạp ví để tiếp
+              Ví đã âm quá {formatPrice(POLICY.walletOverdraftLimit)} nên bạn tạm không nhận được job mới. Nạp ví để tiếp
               tục.
             </p>
+          ) : (
+            <p className="mt-2 text-[13px] text-ink-soft">
+              Ví âm quá {formatPrice(POLICY.walletOverdraftLimit)} thì tạm dừng nhận job mới cho tới khi nạp lại.
+            </p>
           )}
+          <WalletTopUp balance={wallet.balance} />
           <p className="mt-3 flex gap-2 text-xs text-muted">
             <Info className="mt-0.5 size-3.5 shrink-0" />
-            <span>
-              Nạp ví bằng chuyển khoản VietQR <b className="text-ink">sắp áp dụng</b>. Hiện tại đội ngũ 360dep ghi nhận
-              thủ công — nhắn cho chúng tôi khi bạn đã chuyển khoản.{" "}
-              <Link href="/chinh-sach" className="text-accent underline underline-offset-2">
-                Chính sách phí
-              </Link>
-            </span>
+            <Link href="/chinh-sach" className="text-accent underline underline-offset-2">
+              Chính sách phí và hoa hồng
+            </Link>
           </p>
         </Card>
 
@@ -94,7 +96,15 @@ export default async function WalletPage() {
                 <li key={e.id} className="flex items-center gap-3 px-4 py-3 text-sm">
                   <span className="min-w-0 flex-1">
                     <span className="block">{KIND_LABEL[e.kind] ?? e.kind}</span>
+                    <span className="block text-xs text-muted">
+                      {formatDateLong(localDate(e.createdAt), true)} · {localTime(e.createdAt)}
+                    </span>
                     {e.note && <span className="block truncate text-xs text-muted">{e.note}</span>}
+                    {e.bookingId && (
+                      <Link href={`/bookings/${e.bookingId}`} className="text-xs text-accent underline underline-offset-2">
+                        Xem lịch hẹn
+                      </Link>
+                    )}
                   </span>
                   <span className={e.amount < 0 ? "font-medium text-danger" : "font-medium text-success"}>
                     {e.amount < 0 ? "−" : "+"}

@@ -189,8 +189,61 @@ export function ComboPartners({ booking }: { booking: Booking }) {
 }
 
 /**
- * The freelancer's side of a two-way review: how the customer was. Other
- * freelancers see it before accepting that customer; the customer sees it too.
+ * What other freelancers said about this customer, shown while deciding
+ * whether to take the booking. The snapshot already carries every review of a
+ * customer the freelancer has a booking with (and nothing else).
+ */
+export function CustomerHistory({ booking }: { booking: Booking }) {
+  const state = useApp()
+  const reviews = state.customerReviews
+    .filter((r) => r.customerId === booking.customerId && r.bookingId !== booking.id)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  const visitsWithMe = state.bookings.filter(
+    (b) => !b.mine && b.proId === booking.proId && b.customerId === booking.customerId && b.status === "completed",
+  ).length
+
+  if (!reviews.length) {
+    return (
+      <section className="rounded-[var(--radius-lg)] bg-subtle px-4 py-3">
+        {/* Not "khách mới": a customer can have finished jobs nobody reviewed. */}
+        <p className="text-[15px] font-semibold">{visitsWithMe ? `Khách quen · đã làm với bạn ${visitsWithMe} lần` : "Chưa có đánh giá về khách này"}</p>
+        <p className="text-[13px] text-ink-soft">Chưa người làm nào trên 360dep chấm điểm khách này.</p>
+      </section>
+    )
+  }
+
+  const average = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+  const withText = reviews.filter((r) => r.body.trim()).slice(0, 2)
+  return (
+    <section className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
+      <p className="flex items-center gap-2 text-[15px] font-semibold">
+        <Star className="size-4 fill-accent text-accent" aria-hidden />
+        Khách được chấm {average.toFixed(1)}/5 · {reviews.length} lượt
+      </p>
+      <p className="text-[13px] text-ink-soft">
+        Người làm trên 360dep đánh giá sau khi làm xong
+        {visitsWithMe ? ` · đã làm với bạn ${visitsWithMe} lần` : ""}.
+      </p>
+      {withText.length > 0 && (
+        <ul className="mt-2 space-y-2">
+          {withText.map((r) => (
+            <li key={r.bookingId} className="rounded-[var(--radius-md)] bg-canvas px-3 py-2 text-[14px]">
+              <p>“{r.body}”</p>
+              <p className="mt-0.5 text-[12px] text-muted">
+                ★ {r.rating} · {r.mine ? "Bạn" : r.proName} · {formatDateLong(localDate(r.createdAt))}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+/**
+ * The freelancer's side of a two-way review: how the customer was. Freelancers
+ * the customer books later see it on the pending booking (CustomerHistory).
+ * The database only accepts it on a completed job.
  */
 export function ReviewCustomer({ booking }: { booking: Booking }) {
   const state = useApp()
@@ -198,7 +251,7 @@ export function ReviewCustomer({ booking }: { booking: Booking }) {
   const [rating, setRating] = React.useState(0)
   const [text, setText] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
-  if (booking.status !== "completed" && booking.status !== "no_show") return null
+  if (booking.status !== "completed") return null
   const written = state.customerReviews.find((r) => r.bookingId === booking.id && r.mine)
   if (written)
     return (
@@ -216,7 +269,7 @@ export function ReviewCustomer({ booking }: { booking: Booking }) {
       }}
     >
       <p className="text-[15px] font-bold">Khách {booking.customerName} thế nào?</p>
-      <p className="text-[13px] text-ink-soft">Người làm khác sẽ thấy đánh giá này trước khi nhận lịch của khách. Không sửa được sau khi gửi.</p>
+      <p className="text-[13px] text-ink-soft">Người làm khác thấy đánh giá này khi khách đặt lịch với họ. Không sửa được sau khi gửi.</p>
       <div className="mt-2 flex gap-1" role="radiogroup" aria-label="Số sao">
         {[1, 2, 3, 4, 5].map((n) => (
           <button key={n} type="button" role="radio" aria-checked={rating === n} aria-label={`${n} sao`} onClick={() => setRating(n)} className="p-1">

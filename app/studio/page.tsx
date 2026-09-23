@@ -1,8 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, IdCard, ImagePlus, Navigation, Phone, Tags, UserRoundPen, Users } from "lucide-react"
+import { ChevronRight, Contact, IdCard, ImagePlus, Navigation, Phone, Tags, UserRoundPen, Users } from "lucide-react"
 import { JobBookingRow } from "@/components/booking-card"
+import { BookingLink } from "@/components/booking-link"
+import { PublishProgress } from "@/components/publish-progress"
 import { RequestCard } from "@/components/request-card"
 import { RequireSession } from "@/components/require-session"
 import { buttonClass, Card, LogoMark, Toggle } from "@/components/ui"
@@ -64,6 +66,7 @@ function Dashboard() {
   const weekNet = doneThisWeek.reduce((s, b) => s + b.quote.payout, 0)
   const myCastings = state.castings.filter((c) => c.proId === proId && c.status === "open")
   const waitingApplicants = myCastings.reduce((n, c) => n + c.applications.filter((a) => a.status === "pending").length, 0)
+  const clientCount = new Set(mine.filter((b) => b.status === "completed").map((b) => b.customerId)).size
 
   return (
     <div className="space-y-8">
@@ -93,7 +96,7 @@ function Dashboard() {
         />
       </div>
 
-      {!pro.published && <SetupNudge />}
+      <PublishProgress />
       <VerifyNudge pro={pro} />
 
       {pending.length > 0 && (
@@ -146,7 +149,7 @@ function Dashboard() {
 
       {toDeliver.length > 0 && (
         <section>
-          <SectionTitle title="Cần giao file" href="/studio/schedule?tab=done" count={toDeliver.length} />
+          <SectionTitle title="Cần giao file" href="/studio/schedule?tab=deliver" count={toDeliver.length} />
           <ul className="space-y-3">
             {toDeliver.slice(0, 3).map((b) => (
               <li key={b.id}>
@@ -178,8 +181,16 @@ function Dashboard() {
           />
           <Shortcut href="/studio/services" icon={<Tags className="size-5" />} title="Bảng giá" text="Dịch vụ và giá của bạn" />
           <Shortcut href="/studio/profile/edit" icon={<UserRoundPen className="size-5" />} title="Hồ sơ & giờ làm" text="Giới thiệu, khu vực, lịch tuần" />
+          <Shortcut
+            href="/studio/khach"
+            icon={<Contact className="size-5" />}
+            title="Khách của bạn"
+            text={clientCount ? `${clientCount} khách đã làm xong` : "Khách đã làm xong sẽ hiện ở đây"}
+          />
         </div>
       </section>
+
+      <BookingLink slug={pro.id} published={pro.published} />
 
       <section>
         <SectionTitle title="Việc mới trong phạm vi của bạn" href="/studio/jobs" count={matchingJobs.length} />
@@ -230,32 +241,6 @@ function SectionTitle({ title, href, count }: { title: string; href: string; cou
         Xem tất cả <ChevronRight className="size-4" />
       </Link>
     </div>
-  )
-}
-
-/** A profile nobody can see is the first thing to fix. */
-function SetupNudge() {
-  return (
-    <Card className="p-4 ring-1 ring-warning/40">
-      <p className="text-[15px] font-bold">Hồ sơ của bạn chưa hiển thị với khách</p>
-      <p className="mt-1 text-[13px] text-ink-soft">
-        Cần ít nhất một dịch vụ có giá, giờ làm việc và một ảnh tác phẩm. Sau đó bật hiển thị trong trang hồ sơ.
-      </p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <Link href="/studio/services" className="rounded-full bg-accent px-3.5 py-2 text-[13px] font-semibold text-white">
-          Dịch vụ & giá
-        </Link>
-        <Link href="/studio/works" className="rounded-full bg-accent px-3.5 py-2 text-[13px] font-semibold text-white">
-          Tác phẩm
-        </Link>
-        <Link
-          href="/studio/profile/edit"
-          className="rounded-full bg-accent px-3.5 py-2 text-[13px] font-semibold text-white"
-        >
-          Hồ sơ & giờ làm
-        </Link>
-      </div>
-    </Card>
   )
 }
 

@@ -34,11 +34,13 @@ export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: 
             <div className="flex items-start justify-between gap-2">
               <p className="font-semibold leading-snug">
                 {tpl.name} <span className="font-normal text-muted">· {variant.label}</span>
+                {job.quantity > 1 && <span className="ml-1.5 inline-block rounded-full bg-accent-soft px-2 py-0.5 align-middle text-xs font-semibold text-accent-dark">{job.quantity} người</span>}
               </p>
               <JobStatusLabel job={job} />
             </div>
             <p className="mt-0.5 text-xs text-muted">
-              {job.district}, {job.city} · {job.atHome ? "Tại nhà khách" : "Khách đến studio"} · {formatDuration(variant.durationMin)}
+              {job.district}, {job.city} · {job.atHome ? "Tại nhà khách" : "Khách đến studio"} ·{" "}
+              {formatDuration(variant.durationMin * (variant.perPerson ? Math.max(1, job.quantity) : 1))}
             </p>
             {job.description && <p className="mt-2 line-clamp-2 text-[13px] text-ink-soft">{job.description}</p>}
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
@@ -47,6 +49,7 @@ export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: 
               </span>
               <span className="text-ink-soft">
                 Khung giá <b className="text-ink">{formatPrice(variant.minPrice)} – {formatPrice(variant.maxPrice)}</b>
+                {job.quantity > 1 && " / người"}
               </span>
               {extra}
               {job.mine && (
