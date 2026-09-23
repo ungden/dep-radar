@@ -6,7 +6,7 @@ import { Txt } from "./text"
 
 type Variant = "primary" | "secondary" | "ghost" | "danger"
 
-/** The main action is a black pill. Secondary actions are outlined; nothing uses the accent. */
+/** The main action is a rose pill. Secondary actions are outlined. */
 export function Button({
   label,
   onPress,
@@ -29,7 +29,7 @@ export function Button({
   full?: boolean
 }) {
   const height = size === "sm" ? 36 : size === "lg" ? 54 : 46
-  const bg = variant === "primary" ? colors.ink : variant === "ghost" ? "transparent" : colors.surface
+  const bg = variant === "primary" ? colors.accent : variant === "ghost" ? "transparent" : colors.surface
   const fg = variant === "primary" ? colors.surface : variant === "danger" ? colors.danger : colors.ink
   return (
     <Press

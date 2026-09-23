@@ -73,7 +73,7 @@ function Schedule() {
                   onClick={() => setDay(d)}
                   className={cn(
                     "relative flex w-13 shrink-0 flex-col items-center gap-1 rounded-2xl border py-2.5 text-sm",
-                    activeDay ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink",
+                    activeDay ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink",
                   )}
                 >
                   <span className={cn("text-xs", activeDay ? "text-white/80" : "text-muted")}>{d === today ? "Nay" : weekdayShort(d)}</span>

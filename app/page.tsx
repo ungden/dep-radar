@@ -7,7 +7,7 @@ import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Bell, ChevronDown, MapPin, MessageCircle, Search, X } from "lucide-react"
 import { CATEGORY_ICON, PostCard, VerticalSwitch } from "@/components/beauty"
-import { Avatar, ButtonLink, Chip, LogoMark, PageSkeleton } from "@/components/ui"
+import { Avatar, ButtonLink, Chip, PageSkeleton } from "@/components/ui"
 import { CATEGORIES, getVertical, isVertical } from "@/lib/catalog"
 import { actions } from "@/lib/client-actions"
 import { rankFeed, type VerticalFilter } from "@/lib/feed"
@@ -82,7 +82,7 @@ function Explore() {
       <TopBar />
 
       <div className="md:max-w-2xl">
-        <h1 className="hidden text-[40px] font-extrabold leading-[1.05] tracking-[-0.03em] md:block">
+        <h1 className="hidden text-[40px] font-bold leading-[1.05] tracking-[-0.03em] md:block">
           Đặt dịch vụ, xem giá ngay.
         </h1>
         <p className="mt-3 hidden text-[17px] text-ink-soft md:block">
@@ -100,7 +100,7 @@ function Explore() {
 
       <section className="mt-5">
         <div className="mb-4 flex items-baseline justify-between gap-4">
-          <h2 className="text-[22px] font-extrabold tracking-tight md:text-[26px]">
+          <h2 className="text-[22px] font-bold tracking-tight md:text-[26px]">
             {vertical === "all" ? "Dịch vụ" : getVertical(vertical).label}
             {city ? ` ở ${city}` : ""}
           </h2>
@@ -153,7 +153,7 @@ function Explore() {
 
       <section className="mt-14 flex flex-col gap-3 rounded-[var(--radius-xl)] bg-subtle p-6 md:flex-row md:items-center md:justify-between md:p-8">
         <div>
-          <p className="text-[20px] font-extrabold tracking-tight">Không thấy dịch vụ bạn cần?</p>
+          <p className="text-[20px] font-bold tracking-tight">Không thấy dịch vụ bạn cần?</p>
           <p className="mt-1 text-[15px] text-ink-soft">Đăng yêu cầu, người làm gần bạn gửi báo giá. Bạn chọn, không mất phí.</p>
         </div>
         <ButtonLink href="/requests/new" size="lg" className="shrink-0">
@@ -174,8 +174,11 @@ function ServiceCard({ offer, priority }: { offer: ServiceOffer; priority?: bool
   const shortest = Math.min(...template.variants.map((v) => v.durationMin))
   const Icon = CATEGORY_ICON[template.category]
   return (
-    <Link href={`/dich-vu/${template.id}`} className="group block animate-fade-up">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] bg-subtle">
+    <Link
+      href={`/dich-vu/${template.id}`}
+      className="group block animate-fade-up overflow-hidden rounded-[var(--radius-lg)] bg-surface shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-raised)]"
+    >
+      <div className="relative aspect-[4/5] overflow-hidden bg-subtle">
         {photo ? (
           <Image
             src={photo}
@@ -191,26 +194,28 @@ function ServiceCard({ offer, priority }: { offer: ServiceOffer; priority?: bool
           </span>
         )}
       </div>
-      <p className="mt-2.5 line-clamp-2 text-[15px] font-bold leading-snug">{template.name}</p>
-      <p className="mt-0.5 text-[14px]">
-        <span className="text-muted">Từ </span>
-        <span className="font-bold">{formatPrice(fromPrice)}</span>
-        <span className="text-muted"> · {formatDuration(shortest)}</span>
-      </p>
-      <div className="mt-2 flex items-center justify-between gap-2">
-        <span className="flex min-w-0 items-center gap-1.5 text-[13px] text-ink-soft">
-          <span className="hidden -space-x-1.5 sm:flex">
-            {pros.slice(0, 3).map((p) => (
-              <Avatar key={p.id} name={p.name} tone={p.tone} src={p.avatar} size={20} className="ring-2 ring-canvas" />
-            ))}
+      <div className="p-3">
+        <p className="line-clamp-2 text-[15px] font-semibold leading-snug">{template.name}</p>
+        <p className="mt-0.5 text-[14px]">
+          <span className="text-muted">Từ </span>
+          <span className="font-semibold text-accent-dark">{formatPrice(fromPrice)}</span>
+          <span className="text-muted"> · {formatDuration(shortest)}</span>
+        </p>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="flex min-w-0 items-center gap-1.5 text-[13px] text-ink-soft">
+            <span className="hidden -space-x-1.5 sm:flex">
+              {pros.slice(0, 3).map((p) => (
+                <Avatar key={p.id} name={p.name} tone={p.tone} src={p.avatar} size={20} className="ring-2 ring-surface" />
+              ))}
+            </span>
+            <span className="truncate">
+              {pros.length === 1 ? pros[0].name : `${pros.length} người nhận`}
+            </span>
           </span>
-          <span className="truncate">
-            {pros.length === 1 ? pros[0].name : `${pros.length} người nhận`}
+          <span className="shrink-0 rounded-full bg-accent px-3.5 py-1.5 text-[13px] font-semibold text-white transition-colors group-hover:bg-accent-dark">
+            Đặt
           </span>
-        </span>
-        <span className="shrink-0 rounded-full bg-ink px-3 py-1.5 text-[13px] font-semibold text-white transition-colors group-hover:bg-ink/85">
-          Đặt
-        </span>
+        </div>
       </div>
     </Link>
   )
@@ -225,7 +230,7 @@ function TopBar() {
     <div className="flex h-12 items-center justify-between md:hidden">
       <CityPicker value={city} />
       <Link href="/" aria-label="360dep">
-        <LogoMark size={30} />
+        <span className="font-display text-[24px] font-bold leading-none text-accent">360dep</span>
       </Link>
       <div className="flex items-center">
         {session ? (
@@ -243,7 +248,7 @@ function TopBar() {
             </Link>
           </>
         ) : (
-          <Link href="/login" className="inline-flex h-9 items-center rounded-full bg-ink px-4 text-[13px] font-semibold text-white">
+          <Link href="/login" className="inline-flex h-9 items-center rounded-full bg-accent px-4 text-[13px] font-semibold text-white">
             Đăng nhập
           </Link>
         )}
@@ -272,7 +277,7 @@ function SearchBox({ className, large }: { className?: string; large?: boolean }
         placeholder="Bạn muốn làm gì hôm nay?"
         aria-label="Tìm kiếm"
         className={cn(
-          "w-full rounded-full border border-line bg-surface pl-12 pr-4 text-[16px] shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-ink focus:outline-none",
+          "w-full rounded-full border border-line bg-surface pl-12 pr-4 text-[16px] shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-accent focus:outline-none",
           large ? "h-14" : "h-12",
         )}
       />
@@ -351,7 +356,7 @@ function EmptySupply({ vertical }: { vertical: VerticalFilter }) {
 function SectionTitle({ title, href }: { title: string; href?: string }) {
   return (
     <div className="mb-4 flex items-baseline justify-between gap-4">
-      <h2 className="text-[20px] font-extrabold tracking-tight md:text-[24px]">{title}</h2>
+      <h2 className="text-[20px] font-bold tracking-tight md:text-[24px]">{title}</h2>
       {href && (
         <Link href={href} className="shrink-0 text-[14px] font-semibold text-ink underline-offset-4 hover:underline">
           Xem tất cả

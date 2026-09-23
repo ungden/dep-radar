@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "dep360",
     "userInterfaceStyle": "light",
-    "backgroundColor": "#FAFAF8",
+    "backgroundColor": "#FAF6F4",
     "ios": {
       "bundleIdentifier": "vn.dep360.app",
       "supportsTablet": false,
@@ -21,7 +21,7 @@
     "android": {
       "package": "vn.dep360.app",
       "adaptiveIcon": {
-        "backgroundColor": "#161413",
+        "backgroundColor": "#A8535D",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false
@@ -35,7 +35,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FAFAF8",
+          "backgroundColor": "#FAF6F4",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 96
         }
@@ -54,7 +54,7 @@
       [
         "expo-notifications",
         {
-          "color": "#161413"
+          "color": "#A8535D"
         }
       ],
       "expo-font"

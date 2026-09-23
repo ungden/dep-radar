@@ -80,7 +80,7 @@ export default function OnboardingPage() {
                       onClick={() => toggle(c.id)}
                       className={cn(
                         "h-10 rounded-full border px-4 text-[14px] font-medium transition-colors",
-                        categories.includes(c.id) ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink/30",
+                        categories.includes(c.id) ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
                       )}
                     >
                       {c.label}

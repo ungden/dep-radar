@@ -126,7 +126,7 @@ export function ProProfile({ proId }: { proId: string }) {
           </div>
         </div>
 
-        <h1 className="mt-3 flex flex-wrap items-center gap-x-2 text-[28px] font-extrabold leading-tight tracking-tight md:text-[36px]">
+        <h1 className="mt-3 flex flex-wrap items-center gap-x-2 text-[28px] font-bold leading-tight tracking-tight md:text-[36px]">
           {pro.name}
           <VerifiedMark pro={pro} className="size-6" />
         </h1>
@@ -227,7 +227,7 @@ export function ProProfile({ proId }: { proId: string }) {
               <>
                 {from !== null ? (
                   <p className="text-[14px] text-muted">
-                    Từ <span className="text-[24px] font-extrabold tracking-tight text-ink">{formatPrice(from)}</span>
+                    Từ <span className="text-[24px] font-bold tracking-tight text-ink">{formatPrice(from)}</span>
                   </p>
                 ) : (
                   <p className="text-[15px] font-semibold">Chưa có bảng giá</p>
@@ -280,7 +280,7 @@ function Stats({ pro, onReviews }: { pro: Pro; onReviews: () => void }) {
   if (pro.stats.completedJobs > 0)
     items.push(
       <li key="jobs">
-        <p className="text-[20px] font-extrabold tracking-tight">{pro.stats.completedJobs.toLocaleString("vi-VN")}</p>
+        <p className="text-[20px] font-bold tracking-tight">{pro.stats.completedJobs.toLocaleString("vi-VN")}</p>
         <p className="text-[13px] text-ink-soft">lịch đã làm</p>
       </li>,
     )
@@ -288,7 +288,7 @@ function Stats({ pro, onReviews }: { pro: Pro; onReviews: () => void }) {
     items.push(
       <li key="rating">
         <button type="button" onClick={onReviews} className="text-left">
-          <p className="text-[20px] font-extrabold tracking-tight">★ {pro.rating.average.toFixed(1)}</p>
+          <p className="text-[20px] font-bold tracking-tight">★ {pro.rating.average.toFixed(1)}</p>
           <p className="text-[13px] text-ink-soft underline decoration-line underline-offset-2">{pro.rating.count} đánh giá</p>
         </button>
       </li>,
@@ -296,7 +296,7 @@ function Stats({ pro, onReviews }: { pro: Pro; onReviews: () => void }) {
   if (response)
     items.push(
       <li key="response">
-        <p className="text-[20px] font-extrabold tracking-tight">{response}</p>
+        <p className="text-[20px] font-bold tracking-tight">{response}</p>
         <p className="text-[13px] text-ink-soft">phản hồi</p>
       </li>,
     )
@@ -456,7 +456,7 @@ function About({ pro }: { pro: Pro }) {
 function AboutSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-3 text-[17px] font-extrabold tracking-tight">{title}</h2>
+      <h2 className="mb-3 text-[17px] font-bold tracking-tight">{title}</h2>
       {children}
     </section>
   )

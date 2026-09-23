@@ -90,7 +90,7 @@ export function JobBookingRow({ booking, actions }: { booking: Booking; actions?
   return (
     <Card className="p-3.5">
       <Link href={`/bookings/${booking.id}`} className="flex gap-3">
-        <div className="flex w-16 shrink-0 flex-col items-center justify-center rounded-[var(--radius-md)] bg-ink py-2 text-white">
+        <div className="flex w-16 shrink-0 flex-col items-center justify-center rounded-[var(--radius-md)] bg-accent py-2 text-white">
           <span className="text-[16px] font-bold tabular-nums">{booking.time}</span>
           <span className="text-xs text-white/70">{Math.round(booking.durationMin)} phút</span>
         </div>

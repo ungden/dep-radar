@@ -275,7 +275,7 @@ export default function ProProfile() {
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <View style={{ flex: 1, alignItems: "center", gap: 2, paddingHorizontal: 4 }}>
-      <Txt v="lead" w={800} tabular numberOfLines={1}>
+      <Txt v="lead" w={700} tabular numberOfLines={1}>
         {value}
       </Txt>
       <Txt v="meta" color={colors.muted} center numberOfLines={1}>

@@ -155,14 +155,14 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
 
       <header className="mt-3 max-w-3xl">
         <CategoryTag category={category.id} />
-        <h1 className="mt-3 text-[32px] font-extrabold leading-[1.08] tracking-[-0.025em] md:text-[44px]">{title}</h1>
+        <h1 className="mt-3 text-[32px] font-bold leading-[1.08] tracking-[-0.025em] md:text-[44px]">{title}</h1>
         <p className="mt-3 text-[17px] leading-relaxed text-ink-soft">{intro(category, city, pros.length)}</p>
       </header>
 
       <div className="mt-8 md:mt-10 md:grid md:grid-cols-[minmax(0,1fr)_340px] md:gap-10 lg:gap-14">
         <div>
           <section>
-            <h2 className="text-[20px] font-extrabold tracking-tight md:text-[24px]">
+            <h2 className="text-[20px] font-bold tracking-tight md:text-[24px]">
               {person.charAt(0).toUpperCase() + person.slice(1)} ở {city}
             </h2>
             {pros.length > 0 ? (
@@ -212,7 +212,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
 
           {cityWorks.length > 0 && (
             <section className="mt-12">
-              <h2 className="text-[20px] font-extrabold tracking-tight md:text-[24px]">Tác phẩm gần đây</h2>
+              <h2 className="text-[20px] font-bold tracking-tight md:text-[24px]">Tác phẩm gần đây</h2>
               <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 md:gap-x-5">
                 {cityWorks.slice(0, 9).map((w, i) => (
                   <PostCard
@@ -239,7 +239,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
 
         <aside className="mt-12 md:mt-0">
           <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-5 md:sticky md:top-24">
-            <h2 className="text-[17px] font-extrabold tracking-tight">Khung giá trên 360dep</h2>
+            <h2 className="text-[17px] font-bold tracking-tight">Khung giá trên 360dep</h2>
             <ul className="mt-3 divide-y divide-line">
               {templates.map((t) => {
                 const band = priceBand(t)

@@ -28,15 +28,15 @@ export function Timeline({ steps }: { steps: TimelineStep[] }) {
                   height: 12,
                   borderRadius: 6,
                   marginTop: 5,
-                  backgroundColor: done ? (s.stop ? colors.danger : colors.ink) : colors.surface,
+                  backgroundColor: done ? (s.stop ? colors.danger : colors.accent) : colors.surface,
                   borderWidth: 2,
-                  borderColor: done ? (s.stop ? colors.danger : colors.ink) : colors.subtleStrong,
+                  borderColor: done ? (s.stop ? colors.danger : colors.accent) : colors.subtleStrong,
                 }}
               />
-              {!last ? <View style={{ flex: 1, width: 2, backgroundColor: done ? colors.ink : colors.subtleStrong }} /> : null}
+              {!last ? <View style={{ flex: 1, width: 2, backgroundColor: done ? colors.accent : colors.subtleStrong }} /> : null}
             </View>
             <View style={{ flex: 1, paddingBottom: last ? 0 : 16 }}>
-              <Txt w={done ? 700 : 500} color={done ? (s.stop ? colors.danger : colors.ink) : colors.muted}>
+              <Txt w={done ? 700 : 500} color={done ? (s.stop ? colors.danger : colors.accent) : colors.muted}>
                 {s.label}
               </Txt>
               {s.at ? (

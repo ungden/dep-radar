@@ -16,8 +16,7 @@ export interface TabSpec {
 }
 
 /**
- * Five tabs, the middle one a black "+". The selected tab gets a short accent
- * bar: one of the three places the accent is allowed.
+ * Five tabs, the middle one a rose "+". The selected tab is rose.
  */
 export function TabBar({ state, navigation, specs }: BottomTabBarProps & { specs: Record<string, TabSpec> }) {
   const insets = useSafeAreaInsets()
@@ -46,7 +45,7 @@ export function TabBar({ state, navigation, specs }: BottomTabBarProps & { specs
               <Press
                 onPress={onPress}
                 accessibilityLabel={spec.label}
-                style={{ width: 52, height: 40, borderRadius: 20, backgroundColor: colors.ink, alignItems: "center", justifyContent: "center" }}
+                style={{ width: 52, height: 40, borderRadius: 20, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}
               >
                 <Icon name="plus" size={22} color={colors.surface} />
               </Press>
@@ -68,10 +67,10 @@ export function TabBar({ state, navigation, specs }: BottomTabBarProps & { specs
           >
             <View style={{ height: 3, width: 18, borderRadius: 2, backgroundColor: focused ? colors.accent : "transparent", marginBottom: 3 }} />
             <View>
-              <Icon name={spec.icon} size={23} color={focused ? colors.ink : colors.muted} />
+              <Icon name={spec.icon} size={23} color={focused ? colors.accent : colors.muted} />
               {spec.badge ? <CountBadge count={spec.badge} style={{ position: "absolute", top: -6, right: -12 }} /> : null}
             </View>
-            <Txt v="meta" w={focused ? 700 : 500} color={focused ? colors.ink : colors.muted} numberOfLines={1}>
+            <Txt v="meta" w={focused ? 600 : 500} color={focused ? colors.accent : colors.muted} numberOfLines={1}>
               {spec.label}
             </Txt>
           </Press>

@@ -18,7 +18,7 @@ export default function StudioPage() {
     <div className="mx-auto max-w-4xl pt-2 md:pt-8">
       <div className="flex h-12 items-center gap-2 md:hidden">
         <LogoMark size={28} />
-        <span className="text-[15px] font-extrabold tracking-tight">Studio</span>
+        <span className="text-[15px] font-bold tracking-tight">Studio</span>
       </div>
       <RequireSession role="pro">
         <Dashboard />
@@ -69,7 +69,7 @@ function Dashboard() {
     <div className="space-y-8">
       <div>
         <p className="text-[13px] font-medium text-muted">{formatDateLong(today)}</p>
-        <h1 className="mt-1 text-[28px] font-extrabold leading-tight tracking-tight md:text-[34px]">
+        <h1 className="mt-1 text-[28px] font-bold leading-tight tracking-tight md:text-[34px]">
           {pending.length
             ? `${pending.length} khách đang chờ bạn gọi`
             : todays.length
@@ -167,7 +167,7 @@ function Dashboard() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-[20px] font-extrabold tracking-tight">Làm nhanh</h2>
+        <h2 className="mb-3 text-[20px] font-bold tracking-tight">Làm nhanh</h2>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <Shortcut href="/studio/works" icon={<ImagePlus className="size-5" />} title="Đăng tác phẩm" text="Ảnh, trước/sau, clip" />
           <Shortcut
@@ -213,7 +213,7 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   return (
     <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
       <p className="text-[13px] font-medium text-muted">{label}</p>
-      <p className="mt-1 text-[22px] font-extrabold tracking-tight">{value}</p>
+      <p className="mt-1 text-[22px] font-bold tracking-tight">{value}</p>
       {sub && <p className="mt-0.5 text-[12.5px] leading-snug text-ink-soft">{sub}</p>}
     </div>
   )
@@ -222,7 +222,7 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
 function SectionTitle({ title, href, count }: { title: string; href: string; count?: number }) {
   return (
     <div className="mb-3 flex items-center justify-between">
-      <h2 className="flex items-center gap-2 text-[20px] font-extrabold tracking-tight">
+      <h2 className="flex items-center gap-2 text-[20px] font-bold tracking-tight">
         {title}
         {count ? <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold text-white">{count}</span> : null}
       </h2>
@@ -242,15 +242,15 @@ function SetupNudge() {
         Cần ít nhất một dịch vụ có giá, giờ làm việc và một ảnh tác phẩm. Sau đó bật hiển thị trong trang hồ sơ.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Link href="/studio/services" className="rounded-full bg-ink px-3.5 py-2 text-[13px] font-semibold text-white">
+        <Link href="/studio/services" className="rounded-full bg-accent px-3.5 py-2 text-[13px] font-semibold text-white">
           Dịch vụ & giá
         </Link>
-        <Link href="/studio/works" className="rounded-full bg-ink px-3.5 py-2 text-[13px] font-semibold text-white">
+        <Link href="/studio/works" className="rounded-full bg-accent px-3.5 py-2 text-[13px] font-semibold text-white">
           Tác phẩm
         </Link>
         <Link
           href="/studio/profile/edit"
-          className="rounded-full bg-ink px-3.5 py-2 text-[13px] font-semibold text-white"
+          className="rounded-full bg-accent px-3.5 py-2 text-[13px] font-semibold text-white"
         >
           Hồ sơ & giờ làm
         </Link>

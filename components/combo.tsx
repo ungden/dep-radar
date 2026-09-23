@@ -49,7 +49,7 @@ export function ComboSuggestions({
   if (!pros.length) return null
   return (
     <section className={cn("rounded-[var(--radius-xl)] border border-line bg-surface p-4", className)}>
-      <p className="text-[17px] font-extrabold tracking-tight">Đặt chung một buổi?</p>
+      <p className="text-[17px] font-bold tracking-tight">Đặt chung một buổi?</p>
       <p className="mt-1 text-[14px] text-ink-soft">{PITCH[next]}</p>
       <ul className="mt-4 space-y-3">
         {pros.map((p) => (
@@ -57,7 +57,7 @@ export function ComboSuggestions({
             <ProCard pro={p} />
             <Link
               href={`/book/${p.id}?cung=${bookingId}`}
-              className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-full bg-ink text-[14px] font-semibold text-white"
+              className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-full bg-accent text-[14px] font-semibold text-white"
             >
               Đặt {p.name} cùng buổi
             </Link>

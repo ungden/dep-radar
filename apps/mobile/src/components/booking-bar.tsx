@@ -42,7 +42,7 @@ export function BookingBar({
     >
       <View style={{ flex: 1 }}>
         {title ? (
-          <Txt v="lead" w={800} tabular numberOfLines={1}>
+          <Txt v="lead" w={700} tabular numberOfLines={1}>
             {title}
           </Txt>
         ) : null}

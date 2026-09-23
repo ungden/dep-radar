@@ -20,7 +20,7 @@ export default function SavedPage() {
 
   return (
     <div className="pt-4 md:pt-10">
-      <h1 className="text-[28px] font-extrabold leading-tight tracking-tight md:text-[36px]">Đã lưu</h1>
+      <h1 className="text-[28px] font-bold leading-tight tracking-tight md:text-[36px]">Đã lưu</h1>
       <Tabs
         className="mt-4"
         value={tab}
@@ -95,7 +95,7 @@ function Empty({ photos = [], title, text, action }: { photos?: string[]; title:
           ))}
         </div>
       )}
-      <p className="text-[20px] font-extrabold tracking-tight">{title}</p>
+      <p className="text-[20px] font-bold tracking-tight">{title}</p>
       <p className="mt-1.5 max-w-sm text-[15px] text-ink-soft">{text}</p>
       <div className="mt-6">{action}</div>
     </div>

@@ -204,7 +204,7 @@ function VerifyFlow() {
       </ul>
 
       <label className="flex items-start gap-2.5 rounded-2xl bg-canvas p-3.5 text-[13px] text-ink-soft">
-        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-[var(--color-ink)]" />
+        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-[var(--color-accent)]" />
         <span>
           Tôi đồng ý cho 360dep gửi ảnh CCCD và ảnh chân dung của tôi tới dịch vụ AI (Google Gemini) chỉ để xác minh danh tính, theo Nghị định 13/2023/NĐ-CP. 360dep không
           lưu ảnh; khách hàng chỉ thấy dấu xác minh, không thấy thông tin CCCD.

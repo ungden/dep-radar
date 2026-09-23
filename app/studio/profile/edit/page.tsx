@@ -84,7 +84,7 @@ function ProfileEditor() {
           ) : (
             <Avatar name={displayName} tone={pro.tone} size={64} />
           )}
-          <label className="absolute -bottom-1 -right-1 inline-flex size-7 cursor-pointer items-center justify-center rounded-full bg-ink text-white">
+          <label className="absolute -bottom-1 -right-1 inline-flex size-7 cursor-pointer items-center justify-center rounded-full bg-accent text-white">
             <Camera className="size-3.5" />
             <input
               type="file"
@@ -153,7 +153,7 @@ function ProfileEditor() {
             step={1}
             value={maxTravelKm}
             onChange={(e) => setMaxTravelKm(Number(e.target.value))}
-            className="w-full accent-[var(--color-ink)]"
+            className="w-full accent-[var(--color-accent)]"
           />
         </Field>
         <Field label="Địa chỉ studio (nếu có)" hint="Có studio thì bạn nhận được cả dịch vụ chỉ làm tại chỗ.">
@@ -482,7 +482,7 @@ function ModelCardEditor() {
   return (
     <Card className="space-y-4 p-4">
       <div>
-        <p className="text-[17px] font-extrabold tracking-tight">Thẻ người mẫu</p>
+        <p className="text-[17px] font-bold tracking-tight">Thẻ người mẫu</p>
         <p className="text-[13px] text-ink-soft">Hiện trên hồ sơ để bên thuê biết bạn có hợp không. Không cần số đo ba vòng.</p>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

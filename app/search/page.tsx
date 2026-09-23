@@ -193,7 +193,7 @@ function SearchView() {
             enterKeyHint="search"
             aria-label="Tìm kiếm"
             placeholder="Nail, makeup, chụp ảnh, thuê mẫu…"
-            className="h-13 w-full rounded-full border border-line bg-surface pl-12 pr-12 text-[16px] shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-ink focus:outline-none md:h-14 [&::-webkit-search-cancel-button]:hidden"
+            className="h-13 w-full rounded-full border border-line bg-surface pl-12 pr-12 text-[16px] shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-accent focus:outline-none md:h-14 [&::-webkit-search-cancel-button]:hidden"
           />
           {q && (
             <button
@@ -340,7 +340,7 @@ function Filters({
           aria-label="Khu vực"
           value={city}
           onChange={(e) => onChange({ city: e.target.value || "all" })}
-          className="h-11 w-full rounded-full border border-line bg-surface px-4 text-[15px] focus:border-ink focus:outline-none"
+          className="h-11 w-full rounded-full border border-line bg-surface px-4 text-[15px] focus:border-accent focus:outline-none"
         >
           <option value="">Toàn quốc</option>
           {CITIES.map((c) => (
@@ -425,7 +425,7 @@ function Choice({ active, onClick, children }: { active: boolean; onClick: () =>
       onClick={onClick}
       className={cn(
         "relative inline-flex h-9 items-center rounded-full border px-3.5 text-[13px] font-medium transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
-        active ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink/30",
+        active ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
       )}
     >
       {children}

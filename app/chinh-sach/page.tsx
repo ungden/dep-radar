@@ -134,7 +134,7 @@ export default function PolicyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2 text-[17px] font-extrabold tracking-tight text-ink">{title}</h2>
+      <h2 className="mb-2 text-[17px] font-bold tracking-tight text-ink">{title}</h2>
       {children}
     </section>
   )

@@ -189,7 +189,7 @@ function WorkForm({
             onClick={() => setKind(value)}
             className={cn(
               "inline-flex h-11 items-center justify-center gap-1.5 rounded-full border text-[14px] font-semibold transition-colors",
-              kind === value ? "border-ink bg-ink text-white" : "border-line bg-surface hover:border-ink/30",
+              kind === value ? "border-accent bg-accent text-white" : "border-line bg-surface hover:border-ink/30",
             )}
           >
             {icon}

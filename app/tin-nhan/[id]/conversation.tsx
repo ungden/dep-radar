@@ -93,7 +93,7 @@ export function Conversation({
             <div
               className={cn(
                 "max-w-[78%] rounded-2xl px-3.5 py-2.5 text-sm",
-                m.mine ? "bg-ink text-white" : "border border-line bg-surface text-ink",
+                m.mine ? "bg-accent text-white" : "border border-line bg-surface text-ink",
               )}
             >
               {m.images.map((src) => (

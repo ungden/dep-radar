@@ -47,7 +47,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
       <div className="grid gap-8 md:grid-cols-[1fr_340px] md:gap-x-8 md:gap-y-2">
         <div className="md:col-start-1">
           <p className="text-[13px] font-semibold text-muted">{categoryLabel(template.category)}</p>
-          <h1 className="mt-1 text-[30px] font-extrabold leading-tight tracking-tight md:text-[38px]">{template.name}</h1>
+          <h1 className="mt-1 text-[30px] font-bold leading-tight tracking-tight md:text-[38px]">{template.name}</h1>
           <p className="mt-2 text-[16px] text-ink-soft">{template.description}</p>
 
           <ul className="mt-5 space-y-2 text-[15px]">
@@ -99,7 +99,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
 
         <div className="md:col-start-1">
           <section className="md:mt-2">
-            <h2 className="text-[22px] font-extrabold tracking-tight">
+            <h2 className="text-[22px] font-bold tracking-tight">
               Chọn người làm{city ? ` ở ${city}` : ""}
               {ranked.length > 0 && <span className="ml-2 text-[15px] font-medium text-muted">{ranked.length}</span>}
             </h2>
@@ -131,7 +131,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
 
           {works.length > 0 && (
             <section className="mt-12">
-              <h2 className="mb-4 text-[22px] font-extrabold tracking-tight">Ảnh thật của dịch vụ này</h2>
+              <h2 className="mb-4 text-[22px] font-bold tracking-tight">Ảnh thật của dịch vụ này</h2>
               <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3">
                 {works.map((w) => (
                   <PostCard key={w.id} work={w} />

@@ -29,7 +29,7 @@ import { TextTabs } from "@/components/switches"
 import { TopBar } from "@/components/top-bar"
 import { useApp } from "@/state/app"
 import { useBrowse } from "@/state/derived"
-import { colors, gutter, radius } from "@/theme"
+import { card, colors, gutter, radius } from "@/theme"
 import { Button } from "@/ui/button"
 import { Chip, EmptyState, ErrorNote, Photo, SectionHeader, Skeleton } from "@/ui/bits"
 import { CATEGORY_ICON, Icon } from "@/ui/icon"
@@ -262,7 +262,7 @@ export default function Explore() {
 
           {/* Anything else */}
           <View style={{ marginHorizontal: gutter, marginTop: 8, backgroundColor: colors.subtle, borderRadius: radius.xl, padding: 20, gap: 8 }}>
-            <Txt v="title" w={800}>
+            <Txt v="title" w={700}>
               Không thấy dịch vụ bạn cần?
             </Txt>
             <Txt color={colors.inkSoft}>Đăng yêu cầu, người làm gần bạn gửi báo giá. Bạn chọn, không mất phí.</Txt>
@@ -296,21 +296,24 @@ const ServiceCard = React.memo(function ServiceCard({ offer, photo, width }: { o
     <Press
       onPress={() => router.push({ pathname: "/dich-vu/[id]", params: { id: template.id } })}
       accessibilityLabel={`${template.name}, từ ${formatPrice(fromPrice)}, ${who}`}
-      style={{ width, gap: 4 }}
+      style={{ width, ...card }}
     >
-      {photo ? (
-        <Photo uri={photo} ratio={4 / 5} rounded={radius.lg} recyclingKey={template.id} />
-      ) : (
-        <View style={{ aspectRatio: 4 / 5, borderRadius: radius.lg, backgroundColor: colors.subtle, alignItems: "center", justifyContent: "center" }}>
-          <Icon name={CATEGORY_ICON[template.category]} size={40} color={colors.inkSoft} />
-        </View>
-      )}
-      <Txt w={700} numberOfLines={2} style={{ marginTop: 6 }}>
+      <View style={{ borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, overflow: "hidden" }}>
+        {photo ? (
+          <Photo uri={photo} ratio={4 / 5} rounded={0} recyclingKey={template.id} />
+        ) : (
+          <View style={{ aspectRatio: 4 / 5, backgroundColor: colors.subtle, alignItems: "center", justifyContent: "center" }}>
+            <Icon name={CATEGORY_ICON[template.category]} size={40} color={colors.inkSoft} />
+          </View>
+        )}
+      </View>
+      <View style={{ padding: 10, gap: 4 }}>
+      <Txt w={600} numberOfLines={2}>
         {template.name}
       </Txt>
       <Txt v="meta" color={colors.muted} numberOfLines={1} tabular>
         Từ{" "}
-        <Txt v="meta" w={700} color={colors.ink}>
+        <Txt v="meta" w={700} color={colors.accentDark}>
           {formatPrice(fromPrice)}
         </Txt>{" "}
         · {formatDuration(shortest)}
@@ -319,11 +322,12 @@ const ServiceCard = React.memo(function ServiceCard({ offer, photo, width }: { o
         <Txt v="meta" color={colors.inkSoft} numberOfLines={1} style={{ flexShrink: 1 }}>
           {who}
         </Txt>
-        <View style={{ height: 30, paddingHorizontal: 14, borderRadius: radius.full, backgroundColor: colors.ink, justifyContent: "center" }}>
+        <View style={{ height: 30, paddingHorizontal: 14, borderRadius: radius.full, backgroundColor: colors.accent, justifyContent: "center" }}>
           <Txt v="meta" w={700} color={colors.surface}>
             Đặt
           </Txt>
         </View>
+      </View>
       </View>
     </Press>
   )

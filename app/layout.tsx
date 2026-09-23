@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Be_Vietnam_Pro } from "next/font/google"
+import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google"
 import "./globals.css"
 
 import { AppShell } from "@/components/layout/app-shell"
@@ -14,6 +14,13 @@ const body = Be_Vietnam_Pro({
   // 800 is the headline weight; there is no second family to download.
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-body",
+})
+
+// The wordmark only, one weight.
+const serif = Playfair_Display({
+  subsets: ["latin", "vietnamese"],
+  weight: ["700"],
+  variable: "--font-serif",
 })
 
 export const metadata: Metadata = {
@@ -38,7 +45,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#FAFAF8",
+  themeColor: "#FAF6F4",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -48,7 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // One server read per navigation feeds every screen; see lib/api/snapshot.ts.
   const snapshot = backendEnabled ? await loadSnapshot() : emptySnapshot
   return (
-    <html lang="vi" className={body.variable}>
+    <html lang="vi" className={`${body.variable} ${serif.variable}`}>
       <body className="min-h-dvh">
         <a
           href="#main"

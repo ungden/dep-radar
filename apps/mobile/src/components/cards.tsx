@@ -4,7 +4,7 @@ import { View } from "react-native"
 import { categoryLabel, type ProService } from "@/shared"
 import { formatKm, formatPrice, formatShortPrice } from "@/data/format"
 import { fromPrice, type AppPro, type AppWork } from "@/data/public"
-import { colors, radius } from "@/theme"
+import { card, colors, radius } from "@/theme"
 import { Avatar, Photo, Rating, Skeleton, VerifiedMark } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -31,10 +31,18 @@ export const PostCard = React.memo(function PostCard({
     <Press
       onPress={() => router.push({ pathname: "/works/[id]", params: { id: work.id } })}
       accessibilityLabel={`${work.title}${price ? `, từ ${formatPrice(price)}` : ""}${pro ? `, ${pro.name}` : ""}`}
-      style={{ gap: 6, paddingBottom: 20 }}
+      style={{ ...card, marginBottom: 12 }}
     >
-      <View>
-        <Photo uri={work.images[0]} recyclingKey={work.id} />
+      <View style={{ borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, overflow: "hidden" }}>
+        <Photo uri={work.images[0]} recyclingKey={work.id} rounded={0} />
+        {/* A fact, not a slogan: the person has bookings switched on. */}
+        {pro?.acceptingJobs ? (
+          <View style={{ position: "absolute", top: 8, left: 8, paddingHorizontal: 9, height: 24, borderRadius: radius.full, backgroundColor: "rgba(255,255,255,0.92)", justifyContent: "center" }}>
+            <Txt v="label" w={600} color={colors.accent}>
+              Có thể đặt
+            </Txt>
+          </View>
+        ) : null}
         <View style={{ position: "absolute", top: 0, right: 0 }}>
           <SaveHeart work={work} onPhoto />
         </View>
@@ -42,12 +50,12 @@ export const PostCard = React.memo(function PostCard({
           <View
             style={{
               position: "absolute",
-              top: 8,
-              left: 8,
+              bottom: 8,
+              right: 8,
               paddingHorizontal: 7,
               height: 24,
               borderRadius: radius.full,
-              backgroundColor: "rgba(22,20,19,0.55)",
+              backgroundColor: "rgba(58,42,44,0.6)",
               flexDirection: "row",
               alignItems: "center",
               gap: 3,
@@ -62,11 +70,12 @@ export const PostCard = React.memo(function PostCard({
           </View>
         ) : null}
       </View>
-      <Txt w={700} numberOfLines={2}>
+      <View style={{ padding: 10, gap: 5 }}>
+      <Txt w={600} numberOfLines={2}>
         {work.title}
       </Txt>
       {price !== null ? (
-        <Txt w={500} tabular>
+        <Txt w={600} tabular color={colors.accentDark}>
           Từ {formatPrice(price)}
         </Txt>
       ) : null}
@@ -90,6 +99,7 @@ export const PostCard = React.memo(function PostCard({
           ) : null}
         </View>
       ) : null}
+      </View>
     </Press>
   )
 })
@@ -123,7 +133,7 @@ export function ProCard({
     <Press
       onPress={() => router.push({ pathname: "/pros/[id]", params: { id: pro.id } })}
       accessibilityLabel={`${pro.name}, ${pro.title}`}
-      style={{ width, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, gap: 10 }}
+      style={{ width, ...card, padding: 12, gap: 10 }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={44} />
