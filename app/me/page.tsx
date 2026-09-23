@@ -45,7 +45,7 @@ export default function MePage() {
             <UserRound className="size-7" />
           </span>
           <p className="mt-3 font-semibold">Bạn chưa đăng nhập</p>
-          <p className="mt-1 text-[15px] text-ink-soft">Đăng nhập để đặt lịch, lưu mẫu và nhận báo giá.</p>
+          <p className="mt-1 text-[15px] text-ink-soft">Đăng nhập để đặt lịch, lưu mẫu và đăng yêu cầu.</p>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <ButtonLink href="/login">Đăng nhập</ButtonLink>
             <ButtonLink href="/login?role=pro" variant="outline">

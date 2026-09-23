@@ -137,7 +137,7 @@ export function OccasionView({ occasionId }: { occasionId: string }) {
             <h2 className="text-[17px] font-bold tracking-tight">Đặt nhiều người cho một buổi</h2>
             <p className="mt-1 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
               Mỗi người làm là một lịch hẹn riêng: bạn đặt từng người cho cùng giờ, cùng địa điểm. Khi đặt, chọn “Đặt chung
-              một buổi” để các lịch hẹn được gắn với nhau. Mỗi người vẫn tự gọi xác nhận lịch của mình.
+              một buổi” để các lịch hẹn được gắn với nhau. Mỗi người vẫn tự nhận lịch của mình.
             </p>
           </div>
         </section>
@@ -265,8 +265,8 @@ function Step({ index, template: t, state, city }: { index: number; template: Se
               </p>
               <p className="mx-auto mt-1 max-w-sm text-[14px] text-ink-soft">
                 {all.length > 0
-                  ? `Có ${all.length} ${who} ở thành phố khác đang nhận dịch vụ này. Hoặc đăng yêu cầu để người làm quanh bạn gửi báo giá.`
-                  : "Đăng yêu cầu: khi có người nhận việc này quanh bạn, họ thấy yêu cầu và gửi báo giá."}
+                  ? `Có ${all.length} ${who} ở thành phố khác đang nhận dịch vụ này. Hoặc đăng yêu cầu: người làm quanh bạn được báo, ai nhận trước sẽ làm.`
+                  : "Đăng yêu cầu: khi có người làm việc này quanh bạn, họ được báo và ai nhận trước sẽ làm."}
               </p>
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 <ButtonLink href={`/requests/new?service=${t.id}`} size="sm">

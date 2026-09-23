@@ -23,7 +23,7 @@ export function ServiceMenu({ proId, bookable = true }: { proId: string; bookabl
     return (
       <EmptyState
         title={`${capitalize(pro ? personWord(pro.categories) : "người làm")} đang cập nhật bảng giá`}
-        text="Nhắn tin để hỏi giá trước, hoặc quay lại sau."
+        text="Quay lại sau, hoặc đăng yêu cầu để người làm khác quanh bạn nhận việc."
       />
     )
 

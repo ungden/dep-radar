@@ -109,8 +109,8 @@ export function ServiceView({ templateId }: { templateId: string }) {
                 <p className="text-[16px] font-bold">Chưa có ai nhận dịch vụ này{city ? ` ở ${city}` : ""}</p>
                 <p className="mx-auto mt-1 max-w-sm text-[14px] text-ink-soft">
                   {elsewhere.length
-                    ? `Có ${elsewhere.length} người nhận ở thành phố khác. Hoặc đăng yêu cầu để người làm quanh bạn gửi báo giá.`
-                    : "Đăng yêu cầu: khi có người nhận việc này quanh bạn, họ thấy yêu cầu và gửi báo giá. Không mất phí."}
+                    ? `Có ${elsewhere.length} người nhận ở thành phố khác. Hoặc đăng yêu cầu: người làm quanh bạn được báo, ai nhận trước sẽ làm.`
+                    : "Đăng yêu cầu: khi có người làm việc này quanh bạn, họ được báo và ai nhận trước sẽ làm. Không mất phí."}
                 </p>
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                   <ButtonLink href={`/requests/new?service=${template.id}`}>Đăng yêu cầu</ButtonLink>

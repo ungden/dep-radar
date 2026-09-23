@@ -120,8 +120,27 @@ select * from public.platform_settings;
 
 Muốn gỡ một thông tin thì đặt lại `null`. Web đọc bảng này mỗi lần tải trang (`state.platform`), không cần deploy.
 
-**Hạn mức ví** nằm ở `fee_policy.wallet_floor` (mặc định −200.000đ): dưới mức này freelancer không nhận lịch mới
-và không tự bật lại "nhận job" được cho tới khi nạp ví.
+**Phí trước đơn tiếp theo:** `fee_policy.wallet_floor` = 0. Hoàn thành một lịch là trừ ngay phí dịch vụ 360dep vào
+ví người làm và gửi thông báo "Thanh toán phí …". Khi ví còn âm, người làm không nhận lịch, không nhận việc được, và
+khách không đặt được lịch với họ; nạp đủ là tự mở lại, không phải bật gì.
+
+**Ghi nhận nạp ví bằng tay:** `/admin` → tab **Nạp ví**: tìm người làm theo mã nạp (nội dung chuyển khoản
+`NAP AB23CD`, mỗi người một mã, xem ở tab Chuyên viên), slug hoặc tên; nhập số tiền và mã giao dịch ngân hàng. Cùng
+một mã giao dịch không cộng hai lần.
+
+**Tự cộng ví khi có tiền về (SePay):** web có sẵn webhook `POST /api/payments/sepay`. Chưa đặt khoá thì webhook trả
+503 (đang tắt) và app nói với người làm là nhân viên ghi nhận bằng tay. Bật một lần:
+
+1. Tạo tài khoản [SePay](https://sepay.vn), liên kết đúng tài khoản ngân hàng đã điền ở `platform_settings.topup_account_no`.
+2. SePay → Webhooks → Thêm webhook: sự kiện **Có tiền vào**, URL `https://www.360dep.vn/api/payments/sepay`,
+   kiểu chứng thực **API Key**, tự đặt một chuỗi dài ngẫu nhiên làm khoá.
+3. Vercel → Project → Settings → Environment Variables: thêm `SEPAY_WEBHOOK_KEY` = đúng chuỗi đó (Production), cùng
+   `SUPABASE_SERVICE_ROLE_KEY` nếu chưa có, rồi deploy lại.
+4. Chuyển thử 10.000đ với nội dung `NAP <mã nạp của một người làm>`: ví người đó được cộng và họ nhận thông báo.
+   Giao dịch không có mã (hoặc mã sai) thì không cộng cho ai; ghi nhận tay ở `/admin`.
+
+Webhook kiểm tra header `Authorization: Apikey <khoá>`, bỏ qua tiền ra, và dùng mã giao dịch của SePay làm tham
+chiếu nên SePay gửi lại cũng không cộng hai lần.
 
 **Báo vắng mặt**: bù phí di chuyển được giữ 24 giờ rồi tự cộng vào ví (cron `dep360-no-show-release`). Khách khiếu
 nại trong 24 giờ thì khoản đó chờ admin quyết bằng `decide_no_show_compensation`.

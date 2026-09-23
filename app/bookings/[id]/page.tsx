@@ -4,7 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { CalendarDays, CalendarPlus, Home, Info, MapPinned, Phone, Store, Timer } from "lucide-react"
+import { CalendarDays, CalendarPlus, Home, Info, MapPinned, MessageSquare, Phone, Store, Timer } from "lucide-react"
 import { ProCard } from "@/components/beauty"
 import { bookingImage, DeclineForm } from "@/components/booking-card"
 import {
@@ -20,6 +20,7 @@ import {
   VoucherPanel,
   useNow,
 } from "@/components/booking-extras"
+import { FEE_BLOCK_REASON, FeeDueCard, useFeeOwed } from "@/components/fee-due"
 import { PriceBreakdown } from "@/components/price-breakdown"
 import { MessageButton } from "@/components/message-button"
 import { ReportButton } from "@/components/report-button"
@@ -31,7 +32,7 @@ import { actions, useAct } from "@/lib/client-actions"
 import { getTemplate } from "@/lib/catalog"
 import { getPro, servicesOf, useApp, type AppState } from "@/lib/store"
 import { POLICY, hoursUntilStart } from "@/lib/pricing"
-import { reviewWindow } from "@/lib/connection"
+import { bookingChatOpen, reviewWindow } from "@/lib/connection"
 import { rankScore } from "@/lib/trust"
 import type { Booking, Pro } from "@/lib/types"
 import { addMinutes, cn, formatDateLong, formatDuration, formatPrice, localDate, localTime, toTimestamptz, todayISO } from "@/lib/utils"
@@ -60,6 +61,7 @@ function BookingDetail() {
   const [confirmDecline, setConfirmDecline] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const now = useNow()
+  const owed = useFeeOwed()
 
   const isPro = session?.role === "pro" && booking?.proId === session.proId
   const isCustomer = session?.role === "customer" && booking?.mine
@@ -106,7 +108,8 @@ function BookingDetail() {
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{isPro ? booking.customerName : pro.name}</p>
           <p className="text-xs text-muted">
-            {isPro ? `Khách hàng · ${formatPhone(booking.customerPhone)}` : pro.title}
+            {/* The number comes with the match and goes when the job ends. */}
+            {isPro ? (booking.customerPhone ? `Khách hàng · ${formatPhone(booking.customerPhone)}` : "Khách hàng") : pro.title}
           </p>
         </div>
         <StatusBadge status={booking.status} />
@@ -175,11 +178,12 @@ function BookingDetail() {
 
       {isPro && booking.status === "pending" && (
         <p className="flex gap-2 rounded-xl bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning">
-          <Phone className="mt-0.5 size-4 shrink-0" />
-          Gọi cho khách ({formatPhone(booking.customerPhone)}) để xác nhận giờ, địa chỉ và yêu cầu trước khi nhận job.
-          Cần phản hồi trong {POLICY.confirmWithinHours} giờ.
+          <Timer className="mt-0.5 size-4 shrink-0" />
+          Xem giờ, địa chỉ và yêu cầu ở trên rồi bấm Nhận lịch, trong {POLICY.confirmWithinHours} giờ. Nhận rồi thì hai bên
+          nhắn tin và gọi được cho nhau.
         </p>
       )}
+      {isPro && booking.status === "pending" && <FeeDueCard />}
       {isPro && booking.status === "pending" && <CustomerHistory booking={booking} />}
 
       {isCustomer && booking.status === "pending" && <CustomerConfirmWait booking={booking} proName={pro.name} />}
@@ -260,23 +264,32 @@ function BookingDetail() {
             <DeclineForm booking={booking} onCancel={() => setConfirmDecline(false)} />
           )}
           {isPro && booking.status === "pending" && !confirmDecline && (
-            <div className="grid grid-cols-[auto_1fr_1fr] gap-2">
-              <Button variant="ghost" size="lg" onClick={() => setConfirmDecline(true)}>
-                Từ chối
-              </Button>
-              <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "lg")}>
-                <Phone className="size-4" /> Gọi khách
-              </a>
-              <Button size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "confirmed"), "Đã nhận lịch")}>
-                Đã gọi, nhận lịch
-              </Button>
-            </div>
+            <>
+              <div className="grid grid-cols-[auto_1fr] gap-2">
+                <Button variant="ghost" size="lg" onClick={() => setConfirmDecline(true)}>
+                  Từ chối
+                </Button>
+                {/* The database refuses it while a fee is owed; say so before the tap. */}
+                <Button
+                  size="lg"
+                  disabled={owed > 0}
+                  onClick={() => run(() => actions.setBookingStatus(booking.id, "confirmed"), "Đã nhận lịch")}
+                >
+                  Nhận lịch
+                </Button>
+              </div>
+              {owed > 0 && <p className="mt-2 text-center text-[13px] text-danger">{FEE_BLOCK_REASON}</p>}
+            </>
           )}
           {isPro && (booking.status === "confirmed" || booking.status === "in_progress") && (
             <div className="grid grid-cols-2 gap-2">
-              <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "lg")}>
-                <Phone className="size-4" /> Gọi khách
-              </a>
+              {booking.customerPhone ? (
+                <a href={`tel:${booking.customerPhone.replace(/\s/g, "")}`} className={buttonClass("outline", "lg")}>
+                  <Phone className="size-4" /> Gọi khách
+                </a>
+              ) : (
+                <MessageButton booking={booking} label="Nhắn khách" className="h-12" />
+              )}
               <Button size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "completed"), "Đã đánh dấu hoàn thành")}>
                 Đánh dấu hoàn thành
               </Button>
@@ -314,9 +327,17 @@ function BookingDetail() {
           <ButtonLink href={`/book/${booking.proId}?service=${booking.templateId}&variant=${booking.variantId}`}>Đặt lại</ButtonLink>
         </div>
       )}
-      <div className="flex justify-center pt-2">
-        <MessageButton proId={booking.proId} bookingId={booking.id} label="Nhắn tin" />
-      </div>
+      {/* Chat comes with the match: open while accepted and not over. */}
+      {bookingChatOpen(booking.status) ? (
+        <div className="flex justify-center pt-2">
+          <MessageButton booking={booking} label={isPro ? "Nhắn tin với khách" : `Nhắn tin với ${pro.name}`} />
+        </div>
+      ) : booking.status === "pending" ? (
+        <p className="flex items-center justify-center gap-2 pt-2 text-[13px] text-muted">
+          <MessageSquare className="size-4" />
+          {isPro ? "Nhắn tin mở khi bạn nhận lịch" : "Nhắn tin mở khi người làm nhận lịch"}
+        </p>
+      ) : null}
 
       <div className="flex flex-col items-center gap-2 pt-1">
         {isCustomer && active && <ShareBooking booking={booking} />}
@@ -335,7 +356,7 @@ function BookingDetail() {
 }
 
 /**
- * The person has until confirm_by to call and accept; after that the database
+ * The person has until confirm_by to accept; after that the database
  * lets the request lapse. The customer sees the real deadline, not a promise.
  */
 function CustomerConfirmWait({ booking, proName }: { booking: Booking; proName: string }) {
@@ -352,13 +373,14 @@ function CustomerConfirmWait({ booking, proName }: { booking: Booking; proName: 
     <div className="rounded-xl bg-subtle px-3.5 py-3 text-[14px]">
       <p className="flex items-center gap-2 font-semibold text-accent-dark">
         <Timer className="size-4 shrink-0" />
-        {minutes === 0 ? "Đã hết thời gian chờ xác nhận" : `Chờ ${proName} gọi xác nhận · còn ${left}`}
+        {minutes === 0 ? "Đã hết thời gian chờ nhận lịch" : `Chờ ${proName} nhận lịch · còn ${left}`}
       </p>
       <p className="mt-1 flex gap-2 text-[13px] text-ink-soft">
-        <Phone className="mt-0.5 size-3.5 shrink-0" />
+        <MessageSquare className="mt-0.5 size-3.5 shrink-0" />
         <span>
-          {proName} sẽ gọi số {formatPhone(booking.customerPhone)} trước {localTime(booking.confirmBy)}. Không ai xác nhận thì
-          lịch tự huỷ{booking.paymentMethod === "online" ? " và tiền được hoàn 100%" : ""}, bạn không mất gì.
+          {proName} xem lịch và bấm nhận trong app trước {localTime(booking.confirmBy)}. Nhận rồi thì hai bên nhắn tin, gọi
+          được cho nhau. Không ai nhận thì lịch tự huỷ{booking.paymentMethod === "online" ? " và tiền được hoàn 100%" : ""}, bạn
+          không mất gì.
         </span>
       </p>
     </div>
@@ -400,8 +422,8 @@ function Alternatives({ state, booking, pro }: { state: AppState; booking: Booki
           Chưa có ai khác ở {pro.city} nhận {booking.serviceName.toLowerCase()}.{" "}
           <Link href={`/requests/new?service=${booking.templateId}`} className="font-semibold text-accent underline underline-offset-2">
             Đăng yêu cầu
-          </Link>{" "}
-          để người làm quanh bạn gửi báo giá.
+          </Link>
+          : người làm quanh bạn được báo, ai nhận trước sẽ làm.
         </p>
       )}
     </section>

@@ -1,16 +1,18 @@
 "use client"
 
 import * as React from "react"
-import { BriefcaseBusiness, Car, Send } from "lucide-react"
-import { PriceInput } from "@/components/price-input"
+import { useRouter } from "next/navigation"
+import { BriefcaseBusiness, Car } from "lucide-react"
+import { FEE_ANCHOR, FEE_BLOCK_REASON, FeeDueCard, useFeeOwed } from "@/components/fee-due"
 import { RequestCard } from "@/components/request-card"
 import { RequireSession } from "@/components/require-session"
-import { Button, Chip, EmptyState, PageHeader, inputClass } from "@/components/ui"
-import { getTemplate, getVariant, isPriceAllowed } from "@/lib/catalog"
-import { actions, useAct } from "@/lib/client-actions"
-import { distanceToCustomer, priceOf, proView, quoteFor, useApp } from "@/lib/store"
+import { Button, Chip, EmptyState, PageHeader, buttonClass } from "@/components/ui"
+import { getTemplate } from "@/lib/catalog"
+import { actions } from "@/lib/client-actions"
+import { POLICY, commissionFor } from "@/lib/pricing"
+import { distanceToCustomer, priceOf, proView, useApp } from "@/lib/store"
 import type { JobPost } from "@/lib/types"
-import { cn, formatPrice } from "@/lib/utils"
+import { formatPrice } from "@/lib/utils"
 
 export default function StudioJobsPage() {
   return (
@@ -23,35 +25,48 @@ export default function StudioJobsPage() {
   )
 }
 
+/** take_job's answer when someone else was first. */
+const TAKEN = "Đã có người nhận việc này."
+
+/**
+ * Requests customers posted. Every freelancer who can do one is told, and the
+ * first to press "Nhận việc" gets it at the posted price (take_job): a
+ * confirmed booking, and the chat opens. Nothing to quote or wait for.
+ */
 function JobBoard() {
   const state = useApp()
+  const owed = useFeeOwed()
   const proId = state.session!.proId!
   const pro = proView(state, proId)!
-  const [scope, setScope] = React.useState<"match" | "all" | "offered">("match")
+  const [scope, setScope] = React.useState<"match" | "all">("match")
+  // Taken by someone else while this page was open.
+  const [gone, setGone] = React.useState<string[]>([])
+  const [notice, setNotice] = React.useState<string | null>(null)
 
-  const withDistance = state.jobs
-    .filter((j) => !j.mine)
+  const jobs = state.jobs
+    .filter((j) => !j.mine && j.status === "open" && !gone.includes(j.id))
     .map((j) => ({ job: j, km: distanceToCustomer(state, proId, { city: j.city, district: j.district, detail: "" }) }))
-
-  const jobs = withDistance
-    .filter(({ job, km }) => {
-      const offered = job.offers.some((o) => o.proId === proId)
-      if (scope === "offered") return offered
-      if (job.status !== "open") return false
-      if (scope === "match") {
-        return (
-          pro.categories.includes(getTemplate(job.templateId)?.category ?? "nail") && km !== null && km <= pro.maxTravelKm
-        )
-      }
-      return true
-    })
-    .sort((a, b) => a.job.date.localeCompare(b.job.date))
+    .filter(({ job, km }) =>
+      scope === "match"
+        ? pro.categories.includes(getTemplate(job.templateId)?.category ?? "nail") && km !== null && km <= pro.maxTravelKm
+        : true,
+    )
+    .sort((a, b) => `${a.job.date}${a.job.time}`.localeCompare(`${b.job.date}${b.job.time}`))
 
   return (
     <>
+      <p className="mb-3 text-[13px] text-ink-soft">
+        Khách đăng yêu cầu với giá cố định. Ai bấm Nhận việc trước sẽ có lịch hẹn đã xác nhận, và nhắn tin được với khách ngay.
+      </p>
+      <FeeDueCard className="mb-4" />
       {!state.acceptingJobs && (
         <p className="mb-3 rounded-2xl bg-warning-soft px-4 py-3 text-[13px] text-warning">
-          Bạn đang tạm nghỉ nhận job. Bật lại ở trang Tổng quan để gửi báo giá.
+          Bạn đang tạm nghỉ nhận khách. Bật lại ở trang Tổng quan để nhận việc.
+        </p>
+      )}
+      {notice && (
+        <p role="status" className="mb-3 rounded-2xl bg-canvas px-4 py-3 text-[13px] text-ink-soft">
+          {notice}
         </p>
       )}
       <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
@@ -61,16 +76,22 @@ function JobBoard() {
         <Chip active={scope === "all"} onClick={() => setScope("all")}>
           Tất cả
         </Chip>
-        <Chip active={scope === "offered"} onClick={() => setScope("offered")}>
-          Đã báo giá
-        </Chip>
       </div>
       {jobs.length ? (
         <ul className="space-y-3">
           {jobs.map(({ job, km }) => {
-            // Quoting needs the service listed at a price, inside the travel radius.
+            // Taking needs the service listed, inside the travel radius; the database checks the rest.
             const listed = priceOf(state, proId, job.templateId, job.variantId)
-            const canOffer = listed !== null && km !== null && km <= pro.maxTravelKm
+            const reason =
+              owed > 0
+                ? FEE_BLOCK_REASON
+                : !state.acceptingJobs
+                  ? "Bạn đang tạm nghỉ nhận khách"
+                  : listed === null
+                    ? "Bạn chưa niêm yết dịch vụ/gói này"
+                    : km === null || km > pro.maxTravelKm
+                      ? "Ngoài phạm vi di chuyển của bạn"
+                      : undefined
             return (
               <li key={job.id} id={job.id} className="scroll-mt-20">
                 <RequestCard
@@ -83,17 +104,13 @@ function JobBoard() {
                     </span>
                   }
                   footer={
-                    <OfferBox
+                    <TakeBox
                       job={job}
-                      proId={proId}
-                      disabled={!state.acceptingJobs || !canOffer}
-                      reason={
-                        listed === null
-                          ? "Bạn chưa niêm yết dịch vụ/gói này"
-                          : km === null || km > pro.maxTravelKm
-                            ? "Ngoài phạm vi di chuyển của bạn"
-                            : undefined
-                      }
+                      reason={reason}
+                      onTaken={() => {
+                        setGone((ids) => [...ids, job.id])
+                        setNotice(`${TAKEN} Yêu cầu đã được gỡ khỏi danh sách.`)
+                      }}
                     />
                   }
                 />
@@ -104,164 +121,60 @@ function JobBoard() {
       ) : (
         <EmptyState
           icon={<BriefcaseBusiness className="size-6" />}
-          title={scope === "offered" ? "Bạn chưa gửi báo giá nào" : "Chưa có việc mới"}
-          text="Việc mới từ khách quanh khu vực của bạn sẽ hiện ở đây."
+          title="Chưa có việc mới"
+          text="Khi khách quanh bạn đăng yêu cầu bạn làm được, bạn được báo ngay và việc hiện ở đây."
         />
       )}
     </>
   )
 }
 
-function OfferBox({ job, proId, disabled, reason }: { job: JobPost; proId: string; disabled: boolean; reason?: string }) {
-  const state = useApp()
-  const act = useAct()
-  const variant = getVariant(job.templateId, job.variantId)!
-  const existing = job.offers.find((o) => o.proId === proId)
-  const [open, setOpen] = React.useState(false)
-  // A quote may not undercut the freelancer's own listed price.
-  const floor = priceOf(state, proId, job.templateId, job.variantId) ?? variant.minPrice
-  const [price, setPrice] = React.useState(Math.max(floor, variant.suggestedPrice))
-  const [message, setMessage] = React.useState("")
+function TakeBox({ job, reason, onTaken }: { job: JobPost; reason?: string; onTaken: () => void }) {
+  const router = useRouter()
+  const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
-  const others = job.offers.filter((o) => o.proId !== proId).length
-
-  if (existing) {
-    const tone =
-      existing.status === "accepted" ? "bg-success-soft text-success" : existing.status === "rejected" ? "bg-canvas text-muted" : "bg-subtle text-accent-dark"
-    return (
-      <div className={cn("mt-3 flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-[13px]", tone)}>
-        <span>
-          {existing.status === "accepted"
-            ? `Khách đã chọn bạn · ${formatPrice(existing.price)}${job.quantity > 1 ? ` × ${job.quantity} người` : ""}`
-            : existing.status === "rejected"
-              ? "Khách đã chọn người làm khác"
-              : `Đã gửi báo giá ${formatPrice(existing.price)}${job.quantity > 1 ? ` × ${job.quantity} người` : ""}`}
-        </span>
-        {existing.status === "pending" && (
-          <button
-            type="button"
-            onClick={() => void act(() => actions.withdrawOffer(job.id), "Đã rút báo giá")}
-            className="font-medium underline underline-offset-2"
-          >
-            Rút lại
-          </button>
-        )}
-      </div>
-    )
-  }
-
-  if (!open) {
-    return (
-      <div className="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3">
-        <span className="text-xs text-muted">{reason ?? (others ? `${others} người làm đã báo giá` : "Chưa có ai báo giá")}</span>
-        <Button size="sm" disabled={disabled} onClick={() => setOpen(true)}>
-          Gửi báo giá
-        </Button>
-      </div>
-    )
-  }
-
-  const allowed = isPriceAllowed(variant, price) && price >= floor
-  const suggested = Math.max(floor, variant.suggestedPrice)
-  // accept_offer builds the booking with build_quote(unit price, quantity, ...):
-  // the offer is per person and the customer pays it once per head.
-  const heads = Math.max(1, job.quantity)
-  const quote = quoteFor(state, {
-    proId,
-    price: (allowed ? price : suggested) * heads,
-    atHome: job.atHome,
-    address: { city: job.city, district: job.district, detail: "" },
-    date: job.date,
-    time: job.time,
-  })
+  // Commission is on the service price only; travel and urgent fees are all the freelancer's.
+  const service = job.price !== null ? job.price * job.quantity : null
+  const payout = service !== null ? service - commissionFor(service) : null
 
   return (
-    <form
-      className="mt-3 space-y-3 border-t border-line pt-3"
-      onSubmit={async (e) => {
-        e.preventDefault()
-        if (message.trim().length < 10) return setError("Lời nhắn cần ít nhất 10 ký tự.")
-        const problem = await act(() => actions.sendOffer(job.id, price, message.trim()), "Đã gửi báo giá")
-        if (problem) setError(problem)
-        else setOpen(false)
-      }}
-    >
-      <div>
-        <div className="flex items-center justify-between gap-3 text-[13px]">
-          <label htmlFor={`price-${job.id}`} className="text-muted">
-            Giá dịch vụ{heads > 1 ? " mỗi người" : ""}
-          </label>
-          <PriceInput
-            value={price}
-            onChange={setPrice}
-            min={floor}
-            max={variant.maxPrice}
-            label={`Nhập giá${heads > 1 ? " mỗi người" : ""}`}
-          />
-        </div>
-        <input
-          id={`price-${job.id}`}
-          aria-label="Kéo để chọn giá"
-          type="range"
-          min={floor}
-          max={variant.maxPrice}
-          step={5000}
-          value={price}
-          onChange={(e) => setPrice(Number(e.target.value))}
-          className="mt-2 w-full accent-[var(--color-accent)]"
-        />
-        <div className="flex justify-between text-xs text-muted">
-          <span>{formatPrice(floor)}</span>
-          <button type="button" className="text-accent" onClick={() => setPrice(suggested)}>
-            Dùng giá gợi ý {formatPrice(suggested)}
-          </button>
-          <span>{formatPrice(variant.maxPrice)}</span>
-        </div>
-        {!allowed && (
-          <p className="mt-1 text-xs text-danger">
-            Giá cần từ {formatPrice(floor)} đến {formatPrice(variant.maxPrice)}, chẵn 5.000đ.
-          </p>
+    <div className="mt-3 border-t border-line pt-3">
+      {payout !== null && (
+        <p className="text-[13px] text-ink-soft">
+          Bạn nhận <b className="text-success">{formatPrice(payout)}</b> sau phí 360dep {Math.round(POLICY.commissionRate * 100)}%, cộng phí
+          di chuyển / đặt gấp nếu có.
+        </p>
+      )}
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <span className="text-xs text-muted">{reason ?? "Nhận trước, được việc."}</span>
+        {/* Owing a fee: the button is the payment, above. */}
+        {reason === FEE_BLOCK_REASON ? (
+          <a href={`#${FEE_ANCHOR}`} className={buttonClass("soft", "sm")}>
+            Thanh toán phí
+          </a>
+        ) : (
+        <Button
+          size="sm"
+          disabled={busy || Boolean(reason)}
+          onClick={async () => {
+            setBusy(true)
+            setError(null)
+            const result = await actions.takeJob(job.id)
+            setBusy(false)
+            if ("id" in result) return router.push(`/bookings/${result.id}`)
+            if (result.error === TAKEN) return onTaken()
+            setError(result.error)
+          }}
+        >
+          {busy ? "Đang nhận…" : "Nhận việc"}
+        </Button>
         )}
       </div>
-
-      <div className="rounded-xl bg-canvas px-3 py-2.5 text-xs text-ink-soft">
-        {heads > 1 && (
-          <div className="flex justify-between">
-            <span>Giá dịch vụ × {heads} người</span>
-            <span>{formatPrice(quote.servicePrice)}</span>
-          </div>
-        )}
-        <div className="flex justify-between">
-          <span>Khách trả (gồm phí di chuyển/gấp)</span>
-          <b className="text-ink">{formatPrice(quote.total)}</b>
-        </div>
-        <div className="flex justify-between">
-          <span>Hoa hồng 360dep ({Math.round(quote.commissionRate * 100)}%)</span>
-          <span>−{formatPrice(quote.commission)}</span>
-        </div>
-        <div className="flex justify-between font-semibold text-success">
-          <span>Bạn nhận</span>
-          <span>{formatPrice(quote.payout)}</span>
-        </div>
-      </div>
-
-      <textarea
-        aria-label="Lời nhắn cho khách"
-        rows={3}
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="Bạn sẽ làm thế nào, đã có mẫu tương tự chưa, có mang đủ dụng cụ không…"
-        className={cn(inputClass, "resize-none text-sm")}
-      />
-      {error && <p className="text-xs text-danger">{error}</p>}
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
-          Huỷ
-        </Button>
-        <Button type="submit" size="sm" disabled={!allowed}>
-          <Send className="size-3.5" /> Gửi báo giá
-        </Button>
-      </div>
-    </form>
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-danger">
+          {error}
+        </p>
+      )}
+    </div>
   )
 }

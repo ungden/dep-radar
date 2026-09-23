@@ -5,6 +5,7 @@ import { backendEnabled } from "@/lib/supabase/env"
 import { supabaseServer } from "@/lib/supabase/server"
 import { localDate, localTime } from "@/lib/utils"
 import type { ActionResult } from "./actions"
+import { messageFor, orLegacy } from "./errors"
 
 /**
  * The operations desk. Reads go through row level security with the admin
@@ -39,6 +40,8 @@ export interface AdminPro {
   rating: number
   ratingCount: number
   wallet: number
+  /** The code on their fee transfers ("NAP AB23CD"); null before the match-then-chat migration. */
+  payCode: string | null
 }
 
 export interface AdminBooking {
@@ -106,12 +109,15 @@ export async function pendingChecks(): Promise<PendingCheck[]> {
 
 export async function adminPros(): Promise<AdminPro[]> {
   const supabase = await supabaseServer()
-  const { data, error } = await supabase
-    .from("pros")
-    .select(
-      "id, slug, display_name, city, district, identity_status, published, suspended_at, accepting_jobs, completed_jobs, rating_avg, rating_count",
-    )
-    .order("created_at", { ascending: false })
+  const { data: rows, error } = await orLegacy((legacy) =>
+    supabase
+      .from("pros")
+      .select(
+        `id, slug, display_name, city, district, identity_status, published, suspended_at, accepting_jobs, completed_jobs, rating_avg, rating_count${legacy ? "" : ", pay_code"}`,
+      )
+      .order("created_at", { ascending: false }),
+  )
+  const data = rows as Record<string, any>[] | null
   if (error) {
     console.error("adminPros failed:", error.message)
     return []
@@ -135,6 +141,7 @@ export async function adminPros(): Promise<AdminPro[]> {
     rating: Number(p.rating_avg),
     ratingCount: p.rating_count,
     wallet: balances.get(p.id) ?? 0,
+    payCode: p.pay_code ?? null,
   }))
 }
 
@@ -210,4 +217,29 @@ export async function setReviewHidden(bookingId: string, hidden: boolean) {
 
 export async function resolveReport(reportId: string, status: string, resolution = "") {
   return call("resolve_report", { p_report: reportId, p_status: status, p_resolution: resolution })
+}
+
+/**
+ * Staff credit a freelancer's wallet after seeing the transfer on the bank
+ * statement. `ref` is the bank's transaction reference, so the same transfer
+ * is not recorded twice.
+ */
+export async function recordTopup(proId: string, amount: number, ref: string): Promise<ActionResult> {
+  if (!Number.isInteger(amount) || amount <= 0) return { ok: false, error: "Nhập số tiền." }
+  const supabase = await supabaseServer()
+  const reference = ref.trim()
+  // record_topup quietly skips a reference it already has (credit_topup returns
+  // false), which would look like success here: say so instead.
+  if (reference) {
+    const { count } = await supabase
+      .from("wallet_entries")
+      .select("id", { count: "exact", head: true })
+      .eq("kind", "topup")
+      .eq("ref", reference)
+    if ((count ?? 0) > 0) return { ok: false, error: "Mã giao dịch này đã được ghi nhận rồi, không cộng lần nữa." }
+  }
+  const { error } = await supabase.rpc("record_topup", { p_pro: proId, p_amount: amount, p_ref: reference })
+  if (error) return { ok: false, error: messageFor(error) }
+  revalidatePath("/admin")
+  return { ok: true, data: undefined }
 }

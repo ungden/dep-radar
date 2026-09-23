@@ -486,7 +486,7 @@ function NoResults({ vertical, filtered, onClear }: { vertical: VerticalFilter; 
           ? "Thử bỏ bớt bộ lọc hoặc đổi từ khoá."
           : trade && trade.id !== "beauty"
             ? `${trade.label} vừa mở trên 360dep, người làm còn ít. Đăng yêu cầu để ai phù hợp liên hệ bạn.`
-            : "Đăng yêu cầu, người làm gần bạn sẽ gửi báo giá."}
+            : "Đăng yêu cầu, người làm gần bạn được báo và ai nhận trước sẽ làm."}
       </p>
       <div className="mt-5 flex justify-center">
         {filtered ? (

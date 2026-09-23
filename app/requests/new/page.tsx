@@ -29,6 +29,9 @@ export default function NewRequestPage() {
   )
 }
 
+/** "Trả thêm" goes up in these steps, per person, as far as the catalogue's top price. */
+const EXTRA_STEP = 20000
+
 /** Half-hour starts, the same step the freelancers' own calendars use. */
 const TIME_OPTIONS = Array.from({ length: 28 }, (_, i) => {
   const minutes = 8 * 60 + i * 30
@@ -46,6 +49,9 @@ function NewRequestForm() {
   const [category, setCategory] = React.useState<CategoryId>(start.category)
   const [templateId, setTemplateId] = React.useState(start.id)
   const [variantId, setVariantId] = React.useState(start.variants[0].id)
+  const [quantity, setQuantity] = React.useState(1)
+  // Per person, on top of the catalogue price: 0 posts at the catalogue price.
+  const [extra, setExtra] = React.useState(0)
   const [description, setDescription] = React.useState("")
   const [date, setDate] = React.useState(addDays(todayISO(), 2))
   const [time, setTime] = React.useState("16:00")
@@ -60,12 +66,26 @@ function NewRequestForm() {
   const tpl = templates.find((t) => t.id === templateId) ?? templates[0]
   const variant = tpl.variants.find((v) => v.id === variantId) ?? tpl.variants[0]
   const atHome = atHomePref && !tpl.studioOnly
+  const heads = variant.perPerson ? Math.min(Math.max(quantity, 1), variant.maxQuantity ?? 1) : 1
+  // post_job fixes the price per person: the catalogue's suggested price, or
+  // more if the customer offers it, never above the catalogue's top price.
+  const extras = Array.from(
+    { length: Math.floor((variant.maxPrice - variant.suggestedPrice) / EXTRA_STEP) + 1 },
+    (_, i) => i * EXTRA_STEP,
+  )
+  const unit = variant.suggestedPrice + (extras.includes(extra) ? extra : 0)
+
+  const pickVariant = (id: string) => {
+    setVariantId(id)
+    setQuantity(1)
+    setExtra(0)
+  }
 
   const pickCategory = (c: CategoryId) => {
     setCategory(c)
     const first = templatesByCategory(c)[0]
     setTemplateId(first.id)
-    setVariantId(first.variants[0].id)
+    pickVariant(first.variants[0].id)
   }
 
   const valid = date >= todayISO() && atHome && Boolean(addressId)
@@ -87,6 +107,9 @@ function NewRequestForm() {
           addressId,
           atHome,
           paymentMethod,
+          quantity: heads,
+          // Left out at the catalogue price.
+          price: unit > variant.suggestedPrice ? unit : null,
         })
         setBusy(false)
         if ("error" in result) return setError(result.error)
@@ -94,7 +117,8 @@ function NewRequestForm() {
       }}
     >
       <p className="rounded-2xl bg-subtle px-4 py-3 text-[13px] text-accent-dark">
-        Chọn dịch vụ theo danh mục chuẩn của 360dep. Người làm phù hợp quanh bạn sẽ báo giá trong khung giá quy định, bạn so sánh hồ sơ, đánh giá và chọn người ưng ý.
+        Chọn dịch vụ, giờ và địa chỉ. 360dep báo cho mọi người làm phù hợp quanh bạn, ai nhận trước sẽ làm với giá bên dưới.
+        Người làm nhận rồi thì hai bên nhắn tin được với nhau trong lịch hẹn.
       </p>
 
       <fieldset>
@@ -129,7 +153,7 @@ function NewRequestForm() {
           onChange={(e) => {
             const next = templates.find((t) => t.id === e.target.value)!
             setTemplateId(next.id)
-            setVariantId(next.variants[0].id)
+            pickVariant(next.variants[0].id)
           }}
         >
           {templates.map((t) => (
@@ -148,7 +172,7 @@ function NewRequestForm() {
               key={v.id}
               type="button"
               aria-pressed={v.id === variant.id}
-              onClick={() => setVariantId(v.id)}
+              onClick={() => pickVariant(v.id)}
               className={cn(
                 "rounded-xl border px-3 py-2.5 text-left text-sm",
                 v.id === variant.id ? "border-accent bg-subtle text-accent-dark" : "border-line bg-surface text-ink-soft",
@@ -158,13 +182,59 @@ function NewRequestForm() {
                 {v.label} · {formatDuration(v.durationMin)}
               </span>
               <span className="block text-xs">
-                Khung giá {formatPrice(v.minPrice)} – {formatPrice(v.maxPrice)}
+                Giá {formatPrice(v.suggestedPrice)}
+                {v.perPerson ? " / người" : ""}
               </span>
             </button>
           ))}
         </div>
         <p className="mt-2 text-xs text-muted">Bao gồm: {tpl.includes.join(" · ")}</p>
+        {variant.perPerson && (
+          <div className="mt-3 flex items-center gap-2 rounded-xl bg-canvas px-3 py-2">
+            <span className="flex-1 text-[13px]">Số người</span>
+            <button
+              type="button"
+              aria-label="Giảm số người"
+              disabled={heads <= 1}
+              onClick={() => setQuantity(heads - 1)}
+              className="inline-flex size-8 items-center justify-center rounded-full border border-line-strong disabled:opacity-40"
+            >
+              −
+            </button>
+            <span className="w-6 text-center font-semibold">{heads}</span>
+            <button
+              type="button"
+              aria-label="Tăng số người"
+              disabled={heads >= (variant.maxQuantity ?? 1)}
+              onClick={() => setQuantity(heads + 1)}
+              className="inline-flex size-8 items-center justify-center rounded-full border border-line-strong disabled:opacity-40"
+            >
+              +
+            </button>
+          </div>
+        )}
       </fieldset>
+
+      <section aria-labelledby="request-price" className="rounded-2xl border border-line bg-surface p-4">
+        <p id="request-price" className="text-[15px]">
+          Giá: <b className="text-[17px]">{formatPrice(unit * heads)}</b>
+          {heads > 1 && <span className="text-[13px] text-muted"> ({formatPrice(unit)} × {heads} người)</span>}
+        </p>
+        <p className="mt-0.5 text-[13px] text-ink-soft">Người làm nhận trước sẽ làm với giá này.</p>
+        {extras.length > 1 && (
+          <div className="mt-3">
+            <Field label={`Trả thêm để có người nhận nhanh hơn (tuỳ chọn${heads > 1 ? ", mỗi người" : ""})`}>
+              <select className={inputClass} value={unit - variant.suggestedPrice} onChange={(e) => setExtra(Number(e.target.value))}>
+                {extras.map((x) => (
+                  <option key={x} value={x}>
+                    {x === 0 ? "Không trả thêm" : `+${formatPrice(x)} · giá ${formatPrice(variant.suggestedPrice + x)}${heads > 1 ? "/người" : ""}`}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+        )}
+      </section>
 
       <Field label="Mô tả thêm (tuỳ chọn)" hint="Tình trạng da/móng/tóc, phong cách mong muốn, số người…">
         <textarea
@@ -257,7 +327,8 @@ function NewRequestForm() {
 
       <p className="flex gap-2 text-xs text-muted">
         <Info className="mt-0.5 size-3.5 shrink-0" />
-        Khách không mất phí đăng yêu cầu. Nếu làm tại nhà xa hơn {POLICY.freeTravelKm} km hoặc bắt đầu trong vòng {POLICY.urgentWithinHours} giờ, báo giá sẽ kèm phí di chuyển / đặt gấp theo quy định.
+        Khách không mất phí đăng yêu cầu. Nếu nhà bạn cách người nhận việc xa hơn {POLICY.freeTravelKm} km hoặc giờ hẹn trong vòng{" "}
+        {POLICY.urgentWithinHours} giờ tới, lịch hẹn cộng thêm phí di chuyển / đặt gấp theo quy định, hiện rõ trong lịch hẹn.
       </p>
 
       {error && (

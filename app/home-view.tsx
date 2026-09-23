@@ -102,7 +102,7 @@ function Explore() {
           Đặt dịch vụ, xem giá ngay.
         </h1>
         <p className="mt-3 hidden text-[17px] text-ink-soft md:block">
-          Làm đẹp, chụp ảnh, người mẫu gần bạn. Giá niêm yết, người làm gọi xác nhận trước khi đến.
+          Làm đẹp, chụp ảnh, người mẫu gần bạn. Giá niêm yết, người làm nhận lịch trong app rồi hai bên nhắn tin với nhau.
         </p>
         <SearchBox className="mt-3 md:mt-6" large />
       </div>
@@ -189,7 +189,7 @@ function Explore() {
       <section className="mt-14 flex flex-col gap-3 rounded-[var(--radius-xl)] bg-subtle p-6 md:flex-row md:items-center md:justify-between md:p-8">
         <div>
           <p className="text-[20px] font-bold tracking-tight">Không thấy dịch vụ bạn cần?</p>
-          <p className="mt-1 text-[15px] text-ink-soft">Đăng yêu cầu, người làm gần bạn gửi báo giá. Bạn chọn, không mất phí.</p>
+          <p className="mt-1 text-[15px] text-ink-soft">Đăng yêu cầu với giá niêm yết, người làm gần bạn nhận việc. Không mất phí.</p>
         </div>
         <ButtonLink href="/requests/new" size="lg" className="shrink-0">
           Đăng yêu cầu
@@ -433,8 +433,8 @@ function EmptySupply({
       <p className="text-[17px] font-bold">{label ? `${label}: chưa có ai nhận lịch${where}` : `Chưa có dịch vụ nào${where}`}</p>
       <p className="mx-auto mt-1.5 max-w-sm text-[15px] text-ink-soft">
         {elsewhere > 0
-          ? `Có ${elsewhere} dịch vụ ở thành phố khác. Hoặc đăng yêu cầu để người làm quanh bạn gửi báo giá.`
-          : "Đăng yêu cầu: khi có người nhận việc này quanh bạn, họ thấy yêu cầu và gửi báo giá. Không mất phí."}
+          ? `Có ${elsewhere} dịch vụ ở thành phố khác. Hoặc đăng yêu cầu: người làm quanh bạn được báo, ai nhận trước sẽ làm.`
+          : "Đăng yêu cầu: khi có người làm việc này quanh bạn, họ được báo và ai nhận trước sẽ làm. Không mất phí."}
       </p>
       <div className="mt-5 flex flex-wrap justify-center gap-2">
         <ButtonLink

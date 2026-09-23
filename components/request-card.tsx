@@ -10,8 +10,8 @@ import { cn, formatDateLong, formatDuration, formatPrice } from "@/lib/utils"
 
 export function JobStatusLabel({ job }: { job: JobPost }) {
   const map = {
-    open: ["Đang nhận báo giá", "bg-warning-soft text-warning"],
-    booked: ["Đã chốt", "bg-success-soft text-success"],
+    open: ["Đang tìm người làm", "bg-warning-soft text-warning"],
+    booked: ["Đã có người nhận", "bg-success-soft text-success"],
     closed: ["Đã đóng", "bg-canvas text-muted"],
   } as const
   const [label, cls] = map[job.status]
@@ -22,7 +22,6 @@ export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: 
   const tpl = getTemplate(job.templateId)!
   const variant = getVariant(job.templateId, job.variantId)!
   const Icon = CATEGORY_ICON[tpl.category]
-  const pendingOffers = job.offers.filter((o) => o.status === "pending").length
   return (
     <Card className="p-4">
       <Link href={href} className="block">
@@ -47,17 +46,20 @@ export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: 
               <span>
                 {formatDateLong(job.date)} · {job.time}
               </span>
-              <span className="text-ink-soft">
-                Khung giá <b className="text-ink">{formatPrice(variant.minPrice)} – {formatPrice(variant.maxPrice)}</b>
-                {job.quantity > 1 && " / người"}
-              </span>
-              {extra}
-              {job.mine && (
-                <span className="ml-auto inline-flex items-center gap-0.5 text-accent">
-                  {job.offers.length} báo giá{pendingOffers && job.status === "open" ? " mới" : ""}
-                  <ChevronRight className="size-4" />
+              {/* The price the request was posted at; an older one had only the catalogue band. */}
+              {job.price !== null ? (
+                <span className="text-ink-soft">
+                  Giá <b className="text-ink">{formatPrice(job.price * job.quantity)}</b>
+                  {job.quantity > 1 && ` (${formatPrice(job.price)} × ${job.quantity} người)`}
+                </span>
+              ) : (
+                <span className="text-ink-soft">
+                  Khung giá <b className="text-ink">{formatPrice(variant.minPrice)} – {formatPrice(variant.maxPrice)}</b>
+                  {job.quantity > 1 && " / người"}
                 </span>
               )}
+              {extra}
+              {job.mine && <ChevronRight className="ml-auto size-4 text-accent" />}
             </div>
           </div>
         </div>

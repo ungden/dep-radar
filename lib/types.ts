@@ -319,17 +319,6 @@ export interface Delivery {
   acceptedAt?: string
 }
 
-export type OfferStatus = "pending" | "accepted" | "rejected"
-
-export interface Offer {
-  id: string
-  proId: string
-  price: number
-  message: string
-  status: OfferStatus
-  createdAt: string
-}
-
 export type JobStatus = "open" | "booked" | "closed"
 
 export interface JobPost {
@@ -346,8 +335,17 @@ export interface JobPost {
   paymentMethod: PaymentMethod
   customerName: string
   status: JobStatus
-  offers: Offer[]
   quantity: number
+  /**
+   * What the customer pays per person, fixed when posting: the first freelancer
+   * to take the request works for this. Null before the match-then-chat
+   * migration (supabase/migrations/20260926100000).
+   */
+  price: number | null
+  /** The booking made when a freelancer took it. */
+  bookingId: string | null
+  /** How many freelancers were told about it; null when the database does not say. */
+  notified: number | null
   mine: boolean
   createdAt: string
 }
