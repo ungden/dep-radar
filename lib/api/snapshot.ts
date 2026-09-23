@@ -24,7 +24,8 @@ import type {
   WorkStats,
 } from "@/lib/types"
 import { localDate, localTime } from "@/lib/utils"
-import type { AddressItem, CustomerReviewItem, PlatformSettings, TimeBlock } from "./types"
+import { orLegacy } from "./errors"
+import type { AddressItem, CustomerReviewItem, PlatformSettings, TimeBlock, VoucherItem } from "./types"
 
 /**
  * One server read per page load that the whole UI renders from.
@@ -74,6 +75,13 @@ export interface AppSnapshot {
   platform: PlatformSettings
   /** Account ids the signed-in person has blocked. */
   blockedAccounts: string[]
+  /** The signed-in person's 360dep vouchers, newest first, used and expired included. */
+  vouchers: VoucherItem[]
+  /**
+   * Where the signed-in account stands with Giới thiệu bạn bè. Null when
+   * signed out, or before the referral migration (so nothing is claimed).
+   */
+  referral: { referredBy: string | null; joinedAt: string } | null
 }
 
 export const emptyPlatform: PlatformSettings = {
@@ -85,6 +93,12 @@ export const emptyPlatform: PlatformSettings = {
   companyName: null,
   companyTaxId: null,
   companyAddress: null,
+  referralEnabled: false,
+  referralCustomerAmount: 0,
+  referralProAmount: 0,
+  referralMinTotal: 0,
+  referralMonthlyCap: 0,
+  voucherDays: 0,
 }
 
 export const emptySnapshot: AppSnapshot = {
@@ -111,6 +125,8 @@ export const emptySnapshot: AppSnapshot = {
   myTimeBlocks: [],
   platform: emptyPlatform,
   blockedAccounts: [],
+  vouchers: [],
+  referral: null,
 }
 
 /**
@@ -129,21 +145,14 @@ const PRO_BASE = `
   completed_jobs, response_minutes, created_at`
 const PRO_SELECT = `${PRO_BASE}, equipment`
 
-/**
- * The web can reach production before the 2026-09-23 migrations do (or be
- * rolled back after them). A select naming a column that is not there fails
- * whole -- which once blanked the feed -- so on "undefined column" (42703)
- * read again without the new columns: the new features stay empty, the rest
- * of the site keeps working.
+/*
+ * Reads go through orLegacy (./errors) where they name columns a migration
+ * added, so the site keeps working on a database that is behind the code.
+ * The generations, newest first: 1 = the 2026-09-25 connection rules (blind
+ * reviews, vouchers, referrals), 2 = the 2026-09-23 trades (delivery, usage,
+ * interests, equipment, clips). A query with one step drops only its own new
+ * columns.
  */
-async function orLegacy<T extends { error: { code?: string } | null }>(run: (legacy: boolean) => PromiseLike<T>): Promise<T> {
-  const first = await run(false)
-  if (first.error?.code === "42703") {
-    console.warn("snapshot: new columns missing, reading without them (migrations not applied?)")
-    return run(true)
-  }
-  return first
-}
 
 /** Tone used behind an avatar while its image loads. Stable per freelancer. */
 const TONES = ["#E9C9C6", "#EBD5C3", "#DCD3E8", "#CFDDD6", "#F0D8C0", "#D8D2C7", "#E4CBD6"]
@@ -245,13 +254,17 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
           )
           .order("sort_order"),
       ),
-      supabase
-        .from("reviews")
-        // No join: `bookings` is private, and a review has to be readable by
-        // anyone looking at the profile.
-        .select("booking_id, pro_id, author_name, service_label, rating, tags, body, photo_paths, reply, created_at")
-        .is("hidden_at", null)
-        .order("created_at", { ascending: false }),
+      orLegacy((legacy) =>
+        supabase
+          .from("reviews")
+          // No join: `bookings` is private, and a review has to be readable by
+          // anyone looking at the profile.
+          .select(
+            `booking_id, pro_id, author_name, service_label, rating, tags, body, photo_paths, reply, created_at${legacy ? "" : ", published_at"}`,
+          )
+          .is("hidden_at", null)
+          .order("created_at", { ascending: false }),
+      ),
       supabase.from("pro_service_prices").select("pro_id, template_id, variant_id, price"),
       supabase.from("pro_services").select("pro_id, template_id, active"),
       // Separate from the pros query: a failed embed would blank the whole feed.
@@ -271,12 +284,16 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
         `)
         .order("starts_at")
         .limit(300),
-      supabase
-        .from("platform_settings")
-        .select(
-          "topup_bank_bin, topup_account_no, topup_account_name, support_zalo, support_email, company_name, company_tax_id, company_address",
-        )
-        .maybeSingle(),
+      orLegacy((legacy) =>
+        supabase
+          .from("platform_settings")
+          .select(
+            `topup_bank_bin, topup_account_no, topup_account_name, support_zalo, support_email, company_name, company_tax_id, company_address${
+              legacy ? "" : ", referral_enabled, referral_customer_amount, referral_pro_amount, referral_min_total, referral_monthly_cap, voucher_days"
+            }`,
+          )
+          .maybeSingle(),
+      ),
     ])
 
   const modelOf = new Map(rowsOf("model profiles", modelsRes).map((row: Row) => [row.pro_id as string, row]))
@@ -305,7 +322,10 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     }
   })
 
-  const reviews: Review[] = rowsOf("reviews", reviewsRes).map((row: Row) => {
+  // The public list: a blind review is readable by its author (row level
+  // security), but it is not on the profile until it is published.
+  const publicReviews = rowsOf<Row>("reviews", reviewsRes).filter((row) => row.published_at !== null)
+  const reviews: Review[] = publicReviews.map((row: Row) => {
     return {
       id: row.booking_id,
       proId: slugOf.get(row.pro_id) ?? row.pro_id,
@@ -383,7 +403,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
   // Missing before its migration is applied: the pages then show no bank details,
   // which is what they showed before.
   if (platformRes.error) console.error("snapshot platform settings failed:", platformRes.error.message)
-  const settings = platformRes.data
+  const settings = platformRes.data as Row | null
   const platform: PlatformSettings = settings
     ? {
         topupBankBin: settings.topup_bank_bin,
@@ -394,6 +414,12 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
         companyName: settings.company_name,
         companyTaxId: settings.company_tax_id,
         companyAddress: settings.company_address,
+        referralEnabled: Boolean(settings.referral_enabled),
+        referralCustomerAmount: settings.referral_customer_amount ?? 0,
+        referralProAmount: settings.referral_pro_amount ?? 0,
+        referralMinTotal: settings.referral_min_total ?? 0,
+        referralMonthlyCap: settings.referral_monthly_cap ?? 0,
+        voucherDays: settings.voucher_days ?? 0,
       }
     : emptyPlatform
 
@@ -401,30 +427,49 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
   if (!me) return base
 
   // Signed in: their own bookings, requests, addresses and shortlist.
-  const [accountRes, bookingsRes, jobsRes, addressesRes, savedRes, followsRes, unreadRes, blocksRes, blockedRes] =
-    await Promise.all([
-    orLegacy((legacy) =>
-      supabase
-        .from("accounts")
-        .select(legacy ? "id, full_name, phone, active_role, is_admin" : "id, full_name, phone, active_role, is_admin, interests")
-        .eq("id", me)
-        .maybeSingle(),
+  const [
+    accountRes,
+    bookingsRes,
+    jobsRes,
+    addressesRes,
+    savedRes,
+    followsRes,
+    unreadRes,
+    blocksRes,
+    blockedRes,
+    vouchersRes,
+    disputesRes,
+  ] = await Promise.all([
+    orLegacy(
+      (legacy) =>
+        supabase
+          .from("accounts")
+          .select(
+            `id, full_name, phone, active_role, is_admin, created_at${legacy >= 2 ? "" : ", interests"}${legacy >= 1 ? "" : ", referred_by"}`,
+          )
+          .eq("id", me)
+          .maybeSingle(),
+      2,
     ),
-    orLegacy((legacy) =>
-      supabase
-        .from("bookings")
-        .select(`
-          id, customer_id, pro_id, template_id, variant_id, quantity, source, status,
-          starts_at, duration_min, at_home, city, district, address, address_note, note,
-          service_price, distance_km, travel_fee, urgent_fee, total, commission_rate, commission, payout,
-          payment_method, confirm_by, cancel_reason, cancelled_by, reschedule_to, reschedule_by, created_at,
-          ${legacy ? "" : "usage_scope, consent_repost, booking_group_id, delivery_due_at, delivered_at, delivery_url, delivery_note, delivery_accepted_at,"}
-          customer:accounts!bookings_customer_id_fkey (full_name, phone),
-          pro:pros!bookings_pro_id_fkey!inner (slug, display_name, avatar_path, accounts!pros_id_fkey (phone)),
-          reviews (booking_id)
-        `)
-        .or(`customer_id.eq.${me},pro_id.eq.${me}`)
-        .order("starts_at", { ascending: false }),
+    orLegacy(
+      (legacy) =>
+        supabase
+          .from("bookings")
+          .select(`
+            id, customer_id, pro_id, template_id, variant_id, quantity, source, status,
+            starts_at, duration_min, at_home, city, district, address, address_note, note,
+            service_price, distance_km, travel_fee, urgent_fee, total, commission_rate, commission, payout,
+            payment_method, confirm_by, cancel_reason, cancelled_by, cancelled_at, completed_at,
+            reschedule_to, reschedule_by, created_at,
+            ${legacy >= 2 ? "" : "usage_scope, consent_repost, booking_group_id, delivery_due_at, delivered_at, delivery_url, delivery_note, delivery_accepted_at,"}
+            ${legacy >= 1 ? "" : "discount, voucher_id,"}
+            customer:accounts!bookings_customer_id_fkey (full_name, phone),
+            pro:pros!bookings_pro_id_fkey!inner (slug, display_name, avatar_path, accounts!pros_id_fkey (phone)),
+            reviews (booking_id, rating, tags, body, photo_paths${legacy >= 1 ? "" : ", published_at"})
+          `)
+          .or(`customer_id.eq.${me},pro_id.eq.${me}`)
+          .order("starts_at", { ascending: false }),
+      2,
     ),
     supabase
       .from("jobs")
@@ -447,6 +492,16 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       .order("starts_at")
       .limit(200),
     supabase.from("user_blocks").select("blocked").eq("blocker", me),
+    // Row level security returns only the caller's own. Missing before the
+    // referral migration, which reads as none.
+    supabase
+      .from("vouchers")
+      .select("id, amount, min_total, expires_at, booking_id, used_at, note, created_at")
+      .eq("account_id", me)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    // The customer's own no-show disputes, so the form is not offered twice.
+    supabase.from("reports").select("booking_id").eq("reporter_id", me).eq("reason", "no_show_dispute"),
   ])
 
   // Loose on purpose: the select differs by whether the migrations are in.
@@ -461,8 +516,10 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       }
     : null
 
+  const disputed = new Set(rowsOf<Row>("disputes", disputesRes).map((row) => row.booking_id as string))
   const bookings: Booking[] = rowsOf("bookings", bookingsRes).map((row: Row) => {
     const template = getTemplate(row.template_id)
+    const review = first(row.reviews)
     const variant = getVariant(row.template_id, row.variant_id)
     const customer = first(row.customer)
     const proRow = first(row.pro)
@@ -503,7 +560,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       proName: proRow.display_name ?? "Chuyên viên",
       mine,
       source: row.source as Booking["source"],
-      reviewed: Array.isArray(row.reviews) ? row.reviews.length > 0 : Boolean(row.reviews),
+      reviewed: Boolean(review.booking_id),
       quantity: row.quantity ?? 1,
       confirmBy: row.confirm_by,
       cancelReason: row.cancel_reason ?? undefined,
@@ -524,6 +581,21 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
             acceptedAt: row.delivery_accepted_at ?? undefined,
           }
         : undefined,
+      completedAt: row.completed_at ?? undefined,
+      cancelledAt: row.cancelled_at ?? undefined,
+      discount: Number(row.discount ?? 0),
+      voucherId: row.voucher_id ?? undefined,
+      review: review.booking_id
+        ? {
+            rating: review.rating,
+            tags: review.tags ?? [],
+            text: review.body ?? "",
+            photos: review.photo_paths ?? [],
+            // Before blind reviews, a review was public as soon as it was written.
+            publishedAt: review.published_at === undefined ? (row.completed_at ?? row.created_at) : review.published_at,
+          }
+        : undefined,
+      disputed: disputed.has(row.id),
     }
   })
 
@@ -533,12 +605,16 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
   const customersOfMine = [...new Set(bookings.filter((b) => !b.mine).map((b) => b.customerId))]
   const reviewFilter = [`pro_id.eq.${me}`, `customer_id.eq.${me}`]
   if (customersOfMine.length) reviewFilter.push(`customer_id.in.(${customersOfMine.join(",")})`)
-  const customerReviewsRes = await supabase
-    .from("customer_reviews")
-    .select("booking_id, pro_id, customer_id, rating, body, created_at, pro:pros!customer_reviews_pro_id_fkey (slug, display_name)")
-    .or(reviewFilter.join(","))
-    .order("created_at", { ascending: false })
-    .limit(500)
+  const customerReviewsRes = await orLegacy((legacy) =>
+    supabase
+      .from("customer_reviews")
+      .select(
+        `booking_id, pro_id, customer_id, rating, body, created_at${legacy ? "" : ", published_at"}, pro:pros!customer_reviews_pro_id_fkey (slug, display_name)`,
+      )
+      .or(reviewFilter.join(","))
+      .order("created_at", { ascending: false })
+      .limit(500),
+  )
   const customerReviews: CustomerReviewItem[] = rowsOf("customer reviews", customerReviewsRes).map((row: Row) => {
     const pro = first(row.pro)
     return {
@@ -550,6 +626,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       body: row.body ?? "",
       createdAt: row.created_at,
       mine: row.pro_id === me,
+      publishedAt: row.published_at === undefined ? row.created_at : row.published_at,
     }
   })
 
@@ -624,5 +701,17 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       note: row.note ?? "",
     })),
     blockedAccounts: rowsOf("blocks", blockedRes).map((row) => row.blocked),
+    vouchers: rowsOf<Row>("vouchers", vouchersRes).map((row) => ({
+      id: row.id,
+      amount: row.amount,
+      minTotal: row.min_total ?? 0,
+      expiresAt: row.expires_at,
+      bookingId: row.booking_id ?? null,
+      usedAt: row.used_at ?? null,
+      note: row.note ?? "",
+      createdAt: row.created_at,
+    })),
+    // Without the referral columns there is nothing to claim against.
+    referral: account && "referred_by" in account ? { referredBy: account.referred_by ?? null, joinedAt: account.created_at } : null,
   }
 }

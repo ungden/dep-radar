@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
 import type { ActionResult } from "./actions"
-import type { NotificationItem, WalletSummary } from "./types"
+import type { NotificationItem, ReferralRewardItem, WalletSummary } from "./types"
 
 /**
  * The two ledgers a person keeps: what happened to them (notifications) and what
@@ -117,6 +117,39 @@ export async function earningsByMonth(): Promise<{ month: string; jobs: number; 
     months.set(month, row)
   }
   return [...months.values()]
+}
+
+// Giới thiệu bạn bè ------------------------------------------------------------
+
+/**
+ * The caller's referral code (made the first time it is asked for) and the
+ * rewards it has earned either way round. `code` is null signed out, and before
+ * the referral migration is in.
+ */
+export async function referralOverview(): Promise<{ code: string | null; rewards: ReferralRewardItem[] }> {
+  const supabase = await supabaseServer()
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return { code: null, rewards: [] }
+  const me = auth.user.id
+  const [{ data: code, error }, { data: rows, error: rowsError }] = await Promise.all([
+    supabase.rpc("my_referral_code"),
+    supabase
+      .from("referral_rewards")
+      .select("referee, referrer, kind, referrer_amount, referee_amount, created_at")
+      .or(`referrer.eq.${me},referee.eq.${me}`)
+      .order("created_at", { ascending: false })
+      .limit(100),
+  ])
+  if (error || rowsError) console.error("referralOverview failed:", error?.message ?? rowsError?.message)
+  return {
+    code: error ? null : (code ?? null),
+    rewards: (rows ?? []).map((r) => ({
+      kind: r.kind === "pro" ? "pro" : "customer",
+      iInvited: r.referrer === me,
+      amount: r.referrer === me ? r.referrer_amount : r.referee_amount,
+      createdAt: r.created_at,
+    })),
+  }
 }
 
 // Days off --------------------------------------------------------------------

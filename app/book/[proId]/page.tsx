@@ -25,6 +25,7 @@ import {
   formatDuration,
   formatPrice,
   formatResponseTime,
+  ratingText,
   localDate,
   localTime,
   parseISODate,
@@ -290,7 +291,7 @@ function BookingFlow({ proId }: { proId: string }) {
             {pro.name} <VerifiedMark pro={pro} />
           </p>
           <p className="text-[13px] text-ink-soft">
-            {pro.rating.count ? `★ ${pro.rating.average.toFixed(1)} (${pro.rating.count}) · ` : ""}
+            {pro.rating.count ? `${ratingText(pro.rating)} · ` : ""}
             {pro.stats.completedJobs > 0 ? `${pro.stats.completedJobs} lịch đã làm` : "Mới trên 360dep"}
           </p>
         </div>

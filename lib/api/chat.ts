@@ -3,15 +3,22 @@
 import { revalidatePath } from "next/cache"
 import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
 import type { ActionResult } from "./actions"
+import { GENERIC, messageFor, orLegacy } from "./errors"
 
 /**
  * Messaging between a customer and a freelancer. A thread needs a reason to
  * exist — a booking they share, or a question about a published profile — so the
  * inbox cannot become a channel for messaging any freelancer about anything.
+ *
+ * A booking's conversation also ends (threads.closes_at, see
+ * supabase/migrations/20260925100000_chat_lifecycle.sql): the history stays,
+ * the box to write in goes.
  */
 
 export interface ThreadSummary {
   id: string
+  /** Account id of the other person, for blocking. */
+  otherId: string
   otherName: string
   otherAvatar: string | null
   /** The freelancer's slug, for linking to their profile. */
@@ -39,20 +46,25 @@ export async function listThreads(): Promise<ThreadSummary[]> {
   if (!auth.user) return []
   const me = auth.user.id
 
-  const { data, error } = await supabase
-    .from("threads")
-    // The customer's name is on the thread, not joined from `accounts`: that
-    // row carries their phone number and a thread does not entitle anyone to it.
-    .select(`
-      id, customer_id, pro_id, booking_id, customer_name, last_message_at,
-      pro:pros!threads_pro_id_fkey (slug, display_name, avatar_path),
-      messages (id, sender_id, body, image_paths, read_at, created_at)
-    `)
-    .order("last_message_at", { ascending: false })
+  const [{ data, error }, { data: blocks }] = await Promise.all([
+    supabase
+      .from("threads")
+      // The customer's name is on the thread, not joined from `accounts`: that
+      // row carries their phone number and a thread does not entitle anyone to it.
+      .select(`
+        id, customer_id, pro_id, booking_id, customer_name, last_message_at,
+        pro:pros!threads_pro_id_fkey (slug, display_name, avatar_path),
+        messages (id, sender_id, body, image_paths, read_at, created_at)
+      `)
+      .order("last_message_at", { ascending: false }),
+    supabase.from("user_blocks").select("blocked").eq("blocker", me),
+  ])
   if (error) {
     console.error("listThreads failed:", error.message)
     return []
   }
+  // Someone you blocked is out of your inbox; unblocking brings them back.
+  const blocked = new Set((blocks ?? []).map((b) => b.blocked))
 
   return (data ?? [])
     .map((t) => {
@@ -64,6 +76,7 @@ export async function listThreads(): Promise<ThreadSummary[]> {
       const last = messages.at(-1)
       return {
         id: t.id,
+        otherId: iAmPro ? t.customer_id : t.pro_id,
         otherName: String((iAmPro ? t.customer_name : pro.display_name) ?? "Người dùng"),
         otherAvatar: (iAmPro ? null : pro.avatar_path) as string | null,
         proSlug: String(pro.slug ?? ""),
@@ -77,7 +90,7 @@ export async function listThreads(): Promise<ThreadSummary[]> {
       }
     })
     // A thread nobody has written in yet is noise in the inbox.
-    .filter((t) => t.lastMessage !== "")
+    .filter((t) => t.lastMessage !== "" && !blocked.has(t.otherId))
 }
 
 export async function listMessages(threadId: string): Promise<ChatMessage[]> {
@@ -108,29 +121,45 @@ export async function listMessages(threadId: string): Promise<ChatMessage[]> {
   }))
 }
 
-/** Who the caller is talking to, for the conversation header. */
-export async function threadHeader(
-  threadId: string,
-): Promise<{ name: string; proSlug: string; bookingId: string | null; iAmPro: boolean } | null> {
+export interface ThreadHeader {
+  name: string
+  /** Account id of the other person, for blocking and reporting. */
+  otherId: string
+  proSlug: string
+  bookingId: string | null
+  iAmPro: boolean
+  /** When the conversation stops taking messages; null while it is open for good. */
+  closesAt: string | null
+}
+
+/** Who the caller is talking to, and until when, for the conversation header. */
+export async function threadHeader(threadId: string): Promise<ThreadHeader | null> {
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return null
-  const { data } = await supabase
-    .from("threads")
-    .select(`
-      pro_id, booking_id, customer_name,
-      pro:pros!threads_pro_id_fkey (slug, display_name)
-    `)
-    .eq("id", threadId)
-    .maybeSingle()
+  // closes_at is computed by the database (a PostgREST computed field), and
+  // missing until the chat lifecycle migration is in: then it is open for good.
+  const { data } = await orLegacy((legacy) =>
+    supabase
+      .from("threads")
+      .select(`
+        customer_id, pro_id, booking_id, customer_name,${legacy ? "" : " closes_at,"}
+        pro:pros!threads_pro_id_fkey (slug, display_name)
+      `)
+      .eq("id", threadId)
+      .maybeSingle(),
+  )
   if (!data) return null
-  const iAmPro = data.pro_id === auth.user.id
-  const pro = one(data.pro)
+  const row = data as unknown as Record<string, unknown>
+  const iAmPro = row.pro_id === auth.user.id
+  const pro = one(row.pro)
   return {
-    name: String((iAmPro ? data.customer_name : pro.display_name) ?? "Người dùng"),
+    name: String((iAmPro ? row.customer_name : pro.display_name) ?? "Người dùng"),
+    otherId: String(iAmPro ? row.customer_id : row.pro_id),
     proSlug: String(pro.slug ?? ""),
-    bookingId: data.booking_id,
+    bookingId: (row.booking_id as string | null) ?? null,
     iAmPro,
+    closesAt: (row.closes_at as string | null | undefined) ?? null,
   }
 }
 
@@ -149,20 +178,30 @@ export async function openThread(proId: string, bookingId?: string | null): Prom
   return { ok: true, data: data as unknown as string }
 }
 
-export async function sendMessage(threadId: string, body: string, images: string[] = []): Promise<ActionResult> {
+/**
+ * Sends one message. `data` is true when the database hid contact details in
+ * it ("[đã ẩn]"), so the screen can say why. A refusal (the chat has ended,
+ * three questions without an answer, a block) comes back as the database's
+ * own sentence.
+ */
+export async function sendMessage(threadId: string, body: string, images: string[] = []): Promise<ActionResult<boolean>> {
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
   if (!body.trim() && images.length === 0) return { ok: false, error: "Nhập tin nhắn." }
-  const { error } = await supabase.rpc("send_message" as never, {
+  const { data, error } = await supabase.rpc("send_message", {
     p_thread: threadId,
     p_body: body.trim().slice(0, 2000),
     p_image_paths: images,
-  } as never)
-  if (error) return { ok: false, error: "Không gửi được tin nhắn." }
+  })
+  if (error) {
+    const message = messageFor(error)
+    return { ok: false, error: message === GENERIC ? "Không gửi được tin nhắn." : message }
+  }
   revalidatePath(`/tin-nhan/${threadId}`)
   revalidatePath("/tin-nhan")
-  return { ok: true, data: undefined }
+  // Before the lifecycle migration the function returned nothing: nothing hidden.
+  return { ok: true, data: data === true }
 }
 
 /**

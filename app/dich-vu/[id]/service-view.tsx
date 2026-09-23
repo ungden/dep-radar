@@ -12,7 +12,7 @@ import { distanceToCustomer, servicesOf, useApp } from "@/lib/store"
 import { excludes, placeLabel } from "@/lib/trade"
 import { rankScore } from "@/lib/trust"
 import type { Pro } from "@/lib/types"
-import { cn, formatDuration, formatPrice } from "@/lib/utils"
+import { cn, formatDuration, formatPrice, ratingText } from "@/lib/utils"
 
 /**
  * A service, for sale: what it is, what each option costs, and who near the
@@ -181,7 +181,7 @@ function ProOffer({ pro, templateId }: { pro: Pro; templateId: string }) {
               <VerifiedMark pro={pro} />
             </span>
             <span className="block truncate text-[13px] text-ink-soft">
-              {pro.rating.count ? `★ ${pro.rating.average.toFixed(1)} (${pro.rating.count}) · ` : ""}
+              {pro.rating.count ? `${ratingText(pro.rating)} · ` : ""}
               {whereLabel(state, pro)}
             </span>
           </span>

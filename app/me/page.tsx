@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Bell,
   CircleHelp,
+  Gift,
   Heart,
   ImagePlus,
   LogOut,
@@ -178,6 +179,7 @@ type MenuItem = { href: string; icon: React.ComponentType<{ className?: string }
 const commonItems: MenuItem[] = [
   { href: "/tin-nhan", icon: MessageSquare, label: "Tin nhắn" },
   { href: "/thong-bao", icon: Bell, label: "Thông báo" },
+  { href: "/gioi-thieu", icon: Gift, label: "Giới thiệu bạn bè", sub: "Mã giới thiệu, thưởng và voucher của bạn" },
   { href: "/me/cai-dat", icon: Settings, label: "Cài đặt tài khoản" },
   { href: "/tro-giup", icon: CircleHelp, label: "Trợ giúp & an toàn" },
   { href: "/chinh-sach", icon: ShieldCheck, label: "Chính sách phí, đặt lịch & huỷ" },

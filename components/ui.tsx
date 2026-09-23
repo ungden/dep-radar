@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { ChevronLeft, Star } from "lucide-react"
 import type { BookingStatus } from "@/lib/types"
 import { LOGO_GLYPH_PATH, LOGO_RADIUS } from "@/lib/design/brand"
+import { showsAverage } from "@/lib/connection"
 import { cn, initials } from "@/lib/utils"
 
 type ButtonVariant = "primary" | "outline" | "soft" | "ghost" | "danger"
@@ -128,7 +129,15 @@ export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
   return <div className={cn("rounded-[var(--radius-card)] border border-line bg-surface", className)} {...props} />
 }
 
+/** A freelancer's rating. With a count under three it says "Mới" rather than an average of one or two reviews. */
 export function Rating({ value, count, className }: { value: number; count?: number; className?: string }) {
+  if (count !== undefined && !showsAverage(count))
+    return (
+      <span className={cn("inline-flex items-center gap-1 text-[13px] text-ink-soft", className)}>
+        <span className="font-medium text-ink">Mới</span>
+        {count > 0 && <span className="text-muted">· {count} đánh giá</span>}
+      </span>
+    )
   return (
     <span className={cn("inline-flex items-center gap-1 text-[13px] text-ink-soft", className)}>
       <Star className="size-3.5 fill-ink text-ink" aria-hidden />
