@@ -16,10 +16,10 @@ import { CATEGORIES, getVertical, isVertical } from "@/lib/catalog"
 import { actions } from "@/lib/client-actions"
 import { rankFeed, type VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
-import { categoryRow, serviceOffers } from "@/lib/offers"
+import { categoryRow, serviceOffers, type ServiceOffer } from "@/lib/offers"
 import { distanceToCustomer, getPro, useApp } from "@/lib/store"
 import type { Booking, Category, CategoryId } from "@/lib/types"
-import { cn } from "@/lib/utils"
+import { cn, formatPrice } from "@/lib/utils"
 
 const DEMO_KEY = "dep360_demo_notice"
 /** Set once the visitor has answered "Bạn ở đâu?" (or picked a city some other way). */
@@ -93,47 +93,59 @@ function Explore() {
     ).slice(0, 8)
   }, [state, city, vertical, session, now])
 
+  // Wide screens have room for every category in one row; phones get the
+  // short row and "Xem thêm" (categoryRow).
+  const rowIds = new Set(tiles.row.map((c) => c.id))
+  const tileItems = (allCategories ? tiles.ordered : [...tiles.row, ...tiles.ordered.filter((c) => !rowIds.has(c.id))]).map((c) => ({
+    id: c.id,
+    label: c.short ?? c.label,
+    soon: !tiles.offered.has(c.id),
+    className: allCategories || rowIds.has(c.id) ? undefined : "hidden lg:flex",
+  }))
+
   return (
-    <div className="pt-1 md:pt-10">
+    <div className="pt-1 md:pt-6">
       <TopBar />
+      <DemoNotice />
 
-      <div className="md:max-w-2xl">
-        <h1 className="mt-1 text-[24px] font-bold leading-tight tracking-[-0.02em] md:mt-0 md:text-[40px] md:leading-[1.05] md:tracking-[-0.03em]">
-          Đặt dịch vụ, xem giá ngay.
-        </h1>
-        <p className="mt-3 hidden text-[17px] text-ink-soft md:block">
-          Làm đẹp, chụp ảnh, người mẫu gần bạn. Giá niêm yết, người làm nhận lịch trong app rồi hai bên nhắn tin với nhau.
-        </p>
-        <SearchBox className="mt-3 md:mt-6" large />
-      </div>
-
-      <CityChooser city={city} />
+      <section className="md:grid md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] md:items-center md:gap-10 lg:gap-14">
+        <div>
+          <h1 className="mt-1 text-[24px] font-bold leading-tight tracking-[-0.02em] md:mt-0 md:text-[44px] md:leading-[1.05] md:tracking-[-0.03em]">
+            Đặt dịch vụ, xem giá ngay.
+          </h1>
+          <p className="mt-3 hidden max-w-xl text-[17px] text-ink-soft md:block">
+            Làm đẹp, chụp ảnh, người mẫu gần bạn. Giá niêm yết, người làm nhận lịch trong app rồi hai bên nhắn tin với nhau.
+          </p>
+          <SearchBox className="mt-3 md:hidden" large />
+          <HeroSearch city={city} className="mt-7 hidden md:flex" />
+          <p className="mt-4 hidden text-[14px] text-muted md:block">
+            {offers.length > 0
+              ? `${offers.length} dịch vụ đang nhận lịch${city ? ` ở ${city}` : ""} · trả tiền trực tiếp cho người làm sau khi xong`
+              : "Chưa có dịch vụ nào ở khu vực này. Đăng yêu cầu để người làm quanh bạn nhận việc."}
+          </p>
+        </div>
+        <HeroPhotos offers={offers} className="hidden md:grid" />
+      </section>
 
       {/* Sticky under the mobile top bar, so the trade is always one tap away. */}
-      <div className="sticky top-0 z-30 -mx-4 mt-4 bg-canvas/95 px-4 py-2.5 backdrop-blur md:top-16 md:mx-0 md:mt-8 md:px-0">
+      <div className="sticky top-0 z-30 -mx-4 mt-4 bg-canvas/95 px-4 py-2.5 backdrop-blur md:top-16 md:mx-0 md:mt-10 md:px-0">
         <VerticalSwitch value={vertical} onChange={(v) => { setVertical(v); setCategory("all"); setAllCategories(false) }} />
       </div>
-
-      <DemoNotice />
 
       <Rebook />
 
       <section className="mt-5">
         {categories.length > 1 && (
           <CategoryTiles
-            className="mb-6"
-            items={(allCategories ? tiles.ordered : tiles.row).map((c) => ({
-              id: c.id,
-              label: c.short ?? c.label,
-              soon: !tiles.offered.has(c.id),
-            }))}
+            className="mb-6 md:mb-8"
+            items={tileItems}
             value={shownCategory}
             // Tapping the chosen category again goes back to everything.
             onChange={(id) => {
               setCategory(id === shownCategory ? "all" : (id as CategoryId))
               setAllCategories(false)
             }}
-            more={tiles.more ? { open: allCategories, onToggle: () => setAllCategories((v) => !v) } : undefined}
+            more={tiles.more ? { open: allCategories, onToggle: () => setAllCategories((v) => !v), className: allCategories ? undefined : "lg:hidden" } : undefined}
           />
         )}
 
@@ -199,57 +211,6 @@ function Explore() {
       {/* The footer is desktop-only; on a phone these are the links it would have given. */}
       <MobileLinks className="mt-10" />
     </div>
-  )
-}
-
-/**
- * First visit, no city chosen yet: ask once, lightly. Everything on the page
- * is filtered by the answer, so it is worth one tap -- but "Toàn quốc" is a
- * fine answer and the page works without one.
- */
-function CityChooser({ city }: { city: string | null }) {
-  const [answered, setAnswered] = React.useState(false)
-  const asked = React.useSyncExternalStore(
-    () => () => {},
-    () => {
-      try {
-        return localStorage.getItem(CITY_ASKED_KEY) === "1"
-      } catch {
-        return true
-      }
-    },
-    // The server cannot know; render nothing there rather than flash it.
-    () => true,
-  )
-  if (city || asked || answered) return null
-  const choose = (next: string | null) => {
-    setAnswered(true)
-    try {
-      localStorage.setItem(CITY_ASKED_KEY, "1")
-    } catch {}
-    void actions.setCity(next)
-  }
-  return (
-    <section aria-label="Chọn khu vực" className="mt-4 rounded-[var(--radius-lg)] bg-surface px-4 py-3 shadow-[var(--shadow-soft)] md:max-w-2xl">
-      <p className="text-[15px] font-semibold">
-        Bạn ở đâu? <span className="text-[13px] font-normal text-ink-soft">Để hiện giá của người làm gần bạn.</span>
-      </p>
-      <div className="mt-2.5 grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
-        {[...CITIES, null].map((c) => (
-          <button
-            key={c ?? "all"}
-            type="button"
-            onClick={() => choose(c)}
-            className={cn(
-              "relative inline-flex h-9 items-center justify-center whitespace-nowrap rounded-full px-1 text-[13px] sm:px-4 font-semibold transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
-              c ? "bg-accent-soft text-accent-dark hover:bg-subtle-strong" : "border border-line-strong bg-surface text-ink hover:border-accent",
-            )}
-          >
-            {c ?? "Toàn quốc"}
-          </button>
-        ))}
-      </div>
-    </section>
   )
 }
 
@@ -338,6 +299,110 @@ function TopBar() {
   )
 }
 
+/**
+ * The desktop search: where, then what, in one bar (as Airbnb and Booksy do),
+ * so the city is chosen where it matters instead of in a box of its own.
+ */
+function HeroSearch({ city, className }: { city: string | null; className?: string }) {
+  const router = useRouter()
+  const [q, setQ] = React.useState("")
+  return (
+    <form
+      role="search"
+      className={cn(
+        "h-16 items-center rounded-full border border-line-strong bg-surface pl-2 pr-2 shadow-[var(--shadow-soft)] focus-within:border-accent",
+        className,
+      )}
+      onSubmit={(e) => {
+        e.preventDefault()
+        router.push(`/search${q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ""}`)
+      }}
+    >
+      <label className="relative flex h-12 shrink-0 cursor-pointer items-center gap-2 rounded-full px-4 hover:bg-subtle">
+        <MapPin className="size-5 text-accent" aria-hidden />
+        <span className="flex flex-col leading-tight">
+          <span className="text-[12px] font-semibold text-muted">Khu vực</span>
+          <span className="flex items-center gap-1 text-[15px] font-semibold text-ink">
+            {city ?? "Toàn quốc"} <ChevronDown className="size-4 text-muted" aria-hidden />
+          </span>
+        </span>
+        <select
+          aria-label="Chọn khu vực"
+          value={city ?? ""}
+          onChange={(e) => {
+            try {
+              localStorage.setItem(CITY_ASKED_KEY, "1")
+            } catch {}
+            void actions.setCity(e.target.value || null)
+          }}
+          className="absolute inset-0 cursor-pointer opacity-0"
+        >
+          <option value="">Toàn quốc</option>
+          {CITIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </label>
+      <span aria-hidden className="mx-1 h-8 w-px bg-line" />
+      <label className="flex h-12 min-w-0 flex-1 items-center gap-3 px-3">
+        <Search className="size-5 shrink-0 text-ink" aria-hidden />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          type="search"
+          placeholder="Nail, makeup, chụp ảnh…"
+          aria-label="Tìm kiếm"
+          className="h-full min-w-0 flex-1 bg-transparent text-[16px] placeholder:text-muted focus:outline-none"
+        />
+      </label>
+      <button type="submit" className="inline-flex h-12 shrink-0 items-center rounded-full bg-accent px-7 text-[15px] font-semibold text-white hover:bg-accent-dark">
+        Tìm
+      </button>
+    </form>
+  )
+}
+
+/**
+ * Real work next to the headline on a wide screen: three services that are on
+ * sale here, each with its lowest price, so the first thing seen is what can
+ * be booked and for how much.
+ */
+function HeroPhotos({ offers, className }: { offers: ServiceOffer[]; className?: string }) {
+  const picks = offers.filter((o) => o.photo).slice(0, 3)
+  if (picks.length < 3) return null
+  return (
+    <div className={cn("h-[380px] grid-cols-2 grid-rows-2 gap-3", className)}>
+      {picks.map((o, i) => (
+        <Link
+          key={o.template.id}
+          href={`/dich-vu/${o.template.id}`}
+          className={cn(
+            "group relative overflow-hidden rounded-[var(--radius-xl)] bg-subtle",
+            i === 0 && "row-span-2",
+          )}
+        >
+          <Image
+            src={o.photo!}
+            alt={o.template.name}
+            fill
+            priority={i === 0}
+            sizes="(min-width: 1200px) 300px, 25vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+          <span className="absolute inset-x-3 bottom-3 rounded-2xl bg-surface/95 px-3 py-2 shadow-[var(--shadow-soft)] backdrop-blur">
+            <span className="block truncate text-[14px] font-semibold text-ink">{o.template.name}</span>
+            <span className="block text-[13px] text-ink-soft">
+              Từ <span className="font-semibold text-accent-dark">{formatPrice(o.fromPrice)}</span> · {o.pros.length} người nhận
+            </span>
+          </span>
+        </Link>
+      ))}
+    </div>
+  )
+}
+
 function SearchBox({ className, large }: { className?: string; large?: boolean }) {
   const router = useRouter()
   const [q, setQ] = React.useState("")
@@ -387,9 +452,10 @@ function DemoNotice() {
   const hidden = dismissed || stored
   if (hidden) return null
   return (
-    <p className="mt-3 flex items-center gap-2 rounded-full bg-warning-soft py-1.5 pl-3.5 pr-1 text-[13px] text-warning">
+    <p className="mb-3 flex items-center gap-2 rounded-full bg-warning-soft py-1 pl-3.5 pr-1 text-[13px] text-warning md:mb-8 md:w-fit md:max-w-full">
       <span className="flex-1">
-        Bản demo: nhiều hồ sơ là dữ liệu mẫu, thanh toán online chưa hoạt động.{" "}
+        <span className="md:hidden">Bản demo: hồ sơ là dữ liệu mẫu.</span>
+        <span className="hidden md:inline">Bản demo: nhiều hồ sơ là dữ liệu mẫu, thanh toán online chưa hoạt động.</span>{" "}
         <Link href="/chinh-sach" className="font-semibold underline underline-offset-2">
           Chi tiết
         </Link>
