@@ -2,7 +2,7 @@ import { CATEGORIES, getVertical, verticalOf } from "./catalog"
 import type { Category, CategoryId, ServiceTemplate, VerticalId } from "./types"
 
 /**
- * Words that depend on the trade. A makeup artist is "chuyên viên", someone
+ * Words that depend on the trade. A makeup artist is "người làm", someone
  * with a camera is "người chụp", a model is "mẫu"; a page that mixes them says
  * "người làm". Shared by web and native, so the two never disagree.
  */

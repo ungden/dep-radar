@@ -1,7 +1,7 @@
 import type { Category, CategoryId, ServiceTemplate, ServiceVariant, Vertical, VerticalId } from "./types"
 
 export const VERTICALS: Vertical[] = [
-  { id: "beauty", label: "Làm đẹp", person: "chuyên viên" },
+  { id: "beauty", label: "Làm đẹp", person: "người làm" },
   { id: "photo", label: "Chụp & quay", person: "người chụp" },
   { id: "model", label: "Người mẫu", person: "mẫu" },
 ]

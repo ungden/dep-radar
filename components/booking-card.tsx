@@ -56,7 +56,7 @@ export function BookingCard({ booking }: { booking: Booking }) {
               customer's -- even if a past job means the number is already known. */}
           {booking.status !== "pending" && booking.proPhone ? (
             <a href={`tel:${booking.proPhone.replace(/\s/g, "")}`} className={buttonClass("soft", "sm")}>
-              <Phone className="size-3.5" /> Gọi chuyên viên
+              <Phone className="size-3.5" /> Gọi {booking.proName}
             </a>
           ) : (
             <span className="flex items-center justify-center rounded-full bg-subtle px-3 text-center text-[13px] text-ink-soft">

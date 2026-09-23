@@ -32,7 +32,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
         >
           Tải lại
         </button>
-        {error.digest && <p style={{ fontSize: 12, color: "#7D6C6E" }}>Mã lỗi: {error.digest}</p>}
+        {error.digest && <p style={{ fontSize: 12, color: "#736366" }}>Mã lỗi: {error.digest}</p>}
       </body>
     </html>
   )

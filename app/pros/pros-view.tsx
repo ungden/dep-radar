@@ -21,7 +21,7 @@ type Sort = "match" | "rating" | "jobs"
 
 const TITLE: Record<VerticalFilter, string> = {
   all: "Người làm",
-  beauty: "Chuyên viên làm đẹp",
+  beauty: "Thợ làm đẹp",
   photo: "Người chụp & quay",
   model: "Người mẫu",
 }

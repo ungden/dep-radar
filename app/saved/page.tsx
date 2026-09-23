@@ -64,7 +64,7 @@ export default function SavedPage() {
         ) : (
           <Empty
             title="Bạn chưa theo dõi ai"
-            text="Theo dõi để thấy tác phẩm mới của họ ở trang chủ, đúng thứ tự đăng."
+            text="Theo dõi người làm bạn thích để tìm lại họ nhanh ở đây."
             action={
               session ? (
                 <ButtonLink href="/pros">Tìm người làm</ButtonLink>

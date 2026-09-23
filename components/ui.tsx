@@ -318,7 +318,7 @@ export function Field({
 }
 
 export const inputClass =
-  "w-full rounded-xl border border-line bg-surface px-3.5 py-3 text-[15px] text-ink placeholder:text-muted focus:border-accent focus:outline-none"
+  "w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-[15px] text-ink placeholder:text-muted focus:border-accent focus:outline-none"
 
 export function Toggle({
   checked,

@@ -15,7 +15,7 @@ import { cn, formatDateLong } from "@/lib/utils"
 export default function ReviewPage() {
   return (
     <div className="mx-auto max-w-2xl md:pt-4">
-      <PageHeader title="Đánh giá chuyên viên" back />
+      <PageHeader title="Đánh giá lịch hẹn" back />
       <RequireSession role="customer">
         <ReviewForm />
       </RequireSession>
@@ -44,7 +44,7 @@ function ReviewForm() {
 
   const pro = proView(state, booking.proId)
   if (!pro) {
-    return <EmptyState title="Chuyên viên không còn hoạt động" action={<ButtonLink href="/bookings">Về lịch hẹn</ButtonLink>} />
+    return <EmptyState title="Người làm không còn hoạt động" action={<ButtonLink href="/bookings">Về lịch hẹn</ButtonLink>} />
   }
   const valid = rating > 0 && text.trim().length >= 10
 
@@ -100,7 +100,7 @@ function ReviewForm() {
           rows={4}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Kết quả có giống mẫu không, chuyên viên có đến đúng giờ, dụng cụ có sạch không…"
+          placeholder="Kết quả có giống mẫu không, người làm có đến đúng giờ, dụng cụ có sạch không…"
           className={cn(inputClass, "resize-none")}
         />
       </label>
@@ -143,7 +143,7 @@ function ReviewForm() {
         </p>
       </div>
 
-      <p className="text-xs text-muted">Đánh giá được gắn nhãn “Đã đặt qua 360dep” và không thể bị chuyên viên xoá. Chuyên viên chỉ có thể phản hồi công khai.</p>
+      <p className="text-xs text-muted">Đánh giá được gắn nhãn “Đã đặt qua 360dep” và người làm không thể xoá, chỉ có thể phản hồi công khai.</p>
       {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
 
       <BottomBar>

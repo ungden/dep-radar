@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { CATEGORY_ICONS, ICON_SOFT_OPACITY, ICON_STROKE, type CategoryIconId } from "@/lib/design/category-icons"
 import { cn } from "@/lib/utils"
@@ -27,22 +29,50 @@ export function CategoryIcon({ id, className }: { id: CategoryIconId; className?
 }
 
 /**
- * Categories as a grid of icon tiles rather than a row of text to swipe:
- * everything is visible at once and each choice is a picture.
+ * Categories as icon tiles rather than a row of text: each choice is a picture.
+ *
+ * On a phone they are one scrolling row of 52px tiles with one-line labels, so
+ * the list is one short band and the first price shows sooner; from `sm` up
+ * they become a grid. `row` keeps the single row at every width (search, once
+ * there is a query and the results matter more than the categories).
  */
 export function CategoryTiles({
   items,
   value,
   onChange,
+  row = false,
   className,
 }: {
   items: { id: CategoryIconId; label: string }[]
   value: CategoryIconId
   onChange: (id: CategoryIconId) => void
+  row?: boolean
   className?: string
 }) {
+  const ref = React.useRef<HTMLDivElement>(null)
+  // Keep the chosen one in view in the scrolling row, without moving the page.
+  React.useEffect(() => {
+    const el = ref.current
+    const chosen = el?.querySelector<HTMLElement>('[aria-checked="true"]')
+    if (!el || !chosen || el.scrollWidth <= el.clientWidth) return
+    const left = chosen.offsetLeft - el.offsetLeft
+    if (left < el.scrollLeft || left + chosen.offsetWidth > el.scrollLeft + el.clientWidth) {
+      el.scrollTo({ left: Math.max(0, left - 16) })
+    }
+  }, [value])
   return (
-    <div role="radiogroup" aria-label="Danh mục" className={cn("grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-6 lg:flex lg:flex-wrap lg:gap-x-5", className)}>
+    <div
+      ref={ref}
+      role="radiogroup"
+      aria-label="Danh mục"
+      className={cn(
+        "no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4",
+        row
+          ? "md:mx-0 md:px-0"
+          : "sm:mx-0 sm:grid sm:grid-cols-6 sm:gap-x-2 sm:gap-y-4 sm:overflow-visible sm:px-0 lg:flex lg:flex-wrap lg:gap-x-5",
+        className,
+      )}
+    >
       {items.map((it) => {
         const active = value === it.id
         return (
@@ -52,17 +82,26 @@ export function CategoryTiles({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(it.id)}
-            className="group flex flex-col items-center gap-1.5 text-center lg:w-[84px]"
+            className={cn("group flex min-w-[56px] shrink-0 flex-col items-center gap-1.5 text-center", !row && "lg:w-[84px]")}
           >
             <span
               className={cn(
-                "flex size-[60px] items-center justify-center rounded-[20px] transition-colors",
+                "flex size-[52px] items-center justify-center rounded-[18px] transition-colors",
+                !row && "sm:size-[60px] sm:rounded-[20px]",
                 active ? "bg-accent text-white shadow-[var(--shadow-raised)]" : "bg-accent-soft text-accent group-hover:bg-subtle-strong",
               )}
             >
-              <CategoryIcon id={it.id} className="size-7" />
+              <CategoryIcon id={it.id} className={cn("size-6", !row && "sm:size-7")} />
             </span>
-            <span className={cn("text-[12.5px] leading-tight", active ? "font-semibold text-accent-dark" : "font-medium text-ink")}>{it.label}</span>
+            <span
+              className={cn(
+                "whitespace-nowrap text-[12.5px] leading-tight",
+                !row && "sm:whitespace-normal",
+                active ? "font-semibold text-accent-dark" : "font-medium text-ink",
+              )}
+            >
+              {it.label}
+            </span>
           </button>
         )
       })}
