@@ -3,6 +3,7 @@ import Constants from "expo-constants"
 import * as Notifications from "expo-notifications"
 import * as SecureStore from "expo-secure-store"
 import { Platform } from "react-native"
+import { isThreadOpen } from "./chat"
 import { openLink } from "./routes"
 import { rpcOptional } from "./supabase"
 
@@ -22,7 +23,13 @@ import { rpcOptional } from "./supabase"
  * (the owner's Expo account). Without it nothing is registered.
  */
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
+  handleNotification: async (notification) => {
+    // A new message in the conversation already on screen: it is right there.
+    const link = (notification.request.content.data as { link?: unknown } | undefined)?.link
+    const thread = typeof link === "string" ? link.match(/\/tin-nhan\/([0-9a-f-]{36})$/i)?.[1] : undefined
+    const quiet = Boolean(thread && isThreadOpen(thread))
+    return { shouldShowBanner: !quiet, shouldShowList: !quiet, shouldPlaySound: !quiet, shouldSetBadge: false }
+  },
 })
 
 const SENT_KEY = "dep360_push_sent"

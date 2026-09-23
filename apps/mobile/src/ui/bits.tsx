@@ -4,7 +4,7 @@ import { Text, View, type StyleProp, type ViewStyle } from "react-native"
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated"
 import { initials, formatRating } from "@/data/format"
 import Svg, { Path, Rect } from "react-native-svg"
-import { LOGO_GLYPH_PATH, LOGO_RADIUS } from "@/shared"
+import { LOGO_GLYPH_PATH, LOGO_RADIUS, showsAverage } from "@/shared"
 import { aspect, colors, radius, wordmarkFont } from "@/theme"
 import { Button } from "./button"
 import { Icon } from "./icon"
@@ -95,9 +95,18 @@ export function VerifiedMark({ size = 15 }: { size?: number }) {
   return <Icon name="verified" size={size} color={colors.ink} />
 }
 
-/** "★ 4,9 (23)", or "Mới" when there is no review yet: no invented rating. */
+/**
+ * "★ 4,9 (23)", or "Mới" below MIN_REVIEWS_FOR_AVERAGE reviews: one or two
+ * reviews make an average that says more about luck than about the work.
+ */
 export function Rating({ average, count, showCount = true }: { average: number; count: number; showCount?: boolean }) {
-  if (count <= 0) return <Txt v="meta" color={colors.muted}>Chưa có đánh giá</Txt>
+  if (!showsAverage(count))
+    return (
+      <Txt v="meta" w={600} color={colors.inkSoft}>
+        Mới
+        {showCount && count > 0 ? <Txt v="meta" color={colors.muted}> · {count} đánh giá</Txt> : null}
+      </Txt>
+    )
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
       <Icon name="star" size={13} color={colors.ink} />

@@ -60,6 +60,7 @@ const ICONS = {
   megaphone: { ios: "megaphone", android: "campaign" },
   wifiOff: { ios: "wifi.slash", android: "wifi_off" },
   starEmpty: { ios: "star", android: "star_outline" },
+  gift: { ios: "gift", android: "redeem" },
 } as const
 
 export type IconName = keyof typeof ICONS
