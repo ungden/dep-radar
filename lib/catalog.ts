@@ -9,7 +9,7 @@ export const VERTICALS: Vertical[] = [
 export const CATEGORIES: Category[] = [
   { id: "nail", label: "Nail", vertical: "beauty" },
   { id: "makeup", label: "Makeup", vertical: "beauty" },
-  { id: "skincare", label: "Chăm sóc da", vertical: "beauty" },
+  { id: "skincare", label: "Chăm sóc da", vertical: "beauty", short: "Skincare" },
   { id: "hair", label: "Tóc", vertical: "beauty" },
   { id: "lash-brow", label: "Mi & mày", vertical: "beauty" },
   { id: "massage", label: "Massage", vertical: "beauty" },

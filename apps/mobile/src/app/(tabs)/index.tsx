@@ -1,6 +1,5 @@
 import * as React from "react"
 import { router } from "expo-router"
-import * as WebBrowser from "expo-web-browser"
 import {
   ScrollView,
   View,
@@ -21,7 +20,6 @@ import {
   type VerticalFilter,
 } from "@/shared"
 import { formatDuration, formatPrice } from "@/data/format"
-import { webLink } from "@/data/links"
 import type { AppWork } from "@/data/public"
 import { PostCard, PostCardSkeleton } from "@/components/cards"
 import { TextTabs } from "@/components/switches"
@@ -77,7 +75,9 @@ export default function Explore() {
     () => (app.data ? serviceOffers({ pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical }) : []),
     [app.data, browse, app.city, vertical],
   )
-  const categories = CATEGORIES.filter((c) => offers.some((o) => o.template.category === c.id))
+  // Every category of the trade is shown; ones nobody offers here yet are "Sắp có" (as on the web).
+  const categories = CATEGORIES.filter((c) => vertical === "all" || c.vertical === vertical)
+  const offered = new Set(offers.map((o) => o.template.category))
   const shownCategory = categories.some((c) => c.id === category) ? category : "all"
   const shown = offers.filter((o) => shownCategory === "all" || o.template.category === shownCategory)
   const visible = expanded || shownCategory !== "all" ? shown : shown.slice(0, SERVICES_FIRST)
@@ -146,7 +146,13 @@ export default function Explore() {
   } else if (app.dataError) {
     services = <ErrorNote text={app.dataError} onRetry={() => void app.refresh()} />
   } else if (!shown.length) {
-    services = <EmptySupply vertical={vertical} city={app.city} onAllCities={() => app.setCity(null)} />
+    services = (
+      <EmptySupply
+        city={app.city}
+        label={CATEGORIES.find((c) => c.id === shownCategory)?.label}
+        onAllCities={() => app.setCity(null)}
+      />
+    )
   } else {
     services = (
       <View style={{ gap: 20 }}>
@@ -209,7 +215,10 @@ export default function Explore() {
           {categories.length > 1 ? (
             <View style={{ paddingHorizontal: gutter - 4 }}>
               <CategoryTiles
-                items={[{ id: "all", label: "Tất cả" }, ...categories.map((c) => ({ id: c.id, label: c.label }))]}
+                items={[
+                  { id: "all", label: "Tất cả" },
+                  ...categories.map((c) => ({ id: c.id, label: c.short ?? c.label, soon: !offered.has(c.id) })),
+                ]}
                 value={shownCategory}
                 onChange={(id) => setCategory(id as CategoryId | "all")}
               />
@@ -359,27 +368,27 @@ function ServiceCardSkeleton({ width }: { width: number }) {
   )
 }
 
-/** Nobody here offers anything in this trade: say so, and offer the one useful next step. */
-function EmptySupply({ vertical, city, onAllCities }: { vertical: VerticalFilter; city: string | null; onAllCities: () => void }) {
-  // The section title above already names the trade.
-  const title = `Chưa có ai nhận lịch${city ? ` ở ${city}` : ""}`
-  if (vertical === "photo" || vertical === "model") {
-    return (
+/**
+ * Nobody here offers this yet. The customer is the one reading, so the next
+ * step is a request (people who do it nearby will see it), not "open a profile".
+ */
+function EmptySupply({ city, label, onAllCities }: { city: string | null; label?: string; onAllCities: () => void }) {
+  const title = `${label ? `${label}: c` : "C"}hưa có ai nhận lịch${city ? ` ở ${city}` : ""}`
+  return (
+    <View style={{ gap: 12 }}>
       <EmptyState
         title={title}
-        text={
-          vertical === "photo"
-            ? "Bạn chụp ảnh bằng điện thoại hoặc quay clip? Mở hồ sơ để là những người đầu tiên nhận khách ở đây."
-            : "Bạn làm mẫu ảnh, mẫu livestream? Xác minh danh tính rồi mở hồ sơ để nhận việc an toàn."
-        }
-        action="Mở hồ sơ trên web"
-        onAction={() => void WebBrowser.openBrowserAsync(webLink("/studio/onboarding"))}
+        text="Đăng yêu cầu: khi có người nhận việc này quanh bạn, họ thấy yêu cầu và gửi báo giá. Không mất phí."
+        action="Đăng yêu cầu"
+        onAction={openRequestForm}
       />
-    )
-  }
-  return city ? (
-    <EmptyState title={title} text="Có thể ở thành phố khác đã có người nhận. Hoặc đăng yêu cầu để người làm gửi báo giá." action="Xem cả nước" onAction={onAllCities} />
-  ) : (
-    <EmptyState title={title} text="Đăng yêu cầu để người làm gần bạn gửi báo giá, hoặc quay lại sau." action="Đăng yêu cầu" onAction={openRequestForm} />
+      {city ? (
+        <Press onPress={onAllCities} accessibilityRole="button" style={{ alignSelf: "center", paddingVertical: 8 }}>
+          <Txt w={600} color={colors.accentDark}>
+            Xem cả nước
+          </Txt>
+        </Press>
+      ) : null}
+    </View>
   )
 }

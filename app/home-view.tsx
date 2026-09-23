@@ -18,7 +18,7 @@ import { rankFeed, type VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
 import { serviceOffers } from "@/lib/offers"
 import { distanceToCustomer, getPro, useApp } from "@/lib/store"
-import type { Booking, CategoryId } from "@/lib/types"
+import type { Booking, Category, CategoryId } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const DEMO_KEY = "dep360_demo_notice"
@@ -63,8 +63,12 @@ function Explore() {
     () => (city ? serviceOffers({ pros: state.pros, proServices: state.proServices, works: [], city: null, vertical }).length : 0),
     [state.pros, state.proServices, city, vertical],
   )
-  const categories = CATEGORIES.filter((c) => offers.some((o) => o.template.category === c.id))
+  // Every category of the trade is shown, so people see all that 360dep does;
+  // the ones nobody offers here yet are marked "Sắp có" and lead to a request.
+  const categories = CATEGORIES.filter((c) => vertical === "all" || c.vertical === vertical)
+  const offered = new Set(offers.map((o) => o.template.category))
   const shownCategory = categories.some((c) => c.id === category) ? category : "all"
+  const shownCategoryInfo = CATEGORIES.find((c) => c.id === shownCategory)
   const shown = offers.filter((o) => shownCategory === "all" || o.template.category === shownCategory)
   // The most offered first; the rest one tap away, so the first screen stays short.
   const [expanded, setExpanded] = React.useState(false)
@@ -125,14 +129,17 @@ function Explore() {
         {categories.length > 1 && (
           <CategoryTiles
             className="mb-7"
-            items={[{ id: "all", label: "Tất cả" }, ...categories.map((c) => ({ id: c.id, label: c.short ?? c.label }))]}
+            items={[
+              { id: "all", label: "Tất cả" },
+              ...categories.map((c) => ({ id: c.id, label: c.short ?? c.label, soon: !offered.has(c.id) })),
+            ]}
             value={shownCategory}
             onChange={(id) => setCategory(id as CategoryId | "all")}
           />
         )}
 
         {shown.length === 0 ? (
-          <EmptySupply vertical={vertical} city={city} elsewhere={elsewhere} />
+          <EmptySupply vertical={vertical} city={city} elsewhere={elsewhere} category={shownCategoryInfo} />
         ) : (
           <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:gap-x-5 lg:grid-cols-4">
             {visible.map((o, i) => (
@@ -391,8 +398,18 @@ function DemoNotice() {
  * Nobody offers this here. What a customer can do comes first -- ask, or look
  * further afield -- and the invitation to providers is a small line under it.
  */
-function EmptySupply({ vertical, city, elsewhere }: { vertical: VerticalFilter; city: string | null; elsewhere: number }) {
-  const label = vertical === "all" ? null : getVertical(vertical).label
+function EmptySupply({
+  vertical,
+  city,
+  elsewhere,
+  category,
+}: {
+  vertical: VerticalFilter
+  city: string | null
+  elsewhere: number
+  category?: Category
+}) {
+  const label = category ? category.label : vertical === "all" ? null : getVertical(vertical).label
   const where = city ? ` ở ${city}` : ""
   return (
     <div className="mt-5 rounded-[var(--radius-lg)] border border-dashed border-line-strong px-6 py-10 text-center">
@@ -403,7 +420,15 @@ function EmptySupply({ vertical, city, elsewhere }: { vertical: VerticalFilter; 
           : "Đăng yêu cầu: khi có người nhận việc này quanh bạn, họ thấy yêu cầu và gửi báo giá. Không mất phí."}
       </p>
       <div className="mt-5 flex flex-wrap justify-center gap-2">
-        <ButtonLink href={vertical === "all" ? "/requests/new" : `/requests/new?category=${CATEGORIES.find((c) => c.vertical === vertical)?.id}`}>
+        <ButtonLink
+          href={
+            category
+              ? `/requests/new?category=${category.id}`
+              : vertical === "all"
+                ? "/requests/new"
+                : `/requests/new?category=${CATEGORIES.find((c) => c.vertical === vertical)?.id}`
+          }
+        >
           Đăng yêu cầu
         </ButtonLink>
         {elsewhere > 0 && (
