@@ -409,8 +409,11 @@ update public.pros set pay_code = public.new_pay_code() where pay_code is null;
 alter table public.pros alter column pay_code set default public.new_pay_code();
 alter table public.pros alter column pay_code set not null;
 
--- One bank transaction is credited once.
-create unique index wallet_entries_topup_ref_key on public.wallet_entries (ref) where kind = 'topup' and ref is not null;
+-- One bank transaction is credited once. Only references written by the
+-- functions below ("sepay:<id>" from the webhook, "staff:<ref>" by hand) are
+-- held to it; older free-text references were never unique.
+create unique index wallet_entries_topup_ref_key on public.wallet_entries (ref)
+  where kind = 'topup' and ref ~ '^(sepay|staff):';
 
 create function public.credit_topup(p_pro uuid, p_amount int, p_ref text, p_note text) returns boolean
 language plpgsql security definer set search_path = '' as $$
@@ -438,7 +441,9 @@ begin
   if not exists (select 1 from public.pros where id = p_pro) then
     raise exception 'Không tìm thấy người làm.' using errcode = 'no_data_found';
   end if;
-  perform public.credit_topup(p_pro, p_amount, p_ref, 'Nạp ví (nhân viên ghi nhận)');
+  perform public.credit_topup(p_pro, p_amount,
+    case when trim(coalesce(p_ref, '')) = '' then null else 'staff:' || trim(p_ref) end,
+    'Nạp ví (nhân viên ghi nhận)');
 end $$;
 
 -- The bank's webhook (app/api/payments/sepay), with the server's key only.
