@@ -41,36 +41,19 @@ export async function fileReport(
   return { ok: true, data: undefined }
 }
 
-// TODO(db): the argument name of block_user / unblock_user is not merged yet.
-// Try the likely names in turn; PostgREST answers "no such function" for a
-// wrong one, which costs nothing. Keep the first entry in sync with the migration.
-const ARG_NAMES = ["p_target", "p_account", "p_user", "p_blocked"]
-
-async function callWithTarget(fn: string, target: string): Promise<OptionalResult> {
-  let last: OptionalResult = { ok: false, missing: true, error: "Tính năng này sắp có." }
-  for (const name of ARG_NAMES) {
-    last = await rpcOptional(fn, { [name]: target })
-    if (last.ok || !last.missing) return last
-  }
-  return last
+/** block_user(p_account uuid) / unblock_user(p_account uuid), see 20260924100900_user_blocks.sql. */
+function callWithTarget(fn: string, target: string): Promise<OptionalResult> {
+  return rpcOptional(fn, { p_account: target })
 }
 
 export const blockUser = (target: string) => callWithTarget("block_user", target)
 export const unblockUser = (target: string) => callWithTarget("unblock_user", target)
 
-/** Who the caller has blocked, as far as the server knows. Empty until user_blocks exists. */
+/** Who the caller has blocked (user_blocks: blocker, blocked; readable by the blocker). */
 export async function loadServerBlocks(uid: string): Promise<string[]> {
-  const { data, error } = await supabase.from("user_blocks").select("*").limit(500)
+  const { data, error } = await supabase.from("user_blocks").select("blocked").eq("blocker", uid).limit(500)
   if (error || !data) return []
-  const ids = new Set<string>()
-  for (const row of data as Row[]) {
-    const mine = Object.values(row).includes(uid)
-    if (!mine) continue
-    for (const key of ["blocked_id", "target_id", "blocked_account_id", "blocked"]) {
-      if (typeof row[key] === "string" && row[key] !== uid) ids.add(row[key])
-    }
-  }
-  return [...ids]
+  return (data as { blocked: string }[]).map((r) => r.blocked)
 }
 
 const key = (uid: string) => `dep360_blocked_${uid}`

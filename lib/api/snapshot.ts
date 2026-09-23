@@ -24,7 +24,7 @@ import type {
   WorkStats,
 } from "@/lib/types"
 import { localDate, localTime } from "@/lib/utils"
-import type { AddressItem, CustomerReviewItem } from "./types"
+import type { AddressItem, CustomerReviewItem, PlatformSettings, TimeBlock } from "./types"
 
 /**
  * One server read per page load that the whole UI renders from.
@@ -68,6 +68,23 @@ export interface AppSnapshot {
    * ones about themselves. Nobody else, ever.
    */
   customerReviews: CustomerReviewItem[]
+  /** The signed-in freelancer's own busy time from now on, soonest first. */
+  myTimeBlocks: TimeBlock[]
+  /** Wallet top-up and support details; every field null until the owner fills them in. */
+  platform: PlatformSettings
+  /** Account ids the signed-in person has blocked. */
+  blockedAccounts: string[]
+}
+
+export const emptyPlatform: PlatformSettings = {
+  topupBankBin: null,
+  topupAccountNo: null,
+  topupAccountName: null,
+  supportZalo: null,
+  supportEmail: null,
+  companyName: null,
+  companyTaxId: null,
+  companyAddress: null,
 }
 
 export const emptySnapshot: AppSnapshot = {
@@ -91,6 +108,9 @@ export const emptySnapshot: AppSnapshot = {
   castings: [],
   interests: [],
   customerReviews: [],
+  myTimeBlocks: [],
+  platform: emptyPlatform,
+  blockedAccounts: [],
 }
 
 /**
@@ -205,7 +225,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
   const me = auth.user?.id ?? null
   const city = (await cookies()).get(CITY_COOKIE)?.value ?? null
 
-  const [prosRes, ownProRes, worksRes, reviewsRes, pricesRes, listingsRes, modelsRes, statsRes, castingsRes] =
+  const [prosRes, ownProRes, worksRes, reviewsRes, pricesRes, listingsRes, modelsRes, statsRes, castingsRes, platformRes] =
     await Promise.all([
       orLegacy((legacy) =>
         supabase.from("pros").select(legacy ? PRO_BASE : PRO_SELECT).eq("published", true).is("suspended_at", null),
@@ -251,6 +271,12 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
         `)
         .order("starts_at")
         .limit(300),
+      supabase
+        .from("platform_settings")
+        .select(
+          "topup_bank_bin, topup_account_no, topup_account_name, support_zalo, support_email, company_name, company_tax_id, company_address",
+        )
+        .maybeSingle(),
     ])
 
   const modelOf = new Map(rowsOf("model profiles", modelsRes).map((row: Row) => [row.pro_id as string, row]))
@@ -354,11 +380,29 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     }
   })
 
-  const base: AppSnapshot = { ...emptySnapshot, city, pros, works, reviews, proServices, workStats, castings }
+  // Missing before its migration is applied: the pages then show no bank details,
+  // which is what they showed before.
+  if (platformRes.error) console.error("snapshot platform settings failed:", platformRes.error.message)
+  const settings = platformRes.data
+  const platform: PlatformSettings = settings
+    ? {
+        topupBankBin: settings.topup_bank_bin,
+        topupAccountNo: settings.topup_account_no,
+        topupAccountName: settings.topup_account_name,
+        supportZalo: settings.support_zalo,
+        supportEmail: settings.support_email,
+        companyName: settings.company_name,
+        companyTaxId: settings.company_tax_id,
+        companyAddress: settings.company_address,
+      }
+    : emptyPlatform
+
+  const base: AppSnapshot = { ...emptySnapshot, city, pros, works, reviews, proServices, workStats, castings, platform }
   if (!me) return base
 
   // Signed in: their own bookings, requests, addresses and shortlist.
-  const [accountRes, bookingsRes, jobsRes, addressesRes, savedRes, followsRes, unreadRes] = await Promise.all([
+  const [accountRes, bookingsRes, jobsRes, addressesRes, savedRes, followsRes, unreadRes, blocksRes, blockedRes] =
+    await Promise.all([
     orLegacy((legacy) =>
       supabase
         .from("accounts")
@@ -394,6 +438,15 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     supabase.from("saved_works").select("work_id").eq("account_id", me),
     supabase.from("follows").select("pro_id").eq("account_id", me),
     supabase.from("notifications").select("id", { count: "exact", head: true }).eq("account_id", me).is("read_at", null),
+    // Row level security returns only the caller's own; empty for a customer.
+    supabase
+      .from("time_blocks")
+      .select("id, starts_at, ends_at, note")
+      .eq("pro_id", me)
+      .gt("ends_at", new Date().toISOString())
+      .order("starts_at")
+      .limit(200),
+    supabase.from("user_blocks").select("blocked").eq("blocker", me),
   ])
 
   // Loose on purpose: the select differs by whether the migrations are in.
@@ -563,5 +616,13 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     unreadNotifications: unreadRes.count ?? 0,
     interests: ((account as Row | null)?.interests ?? []) as CategoryId[],
     customerReviews,
+    myTimeBlocks: rowsOf("time blocks", blocksRes).map((row) => ({
+      id: row.id,
+      date: localDate(row.starts_at),
+      from: localTime(row.starts_at),
+      to: localTime(row.ends_at),
+      note: row.note ?? "",
+    })),
+    blockedAccounts: rowsOf("blocks", blockedRes).map((row) => row.blocked),
   }
 }

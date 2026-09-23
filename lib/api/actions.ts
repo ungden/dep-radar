@@ -59,6 +59,31 @@ async function proIdFor(slugOrId: string): Promise<string | null> {
   return data?.id ?? null
 }
 
+/**
+ * Where to measure the trip from when asking which times are free: the chosen
+ * address, or else the freelancer's own location.
+ */
+async function slotOrigin(pro: string, atHome: boolean, addressId?: string | null) {
+  const supabase = await supabaseServer()
+  let lat: number | null = null
+  let lng: number | null = null
+  if (atHome && addressId) {
+    const { data } = await supabase.from("addresses").select("lat, lng").eq("id", addressId).maybeSingle()
+    lat = data?.lat ?? null
+    lng = data?.lng ?? null
+  }
+  if (lat == null || lng == null) {
+    // No address chosen yet: answer the question actually being asked -- which
+    // hours are free -- from the freelancer's own location. Whether they will
+    // travel to a particular address is checked when one is picked, and again
+    // by create_booking. Measuring from nowhere would show a free day as full.
+    const { data } = await supabase.from("pros").select("lat, lng").eq("id", pro).maybeSingle()
+    lat = data?.lat ?? null
+    lng = data?.lng ?? null
+  }
+  return { lat, lng }
+}
+
 /** Bookable start times for one day, generated from the freelancer's own hours. */
 export async function fetchSlots(input: {
   proId: string
@@ -72,23 +97,7 @@ export async function fetchSlots(input: {
   const supabase = await supabaseServer()
   const pro = await proIdFor(input.proId)
   if (!pro) return []
-
-  let lat: number | null = null
-  let lng: number | null = null
-  if (input.atHome && input.addressId) {
-    const { data } = await supabase.from("addresses").select("lat, lng").eq("id", input.addressId).maybeSingle()
-    lat = data?.lat ?? null
-    lng = data?.lng ?? null
-  }
-  if (lat == null || lng == null) {
-    // No address chosen yet: answer the question actually being asked -- which
-    // hours are free -- from the freelancer's own location. Whether they will
-    // travel to a particular address is checked when one is picked, and again
-    // by create_booking. Measuring from nowhere would show a free day as full.
-    const { data } = await supabase.from("pros").select("lat, lng").eq("id", pro).maybeSingle()
-    lat = data?.lat ?? null
-    lng = data?.lng ?? null
-  }
+  const { lat, lng } = await slotOrigin(pro, input.atHome, input.addressId)
   const { data, error } = await supabase.rpc("free_slots", {
     p_pro: pro,
     p_template: input.templateId,
@@ -104,6 +113,43 @@ export async function fetchSlots(input: {
     return []
   }
   return ((data ?? []) as unknown as string[]).map((startsAt) => ({ startsAt, time: localTime(startsAt) }))
+}
+
+/**
+ * Which days, from `from` (yyyy-mm-dd, Vietnam time) for `days` days (at most
+ * 21), have at least one bookable start time. Same rules as fetchSlots, so a day
+ * listed here is a day that has slots when it is opened.
+ */
+export async function freeDays(input: {
+  proId: string
+  templateId: string
+  variantId: string
+  quantity?: number
+  from: string
+  days?: number
+  atHome: boolean
+  addressId?: string | null
+}): Promise<string[]> {
+  const supabase = await supabaseServer()
+  const pro = await proIdFor(input.proId)
+  if (!pro) return []
+  const { lat, lng } = await slotOrigin(pro, input.atHome, input.addressId)
+  const { data, error } = await supabase.rpc("free_days", {
+    p_pro: pro,
+    p_template: input.templateId,
+    p_variant: input.variantId,
+    p_quantity: input.quantity ?? 1,
+    p_from: input.from,
+    p_days: Math.min(Math.max(input.days ?? 14, 1), 21),
+    p_at_home: input.atHome,
+    p_lat: lat ?? undefined,
+    p_lng: lng ?? undefined,
+  })
+  if (error) {
+    console.error("free_days failed:", error.message)
+    return []
+  }
+  return (data ?? []) as unknown as string[]
 }
 
 // Customer -------------------------------------------------------------------
@@ -229,6 +275,24 @@ export async function completeBooking(bookingId: string) {
 
 export async function markNoShow(bookingId: string, reason: string) {
   return rpc<void>("mark_no_show", { p_booking: bookingId, p_reason: reason }, ["/studio/jobs", "/bookings"])
+}
+
+/** The customer says a no-show report is wrong, within 24 hours. Returns the report id. */
+export async function disputeNoShow(bookingId: string, reason: string) {
+  return rpc<string>("dispute_no_show", { p_booking: bookingId, p_reason: reason }, ["/bookings"])
+}
+
+/** Busy time outside 360dep. Timestamps, not local strings: the client converts. Returns the block id. */
+export async function addTimeBlock(input: { startsAt: string; endsAt: string; note?: string }) {
+  return rpc<string>(
+    "add_time_block",
+    { p_starts_at: input.startsAt, p_ends_at: input.endsAt, p_note: input.note ?? "" },
+    ["/studio/schedule"],
+  )
+}
+
+export async function removeTimeBlock(id: string) {
+  return rpc<void>("remove_time_block", { p_id: id }, ["/studio/schedule"])
 }
 
 export async function sendOffer(jobId: string, price: number, message: string) {
@@ -643,6 +707,27 @@ export async function linkBookings(bookingIds: string[]) {
 /** The freelancer's review of the customer, once, after a completed job. */
 export async function reviewCustomer(bookingId: string, rating: number, body = "") {
   return rpc<void>("review_customer", { p_booking: bookingId, p_rating: rating, p_body: body }, ["/bookings", "/studio/jobs"])
+}
+
+// Safety & devices ------------------------------------------------------------------
+
+/** Takes an account id, or a freelancer's slug. */
+export async function blockUser(account: string) {
+  const id = await proIdFor(account)
+  if (!id) return { ok: false as const, error: "Không tìm thấy tài khoản." }
+  return rpc<void>("block_user", { p_account: id }, ["/tin-nhan"])
+}
+
+/** Takes an account id, or a freelancer's slug. */
+export async function unblockUser(account: string) {
+  const id = await proIdFor(account)
+  if (!id) return { ok: false as const, error: "Không tìm thấy tài khoản." }
+  return rpc<void>("unblock_user", { p_account: id }, ["/tin-nhan"])
+}
+
+/** The mobile app's Expo push token, after sign-in. Never revalidates: nothing on screen changes. */
+export async function registerPushToken(token: string, platform: "ios" | "android" | "web") {
+  return rpc<void>("register_push_token", { p_token: token, p_platform: platform })
 }
 
 // Feed ----------------------------------------------------------------------------

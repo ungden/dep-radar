@@ -22,7 +22,7 @@ const PRO_PUBLIC = `
 const WORK_WITH_PRO = `
   id, slug, pro_id, template_id, title, description, image_paths, sort_order,
   pros!works_pro_id_fkey!inner (slug, display_name, avatar_path, rating_avg, rating_count,
-                                identity_status, published)
+                                identity_status, published, suspended_at)
 `
 
 export async function listPros(filter: { city?: string; category?: string } = {}): Promise<ProSummary[]> {
@@ -36,11 +36,20 @@ export async function listPros(filter: { city?: string; category?: string } = {}
   return (data ?? []).map((row) => toProSummary(row as never))
 }
 
-/** Cached per request: generateMetadata and the page both ask for it. */
+/**
+ * Cached per request: generateMetadata and the page both ask for it. A suspended
+ * profile is not a page, even for its owner or an admin, whose row level security
+ * would otherwise let it through.
+ */
 export const getProBySlug = cache(async function getProBySlug(slug: string): Promise<ProDetail | null> {
   if (!backendEnabled) return null
   const supabase = await supabaseServer()
-  const { data, error } = await supabase.from("pros").select(PRO_PUBLIC).eq("slug", slug).maybeSingle()
+  const { data, error } = await supabase
+    .from("pros")
+    .select(PRO_PUBLIC)
+    .eq("slug", slug)
+    .is("suspended_at", null)
+    .maybeSingle()
   if (error) throw error
   return data ? toProDetail(data as never) : null
 })
@@ -66,7 +75,10 @@ export async function listProServices(proId: string): Promise<ListedService[]> {
 export async function listWorks(filter: { proId?: string; category?: string; limit?: number } = {}): Promise<WorkItem[]> {
   if (!backendEnabled) return []
   const supabase = await supabaseServer()
-  let query = supabase.from("works").select(WORK_WITH_PRO).eq("pros.published", true).order("sort_order")
+  let query = supabase.from("works").select(WORK_WITH_PRO)
+    .eq("pros.published", true)
+    .is("pros.suspended_at", null)
+    .order("sort_order")
   if (filter.proId) query = query.eq("pro_id", filter.proId)
   if (filter.limit) query = query.limit(filter.limit)
   const { data, error } = await query
@@ -149,10 +161,11 @@ export const getWorkBySlug = cache(async function getWorkBySlug(slug: string) {
   const { data, error } = await supabase
     .from("works")
     .select(
-      "id, slug, title, description, image_paths, pros!works_pro_id_fkey!inner (slug, display_name, published)",
+      "id, slug, title, description, image_paths, pros!works_pro_id_fkey!inner (slug, display_name, published, suspended_at)",
     )
     .eq("slug", slug)
     .eq("pros.published", true)
+    .is("pros.suspended_at", null)
     .maybeSingle()
   if (error) throw error
   if (!data) return null
@@ -173,7 +186,11 @@ export async function listPublishedSlugs() {
   const supabase = await supabaseServer()
   const [pros, works] = await Promise.all([
     supabase.from("pros").select("slug, city, categories").eq("published", true).is("suspended_at", null),
-    supabase.from("works").select("slug, pros!works_pro_id_fkey!inner (published)").eq("pros.published", true),
+    supabase
+      .from("works")
+      .select("slug, pros!works_pro_id_fkey!inner (published, suspended_at)")
+      .eq("pros.published", true)
+      .is("pros.suspended_at", null),
   ])
   return {
     pros: (pros.data ?? []).map((p) => p.slug),

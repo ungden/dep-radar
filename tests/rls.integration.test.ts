@@ -334,7 +334,9 @@ describe.skipIf(!configured)("row level security over the API", () => {
       const forged = await as.from("castings").update({ accepted_count: 0, slots: 10 }).eq("id", castingId)
       expect(forged.error?.message).toMatch(/permission denied/)
     } finally {
-      await as.rpc("close_casting", { p_casting: castingId })
+      // Deleted rather than closed: a closed call still counts towards the poster's
+      // five a week (20260924100500), and this suite runs more than once locally.
+      await admin.from("castings").delete().eq("id", castingId)
     }
   })
 
@@ -365,8 +367,23 @@ describe.skipIf(!configured)("row level security over the API", () => {
       .select("booking_id")
       .eq("customer_id", customerId)
     expect(byStranger.data ?? [], "another customer read reviews about someone").toHaveLength(0)
-    const byAnyPro = await client(tokenFor(proId)).from("customer_reviews").select("booking_id").eq("customer_id", customerId)
-    expect(byAnyPro.data?.length, "a freelancer cannot check a customer's history").toBeGreaterThan(0)
+    // A freelancer who has a booking with the customer reads their history...
+    const byTheirPro = await client(tokenFor(proId))
+      .from("customer_reviews")
+      .select("booking_id")
+      .eq("customer_id", customerId)
+    expect(byTheirPro.data?.length, "a freelancer with a booking cannot check the customer").toBeGreaterThan(0)
+    // ...and a freelancer who never met them does not (20260924100000).
+    const { data: booked } = await admin.from("bookings").select("pro_id").eq("customer_id", customerId)
+    const met = new Set((booked ?? []).map((b) => b.pro_id))
+    const { data: pros } = await admin.from("pros").select("id").eq("published", true)
+    const stranger = (pros ?? []).find((p) => !met.has(p.id))
+    expect(stranger, "the demo data has no freelancer the customer never booked").toBeTruthy()
+    const byStrangerPro = await client(tokenFor(stranger!.id))
+      .from("customer_reviews")
+      .select("booking_id")
+      .eq("customer_id", customerId)
+    expect(byStrangerPro.data ?? [], "any freelancer could look a customer up").toHaveLength(0)
   })
 
   it("counts feed interest without letting anyone write the numbers", async () => {
@@ -410,6 +427,98 @@ describe.skipIf(!configured)("row level security over the API", () => {
     expect(changed ?? []).toHaveLength(0)
   })
 
+  // The 2026-09-24 fixes ----------------------------------------------------
+
+  it("hides a suspended freelancer and their posts from the public", async () => {
+    const admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } })
+    const { data: target } = await admin.from("pros").select("id").eq("slug", "thu-anh").single()
+    await admin.from("pros").update({ suspended_at: new Date().toISOString() }).eq("id", target!.id)
+    try {
+      const pros = await client().from("pros").select("id").eq("id", target!.id)
+      expect(pros.data ?? []).toHaveLength(0)
+      const works = await client().from("works").select("id").eq("pro_id", target!.id)
+      expect(works.data ?? []).toHaveLength(0)
+      const own = await client(tokenFor(target!.id)).from("works").select("id").eq("pro_id", target!.id)
+      expect(own.data?.length, "a suspended freelancer lost sight of their own posts").toBeGreaterThan(0)
+    } finally {
+      await admin.from("pros").update({ suspended_at: null }).eq("id", target!.id)
+    }
+  })
+
+  it("lets anyone read the platform settings, and only an admin change them", async () => {
+    const read = await client().from("platform_settings").select("*")
+    expect(read.error, read.error?.message).toBeNull()
+    expect(read.data).toHaveLength(1)
+    const { data: changed } = await client(tokenFor(customerId))
+      .from("platform_settings")
+      .update({ topup_account_no: "0123456789" })
+      .eq("id", true)
+      .select("id")
+    expect(changed ?? []).toHaveLength(0)
+  })
+
+  it("keeps busy time, blocks and push tokens to their owner", async () => {
+    const pro = client(tokenFor(proId))
+    const startsAt = new Date(Date.now() + 3 * 86400_000)
+    const added = await pro.rpc("add_time_block" as never, {
+      p_starts_at: startsAt.toISOString(),
+      p_ends_at: new Date(startsAt.getTime() + 3600_000).toISOString(),
+      p_note: "Test RLS",
+    } as never)
+    expect(added.error, added.error?.message).toBeNull()
+    const blockId = added.data as unknown as string
+    try {
+      const mine = await pro.from("time_blocks" as never).select("id").eq("id", blockId)
+      expect(mine.data).toHaveLength(1)
+      const theirs = await client(tokenFor(customerId)).from("time_blocks" as never).select("id").eq("id", blockId)
+      expect(theirs.data ?? []).toHaveLength(0)
+      const direct = await client(tokenFor(proId))
+        .from("time_blocks" as never)
+        .insert({ pro_id: proId, starts_at: startsAt.toISOString(), ends_at: startsAt.toISOString() } as never)
+      expect(direct.error?.message).toMatch(/permission denied/)
+    } finally {
+      await pro.rpc("remove_time_block" as never, { p_id: blockId } as never)
+    }
+
+    const blocked = await client(tokenFor(customerId)).rpc("block_user" as never, { p_account: otherCustomerId } as never)
+    expect(blocked.error, blocked.error?.message).toBeNull()
+    try {
+      const byBlocker = await client(tokenFor(customerId)).from("user_blocks" as never).select("blocked")
+      expect(byBlocker.data).toHaveLength(1)
+      const byBlocked = await client(tokenFor(otherCustomerId)).from("user_blocks" as never).select("blocker")
+      expect(byBlocked.data ?? []).toHaveLength(0)
+    } finally {
+      await client(tokenFor(customerId)).rpc("unblock_user" as never, { p_account: otherCustomerId } as never)
+    }
+
+    const token = "ExponentPushToken[rls-test-00000000001]"
+    const registered = await client(tokenFor(customerId)).rpc("register_push_token" as never, {
+      p_token: token,
+      p_platform: "ios",
+    } as never)
+    expect(registered.error, registered.error?.message).toBeNull()
+    const byStranger = await client(tokenFor(otherCustomerId)).from("push_tokens" as never).select("token")
+    expect(byStranger.data ?? []).toHaveLength(0)
+    const admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } })
+    await admin.from("push_tokens" as never).delete().eq("token", token)
+  })
+
+  it("lists free days to anyone, like free slots", async () => {
+    const { data, error } = await client().rpc("free_days" as never, {
+      p_pro: proId,
+      p_template: "nail-design",
+      p_variant: "simple",
+      p_quantity: 1,
+      p_from: todayISO(),
+      p_days: 14,
+      p_at_home: true,
+      p_lat: 21.0181,
+      p_lng: 105.829,
+    } as never)
+    expect(error, error?.message).toBeNull()
+    expect((data as unknown as string[]).length).toBeGreaterThan(0)
+  })
+
   it("keeps the new actions away from the anon key", async () => {
     const anon = client()
     for (const [fn, args] of [
@@ -420,6 +529,11 @@ describe.skipIf(!configured)("row level security over the API", () => {
       ["link_bookings", { p_bookings: [crypto.randomUUID(), crypto.randomUUID()] }],
       ["review_customer", { p_booking: crypto.randomUUID(), p_rating: 1 }],
       ["remind_overdue_deliveries", {}],
+      ["add_time_block", { p_starts_at: new Date().toISOString(), p_ends_at: new Date().toISOString() }],
+      ["block_user", { p_account: crypto.randomUUID() }],
+      ["register_push_token", { p_token: "ExponentPushToken[anon-test-000000000]", p_platform: "ios" }],
+      ["dispute_no_show", { p_booking: crypto.randomUUID(), p_reason: "Không đúng sự thật" }],
+      ["release_no_show_credits", {}],
     ] as const) {
       const { error } = await anon.rpc(fn as never, args as never)
       expect(error, fn).toBeTruthy()

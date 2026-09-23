@@ -10,14 +10,8 @@ import { cn, formatDateLong, localDate, localTime, todayISO } from "@/lib/utils"
 /**
  * "Chặn giờ": a few hours off inside a working day (a school run, another
  * client booked by phone). Whole days off live in the profile editor.
- *
- * TODO(db-merge): the database side is being added in parallel. This expects
- *   state.myTimeBlocks: { id, date: "yyyy-mm-dd", from: "HH:mm", to: "HH:mm", note }[]
- *     (startsAt/endsAt timestamps are accepted too, see normalise())
- *   actions.addTimeBlock({ date, from, to, note }): Promise<Result>
- *   actions.removeTimeBlock(id): Promise<Result>
- * Until all three exist the section renders nothing, so nobody is shown a form
- * that cannot save. Align the names/shape here when the DB branch lands.
+ * The database treats a block like a booking: no slot is offered inside it
+ * (time_blocks, availability_problem).
  */
 type RawBlock = {
   id: string
@@ -46,8 +40,8 @@ function normalise(raw: RawBlock): Block | null {
 export function TimeBlocks() {
   const state = useApp()
   const act = useAct()
-  const api = actions as typeof actions & TimeBlockActions
-  const raw = (state as typeof state & { myTimeBlocks?: RawBlock[] }).myTimeBlocks
+  const api: TimeBlockActions = actions
+  const raw: RawBlock[] = state.myTimeBlocks
   const today = todayISO()
   const [date, setDate] = React.useState(today)
   const [from, setFrom] = React.useState("12:00")

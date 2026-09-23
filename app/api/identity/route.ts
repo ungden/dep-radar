@@ -1,7 +1,9 @@
 import { createHash } from "node:crypto"
 import { NextResponse } from "next/server"
+import { ageFromCard } from "@/lib/identity-age"
 import { backendEnabled } from "@/lib/supabase/env"
 import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
+import { todayISO } from "@/lib/utils"
 
 /**
  * Identity verification with a vision AI (Gemini).
@@ -13,7 +15,9 @@ import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
  * status itself, and locks the display name to the name on the card. Editing
  * localStorage cannot produce a badge.
  *
- * Images are forwarded to the AI and never stored or logged.
+ * Images are forwarded to the AI and never stored or logged. From the date of
+ * birth on the card, only two facts are kept: whether the person is 18 or over,
+ * and the year of birth. Model work needs the first (20260924100100).
  */
 
 export const runtime = "nodejs"
@@ -60,6 +64,7 @@ Hãy kiểm tra và trả về JSON đúng schema:
 - front_is_cccd: ảnh 1 có phải mặt trước một thẻ CCCD/CMND Việt Nam thật (không phải ảnh chụp màn hình, bản vẽ hay giấy tờ khác) và có ảnh chân dung không.
 - back_is_cccd: ảnh 2 có phải mặt sau CCCD không.
 - name_on_card: họ và tên in trên thẻ (viết hoa như trên thẻ), chuỗi rỗng nếu không đọc được.
+- date_of_birth: ngày sinh in trên thẻ, dạng DD/MM/YYYY, chuỗi rỗng nếu không đọc được. Chỉ dùng để tính đủ 18 tuổi hay chưa; không lưu ngày sinh.
 - card_number: số CCCD in trên thẻ, chỉ chữ số, chuỗi rỗng nếu không đọc được. Số này chỉ dùng để băm một chiều nhằm chặn một thẻ xác minh nhiều tài khoản; không lưu bản gốc.
 - selfie_ok: ảnh 3 có đúng một khuôn mặt người thật, nhìn rõ, không che khuất, không phải ảnh chụp lại từ màn hình hay giấy.
 - same_person: "yes" nếu ảnh chân dung trên thẻ và selfie là cùng một người, "no" nếu rõ ràng khác người, "uncertain" nếu không đủ chắc chắn.
@@ -73,6 +78,7 @@ const SCHEMA = {
     front_is_cccd: { type: "BOOLEAN" },
     back_is_cccd: { type: "BOOLEAN" },
     name_on_card: { type: "STRING" },
+    date_of_birth: { type: "STRING" },
     card_number: { type: "STRING" },
     selfie_ok: { type: "BOOLEAN" },
     same_person: { type: "STRING", enum: ["yes", "no", "uncertain"] },
@@ -83,6 +89,7 @@ const SCHEMA = {
     "front_is_cccd",
     "back_is_cccd",
     "name_on_card",
+    "date_of_birth",
     "card_number",
     "selfie_ok",
     "same_person",
@@ -95,6 +102,7 @@ interface AiVerdict {
   front_is_cccd: boolean
   back_is_cccd: boolean
   name_on_card: string
+  date_of_birth: string
   card_number: string
   selfie_ok: boolean
   same_person: "yes" | "no" | "uncertain"
@@ -139,11 +147,14 @@ async function callerPro() {
   if (!auth.user) return { error: "Cần đăng nhập để xác minh danh tính.", status: 401 as const }
   const { data: pro } = await supabase
     .from("pros")
-    .select("id, identity_status")
+    .select("id, identity_status, adult")
     .eq("id", auth.user.id)
     .maybeSingle()
   if (!pro) return { error: "Chỉ hồ sơ chuyên viên mới xác minh được.", status: 403 as const }
-  if (pro.identity_status === "verified") {
+  // Verified before the age was read (or while under 18): the check may run again,
+  // but only to read the age. It never takes the badge away.
+  const ageOnly = pro.identity_status === "verified"
+  if (ageOnly && pro.adult === true) {
     return { error: "Hồ sơ của bạn đã được xác minh.", status: 409 as const }
   }
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
@@ -156,7 +167,7 @@ async function callerPro() {
     return { error: `Bạn đã thử xác minh ${MAX_CHECKS_PER_DAY} lần trong 24 giờ. Vui lòng thử lại sau.`, status: 429 as const }
   }
   const { data: account } = await supabase.from("accounts").select("full_name").eq("id", auth.user.id).maybeSingle()
-  return { proId: pro.id, profileName: account?.full_name ?? "" }
+  return { proId: pro.id, profileName: account?.full_name ?? "", ageOnly }
 }
 
 /** Record the outcome and let the database own the resulting badge. */
@@ -168,9 +179,60 @@ async function record(input: {
   reason?: string
   consentAt: string
   salt: string
-}) {
+  /** Already verified: only the age is being read. */
+  ageOnly?: boolean
+}): Promise<{ status: "verified" | "rejected" | "pending"; reason?: string }> {
   const admin = supabaseAdmin()
   const hash = cardHash(input.verdict.card_number, input.salt)
+  const age = ageFromCard(input.verdict.date_of_birth, todayISO())
+
+  if (input.ageOnly) {
+    // The age must come from the same card that earned the badge, or anyone could
+    // borrow an adult's card for this second step.
+    let { status, reason } = input
+    if (status === "verified") {
+      const { data: earlier } = await admin
+        .from("identity_checks")
+        .select("card_hash")
+        .eq("pro_id", input.proId)
+        .eq("status", "verified")
+        .not("card_hash", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (!hash || earlier?.card_hash !== hash) {
+        status = "pending"
+        reason = "Cần chụp đúng thẻ CCCD đã dùng để xác minh. Đội ngũ 360dep sẽ kiểm tra thêm."
+      } else if (!age) {
+        status = "pending"
+        reason = "AI chưa đọc được ngày sinh trên thẻ. Chụp lại mặt trước rõ hơn nhé."
+      }
+    }
+    const { error: checkError } = await admin.from("identity_checks").insert({
+      pro_id: input.proId,
+      status,
+      model: MODEL,
+      name_on_card: input.verdict.name_on_card || null,
+      name_matches: input.nameMatched,
+      same_person: input.verdict.same_person,
+      confidence: input.verdict.confidence,
+      reject_reason: reason ?? null,
+      // The card's hash is already on the check that earned the badge; a second
+      // verified row with it would break the one-card-one-account index.
+      card_hash: null,
+      consent_at: input.consentAt,
+      decided_at: status === "pending" ? null : new Date().toISOString(),
+    })
+    if (checkError) throw new Error("Không ghi được lượt xác minh.")
+    if (status === "verified" && age) {
+      const { error } = await admin
+        .from("pros")
+        .update({ adult: age.adult, birth_year: age.birthYear })
+        .eq("id", input.proId)
+      if (error) throw new Error("Không cập nhật được trạng thái xác minh.")
+    }
+    return { status, reason }
+  }
 
   if (input.status === "verified" && hash) {
     const { data: clash } = await admin
@@ -182,7 +244,7 @@ async function record(input: {
       .maybeSingle()
     if (clash) {
       // The same card already verified another account: a human should look.
-      input = { ...input, status: "pending", reason: "Thẻ CCCD này đã dùng để xác minh một tài khoản khác." }
+      input = { ...input, status: "pending", reason: "Thẻ CCCD này đã dùng để xác minh một tài khoản khác. Đội ngũ 360dep sẽ kiểm tra thêm." }
     }
   }
 
@@ -205,6 +267,8 @@ async function record(input: {
     .from("pros")
     .update({
       identity_status: input.status,
+      // Kept for a check an admin may still approve; a rejected card says nothing.
+      ...(input.status !== "rejected" ? { adult: age?.adult ?? null, birth_year: age?.birthYear ?? null } : {}),
       // A verified freelancer is shown under the name on their card.
       ...(input.status === "verified" && input.verdict.name_on_card
         ? { identity_name: input.verdict.name_on_card }
@@ -213,7 +277,7 @@ async function record(input: {
     .eq("id", input.proId)
   if (proError) throw new Error("Không cập nhật được trạng thái xác minh.")
 
-  return input.status
+  return { status: input.status, reason: input.reason }
 }
 
 export async function POST(request: Request) {
@@ -229,11 +293,13 @@ export async function POST(request: Request) {
   // With a backend, the account is what gets rate limited, not the IP address.
   let proId: string | null = null
   let profileName = ""
+  let ageOnly = false
   if (backendEnabled) {
     const caller = await callerPro()
     if ("error" in caller) return NextResponse.json({ error: caller.error }, { status: caller.status })
     proId = caller.proId
     profileName = caller.profileName
+    ageOnly = caller.ageOnly
   } else if (rateLimited(request)) {
     return NextResponse.json({ error: "Bạn đã thử xác minh quá nhiều lần. Vui lòng thử lại sau 1 giờ." }, { status: 429 })
   }
@@ -275,7 +341,8 @@ export async function POST(request: Request) {
       typeof verdict.front_is_cccd !== "boolean" || typeof verdict.back_is_cccd !== "boolean" ||
       typeof verdict.selfie_ok !== "boolean" || !["yes", "no", "uncertain"].includes(verdict.same_person) ||
       typeof verdict.confidence !== "number" || verdict.confidence < 0 || verdict.confidence > 1 ||
-      typeof verdict.name_on_card !== "string" || typeof verdict.card_number !== "string" || !Array.isArray(verdict.issues)
+      typeof verdict.name_on_card !== "string" || typeof verdict.date_of_birth !== "string" ||
+      typeof verdict.card_number !== "string" || !Array.isArray(verdict.issues)
     ) throw new Error("invalid_response")
   } catch (err) {
     const message = err instanceof Error ? err.message : "unknown error"
@@ -290,7 +357,7 @@ export async function POST(request: Request) {
   const hint = verdict.issues?.length ? ` ${verdict.issues.join(". ")}.` : ""
 
   const reject = async (reason: string) => {
-    if (proId) await record({ proId, status: "rejected", verdict, nameMatched: null, reason, consentAt, salt })
+    if (proId) await record({ proId, status: "rejected", verdict, nameMatched: null, reason, consentAt, salt, ageOnly })
     return NextResponse.json({ status: "rejected", reason })
   }
 
@@ -303,22 +370,24 @@ export async function POST(request: Request) {
     const matched = profileName && verdict.name_on_card ? nameMatches(profileName, verdict.name_on_card) : null
     if (matched === false) {
       const reason = `Khuôn mặt khớp, nhưng tên trên thẻ (${verdict.name_on_card}) khác tên hồ sơ. Đội ngũ 360dep sẽ kiểm tra thêm.`
-      if (proId) await record({ proId, status: "pending", verdict, nameMatched: false, reason, consentAt, salt })
+      if (proId) await record({ proId, status: "pending", verdict, nameMatched: false, reason, consentAt, salt, ageOnly })
       return NextResponse.json({ status: "review", nameOnCard: verdict.name_on_card, reason })
     }
-    const status = proId
-      ? await record({ proId, status: "verified", verdict, nameMatched: matched, consentAt, salt })
-      : "verified"
-    return status === "verified"
-      ? NextResponse.json({ status: "verified", nameOnCard: verdict.name_on_card })
+    const outcome = proId
+      ? await record({ proId, status: "verified", verdict, nameMatched: matched, consentAt, salt, ageOnly })
+      : { status: "verified" as const, reason: undefined }
+    // Only whether the person is 18 or over goes back to the browser, never the date.
+    const adult = ageFromCard(verdict.date_of_birth, todayISO())?.adult ?? null
+    return outcome.status === "verified"
+      ? NextResponse.json({ status: "verified", nameOnCard: verdict.name_on_card, adult })
       : NextResponse.json({
           status: "review",
           nameOnCard: verdict.name_on_card,
-          reason: "Thẻ CCCD này đã dùng để xác minh một tài khoản khác. Đội ngũ 360dep sẽ kiểm tra thêm.",
+          reason: outcome.reason ?? "Đội ngũ 360dep sẽ kiểm tra thêm.",
         })
   }
 
   const reason = `AI chưa đủ chắc chắn đây là cùng một người.${hint} Đội ngũ 360dep sẽ kiểm tra thêm, hoặc bạn chụp lại selfie rõ hơn.`
-  if (proId) await record({ proId, status: "pending", verdict, nameMatched: null, reason, consentAt, salt })
+  if (proId) await record({ proId, status: "pending", verdict, nameMatched: null, reason, consentAt, salt, ageOnly })
   return NextResponse.json({ status: "review", nameOnCard: verdict.name_on_card, reason })
 }

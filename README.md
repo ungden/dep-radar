@@ -13,7 +13,7 @@ Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 | --- | --- | --- |
 | Danh mục dịch vụ | 360dep quy định tên, nội dung, gói (thời lượng/mức độ) và khung giá. Freelancer chỉ chọn dịch vụ trong danh mục và đặt giá trong khung. | `lib/catalog.ts` |
 | Phí khách hàng | 0đ phí nền tảng, không đặt cọc. Khách trả giá dịch vụ + phí di chuyển/đặt gấp nếu có; thanh toán online toàn bộ hoặc trả trực tiếp sau khi làm. | `lib/pricing.ts` |
-| Xác nhận lịch | Freelancer gọi điện cho khách xác nhận rồi mới nhận job, trong 2 giờ; quá hạn tự huỷ. | `app/bookings/[id]` |
+| Xác nhận lịch | Freelancer gọi điện cho khách xác nhận rồi mới nhận job, trong 2 giờ (đặt từ 21:00 đến 08:00 thì tới 10:00 sáng, nhưng không muộn hơn 1 giờ trước giờ hẹn); quá hạn tự huỷ. | `app/bookings/[id]` |
 | Hoa hồng | Một mức 15% trên giá dịch vụ, thu từ freelancer. Không tính trên phí di chuyển/gấp. Job online: trừ trước khi chuyển tiền; job tiền mặt: ghi công nợ, đối soát hằng tuần. | `lib/pricing.ts` |
 | Phí di chuyển | Miễn phí 5 km đầu, sau đó 5.000đ/km (tối đa 100.000đ); ngoài bán kính freelancer thì không nhận làm tại nhà. | `lib/pricing.ts`, `lib/geo.ts` |
 | Phí đặt gấp | Bắt đầu trong vòng 3 giờ: +50.000đ. Không nhận lịch trong vòng 60 phút. | `lib/pricing.ts` |
@@ -99,6 +99,32 @@ update public.accounts set is_admin = true
 where id = (select id from auth.users where lower(email) = lower('<email>'));
 select count(*) from public.accounts where is_admin;
 ```
+
+**Thông tin nạp ví, hỗ trợ và công ty** — bảng `platform_settings` có đúng một dòng, ban đầu mọi cột đều
+`null` và app không hiện gì cho cột còn trống. Điền một lần bằng SQL editor (service role), hoặc bởi tài khoản
+admin qua API; client thường không ghi được:
+
+```sql
+update public.platform_settings set
+  topup_bank_bin     = '970436',            -- mã BIN ngân hàng (6 số), dùng cho mã VietQR
+  topup_account_no   = '0123456789',        -- chỉ chữ số
+  topup_account_name = 'CONG TY TNHH 360DEP',
+  support_zalo       = '0900000000',
+  support_email      = 'hotro@360dep.vn',
+  company_name       = 'Công ty TNHH 360dep',
+  company_tax_id     = '0123456789',
+  company_address    = 'Số 1 Đường ABC, Quận X, TP. Hồ Chí Minh'
+where id;
+select * from public.platform_settings;
+```
+
+Muốn gỡ một thông tin thì đặt lại `null`. Web đọc bảng này mỗi lần tải trang (`state.platform`), không cần deploy.
+
+**Hạn mức ví** nằm ở `fee_policy.wallet_floor` (mặc định −200.000đ): dưới mức này freelancer không nhận lịch mới
+và không tự bật lại "nhận job" được cho tới khi nạp ví.
+
+**Báo vắng mặt**: bù phí di chuyển được giữ 24 giờ rồi tự cộng vào ví (cron `dep360-no-show-release`). Khách khiếu
+nại trong 24 giờ thì khoản đó chờ admin quyết bằng `decide_no_show_compensation`.
 
 ## Ảnh tải lên
 

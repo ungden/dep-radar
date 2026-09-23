@@ -68,6 +68,8 @@ export async function removeImage(bucket: Bucket, publicUrl: string): Promise<vo
 
 export const VIDEO_MAX_SECONDS = 60
 export const VIDEO_MAX_BYTES = 50 * 1024 * 1024
+/** Clips kept per account; the same number as video_quota_ok() in the database. */
+export const VIDEO_MAX_COUNT = 30
 const VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"]
 
 /** Loads just enough of the clip to know its length and to grab a poster frame. */
@@ -111,6 +113,13 @@ export async function uploadVideo(file: File): Promise<{ video: string; poster: 
   const supabase = supabaseBrowser()
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) throw new Error("Cần đăng nhập.")
+
+  // The database refuses the 31st clip (20260924101100); asking first saves
+  // uploading 50 MB to be told no, and says so in words.
+  const { data: existing } = await supabase.storage.from("videos").list(auth.user.id, { limit: 100 })
+  if ((existing?.length ?? 0) >= VIDEO_MAX_COUNT) {
+    throw new Error(`Mỗi tài khoản lưu tối đa ${VIDEO_MAX_COUNT} clip. Xoá bớt clip cũ rồi tải lên tiếp nhé.`)
+  }
 
   const { seconds, poster } = await probeVideo(file)
   if (!Number.isFinite(seconds) || seconds > VIDEO_MAX_SECONDS + 0.5) {

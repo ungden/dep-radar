@@ -8,21 +8,9 @@ import { formatPrice } from "@/lib/utils"
 
 /**
  * The bank account 360dep takes top-ups into.
- *
- * TODO(db-merge): the database agent is adding `state.platform` (from
- * platform_settings) with topup_bank_bin / topup_account_no / topup_account_name.
- * Until that lands this reads nothing and the card says top-ups are handled by
- * staff. Both snake_case and camelCase are accepted so the merge needs no edit
- * here; drop the cast once AppSnapshot has the field.
+ * Filled by the owner in platform_settings (see README "Vận hành"); until
+ * then the card says top-ups are recorded by staff.
  */
-type PlatformSettings = {
-  topup_bank_bin?: string | null
-  topup_account_no?: string | null
-  topup_account_name?: string | null
-  topupBankBin?: string | null
-  topupAccountNo?: string | null
-  topupAccountName?: string | null
-}
 
 const AMOUNTS = [200000, 500000, 1000000]
 
@@ -32,10 +20,9 @@ export const topupMemo = (slug: string) => `NAP ${slug}`
 export function WalletTopUp({ balance }: { balance: number }) {
   const state = useApp()
   const slug = state.session?.proId
-  const platform = (state as typeof state & { platform?: PlatformSettings | null }).platform
-  const bin = platform?.topup_bank_bin ?? platform?.topupBankBin ?? ""
-  const account = platform?.topup_account_no ?? platform?.topupAccountNo ?? ""
-  const accountName = platform?.topup_account_name ?? platform?.topupAccountName ?? ""
+  const bin = state.platform.topupBankBin ?? ""
+  const account = state.platform.topupAccountNo ?? ""
+  const accountName = state.platform.topupAccountName ?? ""
   // Enough to bring a negative wallet back to zero, rounded up to the next 50.000đ.
   const suggested = balance < 0 ? Math.ceil(-balance / 50000) * 50000 : AMOUNTS[0]
   const [amount, setAmount] = React.useState(suggested)
