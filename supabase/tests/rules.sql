@@ -191,6 +191,9 @@ begin
   raise notice 'a read receipt clears the unread count, and only for a thread party';
   -- This is not a hypothetical: the app used to stamp read_at with a plain
   -- update, which RLS silently dropped, so the unread badge never cleared.
+  -- Chat lives only while the booking does; reopen it for these checks.
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.bookings set status = 'confirmed' where id = booking;
   perform set_config('request.jwt.claim.sub', customer::text, true);
   thread := public.open_thread(linh, booking);
   perform public.send_message(thread, 'Chị tới lúc 3h nhé');
@@ -242,6 +245,8 @@ begin
     assert false, 'a freelancer opened a chat about somebody else''s booking';
   exception when insufficient_privilege then null;
   end;
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.bookings set status = 'completed' where id = booking;
 
   raise notice 'nobody books themselves';
   perform set_config('request.jwt.claim.sub', linh::text, true);
@@ -433,7 +438,7 @@ begin
       'app_timezone', 'travel_distance_km', 'travel_fee', 'commission_for', 'is_urgent', 'build_quote',
       'service_duration_min', 'listed_price', 'within_working_hours', 'availability_problem', 'free_slots',
       'slugify', 'is_admin', 'is_pro', 'log_work_events', 'work_stats_30d', 'banned_content', 'applied_to_casting',
-      'free_days',
+      'free_days', 'new_pay_code',
       -- the state machine and the things a person does to their own account
       'create_booking', 'confirm_booking', 'decline_booking', 'start_booking', 'complete_booking',
       'mark_no_show', 'cancel_booking', 'request_reschedule', 'respond_reschedule', 'post_job',
@@ -449,7 +454,7 @@ begin
       'register_push_token', 'video_quota_ok',
       -- chat that closes, jobs either side finishes, referrals and vouchers
       'closes_at', 'confirm_booking_done', 'report_pro_no_show', 'my_referral_code', 'claim_referral',
-      'apply_voucher', 'remove_voucher',
+      'apply_voucher', 'remove_voucher', 'chat_status', 'take_job', 'record_topup',
       -- admin decisions, which check is_admin() themselves
       'decide_identity_check', 'decide_no_show_compensation', 'set_pro_suspended', 'set_review_hidden', 'resolve_report'
     ]);
@@ -1249,8 +1254,11 @@ begin
 
   perform set_config('request.jwt.claim.sub', '', true);
   perform public.enforce_wallet_threshold();
-  assert not (select accepting_jobs from public.pros where id = thu), 'the hourly check did not stop the freelancer';
+  assert exists (select 1 from public.notifications where account_id = thu and kind = 'fee_due'),
+    'the hourly check did not ask for the fee';
+  -- Switching jobs off is always allowed; back on, not while the fee is owed.
   perform set_config('request.jwt.claim.sub', thu::text, true);
+  update public.pros set accepting_jobs = false where id = thu;
   begin
     update public.pros set accepting_jobs = true where id = thu;
     assert false, 'a freelancer past the wallet limit switched jobs back on';
@@ -1375,8 +1383,13 @@ begin
   ---------------------------------------------------------------------------
   raise notice 'a block stops messages both ways, and only the blocker sees it';
   perform set_config('request.jwt.claim.sub', customer::text, true);
-  thread := public.open_thread(linh, null);
-  perform public.send_message(thread, 'Chị ơi cho em hỏi giá');
+  blk := public.create_booking(linh, 'nail-design', 'simple',
+    ((monday + 3) + time '09:00') at time zone tz, true, addr, 1, '');
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.confirm_booking(blk);
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  thread := public.open_thread(linh, blk);
+  perform public.send_message(thread, 'Chị ơi em ở tầng 5 nhé');
   begin
     perform public.block_user(customer);
     assert false, 'an account blocked itself';
@@ -1399,7 +1412,7 @@ begin
     assert msg = 'Không thể nhắn tin với tài khoản này.', format('refused for another reason: %s', msg);
   end;
   begin
-    perform public.open_thread(linh, null);
+    perform public.open_thread(linh, blk);
     assert false, 'a blocked account opened a conversation';
   exception when check_violation then null;
   end;
@@ -1414,7 +1427,8 @@ begin
   assert n = 1, 'the blocker cannot see their own block';
   perform public.unblock_user(customer);
   perform set_config('request.jwt.claim.sub', customer::text, true);
-  perform public.send_message(thread, 'Chị ơi cho em hỏi lại');
+  perform public.send_message(thread, 'Chị ơi em ở tầng 5 nhé');
+  perform public.cancel_booking(blk, 'Xong phần kiểm tra chặn');
 
   ---------------------------------------------------------------------------
   raise notice 'push tokens: Expo only, one account per token, and a notification queues a push';
@@ -1518,18 +1532,8 @@ begin
   select id into addr from public.addresses where account_id = customer;
 
   ---------------------------------------------------------------------------
-  raise notice 'contact details are hidden until a booking goes ahead; prices are not';
-  assert public.mask_contact('Gọi em 0912 345 678 nhé') = 'Gọi em [đã ẩn] nhé', public.mask_contact('Gọi em 0912 345 678 nhé');
-  assert public.mask_contact('zalo 0912.345.678') = 'zalo [đã ẩn]', public.mask_contact('zalo 0912.345.678');
-  assert public.mask_contact('+84912345678') = '[đã ẩn]', public.mask_contact('+84912345678');
-  assert public.mask_contact('mail a.b@gmail.com') = 'mail [đã ẩn]', public.mask_contact('mail a.b@gmail.com');
-  assert public.mask_contact('xem zalo.me/0912345678 hoặc fb.com/linh') = 'xem [đã ẩn] hoặc [đã ẩn]', public.mask_contact('xem zalo.me/0912345678 hoặc fb.com/linh');
-  assert public.mask_contact('ig @linh.nail nha') = 'ig [đã ẩn] nha', public.mask_contact('ig @linh.nail nha');
-  assert public.mask_contact('STK 190312345678') = 'STK [đã ẩn]', public.mask_contact('STK 190312345678');
-  assert public.mask_contact('Giá 150.000 - 200.000, combo 1.200.000đ') = 'Giá 150.000 - 200.000, combo 1.200.000đ', 'a price was hidden';
-  assert public.mask_contact('150.000 200.000') = '150.000 200.000', 'two prices were hidden';
-
-  -- A brand-new customer who has never booked linh: a question before booking.
+  raise notice 'no chat before a match';
+  -- A brand-new customer who has never booked linh.
   insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
           'friend@example.invalid', jsonb_build_object('full_name', 'Bạn Mới', 'phone', '0900 000 456'), now(), now())
@@ -1539,34 +1543,11 @@ begin
   returning id into friend_addr;
 
   perform set_config('request.jwt.claim.sub', friend::text, true);
-  general := public.open_thread(linh, null);
-  hidden := public.send_message(general, 'Chị ơi em số 0987 654 321, chị gọi em nhé');
-  assert hidden, 'send_message did not say it hid something';
-  assert (select body from public.messages where thread_id = general order by created_at desc limit 1)
-       = 'Chị ơi em số [đã ẩn], chị gọi em nhé', 'the number reached the freelancer';
-
-  raise notice 'three questions until the freelancer answers';
-  perform public.send_message(general, 'Chị còn lịch thứ 7 không?');
-  perform public.send_message(general, 'Giá bao nhiêu ạ?');
   begin
-    perform public.send_message(general, 'Chị ơi?');
-    assert false, 'a fourth unanswered message was accepted';
+    perform public.open_thread(linh, null);
+    assert false, 'a question from the profile opened a chat';
   exception when check_violation then null;
   end;
-  perform set_config('request.jwt.claim.sub', linh::text, true);
-  perform public.send_message(general, 'Còn em nhé');
-  perform set_config('request.jwt.claim.sub', friend::text, true);
-  perform public.send_message(general, 'Dạ em đặt luôn');
-
-  raise notice 'a message notifies the other side once per conversation until read';
-  select count(*) into n from public.notifications
-    where account_id = linh and kind = 'message_new' and link = '/tin-nhan/' || general and read_at is null;
-  assert n = 1, format('unread message notifications: %s', n);
-  perform set_config('request.jwt.claim.sub', linh::text, true);
-  perform public.mark_thread_read(general);
-  assert not exists (select 1 from public.notifications
-    where account_id = linh and kind = 'message_new' and link = '/tin-nhan/' || general and read_at is null),
-    'reading the conversation left its notification unread';
 
   ---------------------------------------------------------------------------
   raise notice 'the referral code: once, for a new account, never your own';
@@ -1594,16 +1575,32 @@ begin
   end;
 
   ---------------------------------------------------------------------------
-  raise notice 'a booking''s chat: open while it runs, contact details once confirmed';
+  raise notice 'a booking''s chat opens when the freelancer accepts';
   b := public.create_booking(linh, 'nail-design', 'simple',
     ((monday + 5) + time '09:00') at time zone tz, true, friend_addr, 1, '');
-  thread := public.open_thread(linh, b);
-  assert public.closes_at((select t from public.threads t where id = thread)) is null, 'an active booking''s chat has an end';
+  begin
+    perform public.open_thread(linh, b);
+    assert false, 'a chat opened before the freelancer accepted';
+  exception when check_violation then null;
+  end;
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.confirm_booking(b);
   perform set_config('request.jwt.claim.sub', friend::text, true);
-  hidden := public.send_message(thread, 'Số em 0987 654 321 nha chị');
-  assert not hidden, 'contact details were hidden after the booking was confirmed';
+  thread := public.open_thread(linh, b);
+  assert public.chat_status((select t from public.threads t where id = thread)) = 'open', 'an accepted booking''s chat is not open';
+  perform public.send_message(thread, 'Số em 0987 654 321 nha chị');
+  perform public.send_message(thread, 'Em ở tầng 5');
+
+  raise notice 'a message notifies the other side once per conversation until read';
+  select count(*) into n from public.notifications
+    where account_id = linh and kind = 'message_new' and link = '/tin-nhan/' || thread and read_at is null;
+  assert n = 1, format('unread message notifications: %s', n);
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.mark_thread_read(thread);
+  assert not exists (select 1 from public.notifications
+    where account_id = linh and kind = 'message_new' and link = '/tin-nhan/' || thread and read_at is null),
+    'reading the conversation left its notification unread';
+  perform set_config('request.jwt.claim.sub', friend::text, true);
 
   raise notice 'the customer confirms it is done; commission charged, referral paid';
   begin
@@ -1621,15 +1618,20 @@ begin
     'the first completed booking did not reward both sides';
   assert exists (select 1 from public.referral_rewards where referee = friend and kind = 'customer'), 'no reward row';
 
-  raise notice 'the chat closes 72 hours after the job, and then takes nothing';
-  perform set_config('request.jwt.claim.sub', '', true);
-  update public.bookings set completed_at = now() - interval '73 hours' where id = b;
-  perform set_config('request.jwt.claim.sub', friend::text, true);
+  raise notice 'the chat ends with the job';
+  assert public.chat_status((select t from public.threads t where id = thread)) = 'closed', 'a finished job''s chat is still open';
   begin
     perform public.send_message(thread, 'Chị ơi');
-    assert false, 'a closed conversation took a message';
+    assert false, 'a finished job''s chat took a message';
   exception when check_violation then null;
   end;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.send_message(thread, 'Cảm ơn em');
+    assert false, 'the freelancer wrote after the job';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', friend::text, true);
 
   ---------------------------------------------------------------------------
   raise notice 'reviews: blind, tagged, in a window, one reply';
@@ -1769,6 +1771,79 @@ begin
   update public.bookings set completed_at = now() - interval '15 days' where id = b2;
   perform public.publish_due_reviews();
   assert (select published_at is not null from public.reviews where booking_id = b2), 'the window closed and the review stayed blind';
+
+  ---------------------------------------------------------------------------
+  raise notice 'a request goes to everyone who can do it; the first to take it gets it';
+  perform set_config('request.jwt.claim.sub', friend::text, true);
+  begin
+    perform public.post_job('nail-design', 'simple', ((monday + 5) + time '11:00') at time zone tz, true, friend_addr, 1, '', 'cash', 1000);
+    assert false, 'a request below the catalogue price';
+  exception when check_violation then null;
+  end;
+  v := public.post_job('nail-design', 'simple', ((monday + 5) + time '11:00') at time zone tz, true, friend_addr, 1, 'Làm móng đi tiệc');
+  assert (select price = suggested_price from public.jobs j join public.service_variants sv
+          on sv.template_id = j.template_id and sv.id = j.variant_id where j.id = v), 'the request is not at the catalogue price';
+  assert exists (select 1 from public.notifications where account_id = linh and kind = 'job_new'), 'linh was not told about the request';
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.send_offer(v, 300000, 'Chị nhận nhé em, 300k ạ');
+    assert false, 'a quote on a request';
+  exception when feature_not_supported then null;
+  end;
+  b2 := public.take_job(v);
+  assert (select status = 'confirmed' and source = 'job' from public.bookings where id = b2), 'taking a request did not make a confirmed booking';
+  assert (select status = 'booked' and booking_id = b2 from public.jobs where id = v), 'the request is still open';
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  begin
+    perform public.take_job(v);
+    assert false, 'a taken request was taken twice';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', friend::text, true);
+  thread := public.open_thread(linh, b2);
+  perform public.send_message(thread, 'Chị nhận rồi ạ, em cảm ơn');
+  perform public.cancel_booking(b2, 'Xong phần kiểm tra');
+
+  ---------------------------------------------------------------------------
+  raise notice 'the fee is paid before the next job, and a bank transfer pays it once';
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into public.wallet_entries (pro_id, kind, amount, note) values (linh, 'adjustment', -10000000, 'Kiểm tra phí');
+  bal := public.wallet_balance(linh);
+  assert bal < 0, 'the wallet is not owing';
+  perform set_config('request.jwt.claim.sub', friend::text, true);
+  -- A customer cannot book someone who owes; a booking made before, they cannot accept.
+  begin
+    perform public.create_booking(linh, 'nail-design', 'simple', ((monday + 5) + time '13:00') at time zone tz, true, friend_addr, 1, '');
+    assert false, 'a freelancer who owes the fee was booked';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.wallet_entries set amount = 0 where pro_id = linh and note = 'Kiểm tra phí';
+  perform set_config('request.jwt.claim.sub', friend::text, true);
+  b3 := public.create_booking(linh, 'nail-design', 'simple', ((monday + 5) + time '13:00') at time zone tz, true, friend_addr, 1, '');
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.wallet_entries set amount = -10000000 where pro_id = linh and note = 'Kiểm tra phí';
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.confirm_booking(b3);
+    assert false, 'a freelancer who owes the fee accepted a booking';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg like 'Thanh toán phí%', format('refused for another reason: %s', msg);
+  end;
+  perform set_config('request.jwt.claim.sub', '', true);
+  code := (select pay_code from public.pros where id = linh);
+  assert public.record_bank_topup('CT NAP ' || code || ' FT123', -bal, 'FT-TEST-1'), 'the transfer was not credited';
+  assert not public.record_bank_topup('CT NAP ' || code || ' FT123', -bal, 'FT-TEST-1'), 'the same transfer was credited twice';
+  assert not public.record_bank_topup('chuyen tien', 100000, 'FT-TEST-2'), 'a transfer without a code was credited';
+  assert public.wallet_balance(linh) >= 0, 'paid, still owing';
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.confirm_booking(b3);
+  begin
+    perform public.record_topup(linh, 100000, 'x');
+    assert false, 'a freelancer recorded their own top-up';
+  exception when insufficient_privilege then null;
+  end;
 
   perform set_config('request.jwt.claim.sub', '', true);
   raise notice 'CONNECTION RULES PASS';
