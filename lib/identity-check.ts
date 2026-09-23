@@ -62,7 +62,7 @@ function toJpeg(image: IdentityImage): Promise<Blob> {
 }
 
 export type IdentityResult =
-  | { status: "verified"; nameOnCard: string }
+  | { status: "verified"; nameOnCard: string; adult?: boolean | null }
   | { status: "review"; reason: string; nameOnCard?: string }
   | { status: "rejected"; reason: string }
 
