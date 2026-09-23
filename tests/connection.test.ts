@@ -61,7 +61,7 @@ describe("review tags match the database", () => {
     const sql = readFileSync("supabase/migrations/20260925100200_review_rules.sql", "utf8")
     const fn = sql.slice(sql.indexOf("<@ array["), sql.indexOf("-- Both published at once"))
     const [all, issues] = fn.split("&& array[")
-    const quoted = (s: string) => [...s.matchAll(/'([^']+)'/g)].map((m) => m[1])
+    const quoted = (s: string) => [...s.matchAll(/'([^'{}]+)'/g)].map((m) => m[1])
     expect(new Set(quoted(all))).toEqual(new Set([...REVIEW_TAGS, ...REVIEW_ISSUE_TAGS]))
     expect(new Set(quoted(issues))).toEqual(new Set(REVIEW_ISSUE_TAGS))
   })
