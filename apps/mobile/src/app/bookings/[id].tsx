@@ -1,6 +1,5 @@
 import * as React from "react"
-import { router, useLocalSearchParams } from "expo-router"
-import * as WebBrowser from "expo-web-browser"
+import { Stack, router, useLocalSearchParams } from "expo-router"
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet"
 import { Alert, Linking, Platform, ScrollView, View } from "react-native"
 import { POLICY, verticalOf } from "@/shared"
@@ -15,15 +14,17 @@ import {
 } from "@/data/bookings"
 import { openThread } from "@/data/chat"
 import { formatCountdown, formatDateLong, formatDuration, formatPhone, formatPrice, localDate } from "@/data/format"
-import { webLink } from "@/data/links"
 import type { Result } from "@/data/supabase"
 import { StatusPill } from "@/components/booking-row"
+import { useSafetyMenu } from "@/components/safety"
 import { Timeline, type TimelineStep } from "@/components/timeline"
 import { useApp } from "@/state/app"
+import { useNow } from "@/state/keyboard"
 import { useAsync } from "@/state/use-async"
 import { colors, fonts, gutter, radius } from "@/theme"
-import { Button } from "@/ui/button"
+import { Button, IconButton } from "@/ui/button"
 import { Avatar, Card, EmptyState, ErrorNote, Line, Skeleton } from "@/ui/bits"
+import { haptic } from "@/ui/haptics"
 import { Sheet, useSheet } from "@/ui/sheet"
 import { Txt } from "@/ui/text"
 
@@ -64,12 +65,18 @@ export default function BookingDetail() {
   const [reasonFor, setReasonFor] = React.useState<"cancel" | "decline">("cancel")
   const [reason, setReason] = React.useState("")
   const [busy, setBusy] = React.useState<string | null>(null)
-  const [now, setNow] = React.useState(Date.now())
-
-  React.useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(t)
-  }, [])
+  // Ticks only while the confirmation countdown is on screen.
+  const now = useNow(booking.value?.status === "pending")
+  const bv = booking.value
+  const safety = useSafetyMenu(
+    bv && app.uid
+      ? {
+          accountId: bv.pro.id === app.uid ? bv.customer.id : bv.pro.id,
+          name: bv.pro.id === app.uid ? bv.customer.name : bv.pro.name,
+          bookingId: bv.id,
+        }
+      : null,
+  )
 
   if (!app.uid) return <EmptyState title="Cần đăng nhập" action="Đăng nhập" onAction={() => router.push("/login")} />
   const b = booking.value
@@ -89,7 +96,11 @@ export default function BookingDetail() {
     setBusy(key)
     const res = await task()
     setBusy(null)
-    if (!res.ok) return Alert.alert("Chưa thực hiện được", res.error)
+    if (!res.ok) {
+      haptic.error()
+      return Alert.alert("Chưa thực hiện được", res.error)
+    }
+    haptic.success()
     Alert.alert(done)
     void booking.reload()
   }
@@ -114,6 +125,8 @@ export default function BookingDetail() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.canvas }} contentContainerStyle={{ padding: gutter, gap: 16, paddingBottom: 48 }}>
+      <Stack.Screen options={{ headerRight: () => <IconButton name="more" label="Báo cáo hoặc chặn" onPress={safety.open} /> }} />
+      {safety.element}
       <View style={{ gap: 6 }}>
         <StatusPill status={b.status} />
         <Txt v="h2">{b.serviceName}</Txt>
@@ -215,7 +228,7 @@ export default function BookingDetail() {
           <Button label="Hoàn thành" full busy={busy === "complete"} onPress={() => void run("complete", () => completeBooking(b.id), "Đã hoàn thành")} />
         ) : null}
         {!iAmPro && b.status === "completed" && !b.reviewed ? (
-          <Button label="Viết đánh giá trên web" variant="secondary" icon="external" full onPress={() => void WebBrowser.openBrowserAsync(webLink(`/bookings/${b.id}/review`))} />
+          <Button label="Viết đánh giá" icon="star" full onPress={() => router.push({ pathname: "/danh-gia/[bookingId]", params: { bookingId: b.id } })} />
         ) : null}
         {canCancel ? (
           <Button

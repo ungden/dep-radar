@@ -1,8 +1,6 @@
 import * as React from "react"
 import { router } from "expo-router"
 import { Tabs } from "expo-router/js-tabs"
-import * as WebBrowser from "expo-web-browser"
-import { webLink } from "@/data/links"
 import { TabBar, type TabSpec } from "@/components/tab-bar"
 import { useApp } from "@/state/app"
 import { colors } from "@/theme"
@@ -37,13 +35,9 @@ export default function CustomerTabs() {
         name="dang"
         listeners={{
           tabPress: (e) => {
-            // Posting a request is a long form that already works on the web;
-            // until it is rebuilt natively, it opens there, inside the app.
+            // "+" posts a request: a form that slides up over the current tab.
             e.preventDefault()
-            void WebBrowser.openBrowserAsync(webLink("/requests/new"), {
-              presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-              controlsColor: colors.ink,
-            })
+            router.push("/yeu-cau/moi")
           },
         }}
       />

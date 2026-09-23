@@ -8,10 +8,11 @@ import { useAsync } from "@/state/use-async"
 import { colors, gutter } from "@/theme"
 import { Avatar, EmptyState, ErrorNote, Skeleton } from "@/ui/bits"
 import { Press } from "@/ui/press"
+import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
 
 export default function Threads() {
-  const { uid, mode } = useApp()
+  const { uid, mode, blocked } = useApp()
   const threads = useAsync(uid ? () => listThreads(uid) : null, [uid])
 
   if (!uid) return <EmptyState title="Cần đăng nhập" action="Đăng nhập" onAction={() => router.push("/login")} />
@@ -19,10 +20,9 @@ export default function Threads() {
   return (
     <FlashList
       style={{ backgroundColor: colors.canvas }}
-      data={threads.value ?? []}
+      data={(threads.value ?? []).filter((t) => !blocked.has(t.otherId))}
       keyExtractor={(t) => t.id}
-      refreshing={threads.refreshing}
-      onRefresh={() => void threads.refresh()}
+      refreshControl={refreshControl(threads.refreshing, () => void threads.refresh())}
       renderItem={({ item }) => (
         <Press
           onPress={() => router.push({ pathname: "/tin-nhan/[id]", params: { id: item.id } })}

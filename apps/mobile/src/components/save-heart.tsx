@@ -30,6 +30,7 @@ export function SaveHeart({ work, onPhoto }: { work: Pick<AppWork, "dbId" | "tit
   return (
     <Press
       onPress={() => void toggle()}
+      haptic="select"
       accessibilityLabel={saved ? `Bỏ lưu ${work.title}` : `Lưu ${work.title}`}
       accessibilityState={{ selected: saved }}
       style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}

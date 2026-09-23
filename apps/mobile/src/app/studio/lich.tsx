@@ -14,6 +14,7 @@ import { useAsync } from "@/state/use-async"
 import { colors, gutter } from "@/theme"
 import { Button } from "@/ui/button"
 import { EmptyState, ErrorNote, Skeleton } from "@/ui/bits"
+import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
 
 type Row = { kind: "day"; date: string } | { kind: "booking"; booking: BookingItem }
@@ -50,8 +51,7 @@ export default function StudioCalendar() {
         keyExtractor={(r) => (r.kind === "day" ? `d:${r.date}` : r.booking.id)}
         getItemType={(r) => r.kind}
         contentContainerStyle={{ padding: gutter }}
-        refreshing={bookings.refreshing}
-        onRefresh={() => void bookings.refresh()}
+        refreshControl={refreshControl(bookings.refreshing, () => void bookings.refresh())}
         renderItem={({ item }) =>
           item.kind === "day" ? (
             <Txt w={700} style={{ paddingTop: 8, paddingBottom: 8 }}>
@@ -80,7 +80,7 @@ export default function StudioCalendar() {
             <Txt v="meta" color={colors.muted}>
               Giờ làm việc và ngày nghỉ quyết định giờ trống khách thấy.
             </Txt>
-            <Button label="Sửa giờ làm, ngày nghỉ trên web" size="sm" variant="secondary" icon="external" onPress={() => void WebBrowser.openBrowserAsync(webLink("/studio/schedule"))} />
+            <Button label="Giờ làm, ngày nghỉ (mở trên web)" size="sm" variant="secondary" icon="external" onPress={() => void WebBrowser.openBrowserAsync(webLink("/studio/schedule"))} />
           </View>
         }
       />

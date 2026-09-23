@@ -7,10 +7,11 @@ import { BeVietnamPro_800ExtraBold } from "@expo-google-fonts/be-vietnam-pro/800
 import { PlayfairDisplay_700Bold } from "@expo-google-fonts/playfair-display/700Bold"
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet"
 import { useFonts } from "expo-font"
-import { Stack } from "expo-router"
+import { Stack, router, useSegments } from "expo-router"
 import * as SplashScreen from "expo-splash-screen"
 import { StatusBar } from "expo-status-bar"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
+import { useNotificationTaps } from "@/data/push"
 import { AppProvider, useApp } from "@/state/app"
 import { colors, fonts } from "@/theme"
 
@@ -40,10 +41,18 @@ export default function RootLayout() {
 }
 
 function Navigator() {
-  const { ready } = useApp()
+  const { ready, uid, termsAccepted } = useApp()
+  const segments = useSegments()
   React.useEffect(() => {
     if (ready) void SplashScreen.hideAsync()
   }, [ready])
+  useNotificationTaps(ready)
+  // Signed in before the terms screen existed (or on another phone): ask once.
+  // A fresh sign-in is sent there by the login screen itself.
+  const inAuthFlow = ["login", "dieu-khoan", "so-dien-thoai"].includes(String(segments[0] ?? ""))
+  React.useEffect(() => {
+    if (ready && uid && termsAccepted === false && !inAuthFlow) router.push("/dieu-khoan")
+  }, [ready, uid, termsAccepted, inAuthFlow])
   if (!ready) return null
   return (
     <Stack
@@ -68,7 +77,16 @@ function Navigator() {
       <Stack.Screen name="dip/[id]" options={{ title: "" }} />
       <Stack.Screen name="dich-vu/[id]" options={{ title: "" }} />
       <Stack.Screen name="da-luu" options={{ title: "Đã lưu" }} />
-      <Stack.Screen name="dia-chi" options={{ title: "Địa chỉ" }} />
+      <Stack.Screen name="dia-chi/index" options={{ title: "Địa chỉ" }} />
+      <Stack.Screen name="dia-chi/sua" options={{ title: "Địa chỉ", presentation: "modal" }} />
+      <Stack.Screen name="yeu-cau/index" options={{ title: "Yêu cầu của tôi" }} />
+      <Stack.Screen name="yeu-cau/moi" options={{ title: "Đăng yêu cầu", presentation: "modal" }} />
+      <Stack.Screen name="yeu-cau/[id]" options={{ title: "Yêu cầu" }} />
+      <Stack.Screen name="danh-gia/[bookingId]" options={{ title: "Đánh giá", presentation: "modal" }} />
+      <Stack.Screen name="tuyen-mau/index" options={{ title: "Tuyển mẫu" }} />
+      <Stack.Screen name="tuyen-mau/[id]" options={{ title: "" }} />
+      <Stack.Screen name="da-chan" options={{ title: "Đã chặn" }} />
+      <Stack.Screen name="dieu-khoan" options={{ title: "", presentation: "modal", gestureEnabled: false }} />
       <Stack.Screen name="login" options={{ title: "", presentation: "modal" }} />
       <Stack.Screen name="so-dien-thoai" options={{ title: "Số điện thoại", gestureEnabled: false }} />
       <Stack.Screen name="auth/callback" options={{ headerShown: false }} />

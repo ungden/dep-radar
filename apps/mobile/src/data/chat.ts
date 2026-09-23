@@ -12,6 +12,8 @@ export interface ThreadSummary {
   lastMessageAt: string
   unread: number
   iAmPro: boolean
+  /** The other person's account id, for blocking. */
+  otherId: string
 }
 
 export interface ChatMessage {
@@ -50,6 +52,7 @@ export async function listThreads(uid: string): Promise<ThreadSummary[]> {
         lastMessageAt: t.last_message_at,
         unread: messages.filter((m) => m.sender_id !== uid && !m.read_at).length,
         iAmPro,
+        otherId: String(iAmPro ? t.customer_id : t.pro_id),
       }
     })
     .filter((t) => t.lastMessage !== "")
@@ -58,7 +61,7 @@ export async function listThreads(uid: string): Promise<ThreadSummary[]> {
 export async function threadHeader(threadId: string, uid: string) {
   const { data } = await supabase
     .from("threads")
-    .select("pro_id, booking_id, customer_name, pro:pros!threads_pro_id_fkey (slug, display_name)")
+    .select("pro_id, customer_id, booking_id, customer_name, pro:pros!threads_pro_id_fkey (slug, display_name)")
     .eq("id", threadId)
     .maybeSingle()
   const row = data as Row | null
@@ -70,6 +73,7 @@ export async function threadHeader(threadId: string, uid: string) {
     proSlug: String(pro.slug ?? ""),
     bookingId: (row.booking_id ?? null) as string | null,
     iAmPro,
+    otherId: String(iAmPro ? row.customer_id : row.pro_id),
   }
 }
 
@@ -116,6 +120,12 @@ export const markThreadRead = (threadId: string) => rpc("mark_thread_read", { p_
 
 export const openThread = (proUuid: string, bookingId?: string | null) =>
   rpc<string>("open_thread", { p_pro: proUuid, p_booking: bookingId ?? undefined })
+
+/** Ids of the caller's threads (row level security limits the read), for a filtered Realtime listener. */
+export async function myThreadIds(): Promise<string[]> {
+  const { data } = await supabase.from("threads").select("id").limit(500)
+  return ((data ?? []) as Row[]).map((t) => String(t.id))
+}
 
 /** New messages in one thread, pushed by Supabase Realtime (the web's chat uses the same publication). */
 export function subscribeThread(threadId: string, onInsert: (row: Row) => void) {

@@ -9,7 +9,9 @@ import { PostCard } from "@/components/cards"
 import { FollowButton } from "@/components/follow-button"
 import { Clip, PhotoPager } from "@/components/media"
 import { SaveHeart } from "@/components/save-heart"
+import { useSafetyMenu } from "@/components/safety"
 import { useApp } from "@/state/app"
+import { IconButton } from "@/ui/button"
 import { useBrowse } from "@/state/derived"
 import { colors, gutter, radius } from "@/theme"
 import { Avatar, EmptyState, Rating, SectionHeader, VerifiedMark } from "@/ui/bits"
@@ -35,12 +37,24 @@ export default function WorkDetail() {
     () => (work ? browse.works.filter((w) => w.category === work.category && w.proId !== work.proId).slice(0, 6) : []),
     [browse.works, work],
   )
+  const safety = useSafetyMenu(
+    pro && work && app.uid !== pro.uuid ? { accountId: pro.uuid, name: pro.name, workId: work.dbId, onBlocked: () => router.back() } : null,
+  )
 
-  if (!work) {
+  // A post from outside the loaded city (a link, a notification): fetch its author.
+  const { ensureWork } = app
+  const [lookedUp, setLookedUp] = React.useState<string | null>(null)
+  React.useEffect(() => {
+    if (work || !id || !app.data || lookedUp === id) return
+    setLookedUp(id)
+    void ensureWork(id)
+  }, [work, id, app.data, lookedUp, ensureWork])
+
+  if (!work || (pro && app.blocked.has(pro.uuid))) {
     return (
       <View style={{ flex: 1, paddingTop: insets.top + 60 }}>
         <Stack.Screen options={{ headerTransparent: false, title: "" }} />
-        {app.loading || !app.data ? null : (
+        {app.loading || !app.data || lookedUp !== id ? null : (
           <EmptyState title="Không tìm thấy bài đăng" text="Có thể bài đã bị gỡ." action="Về Khám phá" onAction={() => router.replace("/")} />
         )}
       </View>
@@ -56,7 +70,19 @@ export default function WorkDetail() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
-      <Stack.Screen options={{ headerRight: () => <SaveHeart work={work} /> }} />
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <SaveHeart work={work} />
+              {pro && app.uid !== pro.uuid ? (
+                <IconButton name="more" label="Báo cáo hoặc chặn" background="rgba(255,255,255,0.92)" onPress={safety.open} />
+              ) : null}
+            </View>
+          ),
+        }}
+      />
+      {safety.element}
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
         <View style={{ paddingTop: insets.top + 44 }}>
           {work.video ? <Clip uri={work.video} maxHeight={height * 0.72} /> : null}

@@ -5,9 +5,9 @@ import { useApp } from "./app"
 
 /** What the customer can browse right now: listed people in the chosen city. */
 export function useBrowse() {
-  const { data, city, me, distanceTo } = useApp()
+  const { data, city, me, distanceTo, blocked } = useApp()
   return React.useMemo(() => {
-    const pros = (data?.pros ?? []).filter((p) => p.published && (!city || p.city === city))
+    const pros = (data?.pros ?? []).filter((p) => p.published && (!city || p.city === city) && !blocked.has(p.uuid))
     const proIds = new Set(pros.map((p) => p.id))
     const works = (data?.works ?? []).filter((w) => proIds.has(w.proId))
     const proById = new Map((data?.pros ?? []).map((p) => [p.id, p]))
@@ -59,7 +59,7 @@ export function useBrowse() {
         (works.find((w) => w.category === category && w.images[0]) ?? data?.works.find((w) => w.category === category && w.images[0]))
           ?.images[0],
     }
-  }, [data, city, me, distanceTo])
+  }, [data, city, me, distanceTo, blocked])
 }
 
 export type Browse = ReturnType<typeof useBrowse>

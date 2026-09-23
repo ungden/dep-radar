@@ -66,7 +66,7 @@ export default function StudioMe() {
               {accepting ? "Khách đặt được lịch và bạn báo giá được." : "Tạm nghỉ: khách không đặt được, lịch đã nhận vẫn giữ."}
             </Txt>
           </View>
-          <Switch value={accepting} onValueChange={(v) => void toggle(v)} trackColor={{ true: colors.ink, false: colors.subtleStrong }} accessibilityLabel="Nhận lịch mới" />
+          <Switch value={accepting} onValueChange={(v) => void toggle(v)} trackColor={{ true: colors.accent, false: colors.subtleStrong }} accessibilityLabel="Nhận lịch mới" />
         </View>
 
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.md }}>
@@ -83,7 +83,7 @@ export default function StudioMe() {
           <Row icon="verified" label="Xác minh danh tính" onPress={web("/studio/verify")} />
         </View>
         <Txt v="meta" color={colors.muted}>
-          Các mục trên mở trang web của 360dep ngay trong app; bạn có thể cần đăng nhập lại ở đó.
+          Cài đặt Studio chưa có trong app: các mục trên mở trang web 360dep ngay trong app, và bạn có thể phải đăng nhập lại ở đó.
         </Txt>
 
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.md }}>
@@ -106,11 +106,21 @@ export default function StudioMe() {
 
 function Row({ icon, label, onPress, internal }: { icon: IconName; label: string; onPress: () => void; internal?: boolean }) {
   return (
-    <Press onPress={onPress} accessibilityLabel={label} style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, height: 54 }}>
+    <Press
+      onPress={onPress}
+      accessibilityLabel={internal ? label : `${label}, mở trên web`}
+      accessibilityRole={internal ? "button" : "link"}
+      style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, height: 54 }}
+    >
       <Icon name={icon} size={20} />
       <Txt w={600} style={{ flex: 1 }}>
         {label}
       </Txt>
+      {internal ? null : (
+        <Txt v="meta" color={colors.muted}>
+          mở trên web
+        </Txt>
+      )}
       <Icon name={internal ? "right" : "external"} size={14} color={colors.muted} />
     </Press>
   )
