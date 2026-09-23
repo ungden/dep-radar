@@ -37,7 +37,7 @@ $$;
 -- Both published at once when the second one is written, or when the window ends.
 create function public.publish_reviews_for(p_booking uuid) returns void
 language plpgsql security definer set search_path = '' as $$
-declare pro uuid; customer uuid; newly boolean;
+declare pro uuid; customer uuid; newly boolean; v_slug text;
 begin
   update public.reviews set published_at = now()
     where booking_id = p_booking and published_at is null
@@ -47,7 +47,8 @@ begin
     where booking_id = p_booking and published_at is null;
   if newly then
     perform public.refresh_pro_rating(pro);
-    perform public.notify(pro, 'review_new', 'Đánh giá của khách đã hiện', 'Xem và trả lời trên hồ sơ của bạn.', '/pros/' || pro);
+    select p.slug into v_slug from public.pros p where p.id = pro;
+    perform public.notify(pro, 'review_new', 'Đánh giá của khách đã hiện', 'Xem và trả lời trên hồ sơ của bạn.', '/pros/' || v_slug);
   end if;
 end $$;
 
@@ -154,7 +155,7 @@ begin
   end if;
   update public.reviews set reply = left(v_reply, 1000), replied_at = now() where booking_id = p_booking;
   perform public.notify(r.customer_id, 'review_reply', 'Người làm đã trả lời đánh giá của bạn', left(v_reply, 120),
-    '/pros/' || r.pro_id);
+    '/pros/' || (select slug from public.pros where id = r.pro_id));
 end $$;
 
 -- Hourly: the window closed with only one side written.

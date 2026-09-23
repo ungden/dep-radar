@@ -50,7 +50,8 @@ export function travelFeeFor(distanceKm: number | null) {
 export function hoursUntilStart(dateISO: string, time: string, now: Date = new Date()) {
   const [y, m, d] = dateISO.split("-").map(Number)
   const [h, min] = time.split(":").map(Number)
-  return (new Date(y, m - 1, d, h, min).getTime() - now.getTime()) / 3600000
+  // The date and time are Vietnam wall-clock (UTC+7, no daylight saving), whatever the browser's zone.
+  return (Date.UTC(y, m - 1, d, h - 7, min) - now.getTime()) / 3600000
 }
 
 export function isUrgent(dateISO: string, time: string, now: Date = new Date()) {

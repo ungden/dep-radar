@@ -13,6 +13,9 @@
 --    reports it from 15 minutes after the start until 24 hours after the end. The booking is cancelled on the
 --    freelancer, no commission is charged, 360dep gets a report to look at, and
 --    a second one in 30 days is flagged to the admins as a pattern.
+-- 4. Cancelling is for before the appointment. Once it has started, the job
+--    ends by one of the above, so a customer cannot cancel their way out of a
+--    completed job (and its review), nor a freelancer out of a no-show.
 
 -- One way to finish a job, whoever finishes it.
 create function public.finish_booking(p_booking uuid, p_by text) returns void
@@ -120,8 +123,33 @@ begin
   from public.accounts a where a.is_admin;
 
   perform public.notify(b.pro_id, 'pro_no_show', 'Khách báo bạn không đến',
-    'Lịch hẹn đã huỷ. Nếu có nhầm lẫn, hãy liên hệ 360dep. Không đến nhiều lần sẽ bị tạm khoá nhận lịch.',
+    'Lịch hẹn đã huỷ. Nếu có nhầm lẫn, hãy liên hệ 360dep. Không đến nhiều lần có thể bị tạm khoá nhận lịch.',
     '/bookings/' || b.id);
+end $$;
+
+-- Same as 20260918040300, plus: not after the start time.
+create or replace function public.cancel_booking(p_booking uuid, p_reason text default '') returns void
+language plpgsql security definer set search_path = '' as $$
+declare b public.bookings; me uuid := auth.uid(); who public.app_role;
+begin
+  select * into b from public.bookings where id = p_booking for update;
+  if b is null then raise exception 'Không tìm thấy lịch hẹn.' using errcode = 'no_data_found'; end if;
+  who := case when b.customer_id = me then 'customer' when b.pro_id = me then 'pro' end;
+  if who is null then raise exception 'Không có quyền.' using errcode = 'insufficient_privilege'; end if;
+  if b.status not in ('pending', 'confirmed') then
+    raise exception 'Lịch hẹn này không thể huỷ.' using errcode = 'check_violation';
+  end if;
+  if now() >= b.starts_at then
+    raise exception 'Đã tới giờ hẹn, không huỷ được nữa. Nếu người làm không đến, hãy báo "Người làm không đến".'
+      using errcode = 'check_violation';
+  end if;
+  update public.bookings
+    set status = 'cancelled', cancelled_at = now(), cancelled_by = who, cancel_reason = left(p_reason, 300)
+    where id = p_booking;
+  perform public.notify(
+    case when who = 'customer' then b.pro_id else b.customer_id end,
+    'booking_cancelled', 'Lịch hẹn đã bị huỷ',
+    coalesce(nullif(p_reason, ''), 'Không có lý do kèm theo.'), '/bookings/' || p_booking);
 end $$;
 
 do $$

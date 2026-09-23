@@ -1721,6 +1721,13 @@ begin
   perform public.confirm_booking(b2);
   perform set_config('request.jwt.claim.sub', '', true);
   update public.bookings set starts_at = now() - interval '27 hours' where id = b2;
+  perform set_config('request.jwt.claim.sub', friend::text, true);
+  begin
+    perform public.cancel_booking(b2, 'Huỷ sau khi đã làm');
+    assert false, 'a booking was cancelled after its start';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', '', true);
   perform public.auto_complete_bookings();
   assert (select status from public.bookings where id = b2) = 'completed', 'a forgotten job stayed open';
 
