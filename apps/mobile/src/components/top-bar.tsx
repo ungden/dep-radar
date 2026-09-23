@@ -3,7 +3,7 @@ import { View } from "react-native"
 import { CITIES } from "@/shared"
 import { useApp } from "@/state/app"
 import { colors, gutter } from "@/theme"
-import { LogoMark } from "@/ui/bits"
+import { Wordmark } from "@/ui/bits"
 import { IconButton } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -31,7 +31,7 @@ export function TopBar() {
           <Icon name="down" size={14} color={colors.muted} />
         </Press>
       </View>
-      <LogoMark size={28} />
+      <Wordmark size={24} />
       <View style={{ flex: 1, flexDirection: "row", justifyContent: "flex-end" }}>
         <IconButton name="chat" label="Tin nhắn" badge={me.unreadMessages} onPress={() => needSignIn("/tin-nhan")} />
         <IconButton name="bell" label="Thông báo" badge={me.unreadNotifications} onPress={() => needSignIn("/thong-bao")} />

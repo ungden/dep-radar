@@ -4,6 +4,7 @@ import { BeVietnamPro_500Medium } from "@expo-google-fonts/be-vietnam-pro/500Med
 import { BeVietnamPro_600SemiBold } from "@expo-google-fonts/be-vietnam-pro/600SemiBold"
 import { BeVietnamPro_700Bold } from "@expo-google-fonts/be-vietnam-pro/700Bold"
 import { BeVietnamPro_800ExtraBold } from "@expo-google-fonts/be-vietnam-pro/800ExtraBold"
+import { PlayfairDisplay_700Bold } from "@expo-google-fonts/playfair-display/700Bold"
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet"
 import { useFonts } from "expo-font"
 import { Stack } from "expo-router"
@@ -22,6 +23,8 @@ export default function RootLayout() {
     BeVietnamPro_600SemiBold,
     BeVietnamPro_700Bold,
     BeVietnamPro_800ExtraBold,
+    // The wordmark only, as on the web.
+    PlayfairDisplay_700Bold,
   })
   if (!fontsLoaded && !fontError) return null
   return (

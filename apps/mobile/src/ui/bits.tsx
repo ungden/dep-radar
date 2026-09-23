@@ -1,9 +1,9 @@
 import * as React from "react"
 import { Image } from "expo-image"
-import { View, type StyleProp, type ViewStyle } from "react-native"
+import { Text, View, type StyleProp, type ViewStyle } from "react-native"
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated"
 import { initials, formatRating } from "@/data/format"
-import { aspect, colors, radius } from "@/theme"
+import { aspect, colors, radius, wordmarkFont } from "@/theme"
 import { Button } from "./button"
 import { Icon } from "./icon"
 import { Press } from "./press"
@@ -191,13 +191,24 @@ export function LogoMark({ size = 28 }: { size?: number }) {
   )
 }
 
-export function Logo() {
+/** The "360dep" wordmark: rose serif, the same as the web header. */
+export function Wordmark({ size = 24 }: { size?: number }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }} accessibilityLabel="360dep">
-      <LogoMark size={26} />
-      <Txt w={700} style={{ fontSize: 20, lineHeight: 24, letterSpacing: -0.8 }}>
-        360dep
-      </Txt>
+    <Text
+      accessibilityRole="header"
+      accessibilityLabel="360dep"
+      style={{ fontFamily: wordmarkFont, fontSize: size, lineHeight: size * 1.2, color: colors.accent, letterSpacing: -0.3 }}
+    >
+      360dep
+    </Text>
+  )
+}
+
+export function Logo({ size = 32 }: { size?: number }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }} accessibilityLabel="360dep">
+      <LogoMark size={size} />
+      <Wordmark size={size * 0.95} />
     </View>
   )
 }
