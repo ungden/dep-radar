@@ -105,3 +105,24 @@ export async function rpc<T = void>(fn: string, args: Record<string, unknown>): 
   if (error) return { ok: false, error: messageFor(error) }
   return { ok: true, data: data as T }
 }
+
+/**
+ * An RPC that is being added to the database in parallel with this app
+ * (block_user, register_push_token, ...). "Missing" means PostgREST has no
+ * function by that name and those arguments yet: the caller hides the feature
+ * or says so kindly instead of showing a raw error.
+ */
+export type OptionalResult<T = void> = { ok: true; data: T } | { ok: false; missing: boolean; error: string }
+
+export function isMissingFunction(error: { code?: string; message?: string } | null | undefined) {
+  if (!error) return false
+  return error.code === "PGRST202" || error.code === "42883" || /could not find the function|function .* does not exist/i.test(error.message ?? "")
+}
+
+export async function rpcOptional<T = void>(fn: string, args: Record<string, unknown>): Promise<OptionalResult<T>> {
+  if (!backendConfigured) return { ok: false, missing: false, error: "App chưa được cấu hình máy chủ." }
+  const { data, error } = await supabase.rpc(fn, args)
+  if (isMissingFunction(error)) return { ok: false, missing: true, error: "Tính năng này sắp có. Bạn thử lại sau nhé." }
+  if (error) return { ok: false, missing: false, error: messageFor(error) }
+  return { ok: true, data: data as T }
+}

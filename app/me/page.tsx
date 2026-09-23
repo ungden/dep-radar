@@ -20,7 +20,9 @@ import {
   Ticket,
   UserRound,
   Users,
+  Contact,
 } from "lucide-react"
+import { MobileLinks } from "@/components/mobile-links"
 import { Avatar, ButtonLink, Card, Toggle } from "@/components/ui"
 import { formatPhone } from "@/lib/auth/phone"
 import { actions, useAct } from "@/lib/client-actions"
@@ -50,7 +52,9 @@ export default function MePage() {
             </ButtonLink>
           </div>
         </Card>
-        <Menu items={commonItems} />
+        {/* Signed out, only what works signed out; the rest asks to sign in anyway. */}
+        <Menu items={[{ href: "/tuyen-mau", icon: Users, label: "Làm mẫu", sub: "Được làm đẹp miễn phí hoặc có thù lao" }]} />
+        <MobileLinks className="mt-6" />
       </div>
     )
   }
@@ -124,6 +128,7 @@ export default function MePage() {
           <Menu
             items={[
               { href: "/studio/jobs", icon: BriefcaseBusiness, label: "Việc mới quanh bạn" },
+              { href: "/studio/khach", icon: Contact, label: "Khách của bạn", sub: "Khách đã làm, số lần quay lại" },
               { href: "/studio/services", icon: Ticket, label: "Dịch vụ & bảng giá" },
               { href: "/studio/works", icon: ImagePlus, label: "Tác phẩm" },
               { href: "/studio/tuyen-mau", icon: Users, label: "Tuyển mẫu", sub: "Tìm mẫu luyện tay, chụp portfolio" },

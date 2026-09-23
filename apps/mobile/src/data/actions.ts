@@ -47,7 +47,31 @@ export async function setAcceptingJobs(uid: string, value: boolean): Promise<Res
   return error ? { ok: false, error: messageFor(error) } : { ok: true, data: undefined }
 }
 
-export const sendOffer = (jobId: string, price: number, message: string) =>
+/**
+ * Delete the account (Decree 13/2023, App Store 5.1.1(v)). The same
+ * delete_my_account() the web calls (supabase/migrations/*account_deletion*):
+ * no arguments; it refuses while a booking is still to happen, with a
+ * sentence the screen shows as is.
+ *
+ * The web then removes the person's files with the service key. The app has
+ * no such key; it removes what storage lets the owner remove (their own
+ * folder in the public buckets), best effort, before the session ends.
+ */
+export async function deleteMyAccount(uid: string): Promise<Result> {
+  const res = await rpc("delete_my_account", {})
+  if (!res.ok) return res
+  for (const bucket of ["avatars", "works", "reviews", "videos"]) {
+    try {
+      const { data } = await supabase.storage.from(bucket).list(uid, { limit: 100 })
+      if (data?.length) await supabase.storage.from(bucket).remove(data.map((f) => `${uid}/${f.name}`))
+    } catch {
+      // The account is already gone; a leftover file is cleaned up by an admin.
+    }
+  }
+  return res
+}
+
+export const sendOffer =(jobId: string, price: number, message: string) =>
   rpc<string>("send_offer", { p_job: jobId, p_price: price, p_message: message })
 
 export async function withdrawMyOfferOn(uid: string, jobId: string): Promise<Result> {

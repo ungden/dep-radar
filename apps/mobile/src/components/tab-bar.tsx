@@ -59,7 +59,6 @@ export function TabBar({ state, navigation, specs }: BottomTabBarProps & { specs
           <Press
             key={route.key}
             onPress={onPress}
-            quiet
             accessibilityRole="tab"
             accessibilityState={{ selected: focused }}
             accessibilityLabel={spec.badge ? `${spec.label}, ${spec.badge} mới` : spec.label}

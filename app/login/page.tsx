@@ -1,12 +1,33 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import { CalendarCheck } from "lucide-react"
 import { Logo, PageHeader } from "@/components/ui"
+import { getProBySlug } from "@/lib/api/pros"
 import { signInWithGoogle } from "@/lib/auth/actions"
 import { safeNext } from "@/lib/auth/credentials"
 import { googleSignInEnabled } from "@/lib/auth/providers"
+import { getTemplate } from "@/lib/catalog"
 import { currentAccount } from "@/lib/supabase/server"
+import { formatDateLong } from "@/lib/utils"
 import { GoogleButton } from "./google-button"
+
+/**
+ * A visitor who chose a service and a time before signing in arrives here
+ * with that booking in `next` (app/book/[proId]). Say what they are signing
+ * in for, so the Google screen is the last step of booking, not a detour.
+ */
+async function pendingBooking(next: string) {
+  const match = next.match(/^\/book\/([^/?#]+)\?(.*)$/)
+  if (!match) return null
+  const q = new URLSearchParams(match[2])
+  const time = q.get("time")
+  const date = q.get("date")
+  if (!time || !/^\d{2}:\d{2}$/.test(time) || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null
+  const pro = await getProBySlug(decodeURIComponent(match[1])).catch(() => null)
+  if (!pro) return null
+  return { name: pro.name, service: getTemplate(q.get("service") ?? "")?.name ?? null, when: `${time} ${formatDateLong(date)}` }
+}
 
 export const metadata: Metadata = {
   title: "Đăng nhập",
@@ -28,7 +49,7 @@ export default async function LoginPage({
     redirect(wantsPro && account.isPro && !params.next ? "/studio" : next)
   }
 
-  const enabled = await googleSignInEnabled()
+  const [enabled, booking] = await Promise.all([googleSignInEnabled(), pendingBooking(next)])
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pb-10">
@@ -51,6 +72,18 @@ export default async function LoginPage({
             </li>
           ))}
         </ul>
+      )}
+
+      {booking && (
+        <p className="mt-5 flex gap-3 rounded-[var(--radius-lg)] bg-accent-soft px-4 py-3.5 text-[15px] text-ink">
+          <CalendarCheck className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+          <span>
+            <span className="block font-semibold">
+              Đăng nhập để gửi lịch với {booking.name} · {booking.when}
+            </span>
+            {booking.service && <span className="block text-[14px] text-ink-soft">{booking.service}. Lựa chọn của bạn được giữ nguyên.</span>}
+          </span>
+        </p>
       )}
 
       {params.loi === "google" && (

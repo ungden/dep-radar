@@ -1,31 +1,40 @@
 import * as React from "react"
 import { FlashList } from "@shopify/flash-list"
-import { useLocalSearchParams } from "expo-router"
-import { TextInput, View } from "react-native"
+import { router, useLocalSearchParams } from "expo-router"
+import { ScrollView, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
   CATEGORIES,
   VERTICALS,
+  categoryLabel,
   getTemplate,
+  getVertical,
   isVertical,
   rankScore,
+  serviceOffers,
   verticalOf,
   type CategoryId,
+  type ServiceOffer,
   type VerticalFilter,
 } from "@/shared"
-import { fold } from "@/data/format"
+import { fold, formatDuration, formatPrice } from "@/data/format"
 import type { AppPro } from "@/data/public"
-import { ProCard } from "@/components/cards"
+import { ProCard, ProCardSkeleton } from "@/components/cards"
+import { CategoryIcon } from "@/components/category-icon"
+import { OfflineNote } from "@/components/offline-note"
+import { TextTabs } from "@/components/switches"
 import { useApp } from "@/state/app"
 import { useBrowse } from "@/state/derived"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { card, colors, fonts, gutter, radius } from "@/theme"
 import { Button } from "@/ui/button"
-import { Chip, EmptyState } from "@/ui/bits"
+import { Chip, EmptyState, ErrorNote, Photo } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
+import { refreshControl } from "@/ui/refresh"
 import { Sheet, useSheet } from "@/ui/sheet"
 import { Txt } from "@/ui/text"
 
+type Mode = "services" | "people"
 type Place = "any" | "home" | "studio" | "location"
 type PriceBand = "any" | "lt300" | "300to600" | "gt600"
 type Sort = "match" | "near" | "cheap"
@@ -52,6 +61,12 @@ function priceOk(band: PriceBand, price: number | null) {
   return price > 600_000
 }
 
+const words = (q: string) => fold(q.trim()).split(/\s+/).filter(Boolean)
+
+/**
+ * Tìm: services first (what can I book, from how much), people second. The
+ * same filters apply to both; each one that is on shows as a chip with ✕.
+ */
 export default function Search() {
   const params = useLocalSearchParams<{ category?: string; vertical?: string; focus?: string }>()
   const app = useApp()
@@ -59,6 +74,7 @@ export default function Search() {
   const insets = useSafeAreaInsets()
   const sheet = useSheet()
   const input = React.useRef<TextInput>(null)
+  const [mode, setMode] = React.useState<Mode>("services")
   const [query, setQuery] = React.useState("")
   const [filters, setFilters] = React.useState<Filters>(NONE)
   const [draft, setDraft] = React.useState<Filters>(NONE)
@@ -72,8 +88,8 @@ export default function Search() {
     if (params.focus) setTimeout(() => input.current?.focus(), 300)
   }, [params.category, params.vertical, params.focus])
 
-  const results = React.useMemo(() => {
-    const q = fold(query.trim())
+  const people = React.useMemo(() => {
+    const q = words(query)
     const services = browse.services
     const out = browse.pros.filter((p) => {
       if (filters.vertical !== "all" && !p.categories.some((c) => verticalOf(c) === filters.vertical)) return false
@@ -88,11 +104,11 @@ export default function Search() {
       const inCategory = filters.category ? listed.filter((s) => getTemplate(s.templateId)?.category === filters.category) : listed
       const prices = inCategory.flatMap((s) => Object.values(s.prices))
       if (!priceOk(filters.price, prices.length ? Math.min(...prices) : null)) return false
-      if (!q) return true
+      if (!q.length) return true
       const haystack = fold(
         [p.name, p.title, p.district, p.city, ...p.areas, ...p.categories.map((c) => CATEGORIES.find((x) => x.id === c)?.label ?? ""), ...templates.map((t) => t.name)].join(" "),
       )
-      return q.split(/\s+/).every((word) => haystack.includes(word))
+      return q.every((word) => haystack.includes(word))
     })
     const price = (p: AppPro) => browse.priceOf(p.id) ?? Number.POSITIVE_INFINITY
     return out
@@ -104,21 +120,75 @@ export default function Search() {
       })
   }, [browse, filters, query, sort, app])
 
-  const activeCount =
-    (filters.vertical !== "all" ? 1 : 0) +
-    (filters.category ? 1 : 0) +
-    (filters.price !== "any" ? 1 : 0) +
-    (filters.verified ? 1 : 0) +
-    (filters.taking ? 1 : 0) +
-    (filters.place !== "any" ? 1 : 0)
+  // The same cards as Khám phá: a service someone here offers, from its lowest real price.
+  const services = React.useMemo(() => {
+    const q = words(query)
+    const all = serviceOffers({ pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical: filters.vertical })
+    const nearest = (o: ServiceOffer) => Math.min(...o.pros.map((p) => app.distanceTo(p) ?? Number.POSITIVE_INFINITY))
+    return all
+      .filter((o) => {
+        const t = o.template
+        if (filters.category && t.category !== filters.category) return false
+        if (!priceOk(filters.price, o.fromPrice)) return false
+        if (filters.verified && !o.pros.some((p) => p.identity === "verified")) return false
+        if (filters.place === "home" && (t.studioOnly || !o.pros.some((p) => p.homeService))) return false
+        if (filters.place === "studio" && !o.pros.some((p) => p.studioAddress)) return false
+        if (filters.place === "location" && !t.onLocation) return false
+        if (!q.length) return true
+        const haystack = fold([t.name, t.description, categoryLabel(t.category), ...o.pros.map((p) => p.name)].join(" "))
+        return q.every((word) => haystack.includes(word))
+      })
+      .sort((a, b) => {
+        if (sort === "cheap") return a.fromPrice - b.fromPrice
+        if (sort === "near") return nearest(a) - nearest(b)
+        return 0
+      })
+  }, [browse, filters, query, sort, app])
+
+  const active: { key: string; label: string; clear: Partial<Filters> }[] = [
+    ...(filters.vertical !== "all" ? [{ key: "vertical", label: getVertical(filters.vertical).label, clear: { vertical: "all" as const, category: null } }] : []),
+    ...(filters.category ? [{ key: "category", label: categoryLabel(filters.category), clear: { category: null } }] : []),
+    ...(filters.price !== "any" ? [{ key: "price", label: PRICE_LABEL[filters.price], clear: { price: "any" as const } }] : []),
+    ...(filters.place !== "any" ? [{ key: "place", label: PLACE_LABEL[filters.place], clear: { place: "any" as const } }] : []),
+    ...(filters.verified ? [{ key: "verified", label: "Đã xác minh", clear: { verified: false } }] : []),
+    ...(filters.taking ? [{ key: "taking", label: "Đang nhận lịch", clear: { taking: false } }] : []),
+  ]
   const hasAddress = app.me.addresses.length > 0
   const categoryChoices = draft.vertical === "all" ? CATEGORIES : CATEGORIES.filter((c) => c.vertical === draft.vertical)
+  const loading = (!app.data || app.stale) && !app.dataError && app.configured
+  const count = mode === "services" ? services.length : people.length
+
+  const empty = loading ? (
+    <View style={{ gap: 12 }}>
+      <ProCardSkeleton />
+      <ProCardSkeleton />
+    </View>
+  ) : app.dataError ? (
+    <ErrorNote text={app.dataError} onRetry={() => void app.refresh()} />
+  ) : (
+    <View style={{ gap: 4 }}>
+      <EmptyState
+        title={query.trim() ? `Chưa có kết quả cho “${query.trim()}”` : "Không có gì khớp"}
+        text={
+          active.length
+            ? "Thử bỏ bớt bộ lọc, hoặc đăng yêu cầu để người làm gửi báo giá cho bạn."
+            : `Đăng yêu cầu, người làm${app.city ? ` ở ${app.city}` : ""} sẽ gửi báo giá. Không mất phí.`
+        }
+        action="Đăng yêu cầu"
+        onAction={() => router.push("/yeu-cau/moi")}
+      />
+      {active.length ? <Button label="Bỏ tất cả bộ lọc" variant="ghost" full onPress={() => setFilters(NONE)} /> : null}
+      {!active.length && app.city ? <Button label="Tìm cả nước" variant="ghost" full onPress={() => app.setCity(null)} /> : null}
+    </View>
+  )
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas, paddingTop: insets.top + 8 }}>
-      <View style={{ paddingHorizontal: gutter, gap: 12, paddingBottom: 8 }}>
-        <Txt v="h1">Tìm</Txt>
-        <View style={{ flexDirection: "row", gap: 8 }}>
+      <View style={{ gap: 12, paddingBottom: 8 }}>
+        <Txt v="h1" style={{ paddingHorizontal: gutter }}>
+          Tìm
+        </Txt>
+        <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: gutter }}>
           <View
             style={{
               flex: 1,
@@ -151,55 +221,98 @@ export default function Search() {
               setDraft(filters)
               sheet.open()
             }}
-            accessibilityLabel={activeCount ? `Bộ lọc, đang bật ${activeCount}` : "Bộ lọc"}
-            style={{ height: 48, paddingHorizontal: 16, borderRadius: radius.full, backgroundColor: activeCount ? colors.accent : colors.subtle, flexDirection: "row", alignItems: "center", gap: 6 }}
+            accessibilityLabel={active.length ? `Bộ lọc, đang bật ${active.length}` : "Bộ lọc"}
+            style={{ height: 48, paddingHorizontal: 16, borderRadius: radius.full, backgroundColor: active.length ? colors.accent : colors.subtle, flexDirection: "row", alignItems: "center", gap: 6 }}
           >
-            <Icon name="filter" size={18} color={activeCount ? colors.surface : colors.ink} />
-            {activeCount ? (
+            <Icon name="filter" size={18} color={active.length ? colors.surface : colors.ink} />
+            {active.length ? (
               <Txt v="meta" w={700} color={colors.surface}>
-                {activeCount}
+                {active.length}
               </Txt>
             ) : null}
           </Press>
         </View>
-        <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+
+        {active.length ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: gutter }}>
+            {active.map((f) => (
+              <Press
+                key={f.key}
+                haptic="select"
+                onPress={() => setFilters((cur) => ({ ...cur, ...f.clear }))}
+                accessibilityLabel={`Bỏ lọc ${f.label}`}
+                style={{ height: 34, paddingLeft: 12, paddingRight: 8, borderRadius: radius.full, backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accent, flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                <Txt v="meta" w={600} color={colors.accentDark}>
+                  {f.label}
+                </Txt>
+                <Icon name="close" size={12} color={colors.accentDark} />
+              </Press>
+            ))}
+            <Press onPress={() => setFilters(NONE)} accessibilityLabel="Xoá tất cả bộ lọc" style={{ height: 34, paddingHorizontal: 8, justifyContent: "center" }}>
+              <Txt v="meta" w={600} color={colors.inkSoft}>
+                Xoá lọc
+              </Txt>
+            </Press>
+          </ScrollView>
+        ) : null}
+
+        <View style={{ borderBottomWidth: 1, borderBottomColor: colors.line }}>
+          <TextTabs
+            size="body"
+            value={mode}
+            onChange={setMode}
+            items={[
+              { value: "services", label: `Dịch vụ${loading ? "" : ` ${services.length}`}` },
+              { value: "people", label: `Người làm${loading ? "" : ` ${people.length}`}` },
+            ]}
+          />
+        </View>
+        <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: gutter, alignItems: "center" }}>
           <Chip label="Phù hợp" selected={sort === "match"} onPress={() => setSort("match")} />
           {hasAddress ? <Chip label="Gần nhất" selected={sort === "near"} onPress={() => setSort("near")} /> : null}
           <Chip label="Giá thấp" selected={sort === "cheap"} onPress={() => setSort("cheap")} />
+          <Txt v="meta" color={colors.muted} style={{ marginLeft: "auto" }}>
+            {loading ? "" : `${count}${app.city ? ` ở ${app.city}` : ""}`}
+          </Txt>
         </View>
-        <Txt v="meta" color={colors.muted}>
-          {results.length} người{app.city ? ` ở ${app.city}` : ""}
-          {filters.category ? ` · ${CATEGORIES.find((c) => c.id === filters.category)?.label}` : ""}
-        </Txt>
+        <OfflineNote />
       </View>
 
-      <FlashList
-        data={results}
-        keyExtractor={(r) => r.pro.id}
-        contentContainerStyle={{ paddingHorizontal: gutter, paddingBottom: 24 }}
-        keyboardDismissMode="on-drag"
-        renderItem={({ item }) => (
-          <View style={{ paddingBottom: 12 }}>
-            <ProCard pro={item.pro} photos={browse.photosOf.get(item.pro.id) ?? []} price={browse.priceOf(item.pro.id)} distanceKm={item.km} />
-          </View>
-        )}
-        refreshing={app.loading && Boolean(app.data)}
-        onRefresh={() => void app.refresh()}
-        ListEmptyComponent={
-          app.data ? (
-            <EmptyState
-              title="Không có ai khớp"
-              text={activeCount ? "Thử bỏ bớt bộ lọc." : app.city ? `Chưa có người làm phù hợp ở ${app.city}.` : "Thử từ khoá khác."}
-              action={activeCount ? "Bỏ bộ lọc" : app.city ? "Tìm cả nước" : undefined}
-              onAction={() => (activeCount ? setFilters(NONE) : app.setCity(null))}
-            />
-          ) : null
-        }
-      />
+      {mode === "services" ? (
+        <FlashList
+          data={loading ? [] : services}
+          keyExtractor={(o) => o.template.id}
+          contentContainerStyle={{ paddingHorizontal: gutter, paddingBottom: 24 }}
+          keyboardDismissMode="on-drag"
+          renderItem={({ item }) => (
+            <View style={{ paddingBottom: 12 }}>
+              <ServiceRow offer={item} />
+            </View>
+          )}
+          refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}
+          ListEmptyComponent={empty}
+        />
+      ) : (
+        <FlashList
+          data={loading ? [] : people}
+          keyExtractor={(r) => r.pro.id}
+          contentContainerStyle={{ paddingHorizontal: gutter, paddingBottom: 24 }}
+          keyboardDismissMode="on-drag"
+          renderItem={({ item }) => (
+            <View style={{ paddingBottom: 12 }}>
+              <ProCard pro={item.pro} photos={browse.photosOf.get(item.pro.id) ?? []} price={browse.priceOf(item.pro.id)} distanceKm={item.km} />
+            </View>
+          )}
+          refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}
+          ListEmptyComponent={empty}
+        />
+      )}
 
       <Sheet
         sheet={sheet}
         title="Bộ lọc"
+        size="tall"
         footer={
           <View style={{ flexDirection: "row", gap: 10 }}>
             <Button label="Xoá lọc" variant="secondary" onPress={() => setDraft(NONE)} />
@@ -242,6 +355,46 @@ export default function Search() {
         </Group>
       </Sheet>
     </View>
+  )
+}
+
+/** A service for sale, as a row: its photo (or icon), the lowest price here, how many people offer it. */
+function ServiceRow({ offer }: { offer: ServiceOffer }) {
+  const { template, pros, fromPrice, photo } = offer
+  const shortest = Math.min(...template.variants.map((v) => v.durationMin))
+  const who = pros.length === 1 ? pros[0].name : `${pros.length} người nhận`
+  return (
+    <Press
+      onPress={() => router.push({ pathname: "/dich-vu/[id]", params: { id: template.id } })}
+      accessibilityLabel={`${template.name}, từ ${formatPrice(fromPrice)}, ${who}`}
+      style={{ ...card, flexDirection: "row", gap: 12, padding: 10, alignItems: "center" }}
+    >
+      <View style={{ width: 72, borderRadius: radius.md, overflow: "hidden" }}>
+        {photo ? (
+          <Photo uri={photo} rounded={radius.md} recyclingKey={template.id} />
+        ) : (
+          <View style={{ aspectRatio: 4 / 5, backgroundColor: colors.subtle, alignItems: "center", justifyContent: "center" }}>
+            <CategoryIcon id={template.category} size={30} />
+          </View>
+        )}
+      </View>
+      <View style={{ flex: 1, gap: 3 }}>
+        <Txt w={700} numberOfLines={2}>
+          {template.name}
+        </Txt>
+        <Txt v="meta" color={colors.muted} tabular numberOfLines={1}>
+          Từ{" "}
+          <Txt v="meta" w={700} color={colors.accentDark}>
+            {formatPrice(fromPrice)}
+          </Txt>{" "}
+          · {formatDuration(shortest)}
+        </Txt>
+        <Txt v="meta" color={colors.inkSoft} numberOfLines={1}>
+          {categoryLabel(template.category)} · {who}
+        </Txt>
+      </View>
+      <Icon name="right" size={14} color={colors.muted} />
+    </Press>
   )
 }
 

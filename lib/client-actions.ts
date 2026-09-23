@@ -15,7 +15,7 @@ import type {
   UsageScope,
   WorkEventKind,
 } from "./types"
-import { toTimestamptz } from "./utils"
+import { addDays, toTimestamptz } from "./utils"
 
 /**
  * What a button calls.
@@ -80,6 +80,23 @@ export const actions = {
     return api.fetchSlots(input)
   },
 
+  /**
+   * Which days from `from` (yyyy-mm-dd) have at least one bookable start time,
+   * for up to 21 days. Same inputs and rules as slotsFor.
+   */
+  async freeDays(input: {
+    proId: string
+    templateId: string
+    variantId: string
+    quantity?: number
+    from: string
+    days?: number
+    atHome: boolean
+    addressId: string | null
+  }): Promise<string[]> {
+    return api.freeDays(input)
+  },
+
   async deleteAddress(id: string): Promise<Result> {
     return asResult(await api.deleteAddress(id))
   },
@@ -130,6 +147,11 @@ export const actions = {
       default:
         return { error: "Không thể chuyển sang trạng thái này." }
     }
+  },
+
+  /** The customer disputes a no-show report, within 24 hours of it. */
+  async disputeNoShow(bookingId: string, reason: string): Promise<Result> {
+    return asResult(await api.disputeNoShow(bookingId, reason))
   },
 
   async requestReschedule(bookingId: string, date: string, time: string): Promise<Result> {
@@ -201,6 +223,21 @@ export const actions = {
     return asResult(await api.setAcceptingJobs(value))
   },
 
+  /**
+   * Busy time on one day, Vietnam time. `to` may be "24:00" for the end of the
+   * day; a `to` at or before `from` is refused here, before the database says so.
+   */
+  async addTimeBlock(input: { date: string; from: string; to: string; note?: string }): Promise<Result> {
+    const endsAt = input.to === "24:00" ? toTimestamptz(addDays(input.date, 1), "00:00") : toTimestamptz(input.date, input.to)
+    const startsAt = toTimestamptz(input.date, input.from)
+    if (endsAt <= startsAt) return { error: "Giờ kết thúc phải sau giờ bắt đầu." }
+    return asResult(await api.addTimeBlock({ startsAt, endsAt, note: input.note }))
+  },
+
+  async removeTimeBlock(id: string): Promise<Result> {
+    return asResult(await api.removeTimeBlock(id))
+  },
+
   // Reviews -------------------------------------------------------------------
 
   async submitReview(
@@ -256,6 +293,22 @@ export const actions = {
 
   async saveModelProfile(profile: ModelProfile): Promise<Result> {
     return asResult(await api.saveModelProfile(profile))
+  },
+
+  // Safety & devices --------------------------------------------------------------
+
+  /** An account id, or a freelancer's slug. Stops messages both ways. */
+  async blockUser(account: string): Promise<Result> {
+    return asResult(await api.blockUser(account))
+  },
+
+  async unblockUser(account: string): Promise<Result> {
+    return asResult(await api.unblockUser(account))
+  },
+
+  /** The Expo push token of this device, after sign-in. */
+  async registerPushToken(token: string, platform: "ios" | "android" | "web"): Promise<Result> {
+    return asResult(await api.registerPushToken(token, platform))
   },
 
   // Feed ------------------------------------------------------------------------

@@ -9,8 +9,11 @@ import { SignInGate } from "@/components/sign-in-gate"
 import { TextTabs } from "@/components/switches"
 import { useApp } from "@/state/app"
 import { useAsync } from "@/state/use-async"
-import { colors, gutter } from "@/theme"
+import { colors, gutter, radius } from "@/theme"
+import { Icon } from "@/ui/icon"
+import { Press } from "@/ui/press"
 import { EmptyState, ErrorNote, Skeleton } from "@/ui/bits"
+import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
 
 export default function MyBookings() {
@@ -51,9 +54,28 @@ export default function MyBookings() {
             <BookingRow booking={item} as="customer" />
           </View>
         )}
-        refreshing={bookings.refreshing}
-        onRefresh={() => void bookings.refresh()}
-        ListHeaderComponent={bookings.error ? <ErrorNote text={bookings.error} onRetry={() => void bookings.reload()} /> : null}
+        refreshControl={refreshControl(bookings.refreshing, () => void bookings.refresh())}
+        ListHeaderComponent={
+          <View style={{ gap: 10, paddingBottom: 10 }}>
+            <Press
+              onPress={() => router.push("/yeu-cau")}
+              accessibilityLabel="Yêu cầu của tôi và báo giá nhận được"
+              style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.accentSoft, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12 }}
+            >
+              <Icon name="megaphone" size={20} color={colors.accentDark} />
+              <View style={{ flex: 1 }}>
+                <Txt w={700} color={colors.accentDark}>
+                  Yêu cầu của tôi
+                </Txt>
+                <Txt v="meta" color={colors.accentDark}>
+                  Xem báo giá người làm gửi và chọn người ưng ý.
+                </Txt>
+              </View>
+              <Icon name="right" size={14} color={colors.accentDark} />
+            </Press>
+            {bookings.error ? <ErrorNote text={bookings.error} onRetry={() => void bookings.reload()} /> : null}
+          </View>
+        }
         ListEmptyComponent={
           bookings.loading ? (
             <View style={{ gap: 10 }}>

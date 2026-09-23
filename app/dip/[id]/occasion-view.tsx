@@ -259,25 +259,30 @@ function Step({ index, template: t, state, city }: { index: number; template: Se
               )}
             </>
           ) : (
-            <div className="rounded-[var(--radius-lg)] border border-dashed border-line px-5 py-8 text-center">
+            <div className="rounded-[var(--radius-lg)] border border-dashed border-line-strong px-5 py-8 text-center">
               <p className="text-[15px] font-bold">
                 Chưa có ai {city ? `ở ${city} ` : ""}nhận “{t.name}”
               </p>
               <p className="mx-auto mt-1 max-w-sm text-[14px] text-ink-soft">
                 {all.length > 0
-                  ? `Có ${all.length} ${who} ở thành phố khác đang nhận dịch vụ này.`
-                  : "Dịch vụ này vừa mở trên 360dep, chưa ai nhận."}
+                  ? `Có ${all.length} ${who} ở thành phố khác đang nhận dịch vụ này. Hoặc đăng yêu cầu để người làm quanh bạn gửi báo giá.`
+                  : "Đăng yêu cầu: khi có người nhận việc này quanh bạn, họ thấy yêu cầu và gửi báo giá."}
               </p>
               <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <ButtonLink href={`/requests/new?service=${t.id}`} size="sm">
+                  Đăng yêu cầu
+                </ButtonLink>
                 {all.length > 0 && (
                   <ButtonLink href={`/search?category=${t.category}&city=all&tab=pros`} variant="outline" size="sm">
-                    Xem ở nơi khác
+                    Xem cả nước
                   </ButtonLink>
                 )}
-                <ButtonLink href="/login?role=pro" variant={all.length > 0 ? "ghost" : "primary"} size="sm">
-                  Bạn làm dịch vụ này? Mở hồ sơ
-                </ButtonLink>
               </div>
+              <p className="mt-3 text-[13px] text-ink-soft">
+                <Link href="/login?role=pro" className="inline-flex min-h-11 items-center underline underline-offset-2 hover:text-ink">
+                  Bạn làm nghề này? Mở hồ sơ
+                </Link>
+              </p>
             </div>
           )}
         </div>

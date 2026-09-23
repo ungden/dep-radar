@@ -11,6 +11,7 @@ import { CATEGORIES, VERTICALS, categoryLabel } from "@/lib/catalog"
 import { actions, useAct } from "@/lib/client-actions"
 import { trackWork } from "@/lib/feed-events"
 import type { VerticalFilter } from "@/lib/feed"
+import { serviceOffers } from "@/lib/offers"
 import { distanceToCustomer, fromPrice, proView, useApp, worksOf, type AppState } from "@/lib/store"
 import type { CategoryId, Pro, Work } from "@/lib/types"
 import { cn, formatPrice } from "@/lib/utils"
@@ -24,10 +25,14 @@ export const CATEGORY_ICON = Object.fromEntries(
   }),
 ) as Record<CategoryId, React.ComponentType<{ className?: string }>>
 
-/** "2,4 km" when we know where the customer is, otherwise the district. */
+/**
+ * "2,4 km" when we know where the customer is; otherwise the district, plus
+ * the city when browsing the whole country ("Ba Đình" alone could be anywhere).
+ */
 export function whereLabel(state: AppState, pro: Pro) {
   const km = state.session?.role !== "pro" ? distanceToCustomer(state, pro.id) : null
-  return km !== null ? `${km.toLocaleString("vi-VN")} km` : pro.district
+  if (km !== null) return `${km.toLocaleString("vi-VN")} km`
+  return state.city ? pro.district : `${pro.district}, ${pro.city}`
 }
 
 // ---------------------------------------------------------------------------
@@ -44,6 +49,17 @@ export function VerticalSwitch({
 }) {
   const items: { id: VerticalFilter; label: string }[] = [{ id: "all", label: "Tất cả" }, ...VERTICALS]
   const ref = React.useRef<HTMLDivElement>(null)
+  const state = useApp()
+  // A trade nobody offers anywhere yet is still listed (it is part of what
+  // 360dep is), but says so before the tap rather than after.
+  const opening = React.useMemo(() => {
+    const empty = new Set<VerticalFilter>()
+    for (const v of VERTICALS) {
+      const offers = serviceOffers({ pros: state.pros, proServices: state.proServices, works: [], city: null, vertical: v.id })
+      if (!offers.length) empty.add(v.id)
+    }
+    return empty
+  }, [state.pros, state.proServices])
   // On a phone the last trade sits off-screen; keep the chosen one in view
   // without moving the page vertically.
   React.useEffect(() => {
@@ -84,6 +100,9 @@ export function VerticalSwitch({
               />
             )}
             {it.label}
+            {opening.has(it.id) && (
+              <span className={cn("text-[12px] font-medium", active ? "text-white" : "text-muted")}>Sắp mở</span>
+            )}
           </button>
         )
       })}
@@ -264,7 +283,7 @@ export function PostCard({ work, priority, className }: { work: Work; priority?:
               <VerifiedMark pro={pro} className="size-3.5" />
             </p>
             <p className="truncate text-[12.5px] text-ink-soft">
-              {pro.rating.count > 0 ? `★ ${pro.rating.average.toFixed(1)} · ` : ""}
+              {pro.rating.count > 0 ? `★ ${pro.rating.average.toFixed(1)} (${pro.rating.count}) · ` : ""}
               {whereLabel(state, pro)}
             </p>
           </div>
@@ -305,7 +324,7 @@ function TrustLine({ pro, state }: { pro: Pro; state: AppState }) {
 
 /**
  * A person, for lists: who they are, three recent pieces of work, and the
- * facts that decide a booking. Used where a customer compares freelancers.
+ * facts that decide a booking. Used where a customer compares people.
  */
 export function ProCard({ pro: basePro, className }: { pro: Pro; className?: string }) {
   const state = useApp()

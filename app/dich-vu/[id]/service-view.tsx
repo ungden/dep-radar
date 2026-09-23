@@ -7,6 +7,7 @@ import { PostCard, whereLabel } from "@/components/beauty"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar, ButtonLink, PageHeader } from "@/components/ui"
 import { categoryLabel, getTemplate } from "@/lib/catalog"
+import { actions } from "@/lib/client-actions"
 import { distanceToCustomer, servicesOf, useApp } from "@/lib/store"
 import { excludes, placeLabel } from "@/lib/trade"
 import { rankScore } from "@/lib/trust"
@@ -104,19 +105,30 @@ export function ServiceView({ templateId }: { templateId: string }) {
               {ranked.length > 0 && <span className="ml-2 text-[15px] font-medium text-muted">{ranked.length}</span>}
             </h2>
             {ranked.length === 0 ? (
-              <div className="mt-4 rounded-[var(--radius-lg)] border border-dashed border-line px-5 py-8 text-center">
+              <div className="mt-4 rounded-[var(--radius-lg)] border border-dashed border-line-strong px-5 py-8 text-center">
                 <p className="text-[16px] font-bold">Chưa có ai nhận dịch vụ này{city ? ` ở ${city}` : ""}</p>
                 <p className="mx-auto mt-1 max-w-sm text-[14px] text-ink-soft">
                   {elsewhere.length
-                    ? `Có ${elsewhere.length} người nhận ở nơi khác. Đổi khu vực ở trang chủ để xem.`
-                    : "Đăng yêu cầu để người làm gần bạn gửi báo giá, hoặc quay lại sau."}
+                    ? `Có ${elsewhere.length} người nhận ở thành phố khác. Hoặc đăng yêu cầu để người làm quanh bạn gửi báo giá.`
+                    : "Đăng yêu cầu: khi có người nhận việc này quanh bạn, họ thấy yêu cầu và gửi báo giá. Không mất phí."}
                 </p>
-                <div className="mt-4 flex justify-center gap-2">
-                  <ButtonLink href="/requests/new">Đăng yêu cầu</ButtonLink>
-                  <ButtonLink href="/login?role=pro" variant="outline">
-                    Tôi làm dịch vụ này
-                  </ButtonLink>
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  <ButtonLink href={`/requests/new?service=${template.id}`}>Đăng yêu cầu</ButtonLink>
+                  {elsewhere.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => void actions.setCity(null)}
+                      className="inline-flex h-11 items-center rounded-full border border-line-strong bg-surface px-5 text-sm font-semibold hover:border-accent"
+                    >
+                      Xem cả nước
+                    </button>
+                  )}
                 </div>
+                <p className="mt-3 text-[13px] text-ink-soft">
+                  <Link href="/login?role=pro" className="inline-flex min-h-11 items-center underline underline-offset-2 hover:text-ink">
+                    Bạn làm nghề này? Mở hồ sơ
+                  </Link>
+                </p>
               </div>
             ) : (
               <ul className="mt-4 space-y-3">

@@ -51,13 +51,13 @@ function Settings() {
       </Field>
 
       {session?.phone ? (
-        <Field label="Số điện thoại" hint="Chuyên viên gọi số này để xác nhận lịch hẹn. Muốn đổi số, liên hệ hỗ trợ.">
+        <Field label="Số điện thoại" hint="Người làm gọi số này để xác nhận lịch hẹn. Muốn đổi số, liên hệ hỗ trợ.">
           <input className={inputClass} value={formatPhone(session.phone)} disabled />
         </Field>
       ) : (
         <Card className="p-4">
           <p className="font-semibold">Chưa có số điện thoại</p>
-          <p className="mt-1 text-[13px] text-ink-soft">Cần số điện thoại trước khi đặt lịch hoặc nhận job.</p>
+          <p className="mt-1 text-[13px] text-ink-soft">Cần số điện thoại trước khi đặt lịch hoặc nhận khách.</p>
           <Link href="/me/so-dien-thoai?next=/me/cai-dat" className="mt-2 inline-block text-sm font-medium text-accent underline underline-offset-2">
             Thêm số điện thoại
           </Link>
@@ -108,7 +108,7 @@ function Settings() {
       <Card className="p-4 ring-1 ring-danger/30">
         <p className="font-semibold text-danger">Xoá tài khoản</p>
         <p className="mt-1 text-[13px] text-ink-soft">
-          Xoá tên, số điện thoại, email, địa chỉ, mẫu đã lưu và quyền đăng nhập của bạn. Các job đã hoàn thành và đánh giá vẫn
+          Xoá tên, số điện thoại, email, địa chỉ, mẫu đã lưu và quyền đăng nhập của bạn. Các lịch đã hoàn thành và đánh giá vẫn
           còn, nhưng không còn gắn với tên bạn — vì đó cũng là hồ sơ của phía bên kia. Không thể hoàn tác.
         </p>
         {confirmDelete ? (

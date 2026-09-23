@@ -28,7 +28,7 @@ export default async function NotificationsPage() {
           <EmptyState
             icon={<BellOff className="size-6" />}
             title="Chưa có thông báo nào"
-            text="Nhắc lịch hẹn, xác nhận từ chuyên viên và báo giá mới sẽ hiện ở đây."
+            text="Nhắc lịch hẹn, xác nhận từ người làm và báo giá mới sẽ hiện ở đây."
           />
         ) : (
           <ul className="space-y-2">

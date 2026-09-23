@@ -26,7 +26,7 @@ import { MessageButton } from "@/components/message-button"
 import { ServiceMenu } from "@/components/service-menu"
 import { TradeDot } from "@/components/trade"
 import { RatingSummaryBlock, ReviewItem, VerifiedBadge, VerifiedMark } from "@/components/trust"
-import { Avatar, ButtonLink, Chip, EmptyState, Tabs } from "@/components/ui"
+import { Avatar, BottomBar, ButtonLink, Chip, EmptyState, Tabs } from "@/components/ui"
 import { categoryLabel, verticalOf } from "@/lib/catalog"
 import { POLICY, travelFeeFor } from "@/lib/pricing"
 import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp, worksOf } from "@/lib/store"
@@ -146,12 +146,33 @@ export function ProProfile({ proId }: { proId: string }) {
         </p>
         <VerifiedBadge pro={pro} className="mt-3" />
 
+        {/* On a phone the booking facts sit under the name, where the
+            computer's side card would be: open or not, from what price, how far
+            they travel and what that costs. */}
+        {!own && (
+          <div className="mt-4 rounded-[var(--radius-lg)] border border-line bg-surface p-4 md:hidden">
+            <p className="flex flex-wrap items-baseline gap-x-2 text-[14px]">
+              <span className={cn("font-semibold", pro.acceptingJobs ? "text-success" : "text-warning")}>
+                {pro.acceptingJobs ? "Đang nhận lịch" : "Tạm nghỉ nhận lịch mới"}
+              </span>
+              {from !== null && (
+                <>
+                  <span aria-hidden className="text-muted">·</span>
+                  <span className="text-ink-soft">
+                    Từ <b className="text-ink">{formatPrice(from)}</b>
+                  </span>
+                </>
+              )}
+            </p>
+            <WhereFacts pro={pro} className="mt-3" />
+          </div>
+        )}
+
         <Stats pro={pro} onReviews={() => openTab("reviews")} />
 
         {!own && (
-          <div className="mt-5 grid grid-cols-2 gap-2 md:hidden">
-            <MessageButton proId={pro.id} className="w-full" />
-            <BookButton pro={pro} disabled={!services.length} />
+          <div className="mt-5 md:hidden">
+            <MessageButton proId={pro.id} label={`Nhắn tin cho ${firstName}`} className="w-full" />
           </div>
         )}
       </div>
@@ -252,22 +273,47 @@ export function ProProfile({ proId }: { proId: string }) {
           </div>
         </aside>
       </div>
+
+      {/* Phone: the price and the booking button stay in reach while browsing. */}
+      {!own && (
+        <BottomBar className="md:hidden">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              {from !== null ? (
+                <p className="text-[13px] text-muted">
+                  Từ <span className="text-[17px] font-bold text-ink">{formatPrice(from)}</span>
+                </p>
+              ) : (
+                <p className="text-[14px] font-semibold">Chưa có bảng giá</p>
+              )}
+              <p className={cn("text-[13px] font-medium", pro.acceptingJobs ? "text-success" : "text-warning")}>
+                {pro.acceptingJobs ? "Đang nhận lịch" : "Tạm nghỉ nhận lịch"}
+              </p>
+            </div>
+            <BookButton pro={pro} disabled={!services.length} size="lg" className="shrink-0 px-8" />
+          </div>
+        </BottomBar>
+      )}
     </div>
   )
 }
 
-function BookButton({ pro, disabled, className }: { pro: Pro; disabled?: boolean; className?: string }) {
+function BookButton({ pro, disabled, size, className }: { pro: Pro; disabled?: boolean; size?: "md" | "lg"; className?: string }) {
   if (disabled)
     return (
       <span
         aria-disabled
-        className={cn("inline-flex h-11 items-center justify-center rounded-full bg-subtle px-5 text-sm font-semibold text-muted", className)}
+        className={cn(
+          "inline-flex items-center justify-center rounded-full bg-subtle px-5 text-sm font-semibold text-muted",
+          size === "lg" ? "h-13" : "h-11",
+          className,
+        )}
       >
         Chưa nhận đặt
       </span>
     )
   return (
-    <ButtonLink href={`/book/${pro.id}`} className={className}>
+    <ButtonLink href={`/book/${pro.id}`} size={size} className={className}>
       Đặt lịch
     </ButtonLink>
   )

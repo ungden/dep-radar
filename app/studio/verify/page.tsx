@@ -145,7 +145,8 @@ function VerifyFlow() {
         </ul>
         <p className="mt-2 flex items-start gap-1.5 text-xs text-muted">
           <ScanFace className="mt-px size-3.5 shrink-0" />
-          Không bắt buộc, khoảng 2 phút. AI đọc CCCD và so ảnh chân dung trên thẻ với ảnh selfie của bạn.
+          Bắt buộc nếu bạn nhận làm mẫu; các nghề khác thì tuỳ bạn. Khoảng 2 phút: AI đọc CCCD và so ảnh chân dung trên thẻ
+          với ảnh selfie của bạn.
         </p>
       </Card>
 

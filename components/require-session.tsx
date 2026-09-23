@@ -24,16 +24,16 @@ export function RequireSession({ role, children }: { role?: Role; children: Reac
       return (
         <EmptyState
           icon={<LogIn className="size-6" />}
-          title="Bạn chưa có hồ sơ chuyên viên"
-          text="Mở hồ sơ để nhận job làm đẹp tại nhà cho khách quanh bạn."
-          action={<ButtonLink href="/studio/onboarding">Mở hồ sơ chuyên viên</ButtonLink>}
+          title="Bạn chưa có hồ sơ nhận khách"
+          text="Mở hồ sơ để nhận khách quanh bạn: làm đẹp, chụp ảnh, quay clip hoặc làm mẫu."
+          action={<ButtonLink href="/studio/onboarding">Mở hồ sơ nhận khách</ButtonLink>}
         />
       )
     }
     return (
       <EmptyState
         icon={<LogIn className="size-6" />}
-        title={role === "pro" ? "Trang dành cho chuyên viên" : "Trang dành cho khách đặt lịch"}
+        title={role === "pro" ? "Trang dành cho người nhận khách" : "Trang dành cho khách đặt lịch"}
         text="Bạn đang ở chế độ khác. Chuyển chế độ để xem trang này."
         action={
           <Button
@@ -44,7 +44,7 @@ export function RequireSession({ role, children }: { role?: Role; children: Reac
               })
             }
           >
-            {role === "pro" ? "Chuyển sang chế độ chuyên viên" : "Chuyển sang chế độ đặt lịch"}
+            {role === "pro" ? "Chuyển sang chế độ nhận khách" : "Chuyển sang chế độ đặt lịch"}
           </Button>
         }
       />
@@ -54,10 +54,10 @@ export function RequireSession({ role, children }: { role?: Role; children: Reac
     return (
       <EmptyState
         icon={<LogIn className="size-6" />}
-        title={role === "pro" ? "Dành cho freelancer" : "Đăng nhập để tiếp tục"}
+        title={role === "pro" ? "Dành cho người nhận khách" : "Đăng nhập để tiếp tục"}
         text={
           role === "pro"
-            ? "Đăng nhập với vai trò freelancer để nhận job và quản lý lịch làm."
+            ? "Đăng nhập để nhận khách và quản lý lịch làm."
             : "Đăng nhập để xem lịch hẹn, yêu cầu và mẫu đã lưu của bạn."
         }
         action={

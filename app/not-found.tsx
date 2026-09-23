@@ -14,7 +14,7 @@ export default function NotFound() {
       <div className="mt-6 flex gap-2">
         <ButtonLink href="/">Về trang khám phá</ButtonLink>
         <ButtonLink href="/pros" variant="outline">
-          Xem chuyên viên
+          Xem người làm
         </ButtonLink>
       </div>
     </div>

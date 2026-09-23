@@ -1,7 +1,7 @@
 import type { Category, CategoryId, ServiceTemplate, ServiceVariant, Vertical, VerticalId } from "./types"
 
 export const VERTICALS: Vertical[] = [
-  { id: "beauty", label: "Làm đẹp", person: "chuyên viên" },
+  { id: "beauty", label: "Làm đẹp", person: "người làm" },
   { id: "photo", label: "Chụp & quay", person: "người chụp" },
   { id: "model", label: "Người mẫu", person: "mẫu" },
 ]
@@ -13,12 +13,12 @@ export const CATEGORIES: Category[] = [
   { id: "hair", label: "Tóc", vertical: "beauty" },
   { id: "lash-brow", label: "Mi & mày", vertical: "beauty" },
   { id: "massage", label: "Massage", vertical: "beauty" },
-  { id: "photophone", label: "Chụp điện thoại", vertical: "photo" },
-  { id: "camera", label: "Chụp máy ảnh", vertical: "photo" },
-  { id: "short-video", label: "Quay clip ngắn", vertical: "photo" },
-  { id: "product-photo", label: "Chụp sản phẩm", vertical: "photo" },
+  { id: "photophone", label: "Chụp điện thoại", vertical: "photo", short: "Photophone" },
+  { id: "camera", label: "Chụp máy ảnh", vertical: "photo", short: "Máy ảnh" },
+  { id: "short-video", label: "Quay clip ngắn", vertical: "photo", short: "Clip ngắn" },
+  { id: "product-photo", label: "Chụp sản phẩm", vertical: "photo", short: "Sản phẩm" },
   { id: "model-photo", label: "Mẫu ảnh", vertical: "model" },
-  { id: "model-video", label: "Mẫu clip & livestream", vertical: "model" },
+  { id: "model-video", label: "Mẫu clip & livestream", vertical: "model", short: "Mẫu clip" },
 ]
 
 export function categoryLabel(id: CategoryId) {

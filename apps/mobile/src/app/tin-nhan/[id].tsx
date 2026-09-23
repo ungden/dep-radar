@@ -6,9 +6,11 @@ import { KeyboardAvoidingView, Platform, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { listMessages, markThreadRead, sendMessage, subscribeThread, threadHeader, toMessage, type ChatMessage } from "@/data/chat"
 import { formatDay, localDate, localTime } from "@/data/format"
+import { useSafetyMenu } from "@/components/safety"
 import { useApp } from "@/state/app"
+import { useKeyboardVisible } from "@/state/keyboard"
 import { colors, fonts, gutter, radius } from "@/theme"
-import { IconButton } from "@/ui/button"
+import { Button, IconButton } from "@/ui/button"
 import { ErrorNote } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -22,11 +24,14 @@ export default function Conversation() {
   const insets = useSafeAreaInsets()
   const list = React.useRef<FlashListRef<ChatMessage>>(null)
   const [messages, setMessages] = React.useState<ChatMessage[]>([])
-  const [header, setHeader] = React.useState<{ name: string; proSlug: string; bookingId: string | null; iAmPro: boolean } | null>(null)
+  const [header, setHeader] = React.useState<{ name: string; proSlug: string; bookingId: string | null; iAmPro: boolean; otherId: string } | null>(null)
   const [text, setText] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
   const [sending, setSending] = React.useState(false)
   const { refreshMe } = app
+  const keyboard = useKeyboardVisible()
+  const blocked = header ? app.blocked.has(header.otherId) : false
+  const safety = useSafetyMenu(header ? { accountId: header.otherId, name: header.name, onBlocked: () => router.back() } : null)
 
   React.useEffect(() => {
     if (!uid || !id) return
@@ -72,17 +77,24 @@ export default function Conversation() {
         options={{
           title: header?.name ?? "",
           headerRight: () =>
-            header?.bookingId ? (
-              <IconButton name="calendar" label="Xem lịch hẹn" onPress={() => router.push({ pathname: "/bookings/[id]", params: { id: header.bookingId! } })} />
-            ) : header && !header.iAmPro && header.proSlug ? (
-              <IconButton name="person" label="Xem hồ sơ" onPress={() => router.push({ pathname: "/pros/[id]", params: { id: header.proSlug } })} />
+            header ? (
+              <View style={{ flexDirection: "row" }}>
+                {header.bookingId ? (
+                  <IconButton name="calendar" label="Xem lịch hẹn" onPress={() => router.push({ pathname: "/bookings/[id]", params: { id: header.bookingId! } })} />
+                ) : !header.iAmPro && header.proSlug ? (
+                  <IconButton name="person" label="Xem hồ sơ" onPress={() => router.push({ pathname: "/pros/[id]", params: { id: header.proSlug } })} />
+                ) : null}
+                <IconButton name="more" label="Báo cáo hoặc chặn" onPress={safety.open} />
+              </View>
             ) : null,
         }}
       />
+      {safety.element}
       <FlashList
         ref={list}
-        data={messages}
+        data={blocked ? [] : messages}
         keyExtractor={(m) => m.id}
+        keyboardDismissMode="interactive"
         contentContainerStyle={{ padding: gutter }}
         renderItem={({ item, index }) => {
           const day = localDate(item.createdAt)
@@ -124,7 +136,7 @@ export default function Conversation() {
         }}
         ListEmptyComponent={
           <Txt color={colors.inkSoft} center style={{ paddingTop: 40 }}>
-            {header ? `Bắt đầu trò chuyện với ${header.name}.` : ""}
+            {blocked ? "Tin nhắn đã ẩn vì bạn đã chặn người này." : header ? `Bắt đầu trò chuyện với ${header.name}.` : ""}
           </Txt>
         }
       />
@@ -133,6 +145,14 @@ export default function Conversation() {
           <ErrorNote text={error} />
         </View>
       ) : null}
+      {blocked ? (
+        <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 12), gap: 8, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line }}>
+          <Txt color={colors.inkSoft} center>
+            Bạn đã chặn {header?.name ?? "người này"}.
+          </Txt>
+          <Button label="Bỏ chặn" variant="secondary" full onPress={() => header && void app.unblock(header.otherId)} />
+        </View>
+      ) : (
       <View
         style={{
           flexDirection: "row",
@@ -140,7 +160,8 @@ export default function Conversation() {
           gap: 8,
           paddingHorizontal: gutter,
           paddingTop: 8,
-          paddingBottom: Math.max(insets.bottom, 10),
+          // No home-indicator gap while the keyboard is up.
+          paddingBottom: keyboard ? 8 : Math.max(insets.bottom, 10),
           backgroundColor: colors.surface,
           borderTopWidth: 1,
           borderTopColor: colors.line,
@@ -165,6 +186,7 @@ export default function Conversation() {
           <Icon name="send" size={20} color={colors.surface} />
         </Press>
       </View>
+      )}
     </KeyboardAvoidingView>
   )
 }

@@ -1,16 +1,19 @@
 import * as React from "react"
 import { router } from "expo-router"
-import { Alert, Linking, Platform, RefreshControl, ScrollView, View } from "react-native"
+import { Alert, Linking, Platform, ScrollView, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { confirmBooking, listBookings, type BookingItem } from "@/data/bookings"
 import { addDays, formatCountdown, formatPhone, formatPrice, localDate, todayISO } from "@/data/format"
+import { askForPushPermission } from "@/data/push"
 import { StudioHeader } from "@/components/studio-header"
 import { useApp } from "@/state/app"
+import { useNow } from "@/state/keyboard"
 import { useAsync } from "@/state/use-async"
 import { colors, gutter, radius } from "@/theme"
 import { Button } from "@/ui/button"
 import { Card, ErrorNote, SectionHeader, Skeleton } from "@/ui/bits"
 import { Press } from "@/ui/press"
+import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
 
 function mapsUrl(b: BookingItem) {
@@ -24,15 +27,17 @@ export default function Today() {
   const insets = useSafeAreaInsets()
   const uid = app.uid
   const bookings = useAsync(uid ? () => listBookings(uid, "pro") : null, [uid])
-  const [now, setNow] = React.useState(Date.now())
   const [busy, setBusy] = React.useState<string | null>(null)
-
-  React.useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(t)
-  }, [])
-
   const all = bookings.value ?? []
+  const hasPending = all.some((b) => b.status === "pending")
+  // Ticks only while a confirmation countdown is on screen.
+  const now = useNow(hasPending)
+
+  // A booking waiting for a call is the moment push notifications make sense.
+  React.useEffect(() => {
+    if (hasPending && uid) void askForPushPermission(uid)
+  }, [hasPending, uid])
+
   const today = todayISO()
   const monday = addDays(today, -((new Date(`${today}T00:00:00Z`).getUTCDay() + 6) % 7))
   const toCall = all.filter((b) => b.status === "pending").sort((a, b) => a.confirmBy.localeCompare(b.confirmBy))
@@ -55,7 +60,7 @@ export default function Today() {
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.canvas }}
       contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 40, gap: 24 }}
-      refreshControl={<RefreshControl refreshing={bookings.refreshing} onRefresh={() => void bookings.refresh()} />}
+      refreshControl={refreshControl(bookings.refreshing, () => void bookings.refresh())}
     >
       <StudioHeader title="Hôm nay" subtitle={app.myPro && !app.myPro.acceptingJobs ? "Bạn đang tạm nghỉ nhận lịch mới." : undefined} />
       {bookings.error ? (

@@ -1,18 +1,18 @@
-import * as Haptics from "expo-haptics"
 import { Pressable, type GestureResponderEvent, type PressableProps, type StyleProp, type ViewStyle } from "react-native"
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated"
 import { motion } from "@/theme"
+import { haptic as tick } from "./haptics"
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 export interface PressProps extends Omit<PressableProps, "style"> {
   style?: StyleProp<ViewStyle>
-  /** Skip the haptic tick (e.g. for rapid, repeated taps). */
-  quiet?: boolean
+  /** A selection tick for picking an option (a chip, a day, a time). Silent by default. */
+  haptic?: "select"
 }
 
-/** Every tappable thing: scales to 0.98 while held and ticks a light haptic. */
-export function Press({ style, onPressIn, onPressOut, onPress, quiet, disabled, ...rest }: PressProps) {
+/** Every tappable thing: scales to 0.98 while held. Haptics only when asked for. */
+export function Press({ style, onPressIn, onPressOut, onPress, haptic, disabled, ...rest }: PressProps) {
   const scale = useSharedValue(1)
   const animated = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }))
   return (
@@ -30,7 +30,7 @@ export function Press({ style, onPressIn, onPressOut, onPress, quiet, disabled, 
         onPressOut?.(e)
       }}
       onPress={(e: GestureResponderEvent) => {
-        if (!quiet) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
+        if (haptic === "select") tick.select()
         onPress?.(e)
       }}
     />

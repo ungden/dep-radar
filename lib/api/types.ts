@@ -169,3 +169,30 @@ export interface NotificationItem {
   readAt: string | null
   createdAt: string
 }
+
+/**
+ * Time the signed-in freelancer marked busy outside 360dep. Shown in Vietnam
+ * time: a block that runs past midnight shows `to` on the next day's clock.
+ */
+export interface TimeBlock {
+  id: string
+  /** yyyy-mm-dd, Vietnam time, of the start. */
+  date: string
+  /** HH:mm, Vietnam time. */
+  from: string
+  /** HH:mm, Vietnam time. */
+  to: string
+  note: string
+}
+
+/** The platform's own details (wallet top-up, support, company). Null means not set: show nothing. */
+export interface PlatformSettings {
+  topupBankBin: string | null
+  topupAccountNo: string | null
+  topupAccountName: string | null
+  supportZalo: string | null
+  supportEmail: string | null
+  companyName: string | null
+  companyTaxId: string | null
+  companyAddress: string | null
+}

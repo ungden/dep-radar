@@ -34,14 +34,17 @@ const PRO_NAV: NavItem[] = [
   { href: "/studio/jobs", label: "Việc mới", icon: BriefcaseBusiness },
   { href: "/dang", label: "Đăng", icon: Plus, primary: true, match: /^\/(dang|studio\/works|studio\/tuyen-mau)/ },
   { href: "/studio/schedule", label: "Lịch", icon: ListChecks },
-  { href: "/me", label: "Tôi", icon: User, match: /^\/(me|studio\/(services|profile|wallet|verify))/ },
+  { href: "/me", label: "Tôi", icon: User, match: /^\/(me|studio\/(services|profile|wallet|verify|khach))/ },
 ]
 
-/** Desktop has room for words; it shows the places, not the post button. */
+/**
+ * Desktop has room for words; it shows the places, not the post button.
+ * "Tuyển mẫu" is not here: it is for people who want to model, not for
+ * booking, and lives in the footer and in "Tôi".
+ */
 const CUSTOMER_TOP: NavItem[] = [
   { href: "/", label: "Khám phá", icon: Compass, match: /^\/($|works|dip)/ },
   { href: "/pros", label: "Người làm", icon: User, match: /^\/pros/ },
-  { href: "/tuyen-mau", label: "Tuyển mẫu", icon: User, match: /^\/tuyen-mau/ },
   { href: "/bookings", label: "Lịch hẹn", icon: CalendarDays, match: /^\/(bookings|requests)/ },
   { href: "/saved", label: "Đã lưu", icon: User, match: /^\/saved/ },
 ]
@@ -55,7 +58,8 @@ const PRO_TOP: NavItem[] = [
 ]
 
 const FULLSCREEN = [/^\/login/]
-const NO_TABBAR = [/^\/book\//, /^\/works\//, /^\/bookings\/./, /^\/requests\/./, /^\/studio\/verify/]
+// A profile has its own bottom bar ("Từ X · Đặt lịch"), like a work and a booking.
+const NO_TABBAR = [/^\/book\//, /^\/works\//, /^\/pros\/./, /^\/bookings\/./, /^\/requests\/./, /^\/studio\/verify/]
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

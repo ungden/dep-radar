@@ -3,9 +3,10 @@
 import * as React from "react"
 import Link from "next/link"
 import { Pencil, Plus, Store, Trash2, X } from "lucide-react"
+import { PriceInput } from "@/components/price-input"
 import { RequireSession } from "@/components/require-session"
 import { Button, ButtonLink, Card, PageHeader, Toggle } from "@/components/ui"
-import { categoryLabel, getTemplate, templatesByCategory } from "@/lib/catalog"
+import { categoryLabel, getTemplate, isPriceAllowed, templatesByCategory } from "@/lib/catalog"
 import { POLICY, payoutFor } from "@/lib/pricing"
 import { actions, useAct } from "@/lib/client-actions"
 import { proView, servicesOf, useApp } from "@/lib/store"
@@ -136,13 +137,15 @@ function ServicesManager() {
               )
             })}
           </ul>
-          <p className="mt-4 text-xs text-muted">
-            Mẹo: xác minh tay nghề tại{" "}
-            <Link href="/studio/profile" className="text-accent underline underline-offset-2">
-              Xác minh & đánh giá
-            </Link>{" "}
-            để được gắn huy hiệu và ưu tiên hiển thị.
-          </p>
+          {pro.identity !== "verified" && (
+            <p className="mt-4 text-xs text-muted">
+              Mẹo:{" "}
+              <Link href="/studio/verify" className="text-accent underline underline-offset-2">
+                xác minh danh tính
+              </Link>{" "}
+              (CCCD + selfie) để có dấu tick và được xếp trước khi khách tìm kiếm. Bắt buộc nếu bạn nhận làm mẫu.
+            </p>
+          )}
         </Sheet>
       )}
     </>
@@ -165,6 +168,8 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
   const save = async () => {
     const chosen = Object.fromEntries(Object.entries(prices).filter(([, p]) => p !== undefined)) as Record<string, number>
     if (!Object.keys(chosen).length) return setError("Chọn ít nhất một gói.")
+    const bad = tpl.variants.find((v) => chosen[v.id] !== undefined && !isPriceAllowed(v, chosen[v.id]))
+    if (bad) return setError(`Giá gói ${bad.label} cần từ ${formatPrice(bad.minPrice)} đến ${formatPrice(bad.maxPrice)}, chẵn 5.000đ.`)
     setBusy(true)
     const problem = await act(() => actions.saveProService(templateId, chosen, existing?.active ?? true), "Đã lưu bảng giá")
     setBusy(false)
@@ -193,10 +198,19 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
                 <span className="flex-1 text-sm font-medium">
                   {v.label} <span className="font-normal text-muted">· {formatDuration(v.durationMin)}</span>
                 </span>
-                {on && <b className="text-sm">{formatPrice(price)}</b>}
               </label>
               {on && (
                 <>
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <span className="text-[13px] text-muted">Giá của bạn</span>
+                    <PriceInput
+                      value={price}
+                      min={v.minPrice}
+                      max={v.maxPrice}
+                      label={`Nhập giá ${v.label}`}
+                      onChange={(value) => setPrices((x) => ({ ...x, [v.id]: value }))}
+                    />
+                  </div>
                   <input
                     type="range"
                     aria-label={`Giá ${v.label}`}
@@ -205,18 +219,25 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
                     step={5000}
                     value={price}
                     onChange={(e) => setPrices((x) => ({ ...x, [v.id]: Number(e.target.value) }))}
-                    className="mt-3 w-full accent-[var(--color-accent)]"
+                    className="mt-2 w-full accent-[var(--color-accent)]"
                   />
                   <div className="flex justify-between text-xs text-muted">
                     <span>Tối thiểu {formatPrice(v.minPrice)}</span>
                     <button type="button" className="text-accent" onClick={() => setPrices((x) => ({ ...x, [v.id]: v.suggestedPrice }))}>
-                      Gợi ý {formatPrice(v.suggestedPrice)}
+                      Dùng giá gợi ý {formatPrice(v.suggestedPrice)}
                     </button>
                     <span>Tối đa {formatPrice(v.maxPrice)}</span>
                   </div>
-                  <p className="mt-1 text-xs text-ink-soft">
-                    Bạn nhận {formatPrice(payoutFor(price, rate))} sau hoa hồng {Math.round(rate * 100)}%
-                  </p>
+                  {isPriceAllowed(v, price) ? (
+                    <p className="mt-1 text-xs text-ink-soft">
+                      Bạn nhận {formatPrice(payoutFor(price, rate))}
+                      {v.perPerson ? " mỗi người" : ""} sau hoa hồng {Math.round(rate * 100)}%
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-xs text-danger">
+                      Giá cần từ {formatPrice(v.minPrice)} đến {formatPrice(v.maxPrice)}, chẵn 5.000đ.
+                    </p>
+                  )}
                 </>
               )}
             </li>

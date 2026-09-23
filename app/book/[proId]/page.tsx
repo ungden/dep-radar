@@ -4,7 +4,7 @@ import * as React from "react"
 import { Suspense } from "react"
 import Link from "next/link"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
-import { Car, Check, CheckCircle2, Clock, CreditCard, HandCoins, Home, Info, Link2, MapPin, Store, Zap } from "lucide-react"
+import { CalendarX2, Car, Check, CheckCircle2, Clock, CreditCard, HandCoins, Home, Info, Link2, MapPin, Phone, Store, Zap } from "lucide-react"
 import { AddressPicker, defaultAddressId } from "@/components/address-picker"
 import { PriceBreakdown } from "@/components/price-breakdown"
 import { VerifiedMark } from "@/components/trust"
@@ -12,8 +12,9 @@ import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, Sk
 import { getTemplate, getVertical, verticalOf } from "@/lib/catalog"
 import { actions } from "@/lib/client-actions"
 import { formatPhone } from "@/lib/auth/phone"
-import { POLICY, isUrgent } from "@/lib/pricing"
-import { getPro, homeAvailability, priceOf, proView, quoteFor, servicesOf, useApp } from "@/lib/store"
+import { CITIES, districtsOf, travelDistanceKm } from "@/lib/geo"
+import { POLICY, buildQuote, isUrgent } from "@/lib/pricing"
+import { getPro, homeAvailability, priceOf, proView, servicesOf, useApp } from "@/lib/store"
 import { ComboSuggestions } from "@/components/combo"
 import type { CustomerAddress, PaymentMethod, PriceQuote, UsageScope } from "@/lib/types"
 import {
@@ -24,12 +25,15 @@ import {
   formatDuration,
   formatPrice,
   formatResponseTime,
+  localDate,
+  localTime,
   parseISODate,
+  toTimestamptz,
   todayISO,
   weekdayShort,
 } from "@/lib/utils"
 
-const STEPS = ["Dịch vụ", "Thời gian", "Xác nhận"]
+const STEPS = ["Dịch vụ", "Nơi & giờ", "Xác nhận"]
 
 export default function BookPage() {
   return (
@@ -48,20 +52,35 @@ function BookGate() {
     return (
       <div className="mx-auto max-w-2xl">
         <PageHeader back title="Đặt lịch" />
-        <EmptyState title="Chuyên viên chưa nhận đặt lịch" action={<ButtonLink href="/">Về trang khám phá</ButtonLink>} />
+        <EmptyState title="Người làm này chưa nhận đặt lịch" action={<ButtonLink href="/">Về trang khám phá</ButtonLink>} />
       </div>
     )
   }
   return <BookingFlow proId={proId} />
 }
 
+/** A date the form can offer: today or one of the next 13 days. */
+function bookableDate(raw: string | null) {
+  if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null
+  const today = todayISO()
+  return raw >= today && raw <= addDays(today, 13) ? raw : null
+}
+
+/** "22:00 24/09": the last moment a booking can be cancelled for free. */
+function freeCancelUntil(date: string, time: string) {
+  const until = new Date(Date.parse(toTimestamptz(date, time)) - POLICY.freeCancelHours * 3_600_000).toISOString()
+  const [, m, d] = localDate(until).split("-")
+  return { passed: Date.parse(until) <= Date.now(), label: `${localTime(until)} ${d}/${m}` }
+}
+
 function BookingFlow({ proId }: { proId: string }) {
   const router = useRouter()
   const params = useSearchParams()
   const state = useApp()
+  const { session } = state
   const pro = proView(state, proId)!
   const services = servicesOf(state, proId)
-  const isOwnProfile = state.session?.proId === pro.id
+  const isOwnProfile = session?.proId === pro.id
   const paused = !pro.acceptingJobs
 
   const initialService = services.find((s) => s.templateId === params.get("service")) ?? services[0]
@@ -76,21 +95,34 @@ function BookingFlow({ proId }: { proId: string }) {
   )
   const partnerPro = partner ? getPro(state, partner.proId) : undefined
 
-  const [step, setStep] = React.useState(1)
+  // A visitor who chose everything before signing in comes back through the
+  // login page with the choices in the URL (see resumeUrl below).
+  const restoredDate = bookableDate(params.get("date"))
+  const restoredTime = /^\d{2}:\d{2}$/.test(params.get("time") ?? "") ? params.get("time") : null
+  const restoredArea = (() => {
+    const c = params.get("city")
+    const d = params.get("district")
+    return c && d && districtsOf(c).includes(d) ? { city: c, district: d } : null
+  })()
+
   const [templateId, setTemplateId] = React.useState(initialService.templateId)
   const [variantId, setVariantId] = React.useState(initialVariant)
-  const [date, setDate] = React.useState(partner?.date ?? addDays(todayISO(), 1))
-  const [pickedTime, setTime] = React.useState<string | null>(partner?.time ?? null)
-  const [usageScope, setUsageScope] = React.useState<UsageScope>("personal")
-  const [consentRepost, setConsentRepost] = React.useState(false)
+  const [date, setDate] = React.useState(partner?.date ?? restoredDate ?? addDays(todayISO(), 1))
+  const [pickedTime, setTime] = React.useState<string | null>(partner?.time ?? (restoredDate ? restoredTime : null))
+  const [usageScope, setUsageScope] = React.useState<UsageScope>(params.get("usage") === "commercial" ? "commercial" : "personal")
+  const [consentRepost, setConsentRepost] = React.useState(params.get("repost") === "1")
   const [linkError, setLinkError] = React.useState<string | null>(null)
-  const [quantity, setQuantity] = React.useState(1)
+  const [quantity, setQuantity] = React.useState(() => Math.max(1, Number(params.get("qty")) || 1))
   const [pickedAddress, setAddressId] = React.useState<string | null>(null)
-  const [note, setNote] = React.useState("")
+  // Signed out there is no saved address yet: a district is enough to estimate
+  // the travel fee. The real address is saved after signing in.
+  const [area, setArea] = React.useState<{ city: string; district: string }>(restoredArea ?? { city: pro.city, district: "" })
+  const [note, setNote] = React.useState(params.get("note") ?? "")
   const [payment, setPayment] = React.useState<PaymentMethod>("cash")
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   const [doneId, setDoneId] = React.useState<string | null>(null)
+  const [atHomePref, setAtHome] = React.useState(params.get("place") !== "studio")
 
   const tpl = getTemplate(templateId)!
   const variant = tpl.variants.find((v) => v.id === variantId)!
@@ -100,23 +132,35 @@ function BookingFlow({ proId }: { proId: string }) {
   const heads = variant.perPerson ? Math.min(Math.max(quantity, 1), variant.maxQuantity ?? 1) : 1
   const price = unitPrice * heads
   const durationMin = variant.durationMin * heads
-  // Start on the customer's default address without an effect writing it back.
-  const addressId = pickedAddress ?? defaultAddressId(state.addresses)
-  const chosen = state.addresses.find((a) => a.id === addressId) ?? null
-  const address: CustomerAddress | null = chosen
-    ? { city: chosen.city, district: chosen.district, detail: chosen.detail }
-    : null
-  const home = homeAvailability(state, proId, templateId, address ?? { city: pro.city, district: pro.district, detail: "" })
   const canStudio = Boolean(pro.studioAddress)
-  const [atHomePref, setAtHome] = React.useState(true)
   const atHome = !tpl.studioOnly && (atHomePref || !canStudio)
-  const locationOk = atHome ? home.ok && Boolean(chosen) : canStudio
+
+  // Start on the customer's default address without an effect writing it back.
+  const addressId = session ? (pickedAddress ?? defaultAddressId(state.addresses)) : null
+  const chosen = state.addresses.find((a) => a.id === addressId) ?? null
+  const address: CustomerAddress | null = session
+    ? chosen && { city: chosen.city, district: chosen.district, detail: chosen.detail }
+    : area.district
+      ? { city: area.city, district: area.district, detail: "" }
+      : null
+  const home = homeAvailability(state, proId, templateId, address ?? { city: pro.city, district: pro.district, detail: "" })
+  const locationOk = atHome ? home.ok && Boolean(address) : canStudio
+
+  // Back from signing in with everything chosen: straight to the summary,
+  // unless the address still has to be saved.
+  const [step, setStep] = React.useState(() => (restoredDate && restoredTime && !partner ? (atHome && !address ? 2 : 3) : 1))
+
+  // Each step starts at its top, not where the last one was scrolled to.
+  React.useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [step])
 
   const days = Array.from({ length: 14 }, (_, i) => addDays(todayISO(), i))
 
   // The freelancer's real openings for this day, from their working hours. The
   // answer is tagged with what was asked, so a stale reply is simply ignored
-  // rather than having to be cleared from state first.
+  // rather than having to be cleared from state first. Works signed out too:
+  // without an address the server measures from the freelancer's own location.
   const slotKey = [proId, templateId, variantId, heads, date, atHome, addressId].join("|")
   const [loaded, setLoaded] = React.useState<{ key: string; list: { startsAt: string; time: string }[] } | null>(null)
   React.useEffect(() => {
@@ -130,16 +174,40 @@ function BookingFlow({ proId }: { proId: string }) {
   }, [slotKey, proId, templateId, variantId, heads, date, atHome, addressId])
   const slots = loaded?.key === slotKey ? loaded.list : null
 
-  // A time picked for another day or service may no longer be on offer.
+  // A time picked for another day, service or address may no longer be on offer.
   const time = slots && pickedTime && !slots.some((s) => s.time === pickedTime) ? null : pickedTime
-  const quote: PriceQuote | null = time ? quoteFor(state, { proId, price, atHome, address, date, time }) : null
+  const lostTime = Boolean(slots && pickedTime && !time)
 
-  const canNext = step === 1 ? true : step === 2 ? Boolean(time) && locationOk : locationOk
+  // The same arithmetic as the server (lib/pricing.ts), shown as it changes.
+  const quote: PriceQuote = buildQuote({
+    servicePrice: price,
+    atHome,
+    distanceKm: atHome && address ? travelDistanceKm(pro.city, pro.district, address.city, address.district) : null,
+    urgent: time ? isUrgent(date, time) : false,
+  })
+  const ready = Boolean(time) && locationOk
+  const canNext = step === 1 ? true : ready
+
+  // Everything chosen so far, so signing in does not start the booking over.
+  const resumeUrl = () => {
+    const q = new URLSearchParams({ service: templateId, variant: variantId, date })
+    if (time) q.set("time", time)
+    if (heads > 1) q.set("qty", String(heads))
+    if (note.trim()) q.set("note", note.trim().slice(0, 500))
+    if (!atHome) q.set("place", "studio")
+    if (atHome && area.district) {
+      q.set("city", area.city)
+      q.set("district", area.district)
+    }
+    if (usageScope === "commercial") q.set("usage", "commercial")
+    if (consentRepost) q.set("repost", "1")
+    return `/book/${proId}?${q}`
+  }
 
   const submit = async () => {
     setError(null)
-    if (!state.session) {
-      router.push(`/login?next=${encodeURIComponent(`/book/${proId}?service=${templateId}&variant=${variantId}`)}`)
+    if (!session) {
+      router.push(`/login?next=${encodeURIComponent(resumeUrl())}`)
       return
     }
     setBusy(true)
@@ -176,8 +244,9 @@ function BookingFlow({ proId }: { proId: string }) {
 
   const trade = verticalOf(tpl.category)
   const person = getVertical(trade).person
-
   const responseTime = formatResponseTime(pro.stats.responseMinutes)
+  const placeLabelText = tpl.onLocation ? "Địa điểm bạn chọn" : "Làm tại nhà"
+  const variantText = heads > 1 ? `${variant.label} × ${heads} người` : variant.label
 
   if (doneId) {
     return (
@@ -187,7 +256,7 @@ function BookingFlow({ proId }: { proId: string }) {
         </span>
         <h1 className="mt-5 text-[28px] font-bold tracking-tight">Đã gửi yêu cầu đặt lịch</h1>
         <p className="mt-2 text-[15px] text-ink-soft">
-          {pro.name} sẽ gọi cho bạn qua số {formatPhone(state.session?.phone ?? "")} để xác nhận lịch {time} ·{" "}
+          {pro.name} sẽ gọi cho bạn qua số {formatPhone(session?.phone ?? "")} để xác nhận lịch {time} ·{" "}
           {formatDateLong(date)}
           {responseTime ? `, thường trong ${responseTime}` : ""}. Nếu không được xác nhận trong{" "}
           {POLICY.confirmWithinHours} giờ, lịch tự huỷ{payment === "online" ? " và tiền được hoàn 100%" : ""}.
@@ -206,6 +275,8 @@ function BookingFlow({ proId }: { proId: string }) {
     )
   }
 
+  const cancel = time ? freeCancelUntil(date, time) : null
+
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader title={step === 3 ? "Xác nhận đặt lịch" : "Đặt lịch"} back onBack={step > 1 ? () => setStep((s) => s - 1) : undefined} />
@@ -220,7 +291,7 @@ function BookingFlow({ proId }: { proId: string }) {
           </p>
           <p className="text-[13px] text-ink-soft">
             {pro.rating.count ? `★ ${pro.rating.average.toFixed(1)} (${pro.rating.count}) · ` : ""}
-            {pro.stats.completedJobs} lịch đã làm
+            {pro.stats.completedJobs > 0 ? `${pro.stats.completedJobs} lịch đã làm` : "Mới trên 360dep"}
           </p>
         </div>
       </Card>
@@ -238,7 +309,7 @@ function BookingFlow({ proId }: { proId: string }) {
       {(isOwnProfile || paused) && (
         <p className="mb-4 rounded-xl bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning">
           {isOwnProfile
-            ? "Bạn đang xem dịch vụ của chính mình ở chế độ freelancer. Chuyển sang chế độ đặt lịch để thử luồng khách hàng."
+            ? "Bạn đang xem dịch vụ của chính mình ở chế độ nhận khách. Chuyển sang chế độ đặt lịch để thử luồng khách hàng."
             : `${pro.name} đang tạm nghỉ nhận lịch mới. Bạn có thể đăng yêu cầu để người làm khác báo giá.`}
         </p>
       )}
@@ -273,7 +344,7 @@ function BookingFlow({ proId }: { proId: string }) {
                         <span className="block truncate text-xs text-muted">{t.description}</span>
                       </span>
                       <span className="text-sm text-ink-soft">từ {formatPrice(Math.min(...Object.values(s.prices)))}</span>
-                      <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full border", selected ? "border-accent bg-accent text-white" : "border-line")}>
+                      <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full border", selected ? "border-accent bg-accent text-white" : "border-line-strong")}>
                         {selected && <Check className="size-3.5" />}
                       </span>
                     </button>
@@ -285,7 +356,7 @@ function BookingFlow({ proId }: { proId: string }) {
                           aria-label="Giảm số người"
                           disabled={heads <= 1}
                           onClick={() => setQuantity(heads - 1)}
-                          className="inline-flex size-8 items-center justify-center rounded-full border border-line disabled:opacity-40"
+                          className="inline-flex size-8 items-center justify-center rounded-full border border-line-strong disabled:opacity-40"
                         >
                           −
                         </button>
@@ -295,7 +366,7 @@ function BookingFlow({ proId }: { proId: string }) {
                           aria-label="Tăng số người"
                           disabled={heads >= (variant.maxQuantity ?? 1)}
                           onClick={() => setQuantity(heads + 1)}
-                          className="inline-flex size-8 items-center justify-center rounded-full border border-line disabled:opacity-40"
+                          className="inline-flex size-8 items-center justify-center rounded-full border border-line-strong disabled:opacity-40"
                         >
                           +
                         </button>
@@ -314,7 +385,7 @@ function BookingFlow({ proId }: { proId: string }) {
                             }}
                             className={cn(
                               "rounded-xl border px-3 py-2 text-left text-[13px]",
-                              v.id === variantId ? "border-accent bg-subtle text-accent-dark" : "border-line bg-canvas text-ink-soft",
+                              v.id === variantId ? "border-accent bg-subtle text-accent-dark" : "border-line-strong bg-surface text-ink-soft",
                             )}
                           >
                             <span className="block font-medium">{v.label}</span>
@@ -335,33 +406,79 @@ function BookingFlow({ proId }: { proId: string }) {
 
       {step === 2 && (
         <>
-          <ServiceSummary
-            name={tpl.name}
-            variant={heads > 1 ? `${variant.label} × ${heads} người` : variant.label}
-            price={price}
-            duration={durationMin}
-          />
+          <ServiceSummary name={tpl.name} variant={variantText} price={price} duration={durationMin} />
 
+          {/* The place is chosen here, once: it decides the travel fee and which
+              hours are free, so it comes before the time. */}
           <section className="mt-6 rounded-2xl bg-surface p-4 shadow-[var(--shadow-soft)]">
-            <h2 className="mb-3 font-semibold">Địa điểm trước khi chọn giờ</h2>
+            <h2 className="mb-3 font-semibold">Làm ở đâu?</h2>
             <div className="grid grid-cols-2 gap-2">
-              <PlaceOption active={atHome} disabled={!home.ok || tpl.studioOnly} onClick={() => { setAtHome(true); setTime(null) }} icon={tpl.onLocation ? <MapPin className="size-4" /> : <Home className="size-4" />}>
-                {tpl.onLocation ? "Địa điểm bạn chọn" : "Làm tại nhà"}
+              <PlaceOption
+                active={atHome}
+                disabled={tpl.studioOnly || !pro.homeService}
+                onClick={() => {
+                  setAtHome(true)
+                  setTime(null)
+                }}
+                icon={tpl.onLocation ? <MapPin className="size-4" /> : <Home className="size-4" />}
+              >
+                {placeLabelText}
               </PlaceOption>
-              <PlaceOption active={!atHome && canStudio} disabled={!canStudio} onClick={() => { setAtHome(false); setTime(null) }} icon={<Store className="size-4" />}>
+              <PlaceOption
+                active={!atHome && canStudio}
+                disabled={!canStudio}
+                onClick={() => {
+                  setAtHome(false)
+                  setTime(null)
+                }}
+                icon={<Store className="size-4" />}
+              >
                 Tại studio
               </PlaceOption>
             </div>
-            {atHome && <div className="mt-3"><AddressPicker value={addressId} onChange={(id) => { setAddressId(id); setTime(null) }} city={pro.city} district={pro.district} /></div>}
+            {atHome && session && (
+              <div className="mt-3">
+                <AddressPicker
+                  value={addressId}
+                  onChange={(id) => {
+                    setAddressId(id)
+                    setTime(null)
+                  }}
+                  city={restoredArea?.city ?? pro.city}
+                  district={restoredArea?.district ?? pro.district}
+                />
+              </div>
+            )}
+            {atHome && !session && (
+              <AreaPicker
+                value={area}
+                onChange={(next) => {
+                  setArea(next)
+                  setTime(null)
+                }}
+              />
+            )}
             {tpl.studioOnly && <p className="mt-2 text-xs text-ink-soft">Gói dịch vụ này chỉ thực hiện tại studio.</p>}
-            {atHome && chosen && !home.ok && <p className="mt-2 text-xs text-warning">{home.reason}{canStudio ? " Bạn có thể đến studio." : ""}</p>}
+            {atHome && address && !home.ok && (
+              <p className="mt-2 text-xs text-warning">
+                {home.reason}
+                {canStudio ? " Bạn có thể đến studio." : ""}
+              </p>
+            )}
+            {atHome && address && home.ok && quote.distanceKm !== null && (
+              <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-soft">
+                <Car className="size-3.5" />
+                Khoảng {quote.distanceKm.toLocaleString("vi-VN")} km từ {pro.district}.
+                {quote.travelFee === 0 ? " Miễn phí di chuyển." : ` Phí di chuyển ${formatPrice(quote.travelFee)}.`}
+              </p>
+            )}
             {!atHome && canStudio && <p className="mt-2 text-xs text-ink-soft">Studio: {pro.studioAddress}</p>}
           </section>
 
           <section className="mt-6">
             <h2 className="mb-3 flex items-baseline justify-between font-semibold">
               Chọn ngày
-              <span className="text-xs font-normal text-muted">Tháng {parseISODate(date).getMonth() + 1}</span>
+              <span className="text-xs font-normal text-muted">Tháng {parseISODate(date).getUTCMonth() + 1}</span>
             </h2>
             <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
               {days.map((d) => {
@@ -377,11 +494,11 @@ function BookingFlow({ proId }: { proId: string }) {
                     }}
                     className={cn(
                       "flex w-12 shrink-0 flex-col items-center gap-1.5 rounded-xl border py-2.5 text-sm transition-colors",
-                      active ? "border-accent bg-subtle text-accent-dark" : "border-transparent text-ink-soft hover:bg-surface",
+                      active ? "border-accent bg-subtle text-accent-dark" : "border-line-strong bg-surface text-ink hover:border-accent",
                     )}
                   >
                     <span className="text-xs text-muted">{d === todayISO() ? "Nay" : weekdayShort(d)}</span>
-                    <span className={cn("font-medium", active && "font-semibold")}>{parseISODate(d).getDate()}</span>
+                    <span className={cn("font-medium", active && "font-semibold")}>{parseISODate(d).getUTCDate()}</span>
                   </button>
                 )
               })}
@@ -390,6 +507,11 @@ function BookingFlow({ proId }: { proId: string }) {
 
           <section className="mt-6">
             <h2 className="mb-3 font-semibold">Chọn khung giờ</h2>
+            {lostTime && (
+              <p role="status" className="mb-3 rounded-xl bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning">
+                {pickedTime} không còn trống với lựa chọn này. Chọn giờ khác nhé.
+              </p>
+            )}
             {slots === null ? (
               <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5">
                 {Array.from({ length: 10 }).map((_, i) => (
@@ -414,14 +536,14 @@ function BookingFlow({ proId }: { proId: string }) {
                       className={cn(
                         "relative h-12 rounded-xl border text-sm transition-colors",
                         active
-                          ? "border-accent bg-subtle font-semibold text-accent-dark"
-                          : "border-line bg-surface text-ink hover:border-subtle-strong",
+                          ? "border-accent bg-accent font-semibold text-white"
+                          : "border-line-strong bg-surface text-ink hover:border-accent",
                       )}
                     >
                       {slot.time}
                       {urgent && (
-                        <span className="absolute -right-1 -top-2 inline-flex items-center gap-0.5 rounded-full bg-warning px-1.5 py-0.5 text-[9.5px] font-semibold text-white">
-                          <Zap className="size-2.5" />
+                        <span className="absolute -right-1 -top-2.5 inline-flex items-center gap-0.5 rounded-full bg-warning px-1.5 text-[12px] font-semibold leading-[18px] text-white">
+                          <Zap className="size-3" aria-hidden />
                           Gấp
                         </span>
                       )}
@@ -440,62 +562,65 @@ function BookingFlow({ proId }: { proId: string }) {
         </>
       )}
 
-      {step === 3 && time && quote && (
+      {/* Step 3 never disappears: if the time or the place stopped being valid
+          (someone else took the slot, the address changed), it says so and
+          sends the customer back to pick again. */}
+      {step === 3 && !ready && (
+        <section className="rounded-[var(--radius-lg)] border border-line bg-surface px-5 py-8 text-center">
+          <p className="text-[17px] font-bold">
+            {!locationOk ? "Cần chọn nơi làm" : pickedTime ? "Giờ bạn chọn không còn trống" : "Bạn chưa chọn giờ"}
+          </p>
+          <p className="mx-auto mt-1.5 max-w-sm text-[15px] text-ink-soft">
+            {!locationOk
+              ? atHome && session && !chosen
+                ? "Lưu địa chỉ nơi làm để tính phí di chuyển và gửi lịch."
+                : "Chọn lại nơi làm để xem giờ còn trống."
+              : pickedTime
+                ? `${pickedTime} · ${formatDateLong(date)} vừa có người khác đặt hoặc không còn phù hợp. Chọn giờ khác nhé.`
+                : "Chọn ngày và giờ để xem tổng tiền."}
+          </p>
+          <Button className="mt-5" onClick={() => setStep(2)}>
+            {!locationOk ? "Chọn nơi làm" : "Chọn giờ khác"}
+          </Button>
+        </section>
+      )}
+
+      {step === 3 && ready && time && (
         <section className="space-y-4">
-          <ServiceSummary
-            name={tpl.name}
-            variant={heads > 1 ? `${variant.label} × ${heads} người` : variant.label}
-            price={price}
-            duration={durationMin}
-          />
+          <ServiceSummary name={tpl.name} variant={variantText} price={price} duration={durationMin} />
 
           <Card className="divide-y divide-line px-4">
-            <div className="flex gap-4 py-3.5 text-sm">
-              <span className="w-20 shrink-0 text-[13px] text-muted">Thời gian</span>
-              <span className="flex-1 font-medium">
-                {formatDateLong(date, true)}
-                <br />
-                {time} - {addMinutes(time, durationMin)}
-                {quote.urgentFee > 0 && (
-                  <span className="ml-2 inline-flex items-center gap-0.5 rounded-full bg-warning-soft px-1.5 py-0.5 text-xs font-semibold text-warning">
-                    <Zap className="size-3" /> Đặt gấp
-                  </span>
-                )}
+            <SummaryRow label="Thời gian" onEdit={() => setStep(2)}>
+              {formatDateLong(date, true)}
+              <br />
+              {time} - {addMinutes(time, durationMin)}
+              {quote.urgentFee > 0 && (
+                <span className="ml-2 inline-flex items-center gap-0.5 rounded-full bg-warning-soft px-1.5 py-0.5 text-xs font-semibold text-warning">
+                  <Zap className="size-3" /> Đặt gấp
+                </span>
+              )}
+            </SummaryRow>
+
+            <SummaryRow label="Địa điểm" onEdit={() => setStep(2)}>
+              <span className="mb-0.5 flex items-center gap-1 text-xs font-normal text-accent">
+                {atHome ? <Home className="size-3.5" /> : <Store className="size-3.5" />}
+                {atHome ? placeLabelText : "Tại studio"}
               </span>
-            </div>
-
-            <div className="py-3.5">
-              <p className="mb-2 text-[13px] text-muted">Địa điểm</p>
-              <div className="grid grid-cols-2 gap-2">
-                <PlaceOption active={atHome} disabled={!home.ok} onClick={() => setAtHome(true)} icon={tpl.onLocation ? <MapPin className="size-4" /> : <Home className="size-4" />}>
-                  {tpl.onLocation ? "Địa điểm bạn chọn" : "Làm tại nhà"}
-                </PlaceOption>
-                <PlaceOption active={!atHome && canStudio} disabled={!canStudio} onClick={() => setAtHome(false)} icon={<Store className="size-4" />}>
-                  Tại studio
-                </PlaceOption>
-              </div>
-
-              {atHome && (
-                <div className="mt-3">
-                  <AddressPicker value={addressId} onChange={setAddressId} city={pro.city} district={pro.district} />
-                </div>
-              )}
-
-              {atHome && chosen && !home.ok && (
-                <p className="mt-2 text-xs text-warning">
-                  {home.reason}
-                  {canStudio ? " Bạn có thể đến studio." : ""}
-                </p>
-              )}
+              {atHome
+                ? chosen
+                  ? [chosen.detail, chosen.district, chosen.city].filter(Boolean).join(", ")
+                  : `${area.district}, ${area.city}`
+                : pro.studioAddress}
               {atHome && quote.distanceKm !== null && (
-                <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-soft">
-                  <Car className="size-3.5" />
-                  Khoảng cách ước tính ~{quote.distanceKm.toLocaleString("vi-VN")} km từ {pro.district}.
-                  {quote.travelFee === 0 ? " Miễn phí di chuyển." : ` Phí di chuyển ${formatPrice(quote.travelFee)}.`}
-                </p>
+                <span className="mt-0.5 flex items-center gap-1.5 text-xs font-normal text-ink-soft">
+                  <Car className="size-3.5" />~{quote.distanceKm.toLocaleString("vi-VN")} km ·{" "}
+                  {quote.travelFee === 0 ? "miễn phí di chuyển" : `phí di chuyển ${formatPrice(quote.travelFee)}`}
+                </span>
               )}
-              {!atHome && canStudio && <p className="mt-2 text-sm text-ink-soft">Studio: {pro.studioAddress}</p>}
-            </div>
+              {atHome && !session && (
+                <span className="mt-0.5 block text-xs font-normal text-ink-soft">Số nhà, đường bạn điền sau khi đăng nhập.</span>
+              )}
+            </SummaryRow>
 
             <div className="py-3.5">
               <label className="text-[13px] text-muted" htmlFor="note">
@@ -530,7 +655,7 @@ function BookingFlow({ proId }: { proId: string }) {
                       onClick={() => setUsageScope(value)}
                       className={cn(
                         "rounded-[var(--radius-md)] border p-3 text-left transition-colors",
-                        usageScope === value ? "border-accent bg-subtle" : "border-line bg-surface hover:border-ink/30",
+                        usageScope === value ? "border-accent bg-subtle" : "border-line-strong bg-surface hover:border-accent",
                       )}
                     >
                       <span className="block text-[15px] font-semibold">{label}</span>
@@ -588,7 +713,7 @@ function BookingFlow({ proId }: { proId: string }) {
                   onClick={() => available && setPayment(value)}
                   className={cn(
                     "flex gap-2.5 rounded-xl border p-3 text-left disabled:opacity-50",
-                    payment === value ? "border-accent bg-subtle" : "border-line bg-surface",
+                    payment === value ? "border-accent bg-subtle" : "border-line-strong bg-surface",
                   )}
                 >
                   <Icon className={cn("mt-0.5 size-4 shrink-0", payment === value ? "text-ink" : "text-muted")} />
@@ -603,28 +728,58 @@ function BookingFlow({ proId }: { proId: string }) {
 
           <PriceBreakdown quote={quote} paymentMethod={payment} />
 
-          <p className="flex gap-2 text-xs text-muted">
-            <Info className="mt-0.5 size-3.5 shrink-0" />
-            <span>
-              Không cần đặt cọc. {pro.name} sẽ gọi điện xác nhận trước khi nhận lịch. Huỷ miễn phí trước {POLICY.freeCancelHours} giờ
-              {payment === "online" ? `; tiền online do 360dep giữ và chỉ chuyển cho ${pro.name} sau khi hoàn thành` : ""}.{" "}
-              <Link href="/chinh-sach" className="text-accent underline underline-offset-2">
-                Chính sách phí
-              </Link>
-            </span>
-          </p>
-          {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
+          {/* What happens after sending, in the order it happens: the call, then
+              until when the booking can be dropped at no cost. */}
+          <div className="space-y-2.5 rounded-[var(--radius-lg)] bg-subtle px-4 py-3.5 text-[14px]">
+            <p className="flex gap-2.5">
+              <Phone className="mt-0.5 size-4 shrink-0 text-accent" />
+              {session ? (
+                <span>
+                  {pro.name} sẽ gọi số <b>{formatPhone(session.phone)}</b> để xác nhận
+                  {responseTime ? `, thường trong ${responseTime}` : ""}.{" "}
+                  {/* TODO(db): there is no self-service number change yet (set_my_phone
+                      only sets the first number); settings explains how to ask support. */}
+                  <Link href="/me/cai-dat" className="font-semibold text-accent underline underline-offset-2">
+                    Đổi số
+                  </Link>
+                </span>
+              ) : (
+                <span>
+                  Bước tiếp theo: đăng nhập bằng Google và thêm số điện thoại để {pro.name} gọi xác nhận. Lựa chọn của bạn
+                  được giữ nguyên.
+                </span>
+              )}
+            </p>
+            {cancel && (
+              <p className="flex gap-2.5">
+                <CalendarX2 className="mt-0.5 size-4 shrink-0 text-accent" />
+                <span>
+                  {cancel.passed
+                    ? `Lịch bắt đầu trong chưa đầy ${POLICY.freeCancelHours} giờ nên không còn hạn huỷ miễn phí.`
+                    : <>Huỷ miễn phí đến <b>{cancel.label}</b>.</>}{" "}
+                  Không cần đặt cọc.{" "}
+                  <Link href="/chinh-sach" className="text-accent underline underline-offset-2">
+                    Chính sách
+                  </Link>
+                </span>
+              </p>
+            )}
+          </div>
+          {error && (
+            <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+              {error}
+            </p>
+          )}
         </section>
       )}
 
-      <BottomBar>
+      {/* The running total is always in view, on every step. */}
+      <BottomBar className="md:sticky md:bottom-0 md:bg-canvas/95 md:py-3 md:backdrop-blur">
         <div className="flex items-center gap-3">
-          {step === 3 && quote && (
-            <div className="shrink-0">
-              <p className="text-xs text-muted">Tổng</p>
-              <p className="font-semibold">{formatPrice(quote.total)}</p>
-            </div>
-          )}
+          <div className="min-w-0 shrink-0" aria-live="polite">
+            <p className="text-xs text-muted">{step === 1 ? "Giá dịch vụ" : ready ? "Tổng" : "Tạm tính"}</p>
+            <p className="text-[17px] font-bold tabular-nums">{formatPrice(step === 1 ? price : quote.total)}</p>
+          </div>
           {step > 1 && (
             <Button variant="outline" size="lg" onClick={() => setStep((s) => s - 1)} className="hidden md:inline-flex md:w-40">
               Quay lại
@@ -633,19 +788,75 @@ function BookingFlow({ proId }: { proId: string }) {
           <Button
             size="lg"
             className="flex-1"
-            disabled={!canNext || isOwnProfile || paused || busy}
-            onClick={() => (step < 3 ? setStep((s) => s + 1) : void submit())}
+            disabled={(step < 3 && !canNext) || (step === 3 && slots === null) || isOwnProfile || paused || busy}
+            onClick={() => (step < 3 ? setStep((s) => s + 1) : ready ? void submit() : setStep(2))}
           >
             {step < 3
               ? "Tiếp tục"
-              : !state.session
-                ? "Đăng nhập để đặt lịch"
-                : busy
-                  ? "Đang gửi…"
-                  : "Gửi yêu cầu đặt lịch"}
+              : slots === null
+                ? "Đang kiểm tra giờ…"
+                : !ready
+                  ? "Chọn lại"
+                  : busy
+                    ? "Đang gửi…"
+                    : "Gửi yêu cầu"}
           </Button>
         </div>
       </BottomBar>
+    </div>
+  )
+}
+
+/** Signed out: a district is enough to estimate the travel fee. */
+function AreaPicker({
+  value,
+  onChange,
+}: {
+  value: { city: string; district: string }
+  onChange: (v: { city: string; district: string }) => void
+}) {
+  return (
+    <div className="mt-3">
+      <div className="grid grid-cols-2 gap-2">
+        <label className="block">
+          <span className="mb-1 block text-[13px] font-semibold">Thành phố</span>
+          <select
+            className={cn(inputClass, "text-sm")}
+            value={value.city}
+            onChange={(e) => onChange({ city: e.target.value, district: "" })}
+          >
+            {CITIES.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[13px] font-semibold">Quận/huyện</span>
+          <select
+            className={cn(inputClass, "text-sm")}
+            value={value.district}
+            onChange={(e) => onChange({ city: value.city, district: e.target.value })}
+          >
+            <option value="">Chọn quận</option>
+            {districtsOf(value.city).map((d) => (
+              <option key={d}>{d}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <p className="mt-1.5 text-xs text-muted">Để tính phí di chuyển. Số nhà, đường bạn điền sau khi đăng nhập.</p>
+    </div>
+  )
+}
+
+function SummaryRow({ label, onEdit, children }: { label: string; onEdit: () => void; children: React.ReactNode }) {
+  return (
+    <div className="flex gap-4 py-3.5 text-sm">
+      <span className="w-20 shrink-0 text-[13px] text-muted">{label}</span>
+      <span className="min-w-0 flex-1 font-medium">{children}</span>
+      <button type="button" onClick={onEdit} className="-my-1 h-8 shrink-0 text-[13px] font-semibold text-accent underline-offset-2 hover:underline">
+        Đổi
+      </button>
     </div>
   )
 }
@@ -663,7 +874,7 @@ function Stepper({ step, onJump }: { step: number; onJump: (s: number) => void }
             <button
               type="button"
               onClick={() => onJump(n)}
-              className={cn("relative z-10 flex size-7 items-center justify-center rounded-full text-xs font-semibold", active || done ? "bg-accent text-white" : "bg-line text-muted")}
+              className={cn("relative z-10 flex size-7 items-center justify-center rounded-full text-xs font-semibold", active || done ? "bg-accent text-white" : "bg-subtle-strong text-ink-soft")}
             >
               {done ? <Check className="size-3.5" /> : n}
             </button>

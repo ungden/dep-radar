@@ -34,27 +34,32 @@ function BookingsView() {
   const list = mine
     .filter((b) => GROUPS[tab].includes(b.status))
     .sort((a, b) => (tab === "upcoming" ? 1 : -1) * `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
-  const openJobs = jobs.filter((j) => j.mine && j.status === "open")
+  const myJobs = jobs.filter((j) => j.mine)
+  const openJobs = myJobs.filter((j) => j.status === "open")
   const newOffers = openJobs.reduce((n, j) => n + j.offers.filter((o) => o.status === "pending").length, 0)
 
   return (
     <>
-      <Link
-        href="/requests"
-        className="mb-4 flex items-center gap-3 rounded-2xl bg-surface p-3.5 shadow-[var(--shadow-soft)] hover:bg-subtle/40"
-      >
-        <span className="flex size-10 items-center justify-center rounded-full bg-subtle text-accent">
-          <Megaphone className="size-5" />
-        </span>
-        <span className="flex-1">
-          <span className="block text-sm font-semibold">Yêu cầu đã đăng</span>
-          <span className="block text-xs text-muted">
-            {openJobs.length} yêu cầu đang mở{newOffers ? ` · ${newOffers} báo giá mới` : ""}
+      {/* Only once there is something there: a card that says "0" is noise. */}
+      {myJobs.length > 0 && (
+        <Link
+          href="/requests"
+          className="mb-4 flex items-center gap-3 rounded-2xl bg-surface p-3.5 shadow-[var(--shadow-soft)] hover:bg-subtle/40"
+        >
+          <span className="flex size-10 items-center justify-center rounded-full bg-subtle text-accent">
+            <Megaphone className="size-5" />
           </span>
-        </span>
-        {newOffers > 0 && <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-white">{newOffers}</span>}
-        <ChevronRight className="size-4 text-muted" />
-      </Link>
+          <span className="flex-1">
+            <span className="block text-sm font-semibold">Yêu cầu đã đăng</span>
+            <span className="block text-xs text-muted">
+              {openJobs.length ? `${openJobs.length} yêu cầu đang mở` : `${myJobs.length} yêu cầu đã đóng`}
+              {newOffers ? ` · ${newOffers} báo giá mới` : ""}
+            </span>
+          </span>
+          {newOffers > 0 && <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-white">{newOffers}</span>}
+          <ChevronRight className="size-4 text-muted" />
+        </Link>
+      )}
 
       <Tabs
         value={tab}
@@ -77,7 +82,7 @@ function BookingsView() {
         <EmptyState
           icon={<CalendarDays className="size-6" />}
           title={tab === "upcoming" ? "Chưa có lịch hẹn sắp tới" : "Chưa có lịch hẹn nào"}
-          text="Khám phá tác phẩm và đặt lịch với chuyên viên bạn thích."
+          text="Chọn dịch vụ, xem giá và đặt lịch với người làm gần bạn."
           action={tab === "upcoming" ? <ButtonLink href="/">Khám phá ngay</ButtonLink> : undefined}
         />
       )}

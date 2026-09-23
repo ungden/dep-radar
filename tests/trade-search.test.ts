@@ -20,7 +20,7 @@ describe("landing titles fit the trade", () => {
 
 describe("trade words", () => {
   it("names the person by trade, and generically when trades mix", () => {
-    expect(personWord(["nail"])).toBe("chuyên viên")
+    expect(personWord(["nail"])).toBe("người làm")
     expect(personWord(["photophone", "camera"])).toBe("người chụp")
     expect(personWord(["model-photo"])).toBe("mẫu")
     expect(personWord(["makeup", "photophone"])).toBe("người làm")

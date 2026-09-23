@@ -1,13 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Info } from "lucide-react"
 import { CATEGORY_ICON } from "@/components/beauty"
 import { RequireSession } from "@/components/require-session"
-import { BottomBar, Button, Field, PageHeader, inputClass } from "@/components/ui"
+import { BottomBar, Button, Field, PageHeader, PageSkeleton, inputClass } from "@/components/ui"
 import { AddressPicker, defaultAddressId } from "@/components/address-picker"
-import { CATEGORIES, templatesByCategory } from "@/lib/catalog"
+import { CATEGORIES, getTemplate, templatesByCategory } from "@/lib/catalog"
 import { POLICY } from "@/lib/pricing"
 import { actions } from "@/lib/client-actions"
 import { useApp } from "@/lib/store"
@@ -20,7 +21,9 @@ export default function NewRequestPage() {
     <div className="mx-auto max-w-2xl md:pt-4">
       <PageHeader title="Đăng yêu cầu" back />
       <RequireSession role="customer">
-        <NewRequestForm />
+        <Suspense fallback={<PageSkeleton />}>
+          <NewRequestForm />
+        </Suspense>
       </RequireSession>
     </div>
   )
@@ -34,10 +37,15 @@ const TIME_OPTIONS = Array.from({ length: 28 }, (_, i) => {
 
 function NewRequestForm() {
   const router = useRouter()
+  const params = useSearchParams()
   const state = useApp()
-  const [category, setCategory] = React.useState<CategoryId>("nail")
-  const [templateId, setTemplateId] = React.useState(templatesByCategory("nail")[0].id)
-  const [variantId, setVariantId] = React.useState(templatesByCategory("nail")[0].variants[0].id)
+  // Arriving from a service or a trade with nobody nearby: start on that one.
+  const asked = getTemplate(params.get("service") ?? "")
+  const askedCategory = CATEGORIES.find((c) => c.id === params.get("category"))?.id
+  const start = asked ?? templatesByCategory(askedCategory ?? "nail")[0]
+  const [category, setCategory] = React.useState<CategoryId>(start.category)
+  const [templateId, setTemplateId] = React.useState(start.id)
+  const [variantId, setVariantId] = React.useState(start.variants[0].id)
   const [description, setDescription] = React.useState("")
   const [date, setDate] = React.useState(addDays(todayISO(), 2))
   const [time, setTime] = React.useState("16:00")
@@ -86,7 +94,7 @@ function NewRequestForm() {
       }}
     >
       <p className="rounded-2xl bg-subtle px-4 py-3 text-[13px] text-accent-dark">
-        Chọn dịch vụ theo danh mục chuẩn của 360dep. Freelancer phù hợp quanh bạn sẽ báo giá trong khung giá quy định, bạn so sánh hồ sơ, đánh giá và chọn người ưng ý.
+        Chọn dịch vụ theo danh mục chuẩn của 360dep. Người làm phù hợp quanh bạn sẽ báo giá trong khung giá quy định, bạn so sánh hồ sơ, đánh giá và chọn người ưng ý.
       </p>
 
       <fieldset>
@@ -208,7 +216,7 @@ function NewRequestForm() {
         {!atHome && (
           <p className="mt-2 text-xs text-warning">
             Đăng yêu cầu hiện chỉ dành cho dịch vụ làm tại nhà. Với dịch vụ tại studio, hãy đặt lịch trực tiếp với
-            chuyên viên.
+            người làm.
           </p>
         )}
         {atHome && (
@@ -243,7 +251,7 @@ function NewRequestForm() {
           ))}
         </div>
         <p className="mt-2 text-xs text-muted">
-          Trả tiền mặt hoặc chuyển khoản cho chuyên viên sau khi làm. Không cần đặt cọc.
+          Trả tiền mặt hoặc chuyển khoản cho người làm sau khi làm. Không cần đặt cọc.
         </p>
       </fieldset>
 

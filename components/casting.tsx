@@ -97,7 +97,7 @@ export function SafetyNote({ className }: { className?: string }) {
           <p className="font-bold text-ink">Làm mẫu an toàn</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-4">
             <li>Người tuyển không bao giờ được yêu cầu bạn chuyển tiền: không cọc, không phí hồ sơ.</li>
-            <li>Tin có thù lao và tin tuyển mẫu ảnh chỉ mở cho người đã xác minh danh tính.</li>
+            <li>Mọi tin tuyển mẫu đều do người đã xác minh danh tính đăng; tin có thù lao còn cần người đăng đủ 18 tuổi.</li>
             <li>360dep không nhận tin chụp nội y, khoả thân hay nội dung nhạy cảm.</li>
             <li>Gặp ở nơi công khai hoặc studio có địa chỉ; báo cho người thân lịch của bạn.</li>
           </ul>

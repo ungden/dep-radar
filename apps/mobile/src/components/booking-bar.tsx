@@ -12,6 +12,8 @@ export function BookingBar({
   onPress,
   disabled,
   busy,
+  inline,
+  keyboard,
 }: {
   /** Already formatted, e.g. "Từ 250.000đ" or "Tổng 330.000đ". */
   title: string | null
@@ -20,21 +22,22 @@ export function BookingBar({
   onPress: () => void
   disabled?: boolean
   busy?: boolean
+  /** Laid out after the content instead of floating over it (inside a keyboard-avoiding screen). */
+  inline?: boolean
+  /** The keyboard is up: no home-indicator padding. */
+  keyboard?: boolean
 }) {
   const insets = useSafeAreaInsets()
   return (
     <View
       style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: 0,
+        ...(inline ? null : { position: "absolute", left: 0, right: 0, bottom: 0 }),
         backgroundColor: colors.surface,
         borderTopWidth: 1,
         borderTopColor: colors.line,
         paddingHorizontal: gutter,
         paddingTop: 12,
-        paddingBottom: Math.max(insets.bottom, 12),
+        paddingBottom: keyboard ? 12 : Math.max(insets.bottom, 12),
         flexDirection: "row",
         alignItems: "center",
         gap: 12,

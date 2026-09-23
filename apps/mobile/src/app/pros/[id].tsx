@@ -1,5 +1,5 @@
 import * as React from "react"
-import { router, useLocalSearchParams } from "expo-router"
+import { Stack, router, useLocalSearchParams } from "expo-router"
 import { Alert, ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { categoryLabel, getTemplate, verticalOf, type Pro } from "@/shared"
@@ -8,9 +8,10 @@ import { formatDuration, formatKm, formatPrice, formatRating, formatResponseTime
 import { loadProExtras } from "@/data/public"
 import { FollowButton } from "@/components/follow-button"
 import { TextTabs } from "@/components/switches"
-import { useApp, usePro } from "@/state/app"
+import { useSafetyMenu } from "@/components/safety"
+import { useApp, useProLookup } from "@/state/app"
 import { colors, gutter, radius } from "@/theme"
-import { Button } from "@/ui/button"
+import { Button, IconButton } from "@/ui/button"
 import { Avatar, Card, EmptyState, Photo, VerifiedMark } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -21,12 +22,15 @@ type Tab = "works" | "gia" | "reviews" | "about"
 export default function ProProfile() {
   const params = useLocalSearchParams<{ id: string; tab?: string }>()
   const app = useApp()
-  const pro = usePro(params.id)
+  const { pro, searching } = useProLookup(params.id)
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
-  const [tab, setTab] = React.useState<Tab>(params.tab === "gia" ? "gia" : "works")
+  const [tab, setTab] = React.useState<Tab>(params.tab === "gia" || params.tab === "reviews" ? params.tab : "works")
   const [extras, setExtras] = React.useState<{ equipment?: string; model?: Pro["model"] }>({})
   const [opening, setOpening] = React.useState(false)
+
+  const isMine = Boolean(pro && app.uid === pro.uuid)
+  const safety = useSafetyMenu(pro && !isMine ? { accountId: pro.uuid, name: pro.name, onBlocked: () => router.back() } : null)
 
   React.useEffect(() => {
     if (pro) void loadProExtras(pro.uuid).then(setExtras).catch(() => {})
@@ -35,7 +39,17 @@ export default function ProProfile() {
   if (!pro) {
     return (
       <View style={{ flex: 1, paddingTop: insets.top + 60 }}>
-        {app.data ? <EmptyState title="Không tìm thấy hồ sơ" text="Có thể hồ sơ đã tạm ẩn." action="Về Khám phá" onAction={() => router.replace("/")} /> : null}
+        <Stack.Screen options={{ headerTransparent: false }} />
+        {searching ? null : <EmptyState title="Không tìm thấy hồ sơ" text="Có thể hồ sơ đã tạm ẩn." action="Về Khám phá" onAction={() => router.replace("/")} />}
+      </View>
+    )
+  }
+
+  if (app.blocked.has(pro.uuid)) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.canvas, paddingTop: insets.top + 60, paddingHorizontal: gutter }}>
+        <Stack.Screen options={{ headerTransparent: false }} />
+        <EmptyState title={`Bạn đã chặn ${pro.name}`} text="Hồ sơ, bài đăng và tin nhắn của người này đang ẩn trên máy bạn." action="Bỏ chặn" onAction={() => void app.unblock(pro.uuid)} />
       </View>
     )
   }
@@ -61,6 +75,12 @@ export default function ProProfile() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.canvas }} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+      {!isMe ? (
+        <Stack.Screen
+          options={{ headerRight: () => <IconButton name="more" label="Báo cáo hoặc chặn" background="rgba(255,255,255,0.92)" onPress={safety.open} /> }}
+        />
+      ) : null}
+      {safety.element}
       {/* Cover: the first three real photos, uncropped 4:5 */}
       <View style={{ flexDirection: "row", gap: 2, paddingTop: insets.top + 44 }}>
         {[0, 1, 2].map((i) => (
