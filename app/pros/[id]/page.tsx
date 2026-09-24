@@ -17,7 +17,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     title: `${pro.name} · ${pro.title} tại ${pro.city}`,
     description: pro.bio,
     alternates: { canonical: `/pros/${pro.slug}` },
-    openGraph: openGraph({ title: `${pro.name} · ${pro.title}`, url: `/pros/${pro.slug}`, images: pro.avatar ? [pro.avatar] : undefined }),
+    // The image is app/pros/[id]/opengraph-image.tsx: a 1200×630 card, not the square avatar.
+    openGraph: openGraph({ title: `${pro.name} · ${pro.title}`, url: `/pros/${pro.slug}` }),
   }
 }
 

@@ -3,7 +3,7 @@ import { join } from "node:path"
 import { ImageResponse } from "next/og"
 import { BRAND_DARK, BRAND_GOLD, LOGO_EYE_PATH, LOGO_EYE_STROKE, LOGO_RADIUS, WORDMARK_BOX, WORDMARK_PATH } from "@/lib/design/brand"
 
-export const alt = "360dep — Đặt thợ làm đẹp, người chụp ảnh và người mẫu gần bạn"
+export const alt = "360đẹp: đặt thợ làm đẹp, người chụp ảnh và người mẫu gần bạn"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 

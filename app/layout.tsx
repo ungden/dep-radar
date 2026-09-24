@@ -21,10 +21,12 @@ const body = Be_Vietnam_Pro({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  applicationName: "360dep",
+  applicationName: "360đẹp",
+  // "Add to Home Screen" on iPhone: the name under the icon.
+  appleWebApp: { capable: true, title: "360đẹp", statusBarStyle: "default" },
   title: {
-    default: "360dep | Đặt người làm đẹp, chụp ảnh, người mẫu gần bạn",
-    template: "%s | 360dep",
+    default: "360đẹp · Đặt người làm đẹp, chụp ảnh, người mẫu gần bạn",
+    template: "%s | 360đẹp",
   },
   description:
     "Đặt thợ nail, makeup, chăm sóc da, người chụp ảnh bằng điện thoại, quay clip ngắn và người mẫu gần bạn. Xem tác phẩm thật, giá rõ ràng, đặt lịch nhanh.",
@@ -40,8 +42,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "vi_VN",
-    siteName: "360dep",
-    title: "360dep | Lên hình đẹp, theo cách của bạn",
+    siteName: "360đẹp",
+    title: "360đẹp · Lên hình đẹp, theo cách của bạn",
     description: "Làm đẹp, chụp ảnh và người mẫu: đặt người giỏi gần bạn.",
   },
 }
