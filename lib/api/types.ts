@@ -54,6 +54,8 @@ export interface WorkItem {
   title: string
   description: string
   images: string[]
+  /** before_after: images[0] is before, images[1] is after. */
+  kind: "work" | "before_after"
 }
 
 export interface ReviewItem {

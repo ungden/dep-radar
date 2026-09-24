@@ -5,6 +5,7 @@ import { ChevronRight, Contact, Gift, IdCard, ImagePlus, Navigation, Phone, Tags
 import { JobBookingRow } from "@/components/booking-card"
 import { MessageButton } from "@/components/message-button"
 import { BookingLink } from "@/components/booking-link"
+import { PortfolioCard } from "@/components/portfolio-share"
 import { FeeDueCard } from "@/components/fee-due"
 import { PublishProgress } from "@/components/publish-progress"
 import { RequestCard } from "@/components/request-card"
@@ -218,6 +219,7 @@ function Dashboard() {
       </section>
 
       <BookingLink slug={pro.id} published={pro.published} />
+      <PortfolioCard slug={pro.id} published={pro.published} />
 
       <section>
         <SectionTitle title="Việc mới trong phạm vi của bạn" href="/studio/jobs" count={matchingJobs.length} />

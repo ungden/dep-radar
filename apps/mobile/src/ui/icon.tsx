@@ -62,6 +62,8 @@ const ICONS = {
   wifiOff: { ios: "wifi.slash", android: "wifi_off" },
   starEmpty: { ios: "star", android: "star_outline" },
   gift: { ios: "gift", android: "redeem" },
+  share: { ios: "square.and.arrow.up", android: "share" },
+  download: { ios: "arrow.down.to.line", android: "download" },
 } as const
 
 export type IconName = keyof typeof ICONS
