@@ -92,6 +92,13 @@ export interface ProService {
 /** Optional identity verification (CCCD + selfie). Verified freelancers get a badge and rank higher. */
 export type VerificationStatus = "none" | "pending" | "verified" | "rejected"
 
+/**
+ * Where a profile is in the review before customers see it (20260929100000).
+ * "Mở hồ sơ" on a profile never approved asks for a review; the AI reviewer
+ * answers, usually within minutes.
+ */
+export type ReviewStatus = "draft" | "pending" | "approved" | "changes_requested" | "rejected"
+
 export interface ProStats {
   completedJobs: number
   responseMinutes: number
@@ -123,8 +130,12 @@ export interface Pro {
   yearsExp: number
   /** Off means the freelancer is not taking new bookings right now. */
   acceptingJobs: boolean
-  /** A profile is only listed once it has a service, hours and a photo. */
+  /** A profile is only listed once it has a service, hours and a photo, and was approved. */
   published: boolean
+  /** Only on the signed-in freelancer's own profile. */
+  reviewStatus?: ReviewStatus
+  /** What the review asked to change, one reason per line. Own profile only. */
+  reviewNote?: string
   joinedAt: string
   bio: string
   highlights: string[]
@@ -170,6 +181,8 @@ export interface Work {
   /** A clip of up to 60 seconds, shown instead of the first image. */
   video?: string
   createdAt: string
+  /** Set when the review took the post off the marketplace; only its owner (and staff) still see it. */
+  hiddenReason?: string
 }
 
 export type WorkKind = "work" | "before_after"

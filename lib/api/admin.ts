@@ -235,3 +235,80 @@ export async function recordTopup(proId: string, amount: number, ref: string): P
   revalidatePath("/admin")
   return { ok: true, data: undefined }
 }
+
+// The AI reviewer's log ------------------------------------------------------------
+
+export type AiSubject = "pro_profile" | "work" | "follow_up"
+
+export interface AiDecisionItem {
+  id: string
+  createdAt: string
+  subject: AiSubject
+  /** What the AI (or the rules) decided. */
+  decision: string
+  reasons: string[]
+  summary: string
+  model: string
+  proSlug: string
+  proName: string
+  workTitle: string | null
+  /** The post's photos, or the photos the reviewer looked at. */
+  photos: string[]
+  overriddenAt: string | null
+  overrideDecision: string | null
+  overrideNote: string | null
+  overriddenBy: string | null
+}
+
+/** Newest first, and how many decisions the last 24 hours had. Empty before the 20260929100000 migration. */
+export async function aiDecisions(limit = 200): Promise<{ items: AiDecisionItem[]; last24h: number }> {
+  const supabase = await supabaseServer()
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const [{ data, error }, { count }] = await Promise.all([
+    supabase
+      .from("ai_decisions")
+      .select(`
+        id, created_at, subject, decision, reasons, summary, model, input,
+        overridden_at, override_decision, override_note,
+        pro:pros!ai_decisions_pro_id_fkey (slug, display_name),
+        work:works!ai_decisions_work_id_fkey (title, image_paths),
+        overrider:accounts!ai_decisions_overridden_by_fkey (full_name)
+      `)
+      .order("created_at", { ascending: false })
+      .limit(limit),
+    supabase.from("ai_decisions").select("id", { count: "exact", head: true }).gte("created_at", since),
+  ])
+  if (error) {
+    console.error("aiDecisions failed:", error.message)
+    return { items: [], last24h: 0 }
+  }
+  const items = (data ?? []).map((r) => {
+    const pro = row(r.pro)
+    const work = r.work ? row(r.work) : null
+    const input = row(r.input)
+    const photos = work ? work.image_paths : input.photos
+    return {
+      id: r.id,
+      createdAt: r.created_at,
+      subject: r.subject as AiSubject,
+      decision: r.decision,
+      reasons: r.reasons ?? [],
+      summary: r.summary ?? "",
+      model: r.model,
+      proSlug: String(pro.slug ?? ""),
+      proName: String(pro.display_name ?? "Đối tác"),
+      workTitle: work ? String(work.title ?? "") : typeof input.title === "string" ? input.title : null,
+      photos: Array.isArray(photos) ? photos.filter((p): p is string => typeof p === "string") : [],
+      overriddenAt: r.overridden_at,
+      overrideDecision: r.override_decision,
+      overrideNote: r.override_note,
+      overriddenBy: r.overrider ? String(row(r.overrider).full_name ?? "") || null : null,
+    }
+  })
+  return { items, last24h: count ?? 0 }
+}
+
+/** Reverses a decision in the log; admin_override_ai_decision checks is_admin() and tells the partner. */
+export async function overrideAiDecision(decisionId: string, decision: string, note = "") {
+  return call("admin_override_ai_decision", { p_decision_id: decisionId, p_decision: decision, p_note: note })
+}

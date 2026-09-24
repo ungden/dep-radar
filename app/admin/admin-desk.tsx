@@ -1,31 +1,35 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { Button, Card, EmptyState, PageHeader, StatusBadge, Tabs, inputClass } from "@/components/ui"
-import { decideCheck, recordTopup, resolveReport, setSuspended } from "@/lib/api/admin"
-import type { AdminBooking, AdminPro, AdminReport, PendingCheck } from "@/lib/api/admin"
+import { decideCheck, overrideAiDecision, recordTopup, resolveReport, setSuspended } from "@/lib/api/admin"
+import type { AdminBooking, AdminPro, AdminReport, AiDecisionItem, PendingCheck } from "@/lib/api/admin"
 import { useRefresh } from "@/lib/store"
 import type { BookingStatus } from "@/lib/types"
 import { cn, formatPrice, timeAgo } from "@/lib/utils"
 
-type Tab = "checks" | "pros" | "topup" | "bookings" | "reports"
+type Tab = "checks" | "pros" | "topup" | "bookings" | "reports" | "ai"
 
 /**
  * The operations desk: the queue of verifications a vision model was unsure
- * about, the freelancer roster, recent bookings and the report inbox. Every
- * button calls an RPC that checks `is_admin()` again in the database.
+ * about, the freelancer roster, recent bookings, the report inbox, and the log
+ * of what the AI reviewer decided. Every button calls an RPC that checks
+ * `is_admin()` again in the database.
  */
 export function AdminDesk({
   checks,
   pros,
   bookings,
   reports,
+  aiLog,
 }: {
   checks: PendingCheck[]
   pros: AdminPro[]
   bookings: AdminBooking[]
   reports: AdminReport[]
+  aiLog: { items: AiDecisionItem[]; last24h: number }
 }) {
   const [tab, setTab] = React.useState<Tab>(checks.length ? "checks" : "pros")
   const [error, setError] = React.useState<string | null>(null)
@@ -51,6 +55,7 @@ export function AdminDesk({
           { value: "topup", label: "Nạp ví" },
           { value: "bookings", label: "Lịch hẹn" },
           { value: "reports", label: `Báo cáo (${openReports.length})` },
+          { value: "ai", label: `Nhật ký AI (${aiLog.last24h})` },
         ]}
       />
 
@@ -103,6 +108,13 @@ export function AdminDesk({
       )}
 
       {tab === "topup" && <TopupForm pros={pros} onDone={refresh} />}
+
+      {tab === "ai" && (
+        <AiLog
+          log={aiLog}
+          onOverride={(id, decision, note) => run(() => overrideAiDecision(id, decision, note))}
+        />
+      )}
 
       {tab === "bookings" && (
         <ul className="mt-4 space-y-2">
@@ -283,6 +295,202 @@ function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
           {result.text}
         </p>
       )}
+    </Card>
+  )
+}
+
+const DECISION_LABEL: Record<string, string> = {
+  approved: "Duyệt",
+  changes_requested: "Cần sửa",
+  rejected: "Từ chối",
+  hidden: "Ẩn bài",
+  kept: "Giữ bài",
+  nudged: "Nhắc nhở",
+  skipped: "Chưa quyết",
+}
+const DECISION_TONE: Record<string, string> = {
+  approved: "bg-success-soft text-success",
+  kept: "bg-success-soft text-success",
+  changes_requested: "bg-warning-soft text-warning",
+  rejected: "bg-danger-soft text-danger",
+  hidden: "bg-danger-soft text-danger",
+  nudged: "bg-canvas text-ink-soft",
+  skipped: "bg-canvas text-muted",
+}
+const SUBJECT_LABEL: Record<string, string> = { pro_profile: "Hồ sơ", work: "Bài đăng", follow_up: "Nhắc nhở" }
+
+type AiFilter = "all" | "approved" | "changes_requested" | "rejected" | "hidden" | "nudged" | "overridden"
+const AI_FILTERS: { value: AiFilter; label: string }[] = [
+  { value: "all", label: "Tất cả" },
+  { value: "approved", label: "Duyệt" },
+  { value: "changes_requested", label: "Cần sửa" },
+  { value: "rejected", label: "Từ chối" },
+  { value: "hidden", label: "Ẩn ảnh" },
+  { value: "nudged", label: "Nhắc nhở" },
+  { value: "overridden", label: "Đã đảo" },
+]
+
+/** What reversing a decision means: a profile flips approve ↔ reject, a post hide ↔ show. Null for reminders. */
+function reversal(item: AiDecisionItem): { decision: string; label: string } | null {
+  const current = item.overrideDecision ?? item.decision
+  if (item.subject === "pro_profile") {
+    return current === "approved" ? { decision: "rejected", label: "Từ chối hồ sơ" } : { decision: "approved", label: "Duyệt hồ sơ" }
+  }
+  if (item.subject === "work") {
+    return current === "hidden" ? { decision: "kept", label: "Hiện lại bài" } : { decision: "hidden", label: "Ẩn bài" }
+  }
+  return null
+}
+
+/** Only photos from our storage: next/image serves nothing else, and the log may hold a foreign link. */
+const storagePhoto = (url: string) => /^https?:\/\/[^/]+\/storage\/v1\/object\/public\//.test(url)
+
+/**
+ * The AI reviewer's log (ai_decisions), newest first. Each row is what the AI
+ * (or the rules, model "rules") decided and why; "Đảo quyết định" applies the
+ * opposite, records who did it next to the AI's answer, and tells the partner.
+ */
+function AiLog({
+  log,
+  onOverride,
+}: {
+  log: { items: AiDecisionItem[]; last24h: number }
+  onOverride: (id: string, decision: string, note: string) => Promise<void>
+}) {
+  const [filter, setFilter] = React.useState<AiFilter>("all")
+  const shown = log.items.filter((item) => {
+    const current = item.overrideDecision ?? item.decision
+    if (filter === "all") return true
+    if (filter === "overridden") return Boolean(item.overriddenAt)
+    return current === filter
+  })
+
+  return (
+    <div className="mt-4 space-y-3">
+      <p className="text-[13px] text-muted">
+        {log.last24h} quyết định trong 24 giờ qua. Hồ sơ đối tác mới do AI duyệt, bài đăng mới do AI kiểm tra; nhân viên xem lại ở đây và
+        đảo quyết định khi cần. Đối tác được báo mỗi lần đảo.
+      </p>
+      <div className="no-scrollbar flex gap-2 overflow-x-auto">
+        {AI_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            type="button"
+            onClick={() => setFilter(f.value)}
+            aria-pressed={filter === f.value}
+            className={cn(
+              "shrink-0 rounded-full border px-3 py-1.5 text-[13px] font-semibold",
+              filter === f.value ? "border-ink bg-ink text-canvas" : "border-line text-ink-soft hover:bg-subtle",
+            )}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+      {shown.length === 0 && <EmptyState title="Chưa có quyết định nào" />}
+      {shown.map((item) => (
+        <AiDecisionCard key={item.id} item={item} onOverride={onOverride} />
+      ))}
+    </div>
+  )
+}
+
+function AiDecisionCard({
+  item,
+  onOverride,
+}: {
+  item: AiDecisionItem
+  onOverride: (id: string, decision: string, note: string) => Promise<void>
+}) {
+  const [open, setOpen] = React.useState(false)
+  const [note, setNote] = React.useState("")
+  const [busy, setBusy] = React.useState(false)
+  const flip = reversal(item)
+  const current = item.overrideDecision ?? item.decision
+  const photos = item.photos.filter(storagePhoto).slice(0, 4)
+
+  return (
+    <Card className="p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", DECISION_TONE[current] ?? "bg-canvas text-muted")}>
+          {DECISION_LABEL[current] ?? current}
+        </span>
+        <span className="text-xs font-semibold text-ink-soft">{SUBJECT_LABEL[item.subject] ?? item.subject}</span>
+        {item.proSlug ? (
+          <Link href={`/pros/${item.proSlug}`} className="text-sm font-semibold hover:underline">
+            {item.proName}
+          </Link>
+        ) : (
+          <span className="text-sm font-semibold">{item.proName}</span>
+        )}
+        <span className="ml-auto text-xs text-muted" title={new Date(item.createdAt).toLocaleString("vi-VN")}>
+          {timeAgo(item.createdAt)}
+        </span>
+      </div>
+      {item.workTitle && <p className="mt-1 text-[13px] text-ink-soft">Bài: {item.workTitle}</p>}
+      {item.summary && <p className="mt-2 text-sm">{item.summary}</p>}
+      {item.reasons.length > 0 && (
+        <ul className="mt-2 list-disc space-y-0.5 pl-5 text-[13px] text-ink-soft">
+          {item.reasons.map((reason) => (
+            <li key={reason}>{reason}</li>
+          ))}
+        </ul>
+      )}
+      {photos.length > 0 && (
+        <div className="mt-3 flex gap-2">
+          {photos.map((src) => (
+            <a key={src} href={src} target="_blank" rel="noreferrer" className="relative size-16 overflow-hidden rounded-lg bg-subtle">
+              <Image src={src} alt="" fill sizes="64px" className="object-cover" />
+            </a>
+          ))}
+        </div>
+      )}
+      <p className="mt-2 text-xs text-muted">
+        {item.model === "rules" ? "Theo quy tắc (không có AI)" : `Model: ${item.model}`}
+        {item.overriddenAt && (
+          <>
+            {" "}
+            · AI quyết “{DECISION_LABEL[item.decision] ?? item.decision}”, {item.overriddenBy ?? "nhân viên"} đổi thành “
+            {DECISION_LABEL[item.overrideDecision ?? ""] ?? item.overrideDecision}” {timeAgo(item.overriddenAt)}
+            {item.overrideNote ? `: ${item.overrideNote}` : ""}
+          </>
+        )}
+      </p>
+
+      {flip &&
+        (open ? (
+          <div className="mt-3 space-y-2">
+            <input
+              className={cn(inputClass, "text-sm")}
+              placeholder="Ghi chú (gửi cho đối tác, không bắt buộc)"
+              aria-label="Ghi chú khi đảo quyết định"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+            <div className="flex gap-2">
+              <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
+                Thôi
+              </Button>
+              <Button
+                size="sm"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true)
+                  await onOverride(item.id, flip.decision, note.trim())
+                  setBusy(false)
+                  setOpen(false)
+                  setNote("")
+                }}
+              >
+                {busy ? "Đang lưu…" : flip.label}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button className="mt-3" size="sm" variant="ghost" onClick={() => setOpen(true)}>
+            Đảo quyết định
+          </Button>
+        ))}
     </Card>
   )
 }

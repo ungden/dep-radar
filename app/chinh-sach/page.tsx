@@ -218,6 +218,15 @@ export default function PolicyPage() {
             </li>
           </ul>
         </Section>
+
+        <Section title="15. Duyệt hồ sơ đối tác">
+          <p>
+            Hồ sơ đối tác mới được AI kiểm tra trước khi hiện với khách: ảnh tác phẩm có phải ảnh thật của việc đã làm, phần giới thiệu có
+            thông tin liên hệ ngoài 360dep hay nội dung không được phép, giá có hợp lý. Bài đăng mới cũng được kiểm tra như vậy; bài không
+            đạt bị ẩn và đối tác được báo lý do. Mọi quyết định của AI được ghi lại; nhân viên 360dep xem lại nhật ký và có thể thay đổi
+            quyết định.
+          </p>
+        </Section>
       </div>
     </div>
   )

@@ -96,6 +96,11 @@ function WorksManager() {
                 <div className="p-2.5">
                   <p className="truncate text-[14px] font-semibold">{work.title}</p>
                   <p className="truncate text-xs text-muted">{getTemplate(work.templateId)?.name}</p>
+                  {work.hiddenReason && (
+                    <p className="mt-1.5 rounded-lg bg-danger-soft px-2 py-1.5 text-xs text-danger">
+                      <b>Đã ẩn với khách.</b> {work.hiddenReason}
+                    </p>
+                  )}
                   <button
                     type="button"
                     className="mt-1.5 inline-flex items-center gap-1 text-xs text-muted hover:text-danger"
