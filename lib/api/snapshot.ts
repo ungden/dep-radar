@@ -16,6 +16,7 @@ import type {
   Pro,
   ProService,
   Review,
+  ReviewStatus,
   Session,
   UsageScope,
   VerificationStatus,
@@ -153,6 +154,9 @@ const PRO_BASE = `
   years_exp, accepting_jobs, published, identity_status, rating_avg, rating_count,
   completed_jobs, response_minutes, created_at`
 const PRO_SELECT = `${PRO_BASE}, equipment`
+/** The caller's own profile also carries where its review stands (20260929100000). */
+const OWN_PRO_SELECT = `${PRO_SELECT}, review_status, review_note`
+const REVIEW_STATUSES: ReviewStatus[] = ["draft", "pending", "approved", "changes_requested", "rejected"]
 
 /*
  * Reads go through orLegacy (./errors) where they name columns a migration
@@ -211,6 +215,8 @@ function toPro(row: Row, model?: Row): Pro & { uuid: string } {
     rating: { average: Number(row.rating_avg ?? 0), count: row.rating_count ?? 0 },
     equipment: row.equipment || undefined,
     model: model ? toModelProfile(model) : undefined,
+    reviewStatus: REVIEW_STATUSES.includes(row.review_status) ? row.review_status : undefined,
+    reviewNote: row.review_note || undefined,
   }
 }
 
@@ -250,18 +256,29 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       ),
       // The caller's own profile is not in that list until it is published, and
       // without it their studio cannot see their own services or works.
+      // Generations: 1 = before the review columns, 2 = before equipment.
       me
-        ? orLegacy((legacy) => supabase.from("pros").select(legacy ? PRO_BASE : PRO_SELECT).eq("id", me).maybeSingle())
+        ? orLegacy(
+            (legacy) =>
+              supabase
+                .from("pros")
+                .select(legacy >= 2 ? PRO_BASE : legacy ? PRO_SELECT : OWN_PRO_SELECT)
+                .eq("id", me)
+                .maybeSingle(),
+            2,
+          )
         : Promise.resolve({ data: null, error: null }),
       orLegacy((legacy) =>
         supabase
           .from("works")
           // Row level security already makes works public; the freelancer's own
           // unpublished ones have to be here too, or they cannot manage them.
+          // Generations: 1 = before hidden posts (20260929100000), 2 = before clips.
           .select(
-            `id, slug, pro_id, template_id, title, description, image_paths, sort_order, created_at${legacy ? "" : ", kind, video_path"}`,
+            `id, slug, pro_id, template_id, title, description, image_paths, sort_order, created_at${legacy >= 2 ? "" : ", kind, video_path"}${legacy ? "" : ", hidden_at, hidden_reason"}`,
           )
           .order("sort_order"),
+        2,
       ),
       orLegacy((legacy) =>
         supabase
@@ -307,9 +324,12 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
 
   const modelOf = new Map(rowsOf("model profiles", modelsRes).map((row: Row) => [row.pro_id as string, row]))
   const pros = rowsOf("pros", prosRes).map((row: Row) => toPro(row, modelOf.get(row.id)))
-  if (ownProRes.data && !pros.some((p) => p.id === (ownProRes.data as Row).slug)) {
+  if (ownProRes.data) {
+    // Their own row, even when they are also in the public list: it carries the review.
     const own = ownProRes.data as Row
-    pros.push(toPro(own, modelOf.get(own.id)))
+    const at = pros.findIndex((p) => p.id === own.slug)
+    if (at === -1) pros.push(toPro(own, modelOf.get(own.id)))
+    else pros[at] = toPro(own, modelOf.get(own.id))
   }
   const slugOf = new Map(pros.map((p) => [p.uuid, p.id]))
 
@@ -328,6 +348,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       kind: row.kind === "before_after" ? "before_after" : "work",
       video: row.video_path ?? undefined,
       createdAt: row.created_at ?? new Date(0).toISOString(),
+      hiddenReason: row.hidden_at ? row.hidden_reason || "Bài đăng chưa phù hợp với quy định của 360dep." : undefined,
     }
   })
 

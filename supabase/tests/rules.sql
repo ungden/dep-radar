@@ -456,7 +456,8 @@ begin
       'closes_at', 'confirm_booking_done', 'report_pro_no_show', 'my_referral_code', 'claim_referral',
       'apply_voucher', 'remove_voucher', 'chat_status', 'take_job', 'record_topup',
       -- admin decisions, which check is_admin() themselves
-      'decide_identity_check', 'decide_no_show_compensation', 'set_pro_suspended', 'set_review_hidden', 'resolve_report'
+      'decide_identity_check', 'decide_no_show_compensation', 'set_pro_suspended', 'set_review_hidden', 'resolve_report',
+      'admin_override_ai_decision'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 
@@ -1856,4 +1857,208 @@ begin
 
   perform set_config('request.jwt.claim.sub', '', true);
   raise notice 'CONNECTION RULES PASS';
+end $$;
+
+-- The AI reviewer (20260929100000): "Mở hồ sơ" asks for a review, the reviewer's
+-- decisions are applied and logged, an admin can reverse them, and the log is
+-- for admins only.
+do $$
+declare
+  linh uuid; newbie uuid; admin_id uuid; w uuid; log_id uuid; n int; msg text;
+  tpl text; cats public.category_id[];
+begin
+  select id into linh from public.pros where slug = 'linh-pham';
+
+  ---------------------------------------------------------------------------
+  raise notice 'the profiles already on the marketplace count as approved';
+  assert not exists (select 1 from public.pros where published and review_status <> 'approved'),
+    'a published profile is not approved';
+
+  -- A new partner with everything a profile needs: a service, hours, a post.
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          'ai-review@example.invalid', jsonb_build_object('full_name', 'Đối Tác Mới', 'phone', '0900 000 654'), now(), now())
+  returning id into newbie;
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          'admin-ai@example.invalid', jsonb_build_object('full_name', 'Quản trị AI'), now(), now())
+  returning id into admin_id;
+  update public.accounts set is_admin = true where id = admin_id;
+
+  select s.template_id, p.categories into tpl, cats
+  from public.pro_services s join public.pros p on p.id = s.pro_id
+  join public.service_templates t on t.id = s.template_id
+  where s.pro_id = linh and s.active and not t.studio_only and not t.requires_verification
+  limit 1;
+  assert tpl is not null, 'linh has no service to copy';
+  perform set_config('request.jwt.claim.sub', newbie::text, true);
+  -- Whatever a client sends, a new profile starts as a draft.
+  insert into public.pros (id, slug, city, district, categories, review_status, reviewed_at)
+  values (newbie, 'doi-tac-moi-test', 'Hà Nội', 'Đống Đa', cats, 'approved', now());
+  assert (select review_status = 'draft' and reviewed_at is null from public.pros where id = newbie),
+    'a new profile did not start as a draft';
+  insert into public.pro_services (pro_id, template_id, active) values (newbie, tpl, true);
+  insert into public.working_hours (pro_id, weekday, start_min, end_min) values (newbie, 1, 540, 1080);
+  insert into public.works (pro_id, template_id, title, image_paths, slug, hidden_at, ai_checked_at)
+  values (newbie, tpl, 'Mẫu đầu tiên', array['https://example.invalid/storage/v1/object/public/works/a.jpg'],
+          'mau-dau-tien-ai-test', null, now())
+  returning id into w;
+  assert (select ai_checked_at is null from public.works where id = w), 'a new post skipped the reviewer''s queue';
+
+  ---------------------------------------------------------------------------
+  raise notice 'pressing "Mở hồ sơ" before approval asks for a review, and the profile stays hidden';
+  update public.pros set published = true where id = newbie;
+  assert (select not published and review_status = 'pending' and review_requested_at is not null
+          from public.pros where id = newbie), 'publishing without approval did not go to pending';
+  perform set_config('request.jwt.claim.sub', '', true);
+  set local role anon;
+  select count(*) into n from public.pros where id = newbie;
+  reset role;
+  assert n = 0, 'an anonymous visitor sees a profile waiting for review';
+  set local role anon;
+  select count(*) into n from public.works where id = w;
+  reset role;
+  assert n = 0, 'an anonymous visitor sees a post of a profile waiting for review';
+
+  raise notice 'a partner cannot write their own review state';
+  perform set_config('request.jwt.claim.sub', newbie::text, true);
+  update public.pros set review_status = 'approved', review_note = 'ok', reviewed_at = now() where id = newbie;
+  assert (select review_status = 'pending' and review_note is null and reviewed_at is null from public.pros where id = newbie),
+    'a partner approved themselves';
+  foreach msg in array array['review_status', 'review_note', 'review_requested_at', 'reviewed_at'] loop
+    assert not has_column_privilege('authenticated', 'public.pros', msg, 'UPDATE'), format('pros.%s is writable', msg);
+  end loop;
+  -- Nor unhide a post, nor mark it checked.
+  update public.works set hidden_at = now(), ai_checked_at = now() where id = w;
+  assert (select hidden_at is null and ai_checked_at is null from public.works where id = w), 'a partner wrote the reviewer''s columns';
+
+  ---------------------------------------------------------------------------
+  raise notice 'the reviewer asking for changes tells the partner what to fix';
+  perform set_config('request.jwt.claim.sub', '', true);
+  begin
+    perform public.apply_ai_profile_decision(newbie, 'changes_requested', '{}', 'x', 'rules', '{}');
+    assert false, 'changes were requested without a reason';
+  exception when check_violation then null;
+  end;
+  log_id := public.apply_ai_profile_decision(newbie, 'changes_requested',
+    array['Ảnh tác phẩm là ảnh chụp màn hình, hãy đăng ảnh thật'], 'Ảnh chưa đạt', 'gemini-test', '{}');
+  assert log_id is not null, 'the decision was not logged';
+  assert (select not published and review_status = 'changes_requested' and review_note like 'Ảnh tác phẩm%'
+          from public.pros where id = newbie), 'the request for changes was not applied';
+  assert exists (select 1 from public.notifications where account_id = newbie and kind = 'profile_review'
+                 and title like 'Hồ sơ cần chỉnh%'), 'the partner was not told what to fix';
+  assert public.apply_ai_profile_decision(newbie, 'approved', '{}', 'late', 'gemini-test', '{}') is null,
+    'a decision on a profile no longer waiting was applied';
+
+  raise notice 'sending it again, then an approval publishes it and is logged';
+  perform set_config('request.jwt.claim.sub', newbie::text, true);
+  update public.pros set published = true where id = newbie;
+  assert (select review_status from public.pros where id = newbie) = 'pending', 'resubmitting did not ask for a review';
+  perform set_config('request.jwt.claim.sub', '', true);
+  log_id := public.apply_ai_profile_decision(newbie, 'approved', '{}', 'Hồ sơ đạt', 'gemini-test',
+    jsonb_build_object('work_ids', jsonb_build_array(w::text, 'not-a-uuid')));
+  assert (select published and review_status = 'approved' and reviewed_at is not null from public.pros where id = newbie),
+    'an approval did not publish';
+  assert (select ai_checked_at is not null from public.works where id = w), 'the post the reviewer saw is still queued';
+  assert exists (select 1 from public.ai_decisions where id = log_id and subject = 'pro_profile' and decision = 'approved'
+                 and model = 'gemini-test'), 'the approval was not logged';
+  assert exists (select 1 from public.notifications where account_id = newbie and kind = 'profile_approved'),
+    'the partner was not told';
+
+  raise notice 'an approved partner hides and shows their profile themselves, and editing keeps the approval';
+  perform set_config('request.jwt.claim.sub', newbie::text, true);
+  update public.pros set published = false where id = newbie;
+  update public.pros set published = true, bio = 'Làm móng tại nhà, 5 năm kinh nghiệm' where id = newbie;
+  assert (select published and review_status = 'approved' from public.pros where id = newbie),
+    'an approved partner could not show their profile again';
+
+  ---------------------------------------------------------------------------
+  raise notice 'a hidden post leaves the marketplace, and the owner is told';
+  perform set_config('request.jwt.claim.sub', '', true);
+  log_id := public.apply_ai_work_decision(w, 'hidden', array['Ảnh có logo của thương hiệu khác'],
+    'Ảnh lấy của người khác', 'gemini-test', '{}');
+  assert (select hidden_at is not null and hidden_by = 'ai' from public.works where id = w), 'the post was not hidden';
+  set local role anon;
+  select count(*) into n from public.works where id = w;
+  reset role;
+  assert n = 0, 'an anonymous visitor sees a hidden post';
+  perform set_config('request.jwt.claim.sub', newbie::text, true);
+  set local role authenticated;
+  select count(*) into n from public.works where id = w;
+  reset role;
+  assert n = 1, 'the owner lost sight of their hidden post';
+  assert exists (select 1 from public.notifications where account_id = newbie and kind = 'work_hidden'), 'the owner was not told';
+
+  raise notice 'new photos put a post back in the queue';
+  update public.works set image_paths = array['https://example.invalid/storage/v1/object/public/works/b.jpg'] where id = w;
+  assert (select ai_checked_at is null and hidden_at is not null from public.works where id = w), 'an edited post was not queued again';
+
+  ---------------------------------------------------------------------------
+  raise notice 'only an admin reverses a decision, and it is applied';
+  begin
+    perform public.admin_override_ai_decision(log_id, 'kept', 'tự mở');
+    assert false, 'a partner reversed a decision';
+  exception when insufficient_privilege then null;
+  end;
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.admin_override_ai_decision(log_id, 'kept', 'Ảnh của chính chị ấy');
+  assert (select hidden_at is null from public.works where id = w), 'unhiding did not show the post';
+  assert (select overridden_by = admin_id and override_decision = 'kept' from public.ai_decisions where id = log_id),
+    'the override was not recorded';
+  begin
+    perform public.admin_override_ai_decision(log_id, 'kept', '');
+    assert false, 'the same override twice';
+  exception when check_violation then null;
+  end;
+
+  select id into log_id from public.ai_decisions
+  where pro_id = newbie and subject = 'pro_profile' and decision = 'approved' order by created_at desc limit 1;
+  perform public.admin_override_ai_decision(log_id, 'rejected', 'Ảnh lấy từ trang khác');
+  assert (select not published and review_status = 'rejected' and review_note = 'Ảnh lấy từ trang khác'
+          from public.pros where id = newbie), 'an admin rejection did not unpublish';
+  perform public.admin_override_ai_decision(log_id, 'approved', '');
+  assert (select published and review_status = 'approved' from public.pros where id = newbie), 'flipping it back did not publish';
+
+  ---------------------------------------------------------------------------
+  raise notice 'the log is for admins only';
+  perform set_config('request.jwt.claim.sub', newbie::text, true);
+  set local role authenticated;
+  select count(*) into n from public.ai_decisions;
+  reset role;
+  assert n = 0, format('a partner read %s rows of the AI log', n);
+  perform set_config('request.jwt.claim.sub', '', true);
+  begin
+    set local role anon;
+    select count(*) into n from public.ai_decisions;
+    assert false, 'an anonymous caller read the AI log';
+  exception when insufficient_privilege then null;
+  end;
+  reset role;
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  set local role authenticated;
+  select count(*) into n from public.ai_decisions where pro_id = newbie;
+  reset role;
+  assert n >= 3, format('an admin reads %s rows', n);
+  perform set_config('request.jwt.claim.sub', '', true);
+
+  raise notice 'follow-ups are logged and notified';
+  log_id := public.log_ai_followup(newbie, 'Nhắc lần 1', array['Chưa có giờ làm'], jsonb_build_object('kind', 'setup'),
+    'Còn 1 bước nữa', 'Lưu giờ làm việc', '/studio');
+  assert exists (select 1 from public.ai_decisions where id = log_id and decision = 'nudged' and subject = 'follow_up'),
+    'the nudge was not logged';
+  assert exists (select 1 from public.notifications where account_id = newbie and kind = 'ai_follow_up'), 'the nudge was not sent';
+  -- A draft two days old is due a reminder; the one just sent counts.
+  update public.pros set published = false, review_status = 'draft', review_requested_at = null,
+    created_at = now() - interval '2 days' where id = newbie;
+  assert exists (select 1 from public.ai_followup_facts(500) f where f.pro_id = newbie and f.kind = 'setup' and f.prior = 1
+                 and f.has_service and f.has_hours and f.has_work), 'the setup reminder facts are wrong';
+
+  raise notice 'leaving takes the log with the account';
+  perform set_config('request.jwt.claim.sub', newbie::text, true);
+  perform public.delete_my_account();
+  assert not exists (select 1 from public.ai_decisions where pro_id = newbie), 'the AI log survived deletion';
+
+  perform set_config('request.jwt.claim.sub', '', true);
+  raise notice 'AI REVIEW RULES PASS';
 end $$;

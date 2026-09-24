@@ -106,6 +106,79 @@ export type Database = {
           },
         ]
       }
+      ai_decisions: {
+        Row: {
+          created_at: string
+          decision: string
+          id: string
+          input: Json
+          model: string
+          override_decision: string | null
+          override_note: string | null
+          overridden_at: string | null
+          overridden_by: string | null
+          pro_id: string
+          reasons: string[]
+          subject: string
+          summary: string
+          work_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          id?: string
+          input?: Json
+          model?: string
+          override_decision?: string | null
+          override_note?: string | null
+          overridden_at?: string | null
+          overridden_by?: string | null
+          pro_id: string
+          reasons?: string[]
+          subject: string
+          summary?: string
+          work_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          id?: string
+          input?: Json
+          model?: string
+          override_decision?: string | null
+          override_note?: string | null
+          overridden_at?: string | null
+          overridden_by?: string | null
+          pro_id?: string
+          reasons?: string[]
+          subject?: string
+          summary?: string
+          work_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_decisions_overridden_by_fkey"
+            columns: ["overridden_by"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_decisions_pro_id_fkey"
+            columns: ["pro_id"]
+            isOneToOne: false
+            referencedRelation: "pros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_decisions_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           address: string
@@ -1082,6 +1155,10 @@ export type Database = {
           suspended_at: string | null
           title: string
           years_exp: number
+          review_note: string | null
+          review_requested_at: string | null
+          review_status: string
+          reviewed_at: string | null
         }
         Insert: {
           accepting_jobs?: boolean
@@ -1117,6 +1194,10 @@ export type Database = {
           suspended_at?: string | null
           title?: string
           years_exp?: number
+          review_note?: string | null
+          review_requested_at?: string | null
+          review_status?: string
+          reviewed_at?: string | null
         }
         Update: {
           accepting_jobs?: boolean
@@ -1152,6 +1233,10 @@ export type Database = {
           suspended_at?: string | null
           title?: string
           years_exp?: number
+          review_note?: string | null
+          review_requested_at?: string | null
+          review_status?: string
+          reviewed_at?: string | null
         }
         Relationships: [
           {
@@ -1794,6 +1879,10 @@ export type Database = {
           template_id: string
           title: string
           video_path: string | null
+          ai_checked_at: string | null
+          hidden_at: string | null
+          hidden_by: string | null
+          hidden_reason: string | null
         }
         Insert: {
           created_at?: string
@@ -1808,6 +1897,10 @@ export type Database = {
           template_id: string
           title: string
           video_path?: string | null
+          ai_checked_at?: string | null
+          hidden_at?: string | null
+          hidden_by?: string | null
+          hidden_reason?: string | null
         }
         Update: {
           created_at?: string
@@ -1822,6 +1915,10 @@ export type Database = {
           template_id?: string
           title?: string
           video_path?: string | null
+          ai_checked_at?: string | null
+          hidden_at?: string | null
+          hidden_by?: string | null
+          hidden_reason?: string | null
         }
         Relationships: [
           {
@@ -1880,6 +1977,47 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_override_ai_decision: {
+        Args: { p_decision: string; p_decision_id: string; p_note?: string }
+        Returns: undefined
+      }
+      ai_followup_facts: {
+        Args: { p_limit?: number }
+        Returns: {
+          balance: number
+          created_at: string
+          has_hours: boolean
+          has_service: boolean
+          has_work: boolean
+          kind: string
+          last_at: string | null
+          prior: number
+          pro_id: string
+          since: string
+        }[]
+      }
+      apply_ai_profile_decision: {
+        Args: {
+          p_decision: string
+          p_input: Json
+          p_model: string
+          p_pro: string
+          p_reasons: string[]
+          p_summary: string
+        }
+        Returns: string | null
+      }
+      apply_ai_work_decision: {
+        Args: {
+          p_decision: string
+          p_input: Json
+          p_model: string
+          p_reasons: string[]
+          p_summary: string
+          p_work: string
+        }
+        Returns: string | null
+      }
       accept_delivery: { Args: { p_booking: string }; Returns: undefined }
       accept_offer: { Args: { p_offer: string }; Returns: string }
       add_time_block: {
@@ -2091,6 +2229,18 @@ export type Database = {
       mark_no_show: {
         Args: { p_booking: string; p_reason?: string }
         Returns: undefined
+      }
+      log_ai_followup: {
+        Args: {
+          p_body?: string
+          p_input: Json
+          p_link?: string
+          p_pro: string
+          p_reasons: string[]
+          p_summary: string
+          p_title?: string
+        }
+        Returns: string
       }
       mark_thread_read: {
         Args: { p_thread: string }

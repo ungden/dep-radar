@@ -170,6 +170,38 @@ chiếu nên SePay gửi lại cũng không cộng hai lần.
 **Báo vắng mặt**: bù phí di chuyển được giữ 24 giờ rồi tự cộng vào ví (cron `dep360-no-show-release`). Khách khiếu
 nại trong 24 giờ thì khoản đó chờ admin quyết bằng `decide_no_show_compensation`.
 
+**AI duyệt hồ sơ đối tác và nhắc việc** (quyết định 24/09/2026: AI tự duyệt, tự nhắc, để lại nhật ký cho admin):
+
+- Đối tác bấm “Mở hồ sơ cho khách” lần đầu thì hồ sơ **chưa hiện ngay**: database chuyển sang `review_status = 'pending'`
+  (vẫn cần đủ dịch vụ, giờ làm, một ảnh tác phẩm như trước) và màn hình ghi “Đang chờ duyệt”. Server gọi AI cho hồ sơ đó
+  ngay sau khi bấm; nếu không kịp thì cron bên dưới làm trong vòng 5 phút. Đã duyệt một lần thì đối tác tự ẩn/hiện hồ sơ,
+  sửa giới thiệu cũng không phải duyệt lại. Hồ sơ đang hiện trước migration `20260929100000` được tính là đã duyệt.
+- AI (Gemini) xem tên, tiêu đề, giới thiệu, dịch vụ và giá, giờ làm, tối đa 5 ảnh tác phẩm, rồi trả lời *duyệt / cần sửa /
+  từ chối* kèm lý do bằng tiếng Việt; đối tác nhận thông báo (có push). Luật cứng luôn áp trước AI: thiếu dịch vụ/giờ
+  làm/tác phẩm, có số điện thoại/link/Zalo trong giới thiệu, ảnh không phải tải lên từ máy, nhận làm mẫu mà chưa xác minh
+  danh tính → cần sửa.
+- Bài đăng mới của đối tác đã duyệt: AI xem ảnh, bài vi phạm bị ẩn khỏi khách (đối tác vẫn thấy, kèm lý do). Bài đăng có
+  từ trước migration không bị xem lại; muốn đưa một bài vào hàng chờ: `update public.works set ai_checked_at = null where id = '<id>';`
+- Nhắc việc (thông báo + push): hồ sơ chưa gửi duyệt sau 1, 3, 7 ngày (tối đa 3 lần); bị yêu cầu sửa mà 2 và 5 ngày sau
+  chưa gửi lại (tối đa 2 lần); ví âm phí quá 24 giờ thì nhắc mỗi ngày một lần.
+- **Nhật ký:** `/admin` → tab **Nhật ký AI** (số trong ngoặc là số quyết định 24 giờ qua). Lọc theo Duyệt / Cần sửa / Từ
+  chối / Ẩn ảnh / Nhắc nhở / Đã đảo; mỗi dòng có lý do, ảnh AI đã xem, model. **Đảo quyết định** (kèm ghi chú nếu muốn)
+  duyệt ↔ từ chối hồ sơ, ẩn ↔ hiện bài; đối tác được báo, nhật ký giữ cả câu trả lời của AI lẫn người đã đảo.
+- AI lỗi hoặc quá tải: hồ sơ **giữ nguyên chờ duyệt**, không đoán; nhật ký ghi một dòng “Chưa quyết” (tối đa mỗi giờ một
+  lần cho mỗi hồ sơ) và lần chạy sau thử lại. Không có `GEMINI_API_KEY`: hồ sơ được duyệt theo luật cứng ở trên, nhật ký ghi
+  “Chưa có AI, duyệt theo quy tắc”, model `rules`.
+
+Bật (Vercel → Project → Settings → Environment Variables, Production, rồi deploy lại):
+
+1. `CRON_SECRET`: một chuỗi ngẫu nhiên dài (ví dụ `openssl rand -hex 32`). Vercel Cron tự gửi
+   `Authorization: Bearer <CRON_SECRET>` khi biến này có; thiếu thì `/api/ai/cron` trả 503 và không chạy gì.
+   Lịch nằm trong `vercel.json` (`*/5 * * * *`, gói Pro); xem lượt chạy ở Vercel → Project → Settings → Cron Jobs.
+2. `GEMINI_API_KEY` (đã có cho xác minh danh tính) và tuỳ chọn `GEMINI_MODEL` (mặc định `gemini-3.5-flash`, dùng chung).
+3. `SUPABASE_SERVICE_ROLE_KEY` (đã có).
+
+Chạy tay một lượt: `curl -H "Authorization: Bearer $CRON_SECRET" https://www.360dep.vn/api/ai/cron` (trả về số hồ sơ đã
+quyết, bài đã xem, lời nhắc đã gửi). Mỗi lượt tối đa 10 hồ sơ, 20 bài, 50 lời nhắc.
+
 ## Ảnh tải lên
 
 Ảnh tác phẩm và ảnh đại diện được vẽ lại qua canvas rồi nén lại **trên máy người

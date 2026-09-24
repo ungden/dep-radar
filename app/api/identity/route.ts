@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto"
 import { NextResponse } from "next/server"
+import { GEMINI_MODEL, generateJson } from "@/lib/ai/gemini"
 import { ageFromCard } from "@/lib/identity-age"
 import { backendEnabled } from "@/lib/supabase/env"
 import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
@@ -53,7 +54,7 @@ function wrongOrigin(request: Request) {
 }
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024
-const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash"
+const MODEL = GEMINI_MODEL
 const MAX_CHECKS_PER_DAY = 3
 
 const PROMPT = `Bạn là bộ phận xác minh danh tính của 360dep, nền tảng đặt lịch làm đẹp tại Việt Nam.
@@ -322,21 +323,7 @@ export async function POST(request: Request) {
 
   let verdict: AiVerdict
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
-      method: "POST",
-      signal: AbortSignal.timeout(25_000),
-      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: PROMPT }, front, back, selfie] }],
-        generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: SCHEMA },
-      }),
-    })
-    if (res.status === 404) throw new Error(`model_not_found:${MODEL}`)
-    if (!res.ok) throw new Error(`Gemini ${res.status}`)
-    const json = await res.json()
-    const text: string | undefined = json?.candidates?.[0]?.content?.parts?.[0]?.text
-    if (!text) throw new Error("Empty response")
-    verdict = JSON.parse(text) as AiVerdict
+    verdict = (await generateJson({ parts: [{ text: PROMPT }, front, back, selfie], schema: SCHEMA })) as AiVerdict
     if (
       typeof verdict.front_is_cccd !== "boolean" || typeof verdict.back_is_cccd !== "boolean" ||
       typeof verdict.selfie_ok !== "boolean" || !["yes", "no", "uncertain"].includes(verdict.same_person) ||

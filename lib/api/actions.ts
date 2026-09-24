@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
+import { after } from "next/server"
 import { CITY_COOKIE } from "./snapshot"
 import { supabaseServer } from "@/lib/supabase/server"
 import type {
@@ -627,9 +628,27 @@ export async function saveProProfile(input: {
 
   const { error } = await supabase.from("pros").update(row).eq("id", auth.user.id)
   if (error) return { ok: false, error: messageFor(error) }
+  if (input.published === true) reviewSoon(auth.user.id)
   revalidatePath("/studio", "layout")
   revalidatePath("/")
   return { ok: true, data: undefined }
+}
+
+/**
+ * "Mở hồ sơ" on a profile that was never approved asks for a review (the
+ * database turns it into 'pending'). The reviewer then runs for this profile
+ * right after the response is sent, so the answer usually comes within a
+ * minute; if it cannot run here, the cron picks the profile up within five.
+ */
+function reviewSoon(proId: string) {
+  after(async () => {
+    try {
+      const { reviewProfile } = await import("@/lib/ai/review")
+      await reviewProfile(proId)
+    } catch (err) {
+      console.error("review after publish failed:", err instanceof Error ? err.message : err)
+    }
+  })
 }
 
 /** Weekly opening hours, replaced as a set. */

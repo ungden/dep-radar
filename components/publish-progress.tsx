@@ -30,7 +30,9 @@ export function useSavedHours(): [boolean | null, (value: boolean) => void] {
 /**
  * The four things a profile needs before customers can find it, in the order
  * the database checks them (pros_guard: an active service, working hours, one
- * work), then the switch itself. Shown on "Hôm nay" until the profile is live.
+ * work), then the switch itself, which sends the profile for review. Shown on
+ * "Hôm nay" until the profile is live; while the review runs, or when it asked
+ * for changes, the last step says so.
  */
 export function PublishProgress() {
   const state = useApp()
@@ -40,12 +42,22 @@ export function PublishProgress() {
   if (pro.published) return null
 
   const hasService = servicesOf(state, proId).length > 0
-  const hasWork = worksOf(state, proId).length > 0
+  // A post the review hid does not count, as in the database.
+  const hasWork = worksOf(state, proId).some((w) => !w.hiddenReason)
+  const firstReason = (pro.reviewNote ?? "").split("\n").find((line) => line.trim())
+  const last =
+    pro.reviewStatus === "pending"
+      ? { label: "Chờ duyệt", text: "Đang chờ duyệt (thường vài phút)" }
+      : pro.reviewStatus === "changes_requested" || pro.reviewStatus === "rejected"
+        ? { label: "Gửi duyệt lại", text: firstReason ? `Cần sửa: ${firstReason}` : "Sửa theo góp ý rồi bấm “Gửi duyệt lại”" }
+        : pro.reviewStatus === "approved"
+          ? { label: "Mở hồ sơ", text: "Bật hiển thị để khách đặt được lịch" }
+          : { label: "Mở hồ sơ", text: "Bấm “Mở hồ sơ cho khách” để gửi duyệt, thường xong trong vài phút" }
   const steps = [
     { label: "Dịch vụ", text: "Chọn ít nhất một dịch vụ và đặt giá", href: "/studio/services", done: hasService },
     { label: "Tác phẩm", text: "Đăng ít nhất một ảnh việc bạn đã làm", href: "/studio/works", done: hasWork },
     { label: "Giờ làm", text: "Lưu giờ bạn nhận khách trong tuần", href: "/studio/profile/edit#gio-lam", done: hasHours === true },
-    { label: "Mở hồ sơ", text: "Bật hiển thị để khách đặt được lịch", href: "/studio/profile/edit#mo-ho-so", done: false },
+    { ...last, href: "/studio/profile/edit#mo-ho-so", done: false },
   ]
   const doneCount = steps.filter((s) => s.done).length
   const next = steps.find((s) => !s.done)

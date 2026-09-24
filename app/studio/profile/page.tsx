@@ -52,7 +52,13 @@ function ProfileTrust() {
             {pro.name} <VerifiedMark pro={pro} />
           </p>
           <p className="text-sm text-muted">
-            {pro.published ? "Đang hiển thị với khách · sửa hồ sơ" : "Chưa hiển thị với khách · hoàn thiện hồ sơ"}
+            {pro.published
+              ? "Đang hiển thị với khách · sửa hồ sơ"
+              : pro.reviewStatus === "pending"
+                ? "Đang chờ duyệt (thường vài phút)"
+                : pro.reviewStatus === "changes_requested" || pro.reviewStatus === "rejected"
+                  ? "Cần chỉnh trước khi hiện với khách · xem góp ý"
+                  : "Chưa hiển thị với khách · hoàn thiện hồ sơ"}
           </p>
         </div>
         <ChevronRight className="size-5 text-muted" />

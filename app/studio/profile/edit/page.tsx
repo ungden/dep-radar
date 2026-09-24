@@ -57,7 +57,8 @@ function ProfileEditor() {
   // The same three things pros_guard checks before a profile may go public:
   // an active listing, a saved week, a work.
   const hasService = servicesOf(state, proId).length > 0
-  const hasWork = worksOf(state, proId).length > 0
+  // A post the review hid does not count, as in the database.
+  const hasWork = worksOf(state, proId).some((w) => !w.hiddenReason)
   const hours = useWorkingWeek()
 
   const save = async () => {
@@ -256,13 +257,38 @@ function useWorkingWeek() {
 
 type WorkingWeek = ReturnType<typeof useWorkingWeek>
 
-/** A profile only goes public when it can actually take a booking. */
+/**
+ * A profile only goes public when it can actually take a booking, and once the
+ * review has approved it. "Mở hồ sơ" on a profile never approved asks for the
+ * review (the database makes it 'pending'); the answer usually comes in a
+ * minute or two, so the box looks again on its own while it waits.
+ */
 function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWork: boolean; hours: WorkingWeek }) {
   const state = useApp()
   const refresh = useRefresh()
   const pro = proView(state, state.session!.proId!)!
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
+
+  const status = pro.reviewStatus
+  const pending = !pro.published && status === "pending"
+  const refused = !pro.published && (status === "changes_requested" || status === "rejected")
+  const reasons = (pro.reviewNote ?? "").split("\n").map((s) => s.trim()).filter(Boolean)
+
+  const refreshRef = React.useRef(refresh)
+  React.useEffect(() => {
+    refreshRef.current = refresh
+  })
+  React.useEffect(() => {
+    if (!pending) return
+    let rounds = 0
+    const timer = setInterval(() => {
+      rounds++
+      refreshRef.current()
+      if (rounds >= 15) clearInterval(timer)
+    }, 20_000)
+    return () => clearInterval(timer)
+  }, [pending])
 
   // Hours that are only on screen are saved on the way to publishing, so the
   // database's check (pros_guard) sees them.
@@ -282,50 +308,83 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
     ],
   ]
 
+  const heading = pro.published
+    ? "Hồ sơ đang hiển thị với khách"
+    : pending
+      ? "Đang chờ duyệt (thường vài phút)"
+      : status === "changes_requested"
+        ? "Hồ sơ cần chỉnh trước khi hiện với khách"
+        : status === "rejected"
+          ? "Hồ sơ chưa được duyệt"
+          : "Hồ sơ chưa hiển thị với khách"
+
   return (
     <Card id="mo-ho-so" className="scroll-mt-20 p-4">
-      <p className="font-semibold">{pro.published ? "Hồ sơ đang hiển thị với khách" : "Hồ sơ chưa hiển thị với khách"}</p>
-      <ul className="mt-2 space-y-1.5 text-[13px]">
-        {items.map(([done, text, href]) => (
-          <li key={href} className="flex items-center gap-2">
-            {done ? <CheckCircle2 className="size-4 shrink-0 text-success" /> : <Circle className="size-4 shrink-0 text-muted" />}
-            {done ? (
-              <span className="text-ink-soft">{text}</span>
-            ) : (
-              <Link href={href} className="text-accent underline underline-offset-2">
-                {text}
-              </Link>
-            )}
-          </li>
-        ))}
-      </ul>
+      <p className="font-semibold">{heading}</p>
+      {pending && (
+        <p className="mt-1 text-[13px] text-ink-soft">
+          360dep đang xem ảnh, dịch vụ và phần giới thiệu của bạn. Duyệt xong bạn nhận thông báo, và khách thấy hồ sơ ngay.
+        </p>
+      )}
+      {refused && reasons.length > 0 && (
+        <div className="mt-2 rounded-xl bg-warning-soft px-3 py-2.5 text-[13px]">
+          <p className="font-semibold text-warning">Cần sửa:</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-ink">
+            {reasons.map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+          <p className="mt-1.5 text-ink-soft">Sửa xong bấm “Gửi duyệt lại”.</p>
+        </div>
+      )}
+      {!pending && (
+        <ul className="mt-2 space-y-1.5 text-[13px]">
+          {items.map(([done, text, href]) => (
+            <li key={href} className="flex items-center gap-2">
+              {done ? <CheckCircle2 className="size-4 shrink-0 text-success" /> : <Circle className="size-4 shrink-0 text-muted" />}
+              {done ? (
+                <span className="text-ink-soft">{text}</span>
+              ) : (
+                <Link href={href} className="text-accent underline underline-offset-2">
+                  {text}
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
       {error && (
         <p role="alert" className="mt-2 text-xs text-danger">
           {error}
         </p>
       )}
-      <Button
-        className="mt-3"
-        variant={pro.published ? "ghost" : "primary"}
-        disabled={busy || (!pro.published && !ready)}
-        onClick={async () => {
-          setBusy(true)
-          setError(null)
-          if (!pro.published && !hours.saved) {
-            const problem = await hours.save()
-            if (problem) {
-              setBusy(false)
-              return setError(problem)
+      {!pending && (
+        <Button
+          className="mt-3"
+          variant={pro.published ? "ghost" : "primary"}
+          disabled={busy || (!pro.published && !ready)}
+          onClick={async () => {
+            setBusy(true)
+            setError(null)
+            if (!pro.published && !hours.saved) {
+              const problem = await hours.save()
+              if (problem) {
+                setBusy(false)
+                return setError(problem)
+              }
             }
-          }
-          const result = await saveProProfile({ published: !pro.published })
-          setBusy(false)
-          if (!result.ok) return setError(result.error)
-          refresh()
-        }}
-      >
-        {busy ? "Đang lưu…" : pro.published ? "Ẩn hồ sơ" : "Mở hồ sơ cho khách"}
-      </Button>
+            const result = await saveProProfile({ published: !pro.published })
+            setBusy(false)
+            if (!result.ok) return setError(result.error)
+            refresh()
+          }}
+        >
+          {busy ? "Đang lưu…" : pro.published ? "Ẩn hồ sơ" : refused ? "Gửi duyệt lại" : "Mở hồ sơ cho khách"}
+        </Button>
+      )}
+      {!pro.published && !pending && status !== "approved" && (
+        <p className="mt-2 text-xs text-muted">Hồ sơ mới được 360dep duyệt trước khi hiện với khách, thường trong vài phút.</p>
+      )}
     </Card>
   )
 }

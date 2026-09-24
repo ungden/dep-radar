@@ -5,6 +5,7 @@ import { Alert, ScrollView, Switch, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { setAcceptingJobs } from "@/data/actions"
 import { webLink } from "@/data/links"
+import { supabase } from "@/data/supabase"
 import { StudioHeader } from "@/components/studio-header"
 import { useApp } from "@/state/app"
 import { colors, gutter, radius } from "@/theme"
@@ -13,12 +14,40 @@ import { Icon, type IconName } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
 
+/**
+ * Where the profile's review stands (20260929100000). Publishing itself is on
+ * the web; the app only says whether it is waiting or what to fix. Null while
+ * loading, and on a database without the review columns.
+ */
+function useReview(uid: string | null) {
+  const [review, setReview] = React.useState<{ status: string; note: string } | null>(null)
+  React.useEffect(() => {
+    if (!uid) return
+    let live = true
+    void supabase
+      .from("pros")
+      .select("review_status, review_note")
+      .eq("id", uid)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (live && data) setReview({ status: String(data.review_status ?? ""), note: String(data.review_note ?? "") })
+      })
+    return () => {
+      live = false
+    }
+  }, [uid])
+  return review
+}
+
 export default function StudioMe() {
   const app = useApp()
   const insets = useSafeAreaInsets()
   const pro = app.myPro
   const [accepting, setAccepting] = React.useState(pro?.acceptingJobs ?? true)
+  const review = useReview(app.uid ?? null)
   if (!pro || !app.uid) return null
+  const pending = !pro.published && review?.status === "pending"
+  const refused = !pro.published && (review?.status === "changes_requested" || review?.status === "rejected")
   const uid = app.uid
 
   const toggle = async (value: boolean) => {
@@ -53,11 +82,43 @@ export default function StudioMe() {
               {pro.identity === "verified" ? <VerifiedMark /> : null}
             </View>
             <Txt v="meta" color={colors.inkSoft}>
-              {pro.published ? "Hồ sơ đang hiện với khách" : "Hồ sơ chưa công khai"} · xem như khách
+              {pro.published
+                ? "Hồ sơ đang hiện với khách"
+                : pending
+                  ? "Đang chờ duyệt (thường vài phút)"
+                  : refused
+                    ? "Hồ sơ cần chỉnh trước khi hiện với khách"
+                    : "Hồ sơ chưa công khai"}{" "}
+              · xem như khách
             </Txt>
           </View>
           <Icon name="right" size={14} color={colors.muted} />
         </Press>
+
+        {refused && review?.note ? (
+          <Press
+            onPress={web("/studio/profile/edit#mo-ho-so")}
+            accessibilityRole="link"
+            accessibilityLabel="Sửa hồ sơ và gửi duyệt lại, mở trên web"
+            style={{ backgroundColor: colors.warningSoft, borderRadius: radius.md, padding: 16, gap: 6 }}
+          >
+            <Txt w={700} color={colors.warning}>
+              Cần sửa
+            </Txt>
+            {review.note
+              .split("\n")
+              .map((line) => line.trim())
+              .filter(Boolean)
+              .map((line) => (
+                <Txt key={line} v="meta">
+                  • {line}
+                </Txt>
+              ))}
+            <Txt v="meta" w={600} color={colors.warning}>
+              Sửa xong bấm “Gửi duyệt lại” trên web
+            </Txt>
+          </Press>
+        ) : null}
 
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.md, padding: 16 }}>
           <View style={{ flex: 1 }}>
