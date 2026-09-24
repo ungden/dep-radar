@@ -4,8 +4,18 @@ import { Text, View, type StyleProp, type ViewStyle } from "react-native"
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated"
 import { initials, formatRating } from "@/data/format"
 import Svg, { Path, Rect } from "react-native-svg"
-import { LOGO_GLYPH_PATH, LOGO_RADIUS, showsAverage } from "@/shared"
-import { aspect, colors, fonts, radius } from "@/theme"
+import {
+  BRAND_DARK,
+  BRAND_GOLD,
+  LOGO_EYE_PATH,
+  LOGO_EYE_STROKE,
+  LOGO_EYE_STROKE_SMALL,
+  LOGO_RADIUS,
+  WORDMARK_BOX,
+  WORDMARK_PATH,
+  showsAverage,
+} from "@/shared"
+import { aspect, colors, radius } from "@/theme"
 import { Button } from "./button"
 import { Icon } from "./icon"
 import { Press } from "./press"
@@ -170,34 +180,40 @@ export function Divider({ style }: { style?: StyleProp<ViewStyle> }) {
   return <View style={[{ height: 1, backgroundColor: colors.line }, style]} />
 }
 
-/** The 360dep mark: a white serif "đ" on rose. Same outline as the web (lib/design/brand.ts). */
+/** The 360đẹp mark: a champagne closed eye on espresso. Same outline as the web (lib/design/brand.ts). */
 export function LogoMark({ size = 28 }: { size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 32 32">
-      <Rect width={32} height={32} rx={LOGO_RADIUS} fill={colors.accent} />
-      <Path d={LOGO_GLYPH_PATH} fill={colors.surface} />
+      <Rect width={32} height={32} rx={LOGO_RADIUS} fill={BRAND_DARK} />
+      <Path
+        d={LOGO_EYE_PATH}
+        fill="none"
+        stroke={BRAND_GOLD}
+        strokeWidth={size < 24 ? LOGO_EYE_STROKE_SMALL : LOGO_EYE_STROKE}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </Svg>
   )
 }
 
-/** "360đẹp", the same as the web header: Be Vietnam Pro ExtraBold, "360" ink, "đẹp" rose. */
-export function Wordmark({ size = 24 }: { size?: number }) {
+/** "360đẹp" in Noto Serif Display, from the same outline as the web header. */
+export function Wordmark({ size = 24, tone = "dark" }: { size?: number; tone?: "dark" | "gold" }) {
+  const height = size * 0.92
   return (
-    <Text
-      accessibilityRole="header"
-      accessibilityLabel="360đẹp"
-      style={{ fontFamily: fonts[800], fontSize: size, lineHeight: size * 1.25, color: colors.ink, letterSpacing: -size * 0.045 }}
-    >
-      360<Text style={{ color: colors.accent }}>đẹp</Text>
-    </Text>
+    <View accessible accessibilityRole="header" accessibilityLabel="360đẹp">
+      <Svg height={height} width={(height * WORDMARK_BOX.width) / WORDMARK_BOX.height} viewBox={`0 0 ${WORDMARK_BOX.width} ${WORDMARK_BOX.height}`}>
+        <Path d={WORDMARK_PATH} fill={tone === "gold" ? BRAND_GOLD : BRAND_DARK} />
+      </Svg>
+    </View>
   )
 }
 
 export function Logo({ size = 32 }: { size?: number }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }} accessibilityLabel="360dep">
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }} accessibilityLabel="360đẹp">
       <LogoMark size={size} />
-      <Wordmark size={size * 0.95} />
+      <Wordmark size={size * 0.8} />
     </View>
   )
 }

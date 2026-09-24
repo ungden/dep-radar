@@ -28,7 +28,7 @@
     "android": {
       "package": "vn.dep360.app",
       "adaptiveIcon": {
-        "backgroundColor": "#A8535D",
+        "backgroundColor": "#2A1B1E",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false

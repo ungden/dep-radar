@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, Star } from "lucide-react"
 import type { BookingStatus } from "@/lib/types"
-import { LOGO_GLYPH_PATH, LOGO_RADIUS } from "@/lib/design/brand"
+import { BRAND_DARK, BRAND_GOLD, LOGO_EYE_PATH, LOGO_EYE_STROKE, LOGO_EYE_STROKE_SMALL, LOGO_RADIUS, WORDMARK_BOX, WORDMARK_PATH } from "@/lib/design/brand"
 import { showsAverage } from "@/lib/connection"
 import { cn, initials } from "@/lib/utils"
 
@@ -57,35 +57,46 @@ export function ButtonLink({
 export function LogoMark({ size = 32, className }: { size?: number; className?: string }) {
   return (
     <svg aria-hidden width={size} height={size} viewBox="0 0 32 32" className={cn("shrink-0", className)}>
-      <rect width="32" height="32" rx={LOGO_RADIUS} fill="var(--color-accent)" />
-      <path d={LOGO_GLYPH_PATH} fill="#fff" />
+      <rect width="32" height="32" rx={LOGO_RADIUS} fill={BRAND_DARK} />
+      <path
+        d={LOGO_EYE_PATH}
+        fill="none"
+        stroke={BRAND_GOLD}
+        strokeWidth={size < 24 ? LOGO_EYE_STROKE_SMALL : LOGO_EYE_STROKE}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
 
 /**
- * "360đẹp": the name as it is said, in the same family as every other word on
- * the site (Be Vietnam Pro ExtraBold, tight). "360" in ink, "đẹp" in rose.
- * The domain stays 360dep.vn; the label keeps screen readers on the name.
+ * "360đẹp" in Noto Serif Display, drawn from outlines (lib/design/brand.ts) so
+ * it never waits for a font. `size` is the cap height the eye reads at, like a
+ * font size. Espresso on light pages, champagne (`tone="gold"`) on dark.
  */
-export function Wordmark({ className, size = 24 }: { className?: string; size?: number }) {
+export function Wordmark({ className, size = 24, tone = "dark" }: { className?: string; size?: number; tone?: "dark" | "gold" }) {
+  const height = size * 0.92
   return (
-    <span
+    <svg
+      role="img"
       aria-label="360đẹp"
-      className={cn("font-extrabold leading-none tracking-[-0.045em] text-ink [font-variant-numeric:lining-nums]", className)}
-      style={{ fontSize: size }}
+      height={height}
+      width={(height * WORDMARK_BOX.width) / WORDMARK_BOX.height}
+      viewBox={`0 0 ${WORDMARK_BOX.width} ${WORDMARK_BOX.height}`}
+      className={cn("shrink-0", className)}
     >
-      360<span className="text-accent">đẹp</span>
-    </span>
+      <path d={WORDMARK_PATH} fill={tone === "gold" ? BRAND_GOLD : BRAND_DARK} />
+    </svg>
   )
 }
 
 export function Logo({ className, size = "md" }: { className?: string; size?: "md" | "lg" }) {
   const lg = size === "lg"
   return (
-    <span className={cn("inline-flex items-center", lg ? "gap-3" : "gap-2", className)}>
-      <LogoMark size={lg ? 44 : 28} />
-      <Wordmark size={lg ? 36 : 24} />
+    <span className={cn("inline-flex items-center", lg ? "gap-3" : "gap-2.5", className)}>
+      <LogoMark size={lg ? 44 : 32} />
+      <Wordmark size={lg ? 36 : 28} />
     </span>
   )
 }

@@ -14,7 +14,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   // The share image reads its fonts from disk; ship them with that route.
-  outputFileTracingIncludes: { "/opengraph-image": ["./app/_og/*.ttf"] },
+  outputFileTracingIncludes: {
+    "/opengraph-image": ["./app/_og/*.ttf"],
+    "/pros/[id]/opengraph-image": ["./app/_og/*.ttf"],
+    "/dich-vu/[id]/opengraph-image": ["./app/_og/*.ttf"],
+    "/works/[id]/opengraph-image": ["./app/_og/*.ttf"],
+  },
   images: {
     formats: ["image/webp"],
     minimumCacheTTL: 60 * 60 * 24 * 30,
