@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Không tìm thấy trang" }
 export default function NotFound() {
   return (
     <div className="flex min-h-[70dvh] flex-col items-center justify-center px-6 text-center">
-      <p className="font-display text-5xl font-bold text-ink">
+      <p className="text-5xl font-extrabold tracking-[-0.04em] text-ink">
         4<span className="text-accent">0</span>4
       </p>
       <h1 className="mt-4 text-xl font-semibold">Không tìm thấy trang</h1>

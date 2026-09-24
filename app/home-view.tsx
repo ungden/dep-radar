@@ -11,7 +11,7 @@ import { PostCard, VerticalSwitch } from "@/components/beauty"
 import { CategoryTiles } from "@/components/category-icon"
 import { MobileLinks } from "@/components/mobile-links"
 import { ServiceCard } from "@/components/service-card"
-import { ButtonLink, PageSkeleton } from "@/components/ui"
+import { ButtonLink, PageSkeleton, Wordmark } from "@/components/ui"
 import { CATEGORIES, getVertical, isVertical } from "@/lib/catalog"
 import { actions } from "@/lib/client-actions"
 import { rankFeed, type VerticalFilter } from "@/lib/feed"
@@ -272,7 +272,7 @@ function TopBar() {
     <div className="flex h-12 items-center justify-between md:hidden">
       <CityPicker value={city} />
       <Link href="/" aria-label="360dep">
-        <span className="font-display text-[24px] font-bold leading-none text-accent">360dep</span>
+        <Wordmark size={24} />
       </Link>
       <div className="flex items-center">
         {session ? (

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google"
+import { Be_Vietnam_Pro } from "next/font/google"
 import "./globals.css"
 
 import { AppShell } from "@/components/layout/app-shell"
@@ -12,20 +12,12 @@ import { backendEnabled } from "@/lib/supabase/env"
 
 const body = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
-  // 800 is the headline weight; there is no second family to download.
-  // Four weights: 800 is no longer used by any heading.
-  weight: ["400", "500", "600", "700"],
+  // One family for everything, the wordmark included (800). Be Vietnam Pro
+  // was drawn for Vietnamese: stacked marks (ặ, ễ, ở) stay clear and even.
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-body",
 })
 
-// The wordmark only, one weight.
-const serif = Playfair_Display({
-  subsets: ["latin", "vietnamese"],
-  weight: ["700"],
-  variable: "--font-serif",
-  // Only the small wordmark uses it; don't let it compete with the first image.
-  preload: false,
-})
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -65,7 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // One server read per navigation feeds every screen; see lib/api/snapshot.ts.
   const snapshot = backendEnabled ? await loadSnapshot() : emptySnapshot
   return (
-    <html lang="vi" className={`${body.variable} ${serif.variable}`}>
+    <html lang="vi" className={body.variable}>
       <body className="min-h-dvh">
         <a
           href="#main"

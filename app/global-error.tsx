@@ -20,7 +20,9 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           fontFamily: "system-ui, -apple-system, sans-serif",
         }}
       >
-        <p style={{ fontSize: 28, fontWeight: 800, margin: 0, letterSpacing: -1 }}>360dep</p>
+        <p style={{ fontSize: 28, fontWeight: 800, margin: 0, letterSpacing: -1.2 }}>
+          360<span style={{ color: "#A8535D" }}>đẹp</span>
+        </p>
         <h1 style={{ fontSize: 18, margin: 0 }}>Ứng dụng gặp sự cố</h1>
         <p style={{ fontSize: 14, color: "#65575A", maxWidth: 360, margin: 0 }}>
           Mình xin lỗi vì sự bất tiện. Bạn thử tải lại trang nhé.

@@ -63,14 +63,29 @@ export function LogoMark({ size = 32, className }: { size?: number; className?: 
   )
 }
 
+/**
+ * "360đẹp": the name as it is said, in the same family as every other word on
+ * the site (Be Vietnam Pro ExtraBold, tight). "360" in ink, "đẹp" in rose.
+ * The domain stays 360dep.vn; the label keeps screen readers on the name.
+ */
+export function Wordmark({ className, size = 24 }: { className?: string; size?: number }) {
+  return (
+    <span
+      aria-label="360đẹp"
+      className={cn("font-extrabold leading-none tracking-[-0.045em] text-ink [font-variant-numeric:lining-nums]", className)}
+      style={{ fontSize: size }}
+    >
+      360<span className="text-accent">đẹp</span>
+    </span>
+  )
+}
+
 export function Logo({ className, size = "md" }: { className?: string; size?: "md" | "lg" }) {
   const lg = size === "lg"
   return (
     <span className={cn("inline-flex items-center", lg ? "gap-3" : "gap-2", className)}>
       <LogoMark size={lg ? 44 : 28} />
-      <span className={cn("font-display font-bold leading-none tracking-[-0.02em] text-accent", lg ? "text-[36px]" : "text-[24px]")}>
-        360dep
-      </span>
+      <Wordmark size={lg ? 36 : 24} />
     </span>
   )
 }
