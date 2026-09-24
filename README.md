@@ -176,7 +176,7 @@ nại trong 24 giờ thì khoản đó chờ admin quyết bằng `decide_no_sho
   (vẫn cần đủ dịch vụ, giờ làm, một ảnh tác phẩm như trước) và màn hình ghi “Đang chờ duyệt”. Server gọi AI cho hồ sơ đó
   ngay sau khi bấm; nếu không kịp thì cron bên dưới làm trong vòng 5 phút. Đã duyệt một lần thì đối tác tự ẩn/hiện hồ sơ,
   sửa giới thiệu cũng không phải duyệt lại. Hồ sơ đang hiện trước migration `20260929100000` được tính là đã duyệt.
-- AI (Gemini) xem tên, tiêu đề, giới thiệu, dịch vụ và giá, giờ làm, tối đa 5 ảnh tác phẩm, rồi trả lời *duyệt / cần sửa /
+- AI (OpenAI, mặc định `gpt-6-luna`) xem tên, tiêu đề, giới thiệu, dịch vụ và giá, giờ làm, tối đa 5 ảnh tác phẩm, rồi trả lời *duyệt / cần sửa /
   từ chối* kèm lý do bằng tiếng Việt; đối tác nhận thông báo (có push). Luật cứng luôn áp trước AI: thiếu dịch vụ/giờ
   làm/tác phẩm, có số điện thoại/link/Zalo trong giới thiệu, ảnh không phải tải lên từ máy, nhận làm mẫu mà chưa xác minh
   danh tính → cần sửa.
@@ -188,7 +188,7 @@ nại trong 24 giờ thì khoản đó chờ admin quyết bằng `decide_no_sho
   chối / Ẩn ảnh / Nhắc nhở / Đã đảo; mỗi dòng có lý do, ảnh AI đã xem, model. **Đảo quyết định** (kèm ghi chú nếu muốn)
   duyệt ↔ từ chối hồ sơ, ẩn ↔ hiện bài; đối tác được báo, nhật ký giữ cả câu trả lời của AI lẫn người đã đảo.
 - AI lỗi hoặc quá tải: hồ sơ **giữ nguyên chờ duyệt**, không đoán; nhật ký ghi một dòng “Chưa quyết” (tối đa mỗi giờ một
-  lần cho mỗi hồ sơ) và lần chạy sau thử lại. Không có `GEMINI_API_KEY`: hồ sơ được duyệt theo luật cứng ở trên, nhật ký ghi
+  lần cho mỗi hồ sơ) và lần chạy sau thử lại. Không có `OPENAI_API_KEY` (và cũng không có `GEMINI_API_KEY` để dự phòng): hồ sơ được duyệt theo luật cứng ở trên, nhật ký ghi
   “Chưa có AI, duyệt theo quy tắc”, model `rules`.
 
 Bật (Vercel → Project → Settings → Environment Variables, Production, rồi deploy lại):
@@ -196,7 +196,9 @@ Bật (Vercel → Project → Settings → Environment Variables, Production, r�
 1. `CRON_SECRET`: một chuỗi ngẫu nhiên dài (ví dụ `openssl rand -hex 32`). Vercel Cron tự gửi
    `Authorization: Bearer <CRON_SECRET>` khi biến này có; thiếu thì `/api/ai/cron` trả 503 và không chạy gì.
    Lịch nằm trong `vercel.json` (`*/5 * * * *`, gói Pro); xem lượt chạy ở Vercel → Project → Settings → Cron Jobs.
-2. `GEMINI_API_KEY` (đã có cho xác minh danh tính) và tuỳ chọn `GEMINI_MODEL` (mặc định `gemini-3.5-flash`, dùng chung).
+2. `OPENAI_API_KEY` (platform.openai.com → API keys) và tuỳ chọn `OPENAI_MODEL` (mặc định `gpt-6-luna`: rẻ nhất có đọc
+   ảnh, khoảng $0.10 / 1 triệu token vào, một lần duyệt hồ sơ dưới 1 đồng xu). Không có khoá OpenAI thì dùng Gemini nếu có.
+   `GEMINI_API_KEY` vẫn cần riêng cho xác minh danh tính: model của OpenAI từ chối so khuôn mặt selfie với ảnh trên CCCD.
 3. `SUPABASE_SERVICE_ROLE_KEY` (đã có).
 
 Chạy tay một lượt: `curl -H "Authorization: Bearer $CRON_SECRET" https://www.360dep.vn/api/ai/cron` (trả về số hồ sơ đã

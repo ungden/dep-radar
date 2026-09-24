@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto"
 import { NextResponse } from "next/server"
-import { GEMINI_MODEL, generateJson } from "@/lib/ai/gemini"
+import { generateJson, modelName, type AiSchema } from "@/lib/ai/llm"
 import { ageFromCard } from "@/lib/identity-age"
 import { backendEnabled } from "@/lib/supabase/env"
 import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
@@ -54,7 +54,8 @@ function wrongOrigin(request: Request) {
 }
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024
-const MODEL = GEMINI_MODEL
+// Gemini, not OpenAI: OpenAI's models decline to compare a face with an ID photo (lib/ai/llm.ts).
+const MODEL = modelName("gemini")
 const MAX_CHECKS_PER_DAY = 3
 
 const PROMPT = `Bạn là bộ phận xác minh danh tính của 360dep, nền tảng đặt lịch làm đẹp tại Việt Nam.
@@ -73,18 +74,18 @@ Hãy kiểm tra và trả về JSON đúng schema:
 - issues: danh sách vấn đề ngắn gọn bằng tiếng Việt để hướng dẫn người dùng chụp lại (ví dụ "Ảnh mặt trước bị loá"), rỗng nếu không có.
 Chỉ trả JSON, không thêm giải thích.`
 
-const SCHEMA = {
-  type: "OBJECT",
+const SCHEMA: AiSchema = {
+  type: "object",
   properties: {
-    front_is_cccd: { type: "BOOLEAN" },
-    back_is_cccd: { type: "BOOLEAN" },
-    name_on_card: { type: "STRING" },
-    date_of_birth: { type: "STRING" },
-    card_number: { type: "STRING" },
-    selfie_ok: { type: "BOOLEAN" },
-    same_person: { type: "STRING", enum: ["yes", "no", "uncertain"] },
-    confidence: { type: "NUMBER" },
-    issues: { type: "ARRAY", items: { type: "STRING" } },
+    front_is_cccd: { type: "boolean" },
+    back_is_cccd: { type: "boolean" },
+    name_on_card: { type: "string" },
+    date_of_birth: { type: "string" },
+    card_number: { type: "string" },
+    selfie_ok: { type: "boolean" },
+    same_person: { type: "string", enum: ["yes", "no", "uncertain"] },
+    confidence: { type: "number" },
+    issues: { type: "array", items: { type: "string" } },
   },
   required: [
     "front_is_cccd",
@@ -97,6 +98,7 @@ const SCHEMA = {
     "confidence",
     "issues",
   ],
+  additionalProperties: false,
 }
 
 interface AiVerdict {
@@ -138,7 +140,7 @@ async function toPart(file: FormDataEntryValue | null) {
   if (!(file instanceof File)) return null
   if (!file.type.startsWith("image/") || file.size > MAX_IMAGE_BYTES) return null
   const data = Buffer.from(await file.arrayBuffer()).toString("base64")
-  return { inlineData: { mimeType: file.type, data } }
+  return { image: { mimeType: file.type, data } }
 }
 
 /** The signed-in freelancer, plus how many checks they have already used today. */
@@ -323,7 +325,7 @@ export async function POST(request: Request) {
 
   let verdict: AiVerdict
   try {
-    verdict = (await generateJson({ parts: [{ text: PROMPT }, front, back, selfie], schema: SCHEMA })) as AiVerdict
+    verdict = (await generateJson({ parts: [{ text: PROMPT }, front, back, selfie], schema: SCHEMA, name: "identity_check", provider: "gemini" })) as AiVerdict
     if (
       typeof verdict.front_is_cccd !== "boolean" || typeof verdict.back_is_cccd !== "boolean" ||
       typeof verdict.selfie_ok !== "boolean" || !["yes", "no", "uncertain"].includes(verdict.same_person) ||
