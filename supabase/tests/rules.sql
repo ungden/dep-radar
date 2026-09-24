@@ -2119,5 +2119,9 @@ begin
   select count(*) into actual from public.bookings where pro_id = linh and status = 'completed';
   assert (select completed_jobs from public.pros where id = linh) = actual,
     format('completed_jobs %s, completed bookings %s (was %s)', (select completed_jobs from public.pros where id = linh), actual, before);
+  -- The fee this completion charged would leave linh owing, and a freelancer
+  -- who owes is not bookable: the API tests after this file need her free slots.
+  delete from public.wallet_entries where booking_id = b;
+  assert not public.wallet_below_floor(linh), 'linh still owes a fee after the test';
   raise notice 'FLOW FIX RULES PASS';
 end $$;
