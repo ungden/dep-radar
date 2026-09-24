@@ -1,6 +1,6 @@
 import * as React from "react"
 import { FlashList } from "@shopify/flash-list"
-import { router } from "expo-router"
+import { router, useIsFocused } from "expo-router"
 import { Alert, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { getTemplate, getVariant, travelDistanceKm } from "@/shared"
@@ -30,6 +30,16 @@ export default function NewJobs() {
   const pro = app.myPro
   const uid = app.uid
   const jobs = useAsync(uid ? () => listJobs(uid) : null, [uid])
+  const focused = useIsFocused()
+  const reloadJobs = React.useRef(jobs.reload)
+  reloadJobs.current = jobs.reload
+  // Another freelancer can take a request at any moment: re-read the board
+  // every 20 seconds while this tab is on screen (it already reloads on focus).
+  React.useEffect(() => {
+    if (!focused || !uid) return
+    const t = setInterval(() => void reloadJobs.current(), 20_000)
+    return () => clearInterval(t)
+  }, [focused, uid])
   const fee = useFee(uid)
   const [scope, setScope] = React.useState<Scope>("match")
   const [busy, setBusy] = React.useState<string | null>(null)

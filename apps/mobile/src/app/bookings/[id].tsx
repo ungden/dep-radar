@@ -77,7 +77,9 @@ export default function BookingDetail() {
   // Ticks while the confirmation countdown is on screen, or while a customer's
   // buttons for finishing the job may appear by the clock.
   const startsSoon = Boolean(bv && Date.parse(bv.startsAt) - Date.now() < 3_600_000)
-  const now = useNow(bv?.status === "pending" || (customerView && startsSoon && (bv?.status === "confirmed" || bv?.status === "in_progress")))
+  // Ticks near the start for both sides: the customer's actions and the
+  // freelancer's "Hoàn thành" both open at the start time.
+  const now = useNow(bv?.status === "pending" || (startsSoon && (bv?.status === "confirmed" || bv?.status === "in_progress")))
   const noShowOpen = Boolean(customerView && bv?.status === "no_show" && bv.cancelledAt && now <= Date.parse(bv.cancelledAt) + 24 * 3_600_000)
   const disputed = useAsync(noShowOpen && bv && app.uid ? () => hasDisputedNoShow(bv.id, app.uid!) : null, [noShowOpen, bv?.id, app.uid])
   // A freelancer who owes the last job's fee cannot accept this one (confirm_booking refuses).
@@ -334,7 +336,21 @@ export default function BookingDetail() {
           <Button label="Bắt đầu làm" full busy={busy === "start"} onPress={() => void run("start", () => startBooking(b.id), "Đã bắt đầu")} />
         ) : null}
         {iAmPro && b.status === "in_progress" ? (
-          <Button label="Hoàn thành" full busy={busy === "complete"} onPress={() => void run("complete", () => completeBooking(b.id), "Đã hoàn thành")} />
+          <>
+            {/* complete_booking refuses it before the start time; say so before the tap. */}
+            <Button
+              label="Hoàn thành"
+              full
+              busy={busy === "complete"}
+              disabled={Date.parse(b.startsAt) > now}
+              onPress={() => void run("complete", () => completeBooking(b.id), "Đã hoàn thành")}
+            />
+            {Date.parse(b.startsAt) > now ? (
+              <Txt v="meta" color={colors.muted} center>
+                Bấm hoàn thành được từ {at(b.startsAt)}.
+              </Txt>
+            ) : null}
+          </>
         ) : null}
         {!iAmPro && b.status === "completed" ? (
           b.reviewed && b.reviewPublishedAt ? (

@@ -347,6 +347,9 @@ describe.skipIf(!configured)("row level security over the API", () => {
       .select("id, pro_id, customer_id")
       .eq("status", "completed")
       .eq("customer_id", customerId)
+      // The newest: an older seeded one is past the 14-day window, and which one
+      // came back first used to depend on row order.
+      .order("completed_at", { ascending: false })
       .limit(1)
       .single()
     const written = await client(tokenFor(booking!.pro_id)).rpc("review_customer", {

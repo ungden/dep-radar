@@ -100,7 +100,8 @@ function NewAddressForm({
   onSaved: (id: string) => void
   onCancel?: () => void
 }) {
-  const [label, setLabel] = React.useState("Nhà")
+  // Empty with "Nhà" as the hint: a prefilled value got typed onto ("NhàNhà riêng").
+  const [label, setLabel] = React.useState("")
   const [city, setCity] = React.useState(initialCity)
   const [district, setDistrict] = React.useState(initialDistrict)
   const [detail, setDetail] = React.useState("")
@@ -114,7 +115,7 @@ function NewAddressForm({
     <div className="mt-2 rounded-xl border border-line bg-surface p-3">
       <div className="grid grid-cols-2 gap-2">
         <Field label="Tên địa chỉ">
-          <input className={cn(inputClass, "text-sm")} value={label} onChange={(e) => setLabel(e.target.value)} />
+          <input className={cn(inputClass, "text-sm")} value={label} placeholder="Nhà" onChange={(e) => setLabel(e.target.value)} />
         </Field>
         <Field label="Tỉnh/thành">
           <select

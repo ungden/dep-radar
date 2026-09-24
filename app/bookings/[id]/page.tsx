@@ -290,10 +290,20 @@ function BookingDetail() {
               ) : (
                 <MessageButton booking={booking} label="Nhắn khách" className="h-12" />
               )}
-              <Button size="lg" onClick={() => run(() => actions.setBookingStatus(booking.id, "completed"), "Đã đánh dấu hoàn thành")}>
+              {/* complete_booking refuses it before the start time; say so before the tap. */}
+              <Button
+                size="lg"
+                disabled={!started}
+                onClick={() => run(() => actions.setBookingStatus(booking.id, "completed"), "Đã đánh dấu hoàn thành")}
+              >
                 Đánh dấu hoàn thành
               </Button>
             </div>
+          )}
+          {isPro && (booking.status === "confirmed" || booking.status === "in_progress") && !started && (
+            <p className="mt-2 text-center text-[13px] text-muted">
+              Bấm hoàn thành được từ {booking.time}, {formatDateLong(booking.date)}.
+            </p>
           )}
         </BottomBar>
       )}
