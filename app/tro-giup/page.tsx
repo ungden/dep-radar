@@ -26,8 +26,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
     a: (
       <>
         Không. Khách chỉ trả giá dịch vụ người làm niêm yết, cộng phí di chuyển hoặc phí đặt gấp nếu có. 360dep thu{" "}
-        {pct(POLICY.commissionRate)} hoa hồng từ phía người làm ({pct(POLICY.ownClientCommissionRate)} với khách người làm tự mang về
-        qua mã QR hoặc link riêng).
+        {pct(POLICY.commissionRate)} hoa hồng từ phía người làm.
       </>
     ),
   },

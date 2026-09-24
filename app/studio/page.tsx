@@ -5,7 +5,7 @@ import { ChevronRight, Contact, Gift, IdCard, ImagePlus, Navigation, Phone, Tags
 import { JobBookingRow } from "@/components/booking-card"
 import { MessageButton } from "@/components/message-button"
 import { BookingLink } from "@/components/booking-link"
-import { OwnClientsCard, PortfolioCard } from "@/components/portfolio-share"
+import { PortfolioCard } from "@/components/portfolio-share"
 import { FeeDueCard } from "@/components/fee-due"
 import { PublishProgress } from "@/components/publish-progress"
 import { RequestCard } from "@/components/request-card"
@@ -218,7 +218,6 @@ function Dashboard() {
         </div>
       </section>
 
-      {pro.published && <OwnClientsCard />}
       <BookingLink slug={pro.id} published={pro.published} />
       <PortfolioCard slug={pro.id} published={pro.published} />
 
