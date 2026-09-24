@@ -16,7 +16,7 @@ language sql immutable set search_path = '' as $$
   select replace(to_char(n, 'FM999G999G999G999'), ',', '.')
 $$;
 
-grant execute on function public.vnd(numeric) to anon, authenticated;
+revoke all on function public.vnd(numeric) from public, anon, authenticated;
 
 do $$
 declare f record; def text; fixed text;
