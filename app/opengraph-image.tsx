@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { ImageResponse } from "next/og"
-import { LOGO_GLYPH_PATH, LOGO_RADIUS } from "@/lib/design/brand"
+import { BRAND_DARK, BRAND_GOLD, LOGO_EYE_PATH, LOGO_EYE_STROKE, LOGO_RADIUS, WORDMARK_BOX, WORDMARK_PATH } from "@/lib/design/brand"
 
 export const alt = "360dep — Đặt thợ làm đẹp, người chụp ảnh và người mẫu gần bạn"
 export const size = { width: 1200, height: 630 }
@@ -42,12 +42,12 @@ export default async function OpengraphImage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <svg width="84" height="84" viewBox="0 0 32 32">
-            <rect width="32" height="32" rx={LOGO_RADIUS} fill={ACCENT} />
-            <path d={LOGO_GLYPH_PATH} fill="#fff" />
+            <rect width="32" height="32" rx={LOGO_RADIUS} fill={BRAND_DARK} />
+            <path d={LOGO_EYE_PATH} fill="none" stroke={BRAND_GOLD} strokeWidth={LOGO_EYE_STROKE} strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <div style={{ display: "flex", fontSize: 60, fontWeight: 800, color: INK, letterSpacing: -2.5 }}>
-            360<span style={{ color: ACCENT }}>đẹp</span>
-          </div>
+          <svg height="62" width={(62 * WORDMARK_BOX.width) / WORDMARK_BOX.height} viewBox={`0 0 ${WORDMARK_BOX.width} ${WORDMARK_BOX.height}`}>
+            <path d={WORDMARK_PATH} fill={BRAND_DARK} />
+          </svg>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
