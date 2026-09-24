@@ -1,10 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Download, ImageIcon, Share2, Users } from "lucide-react"
+import { Download, ImageIcon, Share2 } from "lucide-react"
 import { Button, Card, Tabs } from "@/components/ui"
-import { myOwnClientStats, type OwnClientStats } from "@/lib/api/actions"
-import { cn, formatPrice } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 
 type Format = "story" | "post"
 
@@ -130,51 +129,6 @@ export function PortfolioCard({ slug, published, className }: { slug: string; pu
           Có ảnh portfolio khi hồ sơ của bạn đã mở với khách.
         </p>
       )}
-    </Card>
-  )
-}
-
-/**
- * Why a partner should hand out their QR and link, and what it brought them:
- * a new customer who comes through either books them at the own-client
- * commission (20261001100000). Rates come from fee_policy, never from here.
- */
-export function OwnClientsCard({ className }: { className?: string }) {
-  const [stats, setStats] = React.useState<OwnClientStats | null>(null)
-
-  React.useEffect(() => {
-    let live = true
-    void myOwnClientStats().then((r) => live && r.ok && setStats(r.data))
-    return () => {
-      live = false
-    }
-  }, [])
-
-  if (!stats) return null
-  const pct = (rate: number) => `${Math.round(rate * 100)}%`
-  const figures = [
-    { label: "Lượt mở 30 ngày", value: String(stats.visits30d) },
-    { label: "Khách mang về", value: String(stats.clients) },
-    { label: "Lịch đã xong", value: String(stats.completed) },
-    { label: "Hoa hồng tiết kiệm", value: formatPrice(stats.saved) },
-  ]
-  return (
-    <Card className={cn("p-4", className)}>
-      <p className="flex items-center gap-2 text-[17px] font-bold tracking-tight">
-        <Users className="size-5 text-accent" /> Khách bạn tự mang về
-      </p>
-      <p className="mt-0.5 text-[13px] text-ink-soft">
-        Khách mới đến từ mã QR trên ảnh portfolio hoặc link đặt lịch của bạn chỉ tính hoa hồng{" "}
-        <b className="text-ink">{pct(stats.rate)}</b> (thay vì {pct(stats.standardRate)}), cho mọi lịch của họ với bạn.
-      </p>
-      <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {figures.map((f) => (
-          <div key={f.label} className="rounded-[var(--radius-md)] bg-subtle px-3 py-2.5">
-            <dt className="text-[12px] text-muted">{f.label}</dt>
-            <dd className="mt-0.5 text-[18px] font-bold tabular-nums">{f.value}</dd>
-          </div>
-        ))}
-      </dl>
     </Card>
   )
 }

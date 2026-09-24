@@ -4,7 +4,7 @@ import { showsAverage } from "@/lib/connection"
 import { absoluteUrl } from "@/lib/env"
 import { OgBrand, ogFonts, vnd } from "@/lib/og"
 import { Chip, DARK, SAFE, Mosaic, QrCode, SHARE_FORMATS, asJpeg, isShareFormat, mosaicPhotos, shortLink } from "@/lib/share-card"
-import { proBookingUrl, proOwnUrl } from "@/lib/working-hours"
+import { proBookingUrl } from "@/lib/working-hours"
 
 /**
  * A freelancer's portfolio as one picture to post: their best work, who they
@@ -37,8 +37,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     pro.identity === "verified" ? "Đã xác minh" : null,
   ].filter((c): c is string => c !== null)
   const link = proBookingUrl(pro.slug)
-  // The QR carries the source, so a customer it brings is the partner's own.
-  const scan = proOwnUrl(pro.slug, "qr")
 
   const story = format === "story"
   const { width, height } = SHARE_FORMATS[format]
@@ -80,7 +78,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: story ? 36 : 28, paddingTop: story ? 36 : 28, borderTop: `2px solid ${DARK.line}` }}>
-        <QrCode url={scan} size={story ? 200 : 150} />
+        <QrCode url={link} size={story ? 200 : 150} />
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ fontSize: story ? 38 : 32, fontWeight: 700 }}>Quét mã để đặt lịch</div>
           <div style={{ fontSize: story ? 30 : 26, color: DARK.soft }}>Xem tác phẩm và giá trên</div>

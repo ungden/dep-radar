@@ -5,7 +5,6 @@ import "./globals.css"
 import { AppShell } from "@/components/layout/app-shell"
 import { SITE_URL } from "@/lib/env"
 import { UnregisterServiceWorker } from "@/components/register-sw"
-import { OwnClientCapture } from "@/components/own-client-capture"
 import { ReferralCapture } from "@/components/referral-capture"
 import { StoreProvider } from "@/lib/store"
 import { emptySnapshot, loadSnapshot } from "@/lib/api/snapshot"
@@ -72,7 +71,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <StoreProvider snapshot={snapshot}>
           <AppShell>{children}</AppShell>
           <ReferralCapture />
-          <OwnClientCapture />
         </StoreProvider>
       </body>
     </html>

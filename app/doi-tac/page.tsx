@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { BadgeCheck, CalendarCheck, HandCoins, Megaphone, QrCode, Wallet } from "lucide-react"
+import { BadgeCheck, CalendarCheck, HandCoins, Megaphone, Wallet } from "lucide-react"
 import { ButtonLink, PageHeader } from "@/components/ui"
 import { CATEGORIES, VERTICALS, categoriesOf } from "@/lib/catalog"
 import { POLICY } from "@/lib/pricing"
@@ -14,7 +14,6 @@ export const metadata: Metadata = {
 }
 
 const pct = `${Math.round(POLICY.commissionRate * 100)}%`
-const ownPct = `${Math.round(POLICY.ownClientCommissionRate * 100)}%`
 const JOIN = "/login?role=pro"
 
 /**
@@ -38,11 +37,6 @@ export default function PartnerPage() {
       icon: HandCoins,
       title: `Phí ${pct}, chỉ khi xong việc`,
       text: `Không phí đăng ký, không phí duy trì. Khách trả thẳng cho bạn; khi bạn bấm hoàn thành, 360dep tính ${pct} trên giá dịch vụ. Phí di chuyển và phí đặt gấp thuộc về bạn.`,
-    },
-    {
-      icon: QrCode,
-      title: `Khách bạn tự mang về: chỉ ${ownPct}`,
-      text: `Studio tự làm ảnh portfolio có mã QR và link đặt lịch riêng cho bạn. Khách mới đến từ đó chỉ tính ${ownPct} thay vì ${pct}, cho mọi lịch của họ với bạn.`,
     },
     {
       icon: Wallet,

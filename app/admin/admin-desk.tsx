@@ -5,17 +5,17 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button, Card, EmptyState, PageHeader, StatusBadge, Tabs, inputClass } from "@/components/ui"
 import { decideCheck, overrideAiDecision, recordTopup, resolveReport, setSuspended } from "@/lib/api/admin"
-import type { AdminBooking, AdminPro, AdminReport, AiDecisionItem, OwnClientRank, PendingCheck } from "@/lib/api/admin"
+import type { AdminBooking, AdminPro, AdminReport, AiDecisionItem, PendingCheck } from "@/lib/api/admin"
 import { useRefresh } from "@/lib/store"
 import type { BookingStatus } from "@/lib/types"
 import { cn, formatPrice, timeAgo } from "@/lib/utils"
 
-type Tab = "checks" | "pros" | "topup" | "bookings" | "reports" | "ai" | "own"
+type Tab = "checks" | "pros" | "topup" | "bookings" | "reports" | "ai"
 
 /**
  * The operations desk: the queue of verifications a vision model was unsure
- * about, the freelancer roster, recent bookings, the report inbox, the log of
- * what the AI reviewer decided, and who brings their own clients. Every button calls an RPC that checks
+ * about, the freelancer roster, recent bookings, the report inbox, and the log
+ * of what the AI reviewer decided. Every button calls an RPC that checks
  * `is_admin()` again in the database.
  */
 export function AdminDesk({
@@ -24,14 +24,12 @@ export function AdminDesk({
   bookings,
   reports,
   aiLog,
-  ranking,
 }: {
   checks: PendingCheck[]
   pros: AdminPro[]
   bookings: AdminBooking[]
   reports: AdminReport[]
   aiLog: { items: AiDecisionItem[]; last24h: number }
-  ranking: OwnClientRank[]
 }) {
   const [tab, setTab] = React.useState<Tab>(checks.length ? "checks" : "pros")
   const [error, setError] = React.useState<string | null>(null)
@@ -58,7 +56,6 @@ export function AdminDesk({
           { value: "bookings", label: "Lịch hẹn" },
           { value: "reports", label: `Báo cáo (${openReports.length})` },
           { value: "ai", label: `Nhật ký AI (${aiLog.last24h})` },
-          { value: "own", label: "Kéo khách" },
         ]}
       />
 
@@ -111,8 +108,6 @@ export function AdminDesk({
       )}
 
       {tab === "topup" && <TopupForm pros={pros} onDone={refresh} />}
-
-      {tab === "own" && <OwnClientTable ranking={ranking} />}
 
       {tab === "ai" && (
         <AiLog
@@ -559,45 +554,4 @@ function Flag({ on, label, tone = "success" }: { on: boolean; label: string; ton
     danger: "bg-danger-soft text-danger",
   }
   return <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", tones[tone])}>{label}</span>
-}
-
-/** Partners ranked by the clients their own QR code and booking link bring in. */
-function OwnClientTable({ ranking }: { ranking: OwnClientRank[] }) {
-  if (!ranking.length)
-    return <EmptyState title="Chưa có đối tác nào kéo khách" text="Khi khách mở trang đối tác từ mã QR hoặc link riêng của họ, số liệu hiện ở đây." />
-  return (
-    <div className="mt-4 overflow-x-auto">
-      <p className="mb-3 text-[13px] text-muted">
-        Khách tự mang về: khách mới vào từ QR hoặc link riêng của đối tác. Lịch của họ với đối tác đó tính hoa hồng thấp.
-      </p>
-      <table className="w-full min-w-[560px] text-left text-sm">
-        <thead className="text-xs text-muted">
-          <tr>
-            <th className="py-2 pr-2 font-medium">#</th>
-            <th className="py-2 pr-2 font-medium">Đối tác</th>
-            <th className="py-2 pr-2 text-right font-medium">Lượt mở 30 ngày</th>
-            <th className="py-2 pr-2 text-right font-medium">Khách mang về</th>
-            <th className="py-2 pr-2 text-right font-medium">Lịch đã xong</th>
-            <th className="py-2 text-right font-medium">Doanh thu</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ranking.map((r, i) => (
-            <tr key={r.proId} className="border-t border-line">
-              <td className="py-2.5 pr-2 text-muted">{i + 1}</td>
-              <td className="py-2.5 pr-2 font-semibold">
-                <Link href={`/pros/${r.slug}`} className="hover:underline">
-                  {r.name}
-                </Link>
-              </td>
-              <td className="py-2.5 pr-2 text-right tabular-nums">{r.visits30d}</td>
-              <td className="py-2.5 pr-2 text-right tabular-nums">{r.clients}</td>
-              <td className="py-2.5 pr-2 text-right tabular-nums">{r.completed}</td>
-              <td className="py-2.5 text-right tabular-nums">{formatPrice(r.gmv)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
 }

@@ -3,7 +3,7 @@ import { getWorkBySlug } from "@/lib/api/pros"
 import { absoluteUrl } from "@/lib/env"
 import { OgBrand, ogCrop, ogFetch, ogFonts } from "@/lib/og"
 import { DARK, QrCode, SAFE, SHARE_FORMATS, asJpeg, isShareFormat, shortLink } from "@/lib/share-card"
-import { proBookingUrl, proOwnUrl } from "@/lib/working-hours"
+import { proBookingUrl } from "@/lib/working-hours"
 
 /**
  * One work as a picture to post: the photo (before and after side by side),
@@ -34,8 +34,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   ])
   const photos = shots.filter((s): s is string => s !== null)
   const link = proBookingUrl(work.proSlug)
-  // The QR carries the source, so a customer it brings is the partner's own.
-  const scan = proOwnUrl(work.proSlug, "qr")
   const radius = story ? 28 : 24
 
   const image = new ImageResponse(
@@ -85,7 +83,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: story ? 32 : 24, paddingTop: story ? 32 : 24, borderTop: `2px solid ${DARK.line}` }}>
-        <QrCode url={scan} size={story ? 176 : 128} />
+        <QrCode url={link} size={story ? 176 : 128} />
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ fontSize: story ? 36 : 30, fontWeight: 700 }}>Quét mã để đặt lịch</div>
           <div style={{ fontSize: story ? 28 : 24, fontWeight: 700, color: DARK.gold }}>{shortLink(link)}</div>
