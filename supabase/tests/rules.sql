@@ -457,7 +457,10 @@ begin
       'apply_voucher', 'remove_voucher', 'chat_status', 'take_job', 'record_topup',
       -- admin decisions, which check is_admin() themselves
       'decide_identity_check', 'decide_no_show_compensation', 'set_pro_suspended', 'set_review_hidden', 'resolve_report',
-      'admin_override_ai_decision'
+      'admin_override_ai_decision',
+      -- the operations desk (20261004100000), every one behind require_admin()
+      'admin_customers', 'admin_set_account_suspended', 'admin_finance_summary', 'admin_finance_by_pro',
+      'admin_finance_bookings', 'admin_wallet_entries', 'admin_adjust_wallet'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 
@@ -2124,4 +2127,104 @@ begin
   delete from public.wallet_entries where booking_id = b;
   assert not public.wallet_below_floor(linh), 'linh still owes a fee after the test';
   raise notice 'FLOW FIX RULES PASS';
+end $$;
+
+-- The operations desk (20261004100000): customers, money, settings, the log.
+do $$
+declare
+  linh uuid; customer uuid; addr uuid; admin_id uuid; n int; msg text; fin jsonb; b uuid; bal int;
+  monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
+  tz text := public.app_timezone();
+begin
+  select id into linh from public.pros where slug = 'linh-pham';
+  select a.id into customer from public.accounts a where a.full_name = 'Ngọc Hân';
+  select id into addr from public.addresses where account_id = customer;
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          'desk-admin@example.invalid', jsonb_build_object('full_name', 'Quản trị Desk'), now(), now())
+  returning id into admin_id;
+  update public.accounts set is_admin = true where id = admin_id;
+
+  raise notice 'the desk is for admins only';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  begin
+    perform * from public.admin_customers('', 10);
+    assert false, 'a customer listed every customer';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.admin_adjust_wallet(linh, 100000, 'tự cộng tiền');
+    assert false, 'a customer credited a wallet';
+  exception when insufficient_privilege then null;
+  end;
+
+  raise notice 'an admin finds a customer and locks them out of new bookings and messages';
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  select count(*) into n from public.admin_customers('Ngọc', 50) c where c.id = customer;
+  assert n = 1, 'the customer search missed Ngọc Hân';
+  begin
+    perform public.admin_set_account_suspended(admin_id, true, 'thử');
+    assert false, 'an admin locked themself out';
+  exception when check_violation then null;
+  end;
+  perform public.admin_set_account_suspended(customer, true, 'Bùng lịch nhiều lần');
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  begin
+    perform public.create_booking(linh, 'nail-gel', 'hand', ((monday + 4) + time '16:00') at time zone tz, true, addr, 1, '');
+    assert false, 'a locked customer booked';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg like 'Tài khoản đang bị khoá%', format('wrong refusal: %s', msg);
+  end;
+  -- Their own writes cannot clear the lock (column grants, 20260922092824).
+  begin
+    set local role authenticated;
+    update public.accounts set suspended_at = null where id = customer;
+    reset role;
+    assert false, 'a locked customer unlocked themself';
+  exception when insufficient_privilege then reset role;
+  end;
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.admin_set_account_suspended(customer, false);
+  assert (select suspended_at is null and suspend_reason = '' from public.accounts where id = customer), 'unlock did not clear';
+  assert (select count(*) from public.admin_actions where target_id = customer and action in ('account:lock', 'account:unlock')) = 2,
+    'the lock and unlock were not logged';
+
+  raise notice 'a wallet correction needs a reason and is logged';
+  begin
+    perform public.admin_adjust_wallet(linh, 50000, '');
+    assert false, 'a correction without a reason went through';
+  exception when check_violation then null;
+  end;
+  bal := (select coalesce(sum(amount), 0) from public.wallet_entries where pro_id = linh);
+  perform public.admin_adjust_wallet(linh, 27000, 'Hoàn phí tính nhầm (test)');
+  assert (select coalesce(sum(amount), 0) from public.wallet_entries where pro_id = linh) = bal + 27000, 'the correction did not land';
+  assert exists (select 1 from public.admin_actions where action = 'wallet:adjust' and target_id = linh and actor_id = admin_id), 'not logged';
+  delete from public.wallet_entries where pro_id = linh and kind = 'adjustment' and note = 'Hoàn phí tính nhầm (test)';
+
+  raise notice 'finance adds up';
+  fin := public.admin_finance_summary(current_date - 3650, current_date + 1);
+  assert (fin->>'commission')::bigint = (select coalesce(sum(commission), 0) from public.bookings where status = 'completed'),
+    format('commission %s', fin->>'commission');
+  assert (fin->>'gmv')::bigint = (select coalesce(sum(total), 0) from public.bookings where status = 'completed'), 'gmv';
+  assert (select sum(f.commission) from public.admin_finance_by_pro(current_date - 3650, current_date + 1) f) = (fin->>'commission')::bigint,
+    'per-freelancer commission does not add up to the total';
+  select count(*) into n from public.admin_finance_bookings(current_date - 3650, current_date + 1);
+  assert n > 0, 'no bookings in the export';
+
+  raise notice 'settings changes are logged; the fee policy is read-only over the API';
+  update public.platform_settings set support_zalo = coalesce(support_zalo, '') || ' ';
+  assert exists (select 1 from public.admin_actions where action = 'settings:platform_settings'), 'settings change not logged';
+  update public.platform_settings set support_zalo = nullif(rtrim(support_zalo), '');
+  begin
+    set local role authenticated;
+    update public.fee_policy set commission_rate = 0;
+    reset role;
+    assert false, 'the fee policy was writable over the API';
+  exception when insufficient_privilege then reset role;
+  end;
+
+  perform set_config('request.jwt.claim.sub', '', true);
+  raise notice 'ADMIN DESK RULES PASS';
 end $$;

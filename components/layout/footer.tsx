@@ -4,6 +4,8 @@ import { CATEGORIES, VERTICALS } from "@/lib/catalog"
 import { OCCASIONS } from "@/lib/occasions"
 import { CITIES } from "@/lib/geo"
 import { POLICY } from "@/lib/pricing"
+import { DEMO_DATA_LIVE } from "@/lib/launch"
+import { CompanyInfo } from "@/components/company-info"
 
 /**
  * Desktop footer. It exists for two reasons: a wide screen without one looks
@@ -94,6 +96,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/quy-che" className="hover:text-ink">
+                  Quy chế hoạt động
+                </Link>
+              </li>
+              <li>
                 <Link href="/gioi-thieu" className="hover:text-ink">
                   Giới thiệu bạn bè
                 </Link>
@@ -117,9 +124,10 @@ export function Footer() {
           </nav>
         </div>
 
-        <p className="mt-8 border-t border-line pt-5 text-xs text-muted">
-          Bản demo: nhiều hồ sơ người làm và tác phẩm là dữ liệu mẫu, thanh toán online chưa hoạt động.
-        </p>
+        <div className="mt-8 space-y-1 border-t border-line pt-5 text-xs text-muted">
+          <CompanyInfo />
+          {DEMO_DATA_LIVE && <p>Bản demo: nhiều hồ sơ người làm và tác phẩm là dữ liệu mẫu, thanh toán online chưa hoạt động.</p>}
+        </div>
       </div>
     </footer>
   )

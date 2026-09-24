@@ -5,17 +5,18 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button, Card, EmptyState, PageHeader, StatusBadge, Tabs, inputClass } from "@/components/ui"
 import { decideCheck, overrideAiDecision, recordTopup, resolveReport, setSuspended } from "@/lib/api/admin"
-import type { AdminBooking, AdminPro, AdminReport, AiDecisionItem, PendingCheck } from "@/lib/api/admin"
+import type { AdminAction, AdminBooking, AdminPro, AdminReport, AiDecisionItem, FeePolicyView, PendingCheck, PlatformSettings } from "@/lib/api/admin"
+import { CustomersPanel, FinancePanel, SettingsPanel } from "./desk-panels"
 import { useRefresh } from "@/lib/store"
 import type { BookingStatus } from "@/lib/types"
 import { cn, formatPrice, timeAgo } from "@/lib/utils"
 
-type Tab = "checks" | "pros" | "topup" | "bookings" | "reports" | "ai"
+type Tab = "checks" | "pros" | "customers" | "finance" | "topup" | "bookings" | "reports" | "ai" | "settings"
 
 /**
  * The operations desk: the queue of verifications a vision model was unsure
- * about, the freelancer roster, recent bookings, the report inbox, and the log
- * of what the AI reviewer decided. Every button calls an RPC that checks
+ * about, the freelancer roster, customers, the money, recent bookings, the
+ * report inbox, the log of what the AI reviewer decided, and the settings. Every button calls an RPC that checks
  * `is_admin()` again in the database.
  */
 export function AdminDesk({
@@ -24,12 +25,14 @@ export function AdminDesk({
   bookings,
   reports,
   aiLog,
+  admin,
 }: {
   checks: PendingCheck[]
   pros: AdminPro[]
   bookings: AdminBooking[]
   reports: AdminReport[]
   aiLog: { items: AiDecisionItem[]; last24h: number }
+  admin: { settings: PlatformSettings; fees: FeePolicyView; log: AdminAction[] }
 }) {
   const [tab, setTab] = React.useState<Tab>(checks.length ? "checks" : "pros")
   const [error, setError] = React.useState<string | null>(null)
@@ -52,10 +55,13 @@ export function AdminDesk({
         items={[
           { value: "checks", label: `Xác minh (${checks.length})` },
           { value: "pros", label: `Chuyên viên (${pros.length})` },
+          { value: "customers", label: "Khách hàng" },
+          { value: "finance", label: "Tài chính" },
           { value: "topup", label: "Nạp ví" },
           { value: "bookings", label: "Lịch hẹn" },
           { value: "reports", label: `Báo cáo (${openReports.length})` },
           { value: "ai", label: `Nhật ký AI (${aiLog.last24h})` },
+          { value: "settings", label: "Cấu hình" },
         ]}
       />
 
@@ -108,6 +114,12 @@ export function AdminDesk({
       )}
 
       {tab === "topup" && <TopupForm pros={pros} onDone={refresh} />}
+
+      {tab === "customers" && <CustomersPanel />}
+
+      {tab === "finance" && <FinancePanel pros={pros} />}
+
+      {tab === "settings" && <SettingsPanel settings={admin.settings} fees={admin.fees} log={admin.log} />}
 
       {tab === "ai" && (
         <AiLog

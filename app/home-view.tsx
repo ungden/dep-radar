@@ -12,6 +12,7 @@ import { CategoryTiles } from "@/components/category-icon"
 import { MobileLinks } from "@/components/mobile-links"
 import { ServiceCard } from "@/components/service-card"
 import { ButtonLink, PageSkeleton, Wordmark } from "@/components/ui"
+import { DEMO_DATA_LIVE } from "@/lib/launch"
 import { CATEGORIES, getVertical, isVertical } from "@/lib/catalog"
 import { actions } from "@/lib/client-actions"
 import { rankFeed, type VerticalFilter } from "@/lib/feed"
@@ -106,7 +107,7 @@ function Explore() {
   return (
     <div className="pt-1 md:pt-6">
       <TopBar />
-      <DemoNotice />
+      {DEMO_DATA_LIVE && <DemoNotice />}
 
       <section className="md:grid md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] md:items-center md:gap-10 lg:gap-14">
         <div>
