@@ -80,7 +80,7 @@ export default function EditAddress() {
               <Chip key={l} label={l} selected={label === l} onPress={() => setLabel(l)} />
             ))}
           </View>
-          <TextInput value={label} onChangeText={setLabel} maxLength={40} placeholder="Nhà" placeholderTextColor={colors.muted} style={[input, { height: 48 }]} accessibilityLabel="Tên gọi địa chỉ" />
+          <TextInput value={label} onChangeText={setLabel} selectTextOnFocus maxLength={40} placeholder="Nhà" placeholderTextColor={colors.muted} style={[input, { height: 48 }]} accessibilityLabel="Tên gọi địa chỉ" />
         </Group>
         <Group title="Thành phố">
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>

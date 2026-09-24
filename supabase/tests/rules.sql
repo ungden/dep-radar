@@ -725,6 +725,10 @@ begin
   assert public.banned_content('Mẫu cần đóng phí hồ sơ 200k'), 'phí hồ sơ';
   assert public.banned_content('Vui lòng đặt cọc trước 500k'), 'đặt cọc trước';
   assert not public.banned_content('Sơn gel tone nude'), 'nude is a colour';
+  assert not public.banned_content('Làm móng tay màu nude'), 'màu nude is a colour, not mẫu nude';
+  assert not public.banned_content('son mau nude'), 'the colour typed without accents';
+  assert public.banned_content('Tuyển mẫu nude'), 'a nude model';
+  assert public.banned_content('Cần người làm mẫu nude'), 'modelling nude';
   assert not public.banned_content('Phục hồi da nhạy cảm'), 'sensitive skin is a service';
   assert not public.banned_content('Chụp lookbook bikini cho shop đồ bơi'), 'swimwear is legitimate';
   assert not public.banned_content('Wax sugar nách'), 'sugar wax';
@@ -2087,4 +2091,33 @@ begin
     'fee_policy still has an own-client rate';
   assert (select commission_rate from public.fee_policy) = 0.15, 'the commission is not 15%';
   raise notice 'FLAT COMMISSION PASS';
+end $$;
+
+-- The flow run on production (20261003100000): completed_jobs follows a
+-- completion straight away instead of waiting for the nightly recount.
+do $$
+declare
+  linh uuid; customer uuid; addr uuid; b uuid; before int; actual int;
+  monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
+  tz text := public.app_timezone();
+begin
+  select id into linh from public.pros where slug = 'linh-pham';
+  select a.id into customer from public.accounts a where a.full_name = 'Ngọc Hân';
+  select id into addr from public.addresses where account_id = customer;
+
+  raise notice 'completing a booking counts it at once';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  b := public.create_booking(linh, 'nail-gel', 'hand', ((monday + 3) + time '17:30') at time zone tz, true, addr, 1, '');
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.confirm_booking(b);
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.bookings set starts_at = now() - interval '1 hour' where id = b;
+  select completed_jobs into before from public.pros where id = linh;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.complete_booking(b);
+  perform set_config('request.jwt.claim.sub', '', true);
+  select count(*) into actual from public.bookings where pro_id = linh and status = 'completed';
+  assert (select completed_jobs from public.pros where id = linh) = actual,
+    format('completed_jobs %s, completed bookings %s (was %s)', (select completed_jobs from public.pros where id = linh), actual, before);
+  raise notice 'FLOW FIX RULES PASS';
 end $$;

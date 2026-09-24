@@ -10,7 +10,7 @@ import { Button, Chip, EmptyState, PageHeader, buttonClass } from "@/components/
 import { getTemplate } from "@/lib/catalog"
 import { actions } from "@/lib/client-actions"
 import { POLICY, commissionFor } from "@/lib/pricing"
-import { distanceToCustomer, priceOf, proView, useApp } from "@/lib/store"
+import { distanceToCustomer, priceOf, proView, useApp, useRefresh } from "@/lib/store"
 import type { JobPost } from "@/lib/types"
 import { formatPrice } from "@/lib/utils"
 
@@ -42,6 +42,22 @@ function JobBoard() {
   // Taken by someone else while this page was open.
   const [gone, setGone] = React.useState<string[]>([])
   const [notice, setNotice] = React.useState<string | null>(null)
+  const refresh = useRefresh()
+
+  // Another freelancer can take a request at any moment, and once taken it is
+  // no longer theirs to read, so no change feed would say so: re-read the board
+  // every 20 seconds while it is on screen, and on coming back to the tab.
+  React.useEffect(() => {
+    const tick = () => {
+      if (document.visibilityState === "visible") refresh()
+    }
+    const t = setInterval(tick, 20_000)
+    document.addEventListener("visibilitychange", tick)
+    return () => {
+      clearInterval(t)
+      document.removeEventListener("visibilitychange", tick)
+    }
+  }, [refresh])
 
   const jobs = state.jobs
     .filter((j) => !j.mine && j.status === "open" && !gone.includes(j.id))
