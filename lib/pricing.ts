@@ -8,6 +8,11 @@ import type { PriceQuote } from "./types"
 export const POLICY = {
   /** Flat commission on the service price, paid by the freelancer. */
   commissionRate: 0.15,
+  /**
+   * On a customer the freelancer brought through their own QR code or booking
+   * link (fee_policy.own_client_commission_rate, decided by the database).
+   */
+  ownClientCommissionRate: 0.05,
   /** Freelancer must accept (or decline) a booking in the app within this window. */
   confirmWithinHours: 2,
   /** Share of an online payment kept for the freelancer on late cancellation. */

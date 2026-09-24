@@ -12,3 +12,10 @@ export const DEFAULT_WORKING_WINDOWS: { weekday: number; startMin: number; endMi
 export const PUBLIC_ORIGIN = "https://www.360dep.vn"
 
 export const proBookingUrl = (slug: string) => `${PUBLIC_ORIGIN}/pros/${slug}`
+
+/**
+ * The same page, marked as reached through the partner's own QR code or link:
+ * a new customer who books from it is their own client, at the lower
+ * commission (components/own-client-capture.tsx).
+ */
+export const proOwnUrl = (slug: string, channel: "qr" | "link") => `${proBookingUrl(slug)}?src=${channel}`

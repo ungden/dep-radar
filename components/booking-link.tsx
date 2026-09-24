@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Check, Copy, Download, Share2 } from "lucide-react"
 import { Button, Card } from "@/components/ui"
-import { proBookingUrl } from "@/lib/working-hours"
+import { proOwnUrl } from "@/lib/working-hours"
 import { cn } from "@/lib/utils"
 
 /**
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils"
 export function BookingLink({ slug, published, className }: { slug: string; published: boolean; className?: string }) {
   return (
     <ShareLinkCard
-      url={proBookingUrl(slug)}
+      url={proOwnUrl(slug, "link")}
       title="Link đặt lịch của bạn"
       text={
         published
