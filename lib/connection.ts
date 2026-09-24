@@ -57,7 +57,8 @@ export interface ReviewWindow {
 export function reviewWindow(completedAt: string | null | undefined, now: Date): ReviewWindow {
   if (!completedAt) return { open: false, daysLeft: 0 }
   const left = new Date(completedAt).getTime() + REVIEW_WINDOW_DAYS * DAY - now.getTime()
-  return { open: left > 0, daysLeft: Math.max(0, Math.ceil(left / DAY)) }
+  // Whole days left, never more than the window itself ("còn 14 ngày" on day one).
+  return { open: left > 0, daysLeft: Math.min(REVIEW_WINDOW_DAYS, Math.max(0, Math.ceil(left / DAY))) }
 }
 
 /** What a written-but-blind review says to its author. */

@@ -55,16 +55,32 @@ export function Conversation({
   }, [threadId])
 
   React.useEffect(() => {
-    const channel = supabaseBrowser()
-      .channel(`thread:${threadId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `thread_id=eq.${threadId}` },
-        () => void reload(),
-      )
-      .subscribe()
+    const client = supabaseBrowser()
+    let channel: ReturnType<typeof client.channel> | null = null
+    let cancelled = false
+    void (async () => {
+      // Realtime checks the reader's access to each message. The session is
+      // read from a cookie asynchronously, and a channel joined before it is
+      // there joins as a stranger and never hears the other side.
+      const { data } = await client.auth.getSession()
+      if (cancelled) return
+      if (data.session) await client.realtime.setAuth(data.session.access_token)
+      channel = client
+        .channel(`thread:${threadId}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "messages", filter: `thread_id=eq.${threadId}` },
+          () => void reload(),
+        )
+        .subscribe()
+    })()
+    // A tab that comes back from the background catches up.
+    const onFocus = () => void reload()
+    window.addEventListener("focus", onFocus)
     return () => {
-      void supabaseBrowser().removeChannel(channel)
+      cancelled = true
+      window.removeEventListener("focus", onFocus)
+      if (channel) void client.removeChannel(channel)
     }
   }, [threadId, reload])
 
