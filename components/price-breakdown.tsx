@@ -72,7 +72,7 @@ export function PriceBreakdown({
           <p className="text-xs text-muted">
             {paymentMethod === "online"
               ? `Khách đã thanh toán online. 360dep chuyển ${formatPrice(quote.payout)} cho bạn trong kỳ đối soát sau khi hoàn thành.`
-              : `Thu ${formatPrice(paid)} trực tiếp từ khách. Hoa hồng ${formatPrice(quote.commission)} ghi vào công nợ, tự trừ vào tiền online kỳ tới.`}{" "}
+              : `Thu ${formatPrice(paid)} trực tiếp từ khách. Khi bấm hoàn thành, phí ${formatPrice(quote.commission)} được trừ vào ví; thanh toán phí trước khi nhận đơn tiếp theo.`}{" "}
             Phí di chuyển và phí đặt gấp giữ nguyên 100% cho bạn.
           </p>
         </div>

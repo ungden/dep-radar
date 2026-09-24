@@ -492,9 +492,12 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
         <button type="button" className="text-muted underline underline-offset-2" onClick={() => setMode("reschedule")}>
           Đề nghị đổi giờ
         </button>
-        <button type="button" className="text-muted underline underline-offset-2" onClick={() => setMode("cancel")}>
-          Huỷ job này
-        </button>
+        {/* cancel_booking refuses from the start time: after that the job ends by completion or a no-show. */}
+        {now < Date.parse(toTimestamptz(booking.date, booking.time)) && (
+          <button type="button" className="text-muted underline underline-offset-2" onClick={() => setMode("cancel")}>
+            Huỷ job này
+          </button>
+        )}
         {canReportNoShow && (
           <button type="button" className="text-muted underline underline-offset-2" onClick={() => setMode("noshow")}>
             Khách vắng mặt

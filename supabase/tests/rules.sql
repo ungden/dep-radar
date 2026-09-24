@@ -1846,6 +1846,14 @@ begin
   exception when insufficient_privilege then null;
   end;
 
+  raise notice 'money reads the Vietnamese way';
+  assert public.vnd(27000) = '27.000', public.vnd(27000);
+  assert public.vnd(1250000) = '1.250.000', public.vnd(1250000);
+  assert not exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname <> 'vnd' and p.prosrc like '%FM999G999G999%'
+  ), 'a function still formats money with a comma';
+
   perform set_config('request.jwt.claim.sub', '', true);
   raise notice 'CONNECTION RULES PASS';
 end $$;
