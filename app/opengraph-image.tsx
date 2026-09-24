@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises"
+import { join } from "node:path"
 import { ImageResponse } from "next/og"
 import { LOGO_GLYPH_PATH, LOGO_RADIUS } from "@/lib/design/brand"
 
@@ -11,7 +13,19 @@ const CANVAS = "#FAF6F4"
 const ACCENT = "#A8535D"
 const SUBTLE = "#F5ECE9"
 
-export default function OpengraphImage() {
+/** The site's own face, so the preview in Zalo or Facebook looks like 360đẹp. */
+async function fonts() {
+  const dir = join(process.cwd(), "app/_og")
+  const load = (w: string) => readFile(join(dir, `BeVietnamPro-${w}.ttf`))
+  const [regular, bold, extra] = await Promise.all([load("Regular"), load("Bold"), load("ExtraBold")])
+  return [
+    { name: "Be Vietnam Pro", data: regular, weight: 400 as const, style: "normal" as const },
+    { name: "Be Vietnam Pro", data: bold, weight: 700 as const, style: "normal" as const },
+    { name: "Be Vietnam Pro", data: extra, weight: 800 as const, style: "normal" as const },
+  ]
+}
+
+export default async function OpengraphImage() {
   return new ImageResponse(
     (
       <div
@@ -23,7 +37,7 @@ export default function OpengraphImage() {
           justifyContent: "space-between",
           background: CANVAS,
           padding: 72,
-          fontFamily: "sans-serif",
+          fontFamily: "Be Vietnam Pro",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
@@ -31,7 +45,9 @@ export default function OpengraphImage() {
             <rect width="32" height="32" rx={LOGO_RADIUS} fill={ACCENT} />
             <path d={LOGO_GLYPH_PATH} fill="#fff" />
           </svg>
-          <div style={{ display: "flex", fontSize: 60, fontWeight: 700, color: ACCENT, letterSpacing: -1 }}>360dep</div>
+          <div style={{ display: "flex", fontSize: 60, fontWeight: 800, color: INK, letterSpacing: -2.5 }}>
+            360<span style={{ color: ACCENT }}>đẹp</span>
+          </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -70,6 +86,6 @@ export default function OpengraphImage() {
         </div>
       </div>
     ),
-    size,
+    { ...size, fonts: await fonts() },
   )
 }

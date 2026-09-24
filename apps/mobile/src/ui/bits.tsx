@@ -5,7 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } fr
 import { initials, formatRating } from "@/data/format"
 import Svg, { Path, Rect } from "react-native-svg"
 import { LOGO_GLYPH_PATH, LOGO_RADIUS, showsAverage } from "@/shared"
-import { aspect, colors, radius, wordmarkFont } from "@/theme"
+import { aspect, colors, fonts, radius } from "@/theme"
 import { Button } from "./button"
 import { Icon } from "./icon"
 import { Press } from "./press"
@@ -180,15 +180,15 @@ export function LogoMark({ size = 28 }: { size?: number }) {
   )
 }
 
-/** The "360dep" wordmark: rose serif, the same as the web header. */
+/** "360đẹp", the same as the web header: Be Vietnam Pro ExtraBold, "360" ink, "đẹp" rose. */
 export function Wordmark({ size = 24 }: { size?: number }) {
   return (
     <Text
       accessibilityRole="header"
-      accessibilityLabel="360dep"
-      style={{ fontFamily: wordmarkFont, fontSize: size, lineHeight: size * 1.2, color: colors.accent, letterSpacing: -0.3 }}
+      accessibilityLabel="360đẹp"
+      style={{ fontFamily: fonts[800], fontSize: size, lineHeight: size * 1.25, color: colors.ink, letterSpacing: -size * 0.045 }}
     >
-      360dep
+      360<Text style={{ color: colors.accent }}>đẹp</Text>
     </Text>
   )
 }

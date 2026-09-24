@@ -3,7 +3,7 @@
 @theme {
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   /* Body and headings in Be Vietnam Pro; the serif is for the wordmark only. */
-  --font-display: var(--font-serif), ui-serif, Georgia, serif;
+  --font-display: var(--font-body), ui-sans-serif, system-ui, sans-serif;
 
   /* Mirrors lib/design/tokens.ts; tests/design-tokens.test.ts keeps them equal. */
   --color-canvas: #FAF6F4;

@@ -14,8 +14,6 @@ export const fonts = {
 
 export type Weight = keyof typeof fonts
 
-/** The serif of the "360dep" wordmark; nothing else uses it. */
-export const wordmarkFont = "PlayfairDisplay_700Bold"
 
 /** Side gutter of every screen. */
 export const gutter = space[4]
