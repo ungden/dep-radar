@@ -2060,5 +2060,20 @@ begin
   assert not exists (select 1 from public.ai_decisions where pro_id = newbie), 'the AI log survived deletion';
 
   perform set_config('request.jwt.claim.sub', '', true);
+  raise notice 'an admin publishing their own partner profile is reviewed like anyone';
+  declare own uuid;
+  begin
+    select p.id into own from public.pros p where p.published and p.review_status = 'approved' limit 1;
+    perform set_config('request.jwt.claim.sub', '', true);
+    update public.accounts set is_admin = true where id = own;
+    update public.pros set published = false, review_status = 'draft', reviewed_at = null where id = own;
+    perform set_config('request.jwt.claim.sub', own::text, true);
+    update public.pros set published = true where id = own;
+    perform set_config('request.jwt.claim.sub', '', true);
+    assert (select not published and review_status = 'pending' from public.pros where id = own),
+      'an admin skipped the review of their own profile';
+    update public.accounts set is_admin = false where id = own;
+    update public.pros set published = true, review_status = 'approved' where id = own;
+  end;
   raise notice 'AI REVIEW RULES PASS';
 end $$;
