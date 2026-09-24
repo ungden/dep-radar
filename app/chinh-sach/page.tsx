@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/ui"
 import { CATALOG, CATEGORIES } from "@/lib/catalog"
 import { AUTO_COMPLETE_HOURS, MIN_REVIEWS_FOR_AVERAGE, NO_SHOW_AFTER_MIN, REVIEW_WINDOW_DAYS } from "@/lib/connection"
 import { POLICY } from "@/lib/pricing"
+import { DEMO_DATA_LIVE } from "@/lib/launch"
 import { formatPrice } from "@/lib/utils"
 import { TopupPolicy } from "./fee-policy"
 import { ReferralPolicy } from "./referral-policy"
@@ -24,13 +25,15 @@ export default function PolicyPage() {
   return (
     <div className="mx-auto max-w-2xl md:pt-4">
       <PageHeader title="Chính sách phí & đặt lịch" back />
-      <div className="rounded-2xl bg-warning-soft px-4 py-3 text-[13px] text-warning">
-        <p className="font-semibold">Đây là bản demo</p>
-        <p className="mt-1">
-          Nhiều hồ sơ người làm và tác phẩm hiện là dữ liệu mẫu. Lịch hẹn, đánh giá và hồ sơ bạn tạo là dữ liệu thật, lưu trên máy chủ. Những mục ghi “sắp áp dụng” là quy
-          định đã chốt nhưng hệ thống chưa tự động thực hiện.
-        </p>
-      </div>
+      {DEMO_DATA_LIVE && (
+        <div className="rounded-2xl bg-warning-soft px-4 py-3 text-[13px] text-warning">
+          <p className="font-semibold">Đây là bản demo</p>
+          <p className="mt-1">
+            Nhiều hồ sơ người làm và tác phẩm hiện là dữ liệu mẫu. Lịch hẹn, đánh giá và hồ sơ bạn tạo là dữ liệu thật, lưu trên máy chủ. Những mục ghi “sắp áp dụng” là quy
+            định đã chốt nhưng hệ thống chưa tự động thực hiện.
+          </p>
+        </div>
+      )}
 
       <div className="mt-6 space-y-8 text-sm leading-relaxed text-ink-soft">
         <Section title="1. Khách hàng không trả phí nền tảng">

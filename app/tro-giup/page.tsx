@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { CompanyInfo } from "@/components/company-info"
 import { PageHeader } from "@/components/ui"
 import { absoluteUrl } from "@/lib/env"
 import { serializeJsonLd } from "@/lib/json-ld"
@@ -165,9 +166,16 @@ export default function HelpPage() {
         giúp bạn. Xem thêm{" "}
         <Link href="/chinh-sach" className="underline underline-offset-2">
           chính sách phí & đặt lịch
+        </Link>{" "}
+        và{" "}
+        <Link href="/quy-che" className="underline underline-offset-2">
+          quy chế hoạt động
         </Link>
         .
       </p>
+
+      {/* The footer with these details is desktop-only; on a phone this is where they are. */}
+      <CompanyInfo className="mt-6 text-xs text-muted" />
     </div>
   )
 }
