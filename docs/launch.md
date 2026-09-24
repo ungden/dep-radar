@@ -12,7 +12,7 @@ không thay cho tư vấn của họ.
   (MISA meInvoice, Viettel S-Invoice, VNPT…) và gửi thông tin API để nối tự động mỗi lần đối tác trả phí. Trước
   khi nối xong, kế toán xuất hoá đơn theo file "Lịch hẹn & hoa hồng" (Admin › Tài chính).
 - [ ] **Thuế và thông tin người bán** (Nghị định 117/2025): nhờ kế toán xác nhận
-  - sàn không giữ tiền đơn hàng (khách trả thẳng đối tác) thì có thuộc diện khấu trừ, nộp thay thuế cho đối tác không;
+  - 360đẹp không giữ tiền đơn hàng (khách trả thẳng đối tác) thì có thuộc diện khấu trừ, nộp thay thuế cho đối tác không;
   - kỳ và mẫu cung cấp thông tin người bán cho cơ quan thuế. Dữ liệu có sẵn ở file "Theo người làm".
   Lưu ý: 360đẹp **không lưu số CCCD** (chỉ họ tên trên thẻ); nếu mẫu báo cáo cần số định danh hay mã số thuế cá
   nhân của đối tác, cần thêm bước đối tác khai số này.
