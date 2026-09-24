@@ -69,6 +69,7 @@ export function toWorkItem(row: Row): WorkItem {
     title: str(row.title),
     description: str(row.description),
     images: arr(row.image_paths),
+    kind: row.kind === "before_after" ? "before_after" : "work",
   }
 }
 

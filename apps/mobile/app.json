@@ -65,7 +65,17 @@
           "color": "#A8535D"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-sharing",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "360dep mở thư viện ảnh để bạn chọn ảnh, clip tác phẩm và ảnh kết quả khi viết đánh giá.",
+          "savePhotosPermission": "360dep lưu ảnh portfolio vào thư viện để bạn đăng lên mạng xã hội.",
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": ["photo"]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

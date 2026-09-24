@@ -2,12 +2,14 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Columns2, Film, ImagePlus, Play, Trash2, X } from "lucide-react"
+import { Columns2, Film, ImagePlus, Play, Share2, Trash2, X } from "lucide-react"
+import { ShareImages } from "@/components/portfolio-share"
 import { RequireSession } from "@/components/require-session"
+import { Sheet } from "@/components/sheet"
 import { Button, Card, EmptyState, Field, PageHeader, inputClass } from "@/components/ui"
 import { deleteWork, saveWork } from "@/lib/api/actions"
 import { getTemplate } from "@/lib/catalog"
-import { useApp, useRefresh, worksOf } from "@/lib/store"
+import { proView, useApp, useRefresh, worksOf } from "@/lib/store"
 import { servicesOf } from "@/lib/store"
 import { uploadImage, uploadVideo, VIDEO_MAX_SECONDS } from "@/lib/uploads"
 import { cn } from "@/lib/utils"
@@ -31,6 +33,9 @@ function WorksManager() {
   const listings = servicesOf(state, proId, true)
   const [adding, setAdding] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  // A work's picture needs its page, which exists once the profile is open.
+  const published = proView(state, proId)?.published ?? false
+  const [sharing, setSharing] = React.useState<{ id: string; title: string } | null>(null)
 
   return (
     <>
@@ -101,22 +106,39 @@ function WorksManager() {
                       <b>Đã ẩn với khách.</b> {work.hiddenReason}
                     </p>
                   )}
-                  <button
-                    type="button"
-                    className="mt-1.5 inline-flex items-center gap-1 text-xs text-muted hover:text-danger"
-                    onClick={async () => {
-                      const result = await deleteWork(work.dbId)
-                      if (!result.ok) return setError(result.error)
-                      refresh()
-                    }}
-                  >
-                    <Trash2 className="size-3.5" /> Xoá
-                  </button>
+                  <div className="mt-1.5 flex items-center gap-3">
+                    {published && !work.hiddenReason && (
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-accent"
+                        onClick={() => setSharing({ id: work.id, title: work.title })}
+                      >
+                        <Share2 className="size-3.5" /> Ảnh đăng
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 text-xs text-muted hover:text-danger"
+                      onClick={async () => {
+                        const result = await deleteWork(work.dbId)
+                        if (!result.ok) return setError(result.error)
+                        refresh()
+                      }}
+                    >
+                      <Trash2 className="size-3.5" /> Xoá
+                    </button>
+                  </div>
                 </div>
               </Card>
             </li>
           ))}
         </ul>
+      )}
+
+      {sharing && (
+        <Sheet open title={`Đăng “${sharing.title}”`} onClose={() => setSharing(null)}>
+          <ShareImages base={`/works/${sharing.id}/portfolio`} fileName={`360dep-${sharing.id}`} />
+        </Sheet>
       )}
     </>
   )

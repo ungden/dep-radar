@@ -19,6 +19,8 @@ const nextConfig: NextConfig = {
     "/pros/[id]/opengraph-image": ["./app/_og/*.ttf"],
     "/dich-vu/[id]/opengraph-image": ["./app/_og/*.ttf"],
     "/works/[id]/opengraph-image": ["./app/_og/*.ttf"],
+    "/pros/[id]/portfolio/[format]": ["./app/_og/*.ttf"],
+    "/works/[id]/portfolio/[format]": ["./app/_og/*.ttf"],
   },
   images: {
     formats: ["image/webp"],

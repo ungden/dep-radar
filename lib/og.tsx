@@ -29,7 +29,12 @@ export function OgBrand({ size = 64, tone = "dark" }: { size?: number; tone?: "d
   return (
     <div style={{ display: "flex", alignItems: "center", gap: size * 0.28 }}>
       <svg width={size} height={size} viewBox="0 0 32 32">
-        <rect width="32" height="32" rx={LOGO_RADIUS} fill={BRAND_DARK} />
+        {tone === "gold" ? (
+          // On the espresso ground the tile needs an edge to read as a tile.
+          <rect x="0.5" y="0.5" width="31" height="31" rx={LOGO_RADIUS - 0.5} fill={BRAND_DARK} stroke={BRAND_GOLD} strokeOpacity={0.4} strokeWidth={1} />
+        ) : (
+          <rect width="32" height="32" rx={LOGO_RADIUS} fill={BRAND_DARK} />
+        )}
         <path d={LOGO_EYE_PATH} fill="none" stroke={BRAND_GOLD} strokeWidth={LOGO_EYE_STROKE} strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <svg height={h} width={(h * WORDMARK_BOX.width) / WORDMARK_BOX.height} viewBox={`0 0 ${WORDMARK_BOX.width} ${WORDMARK_BOX.height}`}>
@@ -39,25 +44,37 @@ export function OgBrand({ size = 64, tone = "dark" }: { size?: number; tone?: "d
   )
 }
 
-/**
- * A photo the image renderer can draw, as a JPEG data URL cropped to its slot,
- * fetched with a short timeout. Null when there is none, and the card is laid
- * out without it.
- */
-export async function ogPhoto(url: string | undefined | null, width = 500, height = 630): Promise<string | null> {
+/** A remote image's bytes, fetched with a short timeout. Null when it can't be had. */
+export async function ogFetch(url: string | undefined | null): Promise<Buffer | null> {
   if (!url || !/^https?:\/\//.test(url)) return null
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(4000) })
     if (!res.ok || !res.headers.get("content-type")?.startsWith("image/")) return null
     const bytes = Buffer.from(await res.arrayBuffer())
-    if (bytes.length > 8_000_000) return null
-    // The renderer can't decode WebP, and a full-size photo bloats the card.
+    return bytes.length > 8_000_000 ? null : bytes
+  } catch {
+    return null
+  }
+}
+
+/**
+ * An image cropped to its slot as a JPEG data URL, which the renderer can draw:
+ * it can't decode WebP, and a full-size photo bloats the result.
+ */
+export async function ogCrop(bytes: Buffer, width: number, height: number): Promise<string | null> {
+  try {
     const { default: sharp } = await import("sharp")
-    const jpeg = await sharp(bytes).rotate().resize(width, height, { fit: "cover" }).jpeg({ quality: 82, mozjpeg: true }).toBuffer()
+    const jpeg = await sharp(bytes).rotate().resize(Math.round(width), Math.round(height), { fit: "cover" }).jpeg({ quality: 84, mozjpeg: true }).toBuffer()
     return `data:image/jpeg;base64,${jpeg.toString("base64")}`
   } catch {
     return null
   }
+}
+
+/** A photo for a card slot, or null when there is none and the card goes without. */
+export async function ogPhoto(url: string | undefined | null, width = 500, height = 630): Promise<string | null> {
+  const bytes = await ogFetch(url)
+  return bytes ? ogCrop(bytes, width, height) : null
 }
 
 export const vnd = (n: number) => `${n.toLocaleString("vi-VN")}đ`

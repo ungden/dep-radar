@@ -84,6 +84,7 @@ function Navigator() {
       <Stack.Screen name="tuyen-mau/[id]" options={{ title: "" }} />
       <Stack.Screen name="da-chan" options={{ title: "Đã chặn" }} />
       <Stack.Screen name="gioi-thieu" options={{ title: "Giới thiệu bạn bè" }} />
+      <Stack.Screen name="anh-portfolio" options={{ title: "Ảnh portfolio" }} />
       <Stack.Screen name="dieu-khoan" options={{ title: "", presentation: "modal", gestureEnabled: false }} />
       <Stack.Screen name="login" options={{ title: "", presentation: "modal" }} />
       <Stack.Screen name="so-dien-thoai" options={{ title: "Số điện thoại", gestureEnabled: false }} />

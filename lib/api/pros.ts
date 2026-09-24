@@ -21,7 +21,7 @@ const PRO_PUBLIC = `
 `
 
 const WORK_WITH_PRO = `
-  id, slug, pro_id, template_id, title, description, image_paths, sort_order,
+  id, slug, pro_id, template_id, title, description, image_paths, kind, sort_order,
   pros!works_pro_id_fkey!inner (slug, display_name, avatar_path, rating_avg, rating_count,
                                 identity_status, published, suspended_at)
 `
@@ -169,7 +169,7 @@ export const getWorkBySlug = cache(async function getWorkBySlug(slug: string) {
   const { data, error } = await supabase
     .from("works")
     .select(
-      "id, slug, title, description, image_paths, pros!works_pro_id_fkey!inner (slug, display_name, published, suspended_at)",
+      "id, slug, title, description, image_paths, kind, pros!works_pro_id_fkey!inner (slug, display_name, title, published, suspended_at)",
     )
     .eq("slug", slug)
     .eq("pros.published", true)
@@ -183,8 +183,10 @@ export const getWorkBySlug = cache(async function getWorkBySlug(slug: string) {
     title: data.title,
     description: data.description ?? "",
     images: data.image_paths ?? [],
+    kind: data.kind === "before_after" ? ("before_after" as const) : ("work" as const),
     proSlug: pro?.slug ?? "",
     proName: pro?.display_name ?? "Chuyên viên",
+    proTitle: pro?.title ?? "",
   }
 })
 
