@@ -3,7 +3,7 @@ import { SUPABASE_URL } from "@/lib/supabase/env"
 import { supabaseAdmin } from "@/lib/supabase/server"
 import type { Json } from "@/lib/supabase/database.types"
 import { followUpDue, followUpMessage, missingSteps, type FollowUpFacts, type FollowUpKind } from "./followups"
-import { GEMINI_MODEL, GeminiError, geminiConfigured, generateJson, type GeminiPart } from "./gemini"
+import { AiError, aiConfigured, generateJson, modelName, type AiPart } from "./llm"
 import { combineProfileDecision, hasContactInfo, profileRuleProblems, type ProfileVerdict } from "./rules"
 import {
   PROFILE_SCHEMA,
@@ -19,7 +19,7 @@ import {
 } from "./verdict"
 
 /**
- * The reviewer. Server only (service role, GEMINI_API_KEY).
+ * The reviewer. Server only (service role, OPENAI_API_KEY).
  *
  * Three jobs, each bounded so one run fits in a Vercel function:
  *  1. profiles waiting for review (pros.review_status = 'pending');
@@ -28,9 +28,9 @@ import {
  * Every outcome goes through a database function that applies it and writes
  * the log (ai_decisions), so what the staff read is what happened.
  *
- * When Gemini fails (outage, bad answer), nothing is guessed: the profile stays
+ * When the AI fails (outage, bad answer), nothing is guessed: the profile stays
  * pending, a 'skipped' row says why (at most once an hour per profile), and the
- * next run tries again. With no GEMINI_API_KEY at all, profiles are decided on
+ * next run tries again. With no AI key at all, profiles are decided on
  * the rules alone and the log says so; posts are then kept unless a rule says
  * otherwise.
  */
@@ -56,7 +56,7 @@ function ownUpload(url: string, proId: string): boolean {
   return Boolean(SUPABASE_URL) && url.startsWith(`${SUPABASE_URL}/storage/v1/object/public/works/${proId}/`)
 }
 
-type Fetched = { ok: true; part: GeminiPart } | { ok: false; missing: boolean }
+type Fetched = { ok: true; part: AiPart } | { ok: false; missing: boolean }
 
 async function fetchImage(url: string): Promise<Fetched> {
   try {
@@ -68,7 +68,7 @@ async function fetchImage(url: string): Promise<Fetched> {
     if (!type.startsWith("image/")) return { ok: false, missing: true }
     const bytes = Buffer.from(await res.arrayBuffer())
     if (bytes.length > MAX_IMAGE_BYTES) return { ok: false, missing: true }
-    return { ok: true, part: { inlineData: { mimeType: type.split(";")[0], data: bytes.toString("base64") } } }
+    return { ok: true, part: { image: { mimeType: type.split(";")[0], data: bytes.toString("base64") } } }
   } catch {
     return { ok: false, missing: false }
   }
@@ -87,7 +87,7 @@ function photosOf(work: Row): { url: string; role: PhotoFact["role"] }[] {
 }
 
 interface GatheredPhotos {
-  parts: GeminiPart[]
+  parts: AiPart[]
   facts: PhotoFact[]
   urls: string[]
   foreign: number
@@ -125,7 +125,7 @@ async function gatherPhotos(proId: string, works: Row[], limit: number): Promise
 }
 
 const errorText = (err: unknown) =>
-  err instanceof GeminiError ? `${err.kind}: ${err.message}` : err instanceof Error ? err.message : String(err)
+  err instanceof AiError ? `${err.kind}: ${err.message}` : err instanceof Error ? err.message : String(err)
 
 /** A 'skipped' row, unless one was written for this profile in the last hour. */
 async function logSkipped(admin: Admin, proId: string, error: string, input: Row) {
@@ -143,7 +143,7 @@ async function logSkipped(admin: Admin, proId: string, error: string, input: Row
     p_decision: "skipped",
     p_reasons: [],
     p_summary: `AI chưa trả lời được, hồ sơ vẫn chờ duyệt và sẽ thử lại: ${error}`.slice(0, 500),
-    p_model: GEMINI_MODEL,
+    p_model: modelName(),
     p_input: input as Json,
   })
   if (rpcError) console.error("ai review: logging a skip failed:", rpcError.message)
@@ -235,7 +235,7 @@ export async function reviewProfile(proId: string, admin: Admin = supabaseAdmin(
 
   let ai: ProfileVerdict | null = null
   let model = "rules"
-  if (geminiConfigured()) {
+  if (aiConfigured()) {
     // A photo that did not load for a passing reason would be judged unseen.
     if (photos.transient) {
       await logSkipped(admin, proId, "không tải được ảnh tác phẩm", input)
@@ -257,9 +257,9 @@ export async function reviewProfile(proId: string, admin: Admin = supabaseAdmin(
         previousNote: pro.review_note,
       })
       ai = parseProfileVerdict(
-        await generateJson({ parts: [{ text: prompt }, ...photos.parts], schema: PROFILE_SCHEMA, timeoutMs: AI_TIMEOUT_MS }),
+        await generateJson({ parts: [{ text: prompt }, ...photos.parts], schema: PROFILE_SCHEMA, name: "profile_review", timeoutMs: AI_TIMEOUT_MS }),
       )
-      model = GEMINI_MODEL
+      model = modelName()
     } catch (err) {
       const message = errorText(err)
       console.error("ai review: profile", proId, "skipped:", message)
@@ -321,7 +321,7 @@ async function reviewWork(admin: Admin, work: Row): Promise<"kept" | "hidden" | 
 
   let verdict: WorkVerdict | null = null
   let model = "rules"
-  if (!ruleReasons.length && geminiConfigured()) {
+  if (!ruleReasons.length && aiConfigured()) {
     if (photos.transient) return "skipped"
     try {
       const prompt = buildWorkPrompt({
@@ -333,9 +333,9 @@ async function reviewWork(admin: Admin, work: Row): Promise<"kept" | "hidden" | 
         photos: photos.facts,
       })
       verdict = parseWorkVerdict(
-        await generateJson({ parts: [{ text: prompt }, ...photos.parts], schema: WORK_SCHEMA, timeoutMs: AI_TIMEOUT_MS }),
+        await generateJson({ parts: [{ text: prompt }, ...photos.parts], schema: WORK_SCHEMA, name: "work_review", timeoutMs: AI_TIMEOUT_MS }),
       )
-      model = GEMINI_MODEL
+      model = modelName()
     } catch (err) {
       // The post stays in the queue; the next run asks again.
       console.error("ai review: work", work.id, "skipped:", errorText(err))
@@ -439,7 +439,7 @@ async function sendFollowUps(admin: Admin, now: Date) {
 export async function runAiReview(budgetMs = 240_000) {
   const admin = supabaseAdmin()
   const deadline = Date.now() + budgetMs
-  const result: Record<string, unknown> = { ai: geminiConfigured() ? GEMINI_MODEL : "rules" }
+  const result: Record<string, unknown> = { ai: aiConfigured() ? modelName() : "rules" }
   // Each part on its own: a failing query in one must not stop the others.
   for (const [name, job] of [
     ["profiles", () => reviewPendingProfiles(admin, deadline)],

@@ -1,7 +1,8 @@
+import type { AiSchema } from "./llm"
 import type { ProfileDecision, ProfileVerdict } from "./rules"
 
 /**
- * What the reviewer asks Gemini, and how its answer is read. Pure: the prompt
+ * What the reviewer asks the AI, and how its answer is read. Pure: the prompt
  * is built from plain facts and the answer is validated field by field, so a
  * model that drifts from the schema is a failed call (the profile stays
  * pending), never a decision nobody meant. Tested in tests/ai-review.test.ts.
@@ -127,24 +128,26 @@ Trả JSON đúng schema:
 - summary: một câu tiếng Việt cho nhân viên 360dep.`
 }
 
-export const PROFILE_SCHEMA = {
-  type: "OBJECT",
+export const PROFILE_SCHEMA: AiSchema = {
+  type: "object",
   properties: {
-    decision: { type: "STRING", enum: ["approved", "changes_requested", "rejected"] },
-    reasons: { type: "ARRAY", items: { type: "STRING" } },
-    summary: { type: "STRING" },
+    decision: { type: "string", enum: ["approved", "changes_requested", "rejected"] },
+    reasons: { type: "array", items: { type: "string" } },
+    summary: { type: "string" },
   },
   required: ["decision", "reasons", "summary"],
+  additionalProperties: false,
 }
 
-export const WORK_SCHEMA = {
-  type: "OBJECT",
+export const WORK_SCHEMA: AiSchema = {
+  type: "object",
   properties: {
-    decision: { type: "STRING", enum: ["kept", "hidden"] },
-    reasons: { type: "ARRAY", items: { type: "STRING" } },
-    summary: { type: "STRING" },
+    decision: { type: "string", enum: ["kept", "hidden"] },
+    reasons: { type: "array", items: { type: "string" } },
+    summary: { type: "string" },
   },
   required: ["decision", "reasons", "summary"],
+  additionalProperties: false,
 }
 
 export class VerdictError extends Error {
@@ -172,7 +175,7 @@ function readCommon(raw: unknown): { decision: unknown; reasons: string[]; summa
   return { decision: r.decision, reasons, summary }
 }
 
-/** Gemini's answer on a profile, or VerdictError. A refusal needs at least one reason the partner can act on. */
+/** The AI's answer on a profile, or VerdictError. A refusal needs at least one reason the partner can act on. */
 export function parseProfileVerdict(raw: unknown): ProfileVerdict {
   const { decision, reasons, summary } = readCommon(raw)
   const decisions: ProfileDecision[] = ["approved", "changes_requested", "rejected"]
@@ -181,7 +184,7 @@ export function parseProfileVerdict(raw: unknown): ProfileVerdict {
   return { decision: decision as ProfileDecision, reasons: decision === "approved" ? [] : reasons, summary }
 }
 
-/** Gemini's answer on one post, or VerdictError. */
+/** The AI's answer on one post, or VerdictError. */
 export function parseWorkVerdict(raw: unknown): WorkVerdict {
   const { decision, reasons, summary } = readCommon(raw)
   if (decision !== "kept" && decision !== "hidden") throw new VerdictError(`decision ${String(decision)}`)
