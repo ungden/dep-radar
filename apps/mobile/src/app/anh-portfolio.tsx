@@ -4,16 +4,28 @@ import { File, Paths } from "expo-file-system"
 import { Asset, requestPermissionsAsync } from "expo-media-library"
 import * as Sharing from "expo-sharing"
 import { Alert, ScrollView, View } from "react-native"
+import { formatPrice } from "@/data/format"
 import { webLink } from "@/data/links"
+import { supabase } from "@/data/supabase"
 import { useApp } from "@/state/app"
+import { useAsync } from "@/state/use-async"
 import { colors, gutter, radius } from "@/theme"
 import { Button } from "@/ui/button"
-import { Chip, EmptyState, Photo } from "@/ui/bits"
+import { Card, Chip, EmptyState, Photo } from "@/ui/bits"
 import { haptic } from "@/ui/haptics"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
 
 type Format = "story" | "post"
+
+type OwnStats = { rate: number; standardRate: number; visits30d: number; clients: number; completed: number; saved: number }
+
+/** What the partner's own QR and link brought (my_own_client_stats, 20261001100000). */
+async function loadOwnStats(): Promise<OwnStats | null> {
+  const { data, error } = await supabase.rpc("my_own_client_stats" as never)
+  if (error) return null
+  return (data as OwnStats | null) ?? null
+}
 
 /**
  * Ảnh portfolio: the freelancer's profile, or one of their works, as a picture
@@ -28,6 +40,7 @@ export default function PortfolioImages() {
   const [format, setFormat] = React.useState<Format>("story")
   const [subject, setSubject] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState<"share" | "save" | null>(null)
+  const stats = useAsync(app.uid ? loadOwnStats : null, [app.uid])
 
   if (!pro) return <EmptyState title="Dành cho người làm" text="Ảnh portfolio có khi bạn đã có hồ sơ người làm." />
   if (!pro.published)
@@ -76,6 +89,8 @@ export default function PortfolioImages() {
       <Txt color={colors.inkSoft}>
         Ảnh tự làm từ tác phẩm, đánh giá và bảng giá mới nhất của bạn. Khách quét mã QR trên ảnh là mở ngay trang đặt lịch của bạn.
       </Txt>
+
+      {stats.value ? <OwnClients stats={stats.value} /> : null}
 
       {works.length > 0 && (
         <View style={{ gap: 10 }}>
@@ -133,5 +148,35 @@ function Subject({ label, uri, selected, onPress }: { label: string; uri?: strin
         {label}
       </Txt>
     </Press>
+  )
+}
+
+function OwnClients({ stats }: { stats: OwnStats }) {
+  const pct = (rate: number) => `${Math.round(rate * 100)}%`
+  const figures = [
+    ["Lượt mở 30 ngày", String(stats.visits30d)],
+    ["Khách mang về", String(stats.clients)],
+    ["Lịch đã xong", String(stats.completed)],
+    ["Tiết kiệm", formatPrice(stats.saved)],
+  ]
+  return (
+    <Card>
+      <Txt w={700}>Khách bạn tự mang về</Txt>
+      <Txt v="meta" color={colors.inkSoft}>
+        Khách mới đến từ mã QR hoặc link của bạn chỉ tính hoa hồng {pct(stats.rate)} (thay vì {pct(stats.standardRate)}), cho mọi lịch của họ với bạn.
+      </Txt>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+        {figures.map(([label, value]) => (
+          <View key={label} style={{ flexBasis: "47%", flexGrow: 1, backgroundColor: colors.subtle, borderRadius: radius.sm, padding: 10 }}>
+            <Txt v="meta" color={colors.muted}>
+              {label}
+            </Txt>
+            <Txt w={700} style={{ fontSize: 17 }}>
+              {value}
+            </Txt>
+          </View>
+        ))}
+      </View>
+    </Card>
   )
 }

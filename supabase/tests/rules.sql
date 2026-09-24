@@ -422,6 +422,8 @@ begin
       'slugify', 'is_admin', 'is_pro', 'free_days',
       -- the feed: reporting and reading interest counts, and the content check
       'log_work_events', 'work_stats_30d', 'banned_content',
+      -- a visit through a partner's own QR or link (a counter, nothing is paid on it)
+      'log_pro_visit',
       -- called by a row level security policy
       'applied_to_casting'
     ]);
@@ -455,9 +457,11 @@ begin
       -- chat that closes, jobs either side finishes, referrals and vouchers
       'closes_at', 'confirm_booking_done', 'report_pro_no_show', 'my_referral_code', 'claim_referral',
       'apply_voucher', 'remove_voucher', 'chat_status', 'take_job', 'record_topup',
+      -- clients a partner brings through their own QR or link
+      'log_pro_visit', 'claim_own_client', 'my_own_client_stats',
       -- admin decisions, which check is_admin() themselves
       'decide_identity_check', 'decide_no_show_compensation', 'set_pro_suspended', 'set_review_hidden', 'resolve_report',
-      'admin_override_ai_decision'
+      'admin_override_ai_decision', 'admin_own_client_ranking'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 
@@ -2076,4 +2080,83 @@ begin
     update public.pros set published = true, review_status = 'approved' where id = own;
   end;
   raise notice 'AI REVIEW RULES PASS';
+end $$;
+
+-- Khách tự mang về (20261001100000): a customer who arrives through a partner's
+-- own QR or link, and has not booked them before, costs that partner the lower
+-- own-client commission on every booking with them.
+do $$
+declare
+  linh uuid; customer uuid; addr uuid; fresh uuid; fresh_addr uuid; b uuid; r jsonb; n int; stats jsonb;
+  monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
+  tz text := public.app_timezone();
+  own_rate numeric; std_rate numeric;
+begin
+  select id into linh from public.pros where slug = 'linh-pham';
+  select a.id into customer from public.accounts a where a.full_name = 'Ngọc Hân';
+  select id into addr from public.addresses where account_id = customer;
+  select own_client_commission_rate, commission_rate into own_rate, std_rate from public.fee_policy;
+  assert own_rate < std_rate, 'the own-client rate is not lower';
+  -- /doi-tac and /tro-giup print POLICY.ownClientCommissionRate (lib/pricing.ts).
+  assert own_rate = 0.05, format('the partner page promises 5%%, the database charges %s', own_rate);
+
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          'own-client@example.invalid', jsonb_build_object('full_name', 'Khách Quét Mã', 'phone', '0900 000 789'), now(), now())
+  returning id into fresh;
+  insert into public.addresses (account_id, city, district, detail, lat, lng, is_default)
+  select fresh, city, district, detail, lat, lng, true from public.addresses where id = addr
+  returning id into fresh_addr;
+
+  ---------------------------------------------------------------------------
+  raise notice 'a visit from the partner''s own QR is counted, their own is not';
+  perform public.log_pro_visit('linh-pham', 'qr');
+  perform public.log_pro_visit('linh-pham', 'qr');
+  perform public.log_pro_visit('linh-pham', 'nope');
+  select coalesce(sum(visits), 0) into n from public.pro_link_visits where pro_id = linh and channel = 'qr';
+  assert n = 2, format('qr visits %s', n);
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.log_pro_visit('linh-pham', 'qr');
+  select coalesce(sum(visits), 0) into n from public.pro_link_visits where pro_id = linh and channel = 'qr';
+  assert n = 2, 'the partner counted their own visit';
+
+  ---------------------------------------------------------------------------
+  raise notice 'only a new customer can be claimed, once';
+  r := public.claim_own_client('linh-pham', 'qr');
+  assert r->>'result' = 'self', format('partner claiming themself: %s', r);
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  r := public.claim_own_client('linh-pham', 'qr');
+  assert r->>'result' = 'known', format('a customer who booked before was claimed: %s', r);
+  perform set_config('request.jwt.claim.sub', fresh::text, true);
+  r := public.claim_own_client('khong-co-ai', 'qr');
+  assert r->>'result' = 'unknown', format('unknown profile: %s', r);
+  r := public.claim_own_client('linh-pham', 'qr');
+  assert r->>'result' = 'claimed' and r->>'name' is not null, format('new customer: %s', r);
+  r := public.claim_own_client('linh-pham', 'link');
+  assert r->>'result' = 'already', format('second claim: %s', r);
+
+  ---------------------------------------------------------------------------
+  raise notice 'the brought customer''s booking carries the own-client rate';
+  b := public.create_booking(linh, 'nail-design', 'simple',
+    ((monday + 2) + time '16:30') at time zone tz, true, fresh_addr, 1, '');
+  assert (select own_client and commission_rate = own_rate
+            and commission = public.commission_for(service_price, own_rate) from public.bookings where id = b),
+    'the own client paid the standard commission';
+  assert not exists (select 1 from public.bookings where customer_id = customer and own_client),
+    'a marketplace customer got the own-client rate';
+
+  ---------------------------------------------------------------------------
+  raise notice 'the partner sees what their channels brought; the ranking is for admins';
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  stats := public.my_own_client_stats();
+  assert (stats->>'clients')::int >= 1 and (stats->>'visits30d')::int >= 2, format('stats %s', stats);
+  begin
+    perform * from public.admin_own_client_ranking();
+    assert false, 'a partner read the admin ranking';
+  exception when insufficient_privilege then null;
+  end;
+
+  perform set_config('request.jwt.claim.sub', '', true);
+  raise notice 'OWN CLIENT RULES PASS';
 end $$;

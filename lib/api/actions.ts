@@ -309,6 +309,28 @@ export async function claimReferral(code: string) {
   return rpc<string>("claim_referral", { p_code: code.trim().toUpperCase() }, ["/gioi-thieu"])
 }
 
+// Khách tự mang về (20261001100000) ----------------------------------------------
+
+export type OwnChannel = "qr" | "link"
+export type OwnClientClaim = { result: "claimed" | "already" | "known" | "self" | "unknown"; name?: string }
+
+/** A visit that came through a partner's own QR or link. Counted, nothing more. */
+export async function logProVisit(slug: string, channel: OwnChannel) {
+  return rpc<void>("log_pro_visit", { p_slug: slug, p_channel: channel })
+}
+
+/** The signed-in customer arrived through this partner's own QR or link. */
+export async function claimOwnClient(slug: string, channel: OwnChannel) {
+  return rpc<OwnClientClaim>("claim_own_client", { p_slug: slug, p_channel: channel })
+}
+
+export type OwnClientStats = { rate: number; standardRate: number; visits30d: number; clients: number; completed: number; saved: number }
+
+/** What the partner's own QR and link brought them. Null for someone who is not a partner. */
+export async function myOwnClientStats() {
+  return rpc<OwnClientStats | null>("my_own_client_stats", {})
+}
+
 /** Busy time outside 360dep. Timestamps, not local strings: the client converts. Returns the block id. */
 export async function addTimeBlock(input: { startsAt: string; endsAt: string; note?: string }) {
   return rpc<string>(

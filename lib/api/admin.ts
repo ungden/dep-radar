@@ -312,3 +312,32 @@ export async function aiDecisions(limit = 200): Promise<{ items: AiDecisionItem[
 export async function overrideAiDecision(decisionId: string, decision: string, note = "") {
   return call("admin_override_ai_decision", { p_decision_id: decisionId, p_decision: decision, p_note: note })
 }
+
+export interface OwnClientRank {
+  proId: string
+  slug: string
+  name: string
+  visits30d: number
+  clients: number
+  completed: number
+  gmv: number
+}
+
+/** Partners ranked by the clients their own QR and link bring (20261001100000). Empty before that migration. */
+export async function ownClientRanking(): Promise<OwnClientRank[]> {
+  const supabase = await supabaseServer()
+  const { data, error } = await supabase.rpc("admin_own_client_ranking" as never)
+  if (error) {
+    console.error("ownClientRanking failed:", error.message)
+    return []
+  }
+  return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+    proId: String(r.pro_id),
+    slug: String(r.slug),
+    name: String(r.name ?? ""),
+    visits30d: Number(r.visits30d ?? 0),
+    clients: Number(r.clients ?? 0),
+    completed: Number(r.completed ?? 0),
+    gmv: Number(r.gmv ?? 0),
+  }))
+}

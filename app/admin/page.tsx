@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { adminBookings, adminPros, adminReports, aiDecisions, isAdmin, pendingChecks } from "@/lib/api/admin"
+import { adminBookings, adminPros, adminReports, aiDecisions, isAdmin, ownClientRanking, pendingChecks } from "@/lib/api/admin"
 import { AdminDesk } from "./admin-desk"
 
 export const metadata: Metadata = {
@@ -16,13 +16,14 @@ export default async function AdminPage() {
   // 404 rather than 403 so the page does not advertise that it exists.
   if (!(await isAdmin())) notFound()
 
-  const [checks, pros, bookings, reports, aiLog] = await Promise.all([
+  const [checks, pros, bookings, reports, aiLog, ranking] = await Promise.all([
     pendingChecks(),
     adminPros(),
     adminBookings(),
     adminReports(),
     aiDecisions(),
+    ownClientRanking(),
   ])
 
-  return <AdminDesk checks={checks} pros={pros} bookings={bookings} reports={reports} aiLog={aiLog} />
+  return <AdminDesk checks={checks} pros={pros} bookings={bookings} reports={reports} aiLog={aiLog} ranking={ranking} />
 }
