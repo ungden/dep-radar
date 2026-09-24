@@ -9,14 +9,14 @@ import { formatPrice } from "@/lib/utils"
 export const metadata: Metadata = {
   title: "Quy chế hoạt động",
   description:
-    "Quy chế hoạt động của sàn giao dịch thương mại điện tử 360đẹp: vai trò của các bên, quy trình đặt lịch và thanh toán, bảo vệ thông tin cá nhân, xử lý vi phạm và giải quyết khiếu nại.",
+    "Quy chế hoạt động của nền tảng kết nối 360đẹp: vai trò của các bên, quy trình đặt lịch và thanh toán, bảo vệ thông tin cá nhân, xử lý vi phạm và giải quyết khiếu nại.",
   alternates: { canonical: "/quy-che" },
 }
 
 const pct = (n: number) => `${Math.round(n * 100)}%`
 
 /**
- * The operating rules a trading platform publishes and files with the Ministry
+ * The operating rules a connecting platform publishes and files with the Ministry
  * of Industry and Trade (Nghị định 52/2013, amended by 85/2021). Every number
  * comes from the same constants the product enforces (lib/pricing.ts,
  * lib/connection.ts), so the rules and the system cannot drift apart; the
@@ -27,25 +27,26 @@ export default function OperatingRulesPage() {
   return (
     <div className="mx-auto max-w-2xl pb-10 md:pt-4">
       <PageHeader title="Quy chế hoạt động" back />
-      <p className="text-[13px] text-muted">Sàn giao dịch thương mại điện tử 360đẹp (www.360dep.vn và ứng dụng 360đẹp) · Phiên bản 1.0, cập nhật ngày 24/09/2026</p>
+      <p className="text-[13px] text-muted">Nền tảng kết nối 360đẹp (www.360dep.vn và ứng dụng 360đẹp) · Phiên bản 1.0, cập nhật ngày 24/09/2026</p>
 
       <div className="mt-6 space-y-8 text-sm leading-relaxed text-ink-soft">
         <Section title="I. Nguyên tắc chung">
           <p>
-            360đẹp là sàn giao dịch thương mại điện tử về dịch vụ, do công ty có thông tin ở cuối trang này sở hữu và vận hành. Sàn kết nối{" "}
+            360đẹp là nền tảng trung gian kết nối dịch vụ, do công ty có thông tin ở cuối trang này sở hữu và vận hành, hoạt động theo hình thức
+            sàn giao dịch thương mại điện tử theo Nghị định 52/2013/NĐ-CP (sửa đổi bởi Nghị định 85/2021/NĐ-CP). 360đẹp kết nối{" "}
             <b className="text-ink">khách hàng</b> có nhu cầu làm đẹp, chụp ảnh, quay clip, làm mẫu với <b className="text-ink">đối tác</b>: các
             cá nhân hành nghề tự do (thợ làm đẹp, người chụp ảnh, người quay, người mẫu) tự đăng ký cung cấp dịch vụ.
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
               360đẹp không trực tiếp cung cấp dịch vụ và không phải người sử dụng lao động của đối tác. Đối tác tự chịu trách nhiệm về chất
-              lượng dịch vụ, giá mình đặt (trong khung giá của sàn), giấy phép hành nghề nếu pháp luật yêu cầu và nghĩa vụ thuế của mình.
+              lượng dịch vụ, giá mình đặt (trong khung giá của 360đẹp), giấy phép hành nghề nếu pháp luật yêu cầu và nghĩa vụ thuế của mình.
             </li>
             <li>
-              Mọi giao dịch trên sàn phải tuân thủ pháp luật Việt Nam, Quy chế này, <Link href="/chinh-sach" className="text-accent underline underline-offset-2">Chính sách phí & đặt lịch</Link>{" "}
+              Mọi giao dịch qua 360đẹp phải tuân thủ pháp luật Việt Nam, Quy chế này, <Link href="/chinh-sach" className="text-accent underline underline-offset-2">Chính sách phí & đặt lịch</Link>{" "}
               và <Link href="/tro-giup" className="text-accent underline underline-offset-2">Trợ giúp & an toàn</Link>.
             </li>
-            <li>Khách hàng và đối tác dùng sàn là đã đồng ý với Quy chế. Khi Quy chế thay đổi, 360đẹp đăng bản mới tại trang này trước khi áp dụng.</li>
+            <li>Khách hàng và đối tác dùng 360đẹp là đã đồng ý với Quy chế. Khi Quy chế thay đổi, 360đẹp đăng bản mới tại trang này trước khi áp dụng.</li>
           </ul>
         </Section>
 
@@ -97,7 +98,7 @@ export default function OperatingRulesPage() {
               {formatPrice(POLICY.travelFeePerKm)}/km, tối đa {formatPrice(POLICY.travelFeeCap)}) và phí đặt gấp {formatPrice(POLICY.urgentFee)}{" "}
               nếu lịch bắt đầu trong {POLICY.urgentWithinHours} giờ. Khách <b className="text-ink">không trả phí nền tảng</b> và không phải đặt cọc.
             </li>
-            <li>Khách thanh toán trực tiếp cho đối tác (tiền mặt hoặc chuyển khoản) sau buổi làm. Thanh toán online qua sàn chưa áp dụng.</li>
+            <li>Khách thanh toán trực tiếp cho đối tác (tiền mặt hoặc chuyển khoản) sau buổi làm. Thanh toán online qua 360đẹp chưa áp dụng.</li>
             <li>
               Đối tác trả 360đẹp phí dịch vụ {pct(POLICY.commissionRate)} trên giá dịch vụ của mỗi lịch hoàn thành (không tính trên phí di
               chuyển và phí đặt gấp). Phí được trừ vào ví đối tác khi lịch hoàn thành; khi ví âm, đối tác chưa nhận lịch mới cho tới khi thanh
@@ -160,7 +161,7 @@ export default function OperatingRulesPage() {
             <li>Dịch vụ, tuyển mẫu hay nội dung khiêu dâm, khoả thân, gợi dục; ảnh “nhạy cảm”; dịch vụ cho người dưới 18 tuổi trái quy định.</li>
             <li>Yêu cầu đặt cọc trước, “phí hồ sơ”, chuyển khoản trước cho người mẫu hay đối tác ngoài lịch hẹn.</li>
             <li>Ảnh tác phẩm không phải của chính mình, thông tin sai sự thật, đánh giá ảo.</li>
-            <li>Đăng thông tin liên hệ để giao dịch ngoài sàn trước khi ghép lịch; quấy rối, xúc phạm, phân biệt đối xử.</li>
+            <li>Đăng thông tin liên hệ để giao dịch ngoài 360đẹp trước khi ghép lịch; quấy rối, xúc phạm, phân biệt đối xử.</li>
             <li>Dịch vụ y tế, thẩm mỹ xâm lấn hay bất kỳ dịch vụ nào pháp luật cấm hoặc cần giấy phép mà đối tác không có.</li>
           </ul>
           <p className="mt-2">
@@ -172,7 +173,7 @@ export default function OperatingRulesPage() {
         <Section title="IX. Quyền và nghĩa vụ các bên">
           <p className="font-semibold text-ink">360đẹp</p>
           <ul className="mt-1 list-disc space-y-1 pl-5">
-            <li>Vận hành sàn ổn định, công khai giá, phí và quy trình; bảo vệ thông tin người dùng; tiếp nhận và giải quyết khiếu nại.</li>
+            <li>Vận hành nền tảng ổn định, công khai giá, phí và quy trình; bảo vệ thông tin người dùng; tiếp nhận và giải quyết khiếu nại.</li>
             <li>Được từ chối, ẩn hồ sơ, bài đăng hoặc khoá tài khoản vi phạm Quy chế; được thu phí dịch vụ đã công bố.</li>
             <li>Lưu trữ thông tin giao dịch và cung cấp cho cơ quan nhà nước khi pháp luật yêu cầu, kể cả thông tin người bán cho cơ quan thuế.</li>
           </ul>
@@ -180,7 +181,7 @@ export default function OperatingRulesPage() {
           <ul className="mt-1 list-disc space-y-1 pl-5">
             <li>Cung cấp thông tin trung thực; thực hiện dịch vụ đúng mô tả, đúng giờ, đúng giá đã hiện cho khách.</li>
             <li>Thanh toán phí dịch vụ đúng hạn; tự kê khai, nộp thuế thu nhập từ dịch vụ theo quy định.</li>
-            <li>Không nhận tiền ngoài giá đã hiện, không lôi kéo khách giao dịch ngoài sàn để né phí.</li>
+            <li>Không nhận tiền ngoài giá đã hiện, không lôi kéo khách giao dịch ngoài 360đẹp để né phí.</li>
           </ul>
           <p className="mt-3 font-semibold text-ink">Khách hàng</p>
           <ul className="mt-1 list-disc space-y-1 pl-5">
