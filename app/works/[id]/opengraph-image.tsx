@@ -28,7 +28,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
           </div>
           {work && <div style={{ display: "flex", fontSize: 30, color: OG.soft }}>{`bởi ${work.proName}`}</div>}
         </div>
-        <div style={{ fontSize: 26, color: OG.soft }}>Xem thêm và đặt lịch trên 360dep.vn</div>
+        <div style={{ fontSize: 26, color: OG.soft }}>Xem thêm và đặt lịch · 360dep.vn</div>
       </div>
     </div>,
     { ...size, fonts },

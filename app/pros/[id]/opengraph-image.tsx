@@ -44,7 +44,10 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         <OgBrand size={60} />
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontSize: photo ? 60 : 76, fontWeight: 800, color: OG.ink, letterSpacing: -2, lineHeight: 1.05 }}>{pro.name}</div>
-          <div style={{ display: "flex", fontSize: 32, color: OG.soft }}>{`${pro.title} · ${pro.district}, ${pro.city}`}</div>
+          <div style={{ display: "flex", flexDirection: "column", fontSize: 30, color: OG.soft, lineHeight: 1.35 }}>
+            <div>{pro.title}</div>
+            <div>{`${pro.district}, ${pro.city}`}</div>
+          </div>
           <div style={{ display: "flex", gap: 14, marginTop: 10 }}>
             <div style={{ display: "flex", background: OG.subtle, color: OG.ink, fontSize: 28, fontWeight: 700, borderRadius: 999, padding: "10px 22px" }}>
               {rating}
@@ -56,7 +59,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
             )}
           </div>
         </div>
-        <div style={{ fontSize: 26, color: OG.soft }}>Xem tác phẩm, giá rõ và đặt lịch trên 360dep.vn</div>
+        <div style={{ fontSize: 26, color: OG.soft }}>Xem tác phẩm và đặt lịch · 360dep.vn</div>
       </div>
     </div>,
     { ...size, fonts },
