@@ -178,11 +178,11 @@ describe.skipIf(!configured)("row level security over the API", () => {
     expect(error?.message).toMatch(/đã có số điện thoại/)
   })
 
-  it("refuses a listing price outside the catalogue band", async () => {
+  it("refuses a listing price that is not one of the catalogue levels", async () => {
     const { error } = await client(tokenFor(proId))
       .from("pro_service_prices")
       .upsert({ pro_id: proId, template_id: "nail-design", variant_id: "simple", price: 5000 })
-    expect(error?.message).toMatch(/khung cho phép/)
+    expect(error?.message).toMatch(/mức giá có sẵn/)
   })
 
   it("keeps the maintenance functions away from the anon key", async () => {
