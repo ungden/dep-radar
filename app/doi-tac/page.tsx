@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { BadgeCheck, CalendarCheck, HandCoins, Megaphone, Wallet } from "lucide-react"
 import { ButtonLink, PageHeader } from "@/components/ui"
+import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { CATEGORIES, VERTICALS, categoriesOf } from "@/lib/catalog"
 import { POLICY } from "@/lib/pricing"
 
@@ -46,7 +47,9 @@ export default function PartnerPage() {
     {
       icon: BadgeCheck,
       title: "Xác minh danh tính",
-      text: "Xác minh bằng CCCD và ảnh chân dung để có dấu đã xác minh và được xếp trước người chưa xác minh. Đăng tin tuyển mẫu và làm dịch vụ người mẫu cần xác minh.",
+      text: IDENTITY_VERIFICATION_OPEN
+        ? "Xác minh bằng CCCD và ảnh chân dung để có dấu đã xác minh và được xếp trước người chưa xác minh. Đăng tin tuyển mẫu và làm dịch vụ người mẫu cần xác minh."
+        : "Sắp mở: xác minh bằng CCCD và ảnh chân dung để có dấu đã xác minh. Dịch vụ người mẫu và tin tuyển mẫu mở cùng lúc với xác minh.",
     },
   ]
 

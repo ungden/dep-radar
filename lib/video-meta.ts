@@ -15,6 +15,16 @@
  * Pure and synchronous so it can be tested without a browser.
  */
 
+/**
+ * Clip limits, shared by the web (lib/uploads.ts) and the app. 200 MB holds a
+ * 60-second clip at a phone's default 1080p (about 60 MB on iPhone, 130 MB on
+ * Android); 4K does not fit and is asked to be exported at 1080p. The videos
+ * bucket allows the same size (20261005100000_video_200mb.sql).
+ */
+export const VIDEO_MAX_SECONDS = 60
+export const VIDEO_MAX_MB = 200
+export const VIDEO_MAX_BYTES = VIDEO_MAX_MB * 1024 * 1024
+
 const CONTAINERS = new Set(["moov", "trak", "udta", "meta", "ilst", "mdia", "minf"])
 const LOCATION_BOXES = new Set(["©xyz", "loci"])
 const FREE = [0x66, 0x72, 0x65, 0x65] // "free"

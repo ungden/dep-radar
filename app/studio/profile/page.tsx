@@ -6,6 +6,7 @@ import { BookingLink } from "@/components/booking-link"
 import { RequireSession } from "@/components/require-session"
 import { RatingSummaryBlock, ReviewItem, VerifiedMark } from "@/components/trust"
 import { Avatar, ButtonLink, Card, PageHeader } from "@/components/ui"
+import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { verticalOf } from "@/lib/catalog"
 import { actions, useAct } from "@/lib/client-actions"
 import { proView, reviewsOf, useApp } from "@/lib/store"
@@ -66,6 +67,7 @@ function ProfileTrust() {
 
       <BookingLink slug={pro.id} published={pro.published} />
 
+      {IDENTITY_VERIFICATION_OPEN ? (
       <section>
         <h2 className="font-semibold">Xác minh danh tính</h2>
         <p className="mt-1 text-sm text-ink-soft">
@@ -107,6 +109,15 @@ function ProfileTrust() {
           )}
         </Card>
       </section>
+      ) : (
+        <section>
+          <h2 className="font-semibold">Xác minh danh tính</h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            Sẽ mở sau. Bạn chưa cần làm gì: hồ sơ, dịch vụ và tác phẩm vẫn hiện với khách bình thường.
+            {pro.categories.some((c) => verticalOf(c) === "model") && " Dịch vụ người mẫu mở cùng lúc với xác minh."}
+          </p>
+        </section>
+      )}
 
       <section>
         <h2 className="mb-3 font-semibold">Đánh giá từ khách</h2>

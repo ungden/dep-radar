@@ -1,7 +1,9 @@
 "use client"
 
+import { Upload } from "tus-js-client"
+import { SUPABASE_URL } from "./supabase/env"
 import { supabaseBrowser } from "./supabase/client"
-import { stripVideoLocation } from "./video-meta"
+import { VIDEO_MAX_BYTES, VIDEO_MAX_MB, VIDEO_MAX_SECONDS, stripVideoLocation } from "./video-meta"
 
 /**
  * Uploading a photo.
@@ -66,8 +68,7 @@ export async function removeImage(bucket: Bucket, publicUrl: string): Promise<vo
 // ---------------------------------------------------------------------------
 // Clips
 
-export const VIDEO_MAX_SECONDS = 60
-export const VIDEO_MAX_BYTES = 50 * 1024 * 1024
+export { VIDEO_MAX_BYTES, VIDEO_MAX_MB, VIDEO_MAX_SECONDS }
 /** Clips kept per account; the same number as video_quota_ok() in the database. */
 export const VIDEO_MAX_COUNT = 30
 const VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"]
@@ -103,19 +104,54 @@ async function probeVideo(file: File): Promise<{ seconds: number; poster: Blob }
 }
 
 /**
- * Uploads a clip of at most 60 seconds to the `videos` bucket, with the place
- * it was filmed removed (lib/video-meta.ts), plus a poster frame to `works`.
- * The post stores the poster as images[0], so every card has a still.
+ * A clip goes up in 6 MB pieces over Supabase's resumable (TUS) endpoint: a
+ * phone that drops off the network for a moment carries on from the last piece
+ * instead of starting 200 MB again. Storage policies apply as with any upload.
  */
-export async function uploadVideo(file: File): Promise<{ video: string; poster: string }> {
+async function uploadResumable(
+  bucket: "videos",
+  path: string,
+  body: Blob,
+  contentType: string,
+  onProgress?: (fraction: number) => void,
+): Promise<void> {
+  const { data } = await supabaseBrowser().auth.getSession()
+  const token = data.session?.access_token
+  if (!token) throw new Error("Cần đăng nhập.")
+  await new Promise<void>((resolve, reject) => {
+    const upload = new Upload(body, {
+      endpoint: `${SUPABASE_URL}/storage/v1/upload/resumable`,
+      retryDelays: [0, 2000, 5000, 10000, 20000],
+      headers: { authorization: `Bearer ${token}`, "x-upsert": "false" },
+      uploadDataDuringCreation: true,
+      removeFingerprintOnSuccess: true,
+      metadata: { bucketName: bucket, objectName: path, contentType, cacheControl: "31536000" },
+      // Supabase requires exactly 6 MB pieces.
+      chunkSize: 6 * 1024 * 1024,
+      onProgress: (sent, total) => onProgress?.(total ? sent / total : 0),
+      onSuccess: () => resolve(),
+      onError: (err) => reject(err),
+    })
+    upload.start()
+  })
+}
+
+/**
+ * Uploads a clip of at most 60 seconds and 200 MB to the `videos` bucket, with
+ * the place it was filmed removed (lib/video-meta.ts), plus a poster frame to
+ * `works`. The post stores the poster as images[0], so every card has a still.
+ */
+export async function uploadVideo(file: File, onProgress?: (fraction: number) => void): Promise<{ video: string; poster: string }> {
   if (!VIDEO_TYPES.includes(file.type)) throw new Error("Chỉ nhận clip MP4, MOV hoặc WebM.")
-  if (file.size > VIDEO_MAX_BYTES) throw new Error("Clip quá 50 MB. Cắt ngắn hoặc xuất ở 720p nhé.")
+  if (file.size > VIDEO_MAX_BYTES) {
+    throw new Error(`Clip quá ${VIDEO_MAX_MB} MB. Quay hoặc xuất lại ở 1080p (không dùng 4K) nhé.`)
+  }
   const supabase = supabaseBrowser()
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) throw new Error("Cần đăng nhập.")
 
   // The database refuses the 31st clip (20260924101100); asking first saves
-  // uploading 50 MB to be told no, and says so in words.
+  // uploading a big file to be told no, and says so in words.
   const { data: existing } = await supabase.storage.from("videos").list(auth.user.id, { limit: 100 })
   if ((existing?.length ?? 0) >= VIDEO_MAX_COUNT) {
     throw new Error(`Mỗi tài khoản lưu tối đa ${VIDEO_MAX_COUNT} clip. Xoá bớt clip cũ rồi tải lên tiếp nhé.`)
@@ -132,15 +168,17 @@ export async function uploadVideo(file: File): Promise<{ video: string; poster: 
   const videoPath = `${auth.user.id}/${id}.${extension}`
   const posterPath = `${auth.user.id}/${id}.jpg`
 
-  const [videoUpload, posterUpload] = await Promise.all([
-    supabase.storage.from("videos").upload(videoPath, new Blob([clean], { type: file.type }), {
-      contentType: file.type,
-      cacheControl: "31536000",
-      upsert: false,
-    }),
-    supabase.storage.from("works").upload(posterPath, poster, { contentType: "image/jpeg", cacheControl: "31536000", upsert: false }),
-  ])
-  if (videoUpload.error || posterUpload.error) throw new Error("Tải clip lên không thành công, thử lại nhé.")
+  const posterUpload = await supabase.storage
+    .from("works")
+    .upload(posterPath, poster, { contentType: "image/jpeg", cacheControl: "31536000", upsert: false })
+  if (posterUpload.error) throw new Error("Tải clip lên không thành công, thử lại nhé.")
+  try {
+    await uploadResumable("videos", videoPath, new Blob([clean], { type: file.type }), file.type, onProgress)
+  } catch (err) {
+    console.error("clip upload failed:", err)
+    await supabase.storage.from("works").remove([posterPath])
+    throw new Error("Tải clip lên không thành công. Kiểm tra mạng rồi thử lại nhé.")
+  }
 
   return {
     video: supabase.storage.from("videos").getPublicUrl(videoPath).data.publicUrl,

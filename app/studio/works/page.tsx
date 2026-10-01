@@ -11,7 +11,7 @@ import { deleteWork, saveWork } from "@/lib/api/actions"
 import { getTemplate } from "@/lib/catalog"
 import { proView, useApp, useRefresh, worksOf } from "@/lib/store"
 import { servicesOf } from "@/lib/store"
-import { uploadImage, uploadVideo, VIDEO_MAX_SECONDS } from "@/lib/uploads"
+import { uploadImage, uploadVideo, VIDEO_MAX_MB, VIDEO_MAX_SECONDS } from "@/lib/uploads"
 import { cn } from "@/lib/utils"
 
 export default function StudioWorksPage() {
@@ -164,6 +164,8 @@ function WorkForm({
   const [after, setAfter] = React.useState<string | null>(null)
   const [clip, setClip] = React.useState<{ video: string; poster: string } | null>(null)
   const [busy, setBusy] = React.useState(false)
+  // Share of the clip uploaded so far; null when no clip is going up.
+  const [clipProgress, setClipProgress] = React.useState<number | null>(null)
 
   const guard = async (run: () => Promise<void>) => {
     setBusy(true)
@@ -190,7 +192,13 @@ function WorkForm({
 
   const pickClip = (files: FileList | null) =>
     guard(async () => {
-      if (files?.[0]) setClip(await uploadVideo(files[0]))
+      if (!files?.[0]) return
+      setClipProgress(0)
+      try {
+        setClip(await uploadVideo(files[0], setClipProgress))
+      } finally {
+        setClipProgress(null)
+      }
     })
 
   const media =
@@ -260,8 +268,16 @@ function WorkForm({
 
       {kind === "clip" && (
         <div>
-          <p className="mb-2 text-[13px] font-semibold">Clip dọc, tối đa {VIDEO_MAX_SECONDS} giây, dưới 50 MB</p>
-          {clip ? (
+          <p className="mb-2 text-[13px] font-semibold">Clip dọc, tối đa {VIDEO_MAX_SECONDS} giây, dưới {VIDEO_MAX_MB} MB (quay 1080p, không cần 4K)</p>
+          {clipProgress !== null ? (
+            <div role="status" className="rounded-[var(--radius-md)] bg-subtle px-4 py-5">
+              <p className="text-[14px] font-semibold">Đang tải clip lên… {Math.round(clipProgress * 100)}%</p>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-line">
+                <div className="h-full bg-accent transition-[width]" style={{ width: `${Math.round(clipProgress * 100)}%` }} />
+              </div>
+              <p className="mt-2 text-[13px] text-ink-soft">Giữ trang này mở. Mạng chập chờn thì clip tự tải tiếp, không phải chọn lại.</p>
+            </div>
+          ) : clip ? (
             <div className="flex items-start gap-3">
               <video src={clip.video} poster={clip.poster} controls playsInline muted className="aspect-[9/16] w-36 rounded-[var(--radius-md)] bg-subtle object-cover" />
               <Button variant="ghost" size="sm" onClick={() => setClip(null)}>
