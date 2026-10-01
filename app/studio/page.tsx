@@ -11,6 +11,7 @@ import { PublishProgress } from "@/components/publish-progress"
 import { RequestCard } from "@/components/request-card"
 import { RequireSession } from "@/components/require-session"
 import { buttonClass, Card, LogoMark, Toggle } from "@/components/ui"
+import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { getTemplate } from "@/lib/catalog"
 import { POLICY } from "@/lib/pricing"
 import { actions, useAct } from "@/lib/client-actions"
@@ -274,7 +275,7 @@ function SectionTitle({ title, href, count }: { title: string; href: string; cou
 }
 
 function VerifyNudge({ pro }: { pro: Pro }) {
-  if (pro.identity === "verified") return null
+  if (!IDENTITY_VERIFICATION_OPEN || pro.identity === "verified") return null
   return (
     <Link href="/studio/verify" className="block">
       <Card className="flex items-center gap-3 p-4 transition-colors hover:border-ink/30">

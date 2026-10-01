@@ -4,6 +4,7 @@ import * as React from "react"
 import { Camera, CheckCircle2, Clock, IdCard, Loader2, RotateCcw, ScanFace, ShieldCheck, TrendingUp, UserRound, X } from "lucide-react"
 import { RequireSession } from "@/components/require-session"
 import { BottomBar, Button, ButtonLink, Card, PageHeader } from "@/components/ui"
+import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { type IdentityImage, type IdentityImageKind, checkImage, loadImage, verifyIdentity } from "@/lib/identity-check"
 import { proView, useApp, useRefresh } from "@/lib/store"
 import { cn } from "@/lib/utils"
@@ -12,9 +13,25 @@ export default function VerifyPage() {
   return (
     <div className="mx-auto max-w-2xl md:pt-4">
       <PageHeader title="Xác minh danh tính" back="/studio/profile" />
-      <RequireSession role="pro">
-        <VerifyFlow />
-      </RequireSession>
+      <RequireSession role="pro">{IDENTITY_VERIFICATION_OPEN ? <VerifyFlow /> : <VerifyLater />}</RequireSession>
+    </div>
+  )
+}
+
+/** While verification is closed (lib/launch.ts): say so before anyone photographs an ID card. */
+function VerifyLater() {
+  return (
+    <div className="flex min-h-[50dvh] flex-col items-center justify-center text-center">
+      <span className="flex size-16 items-center justify-center rounded-full bg-subtle text-accent">
+        <ShieldCheck className="size-8" />
+      </span>
+      <p className="mt-4 font-semibold">Xác minh danh tính sẽ mở sau</p>
+      <p className="mt-1 max-w-sm text-sm text-ink-soft">
+        Bạn chưa cần làm gì. Khi mở, 360dep sẽ báo trong ứng dụng; hồ sơ, dịch vụ và tác phẩm của bạn vẫn hiện với khách bình thường.
+      </p>
+      <ButtonLink href="/studio" className="mt-6">
+        Về Studio
+      </ButtonLink>
     </div>
   )
 }

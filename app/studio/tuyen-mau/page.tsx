@@ -6,6 +6,7 @@ import { Check, MessageCircle, X } from "lucide-react"
 import { compensationLabel } from "@/components/casting"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, Button, Field, PageHeader, inputClass } from "@/components/ui"
+import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { CATEGORIES, categoryLabel } from "@/lib/catalog"
 import { actions, useAct } from "@/lib/client-actions"
 import { districtsOf } from "@/lib/geo"
@@ -181,7 +182,13 @@ function CastingForm({ onDone }: { onDone: () => void }) {
             </button>
           ))}
         </div>
-        {!verified && <p className="mt-2 text-[13px] text-ink-soft">Đăng tin tuyển mẫu cần xác minh danh tính; tin có thù lao cần thêm đủ 18 tuổi.</p>}
+        {!verified && (
+          <p className="mt-2 text-[13px] text-ink-soft">
+            {IDENTITY_VERIFICATION_OPEN
+              ? "Đăng tin tuyển mẫu cần xác minh danh tính; tin có thù lao cần thêm đủ 18 tuổi."
+              : "Đăng tin tuyển mẫu cần xác minh danh tính, sẽ mở sau."}
+          </p>
+        )}
       </fieldset>
 
       {compensation === "discount" && (

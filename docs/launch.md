@@ -20,6 +20,11 @@ không thay cho tư vấn của họ.
   dữ liệu ra nước ngoài (máy chủ Supabase/Vercel; ảnh CCCD gửi AI của Google để đối chiếu, không lưu).
 - [ ] **Kênh hỗ trợ**: điền Zalo và email hỗ trợ ở Admin › Cấu hình. Quy chế hứa xác nhận khiếu nại trong 24 giờ làm việc.
 - [ ] **Đối tác thật**: mời và duyệt đủ đối tác ở mỗi thành phố định mở, trước khi gỡ dữ liệu mẫu.
+- [ ] **Xác minh danh tính: mở sau**, khi đã có nhiều đối tác. Đang tắt bằng `IDENTITY_VERIFICATION_OPEN = false`
+  (`lib/launch.ts`): studio không đòi chụp CCCD, dịch vụ người mẫu và tin tuyển mẫu tạm khoá. Ngày mở: đặt
+  `IDENTITY_HASH_SALT` trên Vercel (chuỗi ngẫu nhiên, `openssl rand -hex 32`, không đổi về sau), đổi cờ thành `true`, deploy.
+- [ ] **Giới hạn tải lên của Supabase ≥ 200 MB** (Storage › Settings › Upload file size limit), để clip tác phẩm tới
+  200 MB lên được. Bucket `videos` đã cho 200 MB (migration `20261005100000_video_200mb`).
 - [ ] Tài khoản Apple Developer (Sign in with Apple, App Store); Sentry để theo dõi lỗi.
 
 ## 2. Ngày ra mắt (kỹ thuật)

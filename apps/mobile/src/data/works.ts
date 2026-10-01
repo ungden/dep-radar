@@ -1,6 +1,6 @@
 import * as Crypto from "expo-crypto"
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
-import { stripVideoLocation } from "@/shared"
+import { VIDEO_MAX_BYTES, VIDEO_MAX_MB, stripVideoLocation } from "@/shared"
 import { messageFor, supabase, type Result } from "./supabase"
 
 /**
@@ -36,14 +36,14 @@ export async function uploadPhoto(uid: string, jpegUri: string): Promise<string>
 }
 
 /**
- * Clips go to their own `videos` bucket (50 MB), with the place they were
+ * Clips go to their own `videos` bucket (200 MB, lib/video-meta.ts), with the place they were
  * filmed removed first: phones write GPS into MP4/MOV metadata, and the same
  * pure function the web uses (lib/video-meta.ts) neutralises those boxes in
  * place without re-encoding.
  */
 export async function uploadVideo(uid: string, uri: string): Promise<string> {
   const raw = await (await fetch(uri)).arrayBuffer()
-  if (raw.byteLength > 50 * 1024 * 1024) throw new Error("Clip quá 50 MB. Cắt ngắn lại nhé.")
+  if (raw.byteLength > VIDEO_MAX_BYTES) throw new Error(`Clip quá ${VIDEO_MAX_MB} MB. Quay lại ở 1080p (không dùng 4K) nhé.`)
   const { buffer } = stripVideoLocation(raw)
   const mov = uri.toLowerCase().endsWith(".mov")
   const path = `${uid}/${Crypto.randomUUID()}.${mov ? "mov" : "mp4"}`

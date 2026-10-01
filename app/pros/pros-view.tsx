@@ -8,6 +8,7 @@ import { ProCard, VerticalSwitch } from "@/components/beauty"
 import { CategoryTiles } from "@/components/category-icon"
 import { sortPros } from "@/components/trust"
 import { ButtonLink, Chip, EmptyState, PageSkeleton } from "@/components/ui"
+import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { CATEGORIES, isVertical, verticalOf } from "@/lib/catalog"
 import { actions } from "@/lib/client-actions"
 import type { VerticalFilter } from "@/lib/feed"
@@ -119,9 +120,11 @@ function ProsView() {
             <option value="jobs">Nhiều lịch nhất</option>
           </select>
         </label>
-        <Chip active={verifiedOnly} onClick={() => setVerifiedOnly((v) => !v)}>
-          Đã xác minh
-        </Chip>
+        {IDENTITY_VERIFICATION_OPEN && (
+          <Chip active={verifiedOnly} onClick={() => setVerifiedOnly((v) => !v)}>
+            Đã xác minh
+          </Chip>
+        )}
         {session && (
           <Chip active={onlyFollowing} onClick={() => setOnlyFollowing((v) => !v)}>
             Đang theo dõi

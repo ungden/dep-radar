@@ -11,6 +11,7 @@ import { ServiceCard } from "@/components/service-card"
 import { Sheet } from "@/components/sheet"
 import { sortPros } from "@/components/trust"
 import { Button, ButtonLink, Chip, PageSkeleton, Tabs, Toggle } from "@/components/ui"
+import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { CATEGORIES, categoryLabel, getTemplate, getVertical, isVertical, verticalOf } from "@/lib/catalog"
 import { interestsFrom, rankFeed, type VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
@@ -68,7 +69,7 @@ function SearchView() {
   const cityParam = params.get("city")
   const city = cityParam === "all" ? "" : (cityParam ?? state.city ?? "")
   const maxPrice = Number(params.get("price") ?? 0)
-  const verifiedOnly = params.get("verified") === "1"
+  const verifiedOnly = IDENTITY_VERIFICATION_OPEN && params.get("verified") === "1"
   const openOnly = params.get("open") === "1"
   const comesToYou = params.get("home") === "1"
   const hasAddress = Boolean(state.customerAddress)
@@ -392,7 +393,9 @@ function Filters({
 
       <FilterGroup title="Chỉ hiện">
         <div className="divide-y divide-line">
-          <ToggleRow label="Đã xác minh danh tính" checked={verifiedOnly} onChange={(v) => onChange({ verified: v ? "1" : null })} />
+          {IDENTITY_VERIFICATION_OPEN && (
+            <ToggleRow label="Đã xác minh danh tính" checked={verifiedOnly} onChange={(v) => onChange({ verified: v ? "1" : null })} />
+          )}
           {/* "Đang nhận lịch", not "rảnh hôm nay": it is a fact on the profile;
               free time depends on the service and the day. */}
           <ToggleRow label="Đang nhận lịch" checked={openOnly} onChange={(v) => onChange({ open: v ? "1" : null })} />

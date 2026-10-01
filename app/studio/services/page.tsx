@@ -6,6 +6,7 @@ import { Pencil, Plus, Store, Trash2, X } from "lucide-react"
 import { PriceInput } from "@/components/price-input"
 import { RequireSession } from "@/components/require-session"
 import { Button, ButtonLink, Card, PageHeader, Toggle } from "@/components/ui"
+import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { categoryLabel, getTemplate, isPriceAllowed, templatesByCategory } from "@/lib/catalog"
 import { POLICY, payoutFor } from "@/lib/pricing"
 import { actions, useAct } from "@/lib/client-actions"
@@ -126,7 +127,11 @@ function ServicesManager() {
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block font-medium">{t.name}</span>
-                      {locked && <span className="block text-[13px] font-medium text-warning">Cần xác minh danh tính trước</span>}
+                      {locked && (
+                        <span className="block text-[13px] font-medium text-warning">
+                          {IDENTITY_VERIFICATION_OPEN ? "Cần xác minh danh tính trước" : "Sắp mở, cùng lúc với xác minh danh tính"}
+                        </span>
+                      )}
                       <span className="block text-xs text-muted">
                         {t.variants.length} gói · khung {formatPrice(Math.min(...t.variants.map((v) => v.minPrice)))} – {formatPrice(Math.max(...t.variants.map((v) => v.maxPrice)))}
                       </span>
@@ -137,7 +142,7 @@ function ServicesManager() {
               )
             })}
           </ul>
-          {pro.identity !== "verified" && (
+          {IDENTITY_VERIFICATION_OPEN && pro.identity !== "verified" && (
             <p className="mt-4 text-xs text-muted">
               Mẹo:{" "}
               <Link href="/studio/verify" className="text-accent underline underline-offset-2">

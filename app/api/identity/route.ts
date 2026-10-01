@@ -2,6 +2,7 @@ import { createHash } from "node:crypto"
 import { NextResponse } from "next/server"
 import { generateJson, modelName, type AiSchema } from "@/lib/ai/llm"
 import { ageFromCard } from "@/lib/identity-age"
+import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { backendEnabled } from "@/lib/supabase/env"
 import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
 import { todayISO } from "@/lib/utils"
@@ -284,6 +285,9 @@ async function record(input: {
 }
 
 export async function POST(request: Request) {
+  if (!IDENTITY_VERIFICATION_OPEN) {
+    return NextResponse.json({ error: "Xác minh danh tính sẽ mở sau, hiện chưa nhận hồ sơ." }, { status: 503 })
+  }
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     return NextResponse.json({ error: "Dịch vụ xác minh chưa được cấu hình (thiếu GEMINI_API_KEY)." }, { status: 503 })

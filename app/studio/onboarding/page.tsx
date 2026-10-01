@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { Button, Field, PageHeader, inputClass } from "@/components/ui"
+import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { CATEGORIES, VERTICALS } from "@/lib/catalog"
 import { saveWorkingHours } from "@/lib/api/actions"
 import { listWorkingHours } from "@/lib/api/me"
@@ -81,20 +82,26 @@ export default function OnboardingPage() {
               <div key={v.id}>
                 <p className="mb-1.5 text-[13px] text-muted">{v.label}</p>
                 <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.filter((c) => c.vertical === v.id).map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      aria-pressed={categories.includes(c.id)}
-                      onClick={() => toggle(c.id)}
-                      className={cn(
-                        "h-10 rounded-full border px-4 text-[14px] font-medium transition-colors",
-                        categories.includes(c.id) ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
-                      )}
-                    >
-                      {c.label}
-                    </button>
-                  ))}
+                  {CATEGORIES.filter((c) => c.vertical === v.id).map((c) => {
+                    // Model services need a verified identity, which opens later (lib/launch.ts).
+                    const later = !IDENTITY_VERIFICATION_OPEN && c.vertical === "model"
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        disabled={later}
+                        aria-pressed={categories.includes(c.id)}
+                        onClick={() => toggle(c.id)}
+                        className={cn(
+                          "h-10 rounded-full border px-4 text-[14px] font-medium transition-colors disabled:opacity-50",
+                          categories.includes(c.id) ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
+                        )}
+                      >
+                        {c.label}
+                        {later && " · sắp mở"}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             ))}
