@@ -1422,7 +1422,8 @@ where v.template_id = p.template_id and v.id = p.variant_id
   and not p.price = any(v.price_tiers);
 
 -- 3. A request is posted at one of the levels ---------------------------------
--- Same as 20260926100000, but the price must be one of the option's levels.
+-- Same as production (20260926100000, money written with vnd() since
+-- 20260928100000), but the price must be one of the option's levels.
 -- Requests already posted keep their price (take_job still checks the band).
 
 create or replace function public.post_job(
@@ -1463,7 +1464,7 @@ begin
   select p.id, 'job_new',
          'Việc mới: ' || coalesce((select name from public.service_templates where id = p_template), 'dịch vụ'),
          addr.district || ' · ' || to_char(p_starts_at at time zone public.app_timezone(), 'HH24:MI DD/MM')
-           || ' · ' || to_char(v_price * p_quantity, 'FM999G999G999') || 'đ. Ai nhận trước được việc.',
+           || ' · ' || public.vnd(v_price * p_quantity) || 'đ. Ai nhận trước được việc.',
          '/studio/jobs'
   from public.pros p
   where p.published and p.suspended_at is null and p.accepting_jobs and p.city = addr.city
