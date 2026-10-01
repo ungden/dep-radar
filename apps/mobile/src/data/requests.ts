@@ -30,11 +30,9 @@ export interface MyRequest {
   bookingId: string | null
 }
 
-/** "Trả thêm để có người nhận nhanh hơn": steps per person above the suggested price. */
-export const PRICE_STEP = 20_000
-
-/** Suggested price plus `steps` extra steps, never above the catalogue's ceiling. */
-export const requestPrice = (variant: ServiceVariant, steps: number) => Math.min(variant.suggestedPrice + Math.max(0, steps) * PRICE_STEP, variant.maxPrice)
+/** The price a request is posted at: the chosen level, or "Tiêu chuẩn" until one is chosen. */
+export const requestPrice = (variant: ServiceVariant, tier: number | null) =>
+  tier !== null && variant.tiers.includes(tier) ? tier : variant.suggestedPrice
 
 export async function postJob(input: {
   templateId: string

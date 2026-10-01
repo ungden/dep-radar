@@ -66,7 +66,7 @@ type Step = { key: "services" | "hours" | "work"; text: string; link: string }
 
 export function missingSteps(f: Pick<FollowUpFacts, "hasService" | "hasHours" | "hasWork">): Step[] {
   const steps: Step[] = []
-  if (!f.hasService) steps.push({ key: "services", text: "chọn dịch vụ và đặt giá", link: "/studio/services" })
+  if (!f.hasService) steps.push({ key: "services", text: "chọn dịch vụ và mức giá", link: "/studio/services" })
   if (!f.hasHours) steps.push({ key: "hours", text: "lưu giờ làm việc", link: "/studio/profile/edit#gio-lam" })
   if (!f.hasWork) steps.push({ key: "work", text: "đăng một ảnh việc bạn đã làm", link: "/studio/works" })
   return steps

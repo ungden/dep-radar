@@ -186,10 +186,11 @@ export default function PolicyPage() {
           <ReferralPolicy />
         </Section>
 
-        <Section title="13. Danh mục & khung giá chuẩn">
+        <Section title="13. Danh mục & mức giá chuẩn">
           <p>
-            Tên dịch vụ, nội dung bao gồm, các gói (thời lượng/mức độ) và khung giá do 360dep quy định để khách so sánh công bằng và tránh báo giá tuỳ tiện. Người làm chỉ chọn
-            dịch vụ trong danh mục, chọn gói mình làm và đặt giá trong khung (làm tròn 5.000đ).
+            Tên dịch vụ, nội dung bao gồm, các gói (thời lượng/mức độ) và mức giá do 360dep quy định để khách so sánh công bằng và tránh báo giá tuỳ tiện. Mỗi gói có 2–3 mức
+            giá (Phổ thông, Tiêu chuẩn, Cao cấp) khảo sát theo giá thị trường tại Hà Nội và TP.HCM. Người làm chỉ chọn dịch vụ trong danh mục, chọn gói mình làm và chọn một mức
+            giá có sẵn; không tự nhập giá.
           </p>
           <p className="mt-2">
             Hiện có {CATALOG.length} dịch vụ thuộc {CATEGORIES.length} danh mục: {CATEGORIES.map((c) => c.label).join(", ")}.

@@ -1573,6 +1573,7 @@ export type Database = {
           max_quantity: number
           min_price: number
           per_person: boolean
+          price_tiers: number[]
           sort_order: number
           suggested_price: number
           template_id: string
@@ -1585,6 +1586,7 @@ export type Database = {
           max_quantity?: number
           min_price: number
           per_person?: boolean
+          price_tiers: number[]
           sort_order?: number
           suggested_price: number
           template_id: string
@@ -1597,6 +1599,7 @@ export type Database = {
           max_quantity?: number
           min_price?: number
           per_person?: boolean
+          price_tiers?: number[]
           sort_order?: number
           suggested_price?: number
           template_id?: string

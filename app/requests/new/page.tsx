@@ -8,7 +8,7 @@ import { CATEGORY_ICON } from "@/components/beauty"
 import { RequireSession } from "@/components/require-session"
 import { BottomBar, Button, Field, PageHeader, PageSkeleton, inputClass } from "@/components/ui"
 import { AddressPicker, defaultAddressId } from "@/components/address-picker"
-import { CATEGORIES, getTemplate, templatesByCategory } from "@/lib/catalog"
+import { CATEGORIES, getTemplate, templatesByCategory, tierLabels } from "@/lib/catalog"
 import { POLICY } from "@/lib/pricing"
 import { actions } from "@/lib/client-actions"
 import { useApp } from "@/lib/store"
@@ -29,9 +29,6 @@ export default function NewRequestPage() {
   )
 }
 
-/** "Trả thêm" goes up in these steps, per person, as far as the catalogue's top price. */
-const EXTRA_STEP = 20000
-
 /** Half-hour starts, the same step the freelancers' own calendars use. */
 const TIME_OPTIONS = Array.from({ length: 28 }, (_, i) => {
   const minutes = 8 * 60 + i * 30
@@ -50,8 +47,8 @@ function NewRequestForm() {
   const [templateId, setTemplateId] = React.useState(start.id)
   const [variantId, setVariantId] = React.useState(start.variants[0].id)
   const [quantity, setQuantity] = React.useState(1)
-  // Per person, on top of the catalogue price: 0 posts at the catalogue price.
-  const [extra, setExtra] = React.useState(0)
+  // One of the option's price levels, per person; null starts on "Tiêu chuẩn".
+  const [tier, setTier] = React.useState<number | null>(null)
   const [description, setDescription] = React.useState("")
   const [date, setDate] = React.useState(addDays(todayISO(), 2))
   const [time, setTime] = React.useState("16:00")
@@ -67,18 +64,14 @@ function NewRequestForm() {
   const variant = tpl.variants.find((v) => v.id === variantId) ?? tpl.variants[0]
   const atHome = atHomePref && !tpl.studioOnly
   const heads = variant.perPerson ? Math.min(Math.max(quantity, 1), variant.maxQuantity ?? 1) : 1
-  // post_job fixes the price per person: the catalogue's suggested price, or
-  // more if the customer offers it, never above the catalogue's top price.
-  const extras = Array.from(
-    { length: Math.floor((variant.maxPrice - variant.suggestedPrice) / EXTRA_STEP) + 1 },
-    (_, i) => i * EXTRA_STEP,
-  )
-  const unit = variant.suggestedPrice + (extras.includes(extra) ? extra : 0)
+  // post_job fixes the price per person at one of the catalogue's levels.
+  const unit = tier !== null && variant.tiers.includes(tier) ? tier : variant.suggestedPrice
+  const labels = tierLabels(variant)
 
   const pickVariant = (id: string) => {
     setVariantId(id)
     setQuantity(1)
-    setExtra(0)
+    setTier(null)
   }
 
   const pickCategory = (c: CategoryId) => {
@@ -108,8 +101,7 @@ function NewRequestForm() {
           atHome,
           paymentMethod,
           quantity: heads,
-          // Left out at the catalogue price.
-          price: unit > variant.suggestedPrice ? unit : null,
+          price: unit,
         })
         setBusy(false)
         if ("error" in result) return setError(result.error)
@@ -182,7 +174,7 @@ function NewRequestForm() {
                 {v.label} · {formatDuration(v.durationMin)}
               </span>
               <span className="block text-xs">
-                Giá {formatPrice(v.suggestedPrice)}
+                Từ {formatPrice(v.minPrice)}
                 {v.perPerson ? " / người" : ""}
               </span>
             </button>
@@ -221,19 +213,28 @@ function NewRequestForm() {
           {heads > 1 && <span className="text-[13px] text-muted"> ({formatPrice(unit)} × {heads} người)</span>}
         </p>
         <p className="mt-0.5 text-[13px] text-ink-soft">Người làm nhận trước sẽ làm với giá này.</p>
-        {extras.length > 1 && (
-          <div className="mt-3">
-            <Field label={`Trả thêm để có người nhận nhanh hơn (tuỳ chọn${heads > 1 ? ", mỗi người" : ""})`}>
-              <select className={inputClass} value={unit - variant.suggestedPrice} onChange={(e) => setExtra(Number(e.target.value))}>
-                {extras.map((x) => (
-                  <option key={x} value={x}>
-                    {x === 0 ? "Không trả thêm" : `+${formatPrice(x)} · giá ${formatPrice(variant.suggestedPrice + x)}${heads > 1 ? "/người" : ""}`}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          </div>
-        )}
+        <div role="radiogroup" aria-label="Mức giá" className={cn("mt-3 grid gap-2", variant.tiers.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
+          {variant.tiers.map((t, i) => (
+            <button
+              key={t}
+              type="button"
+              role="radio"
+              aria-checked={unit === t}
+              onClick={() => setTier(t)}
+              className={cn(
+                "rounded-xl border px-2 py-2.5 text-center transition-colors",
+                unit === t ? "border-accent bg-accent text-white" : "border-line bg-canvas hover:border-ink/30",
+              )}
+            >
+              <span className={cn("block text-[12px]", unit === t ? "text-white/85" : "text-muted")}>{labels[i]}</span>
+              <span className="block text-[14px] font-semibold">
+                {formatPrice(t)}
+                {heads > 1 ? "/người" : ""}
+              </span>
+            </button>
+          ))}
+        </div>
+        <p className="mt-2 text-[12px] text-muted">Mức cao hơn thường có người nhận nhanh hơn và tay nghề, vật tư tốt hơn.</p>
       </section>
 
       <Field label="Mô tả thêm (tuỳ chọn)" hint="Tình trạng da/móng/tóc, phong cách mong muốn, số người…">

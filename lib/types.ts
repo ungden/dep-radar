@@ -45,6 +45,12 @@ export interface ServiceVariant {
   /** e.g. "60 phút", "Đính đá/charm" */
   label: string
   durationMin: number
+  /**
+   * The 2–3 prices a partner may list this option at, ascending (Phổ thông /
+   * Tiêu chuẩn / Cao cấp). Partners pick one; nobody types a price.
+   */
+  tiers: number[]
+  /** Lowest and highest tier, and the "Tiêu chuẩn" one: derived from tiers. */
   minPrice: number
   maxPrice: number
   suggestedPrice: number

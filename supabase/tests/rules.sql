@@ -62,11 +62,18 @@ begin
   assert public.travel_distance_km(null, null, 21.0, 105.0) is null, 'unknown point is unknown';
 
   ---------------------------------------------------------------------------
-  raise notice 'a listing may not leave the catalogue band';
+  raise notice 'a listing is one of the catalogue levels, nothing else';
   begin
     insert into public.pro_service_prices (pro_id, template_id, variant_id, price)
     values (linh, 'nail-design', 'simple', 5000);
-    assert false, 'a price below the band was accepted';
+    assert false, 'a price below the levels was accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    -- nail-design/simple is 200 / 260 / 350: 265 sits between two levels.
+    insert into public.pro_service_prices (pro_id, template_id, variant_id, price)
+    values (linh, 'nail-design', 'simple', 265000);
+    assert false, 'a price between two levels was accepted';
   exception when check_violation then null;
   end;
 
@@ -525,7 +532,7 @@ begin
   update public.pros set adult = true, birth_year = 1998 where id = thu;
   perform set_config('request.jwt.claim.sub', thu::text, true);
   insert into public.pro_services (pro_id, template_id) values (thu, 'model-hand');
-  insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values (thu, 'model-hand', '60m', 350000);
+  insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values (thu, 'model-hand', '60m', 400000);
   at_ := ((monday + 2) + time '10:00') at time zone public.app_timezone();
   msg := public.availability_problem(thu, 'model-hand', '60m', 1, at_, true, 21.0181, 105.829);
   assert msg is null, format('a verified model is bookable: %s', msg);
@@ -1786,6 +1793,11 @@ begin
   begin
     perform public.post_job('nail-design', 'simple', ((monday + 5) + time '11:00') at time zone tz, true, friend_addr, 1, '', 'cash', 1000);
     assert false, 'a request below the catalogue price';
+  exception when check_violation then null;
+  end;
+  begin
+    perform public.post_job('nail-design', 'simple', ((monday + 5) + time '11:00') at time zone tz, true, friend_addr, 1, '', 'cash', 300000);
+    assert false, 'a request between two price levels';
   exception when check_violation then null;
   end;
   v := public.post_job('nail-design', 'simple', ((monday + 5) + time '11:00') at time zone tz, true, friend_addr, 1, 'Làm móng đi tiệc');

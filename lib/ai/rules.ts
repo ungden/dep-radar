@@ -35,7 +35,7 @@ export interface ProfileFacts {
 
 export const RULE_REASONS = {
   modelIdentity: "Xác minh danh tính trước khi nhận làm mẫu (Hồ sơ → Xác minh danh tính).",
-  noService: "Bật ít nhất một dịch vụ và đặt giá (Dịch vụ & bảng giá).",
+  noService: "Bật ít nhất một dịch vụ và chọn mức giá (Dịch vụ & bảng giá).",
   noHours: "Lưu giờ làm việc trong tuần (Hồ sơ → Giờ làm việc).",
   noWork: "Đăng ít nhất một ảnh việc bạn đã làm (Tác phẩm).",
   noName: "Điền tên hiển thị để khách biết gọi bạn là gì.",

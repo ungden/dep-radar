@@ -38,7 +38,7 @@ describe("trade words", () => {
   })
 
   it("gives the catalogue price band", () => {
-    expect(priceBand(getTemplate("photo-phone")!)).toEqual([120_000, 900_000])
+    expect(priceBand(getTemplate("photo-phone")!)).toEqual([120_000, 750_000])
   })
 })
 

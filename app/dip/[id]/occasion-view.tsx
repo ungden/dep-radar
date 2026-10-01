@@ -195,7 +195,7 @@ function Step({ index, template: t, state, city }: { index: number; template: Se
           <p className="mt-1 text-[15px] text-ink-soft">{t.description}</p>
           {band && (
             <p className="mt-3 text-[15px]">
-              <span className="text-muted">Khung giá </span>
+              <span className="text-muted">Giá </span>
               <span className="font-bold">
                 {formatPrice(band[0])} – {formatPrice(band[1])}
               </span>

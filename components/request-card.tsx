@@ -54,7 +54,7 @@ export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: 
                 </span>
               ) : (
                 <span className="text-ink-soft">
-                  Khung giá <b className="text-ink">{formatPrice(variant.minPrice)} – {formatPrice(variant.maxPrice)}</b>
+                  Giá <b className="text-ink">{formatPrice(variant.minPrice)} – {formatPrice(variant.maxPrice)}</b>
                   {job.quantity > 1 && " / người"}
                 </span>
               )}
