@@ -11,7 +11,7 @@ Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 
 | Chủ đề | Quy định | Code |
 | --- | --- | --- |
-| Danh mục dịch vụ | 360dep quy định tên, nội dung, gói (thời lượng/mức độ) và khung giá. Freelancer chỉ chọn dịch vụ trong danh mục và đặt giá trong khung. | `lib/catalog.ts` |
+| Danh mục dịch vụ | 360dep quy định tên, nội dung, gói (thời lượng/mức độ) và 2–3 mức giá mỗi gói (Phổ thông / Tiêu chuẩn / Cao cấp, khảo sát giá thị trường HN & HCM). Freelancer chỉ chọn dịch vụ trong danh mục và chọn một mức giá, không tự nhập giá. | `lib/catalog.ts` |
 | Phí khách hàng | 0đ phí nền tảng, không đặt cọc. Khách trả giá dịch vụ + phí di chuyển/đặt gấp nếu có; thanh toán online toàn bộ hoặc trả trực tiếp sau khi làm. | `lib/pricing.ts` |
 | Xác nhận lịch | Freelancer gọi điện cho khách xác nhận rồi mới nhận job, trong 2 giờ (đặt từ 21:00 đến 08:00 thì tới 10:00 sáng, nhưng không muộn hơn 1 giờ trước giờ hẹn); quá hạn tự huỷ. | `app/bookings/[id]` |
 | Hoa hồng | Một mức 15% trên giá dịch vụ, thu từ freelancer. Không tính trên phí di chuyển/gấp. Job online: trừ trước khi chuyển tiền; job tiền mặt: ghi công nợ, đối soát hằng tuần. | `lib/pricing.ts` |
@@ -57,7 +57,7 @@ npm run dev
 
 ## Cơ sở dữ liệu
 
-Luật chơi (khung giá, phí, trạng thái lịch hẹn) sống ở database, không ở trình duyệt.
+Luật chơi (mức giá, phí, trạng thái lịch hẹn) sống ở database, không ở trình duyệt.
 
 ```bash
 supabase start          # Postgres + Auth + REST cục bộ

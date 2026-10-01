@@ -1,4 +1,5 @@
 import type { Pro, ProService, RatingSummary, Review, Work } from "./types"
+import { getVariant, nearestTier } from "./catalog"
 
 export { CATEGORIES, categoryLabel } from "./catalog"
 export { CITIES } from "./geo"
@@ -212,11 +213,17 @@ export const PROS: (SeedPro & { rating: RatingSummary })[] = PRO_PROFILES.map((p
   rating: ratingFromReviews(p.id),
 }))
 
+/** A demo listing; each price is moved to the catalogue's nearest level, as a real partner would pick. */
 const ps = (proId: string, templateId: string, prices: Record<string, number>): ProService => ({
   id: `${proId}:${templateId}`,
   proId,
   templateId,
-  prices: Object.fromEntries(Object.entries(prices).map(([k, v]) => [k, v * 1000])),
+  prices: Object.fromEntries(
+    Object.entries(prices).map(([variantId, price]) => {
+      const variant = getVariant(templateId, variantId)
+      return [variantId, variant ? nearestTier(variant, price * 1000) : price * 1000]
+    }),
+  ),
   active: true,
 })
 

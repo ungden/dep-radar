@@ -3,11 +3,10 @@
 import * as React from "react"
 import Link from "next/link"
 import { Pencil, Plus, Store, Trash2, X } from "lucide-react"
-import { PriceInput } from "@/components/price-input"
 import { RequireSession } from "@/components/require-session"
 import { Button, ButtonLink, Card, PageHeader, Toggle } from "@/components/ui"
 import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
-import { categoryLabel, getTemplate, isPriceAllowed, templatesByCategory } from "@/lib/catalog"
+import { categoryLabel, getTemplate, isPriceAllowed, nearestTier, templatesByCategory, tierLabels } from "@/lib/catalog"
 import { POLICY, payoutFor } from "@/lib/pricing"
 import { actions, useAct } from "@/lib/client-actions"
 import { proView, servicesOf, useApp } from "@/lib/store"
@@ -48,8 +47,8 @@ function ServicesManager() {
       />
       <div className="mb-4 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px] text-ink-soft">
         <p>
-          Bạn chỉ chọn dịch vụ từ danh mục chuẩn của 360dep và đặt giá trong khung cho phép, để khách so sánh công bằng. Giá đã gồm vật tư, không thu thêm phụ phí ngoài
-          phí di chuyển / đặt gấp do hệ thống tính.
+          Bạn chọn dịch vụ từ danh mục chuẩn của 360dep, mỗi gói chọn 1 trong 2–3 mức giá có sẵn (theo giá thị trường), để khách so sánh công bằng. Giá đã gồm vật tư, không thu
+          thêm phụ phí ngoài phí di chuyển / đặt gấp do hệ thống tính.
         </p>
         <p className="mt-1">
           Hoa hồng 360dep: <b>{Math.round(rate * 100)}%</b> trên giá dịch vụ.{" "}
@@ -133,7 +132,7 @@ function ServicesManager() {
                         </span>
                       )}
                       <span className="block text-xs text-muted">
-                        {t.variants.length} gói · khung {formatPrice(Math.min(...t.variants.map((v) => v.minPrice)))} – {formatPrice(Math.max(...t.variants.map((v) => v.maxPrice)))}
+                        {t.variants.length} gói · giá từ {formatPrice(Math.min(...t.variants.map((v) => v.minPrice)))} – {formatPrice(Math.max(...t.variants.map((v) => v.maxPrice)))}
                       </span>
                     </span>
                     {t.studioOnly ? <Store className="size-4 text-muted" /> : <Plus className="size-4 text-ink" />}
@@ -164,8 +163,14 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
   const tpl = getTemplate(templateId) as ServiceTemplate
   const existing = servicesOf(state, proId, true).find((x) => x.templateId === templateId)
   const rate = POLICY.commissionRate
+  // A price listed before the levels existed shows as the level closest to it.
   const [prices, setPrices] = React.useState<Record<string, number | undefined>>(() =>
-    Object.fromEntries(tpl.variants.map((v) => [v.id, existing ? existing.prices[v.id] : v.suggestedPrice])),
+    Object.fromEntries(
+      tpl.variants.map((v) => {
+        const listed = existing?.prices[v.id]
+        return [v.id, existing ? (listed === undefined ? undefined : nearestTier(v, listed)) : v.suggestedPrice]
+      }),
+    ),
   )
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
@@ -174,7 +179,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
     const chosen = Object.fromEntries(Object.entries(prices).filter(([, p]) => p !== undefined)) as Record<string, number>
     if (!Object.keys(chosen).length) return setError("Chọn ít nhất một gói.")
     const bad = tpl.variants.find((v) => chosen[v.id] !== undefined && !isPriceAllowed(v, chosen[v.id]))
-    if (bad) return setError(`Giá gói ${bad.label} cần từ ${formatPrice(bad.minPrice)} đến ${formatPrice(bad.maxPrice)}, chẵn 5.000đ.`)
+    if (bad) return setError(`Chọn một mức giá có sẵn cho gói ${bad.label}.`)
     setBusy(true)
     const problem = await act(() => actions.saveProService(templateId, chosen, existing?.active ?? true), "Đã lưu bảng giá")
     setBusy(false)
@@ -191,6 +196,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
         {tpl.variants.map((v) => {
           const price = prices[v.id]
           const on = price !== undefined
+          const labels = tierLabels(v)
           return (
             <li key={v.id} className={cn("rounded-2xl border p-3.5", on ? "border-accent/60 bg-surface" : "border-line bg-canvas")}>
               <label className="flex items-center gap-2">
@@ -206,49 +212,35 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
               </label>
               {on && (
                 <>
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="text-[13px] text-muted">Giá của bạn</span>
-                    <PriceInput
-                      value={price}
-                      min={v.minPrice}
-                      max={v.maxPrice}
-                      label={`Nhập giá ${v.label}`}
-                      onChange={(value) => setPrices((x) => ({ ...x, [v.id]: value }))}
-                    />
+                  <div role="radiogroup" aria-label={`Mức giá ${v.label}`} className={cn("mt-3 grid gap-2", v.tiers.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
+                    {v.tiers.map((tier, i) => (
+                      <button
+                        key={tier}
+                        type="button"
+                        role="radio"
+                        aria-checked={price === tier}
+                        onClick={() => setPrices((x) => ({ ...x, [v.id]: tier }))}
+                        className={cn(
+                          "rounded-xl border px-2 py-2.5 text-center transition-colors",
+                          price === tier ? "border-accent bg-accent text-white" : "border-line bg-canvas hover:border-ink/30",
+                        )}
+                      >
+                        <span className={cn("block text-[12px]", price === tier ? "text-white/85" : "text-muted")}>{labels[i]}</span>
+                        <span className="block text-[14px] font-semibold">{formatPrice(tier)}</span>
+                      </button>
+                    ))}
                   </div>
-                  <input
-                    type="range"
-                    aria-label={`Giá ${v.label}`}
-                    min={v.minPrice}
-                    max={v.maxPrice}
-                    step={5000}
-                    value={price}
-                    onChange={(e) => setPrices((x) => ({ ...x, [v.id]: Number(e.target.value) }))}
-                    className="mt-2 w-full accent-[var(--color-accent)]"
-                  />
-                  <div className="flex justify-between text-xs text-muted">
-                    <span>Tối thiểu {formatPrice(v.minPrice)}</span>
-                    <button type="button" className="text-accent" onClick={() => setPrices((x) => ({ ...x, [v.id]: v.suggestedPrice }))}>
-                      Dùng giá gợi ý {formatPrice(v.suggestedPrice)}
-                    </button>
-                    <span>Tối đa {formatPrice(v.maxPrice)}</span>
-                  </div>
-                  {isPriceAllowed(v, price) ? (
-                    <p className="mt-1 text-xs text-ink-soft">
-                      Bạn nhận {formatPrice(payoutFor(price, rate))}
-                      {v.perPerson ? " mỗi người" : ""} sau hoa hồng {Math.round(rate * 100)}%
-                    </p>
-                  ) : (
-                    <p className="mt-1 text-xs text-danger">
-                      Giá cần từ {formatPrice(v.minPrice)} đến {formatPrice(v.maxPrice)}, chẵn 5.000đ.
-                    </p>
-                  )}
+                  <p className="mt-2 text-xs text-ink-soft">
+                    Bạn nhận {formatPrice(payoutFor(price, rate))}
+                    {v.perPerson ? " mỗi người" : ""} sau hoa hồng {Math.round(rate * 100)}%
+                  </p>
                 </>
               )}
             </li>
           )
         })}
       </ul>
+      <p className="mt-3 text-xs text-muted">Chọn mức theo tay nghề và vật tư bạn dùng. Mức giá do 360dep khảo sát theo giá thị trường.</p>
 
       {error && <p className="mt-3 rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
 
@@ -271,7 +263,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
         </Button>
       </div>
       <ButtonLink href="/chinh-sach" variant="ghost" size="sm" className="mt-2 w-full">
-        Vì sao có khung giá?
+        Vì sao giá theo mức có sẵn?
       </ButtonLink>
     </Sheet>
   )

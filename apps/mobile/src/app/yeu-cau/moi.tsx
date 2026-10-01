@@ -2,10 +2,10 @@ import * as React from "react"
 import { Stack, router, useFocusEffect, useNavigation } from "expo-router"
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { CATEGORIES, POLICY, templatesByCategory, type CategoryId } from "@/shared"
+import { CATEGORIES, POLICY, templatesByCategory, tierLabels, type CategoryId } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
 import { addDays, formatDateLong, formatDuration, formatPrice, todayISO, weekdayShort } from "@/data/format"
-import { PRICE_STEP, postJob, requestPrice } from "@/data/requests"
+import { postJob, requestPrice } from "@/data/requests"
 import { CategoryTiles } from "@/components/category-icon"
 import { useApp } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
@@ -23,8 +23,8 @@ const TIMES = Array.from({ length: 28 }, (_, i) => {
 })
 
 /**
- * Đăng yêu cầu: what, when, where, at a fixed price (the catalogue's
- * suggested price, or more to be taken sooner). Every freelancer who can do
+ * Đăng yêu cầu: what, when, where, at one of the option's fixed price levels
+ * (a higher level is usually taken sooner). Every freelancer who can do
  * it is told and the first to take it gets it. The same post_job RPC as
  * app/requests/new on the web. Requests are for work at the customer's
  * place; studio work is booked directly.
@@ -38,8 +38,8 @@ export default function NewRequest() {
   const [templateId, setTemplateId] = React.useState(templatesByCategory("nail")[0].id)
   const [variantId, setVariantId] = React.useState(templatesByCategory("nail")[0].variants[0].id)
   const [quantity, setQuantity] = React.useState(1)
-  /** Extra PRICE_STEPs per person above the suggested price. */
-  const [extra, setExtra] = React.useState(0)
+  /** The chosen price level per person; null is "Tiêu chuẩn". */
+  const [tier, setTier] = React.useState<number | null>(null)
   const [description, setDescription] = React.useState("")
   const [date, setDate] = React.useState(addDays(todayISO(), 2))
   const [time, setTime] = React.useState("16:00")
@@ -88,8 +88,8 @@ export default function NewRequest() {
   const tpl = templates.find((t) => t.id === templateId) ?? templates[0]
   const variant = tpl.variants.find((v) => v.id === variantId) ?? tpl.variants[0]
   const heads = variant.perPerson ? Math.min(Math.max(quantity, 1), variant.maxQuantity ?? 1) : 1
-  const price = requestPrice(variant, extra)
-  const canRaise = price < variant.maxPrice
+  const price = requestPrice(variant, tier)
+  const labels = tierLabels(variant)
   const addresses = app.me.addresses
   const chosen = addresses.find((a) => a.id === addressId) ?? addresses.find((a) => a.isDefault) ?? addresses[0] ?? null
   const days = Array.from({ length: 21 }, (_, i) => addDays(todayISO(), i))
@@ -100,11 +100,11 @@ export default function NewRequest() {
     const first = templatesByCategory(c)[0]
     pickVariant(first.id, first.variants[0].id)
   }
-  // A different package has a different price band: start again from its suggested price.
+  // A different package has different levels: start again from its "Tiêu chuẩn" one.
   const pickVariant = (template: string, id: string) => {
     setTemplateId(template)
     setVariantId(id)
-    setExtra(0)
+    setTier(null)
     setQuantity(1)
   }
 
@@ -178,7 +178,7 @@ export default function NewRequest() {
                   {v.label} · {formatDuration(v.durationMin)}
                 </Txt>
                 <Txt v="meta" color={colors.inkSoft}>
-                  {formatPrice(v.suggestedPrice)}
+                  Từ {formatPrice(v.minPrice)}
                   {v.perPerson ? " mỗi người" : ""}
                 </Txt>
               </Press>
@@ -286,22 +286,31 @@ export default function NewRequest() {
                 {formatPrice(price * heads)}
               </Txt>
             </View>
-            {variant.maxPrice > variant.suggestedPrice ? (
-              <View style={{ gap: 6 }}>
-                <Txt w={600}>Trả thêm để có người nhận nhanh hơn</Txt>
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                  <Txt v="meta" color={colors.inkSoft} style={{ flex: 1 }}>
-                    {price > variant.suggestedPrice
-                      ? `+${formatPrice(price - variant.suggestedPrice)}${variant.perPerson ? " mỗi người" : ""} so với giá gợi ý`
-                      : `Không bắt buộc. Mỗi lần +${formatPrice(PRICE_STEP)}${variant.perPerson ? " mỗi người" : ""}, tối đa ${formatPrice(variant.maxPrice)}.`}
-                  </Txt>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                    <Button label="−" variant="secondary" size="sm" disabled={extra <= 0} onPress={() => setExtra((n) => Math.max(0, n - 1))} />
-                    <Button label="+" variant="secondary" size="sm" disabled={!canRaise} onPress={() => setExtra((n) => n + 1)} />
-                  </View>
-                </View>
-              </View>
-            ) : null}
+            <View style={{ flexDirection: "row", gap: 8 }} accessibilityRole="radiogroup">
+              {variant.tiers.map((t, i) => {
+                const selected = t === price
+                return (
+                  <Press
+                    key={t}
+                    haptic="select"
+                    onPress={() => setTier(t)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected }}
+                    style={{ flex: 1, alignItems: "center", paddingVertical: 10, borderRadius: radius.md, backgroundColor: selected ? colors.accent : colors.subtle, gap: 2 }}
+                  >
+                    <Txt v="meta" color={selected ? "#fff" : colors.muted}>
+                      {labels[i]}
+                    </Txt>
+                    <Txt w={700} tabular color={selected ? "#fff" : colors.ink}>
+                      {formatPrice(t)}
+                    </Txt>
+                  </Press>
+                )
+              })}
+            </View>
+            <Txt v="meta" color={colors.inkSoft}>
+              Mức cao hơn thường có người nhận nhanh hơn{variant.perPerson ? ". Giá tính mỗi người." : "."}
+            </Txt>
           </View>
         </Group>
 

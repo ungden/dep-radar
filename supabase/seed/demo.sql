@@ -250,29 +250,29 @@ on conflict (pro_id, weekday, start_min) do nothing;
 -- Listings ------------------------------------------------------------------
 insert into public.pro_services (pro_id, template_id, active) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-gel', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-gel', 'hand', 180000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-gel', 'hand', 160000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-gel', 'hand-foot', 320000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-gel', 'hand-foot', 300000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-design', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-design', 'simple', 300000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-design', 'simple', 260000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-design', 'stone', 380000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-design', 'stone', 330000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-design', 'art', 520000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-design', 'art', 480000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-extension', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-extension', 'tips', 320000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-extension', 'tips', 280000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-extension', 'builder', 450000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-extension', 'builder', 500000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-removal', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
 insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-removal', 'remove', 80000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-removal', 'remove-care', 140000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-removal', 'remove-care', 150000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-daily', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
@@ -280,61 +280,61 @@ insert into public.pro_service_prices (pro_id, template_id, variant_id, price) v
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-party', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-party', 'makeup', 600000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-party', 'makeup', 550000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-party', 'makeup-hair', 850000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-party', 'makeup-hair', 750000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-photo', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-photo', 'single', 550000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-photo', 'single', 450000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-photo', 'group', 380000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-photo', 'group', 300000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-bridal', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-bridal', 'one', 2200000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-bridal', 'one', 1800000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-bridal', 'two', 4000000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-bridal', 'two', 3200000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('5fd22452-981a-4762-8f5d-106d1f03bec9', 'skin-basic', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5fd22452-981a-4762-8f5d-106d1f03bec9', 'skin-basic', '60m', 350000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5fd22452-981a-4762-8f5d-106d1f03bec9', 'skin-basic', '60m', 380000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5fd22452-981a-4762-8f5d-106d1f03bec9', 'skin-basic', '90m', 480000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5fd22452-981a-4762-8f5d-106d1f03bec9', 'skin-basic', '90m', 550000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('5fd22452-981a-4762-8f5d-106d1f03bec9', 'skin-acne', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
 insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5fd22452-981a-4762-8f5d-106d1f03bec9', 'skin-acne', '60m', 420000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5fd22452-981a-4762-8f5d-106d1f03bec9', 'skin-acne', '90m', 560000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5fd22452-981a-4762-8f5d-106d1f03bec9', 'skin-acne', '90m', 550000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('5fd22452-981a-4762-8f5d-106d1f03bec9', 'skin-recovery', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5fd22452-981a-4762-8f5d-106d1f03bec9', 'skin-recovery', '75m', 450000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('5fd22452-981a-4762-8f5d-106d1f03bec9', 'skin-recovery', '75m', 420000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'hair-wash', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'hair-wash', '45m', 160000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'hair-wash', '45m', 180000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'hair-wash', '60m', 200000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'hair-wash', '60m', 180000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'hair-styling', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
 insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'hair-styling', 'curl', 300000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'hair-styling', 'updo', 420000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'hair-styling', 'updo', 450000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', 'lash-classic', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', 'lash-classic', 'full', 350000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', 'lash-classic', 'full', 380000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', 'lash-volume', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', 'lash-volume', 'full', 450000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', 'lash-volume', 'full', 400000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', 'lash-refill', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', 'lash-refill', 'refill', 200000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', 'lash-refill', 'refill', 220000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', 'brow-shaping', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
@@ -342,61 +342,61 @@ insert into public.pro_service_prices (pro_id, template_id, variant_id, price) v
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'nail-gel', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'nail-gel', 'hand', 150000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'nail-gel', 'hand', 160000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'nail-gel', 'hand-foot', 280000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'nail-gel', 'hand-foot', 300000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'nail-design', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'nail-design', 'simple', 250000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'nail-design', 'simple', 260000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'nail-design', 'stone', 320000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'nail-design', 'stone', 330000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'makeup-daily', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'makeup-daily', 'single', 300000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'makeup-daily', 'single', 280000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'makeup-party', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'makeup-party', 'makeup', 500000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'makeup-party', 'makeup', 550000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-foot', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
 insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-foot', '60m', 300000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-foot', '90m', 420000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-foot', '90m', 400000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-foot', '120m', 520000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-foot', '120m', 500000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-neck', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-neck', '60m', 300000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-neck', '60m', 330000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-neck', '90m', 420000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-neck', '90m', 450000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-neck', '120m', 520000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-neck', '120m', 580000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-oil-cupping', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-oil-cupping', '60m', 350000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-oil-cupping', '60m', 380000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-oil-cupping', '90m', 480000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-oil-cupping', '90m', 520000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-oil-cupping', '120m', 600000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-oil-cupping', '120m', 650000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-prenatal', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-prenatal', '60m', 420000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-prenatal', '60m', 450000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-prenatal', '90m', 560000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-prenatal', '90m', 550000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 insert into public.pro_services (pro_id, template_id, active) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-dry', true)
 on conflict (pro_id, template_id) do update set active = excluded.active;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-dry', '60m', 350000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-dry', '60m', 380000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-dry', '90m', 480000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-dry', '90m', 520000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
-insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-dry', '120m', 600000)
+insert into public.pro_service_prices (pro_id, template_id, variant_id, price) values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-dry', '120m', 650000)
 on conflict (pro_id, template_id, variant_id) do update set price = excluded.price;
 
 -- Portfolio -----------------------------------------------------------------
@@ -719,14 +719,14 @@ insert into public.bookings (id, customer_id, pro_id, template_id, variant_id, q
 values ('bd9f070b-6e1b-43e8-872b-d225fb16e44b', 'f06b6da3-a344-4f36-8c08-bef99f162401', '5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-design', 'stone', 1, 'direct',
   ('2026-09-02'::date + interval '14 hours') at time zone 'Asia/Ho_Chi_Minh', 90, 30, true,
   'Hà Nội', 'Đống Đa', 'Địa chỉ mẫu', 20.9937, 105.811,
-  380000, 2.0, 0, 0, 0.15, 57000,
+  330000, 2.0, 0, 0, 0.15, 50000,
   'cash', 'completed', ('2026-09-02'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-02'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-02'::date + interval '16 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-02'::date + interval '11 hours 20 minutes') at time zone 'Asia/Ho_Chi_Minh')
 on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
-values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'bd9f070b-6e1b-43e8-872b-d225fb16e44b', 'commission', -57000, 'Hoa hồng job hoàn thành')
+values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'bd9f070b-6e1b-43e8-872b-d225fb16e44b', 'commission', -50000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
 insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
 values ('bd9f070b-6e1b-43e8-872b-d225fb16e44b', '5cb61497-1c4a-49d9-80a2-9864426c89bb', 'f06b6da3-a344-4f36-8c08-bef99f162401', 'Ngọc Hân', 'Nail thiết kế · Đính đá / charm', 5, array['Tay nghề tốt', 'Bền đẹp']::text[], 'Làm kỹ, form móng đẹp, đến đúng giờ. Giữ được hơn 3 tuần không bong.',
@@ -742,14 +742,14 @@ insert into public.bookings (id, customer_id, pro_id, template_id, variant_id, q
 values ('dc49cdd4-e279-4ec0-84fd-dac4683810fe', '9a937381-49b2-4ef9-8edb-2c55ae893c48', '5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-gel', 'hand', 1, 'direct',
   ('2026-08-21'::date + interval '14 hours') at time zone 'Asia/Ho_Chi_Minh', 45, 30, true,
   'Hà Nội', 'Đống Đa', 'Địa chỉ mẫu', 20.9937, 105.811,
-  180000, 2.0, 0, 0, 0.15, 27000,
+  160000, 2.0, 0, 0, 0.15, 24000,
   'cash', 'completed', ('2026-08-21'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-21'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-21'::date + interval '16 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-21'::date + interval '11 hours 20 minutes') at time zone 'Asia/Ho_Chi_Minh')
 on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
-values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'dc49cdd4-e279-4ec0-84fd-dac4683810fe', 'commission', -27000, 'Hoa hồng job hoàn thành')
+values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'dc49cdd4-e279-4ec0-84fd-dac4683810fe', 'commission', -24000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
 insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
 values ('dc49cdd4-e279-4ec0-84fd-dac4683810fe', '5cb61497-1c4a-49d9-80a2-9864426c89bb', '9a937381-49b2-4ef9-8edb-2c55ae893c48', 'Thảo Vy', 'Sơn gel trơn · Tay', 5, array['Dụng cụ sạch sẽ', 'Tư vấn kỹ']::text[], 'Tư vấn màu rất có tâm, dụng cụ hấp tiệt trùng trước mặt mình luôn.',
@@ -765,14 +765,14 @@ insert into public.bookings (id, customer_id, pro_id, template_id, variant_id, q
 values ('b4287a1e-f41f-4354-859e-33e42f13198b', 'bdb0d68c-8db6-41bf-8584-4569b2534db0', '5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-extension', 'builder', 1, 'direct',
   ('2026-08-10'::date + interval '14 hours') at time zone 'Asia/Ho_Chi_Minh', 120, 30, true,
   'Hà Nội', 'Đống Đa', 'Địa chỉ mẫu', 20.9937, 105.811,
-  450000, 2.0, 0, 0, 0.15, 68000,
+  500000, 2.0, 0, 0, 0.15, 75000,
   'cash', 'completed', ('2026-08-10'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-10'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-10'::date + interval '16 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-10'::date + interval '11 hours 20 minutes') at time zone 'Asia/Ho_Chi_Minh')
 on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
-values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'b4287a1e-f41f-4354-859e-33e42f13198b', 'commission', -68000, 'Hoa hồng job hoàn thành')
+values ('5cb61497-1c4a-49d9-80a2-9864426c89bb', 'b4287a1e-f41f-4354-859e-33e42f13198b', 'commission', -75000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
 insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
 values ('b4287a1e-f41f-4354-859e-33e42f13198b', '5cb61497-1c4a-49d9-80a2-9864426c89bb', 'bdb0d68c-8db6-41bf-8584-4569b2534db0', 'Minh Châu', 'Nối móng · Đắp gel', 4, array['Tay nghề tốt']::text[], 'Đẹp, nhưng đến trễ 15 phút vì kẹt xe, có nhắn báo trước.',
@@ -788,14 +788,14 @@ insert into public.bookings (id, customer_id, pro_id, template_id, variant_id, q
 values ('45e315f5-b594-4c9b-8c7c-5fb9375a0ee6', 'b1e151a4-83e9-46f4-8592-d240360f1d64', '9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-party', 'makeup', 1, 'direct',
   ('2026-09-05'::date + interval '14 hours') at time zone 'Asia/Ho_Chi_Minh', 60, 30, true,
   'Hà Nội', 'Đống Đa', 'Địa chỉ mẫu', 21.0341, 105.8142,
-  600000, 2.0, 0, 0, 0.15, 90000,
+  550000, 2.0, 0, 0, 0.15, 83000,
   'cash', 'completed', ('2026-09-05'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-05'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-05'::date + interval '16 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-05'::date + interval '11 hours 20 minutes') at time zone 'Asia/Ho_Chi_Minh')
 on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
-values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', '45e315f5-b594-4c9b-8c7c-5fb9375a0ee6', 'commission', -90000, 'Hoa hồng job hoàn thành')
+values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', '45e315f5-b594-4c9b-8c7c-5fb9375a0ee6', 'commission', -83000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
 insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
 values ('45e315f5-b594-4c9b-8c7c-5fb9375a0ee6', '9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'b1e151a4-83e9-46f4-8592-d240360f1d64', 'Lan Phương', 'Makeup dự tiệc · Makeup', 5, array['Bền đẹp', 'Nhẹ nhàng']::text[], 'Makeup trong veo, chụp ảnh lên rất xinh, bền cả tối.',
@@ -811,14 +811,14 @@ insert into public.bookings (id, customer_id, pro_id, template_id, variant_id, q
 values ('824c4706-83fe-439d-897e-3fe6f31a942d', '73433aa8-86d8-43bd-80cd-924c09ff5fce', '9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-photo', 'single', 1, 'direct',
   ('2026-08-28'::date + interval '14 hours') at time zone 'Asia/Ho_Chi_Minh', 60, 30, true,
   'Hà Nội', 'Đống Đa', 'Địa chỉ mẫu', 21.0341, 105.8142,
-  550000, 2.0, 0, 0, 0.15, 83000,
+  450000, 2.0, 0, 0, 0.15, 68000,
   'cash', 'completed', ('2026-08-28'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-28'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-28'::date + interval '16 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-28'::date + interval '11 hours 20 minutes') at time zone 'Asia/Ho_Chi_Minh')
 on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
-values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', '824c4706-83fe-439d-897e-3fe6f31a942d', 'commission', -83000, 'Hoa hồng job hoàn thành')
+values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', '824c4706-83fe-439d-897e-3fe6f31a942d', 'commission', -68000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
 insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
 values ('824c4706-83fe-439d-897e-3fe6f31a942d', '9eef8114-88b2-4fe8-8655-35eb03b8bf61', '73433aa8-86d8-43bd-80cd-924c09ff5fce', 'Bảo Ngọc', 'Makeup chụp ảnh / kỷ yếu · 1 người', 5, array['Tư vấn kỹ']::text[], 'Chị rất nhẹ nhàng, hỏi kỹ về da trước khi làm.',
@@ -834,14 +834,14 @@ insert into public.bookings (id, customer_id, pro_id, template_id, variant_id, q
 values ('c077d96a-bfa5-4a97-85d3-59050126a036', '73afbfcc-5f79-464f-8d16-fc4bd4b78ad4', '9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'makeup-bridal', 'one', 1, 'direct',
   ('2026-08-12'::date + interval '14 hours') at time zone 'Asia/Ho_Chi_Minh', 120, 30, true,
   'Hà Nội', 'Đống Đa', 'Địa chỉ mẫu', 21.0341, 105.8142,
-  2200000, 2.0, 0, 0, 0.15, 330000,
+  1800000, 2.0, 0, 0, 0.15, 270000,
   'cash', 'completed', ('2026-08-12'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-12'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-12'::date + interval '16 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-12'::date + interval '11 hours 20 minutes') at time zone 'Asia/Ho_Chi_Minh')
 on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
-values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'c077d96a-bfa5-4a97-85d3-59050126a036', 'commission', -330000, 'Hoa hồng job hoàn thành')
+values ('9eef8114-88b2-4fe8-8655-35eb03b8bf61', 'c077d96a-bfa5-4a97-85d3-59050126a036', 'commission', -270000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
 insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
 values ('c077d96a-bfa5-4a97-85d3-59050126a036', '9eef8114-88b2-4fe8-8655-35eb03b8bf61', '73afbfcc-5f79-464f-8d16-fc4bd4b78ad4', 'Hải Yến', 'Makeup cô dâu · 1 lễ (ăn hỏi hoặc cưới)', 4, array['Tay nghề tốt']::text[], 'Layout đẹp, hơi lâu hơn dự kiến một chút.',
@@ -857,14 +857,14 @@ insert into public.bookings (id, customer_id, pro_id, template_id, variant_id, q
 values ('1c83c1ba-7fb8-4c11-8015-ae5e2ebe4646', 'cd023aa1-2d9c-4d5a-8daf-edb5c6aca73c', '5fd22452-981a-4762-8f5d-106d1f03bec9', 'skin-recovery', '75m', 1, 'direct',
   ('2026-09-01'::date + interval '14 hours') at time zone 'Asia/Ho_Chi_Minh', 75, 30, true,
   'Hà Nội', 'Đống Đa', 'Địa chỉ mẫu', 10.7843, 106.6844,
-  450000, 2.0, 0, 0, 0.15, 68000,
+  420000, 2.0, 0, 0, 0.15, 63000,
   'cash', 'completed', ('2026-09-01'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-01'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-01'::date + interval '16 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-01'::date + interval '11 hours 20 minutes') at time zone 'Asia/Ho_Chi_Minh')
 on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
-values ('5fd22452-981a-4762-8f5d-106d1f03bec9', '1c83c1ba-7fb8-4c11-8015-ae5e2ebe4646', 'commission', -68000, 'Hoa hồng job hoàn thành')
+values ('5fd22452-981a-4762-8f5d-106d1f03bec9', '1c83c1ba-7fb8-4c11-8015-ae5e2ebe4646', 'commission', -63000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
 insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
 values ('1c83c1ba-7fb8-4c11-8015-ae5e2ebe4646', '5fd22452-981a-4762-8f5d-106d1f03bec9', 'cd023aa1-2d9c-4d5a-8daf-edb5c6aca73c', 'Khánh Linh', 'Phục hồi da nhạy cảm · 75 phút', 5, array['Dụng cụ sạch sẽ', 'Nhẹ nhàng']::text[], 'Da dịu hẳn sau 2 buổi, không bị đỏ như lúc đi spa.',
@@ -903,14 +903,14 @@ insert into public.bookings (id, customer_id, pro_id, template_id, variant_id, q
 values ('a85ba79c-f1d2-461a-8329-751291e998ec', 'd1241708-0ec0-4cd0-85bf-98a098dc5af1', '4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'hair-styling', 'updo', 1, 'direct',
   ('2026-08-17'::date + interval '14 hours') at time zone 'Asia/Ho_Chi_Minh', 60, 30, true,
   'Hà Nội', 'Đống Đa', 'Địa chỉ mẫu', 10.7757, 106.7004,
-  420000, 2.0, 0, 0, 0.15, 63000,
+  450000, 2.0, 0, 0, 0.15, 68000,
   'cash', 'completed', ('2026-08-17'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-17'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-17'::date + interval '16 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-17'::date + interval '11 hours 20 minutes') at time zone 'Asia/Ho_Chi_Minh')
 on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
-values ('4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'a85ba79c-f1d2-461a-8329-751291e998ec', 'commission', -63000, 'Hoa hồng job hoàn thành')
+values ('4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'a85ba79c-f1d2-461a-8329-751291e998ec', 'commission', -68000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
 insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
 values ('a85ba79c-f1d2-461a-8329-751291e998ec', '4b0f5d5a-3bdb-4ee4-86ad-3c32d71c235f', 'd1241708-0ec0-4cd0-85bf-98a098dc5af1', 'Hồng Nhung', 'Tạo kiểu tóc sự kiện · Búi / tết cầu kỳ', 5, array['Bền đẹp']::text[], 'Tóc giữ nếp tới cuối tiệc cưới.',
@@ -949,14 +949,14 @@ insert into public.bookings (id, customer_id, pro_id, template_id, variant_id, q
 values ('5b56ddce-104d-4533-8903-b77cd016e986', '93164c11-60ad-434d-8cbd-0e217e49a33c', 'ffe52497-3a38-41b9-8efc-1b76837aa36d', 'lash-classic', 'full', 1, 'direct',
   ('2026-09-08'::date + interval '14 hours') at time zone 'Asia/Ho_Chi_Minh', 90, 30, true,
   'Hà Nội', 'Đống Đa', 'Địa chỉ mẫu', 21.0288, 105.8525,
-  350000, 2.0, 0, 0, 0.15, 53000,
+  380000, 2.0, 0, 0, 0.15, 57000,
   'cash', 'completed', ('2026-09-08'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-08'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-08'::date + interval '16 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-08'::date + interval '11 hours 20 minutes') at time zone 'Asia/Ho_Chi_Minh')
 on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
-values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', '5b56ddce-104d-4533-8903-b77cd016e986', 'commission', -53000, 'Hoa hồng job hoàn thành')
+values ('ffe52497-3a38-41b9-8efc-1b76837aa36d', '5b56ddce-104d-4533-8903-b77cd016e986', 'commission', -57000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
 insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
 values ('5b56ddce-104d-4533-8903-b77cd016e986', 'ffe52497-3a38-41b9-8efc-1b76837aa36d', '93164c11-60ad-434d-8cbd-0e217e49a33c', 'Phương Anh', 'Nối mi classic · Full set', 5, array['Nhẹ nhàng', 'Bền đẹp']::text[], 'Mi tự nhiên, không cộm, không cay mắt.',
@@ -995,14 +995,14 @@ insert into public.bookings (id, customer_id, pro_id, template_id, variant_id, q
 values ('e44a239c-9a33-4f18-825d-609b816c20d8', 'e027b0ba-dfba-4717-8b0d-f92acb62a9b8', '6ecaa96d-5749-4fe4-8384-642d3f798120', 'makeup-party', 'makeup', 1, 'direct',
   ('2026-08-30'::date + interval '14 hours') at time zone 'Asia/Ho_Chi_Minh', 60, 30, true,
   'Hà Nội', 'Đống Đa', 'Địa chỉ mẫu', 16.0472, 108.2199,
-  500000, 2.0, 0, 0, 0.15, 75000,
+  550000, 2.0, 0, 0, 0.15, 83000,
   'cash', 'completed', ('2026-08-30'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-30'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-30'::date + interval '16 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-30'::date + interval '11 hours 20 minutes') at time zone 'Asia/Ho_Chi_Minh')
 on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
-values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'e44a239c-9a33-4f18-825d-609b816c20d8', 'commission', -75000, 'Hoa hồng job hoàn thành')
+values ('6ecaa96d-5749-4fe4-8384-642d3f798120', 'e44a239c-9a33-4f18-825d-609b816c20d8', 'commission', -83000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
 insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
 values ('e44a239c-9a33-4f18-825d-609b816c20d8', '6ecaa96d-5749-4fe4-8384-642d3f798120', 'e027b0ba-dfba-4717-8b0d-f92acb62a9b8', 'Diệu Linh', 'Makeup dự tiệc · Makeup', 5, array['Giá hợp lý', 'Nhẹ nhàng']::text[], 'Nhóm mình 3 người làm nhanh gọn, bạn rất dễ thương.',
@@ -1018,14 +1018,14 @@ insert into public.bookings (id, customer_id, pro_id, template_id, variant_id, q
 values ('a291b915-0d35-40c8-8dca-8d7e51ef872c', 'cbe9e85a-9bde-4f14-8fec-bb3bd008b9dd', '3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-neck', '90m', 1, 'direct',
   ('2026-09-06'::date + interval '14 hours') at time zone 'Asia/Ho_Chi_Minh', 90, 30, true,
   'Hà Nội', 'Đống Đa', 'Địa chỉ mẫu', 10.8106, 106.7091,
-  420000, 2.0, 0, 0, 0.15, 63000,
+  450000, 2.0, 0, 0, 0.15, 68000,
   'cash', 'completed', ('2026-09-06'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-06'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-06'::date + interval '16 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-09-06'::date + interval '11 hours 20 minutes') at time zone 'Asia/Ho_Chi_Minh')
 on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
-values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'a291b915-0d35-40c8-8dca-8d7e51ef872c', 'commission', -63000, 'Hoa hồng job hoàn thành')
+values ('3d48e94c-1b06-4234-8b62-f63c55989f25', 'a291b915-0d35-40c8-8dca-8d7e51ef872c', 'commission', -68000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
 insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
 values ('a291b915-0d35-40c8-8dca-8d7e51ef872c', '3d48e94c-1b06-4234-8b62-f63c55989f25', 'cbe9e85a-9bde-4f14-8fec-bb3bd008b9dd', 'Quốc Bảo', 'Massage cổ vai gáy · 90 phút', 5, array['Tay nghề tốt', 'Đúng giờ']::text[], 'Bấm huyệt đúng chỗ đau, mang theo cả giường gấp, rất chuyên nghiệp.',
@@ -1041,14 +1041,14 @@ insert into public.bookings (id, customer_id, pro_id, template_id, variant_id, q
 values ('985c291f-20cf-4629-88fd-f804f9a5dff4', 'a86f5455-4503-4cb3-8222-596c1f117886', '3d48e94c-1b06-4234-8b62-f63c55989f25', 'massage-prenatal', '60m', 1, 'direct',
   ('2026-08-22'::date + interval '14 hours') at time zone 'Asia/Ho_Chi_Minh', 60, 30, true,
   'Hà Nội', 'Đống Đa', 'Địa chỉ mẫu', 10.8106, 106.7091,
-  420000, 2.0, 0, 0, 0.15, 63000,
+  450000, 2.0, 0, 0, 0.15, 68000,
   'cash', 'completed', ('2026-08-22'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-22'::date + interval '12 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-22'::date + interval '16 hours') at time zone 'Asia/Ho_Chi_Minh',
   ('2026-08-22'::date + interval '11 hours 20 minutes') at time zone 'Asia/Ho_Chi_Minh')
 on conflict (id) do nothing;
 insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
-values ('3d48e94c-1b06-4234-8b62-f63c55989f25', '985c291f-20cf-4629-88fd-f804f9a5dff4', 'commission', -63000, 'Hoa hồng job hoàn thành')
+values ('3d48e94c-1b06-4234-8b62-f63c55989f25', '985c291f-20cf-4629-88fd-f804f9a5dff4', 'commission', -68000, 'Hoa hồng job hoàn thành')
 on conflict (booking_id, kind) do nothing;
 insert into public.reviews (booking_id, pro_id, customer_id, author_name, service_label, rating, tags, body, photo_paths, reply, replied_at, created_at)
 values ('985c291f-20cf-4629-88fd-f804f9a5dff4', '3d48e94c-1b06-4234-8b62-f63c55989f25', 'a86f5455-4503-4cb3-8222-596c1f117886', 'Thanh Tâm', 'Massage bầu · 60 phút', 5, array['Nhẹ nhàng', 'Tư vấn kỹ']::text[], 'Massage bầu tháng thứ 7, chị rất cẩn thận, hỏi kỹ tình trạng trước.',

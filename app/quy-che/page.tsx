@@ -40,7 +40,7 @@ export default function OperatingRulesPage() {
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
               360đẹp không trực tiếp cung cấp dịch vụ và không phải người sử dụng lao động của đối tác. Đối tác tự chịu trách nhiệm về chất
-              lượng dịch vụ, giá mình đặt (trong khung giá của 360đẹp), giấy phép hành nghề nếu pháp luật yêu cầu và nghĩa vụ thuế của mình.
+              lượng dịch vụ, mức giá mình chọn (trong các mức giá của 360đẹp), giấy phép hành nghề nếu pháp luật yêu cầu và nghĩa vụ thuế của mình.
             </li>
             <li>
               Mọi giao dịch qua 360đẹp phải tuân thủ pháp luật Việt Nam, Quy chế này, <Link href="/chinh-sach" className="text-accent underline underline-offset-2">Chính sách phí & đặt lịch</Link>{" "}
@@ -54,7 +54,7 @@ export default function OperatingRulesPage() {
           <ul className="list-disc space-y-1 pl-5">
             <li>Khách hàng đăng ký bằng Google, Apple, số điện thoại hoặc email. Cần số điện thoại trước khi đặt lịch.</li>
             <li>
-              Đối tác mở hồ sơ miễn phí, chọn dịch vụ từ danh mục và đặt giá trong khung, thêm giờ làm việc và ảnh tác phẩm do chính mình
+              Đối tác mở hồ sơ miễn phí, chọn dịch vụ từ danh mục và chọn một trong các mức giá có sẵn, thêm giờ làm việc và ảnh tác phẩm do chính mình
               làm. Hồ sơ chỉ hiện với khách sau khi qua kiểm duyệt (bằng AI, có nhật ký để nhân viên 360đẹp xem lại và thay đổi quyết định).
             </li>
             <li>

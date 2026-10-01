@@ -27,7 +27,7 @@ export default function PartnerPage() {
     {
       icon: CalendarCheck,
       title: "Nhận lịch",
-      text: "Mở hồ sơ, chọn dịch vụ, đặt giá trong khung chuẩn và giờ làm việc. Khách gần bạn đặt thẳng theo lịch bạn mở; bạn xác nhận trong app.",
+      text: "Mở hồ sơ, chọn dịch vụ, chọn mức giá có sẵn cho từng gói và giờ làm việc. Khách gần bạn đặt thẳng theo lịch bạn mở; bạn xác nhận trong app.",
     },
     {
       icon: Megaphone,
@@ -100,7 +100,7 @@ export default function PartnerPage() {
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-[13px] text-muted">{CATEGORIES.length} danh mục, giá đặt trong khung chuẩn của từng dịch vụ.</p>
+        <p className="mt-3 text-[13px] text-muted">{CATEGORIES.length} danh mục. Mỗi gói có 2–3 mức giá theo giá thị trường, bạn chọn mức hợp với tay nghề.</p>
       </section>
 
       <section className="mt-10 rounded-[var(--radius-lg)] bg-subtle p-5">

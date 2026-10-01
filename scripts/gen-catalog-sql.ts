@@ -1,6 +1,6 @@
 /**
  * Emits supabase/seed/catalog.sql from the TypeScript catalogue, so the price
- * bands the UI shows and the ones the database enforces can never drift apart.
+ * levels the UI shows and the ones the database enforces can never drift apart.
  *
  *   npm run catalog:sql          # regenerate
  *   npm run catalog:check        # fail if the committed file is stale (CI)
@@ -69,10 +69,11 @@ function templateSql(t: ServiceTemplate, sortOrder: number): string[] {
   ]
   t.variants.forEach((v, vi) => {
     out.push(
-      `insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, per_person, max_quantity, sort_order) values (`,
-      `  ${q(t.id)}, ${q(v.id)}, ${q(v.label)}, ${v.durationMin}, ${v.minPrice}, ${v.maxPrice}, ${v.suggestedPrice}, ${Boolean(v.perPerson)}, ${v.maxQuantity ?? 1}, ${vi})`,
+      `insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order) values (`,
+      `  ${q(t.id)}, ${q(v.id)}, ${q(v.label)}, ${v.durationMin}, ${v.minPrice}, ${v.maxPrice}, ${v.suggestedPrice}, array[${v.tiers.join(", ")}], ${Boolean(v.perPerson)}, ${v.maxQuantity ?? 1}, ${vi})`,
       "  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,",
       "    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,",
+      "    price_tiers = excluded.price_tiers,",
       "    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order;",
     )
   })

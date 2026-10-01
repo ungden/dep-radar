@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { CATALOG, CATEGORIES, clampPrice, getTemplate, getVariant, isPriceAllowed, templatesByCategory } from "@/lib/catalog"
+import { CATALOG, CATEGORIES, getTemplate, getVariant, isPriceAllowed, nearestTier, templatesByCategory, tierLabels } from "@/lib/catalog"
 import { PROS, PRO_SERVICES, REVIEWS, getPro } from "@/lib/data"
 import { travelDistanceKm } from "@/lib/geo"
 import { bayesianRating, isVerified, rankScore } from "@/lib/trust"
@@ -15,15 +15,21 @@ describe("catalogue integrity", () => {
     }
   })
 
-  it("keeps every band ordered and aligned to the 5.000đ step the sliders use", () => {
+  it("gives every option 2–3 ascending price levels on the 5.000đ step", () => {
     for (const t of CATALOG) {
       for (const v of t.variants) {
-        expect(v.minPrice, `${t.id}/${v.id}`).toBeLessThanOrEqual(v.suggestedPrice)
-        expect(v.suggestedPrice, `${t.id}/${v.id}`).toBeLessThanOrEqual(v.maxPrice)
-        expect(v.minPrice % 5000, `${t.id}/${v.id} min`).toBe(0)
-        expect(v.maxPrice % 5000, `${t.id}/${v.id} max`).toBe(0)
-        expect(v.suggestedPrice % 5000, `${t.id}/${v.id} suggested`).toBe(0)
-        expect(v.durationMin, `${t.id}/${v.id}`).toBeGreaterThanOrEqual(15)
+        const at = `${t.id}/${v.id}`
+        expect(v.tiers.length, at).toBeGreaterThanOrEqual(2)
+        expect(v.tiers.length, at).toBeLessThanOrEqual(3)
+        v.tiers.forEach((tier, i) => {
+          expect(tier % 5000, `${at} level ${i}`).toBe(0)
+          if (i) expect(tier, `${at} level ${i}`).toBeGreaterThan(v.tiers[i - 1])
+        })
+        expect(v.minPrice, at).toBe(v.tiers[0])
+        expect(v.maxPrice, at).toBe(v.tiers[v.tiers.length - 1])
+        expect(v.tiers, at).toContain(v.suggestedPrice)
+        expect(tierLabels(v).length, at).toBe(v.tiers.length)
+        expect(v.durationMin, at).toBeGreaterThanOrEqual(15)
       }
     }
   })
@@ -32,20 +38,24 @@ describe("catalogue integrity", () => {
     for (const c of CATEGORIES) expect(templatesByCategory(c.id).length, c.id).toBeGreaterThan(0)
   })
 
-  it("accepts prices inside the band only", () => {
+  it("accepts the listed levels only, never a price in between", () => {
     const v = getVariant("nail-design", "simple")!
-    expect(isPriceAllowed(v, v.minPrice)).toBe(true)
-    expect(isPriceAllowed(v, v.maxPrice)).toBe(true)
+    for (const tier of v.tiers) expect(isPriceAllowed(v, tier)).toBe(true)
+    expect(isPriceAllowed(v, v.tiers[0] + 5000)).toBe(false)
     expect(isPriceAllowed(v, v.minPrice - 5000)).toBe(false)
     expect(isPriceAllowed(v, v.maxPrice + 5000)).toBe(false)
-    expect(isPriceAllowed(v, v.minPrice + 1000)).toBe(false) // not a 5.000đ step
-    expect(clampPrice(v, 10)).toBe(v.minPrice)
-    expect(clampPrice(v, 99_000_000)).toBe(v.maxPrice)
+  })
+
+  it("moves an old price to the closest level", () => {
+    const v = getVariant("nail-gel", "hand")! // 120 / 160 / 220
+    expect(nearestTier(v, 10)).toBe(120_000)
+    expect(nearestTier(v, 175_000)).toBe(160_000)
+    expect(nearestTier(v, 99_000_000)).toBe(220_000)
   })
 })
 
 describe("seed data integrity", () => {
-  it("prices every listing inside the catalogue band", () => {
+  it("prices every listing at one of the catalogue levels", () => {
     for (const listing of PRO_SERVICES) {
       const tpl = getTemplate(listing.templateId)
       expect(tpl, listing.templateId).toBeDefined()

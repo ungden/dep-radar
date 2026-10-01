@@ -102,17 +102,17 @@ export default function ServiceScreen() {
                 </View>
                 <View style={{ alignItems: "flex-end" }}>
                   <Txt w={700} tabular>
-                    {formatPrice(v.minPrice)}
+                    Từ {formatPrice(v.minPrice)}
                   </Txt>
                   <Txt v="meta" color={colors.muted} tabular>
-                    đến {formatPrice(v.maxPrice)}
+                    {v.tiers.map((t) => formatPrice(t)).join(" · ")}
                   </Txt>
                 </View>
               </View>
             </View>
           ))}
           <Txt v="meta" color={colors.inkSoft} style={{ marginTop: 4 }}>
-            Khung giá chuẩn của 360dep; mỗi người làm tự đặt giá trong khung. Khách không trả phí nền tảng.
+            Mỗi gói có 2–3 mức giá do 360dep khảo sát theo giá thị trường; người làm chọn một mức. Khách không trả phí nền tảng.
           </Txt>
         </Card>
       </View>

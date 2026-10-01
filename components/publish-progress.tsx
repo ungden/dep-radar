@@ -54,7 +54,7 @@ export function PublishProgress() {
           ? { label: "Mở hồ sơ", text: "Bật hiển thị để khách đặt được lịch" }
           : { label: "Mở hồ sơ", text: "Bấm “Mở hồ sơ cho khách” để gửi duyệt, thường xong trong vài phút" }
   const steps = [
-    { label: "Dịch vụ", text: "Chọn ít nhất một dịch vụ và đặt giá", href: "/studio/services", done: hasService },
+    { label: "Dịch vụ", text: "Chọn ít nhất một dịch vụ và mức giá", href: "/studio/services", done: hasService },
     { label: "Tác phẩm", text: "Đăng ít nhất một ảnh việc bạn đã làm", href: "/studio/works", done: hasWork },
     { label: "Giờ làm", text: "Lưu giờ bạn nhận khách trong tuần", href: "/studio/profile/edit#gio-lam", done: hasHours === true },
     { ...last, href: "/studio/profile/edit#mo-ho-so", done: false },

@@ -244,7 +244,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
 
         <aside className="mt-12 md:mt-0">
           <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-5 md:sticky md:top-24">
-            <h2 className="text-[17px] font-bold tracking-tight">Khung giá trên 360dep</h2>
+            <h2 className="text-[17px] font-bold tracking-tight">Giá trên 360dep</h2>
             <ul className="mt-3 divide-y divide-line">
               {templates.map((t) => {
                 const band = priceBand(t)
@@ -261,7 +261,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
               })}
             </ul>
             <p className="mt-3 text-[13px] leading-relaxed text-muted">
-              {person.charAt(0).toUpperCase() + person.slice(1)} tự đặt giá trong khung này, nên bạn so sánh được giữa các hồ sơ.{" "}
+              Mỗi gói có 2–3 mức giá theo giá thị trường; {person} chọn một mức, nên bạn so sánh được giữa các hồ sơ.{" "}
               <Link href="/chinh-sach" className="font-semibold text-ink underline underline-offset-2">
                 Chính sách phí
               </Link>

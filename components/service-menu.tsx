@@ -50,7 +50,7 @@ export function ServiceMenu({ proId, bookable = true }: { proId: string; bookabl
         ))}
       </ul>
       <p className="mt-4 text-[13px] leading-relaxed text-muted">
-        Tên dịch vụ, nội dung và khung giá do 360dep chuẩn hoá, nên bạn so sánh được giữa các hồ sơ. Phí di chuyển và phí đặt
+        Tên dịch vụ, nội dung và mức giá do 360dep chuẩn hoá, nên bạn so sánh được giữa các hồ sơ. Phí di chuyển và phí đặt
         gấp (nếu có) hiện rõ trước khi bạn xác nhận.
       </p>
     </div>

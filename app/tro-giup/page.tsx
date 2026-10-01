@@ -116,7 +116,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
         <Link href="/doi-tac" className="text-accent underline underline-offset-2">
           Mở hồ sơ đối tác
         </Link>
-        , chọn dịch vụ từ danh mục và đặt giá trong khung, thêm giờ làm việc và ít nhất một ảnh tác phẩm. Không có phí
+        , chọn dịch vụ từ danh mục và chọn mức giá có sẵn, thêm giờ làm việc và ít nhất một ảnh tác phẩm. Không có phí
         đăng ký; 360dep chỉ thu hoa hồng khi bạn hoàn thành lịch hẹn.
       </>
     ),

@@ -86,14 +86,14 @@ export function ServiceView({ templateId }: { templateId: string }) {
                     </span>
                   </span>
                   <span className="shrink-0 text-right font-semibold">
-                    {formatPrice(v.minPrice)}
-                    <span className="block text-[12px] font-normal text-muted">đến {formatPrice(v.maxPrice)}</span>
+                    Từ {formatPrice(v.minPrice)}
+                    <span className="block text-[12px] font-normal text-muted">{v.tiers.map((t) => formatPrice(t)).join(" · ")}</span>
                   </span>
                 </li>
               ))}
             </ul>
             <p className="mt-3 text-[13px] text-ink-soft">
-              Khung giá chuẩn của 360dep; mỗi người làm tự đặt giá trong khung. Khách không trả phí nền tảng.
+              Mỗi gói có 2–3 mức giá do 360dep khảo sát theo giá thị trường; người làm chọn một mức. Khách không trả phí nền tảng.
             </p>
           </div>
         </aside>

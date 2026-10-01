@@ -86,7 +86,7 @@ Một đối tác (freelancer) vừa gửi hồ sơ để hiện với khách. H
 
 ${PHOTO_RULES}
 Phần giới thiệu, tiêu đề, tên đạt khi: không có số điện thoại, email, link, tên Zalo/Facebook; không tục tĩu, không hứa hẹn kiểu lừa đảo ("đặt cọc trước", "phí hồ sơ"), không nhận làm dịch vụ nhạy cảm.
-Giá: đã nằm trong khung của 360dep; chỉ nêu khi giá rõ ràng vô lý so với dịch vụ.
+Giá: là một trong các mức giá có sẵn của 360dep (đối tác không tự nhập giá); không cần nhận xét về giá.
 Không đòi thêm những thứ không có trong danh sách trên (không bắt buộc bio dài, không chấm điểm thẩm mỹ).
 
 Hồ sơ:
