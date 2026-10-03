@@ -94,8 +94,10 @@ Thêm trong bản này (thay cho link web):
 
 ## Vẫn mở trên web
 
-- Cài đặt Studio: dịch vụ & bảng giá, giờ làm/ngày nghỉ, sửa hồ sơ, tác phẩm, ví, xác minh danh tính, mở hồ sơ người
-  làm lần đầu; mỗi dòng ghi "mở trên web". Trình duyệt trong app không dùng chung phiên, có thể phải đăng nhập lại.
+- Đăng ký đối tác, chọn nghề, dịch vụ và ba mức giá, nơi phục vụ, giờ làm, tác phẩm và gửi duyệt đã có flow native
+  `/ho-so-doi-tac`. Tiến độ tính theo dữ liệu đã lưu; giờ gợi ý và lựa chọn chưa lưu chưa mở lịch nhận khách.
+- Ngày nghỉ, ví và xác minh danh tính vẫn mở trên web. Trình duyệt trong app không dùng chung phiên, có thể phải
+  đăng nhập lại. Xem quy trình và điều kiện nhận job tại [QUY_TRINH_DOI_TAC_2026-10.md](../../docs/QUY_TRINH_DOI_TAC_2026-10.md).
 - Gửi ảnh trong chat; ảnh chat chỉ hiện nếu storage cho phiên người dùng ký URL (web ký bằng server).
 - Đổi giờ hẹn (`request_reschedule`), báo vắng mặt; người đăng tin tuyển mẫu xem người ứng tuyển trên web.
 - **Video:** chỉ hiện khi có cột `works.video_path`. Bucket `works` hiện chỉ nhận ảnh ≤ 5 MB, nên tải clip sẽ bị

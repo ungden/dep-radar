@@ -34,6 +34,8 @@ Web dùng các trang Studio với tiến độ chung; app có màn hình native 
 
 Migration mới: `20261006100001_standard_partner_catalog_flow.sql`, sau migration ba mức giá hiện có. Đã chạy lại migration và SQL tests trên database local tách biệt; các cron cũ được bỏ qua trong database kiểm thử phụ do pg_cron chỉ chạy ở database chính.
 
+Ngày 04/10 đã build iOS Release cho Simulator, khởi chạy app và kiểm tra màn hình Nail hiển thị đủ ba mức giá cho từng gói. Bundle iOS/Android đã xuất với cấu hình backend công khai. Trạng thái phát hành và giới hạn kiểm tra: [RELEASE_PARTNER_2026-10-04.md](./RELEASE_PARTNER_2026-10-04.md).
+
 Thứ tự phát hành: áp dụng migration → phát hành web → phát hành bundle/build mobile. Production chưa được thay đổi trong đợt triển khai này. Migration giữ giá/đơn cũ và không tự công khai bản nháp. Nếu rollback giao diện, giữ schema bổ sung và các hợp đồng đã chốt; không xóa bảng lịch phụ đang có đơn.
 
 Ảnh kiểm tra web: [Desktop](./qa/partner-three-prices-desktop.jpg), [390px](./qa/partner-three-prices-mobile.jpg). Tài khoản QA và ảnh tải lên backend local đã được dọn sau kiểm tra.
