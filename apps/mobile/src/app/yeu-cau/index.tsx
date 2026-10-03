@@ -56,8 +56,8 @@ export default function MyRequests() {
                 </Txt>
               </View>
               <Txt w={700}>
-                {t?.name ?? item.templateId}
-                {v ? ` · ${v.label}` : ""}
+                {item.contract?.serviceName ?? t?.name ?? item.templateId}
+                {v ? ` · ${item.contract?.variantLabel ?? v.label}` : ""}
               </Txt>
               <Txt v="meta" color={colors.inkSoft}>
                 {item.time}, {formatDateLong(item.date)} · {item.district}, {item.city}

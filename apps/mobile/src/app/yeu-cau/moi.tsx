@@ -2,7 +2,7 @@ import * as React from "react"
 import { Stack, router, useFocusEffect, useNavigation } from "expo-router"
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { CATEGORIES, POLICY, templatesByCategory, tierLabels, type CategoryId } from "@/shared"
+import { CATEGORIES, POLICY, templatesByCategory, tierLabels, serviceQuantity, isUrgent, PRICE_LEVEL_NOTE, type CategoryId } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
 import { addDays, formatDateLong, formatDuration, formatPrice, todayISO, weekdayShort } from "@/data/format"
 import { postJob, requestPrice } from "@/data/requests"
@@ -39,6 +39,7 @@ export default function NewRequest() {
   const [variantId, setVariantId] = React.useState(templatesByCategory("nail")[0].variants[0].id)
   const [quantity, setQuantity] = React.useState(1)
   /** The chosen price level per person; null is "Tiêu chuẩn". */
+  const [feeLimit, setFeeLimit] = React.useState(0)
   const [tier, setTier] = React.useState<number | null>(null)
   const [description, setDescription] = React.useState("")
   const [date, setDate] = React.useState(addDays(todayISO(), 2))
@@ -87,13 +88,14 @@ export default function NewRequest() {
   const templates = templatesByCategory(category)
   const tpl = templates.find((t) => t.id === templateId) ?? templates[0]
   const variant = tpl.variants.find((v) => v.id === variantId) ?? tpl.variants[0]
-  const heads = variant.perPerson ? Math.min(Math.max(quantity, 1), variant.maxQuantity ?? 1) : 1
+  const heads = serviceQuantity(variant, quantity)
   const price = requestPrice(variant, tier)
   const labels = tierLabels(variant)
   const addresses = app.me.addresses
   const chosen = addresses.find((a) => a.id === addressId) ?? addresses.find((a) => a.isDefault) ?? addresses[0] ?? null
   const days = Array.from({ length: 21 }, (_, i) => addDays(todayISO(), i))
-  const valid = !tpl.studioOnly && Boolean(chosen) && date >= todayISO()
+  const maxTotal = price * heads + feeLimit + (isUrgent(date, time) ? POLICY.urgentFee : 0)
+  const valid = (variant.sessions ?? 1) === 1 && !tpl.studioOnly && Boolean(chosen) && date >= todayISO()
 
   const pickCategory = (c: CategoryId) => {
     setCategory(c)
@@ -123,6 +125,7 @@ export default function NewRequest() {
       quantity: heads,
       description: description.trim(),
       price,
+      maxTotal,
     })
     setBusy(false)
     if (!res.ok) {
@@ -188,7 +191,7 @@ export default function NewRequest() {
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
               <Txt w={600}>Số người</Txt>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-                <Button label="−" variant="secondary" size="sm" disabled={heads <= 1} onPress={() => setQuantity(heads - 1)} />
+                <Button label="−" variant="secondary" size="sm" disabled={heads <= (variant.minQuantity ?? 1)} onPress={() => setQuantity(heads - 1)} />
                 <Txt v="lead" w={700} tabular accessibilityLabel={`${heads} người`}>
                   {heads}
                 </Txt>
@@ -309,7 +312,7 @@ export default function NewRequest() {
               })}
             </View>
             <Txt v="meta" color={colors.inkSoft}>
-              Mức cao hơn thường có người nhận nhanh hơn{variant.perPerson ? ". Giá tính mỗi người." : "."}
+              {PRICE_LEVEL_NOTE}
             </Txt>
           </View>
         </Group>
@@ -317,6 +320,8 @@ export default function NewRequest() {
         <Txt v="meta" color={colors.muted}>
           Trả tiền mặt hoặc chuyển khoản cho người làm sau khi xong, không cần cọc. Làm xa hơn {POLICY.freeTravelKm} km hoặc bắt đầu trong {POLICY.urgentWithinHours} giờ tới, cộng thêm phí di chuyển / phí gấp theo bảng giá 360dep.
         </Txt>
+        <Group title="Phí di chuyển tối đa đồng ý"><View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>{[0, 25000, 50000, 100000].map((n) => <Chip key={n} label={formatPrice(n)} selected={n === feeLimit} onPress={() => setFeeLimit(n)} />)}</View><Txt>Tổng tối đa {formatPrice(maxTotal)} (đã gồm phí gấp nếu có).</Txt></Group>
+        {(variant.sessions ?? 1) > 1 && <ErrorNote text="Gói nhiều buổi: đặt trực tiếp từ hồ sơ đối tác để chọn đủ lịch." />}
         {error ? <ErrorNote text={error} /> : null}
       </ScrollView>
       <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: keyboard ? 12 : Math.max(insets.bottom, 12), backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line }}>

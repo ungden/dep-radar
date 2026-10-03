@@ -58,6 +58,7 @@ export function BookingRow({ booking, as }: { booking: BookingItem; as: "custome
         </Txt>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <StatusPill status={booking.status} />
+          {booking.status === "completed" && booking.delivery && !booking.delivery.acceptedAt && <Txt v="meta" color={colors.warning}>{booking.delivery.deliveredAt ? "Chờ xác nhận sản phẩm" : "Chờ giao sản phẩm"}</Txt>}
           <Txt v="meta" w={700} tabular>
             {formatPrice(as === "pro" ? booking.quote.payout : booking.quote.total)}
           </Txt>

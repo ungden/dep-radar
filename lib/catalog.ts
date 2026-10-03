@@ -37,31 +37,32 @@ export const isVertical = (value: unknown): value is VerticalId => VERTICALS.som
 const k = (n: number) => n * 1000
 
 /**
- * Variant helper. `tiers` are the 2–3 prices (thousand VND, ascending) a
+ * Variant helper. `tiers` are exactly three prices (thousand VND, ascending) a
  * partner chooses between; the band and the "Tiêu chuẩn" price follow from them.
  */
-const v = (id: string, label: string, durationMin: number, tiers: number[]): ServiceVariant => ({
+const v = (id: string, label: string, durationMin: number, tiers: [number, number, number]): ServiceVariant => ({
   id,
   label,
   durationMin,
-  tiers: tiers.map(k),
+  tiers: tiers.map(k) as [number, number, number],
   minPrice: k(tiers[0]),
   maxPrice: k(tiers[tiers.length - 1]),
-  suggestedPrice: k(tiers.length === 3 ? tiers[1] : tiers[0]),
+  suggestedPrice: k(tiers[1]),
 })
 
 /** A per-head option: price and duration are multiplied by the head count. */
 const group = (variant: ServiceVariant, maxQuantity: number): ServiceVariant => ({
   ...variant,
   perPerson: true,
+  durationRule: "per_person",
   maxQuantity,
 })
 
-const byDuration = (bands: [number, number[]][]) => bands.map(([d, tiers]) => v(`${d}m`, `${d} phút`, d, tiers))
+const byDuration = (bands: [number, [number, number, number]][]) => bands.map(([d, tiers]) => v(`${d}m`, `${d} phút`, d, tiers))
 
 /**
  * The 360đẹp service catalogue. Names, what is included, the options offered and
- * the 2–3 price levels of each option are set by 360đẹp so listings stay
+ * the three price levels of each option are set by 360đẹp so listings stay
  * comparable and fair. Partners choose which services/options they do and pick
  * one of the levels; they never type a price or invent a service.
  */
@@ -101,7 +102,7 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Tháo gel & dưỡng móng",
     description: "Tháo gel/bột an toàn, không làm mỏng móng.",
     includes: ["Tháo gel bằng dung dịch chuyên dụng", "Dũa lại form", "Dưỡng móng"],
-    variants: [v("remove", "Tháo gel", 20, [50, 80]), v("remove-care", "Tháo + dưỡng", 45, [100, 150])],
+    variants: [v("remove", "Tháo gel", 20, [50, 80, 100]), v("remove-care", "Tháo + dưỡng", 45, [100, 150, 200])],
   },
   {
     id: "nail-pedicure",
@@ -158,7 +159,7 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Makeup cô dâu",
     description: "Makeup và làm tóc cô dâu, tư vấn layout trước ngày cưới.",
     includes: ["Tư vấn layout trước ngày cưới", "Makeup + làm tóc cô dâu", "Mi giả, phụ kiện tóc cơ bản"],
-    variants: [v("one", "1 lễ (ăn hỏi hoặc cưới)", 120, [1200, 1800, 2800]), v("two", "Trọn gói 2 lễ (2 buổi)", 240, [2200, 3200, 4800]),
+    variants: [v("one", "1 lễ (ăn hỏi hoặc cưới)", 120, [1200, 1800, 2800]), { ...v("two", "Trọn gói 2 lễ (2 buổi × 120 phút)", 120, [2200, 3200, 4800]), sessions: 2 },
       v("fullday", "Theo cô dâu cả ngày (dặm, đổi layout)", 600, [3000, 4500, 6500]),],
   },
   {
@@ -416,7 +417,7 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Tháo mi nối",
     description: "Tháo mi cũ an toàn bằng dung dịch chuyên dụng.",
     includes: ["Tháo bằng dung dịch chuyên dụng", "Làm sạch mi thật"],
-    variants: [v("remove", "Tháo mi", 20, [50, 80])],
+    variants: [v("remove", "Tháo mi", 20, [50, 80, 100])],
   },
   {
     id: "brow-lamination",
@@ -565,9 +566,9 @@ const PHOTO_AND_MODEL: ServiceTemplate[] = [
     category: "photophone",
     name: "Chụp outfit / feedback quần áo",
     description: "Chụp từng bộ đồ khách tự mặc hoặc của shop, ảnh dọc kiểu mạng xã hội.",
-    includes: ["Hướng dẫn tạo dáng theo từng bộ", "Toàn bộ ảnh gốc", "2–3 ảnh chỉnh mỗi bộ"],
+    includes: ["Hướng dẫn tạo dáng theo từng bộ", "Toàn bộ ảnh gốc", "2 ảnh chỉnh mỗi bộ"],
     onLocation: true,
-    deliverable: "Ảnh gốc + 2–3 ảnh chỉnh mỗi bộ",
+    deliverable: "Ảnh gốc + 2 ảnh chỉnh mỗi bộ",
     deliveryDays: 2,
     variants: [v("5", "5 bộ · 60 phút", 60, [300, 450, 650]), v("10", "10 bộ · 2 giờ", 120, [500, 800, 1200])],
   },
@@ -650,7 +651,7 @@ const PHOTO_AND_MODEL: ServiceTemplate[] = [
     onLocation: true,
     deliverable: "Ảnh nhóm + ảnh từng người đã chỉnh",
     deliveryDays: 7,
-    variants: [group(v("half", "Buổi 3 giờ (giá mỗi người)", 180, [150, 250, 400]), 15)],
+    variants: [{ ...group(v("half", "Buổi 3 giờ (giá mỗi người)", 180, [150, 250, 400]), 15), minQuantity: 5, durationRule: "fixed" }],
   },
   // Quay clip ngắn ---------------------------------------------------------
   {
@@ -733,9 +734,9 @@ const PHOTO_AND_MODEL: ServiceTemplate[] = [
     category: "product-photo",
     name: "Chụp quần áo trải sàn / ma-nơ-canh",
     description: "Chụp flatlay hoặc ma-nơ-canh cho shop thời trang online.",
-    includes: ["Là phẳng & sắp đặt", "2–3 góc mỗi bộ", "Tách nền, chỉnh màu"],
+    includes: ["Là phẳng & sắp đặt", "2 góc mỗi bộ", "Tách nền, chỉnh màu"],
     onLocation: true,
-    deliverable: "2–3 ảnh mỗi bộ",
+    deliverable: "2 ảnh mỗi bộ",
     deliveryDays: 3,
     variants: [v("10", "10 bộ", 90, [400, 650, 1000]), v("30", "30 bộ", 240, [1000, 1700, 2600])],
   },
@@ -746,7 +747,7 @@ const PHOTO_AND_MODEL: ServiceTemplate[] = [
     description: "Chụp món tại quán cho menu, GrabFood, ShopeeFood.",
     includes: ["Bày món cơ bản", "Chụp tại quán", "Chỉnh màu"],
     onLocation: true,
-    deliverable: "1–2 ảnh mỗi món",
+    deliverable: "1 ảnh mỗi món",
     deliveryDays: 3,
     variants: [v("10", "10 món", 120, [600, 1000, 1600]), v("20", "20 món", 180, [1000, 1700, 2800])],
   },
@@ -830,6 +831,37 @@ const PHOTO_AND_MODEL: ServiceTemplate[] = [
 
 CATALOG.push(...PHOTO_AND_MODEL)
 
+// Scope belongs to the option, so changing quantity or price never changes
+// the promised output. Counts below are the minimum guaranteed, not ranges.
+const OUTPUTS: Record<string, Record<string, string>> = {
+  "photo-phone": { "30m": "Toàn bộ ảnh gốc + 5 ảnh chỉnh", "60m": "Toàn bộ ảnh gốc + 10 ảnh chỉnh", "90m": "Toàn bộ ảnh gốc + 15 ảnh chỉnh", "120m": "Toàn bộ ảnh gốc + 20 ảnh chỉnh" },
+  "photo-phone-group": { "pair-60": "Toàn bộ ảnh gốc + 15 ảnh chỉnh", "group-90": "Toàn bộ ảnh gốc + 25 ảnh chỉnh" },
+  "photo-tour": { half: "Toàn bộ ảnh gốc + 50 ảnh chỉnh", full: "Toàn bộ ảnh gốc + 100 ảnh chỉnh" },
+  "photo-outfit": { "5": "Ảnh gốc + 10 ảnh chỉnh (2 ảnh/bộ)", "10": "Ảnh gốc + 20 ảnh chỉnh (2 ảnh/bộ)" },
+  "photo-party": { "60m": "Ảnh gốc + 30 ảnh chỉnh", "120m": "Ảnh gốc + 60 ảnh chỉnh" },
+  "photo-portrait": { "60m": "Ảnh gốc chọn lọc + 15 ảnh chỉnh", "120m": "Ảnh gốc chọn lọc + 30 ảnh chỉnh" },
+  "photo-profile": { "30m": "5 ảnh chỉnh", "60m": "10 ảnh chỉnh" },
+  "photo-event": { "120m": "60 ảnh sự kiện đã chỉnh màu", "240m": "120 ảnh sự kiện đã chỉnh màu" },
+  "photo-family": { "60m": "Ảnh gốc chọn lọc + 15 ảnh chỉnh", "120m": "Ảnh gốc chọn lọc + 30 ảnh chỉnh" },
+  "photo-yearbook-group": { half: "20 ảnh nhóm + 3 ảnh chỉnh mỗi người" },
+}
+for (const template of CATALOG) {
+  for (const variant of template.variants) {
+    if (verticalOf(template.category) === "photo") {
+      variant.revisions = 1
+      variant.deliverable = OUTPUTS[template.id]?.[variant.id] ?? template.deliverable
+      if (["video-short", "video-talking", "product-video"].includes(template.id)) {
+        variant.deliverable = `${variant.id} clip dọc 9:16, 15–60 giây/clip, có nhạc và phụ đề; không gồm file dự án`
+      }
+      if (template.id === "product-basic") variant.deliverable = `${Number(variant.id) * 3} ảnh chỉnh (3 ảnh/sản phẩm)`
+      if (template.id === "product-lifestyle") variant.deliverable = `${Number(variant.id) * 2} ảnh chỉnh (2 ảnh/sản phẩm)`
+      if (template.id === "product-flatlay") variant.deliverable = `${Number(variant.id) * 2} ảnh chỉnh (2 ảnh/bộ)`
+      if (template.id === "product-food") variant.deliverable = `${variant.id} ảnh chỉnh (1 ảnh/món)`
+    }
+    if (template.id === "brow-tattoo") variant.followupDays = 45
+  }
+}
+
 export const getTemplate = (id: string) => CATALOG.find((t) => t.id === id)
 export const getVariant = (templateId: string, variantId: string) =>
   getTemplate(templateId)?.variants.find((x) => x.id === variantId)
@@ -837,8 +869,19 @@ export const templatesByCategory = (category: CategoryId) => CATALOG.filter((t) 
 export const templatesByVertical = (vertical: VerticalId) => CATALOG.filter((t) => verticalOf(t.category) === vertical)
 
 /** The names of a variant's price levels, lowest first. */
-export function tierLabels(variant: ServiceVariant): string[] {
-  return variant.tiers.length === 3 ? ["Phổ thông", "Tiêu chuẩn", "Cao cấp"] : ["Tiêu chuẩn", "Cao cấp"]
+export function tierLabels(_variant?: ServiceVariant): string[] {
+  return ["Cơ bản", "Chuyên nghiệp", "Master"]
+}
+
+export const CATALOG_VERSION = 2
+export const PRICE_LEVEL_NOTE = "Mức giá do đối tác tự chọn cho từng gói; tay nghề được thể hiện qua tác phẩm và đánh giá khách."
+
+export function serviceDuration(variant: ServiceVariant, quantity = 1): number {
+  return variant.durationMin * (variant.perPerson && variant.durationRule !== "fixed" ? quantity : 1)
+}
+
+export function serviceQuantity(variant: ServiceVariant, quantity = 1): number {
+  return variant.perPerson ? Math.min(variant.maxQuantity ?? 1, Math.max(variant.minQuantity ?? 1, quantity)) : 1
 }
 
 /** The level closest to a price (ties go to the lower one): for prices set before levels existed. */

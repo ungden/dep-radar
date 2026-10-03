@@ -36,7 +36,7 @@ export function BookingCard({ booking }: { booking: Booking }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <p className="truncate text-[15px] font-bold">{booking.serviceName}</p>
-            <StatusBadge status={booking.status} />
+            <StatusBadge status={booking.status} label={booking.status === "completed" && booking.delivery && !booking.delivery.acceptedAt ? booking.delivery.deliveredAt ? "Chờ xác nhận sản phẩm" : "Chờ giao sản phẩm" : undefined} />
           </div>
           <p className="truncate text-[13px] text-ink-soft">
             {booking.variantLabel} · {pro.name}
@@ -114,7 +114,7 @@ export function JobBookingRow({ booking, actions }: { booking: Booking; actions?
               {booking.serviceName} <span className="font-normal text-muted">· {booking.variantLabel}</span>
               {booking.quantity > 1 && <span className="font-normal text-muted"> · {booking.quantity} người</span>}
             </p>
-            <StatusBadge status={booking.status} />
+            <StatusBadge status={booking.status} label={booking.status === "completed" && booking.delivery && !booking.delivery.acceptedAt ? booking.delivery.deliveredAt ? "Chờ xác nhận sản phẩm" : "Chờ giao sản phẩm" : undefined} />
           </div>
           <p className="mt-0.5 flex items-center gap-1.5 text-[13px] text-ink-soft">
             <Avatar name={booking.customerName} size={20} />

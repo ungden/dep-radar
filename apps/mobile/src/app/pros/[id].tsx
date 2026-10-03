@@ -2,7 +2,7 @@ import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import { ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { categoryLabel, getTemplate, showsAverage, verticalOf, type Pro } from "@/shared"
+import { categoryLabel, getTemplate, showsAverage, verticalOf, type Pro, tierLabels } from "@/shared"
 import { formatDuration, formatKm, formatPrice, formatRating, formatResponseTime } from "@/data/format"
 import { loadProExtras } from "@/data/public"
 import { FollowButton } from "@/components/follow-button"
@@ -192,7 +192,8 @@ export default function ProProfile() {
                           {v.label}
                           <Txt v="meta" color={colors.muted}>
                             {"  "}
-                            {formatDuration(v.durationMin)}
+                            {formatDuration(v.durationMin)} · {tierLabels(v)[v.tiers.indexOf(s.prices[v.id])]}
+                            {v.deliverable ?? t.deliverable}{v.revisions ? ` · ${v.revisions} lượt sửa` : ""}{v.sessions ? ` · ${v.sessions} buổi` : ""}{v.followupDays ? ` · dặm trong ${v.followupDays} ngày` : ""}
                           </Txt>
                         </Txt>
                         <Txt w={700} tabular>

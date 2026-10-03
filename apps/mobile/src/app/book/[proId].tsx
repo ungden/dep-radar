@@ -1,8 +1,10 @@
 import * as React from "react"
 import { Stack, router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router"
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View, useWindowDimensions } from "react-native"
-import { CITIES, POLICY, buildQuote, districtsOf, getTemplate, isUrgent, travelDistanceKm } from "@/shared"
+import { appointmentAt, CITIES, POLICY, buildQuote, districtsOf, getTemplate, isUrgent, travelDistanceKm, serviceQuantity, type PriceQuote } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
+import { rpc } from "@/data/supabase"
+import { toTimestamptz } from "@/data/format"
 import { createBooking, fetchSlots } from "@/data/bookings"
 import { addDays, formatDateLong, formatDuration, formatKm, formatPrice, todayISO, weekdayShort } from "@/data/format"
 import { askForPushPermission } from "@/data/push"
@@ -71,7 +73,7 @@ export default function Book() {
   const template = listing ? getTemplate(listing.templateId) : undefined
   const offered = template && listing ? template.variants.filter((v) => listing.prices[v.id] != null) : []
   const variant = offered.find((v) => v.id === variantId) ?? offered[0]
-  const heads = variant?.perPerson ? Math.min(Math.max(quantity, 1), variant.maxQuantity ?? 1) : 1
+  const heads = variant ? serviceQuantity(variant, quantity) : 1
   const unit = variant && listing ? listing.prices[variant.id] : 0
   const servicePrice = unit * heads
 
@@ -104,7 +106,19 @@ export default function Book() {
   const daySlots = slots?.key === slotKey ? slots.list : null
   const picked = time && daySlots?.some((s) => s.startsAt === time.startsAt) ? time : null
 
-  const quote = picked ? buildQuote({ servicePrice, atHome, distanceKm: km, urgent: isUrgent(date, picked.time) }) : null
+  const quoteKey = [slotKey, picked?.startsAt, app.uid].join("|")
+  const [verified, setVerified] = React.useState<{ key: string; quote?: PriceQuote & { unitPrice: number; expiresAt: string }; error?: string } | null>(null)
+  const [secondDate, setSecondDate] = React.useState("")
+  const [secondTime, setSecondTime] = React.useState("09:00")
+  React.useEffect(() => {
+    if (!app.uid || !pro || !listing || !variant || !picked || (atHome && !address)) return
+    let live = true
+    void rpc<PriceQuote & { unitPrice: number; expiresAt: string }>("booking_quote", { p_pro: pro.uuid, p_template: listing.templateId, p_variant: variant.id, p_starts_at: picked.startsAt, p_at_home: atHome, p_address_id: atHome ? chosenId : null, p_quantity: heads }).then((r) => { if (live) setVerified({ key: quoteKey, ...(r.ok ? { quote: r.data } : { error: r.error }) }) })
+    return () => { live = false }
+  }, [quoteKey, app.uid, pro, listing, variant, picked, atHome, address, chosenId, heads])
+  const confirmedQuote = verified?.key === quoteKey ? verified.quote : null
+  const quote = confirmedQuote ?? (picked ? buildQuote({ servicePrice, atHome, distanceKm: km, urgent: isUrgent(date, picked.time) }) : null)
+
 
   // Leaving with choices made asks first; a sent booking leaves freely.
   const dirty = !doneId && (step > 1 || Boolean(time) || Boolean(note.trim()) || templateId !== null)
@@ -163,8 +177,12 @@ export default function Book() {
     if (atHome && !address) return addAddress()
     if (!app.me.account?.phone) return router.push("/so-dien-thoai")
     if (!picked) return
+    if (!confirmedQuote) return setError(verified?.error ?? "Đang kiểm tra tổng tiền.")
+    const secondAt = appointmentAt(secondDate, secondTime)
+    if ((variant.sessions ?? 1) > 1 && (!secondAt || secondAt <= picked.startsAt)) return setError("Chọn ngày, giờ hợp lệ cho buổi thứ hai sau buổi đầu.")
     setBusy(true)
     setError(null)
+    try {
     const res = await createBooking({
       proUuid: pro.uuid,
       templateId: template.id,
@@ -174,6 +192,8 @@ export default function Book() {
       addressId: atHome ? chosenId : null,
       quantity: heads,
       note: note.trim(),
+      expectedTotal: confirmedQuote.total, expectedUnit: confirmedQuote.unitPrice,
+      sessions: (variant.sessions ?? 1) > 1 ? [secondAt!] : [],
     })
     setBusy(false)
     if (!res.ok) {
@@ -185,6 +205,8 @@ export default function Book() {
     void app.refreshMe()
     // The confirmation call is time-critical; this is the moment to ask.
     void askForPushPermission(app.uid)
+    } catch { setError("Không gửi được lịch. Kiểm tra kết nối và thử lại.") }
+    finally { setBusy(false) }
   }
 
   const next = () => (step < 3 ? setStep(step + 1) : void submit())
@@ -238,7 +260,7 @@ export default function Book() {
                   key={v.id}
                   selected={v.id === variant.id}
                   title={v.label}
-                  subtitle={`${formatDuration(v.durationMin)}${v.perPerson ? " · mỗi người" : ""}`}
+                  subtitle={`${formatDuration(v.durationMin)}${v.perPerson ? v.durationRule === "fixed" ? " · cả nhóm, giá mỗi người" : " · mỗi người" : ""}`}
                   right={formatPrice(listing!.prices[v.id])}
                   onPress={() => {
                     setVariantId(v.id)
@@ -251,7 +273,7 @@ export default function Book() {
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                 <Txt w={600}>Số người</Txt>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-                  <Button label="−" variant="secondary" size="sm" disabled={heads <= 1} onPress={() => setQuantity(heads - 1)} />
+                  <Button label="−" variant="secondary" size="sm" disabled={heads <= (variant.minQuantity ?? 1)} onPress={() => setQuantity(heads - 1)} />
                   <Txt v="lead" w={700} tabular accessibilityLabel={`${heads} người`}>
                     {heads}
                   </Txt>
@@ -412,6 +434,8 @@ export default function Book() {
                 <Button label="Chọn lại giờ" variant="secondary" size="sm" onPress={() => setStep(2)} />
               </View>
             ) : null}
+            {app.uid && !confirmedQuote && <ErrorNote text={verified?.key === quoteKey && verified.error ? verified.error : "Đang xác nhận tổng tiền…"} />}
+            {(variant.sessions ?? 1) > 1 && <View style={{ gap: 8 }}><Txt w={700}>Buổi thứ hai (đã gồm trong giá)</Txt><TextInput accessibilityLabel="Ngày buổi thứ hai YYYY-MM-DD" placeholder="Ngày YYYY-MM-DD" value={secondDate} onChangeText={setSecondDate} style={{ padding: 12, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, color: colors.ink }} /><TextInput accessibilityLabel="Giờ buổi thứ hai HH:mm" value={secondTime} onChangeText={setSecondTime} style={{ padding: 12, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, color: colors.ink }} /><Txt v="meta">Hệ thống giữ cả hai buổi cùng lúc và kiểm tra giờ trống khi gửi.</Txt></View>}
             {quote && picked ? (
               <Card>
                 <Txt w={700}>
@@ -441,7 +465,7 @@ export default function Book() {
         title={quote ? `Tổng ${formatPrice(quote.total)}` : servicePrice ? formatPrice(servicePrice) : null}
         note={picked ? `${date.split("-").reverse().slice(0, 2).join("/")} · ${picked.time}` : variant.label}
         action={action}
-        disabled={!canNext}
+        disabled={!canNext || (step === 3 && Boolean(app.uid) && !confirmedQuote)}
         busy={busy}
         onPress={next}
       />

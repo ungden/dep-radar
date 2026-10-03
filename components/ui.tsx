@@ -184,9 +184,9 @@ const STATUS: Record<BookingStatus, { label: string; className: string }> = {
   no_show: { label: "Khách vắng mặt", className: "bg-danger-soft text-danger" },
 }
 
-export function StatusBadge({ status }: { status: BookingStatus }) {
+export function StatusBadge({ status, label }: { status: BookingStatus; label?: string }) {
   const s = STATUS[status]
-  return <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", s.className)}>{s.label}</span>
+  return <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", s.className)}>{label ?? s.label}</span>
 }
 
 export function Pill({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) {
@@ -359,10 +359,12 @@ export function Toggle({
   checked,
   onChange,
   label,
+  disabled,
 }: {
   checked: boolean
   onChange: (v: boolean) => void
   label: string
+  disabled?: boolean
 }) {
   return (
     <button
@@ -370,8 +372,9 @@ export function Toggle({
       role="switch"
       aria-checked={checked}
       aria-label={label}
+      disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={cn("relative h-7 w-12 shrink-0 rounded-full transition-colors", checked ? "bg-accent" : "bg-subtle-strong")}
+      className={cn("relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:opacity-50", checked ? "bg-accent" : "bg-subtle-strong")}
     >
       <span className={cn("absolute top-1 size-5 rounded-full bg-white shadow transition-all", checked ? "left-6" : "left-1")} />
     </button>

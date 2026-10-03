@@ -10,7 +10,7 @@
 do $$
 declare
   linh uuid; thu uuid; customer uuid; addr uuid; booking uuid; other uuid;
-  msg text; km numeric; q public.quote; n int; slot timestamptz; thread uuid;
+  identity_before public.verification_status; msg text; km numeric; q public.quote; n int; slot timestamptz; thread uuid;
   other_phone text; other_avatar text; leaving uuid; google_user uuid; google_addr uuid;
   -- Every date below is anchored to the next Monday, so the tests never land on
   -- the Sunday the demo freelancers take off.
@@ -20,6 +20,8 @@ begin
   select id into thu from public.pros where slug = 'thu-anh';
   select a.id into customer from public.accounts a where a.full_name = 'Ngọc Hân';
   select id into addr from public.addresses where account_id = customer;
+  -- Demo appointments use relative dates; isolate the two rule-test calendars.
+  delete from public.bookings where pro_id in(linh,thu) and status in('pending','confirmed','in_progress');
 
   ---------------------------------------------------------------------------
   raise notice 'travel fee bands';
@@ -50,7 +52,7 @@ begin
 
   raise notice 'group options multiply by head count';
   assert public.service_duration_min('makeup-photo', 'group', 3) = 135, 'three heads take three slots';
-  assert public.service_duration_min('makeup-photo', 'single', 3) = 60, 'a single option ignores quantity';
+  assert public.service_duration_min('makeup-photo', 'single', 3) is null, 'single rejects an invalid quantity';
   q := public.build_quote(380000, 3, false, null, false);
   assert q.service_price = 1140000, format('group price %s', q.service_price);
 
@@ -304,11 +306,11 @@ begin
   update public.accounts set full_name = msg where id = customer;
 
   perform set_config('request.jwt.claim.sub', linh::text, true);
-  select display_name, avatar_path into msg, other_avatar from public.pros where id = linh;
+  select display_name, avatar_path, identity_status into msg, other_avatar, identity_before from public.pros where id = linh;
   update public.pros set display_name = 'Chuyên viên đã rời nền tảng', published = false, avatar_path = null,
     identity_status = 'verified', identity_name = 'NGUYEN VAN A', rating_count = 999, suspended_at = null
     where id = linh;
-  assert (select identity_status from public.pros where id = linh) = 'none', 'the tombstone handed out a badge';
+  assert (select identity_status from public.pros where id = linh) = identity_before, 'the tombstone handed out a badge';
   assert (select rating_count from public.pros where id = linh) < 999, 'the tombstone set a rating';
   perform set_config('request.jwt.claim.sub', '', true);
   update public.pros set display_name = msg, avatar_path = other_avatar, published = true where id = linh;
@@ -330,7 +332,7 @@ begin
   raise notice 'deleting an account still anonymises it';
   insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
-          'leaving@example.invalid', jsonb_build_object('full_name', 'Sắp rời đi', 'phone', '0900 000 123'), now(), now())
+          (gen_random_uuid()::text||'-leaving@example.invalid'), jsonb_build_object('full_name', 'Sắp rời đi', 'phone', '0900 000 123'), now(), now())
   returning id into leaving;
   assert (select phone from public.accounts where id = leaving) = '+84900000123', 'a new account stores E.164';
   perform set_config('request.jwt.claim.sub', leaving::text, true);
@@ -343,7 +345,7 @@ begin
   raise notice 'a Google account starts without a phone number and cannot book until it has one';
   insert into auth.users (instance_id, id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
-          'google@example.invalid', '{"provider":"google","providers":["google"]}',
+          (gen_random_uuid()::text||'-google@example.invalid'), '{"provider":"google","providers":["google"]}',
           jsonb_build_object('name', 'Khách Google'), now(), now())
   returning id into google_user;
   assert (select phone from public.accounts where id = google_user) = '', 'a Google account got a phone number';
@@ -390,7 +392,7 @@ begin
   begin
     insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
     values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
-            'badphone@example.invalid', jsonb_build_object('full_name', 'Số sai', 'phone', '12345'), now(), now());
+            (gen_random_uuid()::text||'-badphone@example.invalid'), jsonb_build_object('full_name', 'Số sai', 'phone', '12345'), now(), now());
     assert false, 'an account with a malformed phone number was created';
   exception when check_violation then null;
   end;
@@ -401,7 +403,7 @@ begin
 
   perform set_config('request.jwt.claim.sub', linh::text, true);
   raise notice 'and cannot publish an empty profile';
-  insert into public.pros (id, slug, city, district) values (customer, 'ngoc-han-test', 'Hà Nội', 'Đống Đa');
+  insert into public.pros (id, slug, city, district, categories) values (customer, 'ngoc-han-test', 'Hà Nội', 'Đống Đa', array['nail']::public.category_id[]);
   perform set_config('request.jwt.claim.sub', customer::text, true);
   begin
     update public.pros set published = true where id = customer;
@@ -447,6 +449,9 @@ begin
       'slugify', 'is_admin', 'is_pro', 'log_work_events', 'work_stats_30d', 'banned_content', 'applied_to_casting',
       'free_days',
       -- the state machine and the things a person does to their own account
+      'create_partner', 'partner_setup', 'save_partner_profile', 'confirm_partner_hours', 'submit_partner_profile',
+      'save_pro_service', 'booking_quote', 'create_booking_checked', 'post_job_checked', 'my_job_eligibility',
+      'propose_followup', 'confirm_followup',
       'create_booking', 'confirm_booking', 'decline_booking', 'start_booking', 'complete_booking',
       'mark_no_show', 'cancel_booking', 'request_reschedule', 'respond_reschedule', 'post_job',
       'send_offer', 'accept_offer', 'withdraw_offer', 'write_review', 'reply_review', 'open_thread',
@@ -813,7 +818,7 @@ begin
   perform set_config('request.jwt.claim.sub', '', true);
   insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
-          'nophone@example.invalid', jsonb_build_object('name', 'Chưa có số'), now(), now())
+          (gen_random_uuid()::text||'-nophone@example.invalid'), jsonb_build_object('name', 'Chưa có số'), now(), now())
   returning id into nobody;
   perform set_config('request.jwt.claim.sub', nobody::text, true);
   begin
@@ -1159,7 +1164,7 @@ begin
   perform set_config('request.jwt.claim.sub', '', true);
   insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
-          'admin-test@example.invalid', jsonb_build_object('full_name', 'Quản trị thử'), now(), now())
+          (gen_random_uuid()::text||'-admin-test@example.invalid'), jsonb_build_object('full_name', 'Quản trị thử'), now(), now())
   returning id into admin_id;
   update public.accounts set is_admin = true where id = admin_id;
 
@@ -1520,7 +1525,7 @@ begin
   raise notice 'deleting an account takes its push tokens and blocks with it';
   insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
-          'leaving-2@example.invalid', jsonb_build_object('full_name', 'Rời đi lần hai', 'phone', '0900 000 789'), now(), now())
+          (gen_random_uuid()::text||'-leaving-2@example.invalid'), jsonb_build_object('full_name', 'Rời đi lần hai', 'phone', '0900 000 789'), now(), now())
   returning id into leaving;
   perform set_config('request.jwt.claim.sub', leaving::text, true);
   perform public.register_push_token('ExponentPushToken[rules-test-leaving01]', 'ios');
@@ -1537,7 +1542,7 @@ end $$;
 do $$
 declare
   linh uuid; thu uuid; customer uuid; addr uuid; b uuid; b2 uuid; b3 uuid; thread uuid; general uuid;
-  friend uuid; friend_addr uuid; code text; v uuid; n int; msg text; hidden boolean; bal int;
+  transfer_ref text := 'sepay:'||gen_random_uuid()::text; friend uuid; friend_addr uuid; code text; v uuid; n int; msg text; hidden boolean; bal int;
   monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
   tz text := public.app_timezone();
 begin
@@ -1551,7 +1556,7 @@ begin
   -- A brand-new customer who has never booked linh.
   insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
-          'friend@example.invalid', jsonb_build_object('full_name', 'Bạn Mới', 'phone', '0900 000 456'), now(), now())
+          (gen_random_uuid()::text||'-friend@example.invalid'), jsonb_build_object('full_name', 'Bạn Mới', 'phone', '0900 000 456'), now(), now())
   returning id into friend;
   insert into public.addresses (account_id, city, district, detail, lat, lng, is_default)
   select friend, city, district, detail, lat, lng, true from public.addresses where id = addr
@@ -1853,10 +1858,10 @@ begin
   end;
   perform set_config('request.jwt.claim.sub', '', true);
   code := (select pay_code from public.pros where id = linh);
-  assert public.record_bank_topup('CT DEN DEP' || code || ' FT123', -bal, 'sepay:TEST-1'), 'the transfer was not credited';
-  assert not public.record_bank_topup('CT DEN DEP' || code || ' FT123', -bal, 'sepay:TEST-1'), 'the same transfer was credited twice';
-  assert not public.record_bank_topup('chuyen tien', 100000, 'sepay:TEST-2'), 'a transfer without a code was credited';
-  assert public.record_bank_topup('DEPOSIT dep ' || lower(code), 1000, 'sepay:TEST-3'), 'a word before the code hid it';
+  assert public.record_bank_topup('CT DEN DEP' || code || ' FT123', -bal, transfer_ref||':1'), 'the transfer was not credited';
+  assert not public.record_bank_topup('CT DEN DEP' || code || ' FT123', -bal, transfer_ref||':1'), 'the same transfer was credited twice';
+  assert not public.record_bank_topup('chuyen tien', 100000, transfer_ref||':2'), 'a transfer without a code was credited';
+  assert public.record_bank_topup('DEPOSIT dep ' || lower(code), 1000, transfer_ref||':3'), 'a word before the code hid it';
   assert public.wallet_balance(linh) >= 0, 'paid, still owing';
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.confirm_booking(b3);
@@ -1897,11 +1902,11 @@ begin
   perform set_config('request.jwt.claim.sub', '', true);
   insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
-          'ai-review@example.invalid', jsonb_build_object('full_name', 'Đối Tác Mới', 'phone', '0900 000 654'), now(), now())
+          (gen_random_uuid()::text||'-ai-review@example.invalid'), jsonb_build_object('full_name', 'Đối Tác Mới', 'phone', '0900 000 654'), now(), now())
   returning id into newbie;
   insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
-          'admin-ai@example.invalid', jsonb_build_object('full_name', 'Quản trị AI'), now(), now())
+          (gen_random_uuid()::text||'-admin-ai@example.invalid'), jsonb_build_object('full_name', 'Quản trị AI'), now(), now())
   returning id into admin_id;
   update public.accounts set is_admin = true where id = admin_id;
 
@@ -1914,20 +1919,21 @@ begin
   perform set_config('request.jwt.claim.sub', newbie::text, true);
   -- Whatever a client sends, a new profile starts as a draft.
   insert into public.pros (id, slug, city, district, categories, review_status, reviewed_at)
-  values (newbie, 'doi-tac-moi-test', 'Hà Nội', 'Đống Đa', cats, 'approved', now());
+  values (newbie, 'doi-tac-moi-test-'||newbie::text, 'Hà Nội', 'Đống Đa', cats, 'approved', now());
   assert (select review_status = 'draft' and reviewed_at is null from public.pros where id = newbie),
     'a new profile did not start as a draft';
   insert into public.pro_services (pro_id, template_id, active) values (newbie, tpl, true);
   insert into public.working_hours (pro_id, weekday, start_min, end_min) values (newbie, 1, 540, 1080);
   insert into public.works (pro_id, template_id, title, image_paths, slug, hidden_at, ai_checked_at)
   values (newbie, tpl, 'Mẫu đầu tiên', array['https://example.invalid/storage/v1/object/public/works/a.jpg'],
-          'mau-dau-tien-ai-test', null, now())
+          'mau-dau-tien-ai-test-'||newbie::text, null, now())
   returning id into w;
   assert (select ai_checked_at is null from public.works where id = w), 'a new post skipped the reviewer''s queue';
 
   ---------------------------------------------------------------------------
   raise notice 'pressing "Mở hồ sơ" before approval asks for a review, and the profile stays hidden';
-  update public.pros set published = true where id = newbie;
+  perform public.confirm_partner_hours('[{"weekday":1,"startMin":540,"endMin":1080}]');
+  perform public.submit_partner_profile(true);
   assert (select not published and review_status = 'pending' and review_requested_at is not null
           from public.pros where id = newbie), 'publishing without approval did not go to pending';
   perform set_config('request.jwt.claim.sub', '', true);
@@ -1972,7 +1978,8 @@ begin
 
   raise notice 'sending it again, then an approval publishes it and is logged';
   perform set_config('request.jwt.claim.sub', newbie::text, true);
-  update public.pros set published = true where id = newbie;
+  perform public.confirm_partner_hours('[{"weekday":1,"startMin":540,"endMin":1080}]');
+  perform public.submit_partner_profile(true);
   assert (select review_status from public.pros where id = newbie) = 'pending', 'resubmitting did not ask for a review';
   perform set_config('request.jwt.claim.sub', '', true);
   log_id := public.apply_ai_profile_decision(newbie, 'approved', '{}', 'Hồ sơ đạt', 'gemini-test',
@@ -2154,7 +2161,7 @@ begin
   perform set_config('request.jwt.claim.sub', '', true);
   insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
-          'desk-admin@example.invalid', jsonb_build_object('full_name', 'Quản trị Desk'), now(), now())
+          (gen_random_uuid()::text||'-desk-admin@example.invalid'), jsonb_build_object('full_name', 'Quản trị Desk'), now(), now())
   returning id into admin_id;
   update public.accounts set is_admin = true where id = admin_id;
 

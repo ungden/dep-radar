@@ -45,25 +45,9 @@ export default function NewJobs() {
   const [busy, setBusy] = React.useState<string | null>(null)
 
   if (!pro || !uid) return null
-  const listed = (j: JobItem) => app.data?.services.find((s) => s.proId === pro.id && s.templateId === j.templateId && s.active)?.prices[j.variantId] ?? null
   const kmTo = (j: JobItem) => travelDistanceKm(pro.city, pro.district, j.city, j.district)
-  const inRange = (j: JobItem) => {
-    const km = kmTo(j)
-    return km === null || km <= pro.maxTravelKm
-  }
-  // What take_job itself checks that the app can know: the same city, a price listed for this package.
-  const problem = (j: JobItem): string | null => {
-    if (j.city !== pro.city) return "Yêu cầu ở thành phố khác."
-    if (listed(j) === null) return "Bạn chưa niêm yết gói này nên chưa nhận được."
-    if (!inRange(j)) return "Ngoài phạm vi bạn đi."
-    if (!pro.acceptingJobs) return "Bật nhận lịch ở tab Tôi để nhận việc."
-    if (fee.owing) return OWING_NOTE
-    return null
-  }
-
-  const list = (jobs.value ?? [])
-    .filter((j) => !j.mine)
-    .filter((j) => scope === "all" || (j.city === pro.city && listed(j) !== null && inRange(j)))
+  const problem = (j: JobItem): string | null => fee.owing ? OWING_NOTE : j.eligibility?.reason ?? (j.eligibility ? null : "Chưa kiểm tra được điều kiện nhận việc.")
+  const list = (jobs.value ?? []).filter((j) => !j.mine).filter((j) => scope === "all" || problem(j) === null)
 
   const take = async (j: JobItem) => {
     setBusy(j.id)
@@ -110,8 +94,8 @@ export default function NewJobs() {
             <Card style={{ marginBottom: 12 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
                 <Txt w={700} style={{ flex: 1 }}>
-                  {t?.name ?? j.templateId}
-                  {v ? ` · ${v.label}` : ""}
+                  {j.contract?.serviceName ?? t?.name ?? j.templateId}
+                  {v ? ` · ${j.contract?.variantLabel ?? v.label}` : ""}
                   {j.quantity > 1 ? ` × ${j.quantity} người` : ""}
                 </Txt>
                 <Txt v="lead" w={800} tabular>
@@ -125,8 +109,9 @@ export default function NewJobs() {
               {j.description ? <Txt color={colors.inkSoft}>{j.description}</Txt> : null}
               <Txt v="meta" color={colors.muted}>
                 {j.customerName} · {j.atHome ? "làm tại nhà khách" : "làm tại studio"}
-                {j.quantity > 1 ? ` · ${formatPrice(j.price)}/người` : ""} · phí di chuyển, phí gấp (nếu có) cộng thêm
+                {j.quantity > 1 ? ` · ${formatPrice(j.price)}/người` : ""} · tổng và phụ phí được máy chủ kiểm tra
               </Txt>
+              {j.eligibility?.payout != null && <Txt v="meta" color={colors.success}>Bạn nhận {formatPrice(j.eligibility.payout)}, đã gồm phụ phí sau hoa hồng.</Txt>}
               {why ? (
                 <Txt v="meta" color={fee.owing && why === OWING_NOTE ? colors.warning : colors.muted}>
                   {why}

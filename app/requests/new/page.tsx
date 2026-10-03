@@ -8,8 +8,8 @@ import { CATEGORY_ICON } from "@/components/beauty"
 import { RequireSession } from "@/components/require-session"
 import { BottomBar, Button, Field, PageHeader, PageSkeleton, inputClass } from "@/components/ui"
 import { AddressPicker, defaultAddressId } from "@/components/address-picker"
-import { CATEGORIES, getTemplate, templatesByCategory, tierLabels } from "@/lib/catalog"
-import { POLICY } from "@/lib/pricing"
+import { CATEGORIES, getTemplate, templatesByCategory, tierLabels, serviceQuantity, serviceDuration, PRICE_LEVEL_NOTE } from "@/lib/catalog"
+import { POLICY, isUrgent } from "@/lib/pricing"
 import { actions } from "@/lib/client-actions"
 import { useApp } from "@/lib/store"
 import { PAYMENT_LABEL } from "@/components/price-breakdown"
@@ -48,6 +48,7 @@ function NewRequestForm() {
   const [variantId, setVariantId] = React.useState(start.variants[0].id)
   const [quantity, setQuantity] = React.useState(1)
   // One of the option's price levels, per person; null starts on "Tiêu chuẩn".
+  const [feeLimit, setFeeLimit] = React.useState(0)
   const [tier, setTier] = React.useState<number | null>(null)
   const [description, setDescription] = React.useState("")
   const [date, setDate] = React.useState(addDays(todayISO(), 2))
@@ -63,7 +64,7 @@ function NewRequestForm() {
   const tpl = templates.find((t) => t.id === templateId) ?? templates[0]
   const variant = tpl.variants.find((v) => v.id === variantId) ?? tpl.variants[0]
   const atHome = atHomePref && !tpl.studioOnly
-  const heads = variant.perPerson ? Math.min(Math.max(quantity, 1), variant.maxQuantity ?? 1) : 1
+  const heads = serviceQuantity(variant, quantity)
   // post_job fixes the price per person at one of the catalogue's levels.
   const unit = tier !== null && variant.tiers.includes(tier) ? tier : variant.suggestedPrice
   const labels = tierLabels(variant)
@@ -81,7 +82,8 @@ function NewRequestForm() {
     pickVariant(first.variants[0].id)
   }
 
-  const valid = date >= todayISO() && atHome && Boolean(addressId)
+  const maxTotal = unit * heads + feeLimit + (isUrgent(date, time) ? POLICY.urgentFee : 0)
+  const valid = date >= todayISO() && atHome && Boolean(addressId) && (variant.sessions ?? 1) === 1
 
   return (
     <form
@@ -102,6 +104,7 @@ function NewRequestForm() {
           paymentMethod,
           quantity: heads,
           price: unit,
+          maxTotal,
         })
         setBusy(false)
         if ("error" in result) return setError(result.error)
@@ -138,6 +141,9 @@ function NewRequestForm() {
         </div>
       </fieldset>
 
+      <p className="text-xs text-muted">{PRICE_LEVEL_NOTE}</p>
+      <Field label="Phí di chuyển tối đa bạn đồng ý"><select className={inputClass} value={feeLimit} onChange={(e) => setFeeLimit(Number(e.target.value))}>{[0, 25000, 50000, 100000].map((n) => <option key={n} value={n}>{formatPrice(n)}</option>)}</select><p className="mt-2 text-sm">Tổng tối đa: {formatPrice(maxTotal)} (đã tính phí đặt gấp nếu có). Chỉ người làm có cùng mức giá, đủ điều kiện và không vượt tổng này mới nhận được.</p></Field>
+      {(variant.sessions ?? 1) > 1 && <p role="alert" className="text-warning">Gói nhiều buổi: hãy đặt trực tiếp từ hồ sơ đối tác để chọn đủ lịch.</p>}
       <Field label="Dịch vụ">
         <select
           className={inputClass}
@@ -187,7 +193,7 @@ function NewRequestForm() {
             <button
               type="button"
               aria-label="Giảm số người"
-              disabled={heads <= 1}
+              disabled={heads <= (variant.minQuantity ?? 1)}
               onClick={() => setQuantity(heads - 1)}
               className="inline-flex size-8 items-center justify-center rounded-full border border-line-strong disabled:opacity-40"
             >
@@ -234,7 +240,7 @@ function NewRequestForm() {
             </button>
           ))}
         </div>
-        <p className="mt-2 text-[12px] text-muted">Mức cao hơn thường có người nhận nhanh hơn và tay nghề, vật tư tốt hơn.</p>
+        <p className="mt-2 text-[12px] text-muted">{PRICE_LEVEL_NOTE}</p>
       </section>
 
       <Field label="Mô tả thêm (tuỳ chọn)" hint="Tình trạng da/móng/tóc, phong cách mong muốn, số người…">

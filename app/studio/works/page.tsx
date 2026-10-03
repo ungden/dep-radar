@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import { Columns2, Film, ImagePlus, Play, Share2, Trash2, X } from "lucide-react"
 import { ShareImages } from "@/components/portfolio-share"
+import { PartnerProgress } from "@/components/partner-progress"
 import { RequireSession } from "@/components/require-session"
 import { Sheet } from "@/components/sheet"
 import { Button, Card, EmptyState, Field, PageHeader, inputClass } from "@/components/ui"
@@ -19,6 +20,7 @@ export default function StudioWorksPage() {
     <div className="mx-auto max-w-3xl md:pt-4">
       <PageHeader title="Tác phẩm" back="/studio" />
       <RequireSession role="pro">
+        <PartnerProgress />
         <WorksManager />
       </RequireSession>
     </div>

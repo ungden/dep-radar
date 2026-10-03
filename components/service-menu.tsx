@@ -4,7 +4,7 @@ import * as React from "react"
 import { Check, ChevronDown, Clock, MapPin, PackageCheck, X } from "lucide-react"
 import { TradeDot } from "@/components/trade"
 import { ButtonLink, Chip, EmptyState } from "@/components/ui"
-import { categoryLabel, getTemplate, verticalOf } from "@/lib/catalog"
+import { categoryLabel, getTemplate, verticalOf, tierLabels, PRICE_LEVEL_NOTE } from "@/lib/catalog"
 import { getPro, servicesOf, useApp } from "@/lib/store"
 import { excludes, personWord, placeLabel } from "@/lib/trade"
 import type { CategoryId, Pro, ProService } from "@/lib/types"
@@ -113,8 +113,8 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
           <p className="mt-0.5 flex items-center gap-1 text-[13px] text-muted">
             <Clock className="size-3.5" />
             {variants.length === 1 && !variant.label.startsWith(`${variant.durationMin} phút`) ? `${variant.label} · ` : ""}
-            {formatDuration(variant.durationMin)}
-            {variant.perPerson ? " · mỗi người" : ""}
+            {formatDuration(variant.durationMin)} · {tierLabels(variant)[variant.tiers.indexOf(service.prices[variant.id])]}
+            {variant.perPerson ? variant.durationRule === "fixed" ? " · thời lượng cả nhóm, giá mỗi người" : " · mỗi người" : ""}
           </p>
         </div>
         {bookable && (
@@ -124,6 +124,8 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
         )}
       </div>
 
+      <p className="mt-2 text-xs text-muted">{PRICE_LEVEL_NOTE}</p>
+      <p className="mt-2 text-sm text-ink-soft">{variant.deliverable ?? tpl.deliverable}{variant.revisions ? ` · ${variant.revisions} lượt sửa` : ""}{variant.sessions ? ` · ${variant.sessions} buổi` : ""}{variant.followupDays ? ` · gồm dặm trong ${variant.followupDays} ngày` : ""}</p>
       {tpl.includes.length > 0 && (
         <>
           <button

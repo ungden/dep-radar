@@ -3,10 +3,11 @@
 import * as React from "react"
 import Link from "next/link"
 import { Pencil, Plus, Store, Trash2, X } from "lucide-react"
+import { PartnerProgress } from "@/components/partner-progress"
 import { RequireSession } from "@/components/require-session"
 import { Button, ButtonLink, Card, PageHeader, Toggle } from "@/components/ui"
 import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
-import { categoryLabel, getTemplate, isPriceAllowed, nearestTier, templatesByCategory, tierLabels } from "@/lib/catalog"
+import { categoryLabel, getTemplate, isPriceAllowed, PRICE_LEVEL_NOTE, templatesByCategory, tierLabels } from "@/lib/catalog"
 import { POLICY, payoutFor } from "@/lib/pricing"
 import { actions, useAct } from "@/lib/client-actions"
 import { proView, servicesOf, useApp } from "@/lib/store"
@@ -37,6 +38,7 @@ function ServicesManager() {
 
   return (
     <>
+      <PartnerProgress />
       <PageHeader
         title="Dịch vụ & bảng giá"
         action={
@@ -47,7 +49,7 @@ function ServicesManager() {
       />
       <div className="mb-4 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px] text-ink-soft">
         <p>
-          Bạn chọn dịch vụ từ danh mục chuẩn của 360dep, mỗi gói chọn 1 trong 2–3 mức giá có sẵn (theo giá thị trường), để khách so sánh công bằng. Giá đã gồm vật tư, không thu
+          Bạn chọn dịch vụ từ danh mục chuẩn của 360dep, mỗi gói chọn 1 trong đúng 3 mức giá có sẵn, để khách so sánh công bằng. Giá đã gồm vật tư, không thu
           thêm phụ phí ngoài phí di chuyển / đặt gấp do hệ thống tính.
         </p>
         <p className="mt-1">
@@ -94,7 +96,7 @@ function ServicesManager() {
                       <li key={v.id} className="rounded-xl bg-canvas px-3 py-2 text-[13px]">
                         <span className="text-ink-soft">{v.label}</span> · <b>{formatPrice(l.prices[v.id])}</b>
                         <span className="block text-xs text-muted">
-                          {formatDuration(v.durationMin)} · bạn nhận {formatPrice(payoutFor(l.prices[v.id], rate))}
+                          {tierLabels(v)[v.tiers.indexOf(l.prices[v.id])]} · {formatDuration(v.durationMin)} · bạn nhận {formatPrice(payoutFor(l.prices[v.id], rate))}
                         </span>
                       </li>
                     ))}
@@ -105,6 +107,7 @@ function ServicesManager() {
         })}
       </ul>
 
+      <ButtonLink href="/studio/profile/edit#noi-phuc-vu" className="mt-5">Tiếp tục: nơi phục vụ & giờ làm</ButtonLink>
       {editing && <PriceEditor templateId={editing} onClose={() => setEditing(null)} />}
       {adding && (
         <Sheet title="Thêm dịch vụ từ danh mục" onClose={() => setAdding(false)}>
@@ -163,12 +166,12 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
   const tpl = getTemplate(templateId) as ServiceTemplate
   const existing = servicesOf(state, proId, true).find((x) => x.templateId === templateId)
   const rate = POLICY.commissionRate
-  // A price listed before the levels existed shows as the level closest to it.
+  // Preserve saved choices; the partner explicitly selects any new level.
   const [prices, setPrices] = React.useState<Record<string, number | undefined>>(() =>
     Object.fromEntries(
       tpl.variants.map((v) => {
         const listed = existing?.prices[v.id]
-        return [v.id, existing ? (listed === undefined ? undefined : nearestTier(v, listed)) : v.suggestedPrice]
+        return [v.id, listed]
       }),
     ),
   )
@@ -210,6 +213,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
                   {v.label} <span className="font-normal text-muted">· {formatDuration(v.durationMin)}</span>
                 </span>
               </label>
+              <p className="mt-2 text-xs text-muted">{v.deliverable ?? tpl.deliverable}{v.revisions ? ` · ${v.revisions} lượt sửa` : ""}{v.sessions ? ` · ${v.sessions} buổi` : ""}{v.followupDays ? ` · dặm trong ${v.followupDays} ngày` : ""}</p>
               {on && (
                 <>
                   <div role="radiogroup" aria-label={`Mức giá ${v.label}`} className={cn("mt-3 grid gap-2", v.tiers.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
@@ -240,7 +244,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
           )
         })}
       </ul>
-      <p className="mt-3 text-xs text-muted">Chọn mức theo tay nghề và vật tư bạn dùng. Mức giá do 360dep khảo sát theo giá thị trường.</p>
+      <p className="mt-3 text-xs text-muted">{PRICE_LEVEL_NOTE}</p>
 
       {error && <p className="mt-3 rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
 

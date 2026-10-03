@@ -112,7 +112,7 @@ export default function ServiceScreen() {
             </View>
           ))}
           <Txt v="meta" color={colors.inkSoft} style={{ marginTop: 4 }}>
-            Mỗi gói có 2–3 mức giá do 360dep khảo sát theo giá thị trường; người làm chọn một mức. Khách không trả phí nền tảng.
+            Mỗi gói có đúng 3 mức giá có sẵn; người làm chọn một mức. Khách không trả phí nền tảng.
           </Txt>
         </Card>
       </View>

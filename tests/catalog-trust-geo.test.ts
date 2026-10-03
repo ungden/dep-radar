@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { CATALOG, CATEGORIES, getTemplate, getVariant, isPriceAllowed, nearestTier, templatesByCategory, tierLabels } from "@/lib/catalog"
+import { CATALOG, CATEGORIES, getTemplate, getVariant, isPriceAllowed, nearestTier, templatesByCategory, tierLabels, serviceDuration, serviceQuantity } from "@/lib/catalog"
 import { PROS, PRO_SERVICES, REVIEWS, getPro } from "@/lib/data"
 import { travelDistanceKm } from "@/lib/geo"
 import { bayesianRating, isVerified, rankScore } from "@/lib/trust"
@@ -15,12 +15,11 @@ describe("catalogue integrity", () => {
     }
   })
 
-  it("gives every option 2–3 ascending price levels on the 5.000đ step", () => {
+  it("gives every option exactly 3 ascending price levels on the 5.000đ step", () => {
     for (const t of CATALOG) {
       for (const v of t.variants) {
         const at = `${t.id}/${v.id}`
-        expect(v.tiers.length, at).toBeGreaterThanOrEqual(2)
-        expect(v.tiers.length, at).toBeLessThanOrEqual(3)
+        expect(v.tiers.length, at).toBe(3)
         v.tiers.forEach((tier, i) => {
           expect(tier % 5000, `${at} level ${i}`).toBe(0)
           if (i) expect(tier, `${at} level ${i}`).toBeGreaterThan(v.tiers[i - 1])
@@ -148,5 +147,22 @@ describe("ranking", () => {
     const senior = pro({ id: "a", identity: "none", rating, stats: { completedJobs: 300, responseMinutes: 30 } })
     const junior = pro({ id: "b", identity: "none", rating, stats: { completedJobs: 3, responseMinutes: 30 } })
     expect(rankScore(senior)).toBeGreaterThan(rankScore(junior))
+  })
+})
+
+
+describe("package scheduling", () => {
+  it("charges a yearbook group per person without multiplying the reserved session", () => {
+    const group = getVariant("photo-yearbook-group", "half")!
+    expect(serviceQuantity(group, 1)).toBe(5)
+    expect(serviceQuantity(group, 20)).toBe(15)
+    expect(serviceDuration(group, 5)).toBe(180)
+    expect(serviceDuration(group, 15)).toBe(180)
+  })
+  it("reserves sequential makeup time for each person and separate bridal appointments", () => {
+    expect(serviceDuration(getVariant("makeup-photo", "group")!, 3)).toBe(135)
+    const bridal = getVariant("makeup-bridal", "two")!
+    expect(bridal.sessions).toBe(2)
+    expect(serviceDuration(bridal, 1)).toBe(120)
   })
 })

@@ -1,4 +1,4 @@
-import { getTemplate, getVariant, verticalOf, type BookingStatus, type CategoryId, type PriceQuote } from "@/shared"
+import { getTemplate, getVariant, verticalOf, type ServiceContract, type BookingStatus, type CategoryId, type PriceQuote } from "@/shared"
 import { localDate, localTime } from "./format"
 import { imageUrl } from "./links"
 import { one, rpc, selectWithFallback, supabase, type Row } from "./supabase"
@@ -23,6 +23,7 @@ export interface BookingItem {
   paymentMethod: "online" | "cash"
   templateId: string
   variantId: string
+  contract?: ServiceContract
   serviceName: string
   variantLabel: string
   category: CategoryId
@@ -72,7 +73,7 @@ const WITH_DELIVERY = `${BASE}, delivery_due_at, delivered_at, delivery_url, del
 // 20260925100200_review_rules.sql and 20260925100300_referrals.sql.
 const WITH_CONNECTION = `${WITH_DELIVERY.replace("reviews (booking_id)", "reviews (booking_id, published_at)")},
   voucher_id, discount, customer_reviews (booking_id, rating, body, published_at)`
-const COLUMN_SETS = [WITH_CONNECTION, WITH_DELIVERY, BASE]
+const COLUMN_SETS = [`${WITH_CONNECTION}, service_contract`, WITH_CONNECTION, WITH_DELIVERY, BASE]
 
 function toBooking(row: Row): BookingItem {
   const template = getTemplate(row.template_id)
@@ -80,7 +81,7 @@ function toBooking(row: Row): BookingItem {
   const customer = one(row.customer)
   const pro = one(row.pro)
   const status = (row.status ?? "pending") as BookingStatus
-  const category = (template?.category ?? "nail") as CategoryId
+  const category = (row.service_contract?.category ?? template?.category ?? "nail") as CategoryId
   const hasDelivery = "delivery_due_at" in row && verticalOf(category) === "photo"
   const review = Array.isArray(row.reviews) ? (row.reviews[0] as Row | undefined) : (row.reviews as Row | null | undefined)
   const customerReview = Array.isArray(row.customer_reviews) ? (row.customer_reviews[0] as Row | undefined) : (row.customer_reviews as Row | null | undefined)
@@ -112,8 +113,9 @@ function toBooking(row: Row): BookingItem {
     paymentMethod: row.payment_method === "online" ? "online" : "cash",
     templateId: row.template_id,
     variantId: row.variant_id,
-    serviceName: template?.name ?? row.template_id,
-    variantLabel: variant?.label ?? row.variant_id,
+    contract: row.service_contract ?? undefined,
+    serviceName: row.service_contract?.serviceName ?? template?.name ?? row.template_id,
+    variantLabel: row.service_contract?.variantLabel ?? variant?.label ?? row.variant_id,
     category,
     confirmBy: row.confirm_by,
     cancelReason: row.cancel_reason ?? null,
@@ -219,8 +221,11 @@ export const createBooking = (input: {
   addressId: string | null
   quantity: number
   note: string
+  expectedTotal: number
+  expectedUnit: number
+  sessions?: string[]
 }) =>
-  rpc<string>("create_booking", {
+  rpc<string>("create_booking_checked", {
     p_pro: input.proUuid,
     p_template: input.templateId,
     p_variant: input.variantId,
@@ -230,6 +235,7 @@ export const createBooking = (input: {
     p_quantity: input.quantity,
     p_note: input.note,
     p_payment: "cash",
+    p_expected_total: input.expectedTotal, p_expected_unit: input.expectedUnit, p_sessions: input.sessions ?? [],
   })
 
 export const cancelBooking = (id: string, reason: string) => rpc("cancel_booking", { p_booking: id, p_reason: reason })
@@ -276,3 +282,10 @@ export const STATUS_LABEL: Record<BookingStatus, string> = {
 }
 
 export const isUpcoming = (b: BookingItem) => ["pending", "confirmed", "in_progress"].includes(b.status)
+
+export async function listPartnerAppointments(uid: string) {
+  const { data, error } = await supabase.from("booking_sessions").select("id,booking_id,sequence,starts_at,duration_min,confirmed,booking:bookings!inner(status,service_contract)").eq("pro_id", uid).order("starts_at")
+  if (error) throw new Error("Không tải được các buổi tiếp theo. Thử lại khi có mạng.")
+  type Appointment = { id: string; booking_id: string; sequence: number; starts_at: string; duration_min: number; confirmed: boolean; booking: { status: string; service_contract: { serviceName: string } } }
+  return (data as unknown as Appointment[]).filter((s) => ["pending", "confirmed", "in_progress", "completed"].includes(s.booking.status)).map((s) => ({ ...s, serviceName: s.booking.service_contract.serviceName }))
+}

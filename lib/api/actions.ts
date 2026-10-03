@@ -10,10 +10,13 @@ import type {
   CategoryId,
   ModelProfile,
   PaymentMethod,
+  PriceQuote,
+  JobEligibility,
   UsageScope,
   WorkEventKind,
   WorkKind,
 } from "@/lib/types"
+import type { PartnerSetup } from "@/lib/partner"
 import { localTime } from "@/lib/utils"
 import { GENERIC, messageFor } from "./errors"
 
@@ -156,11 +159,14 @@ export async function createBooking(input: {
   quantity?: number
   note?: string
   paymentMethod?: PaymentMethod
+  expectedTotal: number
+  expectedUnit: number
+  sessions?: string[]
 }) {
   const pro = await proIdFor(input.proId)
   if (!pro) return { ok: false as const, error: "Không tìm thấy chuyên viên." }
   return rpc<string>(
-    "create_booking",
+    "create_booking_checked",
     {
       p_pro: pro,
       p_template: input.templateId,
@@ -171,6 +177,9 @@ export async function createBooking(input: {
       p_quantity: input.quantity ?? 1,
       p_note: input.note ?? "",
       p_payment: input.paymentMethod ?? "cash",
+      p_expected_total: input.expectedTotal,
+      p_expected_unit: input.expectedUnit,
+      p_sessions: input.sessions ?? [],
     },
     ["/bookings"],
   )
@@ -219,9 +228,10 @@ export async function postJob(input: {
   paymentMethod?: PaymentMethod
   /** Per person, when the customer offers more than the catalogue price. */
   price?: number | null
+  maxTotal: number
 }) {
   return rpc<string>(
-    "post_job",
+    "post_job_checked",
     {
       p_template: input.templateId,
       p_variant: input.variantId,
@@ -232,7 +242,8 @@ export async function postJob(input: {
       p_description: input.description ?? "",
       p_payment: input.paymentMethod ?? "cash",
       // Left out at the catalogue price, so a database without p_price still takes it.
-      ...(input.price ? { p_price: input.price } : {}),
+      p_price: input.price,
+      p_max_total: input.maxTotal,
     },
     ["/requests"],
   )
@@ -345,37 +356,7 @@ export async function saveListing(input: {
   prices: Record<string, number>
   active?: boolean
 }): Promise<ActionResult> {
-  const supabase = await supabaseServer()
-  const { data: auth } = await supabase.auth.getUser()
-  if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
-  const proId = auth.user.id
-
-  const { error: listingError } = await supabase
-    .from("pro_services")
-    .upsert({ pro_id: proId, template_id: input.templateId, active: input.active ?? true })
-  if (listingError) return { ok: false, error: messageFor(listingError) }
-
-  const rows = Object.entries(input.prices).map(([variant_id, price]) => ({
-    pro_id: proId,
-    template_id: input.templateId,
-    variant_id,
-    price,
-  }))
-  // Options the freelancer removed are no longer offered.
-  const { error: clearError } = await supabase
-    .from("pro_service_prices")
-    .delete()
-    .eq("pro_id", proId)
-    .eq("template_id", input.templateId)
-    .not("variant_id", "in", `(${Object.keys(input.prices).join(",") || "''"})`)
-  if (clearError) return { ok: false, error: messageFor(clearError) }
-
-  if (rows.length) {
-    const { error } = await supabase.from("pro_service_prices").upsert(rows)
-    if (error) return { ok: false, error: messageFor(error) }
-  }
-  revalidatePath("/studio/services")
-  return { ok: true, data: undefined }
+  return rpc<void>("save_pro_service", { p_template: input.templateId, p_prices: input.prices, p_active: input.active ?? true }, ["/studio/services", "/pros"])
 }
 
 export async function removeListing(templateId: string): Promise<ActionResult> {
@@ -595,40 +576,22 @@ export async function saveProProfile(input: {
   published?: boolean
   /** Photo & video: what they shoot with. */
   equipment?: string | null
+  categories?: CategoryId[]
+  city?: string
+  district?: string
 }): Promise<ActionResult> {
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
 
-  // Only the fields a freelancer owns; the guards in the database drop the rest.
-  const row: Partial<{
-    display_name: string
-    title: string
-    bio: string
-    avatar_path: string | null
-    studio_address: string | null
-    home_service: boolean
-    max_travel_km: number
-    published: boolean
-    equipment: string | null
-  }> = {}
-  if (input.displayName !== undefined) row.display_name = input.displayName.trim()
-  if (input.title !== undefined) row.title = input.title.trim()
-  if (input.bio !== undefined) row.bio = input.bio.trim()
-  if (input.avatarPath !== undefined) row.avatar_path = input.avatarPath
-  if (input.studioAddress !== undefined) row.studio_address = input.studioAddress || null
-  if (input.homeService !== undefined) row.home_service = input.homeService
-  if (input.maxTravelKm !== undefined) row.max_travel_km = input.maxTravelKm
-  if (input.published !== undefined) row.published = input.published
-  if (input.equipment !== undefined) {
-    const equipment = (input.equipment ?? "").trim()
-    if (equipment.length > 200) return { ok: false, error: "Thiết bị tối đa 200 ký tự." }
-    row.equipment = equipment || null
+  const { published, ...profile } = input
+  const result = await rpc<void>("save_partner_profile", { p_profile: profile })
+  if (!result.ok) return result
+  if (published !== undefined) {
+    if (published) return { ok: false, error: "Xác nhận chính sách và gửi hồ sơ để duyệt." }
+    const { error } = await supabase.from("pros").update({ published: false }).eq("id", auth.user.id)
+    if (error) return { ok: false, error: messageFor(error) }
   }
-
-  const { error } = await supabase.from("pros").update(row).eq("id", auth.user.id)
-  if (error) return { ok: false, error: messageFor(error) }
-  if (input.published === true) reviewSoon(auth.user.id)
   revalidatePath("/studio", "layout")
   revalidatePath("/")
   return { ok: true, data: undefined }
@@ -656,7 +619,7 @@ export async function saveWorkingHours(
   windows: { weekday: number; startMin: number; endMin: number }[],
 ): Promise<ActionResult> {
   const supabase = await supabaseServer()
-  const { error } = await supabase.rpc("replace_working_hours" as never, { p_windows: windows } as never)
+  const { error } = await supabase.rpc("confirm_partner_hours" as never, { p_windows: windows } as never)
   if (error) return { ok: false, error: messageFor(error) }
   revalidatePath("/studio", "layout")
   return { ok: true, data: undefined }
@@ -831,4 +794,53 @@ export async function decideApplication(applicationId: string, accept: boolean) 
     { p_application: applicationId, p_accept: accept },
     ["/tuyen-mau", "/studio", "/tin-nhan"],
   )
+}
+
+export async function fetchPartnerSetup(): Promise<PartnerSetup> {
+  const result = await rpc<PartnerSetup>("partner_setup", {})
+  if (!result.ok) throw new Error(result.error)
+  return result.data
+}
+
+export async function submitPartnerProfile(agree: boolean): Promise<ActionResult> {
+  const result = await rpc<void>("submit_partner_profile", { p_agree: agree }, ["/studio", "/"])
+  if (result.ok) {
+    const { data } = await (await supabaseServer()).auth.getUser()
+    if (data.user) reviewSoon(data.user.id)
+  }
+  return result
+}
+
+export async function jobEligibility(ids: string[]): Promise<JobEligibility[]> {
+  const result = await rpc<JobEligibility[]>("my_job_eligibility", { p_ids: ids.slice(0, 200) })
+  if (!result.ok) throw new Error(result.error)
+  return result.data
+}
+
+export async function bookingQuote(input: { proId: string; templateId: string; variantId: string; startsAt: string; atHome: boolean; addressId: string | null; quantity: number }): Promise<ActionResult<PriceQuote & { unitPrice: number; expiresAt: string }>> {
+  const pro = await proIdFor(input.proId)
+  if (!pro) return { ok: false, error: "Không tìm thấy đối tác." }
+  return rpc("booking_quote", { p_pro: pro, p_template: input.templateId, p_variant: input.variantId,
+    p_starts_at: input.startsAt, p_at_home: input.atHome, p_address_id: input.addressId, p_quantity: input.quantity })
+}
+
+export async function bookingSessions(id: string) {
+  const client = await supabaseServer()
+  const { data: auth } = await client.auth.getUser()
+  const { data, error } = await client.from("booking_sessions" as never).select("*").eq("booking_id", id).order("sequence")
+  if (error) throw new Error(messageFor(error))
+  const rows = data as unknown as { id: string; sequence: number; starts_at: string; duration_min: number; confirmed: boolean; proposed_by: string }[]
+  return rows.map((s) => ({ ...s, mine: s.proposed_by === auth.user?.id }))
+}
+export async function proposeFollowup(id: string, startsAt: string) { return rpc<void>("propose_followup", { p_booking: id, p_starts_at: startsAt }, ["/bookings"]) }
+export async function confirmFollowup(id: string) { return rpc<void>("confirm_followup", { p_session: id }, ["/bookings"]) }
+
+export async function partnerAppointments() {
+  const client = await supabaseServer()
+  const { data: auth } = await client.auth.getUser()
+  if (!auth.user) throw new Error("Cần đăng nhập.")
+  const { data, error } = await client.from("booking_sessions" as never).select("id,booking_id,sequence,starts_at,duration_min,confirmed,booking:bookings!inner(status,service_contract)").eq("pro_id", auth.user.id).order("starts_at")
+  if (error) throw new Error(messageFor(error))
+  type Appointment = { id: string; booking_id: string; sequence: number; starts_at: string; duration_min: number; confirmed: boolean; booking: { status: string; service_contract: { serviceName: string } } }
+  return (data as unknown as Appointment[]).filter((s) => ["pending", "confirmed", "in_progress", "completed"].includes(s.booking.status)).map((s) => ({ ...s, serviceName: s.booking.service_contract.serviceName }))
 }

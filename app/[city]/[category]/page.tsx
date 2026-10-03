@@ -261,7 +261,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
               })}
             </ul>
             <p className="mt-3 text-[13px] leading-relaxed text-muted">
-              Mỗi gói có 2–3 mức giá theo giá thị trường; {person} chọn một mức, nên bạn so sánh được giữa các hồ sơ.{" "}
+              Mỗi gói có đúng 3 mức giá có sẵn; {person} chọn một mức, nên bạn so sánh được giữa các hồ sơ.{" "}
               <Link href="/chinh-sach" className="font-semibold text-ink underline underline-offset-2">
                 Chính sách phí
               </Link>

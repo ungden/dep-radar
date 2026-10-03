@@ -100,7 +100,7 @@ export default function PartnerPage() {
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-[13px] text-muted">{CATEGORIES.length} danh mục. Mỗi gói có 2–3 mức giá theo giá thị trường, bạn chọn mức hợp với tay nghề.</p>
+        <p className="mt-3 text-[13px] text-muted">{CATEGORIES.length} danh mục. Mỗi gói có đúng 3 mức giá có sẵn, bạn chọn mức hợp với tay nghề.</p>
       </section>
 
       <section className="mt-10 rounded-[var(--radius-lg)] bg-subtle p-5">

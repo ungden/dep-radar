@@ -90,6 +90,7 @@ function Navigator() {
       <Stack.Screen name="so-dien-thoai" options={{ title: "Số điện thoại", gestureEnabled: false }} />
       <Stack.Screen name="them-email" options={{ title: "Email lấy lại mật khẩu" }} />
       <Stack.Screen name="doi-mat-khau" options={{ title: "Mật khẩu", presentation: "modal" }} />
+      <Stack.Screen name="ho-so-doi-tac" options={{ title: "Hồ sơ đối tác" }} />
       <Stack.Screen name="doi-tac" options={{ title: "360dep Đối tác" }} />
       <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
     </Stack>

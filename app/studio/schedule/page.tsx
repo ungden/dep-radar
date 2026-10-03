@@ -4,6 +4,7 @@ import * as React from "react"
 import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { CalendarDays } from "lucide-react"
+import { PartnerAppointments } from "@/components/partner-appointments"
 import { JobBookingRow } from "@/components/booking-card"
 import { RequireSession } from "@/components/require-session"
 import { TimeBlocks } from "@/components/time-blocks"
@@ -103,6 +104,7 @@ function Schedule() {
           ) : (
             <EmptyState icon={<CalendarDays className="size-6" />} title="Ngày này còn trống" text="Khách có thể đặt các khung giờ trống của bạn." />
           )}
+          <PartnerAppointments date={day} />
           <TimeBlocks />
         </>
       )}

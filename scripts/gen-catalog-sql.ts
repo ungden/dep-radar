@@ -13,7 +13,7 @@
  * The output is idempotent: safe to run against an existing database.
  */
 import { writeFileSync, readFileSync, existsSync } from "node:fs"
-import { CATALOG, verticalOf } from "../lib/catalog"
+import { CATALOG, CATALOG_VERSION, tierLabels, verticalOf, VERTICALS, CATEGORIES } from "../lib/catalog"
 import type { ServiceTemplate } from "../lib/types"
 import { DISTRICT_COORDS } from "../lib/geo"
 import { POLICY } from "../lib/pricing"
@@ -59,22 +59,24 @@ lines.push("", "-- Service catalogue -------------------------------------------
 /** Upserts for one service and its options. sort_order is its place in CATALOG. */
 function templateSql(t: ServiceTemplate, sortOrder: number): string[] {
   const out = [
-    `insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order) values (`,
-    `  ${q(t.id)}, ${q(t.category)}, ${q(t.name)}, ${q(t.description)}, ${arr(t.includes)}, ${Boolean(t.studioOnly)}, ${Boolean(t.onLocation)}, ${t.deliverable ? q(t.deliverable) : "null"}, ${t.deliveryDays ?? "null"}, ${Boolean(t.requiresVerification)}, true, ${sortOrder})`,
+    `insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (`,
+    `  ${q(t.id)}, ${q(t.category)}, ${q(t.name)}, ${q(t.description)}, ${arr(t.includes)}, ${Boolean(t.studioOnly)}, ${Boolean(t.onLocation)}, ${t.deliverable ? q(t.deliverable) : "null"}, ${t.deliveryDays ?? "null"}, ${Boolean(t.requiresVerification)}, true, ${sortOrder}, ${CATALOG_VERSION})`,
     "  on conflict (id) do update set category = excluded.category, name = excluded.name,",
     "    description = excluded.description, includes = excluded.includes,",
     "    studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,",
     "    delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,",
-    "    active = excluded.active, sort_order = excluded.sort_order;",
+    "    active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;",
   ]
   t.variants.forEach((v, vi) => {
     out.push(
-      `insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order) values (`,
-      `  ${q(t.id)}, ${q(v.id)}, ${q(v.label)}, ${v.durationMin}, ${v.minPrice}, ${v.maxPrice}, ${v.suggestedPrice}, array[${v.tiers.join(", ")}], ${Boolean(v.perPerson)}, ${v.maxQuantity ?? 1}, ${vi})`,
+      `insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (`,
+      `  ${q(t.id)}, ${q(v.id)}, ${q(v.label)}, ${v.durationMin}, ${v.minPrice}, ${v.maxPrice}, ${v.suggestedPrice}, array[${v.tiers.join(", ")}], ${Boolean(v.perPerson)}, ${v.maxQuantity ?? 1}, ${vi}, ${q(v.durationRule ?? "fixed")}, ${v.minQuantity ?? 1}, ${v.deliverable ? q(v.deliverable) : "null"}, ${v.revisions ?? 0}, ${v.sessions ?? 1}, ${v.followupDays ?? "null"})`,
       "  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,",
       "    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,",
       "    price_tiers = excluded.price_tiers,",
-      "    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order;",
+      "    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,",
+      "    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,",
+      "    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;",
     )
   })
   return out
@@ -85,6 +87,22 @@ if (only) {
   const verticals = only.slice("--templates=".length).split(",")
   const picked = CATALOG.flatMap((t, ti) => (verticals.includes(verticalOf(t.category)) ? templateSql(t, ti) : []))
   process.stdout.write(picked.join("\n") + "\n")
+  process.exit(0)
+}
+
+if (process.argv.includes("--prices")) {
+  const rows = ["# Bảng giá 360đẹp (10/2026)", "", "Mỗi gói có đúng 3 mức giá; đối tác tự chọn một mức cho từng gói. Mức giá không phải chứng nhận tay nghề. Giá đã gồm vật tư trong phạm vi gói; phí di chuyển và đặt gấp được xác nhận riêng. Đơn vị: nghìn đồng (k).", "", "Sinh từ lib/catalog.ts. Đây là bảng giá nền tảng, chưa phải khảo sát thị trường đã kiểm chứng.", ""]
+  for (const vertical of VERTICALS) {
+    rows.push(`## ${vertical.label}`, "")
+    for (const category of CATEGORIES.filter((c) => c.vertical === vertical.id)) {
+      rows.push(`### ${category.label}`, "", `| Dịch vụ | Gói | Thời lượng mỗi buổi | ${tierLabels().join(" | ")} | Đầu ra / điều kiện |`, "| --- | --- | --- | --- | --- | --- | --- |")
+      for (const t of CATALOG.filter((t) => t.category === category.id)) {
+        for (const v of t.variants) rows.push(`| ${t.name} | ${v.label} | ${v.durationMin} phút${v.perPerson ? v.durationRule === "fixed" ? " / nhóm" : " / người" : ""}${(v.sessions ?? 1) > 1 ? ` × ${v.sessions} buổi` : ""} | ${v.tiers.map((p) => `${p / 1000}k`).join(" | ")} | ${v.deliverable ?? t.deliverable ?? t.includes.join("; ")}${v.revisions ? `; ${v.revisions} lần sửa` : ""}${t.deliveryDays ? `; giao trong ${t.deliveryDays} ngày` : ""}${v.followupDays ? `; dặm trong ${v.followupDays} ngày` : ""}${v.perPerson ? `; ${v.minQuantity ?? 1}–${v.maxQuantity} người` : ""}${t.studioOnly ? "; tại studio" : ""} |`)
+      }
+      rows.push("")
+    }
+  }
+  writeFileSync("docs/BANG_GIA_2026-10.md", rows.join("\n"))
   process.exit(0)
 }
 

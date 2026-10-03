@@ -93,7 +93,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
               ))}
             </ul>
             <p className="mt-3 text-[13px] text-ink-soft">
-              Mỗi gói có 2–3 mức giá do 360dep khảo sát theo giá thị trường; người làm chọn một mức. Khách không trả phí nền tảng.
+              Mỗi gói có đúng 3 mức giá có sẵn; người làm chọn một mức. Khách không trả phí nền tảng.
             </p>
           </div>
         </aside>

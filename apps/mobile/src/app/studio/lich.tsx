@@ -1,5 +1,6 @@
 import * as React from "react"
 import { FlashList } from "@shopify/flash-list"
+import { router } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -7,6 +8,7 @@ import { isUpcoming, listBookings, type BookingItem } from "@/data/bookings"
 import { formatDay } from "@/data/format"
 import { webLink } from "@/data/links"
 import { BookingRow } from "@/components/booking-row"
+import { PartnerAppointments } from "@/components/partner-appointments"
 import { StudioHeader } from "@/components/studio-header"
 import { TextTabs } from "@/components/switches"
 import { useApp } from "@/state/app"
@@ -63,7 +65,7 @@ export default function StudioCalendar() {
             </View>
           )
         }
-        ListHeaderComponent={bookings.error ? <ErrorNote text={bookings.error} onRetry={() => void bookings.reload()} /> : null}
+        ListHeaderComponent={<>{bookings.error && <ErrorNote text={bookings.error} onRetry={() => void bookings.reload()} />}{tab === "upcoming" && <PartnerAppointments reloadKey={bookings.value} />}</>}
         ListEmptyComponent={
           bookings.loading ? (
             <View style={{ gap: 10 }}>
@@ -80,7 +82,8 @@ export default function StudioCalendar() {
             <Txt v="meta" color={colors.muted}>
               Giờ làm việc và ngày nghỉ quyết định giờ trống khách thấy.
             </Txt>
-            <Button label="Giờ làm, ngày nghỉ (mở trên web)" size="sm" variant="secondary" icon="external" onPress={() => void WebBrowser.openBrowserAsync(webLink("/studio/schedule"))} />
+            <Button label="Giờ làm việc" size="sm" variant="secondary" onPress={() => router.push({ pathname: "/ho-so-doi-tac", params: { step: "3" } })} />
+            <Button label="Ngày nghỉ (mở trên web)" size="sm" variant="secondary" icon="external" onPress={() => void WebBrowser.openBrowserAsync(webLink("/studio/schedule"))} />
           </View>
         }
       />

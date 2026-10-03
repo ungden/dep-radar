@@ -495,6 +495,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
             service_price, distance_km, travel_fee, urgent_fee, total, commission_rate, commission, payout,
             payment_method, confirm_by, cancel_reason, cancelled_by, cancelled_at, completed_at,
             reschedule_to, reschedule_by, created_at,
+            ${legacy === 0 ? "service_contract," : ""}
             ${legacy >= 2 ? "" : "usage_scope, consent_repost, booking_group_id, delivery_due_at, delivered_at, delivery_url, delivery_note, delivery_accepted_at,"}
             ${legacy >= 1 ? "" : "discount, voucher_id,"}
             customer:accounts!bookings_customer_id_fkey (full_name, phone),
@@ -505,16 +506,18 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
           .order("starts_at", { ascending: false }),
       2,
     ),
-    // Generation 1 = the 2026-09-26 match-then-chat columns (price, booking, call-out).
+    // First fall back from frozen scope, then from the older match-then-chat columns.
     orLegacy((legacy) =>
       supabase
         .from("jobs")
         .select(`
           id, customer_id, template_id, variant_id, quantity, description, starts_at,
           at_home, address_id, city, district, customer_name, payment_method, status, created_at
-          ${legacy ? "" : ", price, booking_id, notified"}
+          ${legacy >= 2 ? "" : ", price, booking_id, notified"}
+          ${legacy >= 1 ? "" : ", service_contract, max_total"}
         `)
         .order("created_at", { ascending: false }),
+      2,
     ),
     supabase.from("addresses").select("*").eq("account_id", me).order("created_at"),
     supabase.from("saved_works").select("work_id").eq("account_id", me),
@@ -580,9 +583,10 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       proId: slugOf.get(row.pro_id) ?? row.pro_id,
       templateId: row.template_id,
       variantId: row.variant_id,
-      serviceName: template?.name ?? row.template_id,
-      variantLabel: variant?.label ?? row.variant_id,
-      category: (template?.category ?? "nail") as CategoryId,
+      serviceName: row.service_contract?.serviceName ?? template?.name ?? row.template_id,
+      variantLabel: row.service_contract?.variantLabel ?? variant?.label ?? row.variant_id,
+      category: (row.service_contract?.category ?? template?.category ?? "nail") as CategoryId,
+      contract: row.service_contract ?? undefined,
       durationMin: row.duration_min,
       date: localDate(row.starts_at),
       time: localTime(row.starts_at),
@@ -683,6 +687,8 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
 
   const jobs: JobPost[] = rowsOf<Row>("jobs", jobsRes).map((row: Row) => ({
     id: row.id,
+    contract: row.service_contract ?? undefined,
+    maxTotal: row.max_total ?? null,
     templateId: row.template_id,
     variantId: row.variant_id,
     description: row.description ?? "",

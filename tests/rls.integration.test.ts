@@ -542,4 +542,45 @@ describe.skipIf(!configured)("row level security over the API", () => {
       expect(error, fn).toBeTruthy()
     }
   })
+  it("loads only the signed-in partner setup and saves through owner RPCs", async () => {
+    const pro = client(tokenFor(proId))
+    const { data, error } = await pro.rpc("partner_setup" as never, {} as never)
+    expect(error, error?.message).toBeNull()
+    const setup = data as unknown as { profile: { id: string }; hours: unknown[]; services: unknown[] }
+    expect(setup.profile.id).toBe(proId)
+    expect(setup.services.length).toBeGreaterThan(0)
+    const saved = await pro.rpc("save_partner_profile" as never, { p_profile: {} } as never)
+    expect(saved.error, saved.error?.message).toBeNull()
+    const hours = await pro.rpc("confirm_partner_hours" as never, { p_windows: setup.hours } as never)
+    expect(hours.error, hours.error?.message).toBeNull()
+    const consent = await pro.rpc("submit_partner_profile" as never, { p_agree: false } as never)
+    expect(consent.error).toBeTruthy()
+    const other = await client(tokenFor(otherCustomerId)).rpc("partner_setup" as never, {} as never)
+    expect((other.data as unknown as { profile: unknown }).profile).toBeNull()
+  })
+
+  it("refuses arbitrary service tiers atomically through the authenticated API", async () => {
+    const pro = client(tokenFor(proId))
+    const before = await pro.from("pro_service_prices").select("price").eq("pro_id", proId).eq("template_id", "nail-design").eq("variant_id", "simple").single()
+    const bad = await pro.rpc("save_pro_service" as never, { p_template: "nail-design", p_prices: { simple: 265000 }, p_active: true } as never)
+    expect(bad.error).toBeTruthy()
+    const after = await pro.from("pro_service_prices").select("price").eq("pro_id", proId).eq("template_id", "nail-design").eq("variant_id", "simple").single()
+    expect(after.data?.price).toBe(before.data?.price)
+  })
+
+  it("keeps partner setup, hours, listing saves and contracts away from anonymous callers", async () => {
+    const anon = client()
+    for (const [fn, args] of [
+      ["partner_setup", {}], ["submit_partner_profile", { p_agree: true }],
+      ["confirm_partner_hours", { p_windows: [] }],
+      ["save_pro_service", { p_template: "nail-design", p_prices: { simple: 260000 }, p_active: true }],
+      ["my_job_eligibility", { p_ids: [] }],
+    ] as const) {
+      const r = await anon.rpc(fn as never, args as never)
+      expect(r.error, fn).toBeTruthy()
+    }
+    const rows = await anon.from("booking_sessions" as never).select("*")
+    expect(rows.error).toBeTruthy()
+  })
+
 })

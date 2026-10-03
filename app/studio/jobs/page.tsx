@@ -7,10 +7,11 @@ import { FEE_ANCHOR, FEE_BLOCK_REASON, FeeDueCard, useFeeOwed } from "@/componen
 import { RequestCard } from "@/components/request-card"
 import { RequireSession } from "@/components/require-session"
 import { Button, Chip, EmptyState, PageHeader, buttonClass } from "@/components/ui"
-import { getTemplate } from "@/lib/catalog"
+import { jobEligibility } from "@/lib/api/actions"
+import type { JobEligibility } from "@/lib/types"
 import { actions } from "@/lib/client-actions"
 import { POLICY, commissionFor } from "@/lib/pricing"
-import { distanceToCustomer, priceOf, proView, useApp, useRefresh } from "@/lib/store"
+import { distanceToCustomer, proView, useApp, useRefresh } from "@/lib/store"
 import type { JobPost } from "@/lib/types"
 import { formatPrice } from "@/lib/utils"
 
@@ -59,12 +60,15 @@ function JobBoard() {
     }
   }, [refresh])
 
+  const [eligibility, setEligibility] = React.useState<JobEligibility[]>([])
+  const [loadError, setLoadError] = React.useState<string | null>(null)
+  React.useEffect(() => { let live = true; void jobEligibility(state.jobs.filter((j) => !j.mine && j.status === "open").map((j) => j.id)).then((r) => { if (live) { setEligibility(r); setLoadError(null) } }).catch((e: Error) => { if (live) setLoadError(e.message) }); return () => { live = false } }, [state.jobs])
   const jobs = state.jobs
     .filter((j) => !j.mine && j.status === "open" && !gone.includes(j.id))
     .map((j) => ({ job: j, km: distanceToCustomer(state, proId, { city: j.city, district: j.district, detail: "" }) }))
-    .filter(({ job, km }) =>
+    .filter(({ job }) =>
       scope === "match"
-        ? pro.categories.includes(getTemplate(job.templateId)?.category ?? "nail") && km !== null && km <= pro.maxTravelKm
+        ? eligibility.some((e) => e.id === job.id && !e.reason)
         : true,
     )
     .sort((a, b) => `${a.job.date}${a.job.time}`.localeCompare(`${b.job.date}${b.job.time}`))
@@ -97,17 +101,8 @@ function JobBoard() {
         <ul className="space-y-3">
           {jobs.map(({ job, km }) => {
             // Taking needs the service listed, inside the travel radius; the database checks the rest.
-            const listed = priceOf(state, proId, job.templateId, job.variantId)
-            const reason =
-              owed > 0
-                ? FEE_BLOCK_REASON
-                : !state.acceptingJobs
-                  ? "Bạn đang tạm nghỉ nhận khách"
-                  : listed === null
-                    ? "Bạn chưa niêm yết dịch vụ/gói này"
-                    : km === null || km > pro.maxTravelKm
-                      ? "Ngoài phạm vi di chuyển của bạn"
-                      : undefined
+            const match = eligibility.find((e) => e.id === job.id)
+            const reason = owed > 0 ? FEE_BLOCK_REASON : loadError ?? (match ? match.reason ?? undefined : "Đang kiểm tra điều kiện nhận việc…")
             return (
               <li key={job.id} id={job.id} className="scroll-mt-20">
                 <RequestCard
@@ -123,6 +118,7 @@ function JobBoard() {
                     <TakeBox
                       job={job}
                       reason={reason}
+                      verifiedPayout={match?.payout}
                       onTaken={() => {
                         setGone((ids) => [...ids, job.id])
                         setNotice(`${TAKEN} Yêu cầu đã được gỡ khỏi danh sách.`)
@@ -145,20 +141,19 @@ function JobBoard() {
   )
 }
 
-function TakeBox({ job, reason, onTaken }: { job: JobPost; reason?: string; onTaken: () => void }) {
+function TakeBox({ job, reason, verifiedPayout, onTaken }: { job: JobPost; reason?: string; verifiedPayout?: number | null; onTaken: () => void }) {
   const router = useRouter()
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   // Commission is on the service price only; travel and urgent fees are all the freelancer's.
   const service = job.price !== null ? job.price * job.quantity : null
-  const payout = service !== null ? service - commissionFor(service) : null
+  const payout = verifiedPayout ?? (service !== null ? service - commissionFor(service) : null)
 
   return (
     <div className="mt-3 border-t border-line pt-3">
       {payout !== null && (
         <p className="text-[13px] text-ink-soft">
-          Bạn nhận <b className="text-success">{formatPrice(payout)}</b> sau phí 360dep {Math.round(POLICY.commissionRate * 100)}%, cộng phí
-          di chuyển / đặt gấp nếu có.
+          Bạn nhận <b className="text-success">{formatPrice(payout)}</b> sau phí 360dep {Math.round(POLICY.commissionRate * 100)}%, đã gồm phí di chuyển / đặt gấp khi đủ điều kiện.
         </p>
       )}
       <div className="mt-2 flex items-center justify-between gap-3">

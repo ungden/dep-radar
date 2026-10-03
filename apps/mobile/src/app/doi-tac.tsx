@@ -1,10 +1,7 @@
 import * as React from "react"
 import { router } from "expo-router"
-import * as WebBrowser from "expo-web-browser"
 import { ScrollView, View } from "react-native"
-import { webLink } from "@/data/links"
 import { CategoryIcon } from "@/components/category-icon"
-import { useApp } from "@/state/app"
 import { colors, gutter, radius } from "@/theme"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -17,13 +14,7 @@ import { Txt } from "@/ui/text"
  * which lives on the web for now.
  */
 export default function Partner() {
-  const app = useApp()
-
-  const openProfile = async () => {
-    await WebBrowser.openBrowserAsync(webLink("/doi-tac"))
-    // They may have just opened one: the switch to 360dep Đối tác then shows in Tôi.
-    void app.refresh()
-  }
+  const openProfile = () => router.push("/ho-so-doi-tac")
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.canvas }} contentContainerStyle={{ padding: gutter, gap: 16 }}>
@@ -34,8 +25,7 @@ export default function Partner() {
       <Option
         icon={<CategoryIcon id="camera" size={36} />}
         title="Thợ, người chụp ảnh, quay clip"
-        text="Mở hồ sơ đối tác, đăng dịch vụ và bảng giá, nhận lịch từ khách. Mở trên web."
-        external
+        text="Mở hồ sơ đối tác, đăng dịch vụ và bảng giá, nhận lịch từ khách. Lưu từng bước ngay trong app."
         onPress={() => void openProfile()}
       />
       <Option

@@ -1,4 +1,4 @@
-import { getVariant, type ServiceVariant } from "@/shared"
+import { getVariant, type ServiceContract, type ServiceVariant } from "@/shared"
 import { localDate, localTime, toTimestamptz } from "./format"
 import { messageFor, rpc, selectWithFallback, supabase, type Result, type Row } from "./supabase"
 
@@ -10,6 +10,8 @@ import { messageFor, rpc, selectWithFallback, supabase, type Result, type Row } 
  */
 export interface MyRequest {
   id: string
+  contract?: ServiceContract
+  maxTotal?: number | null
   templateId: string
   variantId: string
   quantity: number
@@ -30,7 +32,7 @@ export interface MyRequest {
   bookingId: string | null
 }
 
-/** The price a request is posted at: the chosen level, or "Tiêu chuẩn" until one is chosen. */
+/** The price a request is posted at: the chosen level, or the middle level until one is chosen. */
 export const requestPrice = (variant: ServiceVariant, tier: number | null) =>
   tier !== null && variant.tiers.includes(tier) ? tier : variant.suggestedPrice
 
@@ -45,8 +47,9 @@ export async function postJob(input: {
   description: string
   /** Per person; post_job takes the suggested price when it is left out. */
   price?: number
+  maxTotal: number
 }) {
-  return rpc<string>("post_job", {
+  return rpc<string>("post_job_checked", {
     p_template: input.templateId,
     p_variant: input.variantId,
     p_starts_at: toTimestamptz(input.date, input.time),
@@ -56,15 +59,17 @@ export async function postJob(input: {
     p_description: input.description,
     p_payment: "cash",
     p_price: input.price,
+    p_max_total: input.maxTotal,
   })
 }
 
 const BASE = "id, template_id, variant_id, quantity, description, starts_at, at_home, city, district, status, created_at"
-const COLUMN_SETS = [`${BASE}, price, notified, booking_id`, BASE]
+const COLUMN_SETS = [`${BASE}, price, notified, booking_id, service_contract, max_total`, `${BASE}, price, notified, booking_id`, BASE]
 
 function toRequest(row: Row): MyRequest {
   return {
     id: row.id,
+    contract: row.service_contract ?? undefined, maxTotal: row.max_total ?? null,
     templateId: row.template_id,
     variantId: row.variant_id,
     quantity: row.quantity ?? 1,

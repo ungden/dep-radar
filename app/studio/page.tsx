@@ -1,7 +1,9 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
 import { ChevronRight, Contact, Gift, IdCard, ImagePlus, Navigation, Phone, Tags, UserRoundPen, Users } from "lucide-react"
+import { PartnerAppointments } from "@/components/partner-appointments"
 import { JobBookingRow } from "@/components/booking-card"
 import { MessageButton } from "@/components/message-button"
 import { BookingLink } from "@/components/booking-link"
@@ -12,11 +14,11 @@ import { RequestCard } from "@/components/request-card"
 import { RequireSession } from "@/components/require-session"
 import { buttonClass, Card, LogoMark, Toggle } from "@/components/ui"
 import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
-import { getTemplate } from "@/lib/catalog"
+import { jobEligibility } from "@/lib/api/actions"
 import { POLICY } from "@/lib/pricing"
 import { actions, useAct } from "@/lib/client-actions"
-import { distanceToCustomer, proView, useApp } from "@/lib/store"
-import type { Pro } from "@/lib/types"
+import { proView, useApp } from "@/lib/store"
+import type { JobEligibility, Pro } from "@/lib/types"
 import { showsAverage } from "@/lib/connection"
 import { addDays, cn, formatDateLong, formatPrice, parseISODate, todayISO } from "@/lib/utils"
 
@@ -50,16 +52,9 @@ function Dashboard() {
   const gross = doneThisMonth.reduce((s, b) => s + b.quote.total, 0)
   const commission = doneThisMonth.reduce((s, b) => s + b.quote.commission, 0)
   const net = doneThisMonth.reduce((s, b) => s + b.quote.payout, 0)
-  const matchingJobs = state.jobs.filter((j) => {
-    const km = distanceToCustomer(state, proId, { city: j.city, district: j.district, detail: "" })
-    return (
-      !j.mine &&
-      j.status === "open" &&
-      pro.categories.includes(getTemplate(j.templateId)?.category ?? "nail") &&
-      km !== null &&
-      km <= pro.maxTravelKm
-    )
-  })
+  const [eligibility, setEligibility] = React.useState<JobEligibility[]>([])
+  React.useEffect(() => { let live = true; void jobEligibility(state.jobs.filter((j) => !j.mine && j.status === "open").map((j) => j.id)).then((xs) => { if (live) setEligibility(xs) }).catch(() => { if (live) setEligibility([]) }); return () => { live = false } }, [state.jobs])
+  const matchingJobs = state.jobs.filter((j) => !j.mine && j.status === "open" && eligibility.some((s) => s.id === j.id && !s.reason))
 
   // Photo & video sessions whose files are still owed, soonest deadline first.
   const toDeliver = mine
@@ -103,6 +98,7 @@ function Dashboard() {
       {/* The fee comes before the next job: first thing on the page while it is owed. */}
       <FeeDueCard />
 
+      <PartnerAppointments date={today} />
       <PublishProgress />
       <VerifyNudge pro={pro} />
 

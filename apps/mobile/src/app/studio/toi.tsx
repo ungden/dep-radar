@@ -97,9 +97,9 @@ export default function StudioMe() {
 
         {refused && review?.note ? (
           <Press
-            onPress={web("/studio/profile/edit#mo-ho-so")}
+            onPress={() => router.push("/ho-so-doi-tac?step=5")}
             accessibilityRole="link"
-            accessibilityLabel="Sửa hồ sơ và gửi duyệt lại, mở trên web"
+            accessibilityLabel="Sửa hồ sơ và gửi duyệt lại, mở trong app"
             style={{ backgroundColor: colors.warningSoft, borderRadius: radius.md, padding: 16, gap: 6 }}
           >
             <Txt w={700} color={colors.warning}>
@@ -115,7 +115,7 @@ export default function StudioMe() {
                 </Txt>
               ))}
             <Txt v="meta" w={600} color={colors.warning}>
-              Sửa xong bấm “Gửi duyệt lại” trên web
+              Sửa xong bấm “Gửi duyệt lại” trong app
             </Txt>
           </Press>
         ) : null}
@@ -131,13 +131,13 @@ export default function StudioMe() {
         </View>
 
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.md }}>
-          <Row icon="briefcase" label="Dịch vụ và bảng giá" onPress={web("/studio/services")} />
+          <Row icon="briefcase" label="Dịch vụ và bảng giá" onPress={() => router.push("/ho-so-doi-tac?step=1")} />
           <Divider style={{ marginLeft: 52 }} />
-          <Row icon="clock" label="Giờ làm việc" onPress={web("/studio/schedule")} />
+          <Row icon="clock" label="Giờ làm việc" onPress={() => router.push("/ho-so-doi-tac?step=3")} />
           <Divider style={{ marginLeft: 52 }} />
-          <Row icon="person" label="Sửa hồ sơ" onPress={web("/studio/profile/edit")} />
+          <Row icon="person" label="Sửa hồ sơ" onPress={() => router.push("/ho-so-doi-tac?step=0")} />
           <Divider style={{ marginLeft: 52 }} />
-          <Row icon="photos" label="Quản lý tác phẩm" onPress={web("/studio/works")} />
+          <Row icon="photos" label="Quản lý tác phẩm" onPress={() => router.push("/ho-so-doi-tac?step=4")} />
           <Divider style={{ marginLeft: 52 }} />
           <Row icon="shop" label="Ví và hoa hồng" onPress={web("/studio/wallet")} />
           <Divider style={{ marginLeft: 52 }} />
@@ -173,7 +173,7 @@ function Row({ icon, label, onPress, internal }: { icon: IconName; label: string
   return (
     <Press
       onPress={onPress}
-      accessibilityLabel={internal ? label : `${label}, mở trên web`}
+      accessibilityLabel={internal ? label : `${label}, mở trong app`}
       accessibilityRole={internal ? "button" : "link"}
       style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, height: 54 }}
     >
@@ -183,7 +183,7 @@ function Row({ icon, label, onPress, internal }: { icon: IconName; label: string
       </Txt>
       {internal ? null : (
         <Txt v="meta" color={colors.muted}>
-          mở trên web
+          mở trong app
         </Txt>
       )}
       <Icon name={internal ? "right" : "external"} size={14} color={colors.muted} />

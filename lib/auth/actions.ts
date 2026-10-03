@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { absoluteUrl } from "@/lib/env"
-import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
+import { supabaseServer } from "@/lib/supabase/server"
 import { safeNext } from "./credentials"
 import { isPhoneEmail, maskEmail, parseIdentifier } from "./identifier"
 import { detachedAuthClient, requestPasswordReset, signInWithIdentifier, signUpWithIdentifier, throttles } from "./password"
@@ -186,63 +186,12 @@ export async function becomePro(input: {
   categories: string[]
 }): Promise<{ ok: true; slug: string } | { ok: false; error: string }> {
   const supabase = await supabaseServer()
-  const { data: auth } = await supabase.auth.getUser()
-  if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
-
-  const { data: already } = await supabase.from("pros").select("slug").eq("id", auth.user.id).maybeSingle()
-  if (already) return { ok: true, slug: already.slug }
-
-  const { data: account } = await supabase
-    .from("accounts")
-    .select("full_name")
-    .eq("id", auth.user.id)
-    .maybeSingle()
-
-  const slug = await uniqueSlug(account?.full_name || "chuyen-vien")
-  const { data: district } = await supabase
-    .from("districts")
-    .select("lat, lng")
-    .eq("city", input.city)
-    .eq("district", input.district)
-    .maybeSingle()
-  if (!district) return { ok: false, error: "Khu vực hoạt động không hợp lệ." }
-  const { error } = await supabase.from("pros").insert({
-    id: auth.user.id,
-    slug,
-    title: input.title,
-    city: input.city,
-    district: input.district,
-    lat: district.lat,
-    lng: district.lng,
-    categories: input.categories as never,
-  })
-  if (error) return { ok: false, error: "Không tạo được hồ sơ chuyên viên." }
-  await supabase.from("accounts").update({ active_role: "pro" }).eq("id", auth.user.id)
-  revalidatePath("/studio")
-  return { ok: true, slug }
-}
-
-function slugify(name: string) {
-  return (
-    name
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/\p{M}/gu, "")
-      .replace(/đ/g, "d")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 40) || "chuyen-vien"
-  )
-}
-
-async function uniqueSlug(name: string) {
-  const admin = supabaseAdmin()
-  const base = slugify(name)
-  const { data } = await admin.from("pros").select("slug").like("slug", `${base}%`)
-  const taken = new Set((data ?? []).map((r) => r.slug))
-  if (!taken.has(base)) return base
-  for (let i = 2; i < 100; i++) if (!taken.has(`${base}-${i}`)) return `${base}-${i}`
-  return `${base}-${crypto.randomUUID().slice(0, 6)}`
+  const { data, error } = await supabase.rpc("create_partner" as never, {
+    p_title: input.title, p_city: input.city, p_district: input.district, p_categories: input.categories,
+  } as never)
+  if (error) return { ok: false, error: /[ạ-ỹđ]/i.test(error.message) ? error.message : "Không tạo được hồ sơ đối tác." }
+  revalidatePath("/", "layout")
+  return { ok: true, slug: String(data) }
 }
 
 export async function switchRole(role: "customer" | "pro"): Promise<void> {

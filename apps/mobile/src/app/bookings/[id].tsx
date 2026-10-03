@@ -19,6 +19,7 @@ import {
 import { openThread } from "@/data/chat"
 import { formatCountdown, formatDateLong, formatDuration, formatPhone, formatPrice, localDate, localTime } from "@/data/format"
 import type { Result } from "@/data/supabase"
+import { BookingContract } from "@/components/booking-contract"
 import { VoucherCard } from "@/components/booking-voucher"
 import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
 import { StatusPill } from "@/components/booking-row"
@@ -244,6 +245,8 @@ export default function BookingDetail() {
         ) : null}
       </Card>
 
+      <BookingContract booking={b} />
+      {b.status === "completed" && b.delivery && !b.delivery.acceptedAt && <Txt color={colors.warning}>{b.delivery.deliveredAt ? "Chờ khách xác nhận sản phẩm" : "Xong buổi làm · chờ giao sản phẩm"}</Txt>}
       <Card>
         <Line label="Dịch vụ" value={formatPrice(b.quote.servicePrice)} />
         {b.quote.travelFee ? <Line label="Phí di chuyển" value={formatPrice(b.quote.travelFee)} /> : null}

@@ -9,7 +9,8 @@ import { AddressPicker, defaultAddressId } from "@/components/address-picker"
 import { PriceBreakdown } from "@/components/price-breakdown"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, Skeleton, inputClass, PageSkeleton } from "@/components/ui"
-import { getTemplate, getVertical, verticalOf } from "@/lib/catalog"
+import { getTemplate, getVertical, verticalOf, serviceQuantity, serviceDuration } from "@/lib/catalog"
+import { bookingQuote } from "@/lib/api/actions"
 import { actions } from "@/lib/client-actions"
 import { formatPhone } from "@/lib/auth/phone"
 import { CITIES, districtsOf, travelDistanceKm } from "@/lib/geo"
@@ -130,9 +131,9 @@ function BookingFlow({ proId }: { proId: string }) {
   const unitPrice = priceOf(state, proId, templateId, variantId)!
   // A per-head option is priced and timed per person, so the head count changes
   // both the total and how long the freelancer is booked for.
-  const heads = variant.perPerson ? Math.min(Math.max(quantity, 1), variant.maxQuantity ?? 1) : 1
+  const heads = serviceQuantity(variant, quantity)
   const price = unitPrice * heads
-  const durationMin = variant.durationMin * heads
+  const durationMin = serviceDuration(variant, heads)
   const canStudio = Boolean(pro.studioAddress)
   const atHome = !tpl.studioOnly && (atHomePref || !canStudio)
 
@@ -180,12 +181,26 @@ function BookingFlow({ proId }: { proId: string }) {
   const lostTime = Boolean(slots && pickedTime && !time)
 
   // The same arithmetic as the server (lib/pricing.ts), shown as it changes.
-  const quote: PriceQuote = buildQuote({
+  const estimate: PriceQuote = buildQuote({
     servicePrice: price,
     atHome,
     distanceKm: atHome && address ? travelDistanceKm(pro.city, pro.district, address.city, address.district) : null,
     urgent: time ? isUrgent(date, time) : false,
   })
+  const quoteKey = [slotKey, time, session?.phone].join("|")
+  const [verified, setVerified] = React.useState<{ key: string; quote?: PriceQuote & { unitPrice: number; expiresAt: string }; error?: string } | null>(null)
+  const [secondDate, setSecondDate] = React.useState("")
+  const [secondTime, setSecondTime] = React.useState("09:00")
+  React.useEffect(() => {
+    if (!session || !time || !locationOk) return
+    let live = true
+    void bookingQuote({ proId, templateId, variantId, startsAt: toTimestamptz(date, time), atHome, addressId: atHome ? addressId : null, quantity: heads })
+      .then((result) => { if (live) setVerified({ key: quoteKey, ...(result.ok ? { quote: result.data } : { error: result.error }) }) })
+    return () => { live = false }
+  }, [quoteKey, proId, templateId, variantId, date, time, atHome, addressId, heads, locationOk, session])
+  const confirmedQuote = verified?.key === quoteKey ? verified.quote : null
+  const quote = confirmedQuote ?? estimate
+  const multiple = (variant.sessions ?? 1) > 1
   const ready = Boolean(time) && locationOk
   const canNext = step === 1 ? true : ready
 
@@ -211,6 +226,8 @@ function BookingFlow({ proId }: { proId: string }) {
       router.push(`/login?next=${encodeURIComponent(resumeUrl())}`)
       return
     }
+    if (!confirmedQuote) return setError(verified?.error ?? "Đang xác nhận tổng tiền. Thử lại sau.")
+    if (multiple && (!secondDate || secondDate < date)) return setError("Chọn ngày cho buổi thứ hai sau buổi đầu.")
     setBusy(true)
     const res = await actions.createBooking({
       proId,
@@ -223,6 +240,8 @@ function BookingFlow({ proId }: { proId: string }) {
       quantity: heads,
       note: note.trim(),
       paymentMethod: payment,
+      expectedTotal: confirmedQuote.total, expectedUnit: confirmedQuote.unitPrice,
+      sessions: multiple ? [toTimestamptz(secondDate, secondTime)] : [],
     })
     if ("error" in res) {
       setBusy(false)
@@ -354,7 +373,7 @@ function BookingFlow({ proId }: { proId: string }) {
                         <button
                           type="button"
                           aria-label="Giảm số người"
-                          disabled={heads <= 1}
+                          disabled={heads <= (variant.minQuantity ?? 1)}
                           onClick={() => setQuantity(heads - 1)}
                           className="inline-flex size-8 items-center justify-center rounded-full border border-line-strong disabled:opacity-40"
                         >
@@ -585,6 +604,7 @@ function BookingFlow({ proId }: { proId: string }) {
         </section>
       )}
 
+      {step === 3 && session && !confirmedQuote && <p role="status" className="mb-3 text-sm text-warning">{verified?.key === quoteKey && verified.error ? verified.error : "Đang xác nhận tổng tiền…"}</p>}
       {step === 3 && ready && time && (
         <section className="space-y-4">
           <ServiceSummary name={tpl.name} variant={variantText} price={price} duration={durationMin} />
@@ -690,7 +710,7 @@ function BookingFlow({ proId }: { proId: string }) {
             <p className="flex gap-2 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px]">
               <Info className="mt-0.5 size-4 shrink-0" />
               <span>
-                Bạn nhận: <b>{tpl.deliverable}</b>
+                Bạn nhận: <b>{variant.deliverable ?? tpl.deliverable}</b>
                 {tpl.deliveryDays ? `, trong ${tpl.deliveryDays} ngày sau buổi chụp. Link tải file hiện trong lịch hẹn.` : "."}
               </span>
             </p>
@@ -726,6 +746,7 @@ function BookingFlow({ proId }: { proId: string }) {
             </div>
           </Card>
 
+          {multiple && <Card className="space-y-3 p-4"><p className="font-semibold">Buổi thứ hai (đã gồm trong giá)</p><input aria-label="Ngày buổi thứ hai" type="date" min={date} value={secondDate} onChange={(e) => setSecondDate(e.target.value)} className={inputClass} /><input aria-label="Giờ buổi thứ hai" type="time" step={1800} value={secondTime} onChange={(e) => setSecondTime(e.target.value)} className={inputClass} /><p className="text-xs text-muted">Cả hai buổi sẽ được giữ lịch cùng lúc; hệ thống kiểm tra giờ trống khi gửi.</p></Card>}
           <PriceBreakdown quote={quote} paymentMethod={payment} />
 
           {/* What happens after sending, in the order it happens: the call, then
@@ -788,7 +809,7 @@ function BookingFlow({ proId }: { proId: string }) {
           <Button
             size="lg"
             className="flex-1"
-            disabled={(step < 3 && !canNext) || (step === 3 && slots === null) || isOwnProfile || paused || busy}
+            disabled={(step < 3 && !canNext) || (step === 3 && (slots === null || (Boolean(session) && !confirmedQuote))) || isOwnProfile || paused || busy}
             onClick={() => (step < 3 ? setStep((s) => s + 1) : ready ? void submit() : setStep(2))}
           >
             {step < 3

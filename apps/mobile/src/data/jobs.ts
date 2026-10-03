@@ -1,4 +1,4 @@
-import { getVariant } from "@/shared"
+import { getVariant, type ServiceContract } from "@/shared"
 import { localDate, localTime } from "./format"
 import { rpc, selectWithFallback, supabase, type Row } from "./supabase"
 
@@ -9,6 +9,8 @@ import { rpc, selectWithFallback, supabase, type Row } from "./supabase"
  */
 export interface JobItem {
   id: string
+  contract?: ServiceContract
+  maxTotal?: number | null
   templateId: string
   variantId: string
   quantity: number
@@ -23,6 +25,7 @@ export interface JobItem {
   /** Per person, as posted. */
   price: number
   mine: boolean
+  eligibility?: { reason: string | null; total: number | null; payout: number | null }
   createdAt: string
 }
 
@@ -37,12 +40,16 @@ export async function listJobs(uid: string): Promise<JobItem[]> {
   const rows = await selectWithFallback(
     "jobs",
     (c) => supabase.from("jobs").select(c).eq("status", "open").order("starts_at", { ascending: true }).limit(200),
-    [`${COLUMNS}, price`, COLUMNS],
+    [`${COLUMNS}, price, service_contract, max_total`, `${COLUMNS}, price`, COLUMNS],
   )
+  const eligible = await rpc<({ id: string; reason: string | null; total: number | null; payout: number | null })[]>("my_job_eligibility", { p_ids: rows.filter((r) => r.customer_id !== uid).map((r) => r.id) })
+  if (!eligible.ok) throw new Error(eligible.error)
   return rows
     .filter((row) => Date.parse(row.starts_at) > Date.now())
     .map((row: Row) => ({
       id: row.id,
+      contract: row.service_contract ?? undefined, maxTotal: row.max_total ?? null,
+      eligibility: eligible.data.find((e) => e.id === row.id),
       templateId: row.template_id,
       variantId: row.variant_id,
       quantity: row.quantity ?? 1,

@@ -46,10 +46,9 @@ export interface ServiceVariant {
   label: string
   durationMin: number
   /**
-   * The 2–3 prices a partner may list this option at, ascending (Phổ thông /
-   * Tiêu chuẩn / Cao cấp). Partners pick one; nobody types a price.
+   * Exactly three ascending prices. Each partner chooses one for this option.
    */
-  tiers: number[]
+  tiers: [number, number, number]
   /** Lowest and highest tier, and the "Tiêu chuẩn" one: derived from tiers. */
   minPrice: number
   maxPrice: number
@@ -58,6 +57,14 @@ export interface ServiceVariant {
   perPerson?: boolean
   /** Highest head count accepted (1 for everything but group services). */
   maxQuantity?: number
+  minQuantity?: number
+  /** Group photos charge per person but occupy one fixed window. */
+  durationRule?: "fixed" | "per_person"
+  deliverable?: string
+  revisions?: number
+  /** Included appointments; durationMin is the first appointment only. */
+  sessions?: number
+  followupDays?: number
 }
 
 export interface ServiceTemplate {
@@ -262,6 +269,7 @@ export interface Booking {
   variantId: string
   serviceName: string
   variantLabel: string
+  contract?: ServiceContract
   category: CategoryId
   durationMin: number
   date: string // yyyy-mm-dd
@@ -318,6 +326,31 @@ export interface Booking {
   disputed?: boolean
 }
 
+export interface ServiceContract {
+  version: number
+  serviceName: string
+  variantLabel: string
+  category: CategoryId
+  includes: string[]
+  deliverable: string | null
+  deliveryDays: number | null
+  revisions: number
+  tier: number | null
+  tierLabel: string | null
+  unitPrice: number
+  quantity: number
+  durationMin: number
+  sessions: number
+  followupDays: number | null
+}
+
+export interface JobEligibility {
+  id: string
+  reason: string | null
+  total: number | null
+  payout: number | null
+}
+
 export interface BookingReview {
   rating: number
   tags: string[]
@@ -342,6 +375,8 @@ export type JobStatus = "open" | "booked" | "closed"
 
 export interface JobPost {
   id: string
+  contract?: ServiceContract
+  maxTotal?: number | null
   templateId: string
   variantId: string
   description: string

@@ -4,10 +4,10 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Camera, CheckCircle2, Circle } from "lucide-react"
+import { PartnerProgress } from "@/components/partner-progress"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, Button, Card, Field, PageHeader, Toggle, inputClass } from "@/components/ui"
-import { saveProProfile, saveWorkingHours } from "@/lib/api/actions"
-import { listWorkingHours } from "@/lib/api/me"
+import { saveProProfile, saveWorkingHours, submitPartnerProfile, fetchPartnerSetup } from "@/lib/api/actions"
 import { addDayOff, listDaysOff, removeDayOff, type DayOff } from "@/lib/api/me"
 import { verticalOf } from "@/lib/catalog"
 import { actions, useAct } from "@/lib/client-actions"
@@ -17,8 +17,8 @@ import { cn, todayISO } from "@/lib/utils"
 import { DEFAULT_WORKING_WINDOWS } from "@/lib/working-hours"
 
 const DAYS = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]
-const HOURS = Array.from({ length: 25 }, (_, i) => i * 60)
-const label = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:00`
+const HOURS = Array.from({ length: 49 }, (_, i) => i * 30)
+const label = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
 
 export default function EditProfilePage() {
   return (
@@ -54,8 +54,7 @@ function ProfileEditor() {
   // A verified freelancer is shown under the name on their ID card.
   const nameLocked = pro.identity === "verified"
 
-  // The same three things pros_guard checks before a profile may go public:
-  // an active listing, a saved week, a work.
+  // Readiness uses persisted services, work and confirmed hours.
   const hasService = servicesOf(state, proId).length > 0
   // A post the review hid does not count, as in the database.
   const hasWork = worksOf(state, proId).some((w) => !w.hiddenReason)
@@ -82,6 +81,8 @@ function ProfileEditor() {
 
   return (
     <div className="space-y-5">
+      <PartnerProgress />
+      <Link href="/studio/onboarding" className="text-sm text-accent underline">Sửa nghề và khu vực phục vụ</Link>
       <Card className="flex items-center gap-4 p-4">
         <span className="relative">
           {avatar ? (
@@ -142,7 +143,7 @@ function ProfileEditor() {
         </Field>
       )}
 
-      <Card className="space-y-3 p-4">
+      <Card id="noi-phuc-vu" className="space-y-3 p-4">
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <p className="text-sm font-semibold">Nhận làm tại nhà khách</p>
@@ -215,36 +216,33 @@ function useWorkingWeek() {
   const [loaded, setLoaded] = React.useState(false)
   const [saved, setSaved] = React.useState(false)
 
+  const [extra, setExtra] = React.useState<{ weekday: number; startMin: number; endMin: number }[]>([])
+  const [loadError, setLoadError] = React.useState<string | null>(null)
+  const [attempt, setAttempt] = React.useState(0)
   React.useEffect(() => {
     let live = true
-    void listWorkingHours().then((windows) => {
+    void fetchPartnerSetup().then((setup) => {
       if (!live) return
+      const windows = [...setup.hours].sort((a, b) => a.weekday - b.weekday || a.startMin - b.startMin)
       if (windows.length) {
-        setWeek((current) => {
-          const next = { ...current }
-          for (const day of [0, 1, 2, 3, 4, 5, 6]) next[day] = { ...next[day], on: false }
-          for (const window of windows) {
-            // This editor currently exposes one contiguous window per day. It
-            // preserves the widest saved window instead of overwriting it with defaults.
-            const prior = next[window.weekday]
-            next[window.weekday] = !prior.on || window.endMin - window.startMin > prior.end - prior.start
-              ? { on: true, start: window.startMin, end: window.endMin }
-              : prior
-          }
-          return next
-        })
+        const next = defaultWeek()
+        const additional: typeof extra = []
+        for (const day of [0, 1, 2, 3, 4, 5, 6]) next[day] = { ...next[day], on: false }
+        for (const window of windows) {
+          if (next[window.weekday].on) additional.push(window)
+          else next[window.weekday] = { on: true, start: window.startMin, end: window.endMin }
+        }
+        setWeek(next); setExtra(additional)
       }
-      setSaved(windows.length > 0)
-      setLoaded(true)
-    })
-    return () => {
-      live = false
-    }
-  }, [])
+      setSaved(Boolean(setup.profile?.hours_confirmed && windows.length))
+      setLoadError(null); setLoaded(true)
+    }).catch(() => { if (live) setLoadError("Không tải được giờ đã lưu. Thử lại trước khi chỉnh sửa.") })
+    return () => { live = false }
+  }, [attempt])
 
   /** Store the week as shown. Returns an error sentence, or null. */
   const save = async (): Promise<string | null> => {
-    const windows = windowsOf(week)
+    const windows = [...windowsOf(week), ...extra.filter((w) => week[w.weekday].on)]
     const result = await saveWorkingHours(windows)
     if (!result.ok) return result.error
     setSaved(windows.length > 0)
@@ -252,7 +250,7 @@ function useWorkingWeek() {
     return null
   }
 
-  return { week, setWeek, loaded, saved, save, anyDay: windowsOf(week).length > 0 }
+  return { week, setWeek, extra, setExtra, loaded, saved, loadError, retry: () => setAttempt((n) => n + 1), save, anyDay: windowsOf(week).length > 0 }
 }
 
 type WorkingWeek = ReturnType<typeof useWorkingWeek>
@@ -268,6 +266,7 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
   const refresh = useRefresh()
   const pro = proView(state, state.session!.proId!)!
   const [error, setError] = React.useState<string | null>(null)
+  const [agreed, setAgreed] = React.useState(false)
   const [busy, setBusy] = React.useState(false)
 
   const status = pro.reviewStatus
@@ -290,11 +289,12 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
     return () => clearInterval(timer)
   }, [pending])
 
-  // Hours that are only on screen are saved on the way to publishing, so the
-  // database's check (pros_guard) sees them.
-  const hoursReady = hours.saved || (hours.loaded && hours.anyDay)
-  const ready = hasService && hasWork && hoursReady
+  // Publishing requires hours explicitly confirmed in the database.
+  const hoursReady = hours.saved
+  const locationReady = Boolean(pro.homeService || pro.studioAddress?.trim())
+  const ready = hasService && hasWork && hoursReady && locationReady
   const items: [boolean, string, string][] = [
+    [locationReady, "Nơi phục vụ đã lưu: tại nhà khách hoặc studio", "#noi-phuc-vu"],
     [hasService, "Ít nhất một dịch vụ đang bật, có giá", "/studio/services"],
     [hasWork, "Ít nhất một ảnh tác phẩm", "/studio/works"],
     [
@@ -302,7 +302,7 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
       hours.saved
         ? "Giờ làm việc đã lưu"
         : hours.anyDay
-          ? "Giờ làm việc chưa lưu: sẽ lưu giờ đang hiện ở trên khi bạn mở hồ sơ"
+          ? "Giờ làm việc chưa lưu: bấm Lưu giờ làm việc trước"
           : "Giờ làm việc: bật ít nhất một ngày ở trên",
       "#gio-lam",
     ],
@@ -321,6 +321,7 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
   return (
     <Card id="mo-ho-so" className="scroll-mt-20 p-4">
       <p className="font-semibold">{heading}</p>
+      {pro.published && !pro.acceptingJobs && <p className="mt-2 text-sm text-warning">Bạn đang tạm nghỉ nhận khách. <Link href="/studio" className="underline">Bật nhận khách mới</Link> khi sẵn sàng.</p>}
       {pending && (
         <p className="mt-1 text-[13px] text-ink-soft">
           360dep đang xem ảnh, dịch vụ và phần giới thiệu của bạn. Duyệt xong bạn nhận thông báo, và khách thấy hồ sơ ngay.
@@ -358,28 +359,22 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
           {error}
         </p>
       )}
+      {!pro.published && !pending && <label className="mt-3 flex gap-2 text-sm"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} /> <span>Tôi đồng ý <Link href="/chinh-sach" className="underline">chính sách phí, nhận việc và hủy lịch</Link>.</span></label>}
       {!pending && (
         <Button
           className="mt-3"
           variant={pro.published ? "ghost" : "primary"}
-          disabled={busy || (!pro.published && !ready)}
+          disabled={busy || (!pro.published && (!ready || !agreed))}
           onClick={async () => {
             setBusy(true)
             setError(null)
-            if (!pro.published && !hours.saved) {
-              const problem = await hours.save()
-              if (problem) {
-                setBusy(false)
-                return setError(problem)
-              }
-            }
-            const result = await saveProProfile({ published: !pro.published })
+            const result = pro.published ? await saveProProfile({ published: false }) : await submitPartnerProfile(agreed)
             setBusy(false)
             if (!result.ok) return setError(result.error)
             refresh()
           }}
         >
-          {busy ? "Đang lưu…" : pro.published ? "Ẩn hồ sơ" : refused ? "Gửi duyệt lại" : "Mở hồ sơ cho khách"}
+          {busy ? "Đang lưu…" : pro.published ? "Ẩn hồ sơ" : refused ? "Gửi duyệt lại" : "Gửi hồ sơ để duyệt"}
         </Button>
       )}
       {!pro.published && !pending && status !== "approved" && (
@@ -398,13 +393,14 @@ function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (
     <Card id="gio-lam" className="scroll-mt-20 p-4">
       <p className="font-semibold">Giờ làm việc</p>
       <p className="mt-0.5 text-xs text-muted">
-        Khách chỉ thấy khung giờ nằm trong đây, đã trừ thời lượng dịch vụ và thời gian di chuyển.
+        Khách thấy giờ đã lưu, đã trừ thời lượng dịch vụ và thời gian di chuyển. Thay đổi bên dưới chỉ có hiệu lực sau khi bấm Lưu.
       </p>
       {loaded && !stored && (
         <p className="mt-2 rounded-[var(--radius-md)] bg-warning-soft px-3 py-2 text-[13px] text-warning">
           Chưa lưu. Giờ bên dưới là gợi ý (Thứ 2 – Thứ 7, 9:00 – 19:00); khách chưa đặt được cho tới khi bạn lưu.
         </p>
       )}
+      {hours.loadError && <p role="alert" className="mt-2 text-sm text-danger">{hours.loadError} <button type="button" className="underline" onClick={hours.retry}>Thử lại</button></p>}
       <ul className="mt-3 space-y-2">
         {[1, 2, 3, 4, 5, 6, 0].map((weekday) => {
           const day = days[weekday]
@@ -414,6 +410,7 @@ function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (
               <Toggle
                 label={`Làm việc ${DAYS[weekday]}`}
                 checked={day.on}
+                disabled={!loaded || busy}
                 onChange={(on) => setDays((d) => ({ ...d, [weekday]: { ...d[weekday], on } }))}
               />
               {day.on && (
@@ -424,7 +421,7 @@ function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (
                     value={day.start}
                     onChange={(e) => setDays((d) => ({ ...d, [weekday]: { ...d[weekday], start: Number(e.target.value) } }))}
                   >
-                    {HOURS.slice(0, 24).map((m) => (
+                    {[...new Set([...HOURS.filter((m) => m < 1440), day.start])].sort((a, b) => a - b).map((m) => (
                       <option key={m} value={m}>
                         {label(m)}
                       </option>
@@ -437,7 +434,7 @@ function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (
                     value={day.end}
                     onChange={(e) => setDays((d) => ({ ...d, [weekday]: { ...d[weekday], end: Number(e.target.value) } }))}
                   >
-                    {HOURS.filter((m) => m > day.start).map((m) => (
+                    {[...new Set([...HOURS.filter((m) => m > day.start), day.end])].sort((a, b) => a - b).map((m) => (
                       <option key={m} value={m}>
                         {label(m)}
                       </option>
@@ -449,6 +446,13 @@ function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (
           )
         })}
       </ul>
+      {hours.extra.map((window, i) => days[window.weekday].on && <div key={i} className="mt-2 flex flex-wrap items-center gap-2">
+        <span className="w-20 text-[13px]">{DAYS[window.weekday]}</span>
+        <input aria-label={`Bắt đầu khoảng thêm ${i + 1}`} type="time" className={cn(inputClass, "h-9 w-28")} value={label(window.startMin)} onChange={(e) => { const [h, m] = e.target.value.split(":").map(Number); if (Number.isFinite(h + m)) hours.setExtra((xs) => xs.map((x, j) => j === i ? { ...x, startMin: h * 60 + m } : x)) }} />
+        <span>–</span><input aria-label={`Kết thúc khoảng thêm ${i + 1}`} type="time" className={cn(inputClass, "h-9 w-28")} value={label(window.endMin)} onChange={(e) => { const [h, m] = e.target.value.split(":").map(Number); if (Number.isFinite(h + m)) hours.setExtra((xs) => xs.map((x, j) => j === i ? { ...x, endMin: h * 60 + m } : x)) }} />
+        <Button size="sm" variant="ghost" onClick={() => hours.setExtra((xs) => xs.filter((_, j) => j !== i))}>Bỏ khoảng</Button>
+      </div>)}
+      <div className="mt-3 flex flex-wrap gap-2">{[1, 2, 3, 4, 5, 6, 0].filter((d) => days[d].on).map((d) => <Button key={d} size="sm" variant="ghost" disabled={!loaded || busy} onClick={() => hours.setExtra((xs) => [...xs, { weekday: d, startMin: days[d].end, endMin: Math.min(1440, days[d].end + 60) }])}>+ Khoảng giờ {DAYS[d]}</Button>)}</div>
       <Button
         size="sm"
         className="mt-3"

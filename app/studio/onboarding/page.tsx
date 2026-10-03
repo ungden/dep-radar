@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation"
 import { Button, Field, PageHeader, inputClass } from "@/components/ui"
 import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { CATEGORIES, VERTICALS } from "@/lib/catalog"
-import { saveWorkingHours } from "@/lib/api/actions"
-import { listWorkingHours } from "@/lib/api/me"
+import { fetchPartnerSetup, saveProProfile } from "@/lib/api/actions"
 import { becomePro } from "@/lib/auth/actions"
 import { CITIES, districtsOf } from "@/lib/geo"
 import { useApp } from "@/lib/store"
 import type { CategoryId } from "@/lib/types"
 import { cn } from "@/lib/utils"
-import { DEFAULT_WORKING_WINDOWS } from "@/lib/working-hours"
+import { RequireSession } from "@/components/require-session"
+import { PartnerProgress } from "@/components/partner-progress"
 
 /**
  * Opening a freelancer profile. Deliberately short: a profile stays unlisted
@@ -20,7 +20,9 @@ import { DEFAULT_WORKING_WINDOWS } from "@/lib/working-hours"
  * so asking for all of that up front would only lose people at step one.
  * The hours are saved here with defaults; the rest is the studio checklist.
  */
-export default function OnboardingPage() {
+export default function OnboardingPage() { return <RequireSession><OnboardingForm /></RequireSession> }
+
+function OnboardingForm() {
   const router = useRouter()
   const { session } = useApp()
   const [title, setTitle] = React.useState("")
@@ -30,10 +32,12 @@ export default function OnboardingPage() {
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
 
-  if (session?.proId) {
-    router.replace("/studio")
-    return null
-  }
+  React.useEffect(() => {
+    if (!session?.proId) return
+    let live = true
+    void fetchPartnerSetup().then(({ profile: p }) => { if (live && p) { setTitle(p.title); setCity(p.city); setDistrict(p.district); setCategories(p.categories) } }).catch((e: Error) => { if (live) setError(e.message) })
+    return () => { live = false }
+  }, [session?.proId])
 
   const toggle = (id: CategoryId) =>
     setCategories((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]))
@@ -42,10 +46,10 @@ export default function OnboardingPage() {
 
   return (
     <div className="mx-auto max-w-md px-5 pb-24">
+      {session?.proId && <PartnerProgress />}
       <PageHeader title="Mở hồ sơ đối tác" back />
       <p className="text-sm text-ink-soft">
-        Ba thông tin để bắt đầu. Giờ làm được đặt sẵn Thứ 2 – Thứ 7, 9:00 – 19:00 (sửa được sau). Hồ sơ hiện với khách
-        khi bạn đã thêm dịch vụ, một ảnh tác phẩm và bấm mở hồ sơ.
+        Chọn nghề và khu vực để tạo bản nháp. Sau đó chọn gói và mức giá, nơi phục vụ, xác nhận giờ làm và đăng tác phẩm trước khi gửi duyệt.
       </p>
 
       <form
@@ -55,21 +59,10 @@ export default function OnboardingPage() {
           if (!valid) return
           setBusy(true)
           setError(null)
-          const result = await becomePro({ title: title.trim(), city, district, categories })
-          if (!result.ok) {
-            setBusy(false)
-            return setError(result.error)
-          }
-          // Store a starting week now, so the hours the studio shows are real
-          // rows and opening the profile later cannot fail on them. Best effort:
-          // if it does not go through, the studio checklist says so. Never over
-          // a week that is already there (becomePro also answers ok for an
-          // existing profile).
-          try {
-            if (!(await listWorkingHours()).length) await saveWorkingHours(DEFAULT_WORKING_WINDOWS)
-          } catch {
-            // The checklist on the studio page shows the step as not done.
-          }
+          const result = session?.proId
+            ? await saveProProfile({ title: title.trim(), city, district, categories })
+            : await becomePro({ title: title.trim(), city, district, categories })
+          if (!result.ok) { setBusy(false); return setError(result.error) }
           setBusy(false)
           router.replace("/studio/services")
         }}
@@ -158,7 +151,7 @@ export default function OnboardingPage() {
         )}
 
         <Button type="submit" size="lg" className="w-full" disabled={busy || !valid}>
-          {busy ? "Đang tạo hồ sơ…" : "Tạo hồ sơ"}
+          {busy ? "Đang tạo hồ sơ…" : session?.proId ? "Lưu nghề & khu vực" : "Tạo bản nháp"}
         </Button>
       </form>
     </div>

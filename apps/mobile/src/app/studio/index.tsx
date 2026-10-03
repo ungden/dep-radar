@@ -6,6 +6,7 @@ import { confirmBooking, listBookings, type BookingItem } from "@/data/bookings"
 import { addDays, formatCountdown, formatPrice, localDate, todayISO } from "@/data/format"
 import { askForPushPermission } from "@/data/push"
 import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
+import { PartnerAppointments } from "@/components/partner-appointments"
 import { StudioHeader } from "@/components/studio-header"
 import { useApp } from "@/state/app"
 import { useNow } from "@/state/keyboard"
@@ -149,6 +150,7 @@ export default function Today() {
         ))}
       </View>
 
+      <View style={{ paddingHorizontal: gutter }}><PartnerAppointments date={today} reloadKey={bookings.value} /></View>
       <View style={{ paddingHorizontal: gutter, gap: 12 }}>
         <SectionHeader title="Tuần này" />
         <View style={{ flexDirection: "row", gap: 12 }}>

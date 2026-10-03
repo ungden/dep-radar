@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { CalendarDays, CalendarPlus, Home, Info, MapPinned, MessageSquare, Phone, Store, Timer } from "lucide-react"
+import { BookingContract } from "@/components/booking-contract"
 import { ProCard } from "@/components/beauty"
 import { bookingImage, DeclineForm } from "@/components/booking-card"
 import {
@@ -100,6 +101,7 @@ function BookingDetail() {
   return (
     <div className="space-y-4">
       <BookingTimeline booking={booking} />
+      <BookingContract booking={booking} />
       <DeliveryPanel booking={booking} isPro={isPro} />
       <ComboPartners booking={booking} />
 
@@ -112,7 +114,7 @@ function BookingDetail() {
             {isPro ? (booking.customerPhone ? `Khách hàng · ${formatPhone(booking.customerPhone)}` : "Khách hàng") : pro.title}
           </p>
         </div>
-        <StatusBadge status={booking.status} />
+        <StatusBadge status={booking.status} label={booking.status === "completed" && booking.delivery && !booking.delivery.acceptedAt ? booking.delivery.deliveredAt ? "Chờ xác nhận sản phẩm" : "Chờ giao sản phẩm" : undefined} />
       </Card>
 
       <Card className="flex items-center gap-3 p-3">

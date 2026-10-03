@@ -36,6 +36,9 @@ jobs:
       - run: npm run catalog:check
       - run: supabase start -x realtime,storage-api,imgproxy,studio,edge-runtime,logflare,vector,supavisor
       - run: supabase db reset
+      - name: Partner catalogue and onboarding rules
+        run: |
+          (printf 'BEGIN;\n'; cat supabase/tests/partner-flow.sql; printf 'ROLLBACK;\n') | docker exec -i supabase_db_dep360 psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f -
       - name: Business rules
         run: docker exec -i supabase_db_dep360 psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f - < supabase/tests/rules.sql
       - name: Row level security, over the API

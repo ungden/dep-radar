@@ -114,6 +114,9 @@ export const actions = {
     quantity?: number
     note: string
     paymentMethod: PaymentMethod
+    expectedTotal: number
+    expectedUnit: number
+    sessions?: string[]
   }): Promise<{ id: string } | { error: string }> {
     const result = await api.createBooking({
       proId: input.proId,
@@ -125,6 +128,9 @@ export const actions = {
       quantity: input.quantity ?? 1,
       note: input.note,
       paymentMethod: input.paymentMethod,
+      expectedTotal: input.expectedTotal,
+      expectedUnit: input.expectedUnit,
+      sessions: input.sessions,
     })
     return result.ok ? { id: result.data } : { error: result.error }
   },
@@ -200,9 +206,11 @@ export const actions = {
     paymentMethod: PaymentMethod
     /** Per person; omitted means the catalogue price. */
     price?: number | null
+    maxTotal: number
   }): Promise<{ id: string } | { error: string }> {
     const result = await api.postJob({
       price: input.price,
+      maxTotal: input.maxTotal,
       templateId: input.templateId,
       variantId: input.variantId,
       startsAt: toTimestamptz(input.date, input.time),

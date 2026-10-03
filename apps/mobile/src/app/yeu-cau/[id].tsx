@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router"
 import { Alert, ScrollView, View } from "react-native"
-import { getTemplate, getVariant } from "@/shared"
+import { CATALOG_VERSION, serviceDuration, getTemplate, getVariant } from "@/shared"
 import { formatDateLong, formatDuration, formatPrice } from "@/data/format"
 import { closeJob, getMyRequest, requestProgress } from "@/data/requests"
 import { REQUEST_STATUS } from "@/components/request-status"
@@ -68,10 +68,10 @@ export default function RequestDetail() {
           </Txt>
         </View>
         <Txt v="title" w={700}>
-          {t?.name ?? r.templateId}
+          {r.contract?.serviceName ?? t?.name ?? r.templateId}
         </Txt>
         <Txt color={colors.inkSoft}>
-          {v ? `${v.label} · ${formatDuration(v.durationMin)}` : ""}
+          {v ? `${r.contract?.variantLabel ?? v.label} · ${formatDuration(r.contract?.durationMin ?? serviceDuration(v, r.quantity))}` : ""}
           {r.quantity > 1 ? ` × ${r.quantity} người` : ""}
         </Txt>
         <Txt w={600}>
@@ -85,6 +85,8 @@ export default function RequestDetail() {
 
       <Card>
         {r.quantity > 1 ? <Line label={`${formatPrice(r.price)} × ${r.quantity} người`} value={formatPrice(r.price * r.quantity)} /> : null}
+        {r.maxTotal != null && <Line label="Tổng tối đa đã đồng ý (gồm phụ phí)" value={formatPrice(r.maxTotal)} />}
+        {r.status === "open" && r.contract && r.contract.version < CATALOG_VERSION && <Txt color={colors.warning}>Gói đã cập nhật. Đóng yêu cầu và đăng lại để xác nhận phạm vi mới.</Txt>}
         <Line label="Giá dịch vụ" value={formatPrice(r.price * r.quantity)} strong />
         <Txt v="meta" color={colors.muted}>
           Trả người làm sau khi xong. Phí di chuyển, phí gấp (nếu có) tính theo bảng giá 360dep và hiện trong lịch hẹn.
