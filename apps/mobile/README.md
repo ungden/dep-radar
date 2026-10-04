@@ -15,7 +15,7 @@ npx expo start               # i = iOS simulator, a = Android
 
 | Biến | Giá trị |
 |---|---|
-| `EXPO_PUBLIC_SUPABASE_URL` | `https://360dep.supabase.co` |
+| `EXPO_PUBLIC_SUPABASE_URL` | `https://ohjrocksurzkypcbfkha.supabase.co` |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | anon / publishable key của project |
 
 Thiếu biến thì app vẫn mở và nói rõ "App chưa kết nối máy chủ".
@@ -106,5 +106,9 @@ Thêm trong bản này (thay cho link web):
 - "Gần bạn, còn lịch" đổi thành "Gần bạn, đang nhận lịch": app chỉ biết người làm đang bật nhận lịch,
   không gọi `free_slots` cho từng người ở trang chủ.
 - EAS đã liên kết `@titanlabs/360dep`; ba profile dùng môi trường tương ứng với hai biến backend công khai ở phạm vi project.
-  Cloud build còn chờ chấp thuận chi phí (credit tài khoản đã hết) và tài khoản Apple Developer/Google Play đích.
-  Xem [trạng thái phát hành](../../docs/RELEASE_PARTNER_2026-10-04.md). Chưa có bản gửi store hoặc OTA.
+  `app.config.js` chặn build profile production nếu URL không phải dự án production hoặc khóa JWT không có role `anon`
+  và đúng project ref. Không lấy cấu hình cloud build từ `.env.local` ở root: file đó dành cho QA local.
+- Đã tạo app trên Apple `sai211dn@gmail.com`, team `Q8A7CBYV5Z`, ASC app `6819003877`, và Play `alexle@titanlabs.vn`.
+  Hai build cloud đầu đã hủy do nhầm backend local; chưa có bản gửi store hoặc OTA.
+  Build lại đang chờ tăng trần tổng phí từ 3 lên 6 USD (credit tài khoản đã hết).
+  Xem [trạng thái phát hành](../../docs/RELEASE_PARTNER_2026-10-04.md).

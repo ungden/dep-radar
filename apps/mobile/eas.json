@@ -3,6 +3,21 @@
   "build": {
     "development": { "developmentClient": true, "distribution": "internal", "environment": "development" },
     "preview": { "distribution": "internal", "environment": "preview" },
-    "production": { "autoIncrement": true, "environment": "production" }
+    "production": {
+      "autoIncrement": true,
+      "environment": "production",
+      "android": { "resourceClass": "medium" },
+      "ios": { "resourceClass": "m-medium" }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "sai211dn@gmail.com",
+        "appleTeamId": "Q8A7CBYV5Z",
+        "ascAppId": "6819003877"
+      },
+      "android": { "track": "internal", "releaseStatus": "draft" }
+    }
   }
 }

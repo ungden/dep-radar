@@ -38,6 +38,6 @@ Ngày 04/10 đã build iOS Release cho Simulator, khởi chạy app và kiểm t
 
 Ngày 04/10 đã áp dụng migration `20261006100001` trên production, push `main` và phát hành web tại [www.360dep.vn](https://www.360dep.vn). CI web và database đều đạt. Kiểm tra production xác nhận 72 dịch vụ, 145 gói có đúng ba mức, 15 đơn có hợp đồng đã chốt và vẫn giữ 7 hồ sơ công khai. Migration không tự công khai bản nháp. Nếu rollback giao diện, giữ schema bổ sung và các hợp đồng đã chốt; không xóa bảng lịch phụ đang có đơn.
 
-App đã liên kết EAS `@titanlabs/360dep` và có cấu hình backend công khai cho ba môi trường. Cloud build và phát hành store còn chờ chấp thuận chi phí EAS cùng tài khoản Apple Developer/Google Play đích.
+App đã liên kết EAS `@titanlabs/360dep`; đã tạo app trên đúng tài khoản Apple `sai211dn@gmail.com` và Google Play `alexle@titanlabs.vn`. Hai cloud build đầu đã hủy do nhầm backend local; đã sửa biến EAS về production và thêm kiểm tra cấu hình. Build lại chờ tăng trần tổng phí từ 3 lên 6 USD; chưa có bản gửi store. Xem [trạng thái phát hành](./RELEASE_PARTNER_2026-10-04.md).
 
 Ảnh kiểm tra web: [Desktop](./qa/partner-three-prices-desktop.jpg), [390px](./qa/partner-three-prices-mobile.jpg), [Production](./qa/partner-three-prices-production.png). Tài khoản QA và ảnh tải lên backend local đã được dọn sau kiểm tra.

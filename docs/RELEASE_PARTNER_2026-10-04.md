@@ -28,4 +28,18 @@ Web đã lên [www.360dep.vn](https://www.360dep.vn), Vercel deployment `dpl_69h
 
 App `vn.dep360.app` đã liên kết [EAS @titanlabs/360dep](https://expo.dev/accounts/titanlabs/projects/360dep), project ID `68843a7f-0035-4213-b685-152a8d5f5afb`. Ba profile development/preview/production dùng môi trường tương ứng; mỗi môi trường có `EXPO_PUBLIC_SUPABASE_URL` và `EXPO_PUBLIC_SUPABASE_ANON_KEY` ở phạm vi project. Không gửi service-role key lên EAS. Đã kiểm tra Expo config và định danh iOS/Android.
 
-Credit build EAS của tài khoản đã dùng hết; cloud build sẽ tính thêm phí. Đã hỏi chấp thuận tối đa 3 USD cho một build Android và một build iOS trên worker medium, cùng Apple Developer team và tài khoản Google Play đích. Chưa khởi chạy cloud build hoặc gửi store khi chưa có câu trả lời. Chưa có `expo-updates` hoặc OTA, chưa kiểm tra trên thiết bị thật. Liên kết EAS không đồng nghĩa app đã phát hành lên store.
+## Thiết lập store và sự cố build
+
+Chủ sản phẩm đã duyệt tạo app Google Play và một build Android + một build iOS với trần tổng phí 3 USD. Apple dùng `sai211dn@gmail.com`, team `Q8A7CBYV5Z`, tổ chức TITAN INTERNATIONAL TRADING SERVICE COMPANY LIMITED; Google Play dùng `alexle@titanlabs.vn`, developer `8409379285366511764`.
+
+- Đã đăng ký Apple App ID `vn.dep360.app`, bật Push Notifications và Sign In with Apple; đã chuẩn bị chứng chỉ phân phối, provisioning và APNs qua EAS.
+- [App Store Connect 360dep](https://appstoreconnect.apple.com/apps/6819003877/distribution/ios/version/inflight): app ID `6819003877`, phiên bản `1.0.0`, Prepare for Submission. Đã lưu mô tả tiếng Việt, từ khóa, URL hỗ trợ/marketing, subtitle, category Lifestyle, URL chính sách `https://www.360dep.vn/quy-che` và chọn phát hành thủ công. Chưa gửi App Review.
+- [Google Play 360dep](https://play.google.com/console/u/5/developers/8409379285366511764/app/4975443642828814542/app-dashboard): app ID `4975443642828814542`, ngôn ngữ tiếng Việt, miễn phí. Đã lưu URL chính sách `https://www.360dep.vn/quy-che`. Chưa có release hoặc artifact được upload.
+
+Hai build đầu đã chạy rồi hủy vì biến EAS bị lấy nhầm từ `.env.local` root (backend QA `127.0.0.1`): Android `688815dd-5d7b-4cb0-9655-263353b0150b` (versionCode 2), iOS `22d7d64e-86eb-4af8-9284-01e2b6dc9ae7` (build 1). Không được dùng hoặc submit hai build này. Remote version đã tăng; build sau phải tiếp tục tăng, không reset.
+
+Đã sửa hai biến công khai trong cả ba môi trường EAS từ Supabase project production `ohjrocksurzkypcbfkha`; API production trả đủ 72 dịch vụ. Đọc lại bằng EAS CLI xác nhận URL và anon key production khớp chính xác cấu hình đã xác minh. `app.config.js` kiểm tra profile production, URL, khóa công khai và role/project ref của anon JWT. Kiểm tra qua Expo config thực tế đạt: production hợp lệ được chấp nhận; backend local, khóa thiếu, khóa private/service-role hoặc JWT dự án khác bị từ chối; định danh app và cấu hình development giữ nguyên. Mobile lint đạt.
+
+Credit build EAS của tài khoản đã dùng hết; worker medium Android giá 1 USD, iOS giá 2 USD. Theo [quy định tính phí Expo](https://docs.expo.dev/billing/usage-based-pricing/), chỉ build hủy trước khi bắt đầu xử lý mới không tính phí; số liệu có thể trễ 24 giờ. Hai build cũ có thể vẫn tính tổng 3 USD. Build lại chờ duyệt tăng trần tổng lên 6 USD, thêm tối đa 3 USD. Không chạy build mới trước khi duyệt trần này.
+
+Trước phát hành công khai còn cần: bật và kiểm tra Apple Auth trên backend (production hiện `external.apple: false`, Google `true`), kiểm thử flow đăng nhập/đặt lịch trên bản native thật, screenshot/store listing, khai báo quyền riêng tư và nội dung dựa trên hành vi thực tế, thông tin liên hệ/reviewer. Chưa có `expo-updates` hoặc OTA, chưa kiểm tra trên thiết bị thật. App trên store hiện chỉ là hồ sơ chuẩn bị phát hành.
