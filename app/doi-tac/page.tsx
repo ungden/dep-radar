@@ -27,7 +27,7 @@ export default function PartnerPage() {
     {
       icon: CalendarCheck,
       title: "Nhận lịch",
-      text: "Mở hồ sơ, chọn dịch vụ, chọn mức giá có sẵn cho từng gói và giờ làm việc. Khách gần bạn đặt thẳng theo lịch bạn mở; bạn xác nhận trong app.",
+      text: "Mở hồ sơ, chọn dịch vụ, chọn mức giá có sẵn cho từng gói và giờ làm việc, rồi gửi duyệt. Khi được duyệt và bật nhận khách, khách gần bạn đặt theo lịch bạn mở; bạn xác nhận trong app.",
     },
     {
       icon: Megaphone,
@@ -106,8 +106,8 @@ export default function PartnerPage() {
       <section className="mt-10 rounded-[var(--radius-lg)] bg-subtle p-5">
         <h2 className="text-[18px] font-bold tracking-tight">Bắt đầu</h2>
         <p className="mt-1.5 text-[14px] text-ink-soft">
-          Đăng nhập hoặc tạo tài khoản, rồi mở hồ sơ: dịch vụ và giá, giờ làm, khu vực, ít nhất một ảnh tác phẩm. Đủ thông tin là bật
-          hồ sơ cho khách thấy.
+          Đăng nhập hoặc tạo tài khoản, rồi lưu đủ sáu bước: nghề, dịch vụ và giá, nơi phục vụ, giờ làm, tác phẩm và xác nhận chính sách.
+          Gửi hồ sơ để duyệt; khi được duyệt, bật nhận khách mới lúc bạn sẵn sàng.
         </p>
         <ButtonLink href={JOIN} className="mt-4">
           Mở hồ sơ đối tác
