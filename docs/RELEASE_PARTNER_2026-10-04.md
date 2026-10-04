@@ -20,8 +20,12 @@ CocoaPods lỗi encoding tại đường dẫn có dấu; build bằng bản sao
 
 ## Production và phần còn lại
 
-Supabase liên kết: `ohjrocksurzkypcbfkha`. Preflight xác nhận 72 dịch vụ, 145 gói, 15 đơn và migration hiện tại `20261006100000`. Dry-run chỉ yêu cầu migration mới `20261006100001`. Security advisors mức error không phát hiện lỗi.
+Sau xác nhận của chủ sản phẩm, đã áp dụng migration `20261006100001_standard_partner_catalog_flow.sql` trên Supabase `ohjrocksurzkypcbfkha`, rồi push `main` tại commit `3768e79`. CI [web](https://github.com/ungden/dep-radar/actions/runs/37197376431) và [database](https://github.com/ungden/dep-radar/actions/runs/37197376428) đều đạt; database CI chạy migration từ đầu, SQL nghiệp vụ và 29 RLS tests.
 
-Lệnh áp dụng migration bị bộ duyệt tự động từ chối vì thiếu xác nhận rõ việc thay đổi production. Chưa áp dụng migration, push GitHub hoặc deploy website. Cần xác nhận migration production → push `main` → kiểm tra CI/Vercel → kiểm tra website live. Không phát hành giao diện mới trước khi database sẵn sàng.
+Kiểm tra trực tiếp database production: 72 dịch vụ dùng danh mục phiên bản 2, 145 gói và không có gói sai số lượng ba mức giá; 15 đơn đều có hợp đồng đã chốt; 7 hồ sơ công khai được giữ nguyên. `booking_sessions` bật RLS, không cấp đọc cho anon hoặc INSERT trực tiếp cho authenticated. Security advisors mức error không phát hiện lỗi. Cờ mở xác minh danh tính và demo không đổi.
 
-App `vn.dep360.app` chưa có EAS project ID, `expo-updates` hoặc liên kết store. CLI đang đăng nhập Expo `titanlabs`; cần xác định tài khoản sở hữu dự án và Apple Developer/Google Play trước khi ký và phát hành app. Chưa khởi chạy cloud build, chi phí EAS hoặc gửi store. Chưa kiểm tra trên thiết bị thật.
+Web đã lên [www.360dep.vn](https://www.360dep.vn), Vercel deployment `dpl_69hgUF4e938siQ7CrrGpYMzSRFy8` ở trạng thái Ready/production. Đã thao tác trang Nail và bảng giá hồ sơ đối tác trên live, xác nhận ba mức giá và mức đối tác đã chọn. [Ảnh production](./qa/partner-three-prices-production.png). Không tạo đơn hoặc tài khoản QA trên production. Truy vấn log error trong 10 phút kiểm tra không trả về bản ghi lỗi.
+
+App `vn.dep360.app` đã liên kết [EAS @titanlabs/360dep](https://expo.dev/accounts/titanlabs/projects/360dep), project ID `68843a7f-0035-4213-b685-152a8d5f5afb`. Ba profile development/preview/production dùng môi trường tương ứng; mỗi môi trường có `EXPO_PUBLIC_SUPABASE_URL` và `EXPO_PUBLIC_SUPABASE_ANON_KEY` ở phạm vi project. Không gửi service-role key lên EAS. Đã kiểm tra Expo config và định danh iOS/Android.
+
+Credit build EAS của tài khoản đã dùng hết; cloud build sẽ tính thêm phí. Đã hỏi chấp thuận tối đa 3 USD cho một build Android và một build iOS trên worker medium, cùng Apple Developer team và tài khoản Google Play đích. Chưa khởi chạy cloud build hoặc gửi store khi chưa có câu trả lời. Chưa có `expo-updates` hoặc OTA, chưa kiểm tra trên thiết bị thật. Liên kết EAS không đồng nghĩa app đã phát hành lên store.

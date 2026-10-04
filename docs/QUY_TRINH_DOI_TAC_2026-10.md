@@ -36,6 +36,8 @@ Migration mới: `20261006100001_standard_partner_catalog_flow.sql`, sau migrati
 
 Ngày 04/10 đã build iOS Release cho Simulator, khởi chạy app và kiểm tra màn hình Nail hiển thị đủ ba mức giá cho từng gói. Bundle iOS/Android đã xuất với cấu hình backend công khai. Trạng thái phát hành và giới hạn kiểm tra: [RELEASE_PARTNER_2026-10-04.md](./RELEASE_PARTNER_2026-10-04.md).
 
-Thứ tự phát hành: áp dụng migration → phát hành web → phát hành bundle/build mobile. Production chưa được thay đổi trong đợt triển khai này. Migration giữ giá/đơn cũ và không tự công khai bản nháp. Nếu rollback giao diện, giữ schema bổ sung và các hợp đồng đã chốt; không xóa bảng lịch phụ đang có đơn.
+Ngày 04/10 đã áp dụng migration `20261006100001` trên production, push `main` và phát hành web tại [www.360dep.vn](https://www.360dep.vn). CI web và database đều đạt. Kiểm tra production xác nhận 72 dịch vụ, 145 gói có đúng ba mức, 15 đơn có hợp đồng đã chốt và vẫn giữ 7 hồ sơ công khai. Migration không tự công khai bản nháp. Nếu rollback giao diện, giữ schema bổ sung và các hợp đồng đã chốt; không xóa bảng lịch phụ đang có đơn.
 
-Ảnh kiểm tra web: [Desktop](./qa/partner-three-prices-desktop.jpg), [390px](./qa/partner-three-prices-mobile.jpg). Tài khoản QA và ảnh tải lên backend local đã được dọn sau kiểm tra.
+App đã liên kết EAS `@titanlabs/360dep` và có cấu hình backend công khai cho ba môi trường. Cloud build và phát hành store còn chờ chấp thuận chi phí EAS cùng tài khoản Apple Developer/Google Play đích.
+
+Ảnh kiểm tra web: [Desktop](./qa/partner-three-prices-desktop.jpg), [390px](./qa/partner-three-prices-mobile.jpg), [Production](./qa/partner-three-prices-production.png). Tài khoản QA và ảnh tải lên backend local đã được dọn sau kiểm tra.

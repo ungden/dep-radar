@@ -77,8 +77,8 @@ Thêm trong bản này (thay cho link web):
 - **Sign in with Apple** (bắt buộc khi có Google, App Store 4.8): bật Apple trong Supabase Auth › Providers, điền
   Services ID/key từ Apple Developer, thêm `vn.dep360.app` vào Authorized Client IDs. `ios.usesAppleSignIn` đã bật.
   Khi `/auth/v1/settings` báo `external.apple: false` nút Apple ẩn; gọi được mà provider tắt thì báo rõ "chưa được bật trên máy chủ".
-- **Push** cần EAS projectId của tài khoản Expo chủ sản phẩm: `npx eas init` ghi `expo.extra.eas.projectId` vào
-  `app.json`. Không có thì app không đăng ký token (không lỗi). Gửi push (Edge Function/cron) là việc phía server.
+- **Push** đã có EAS projectId `68843a7f-0035-4213-b685-152a8d5f5afb` trong `app.json`, thuộc
+  [@titanlabs/360dep](https://expo.dev/accounts/titanlabs/projects/360dep). Gửi push (Edge Function/cron) là việc phía server.
 - **Universal links** cần Apple Team ID. Khi có, thêm `"ios": { "associatedDomains": ["applinks:www.360dep.vn"] }`
   vào `app.json` và file `https://www.360dep.vn/.well-known/apple-app-site-association` với appID
   `<TEAMID>.vn.dep360.app`.
@@ -105,4 +105,6 @@ Thêm trong bản này (thay cho link web):
   **chưa được kiểm chứng**: cần kiểm tra trước khi mở video cho người dùng thật.
 - "Gần bạn, còn lịch" đổi thành "Gần bạn, đang nhận lịch": app chỉ biết người làm đang bật nhận lịch,
   không gọi `free_slots` cho từng người ở trang chủ.
-- EAS chưa liên kết; build lên store cần tài khoản Expo, Apple Developer và Google Play của chủ sản phẩm.
+- EAS đã liên kết `@titanlabs/360dep`; ba profile dùng môi trường tương ứng với hai biến backend công khai ở phạm vi project.
+  Cloud build còn chờ chấp thuận chi phí (credit tài khoản đã hết) và tài khoản Apple Developer/Google Play đích.
+  Xem [trạng thái phát hành](../../docs/RELEASE_PARTNER_2026-10-04.md). Chưa có bản gửi store hoặc OTA.
