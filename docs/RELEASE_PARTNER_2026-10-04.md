@@ -72,3 +72,28 @@ Read-only SQL production xác nhận 7/7 hồ sơ công khai là seed, 22 user s
 Google có “Signed, universal APK” 117 MB tại Bundle Explorer, nhưng yêu cầu download hai lần không trả được file. Chưa cài/kiểm thử Android; không phát sinh build trả phí. AVD riêng `dep360_store_qa` được chuẩn bị dưới `/tmp/dep360-android-qa`, chưa khởi chạy. Chrome URL policy chặn mở `chrome://downloads/`; không đi đường khác để vượt chặn. Android screenshot chưa hoàn thành.
 
 Đã sửa lỗi đuôi file screenshot: browser capture tạo JPEG nhưng ban đầu đặt `.png`. Apple đã thay bằng hai `.jpg`, hiện thumbnail đúng và không còn biểu tượng lỗi. File render Google trong repo cũng đổi đuôi đúng. Google chấp nhận ảnh theo bytes; hai ảnh listing load thành công (icon 512×512, feature preview 512×250), không cần thay upload đã hợp lệ.
+
+
+## Bổ sung ảnh store — 2026-10-05
+
+Theo yêu cầu tiếp tục và chụp/đăng đủ hình, đã bổ sung 4 screenshot iPhone native: bộ lọc, hồ sơ, chi tiết tác phẩm và bước chọn gói đặt lịch. App Store Connect hiện đủ 6/10 screenshot Vietnamese 6.5-inch; thumbnail đúng, tải lại vẫn đủ 6, Save disabled. Apple vẫn Prepare for Submission. [Bằng chứng](./store-assets/2026-10-04/local-proofs/dep360-apple-six-screenshots.jpg). Hai ảnh đầu giữ bản cũ; bản local đã thêm nhãn minh họa. Delete All bị automatic approval review từ chối do thiếu xác nhận ngay lúc xóa, đã Cancel và dùng phương án chỉ thêm 4 ảnh.
+
+Apple session hết hạn đã đăng nhập lại đúng sai211dn bằng mật khẩu lưu trong Chrome; 2FA hoàn tất, tiếp tục được App Store Connect. Không lưu mật khẩu/OTP vào tài liệu. Kết nối Chrome DOM không khả dụng ở lượt này; thao tác store bằng CUA native Chrome.
+
+Dữ liệu hồ sơ vẫn là seed. Màn hình chọn ngày giờ trên simulator tải kéo dài, chưa xác nhận booking E2E; không dùng ảnh spinner cho store. Bộ lọc thay ảnh danh sách tìm kiếm có trạng thái tải.
+
+Đĩa xuống khoảng 116–190 MB nhiều lần; đã dọn riêng bản giải nén IPA, ba export JS tạm và node_modules root/mobile của 360dep (cài lại bằng npm ci), giữ IPA/AAB và source. Dung lượng có tăng lên khoảng 1,5 GB nhưng Android emulator vẫn FATAL hasSufficientDiskSpace; đã yêu cầu chủ máy giải phóng ít nhất 4 GB. Không chỉnh emulator dự án khác, không chạy thêm build trả phí. Google screenshot chưa hoàn thành.
+
+User đã yêu cầu làm tiếp toàn bộ các việc còn thiếu. Chưa tạo key Sign in with Apple, chưa đổi khai báo age/wellness, chưa ẩn hồ sơ seed ở lượt bổ sung hình này. Các mục này cần tiếp tục theo bằng chứng nguồn và policy tại hành động; không coi yêu cầu làm tiếp là bằng chứng đã hoàn tất.
+
+Đã hoàn tất Apple age rating: questionnaire khai UGC/social discovery/chat Yes, age assurance/parental controls/unrestricted web access/paid advertising No; medical treatment None, health/wellness Yes; nội dung mature/sexual/violence/chance-based None/No. Calculated 13+, override 18+ theo đối tượng người lớn. UI hiện 18+ (iOS trước 26 là 17+ theo quy đổi Apple). [Bằng chứng](./store-assets/2026-10-04/local-proofs/dep360-apple-age-18.jpg).
+
+Đã chuẩn bị APK QA local từ AAB versionCode 4 bằng bundletool 1.18.1 + aapt2 vendor đã cài, debug-signed bằng debug keystore existing. SHA256 JS bundle khớp AAB đã upload; APK 116.823.523 bytes. Đây là artifact dùng chụp/QA, không upload hoặc thay binary store. Android emulator thử boot lần này SDK từ chối hasSufficientDiskSpace dù còn 1,5 GB; không bypass kiểm tra dung lượng.
+
+Google listing thử Save as draft báo “Upload at least 2 phone or tablet screenshots”. Icon/feature render load đúng nhưng cần Android screenshots để lưu hợp lệ; giữ tab listing và chuyển khai báo qua tab dashboard riêng, không discard ảnh. Apple Content Rights form cần owner xác nhận quyền ảnh mẫu; đã hỏi vì chưa tìm được hồ sơ quyền sử dụng trong repo, chưa tick “I have the necessary rights”.
+
+Kiểm tra read-only bổ sung: anon được EXECUTE free_slots; gọi REST production bằng public anon key trả HTTP 200 và 18 giờ trống cho nail-design/simple ngày 2026-10-06 trong khoảng 1,2 giây. Không tạo đơn. Điều này xác nhận API có trả dữ liệu; chưa xác định nguyên nhân native spinner và chưa xác nhận booking E2E.
+
+Cập nhật dung lượng thực tế: khi đĩa tăng lên khoảng 4,8 GB, SDK vượt kiểm tra ban đầu nhưng từ chối tạo userdata, yêu cầu 7.372,8 MB. Đổi storage của riêng QA AVD từ mặc định 10 GB xuống 2 GB và bỏ SD card không làm giảm mức tối thiểu của image. Cần khoảng 8 GB trống; không tắt/bypass kiểm tra SDK.
+
+Mac đã khóa màn hình, CUA yêu cầu chủ máy mở khóa thủ công; đã hỏi và dừng UI. Supabase sign-in bằng thông tin lưu trong Chrome đã khởi chạy, chưa xác nhận vào được Auth Users trước lúc khóa. Google Target audience yêu cầu Sign in details trước khi điền; còn cần tài khoản reviewer. Chưa tạo tài khoản hoặc nhập mật khẩu mới. Các ảnh bằng chứng native Chrome có thanh tab dự án khác được giữ riêng ở local-proofs (gitignored), không đưa lên repository công khai.

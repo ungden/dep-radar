@@ -11,3 +11,6 @@ playwright-report/
 supabase/.temp/
 .claude/
 tsconfig.tsbuildinfo
+
+# Local native Chrome evidence can include unrelated browser tabs.
+docs/store-assets/**/local-proofs/
