@@ -109,6 +109,8 @@ Thêm trong bản này (thay cho link web):
   `app.config.js` chặn build profile production nếu URL không phải dự án production hoặc khóa JWT không có role `anon`
   và đúng project ref. Không lấy cấu hình cloud build từ `.env.local` ở root: file đó dành cho QA local.
 - Đã tạo app trên Apple `sai211dn@gmail.com`, team `Q8A7CBYV5Z`, ASC app `6819003877`, và Play `alexle@titanlabs.vn`.
-  Hai build cloud đầu đã hủy do nhầm backend local; chưa có bản gửi store hoặc OTA.
-  Build lại đang chờ tăng trần tổng phí từ 3 lên 6 USD (credit tài khoản đã hết).
+  Hai build cloud đầu đã hủy do nhầm backend local; đã duyệt trần tổng phí 6 USD và build lại với production.
+  iOS `1.0.0 (2)` đã được Apple xử lý trên TestFlight; AAB Android `1.0.0 (4)` đã được Google Play chấp nhận,
+  đang ở dialog xác nhận phát hành internal (Chrome Control bị timeout kiểm tra quyền). Cả hai chưa gán tester.
+  Chưa có nhóm/tester iOS được gán, chưa public release hoặc OTA.
   Xem [trạng thái phát hành](../../docs/RELEASE_PARTNER_2026-10-04.md).
