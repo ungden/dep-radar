@@ -16,3 +16,6 @@ Bằng chứng mới trong local-proofs chỉ lưu trên máy và được gitig
 
 
 Cập nhật sau duyệt cụ thể 05/10: máy còn khoảng 46 GB; SDK cũ bị gỡ nên đã tải official commandlinetools Google, xác minh SHA256, chấp nhận SDK license được chủ sản phẩm duyệt và cài trong /private/tmp/dep360-android-sdk. Emulator cài xong, image Android 36 Google Play arm64 đang tải. Các đoạn báo thiếu đĩa ở trên là bằng chứng lịch sử, không phải trạng thái hiện tại. Apple Privacy đã Publish, SIWA key đã tạo, Google IARC đã lưu; ảnh xác nhận trong local-proofs. Android screenshot vẫn chờ boot image mới.
+
+
+Trạng thái cuối SDK 05/10: image đã cài, Android QA đã boot và APK cài Success. CUA nhận cửa sổ qua launcher QA cục bộ, nhưng emulator gặp System UI/Process system ANR; chưa có screenshot app Android hợp lệ. Đã dừng riêng QA sau chẩn đoán, giữ SDK/AVD/APK. Xem local-proofs/dep360-android-system-anr.jpg; không dùng ảnh lỗi cho listing.

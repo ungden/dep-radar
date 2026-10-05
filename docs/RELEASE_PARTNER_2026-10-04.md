@@ -133,3 +133,12 @@ Chủ sản phẩm đề xuất dep360.supabase.co. CLI vanity-subdomains get x�
 Google Cloud project dep360-auth-2026, client 360dep Web, đã có callback project-ref và 360dep. Đã bổ sung https://dep360.supabase.co/auth/v1/callback, UI OAuth client saved và mở lại xác nhận đủ 3 callback. Không đổi client secret/scopes. Auto-review từ chối kích hoạt vanity mới vì đây là cutover auth production chưa xác nhận cụ thể; chưa kích hoạt/xóa domain cũ. Đã hỏi lựa chọn giữ 360dep và duyệt Services ID, hoặc duyệt cutover dep360 và Services ID với callback tương ứng. Apple Services ID vẫn form chuẩn bị, chưa Register.
 
 Tham khảo live: https://supabase.com/docs/guides/platform/custom-domains và https://supabase.com/docs/guides/platform/manage-your-usage/custom-domains. Proof Google callback: local-proofs/dep360-google-vanity-callback-saved.jpg (gitignored).
+
+
+### Android SDK/QA sau tải image — 05/10
+
+SDK/image Android 36 Google Play arm64 đã cài thành công (emulator 37.2.12, platform-tools). Emulator dep360_store_qa boot và adb install APK QA trả Success; không thay AAB/IPA store và không chạy build trả phí. Renderer auto/software ban đầu lỗi display surface; SwiftShader/host đã boot nhưng UI không ổn định, System UI/Process system ANR và Bluetooth stack crash trong image.
+
+Đã tạo launcher cục bộ /private/tmp/360dep Android QA.app chỉ chạy SDK Google có sẵn để CUA nhận cửa sổ (không sửa SDK binary/source app). CUA đọc được Home/appdrawer và icon 360dep; chưa xác nhận app 360dep mở thành công hoặc native Android flows. Screenshot Android chưa chụp/upload, không dùng ảnh boot/ANR làm store screenshot. Bằng chứng local-proofs/dep360-android-system-anr.jpg.
+
+Đã tắt riêng iOS Simulator 360dep Partner QA sau khi xác nhận đúng UDID để giảm tải; sau chẩn đoán cũng dừng emulator Android QA bị ANR, giữ toàn bộ SDK/APK/AVD. Không dừng simulator/emulator hoặc tiến trình của dự án khác. Cần phiên Android ổn định để tiếp tục 6 ảnh. Quyền ảnh/reviewer/Services ID và cutover domain còn chờ xác nhận hoặc thao tác người dùng.
