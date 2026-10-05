@@ -1,5 +1,7 @@
 # Bộ khai báo store cho 360dep 1.0.0
 
+Cập nhật 06/10: Chrome đã kết nối lại; đúng tài khoản Play alexle@titanlabs.vn hiện ở u/6, bị chặn tại Play Console Terms of Service. Form Accept đã mở, đang chờ duyệt riêng; chưa chấp nhận. Reviewer vẫn cần chủ sản phẩm trực tiếp gắn số điện thoại riêng trước khi xác nhận full access. Apple hết phiên và đang chờ đăng nhập lại sai211dn/2FA. Chưa hoàn tất Sign in details, Target audience/Data safety Google hoặc gửi review/phát hành. Các phần dưới là lịch sử khai báo.
+
 Trạng thái cập nhật 05/10: chưa gửi App Review hoặc Google review. Apple đã lưu age rating 18+ và Publish App Privacy cho 14 loại dữ liệu sau xác nhận cụ thể của chủ sản phẩm. Google đã lưu Advertising ID = No, Health = Other và IARC content ratings; còn Sign in details, Target audience và Data safety cần hoàn tất. Source binary: `cca9a78be4642aea23db6db5b8679454d48c2fea`. Apple build 2, Android versionCode 4. Google Play đã mở tạo production release trên tài khoản tổ chức; internal testing không phải điều kiện bắt buộc của tài khoản này.
 
 ## Apple age rating
@@ -40,8 +42,8 @@ Căn cứ: `lib/catalog.ts`, màn hình native, `app/quy-che/page.tsx` mục VII
 
 - Apple đã chọn build 2 và phát hành tự động sau App Review; Google đã lưu draft production dùng lại AAB 4.
 - URL privacy: `https://www.360dep.vn/quy-che`; support: `https://www.360dep.vn/tro-giup`.
-- Reviewer cần tài khoản mẫu riêng, không quyền admin và không dùng thông tin khách hàng thật. Chưa tạo hoặc chia sẻ credential reviewer.
-- Sáu screenshot iPhone đã lưu và đọc lại; Google listing vẫn giữ icon/feature graphic nhưng Save as draft yêu cầu ít nhất hai screenshot Android. Còn screenshot Android, khai báo nội dung đầy đủ và kiểm thử đăng nhập native.
+- Chủ sản phẩm đã tạo tài khoản reviewer; đăng nhập web thành công nhưng đang cần gắn số điện thoại riêng. Apple đã lưu credential; Google đã điền nhưng chưa xác nhận Add/Save do lỗi kết nối. Chưa xác nhận full access hoặc kiểm thử đăng nhập native.
+- Sáu screenshot iPhone và sáu screenshot Android native đã lưu trên store; Google listing có icon/feature graphic. Còn Sign in details, Target audience và Data safety trên Google cùng kiểm thử đăng nhập native.
 - Đã chọn chỉ Vietnam trên Apple và Google production; chưa phát hành.
 - Chưa gửi production App Review hoặc Google review.
 
@@ -91,3 +93,9 @@ Chủ sản phẩm xác nhận quyền sử dụng toàn bộ 34 ảnh mẫu. Ap
 Android QA 35 đã mở được 360dep và chụp sáu màn native thật. Google Play đã lưu 6/8 phone screenshots 1080×1920, toàn bộ có nhãn dữ liệu minh họa, cùng icon và feature graphic. Google setup đạt 8/11. Sign in details được chuẩn bị với Yes, tên 360dep App Review và hướng dẫn tiếng Anh; email/password trống, chưa Add/Save hoặc xác nhận full access. Target audience còn bị Google chặn trước Sign in details; Data Safety chưa hoàn tất. Reviewer account cần chủ sản phẩm trực tiếp tạo credential trên form đang mở.
 
 Bảy hồ sơ mẫu đã được ẩn và tắt nhận job theo duyệt trước đó sau khi lấy đủ ảnh. Anon SQL thấy 0 hồ sơ/0 tác phẩm; dữ liệu nội bộ vẫn giữ nguyên. Apple review Notes đã lưu việc hồ sơ minh họa trong screenshot hiện không được liệt kê công khai và availability phụ thuộc đối tác được duyệt. Chưa gửi Apple/Google review, chưa phát hành công khai; full native login/booking E2E còn chưa xác nhận.
+
+### Reviewer đã đăng nhập; bước lưu Google bị gián đoạn — 05/10
+
+Chủ sản phẩm đã tạo reviewer và yêu cầu điền credential hiện có. Apple đã Save, nút Save disabled sau thao tác. Google đã điền email/password; click Add không được dispatch do CDP deadline, lần đọc lại bị automatic approval review ngắt do stream disconnected rồi Chrome control mất debugger. Chưa xác nhận Add/Save Google, không đánh dấu full access. Credential không lưu trong repository.
+
+Reviewer đăng nhập website thành công nhưng tới form bắt buộc thêm số điện thoại; số này trở thành ID đăng nhập và chỉ gắn với một tài khoản. Form đã bàn giao cho chủ sản phẩm tự nhập/lưu số riêng. Đang chờ hoàn tất số và nối lại Chrome control hoặc chủ sản phẩm tự lưu Google. Google Target audience/Data safety và native login/booking E2E vẫn chưa hoàn tất; chưa gửi review/phát hành.
