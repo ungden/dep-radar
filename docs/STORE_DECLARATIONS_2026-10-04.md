@@ -79,3 +79,15 @@ Tham khảo live: https://supabase.com/docs/guides/platform/custom-domains và h
 Chủ sản phẩm chọn giữ `360dep.supabase.co` và duyệt Services ID. Đã Register `vn.dep360.web` (360dep Web Sign In), bật riêng Sign In with Apple và Save cấu hình. Mở lại Configure xác nhận primary `Q8A7CBYV5Z.vn.dep360.app`, domain `360dep.supabase.co`, callback `https://360dep.supabase.co/auth/v1/callback`. Không cutover sang dep360.supabase.co. Proof `local-proofs/dep360-apple-services-id-saved.jpg` (gitignored).
 
 Apple provider Supabase chưa bật; chủ sản phẩm phải trực tiếp nhập/xác nhận/lưu credential mới. Client IDs cần `vn.dep360.web,vn.dep360.app`; secret dùng Team ID Q8A7CBYV5Z và SIWA Key ID PS2HTF3J28. Services ID lưu thành công chưa chứng minh đăng nhập Apple hoạt động hoặc app đã phát hành.
+
+### Auth đã bật và quyền ảnh đã xác nhận — 05/10
+
+Chủ sản phẩm đã trực tiếp Save Supabase Apple provider. Đọc lại UI xác nhận Enabled và Client IDs `vn.dep360.web,vn.dep360.app`. Metadata secret đã lưu đúng ES256/PS2HTF3J28/Q8A7CBYV5Z/vn.dep360.web, hết hạn 2027-04-03T08:13:05Z; không đưa secret vào repository hoặc output. Cả endpoint authorize vanity và project-ref trả 302 tới Apple với đúng client_id và callback 360dep.supabase.co. Chưa kiểm thử đăng nhập hoàn chỉnh trên native hoặc code exchange.
+
+Chủ sản phẩm xác nhận quyền sử dụng toàn bộ 34 ảnh mẫu. Apple Content Rights đã Save Yes và UI đọc lại đúng. Proof local: `local-proofs/dep360-supabase-apple-enabled.jpg`, `local-proofs/dep360-apple-content-rights-saved.jpg`. Reviewer email/password vẫn chưa có; form tên 360dep App Review đang bàn giao cho chủ sản phẩm tự tạo credential. Android 35 official image đang chuẩn bị để thay phiên Android 36 QA bị ANR; chưa upload screenshot Android hoặc gửi store review.
+
+### Listing Android đã lưu; reviewer còn chờ — 05/10
+
+Android QA 35 đã mở được 360dep và chụp sáu màn native thật. Google Play đã lưu 6/8 phone screenshots 1080×1920, toàn bộ có nhãn dữ liệu minh họa, cùng icon và feature graphic. Google setup đạt 8/11. Sign in details được chuẩn bị với Yes, tên 360dep App Review và hướng dẫn tiếng Anh; email/password trống, chưa Add/Save hoặc xác nhận full access. Target audience còn bị Google chặn trước Sign in details; Data Safety chưa hoàn tất. Reviewer account cần chủ sản phẩm trực tiếp tạo credential trên form đang mở.
+
+Bảy hồ sơ mẫu đã được ẩn và tắt nhận job theo duyệt trước đó sau khi lấy đủ ảnh. Anon SQL thấy 0 hồ sơ/0 tác phẩm; dữ liệu nội bộ vẫn giữ nguyên. Apple review Notes đã lưu việc hồ sơ minh họa trong screenshot hiện không được liệt kê công khai và availability phụ thuộc đối tác được duyệt. Chưa gửi Apple/Google review, chưa phát hành công khai; full native login/booking E2E còn chưa xác nhận.

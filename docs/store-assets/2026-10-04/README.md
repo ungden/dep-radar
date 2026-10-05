@@ -1,6 +1,6 @@
 # Store assets — updated 2026-10-05
 
-App Store Connect đã có 6 screenshot iPhone 1284×2778: khám phá, giá, tác phẩm, chọn gói đặt lịch, hồ sơ và bộ lọc. Đã kiểm tra thumbnail đúng, tải lại trang vẫn đủ 6 ảnh và Save disabled. Bằng chứng: [App Store 6 ảnh](./local-proofs/dep360-apple-six-screenshots.jpg). Google đã có icon 512×512 và feature graphic 1024×500; screenshot Android còn thiếu.
+App Store Connect đã có 6 screenshot iPhone 1284×2778: khám phá, giá, tác phẩm, chọn gói đặt lịch, hồ sơ và bộ lọc. Google Play đã lưu 6 screenshot Android 1080×1920, icon 512×512 và feature graphic 1024×500. Bằng chứng: [Apple 6 ảnh](./local-proofs/dep360-apple-six-screenshots.jpg), [Google 6 ảnh đã lưu](./local-proofs/dep360-play-six-android-saved.jpg). Chưa gửi review hoặc phát hành.
 
 Ảnh lấy bằng chức năng Save Screen của Simulator từ app native trên thiết bị riêng 360dep Partner QA, backend production. HTML chỉ tạo khung giới thiệu; không dựng giả UI. Font Be Vietnam Pro lấy từ assets dự án. Chạy HTTP server thư mục này, mở index.html với type=discover, prices, search, profile, work, booking, icon hoặc feature để tái tạo. `search` hiện là ảnh bộ lọc.
 
@@ -19,3 +19,9 @@ Cập nhật sau duyệt cụ thể 05/10: máy còn khoảng 46 GB; SDK cũ b�
 
 
 Trạng thái cuối SDK 05/10: image đã cài, Android QA đã boot và APK cài Success. CUA nhận cửa sổ qua launcher QA cục bộ, nhưng emulator gặp System UI/Process system ANR; chưa có screenshot app Android hợp lệ. Đã dừng riêng QA sau chẩn đoán, giữ SDK/AVD/APK. Xem local-proofs/dep360-android-system-anr.jpg; không dùng ảnh lỗi cho listing.
+
+## Hoàn tất ảnh Android — 05/10
+
+Phiên QA mới `dep360_store_qa35` dùng official Google APIs Android 35 ARM64 r09 đã mở được app. CUA chụp sáu màn native, crop (0,135)-(706,1590) từ ảnh cửa sổ 706×1626 để bỏ title/status/navigation emulator. Các file `android-0*-native.png` giữ nguyên UI; `android.html` tạo khung giới thiệu, `play-0*-1080x1920.jpg` là ảnh Google Play đã lưu. Cả sáu có nhãn “Giao diện Android · Dữ liệu minh họa”. Không dựng UI giả hoặc dùng màn đang tải. [Xem cả sáu ảnh](./play-android-six-preview.jpg).
+
+Thứ tự store: discover, prices, work, booking, profile, search. HTML có cùng type với index.html; xuất full-page 1080×1920. Quyền sử dụng toàn bộ 34 ảnh đã được chủ sản phẩm xác nhận. Sau khi chụp, bảy hồ sơ seed đã ẩn/tắt nhận job; ảnh mô tả dữ liệu minh họa và không chứng minh đối tác hiện đang khả dụng. Các đoạn lỗi SDK phía trên là lịch sử. Full native login/booking E2E và reviewer account còn chưa hoàn tất.
