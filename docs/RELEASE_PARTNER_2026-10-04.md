@@ -1,6 +1,6 @@
 # Bản phát hành chuẩn hóa đối tác — 04/10/2026
 
-Trạng thái hiện tại 05/10: web/database đã triển khai; Apple 1.0.0(2) Prepare for Submission với sáu ảnh iPhone, App Privacy Published, SIWA key đã tạo. Google production 1.0.0(4) vẫn draft, IARC đã Completed; screenshot Android đang chờ image SDK tải xong. Chưa gửi review/phát hành. Các phần dưới ghi theo thời điểm; kết quả mới nhất ở cuối tài liệu.
+Trạng thái hiện tại 05/10: web/database đã triển khai; Apple 1.0.0(2) Prepare for Submission với sáu ảnh iPhone, App Privacy Published, SIWA key và Services ID đã tạo. Giữ vanity đang active 360dep.supabase.co; callback Apple đã lưu. Supabase Apple provider chưa bật, bước credential cần chủ sản phẩm trực tiếp hoàn tất. Google production 1.0.0(4) vẫn draft, IARC đã Completed; SDK/image và QA APK đã cài nhưng emulator bị ANR nên chưa có screenshot Android hợp lệ. Chưa gửi review/phát hành. Các phần dưới ghi theo thời điểm; kết quả mới nhất ở cuối tài liệu.
 
 ## Phạm vi đã hoàn thành
 
@@ -141,4 +141,10 @@ SDK/image Android 36 Google Play arm64 đã cài thành công (emulator 37.2.12,
 
 Đã tạo launcher cục bộ /private/tmp/360dep Android QA.app chỉ chạy SDK Google có sẵn để CUA nhận cửa sổ (không sửa SDK binary/source app). CUA đọc được Home/appdrawer và icon 360dep; chưa xác nhận app 360dep mở thành công hoặc native Android flows. Screenshot Android chưa chụp/upload, không dùng ảnh boot/ANR làm store screenshot. Bằng chứng local-proofs/dep360-android-system-anr.jpg.
 
-Đã tắt riêng iOS Simulator 360dep Partner QA sau khi xác nhận đúng UDID để giảm tải; sau chẩn đoán cũng dừng emulator Android QA bị ANR, giữ toàn bộ SDK/APK/AVD. Không dừng simulator/emulator hoặc tiến trình của dự án khác. Cần phiên Android ổn định để tiếp tục 6 ảnh. Quyền ảnh/reviewer/Services ID và cutover domain còn chờ xác nhận hoặc thao tác người dùng.
+Đã tắt riêng iOS Simulator 360dep Partner QA sau khi xác nhận đúng UDID để giảm tải; sau chẩn đoán cũng dừng emulator Android QA bị ANR, giữ toàn bộ SDK/APK/AVD. Không dừng simulator/emulator hoặc tiến trình của dự án khác. Cần phiên Android ổn định để tiếp tục 6 ảnh. Quyền ảnh/reviewer còn chờ xác nhận hoặc thao tác người dùng; trạng thái Services ID/domain mới nhất ở dưới.
+
+### Apple Services ID và domain đã chốt — 05/10
+
+Chủ sản phẩm chọn “360dep” sau câu hỏi giữ 360dep.supabase.co và duyệt Services ID hoặc chuyển sang dep360.supabase.co. Đã giữ vanity hiện có; không thực hiện cutover. Apple đã Register Services ID `vn.dep360.web`, description `360dep Web Sign In`, resource `CQ39FBL34D`, chỉ bật Sign In with Apple. Đã Save và mở lại Configure xác nhận primary `Q8A7CBYV5Z.vn.dep360.app`, domain `360dep.supabase.co`, return URL `https://360dep.supabase.co/auth/v1/callback`. Bằng chứng riêng: `docs/store-assets/2026-10-04/local-proofs/dep360-apple-services-id-saved.jpg` (gitignored).
+
+Supabase Apple provider chưa bật hoặc lưu credential mới. Bước bàn giao tại https://supabase.com/dashboard/project/ohjrocksurzkypcbfkha/auth/providers: Client IDs `vn.dep360.web,vn.dep360.app` (web trước), Team ID `Q8A7CBYV5Z`, Key ID `PS2HTF3J28`. Chủ sản phẩm cần tự tạo/nhập client secret từ key .p8 đã tải ngoài repository, xác nhận và Save. Không gửi key/secret trong chat hoặc commit. Tài liệu hiện tại https://supabase.com/docs/guides/auth/social-login/auth-apple yêu cầu secret OAuth được tạo lại tối đa mỗi 6 tháng; native-only không cần secret nhưng sản phẩm có web nên vẫn cần OAuth. Chưa kiểm thử Apple login sau cấu hình, chưa gửi App Review/Google production.

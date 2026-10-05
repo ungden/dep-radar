@@ -73,3 +73,9 @@ Chủ sản phẩm đề xuất dep360.supabase.co. CLI vanity-subdomains get x�
 Google Cloud project dep360-auth-2026, client 360dep Web, đã có callback project-ref và 360dep. Đã bổ sung https://dep360.supabase.co/auth/v1/callback, UI OAuth client saved và mở lại xác nhận đủ 3 callback. Không đổi client secret/scopes. Auto-review từ chối kích hoạt vanity mới vì đây là cutover auth production chưa xác nhận cụ thể; chưa kích hoạt/xóa domain cũ. Đã hỏi lựa chọn giữ 360dep và duyệt Services ID, hoặc duyệt cutover dep360 và Services ID với callback tương ứng. Apple Services ID vẫn form chuẩn bị, chưa Register.
 
 Tham khảo live: https://supabase.com/docs/guides/platform/custom-domains và https://supabase.com/docs/guides/platform/manage-your-usage/custom-domains. Proof Google callback: local-proofs/dep360-google-vanity-callback-saved.jpg (gitignored).
+
+### Services ID đã lưu với domain 360dep — 05/10
+
+Chủ sản phẩm chọn giữ `360dep.supabase.co` và duyệt Services ID. Đã Register `vn.dep360.web` (360dep Web Sign In), bật riêng Sign In with Apple và Save cấu hình. Mở lại Configure xác nhận primary `Q8A7CBYV5Z.vn.dep360.app`, domain `360dep.supabase.co`, callback `https://360dep.supabase.co/auth/v1/callback`. Không cutover sang dep360.supabase.co. Proof `local-proofs/dep360-apple-services-id-saved.jpg` (gitignored).
+
+Apple provider Supabase chưa bật; chủ sản phẩm phải trực tiếp nhập/xác nhận/lưu credential mới. Client IDs cần `vn.dep360.web,vn.dep360.app`; secret dùng Team ID Q8A7CBYV5Z và SIWA Key ID PS2HTF3J28. Services ID lưu thành công chưa chứng minh đăng nhập Apple hoạt động hoặc app đã phát hành.
