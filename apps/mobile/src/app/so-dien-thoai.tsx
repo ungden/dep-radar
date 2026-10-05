@@ -19,17 +19,29 @@ export default function Phone() {
   const [phone, setPhone] = React.useState("")
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const saving = React.useRef(false)
   const valid = toE164(phone) !== null
 
   const save = async () => {
+    if (saving.current || !valid) return
+    saving.current = true
     setBusy(true)
     setError(null)
-    const res = await setMyPhone(phone)
-    setBusy(false)
-    if (!res.ok) return setError(res.error)
-    await app.refreshMe()
-    if (router.canGoBack()) router.back()
-    else router.replace("/")
+    try {
+      const res = await setMyPhone(phone)
+      if (!res.ok) {
+        setError(res.error)
+        return
+      }
+      await app.refreshMe()
+      if (router.canGoBack()) router.back()
+      else router.replace("/")
+    } catch {
+      setError("Không lưu được số điện thoại. Kiểm tra kết nối rồi thử lại.")
+    } finally {
+      saving.current = false
+      setBusy(false)
+    }
   }
 
   return (
@@ -43,7 +55,11 @@ export default function Phone() {
       </Txt>
       <TextInput
         value={phone}
-        onChangeText={setPhone}
+        onChangeText={(value) => {
+          setPhone(value)
+          setError(null)
+        }}
+        editable={!busy}
         placeholder="0968 112 233"
         placeholderTextColor={colors.muted}
         keyboardType="phone-pad"
@@ -55,7 +71,7 @@ export default function Phone() {
       />
       {error ? <ErrorNote text={error} /> : null}
       <Button label="Lưu và tiếp tục" full size="lg" disabled={!valid} busy={busy} onPress={() => void save()} />
-      <Button label="Để sau" variant="ghost" full onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} />
+      <Button label="Để sau" variant="ghost" full disabled={busy} onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} />
       <View />
     </View>
   )
