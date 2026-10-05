@@ -1,5 +1,7 @@
 # Bản phát hành chuẩn hóa đối tác — 04/10/2026
 
+Trạng thái hiện tại 05/10: web/database đã triển khai; Apple 1.0.0(2) Prepare for Submission với sáu ảnh iPhone, App Privacy Published, SIWA key đã tạo. Google production 1.0.0(4) vẫn draft, IARC đã Completed; screenshot Android đang chờ image SDK tải xong. Chưa gửi review/phát hành. Các phần dưới ghi theo thời điểm; kết quả mới nhất ở cuối tài liệu.
+
 ## Phạm vi đã hoàn thành
 
 Commit triển khai: `06e1880`. Nguồn chung có 72 dịch vụ, 145 gói; mỗi gói có đúng ba mức giá do đối tác chọn. Web và app có tiến độ đăng ký sáu bước, lựa chọn dịch vụ, xác nhận giờ làm, gửi duyệt và điều kiện nhận job. Đơn giữ hợp đồng đã chốt, hỗ trợ các buổi có sẵn trong gói và buổi dặm.
@@ -109,3 +111,25 @@ Chrome extension trở lại: profile Ưng Đen dùng tab nền cho store. Key A
 Dung lượng máy được giải phóng lên khoảng 49 GB, nhưng SDK /opt/homebrew/share/android-commandlinetools cũng không còn. APK QA/AAB/IPA được giữ nguyên. Đã tải commandlinetools từ URL Google chính thức, đối chiếu SHA256 với Homebrew metadata, giải nén trong /private/tmp/dep360-android-sdk. Cài emulator/platform-tools/Android 36 Google Play arm64 image đang dừng tại license android-sdk-arm-dbt-license (16/01/2019). Auto-review chặn trả lời y vì chưa được duyệt chấp nhận thỏa thuận cụ thể; đã hỏi xác nhận, không bypass hoặc chấp nhận gián tiếp. Chưa boot Android/cài APK/chụp/upload Android; không chạy build trả phí. Dung lượng cuối khoảng 46 GB.
 
 Bằng chứng riêng local (gitignored): dep360-apple-privacy-publish-pending.jpg, dep360-play-ad-id-no.jpg, dep360-play-health-other.jpg, dep360-play-iarc-terms-pending.jpg, dep360-apple-siwa-register-pending.jpg, dep360-reviewer-signup-handoff.jpg trong docs/store-assets/2026-10-04/local-proofs. Chưa gửi review hay mở production rollout; chưa ẩn seed trước khi lấy đủ ảnh native minh họa Android.
+
+
+### Kết quả sau xác nhận cụ thể SDK / IARC / Privacy / key — 05/10
+
+Chủ sản phẩm đã xác nhận “Duyệt SDK, IARC, Privacy và key”. Apple App Privacy đã Publish cho 14 loại dữ liệu, UI xác nhận Published by Tien Duong Le. Key Sign in with Apple PS2HTF3J28 đã Register, chỉ primary App ID Q8A7CBYV5Z.vn.dep360.app; file .p8 đã tải, giữ ngoài repository với 0600. Không dùng ASC upload key cho SIWA. Services ID vn.dep360.web chưa tạo: automatic approval review chặn vì định danh web ngoài xác nhận key-only; đã hỏi duyệt riêng callback Supabase của 360dep. Supabase login/provider chưa hoàn tất; không nhập credential mới thay người dùng.
+
+Google IARC Terms of Use đã được chấp nhận sau duyệt. Đã lưu questionnaire và Current ratings: Rest of world 12+, North America Teen, Brazil 12+, Germany USK 12+, PEGI Parental Guidance, Russia/Korea 12+. Khai report/block Yes, chat moderation No, current precise location No, digital goods No, cash-convertible rewards/NFT No: voucher dịch vụ và fee credit không phải tiền rút được. Target audience dự kiến 18+ là mục riêng.
+
+SDK license android-sdk-arm-dbt-license và android-sdk-license đã được chấp nhận sau duyệt; emulator cài xong dưới /private/tmp/dep360-android-sdk, Android 36 Google Play arm64 image đang tải. AVD riêng dep360_store_qa cập nhật image path mới, không chỉnh emulator dự án khác. APK QA giữ nguyên JS khớp AAB 4; không chạy build trả phí.
+
+Chưa gửi Apple App Review hoặc Google review. Reviewer cần chủ sản phẩm trực tiếp nhập/tạo credential mới trong form đã mở; Content Rights chưa xác nhận vì 34 ảnh seed không có chứng cứ nguồn/giấy phép trong repo hoặc PR gốc. Không suy ra quyền ảnh từ commit tác giả Claude. Việc ẩn 7 hồ sơ seed đã được duyệt, đang đợi hoàn thành ảnh Android minh họa.
+
+Bằng chứng local gitignored: dep360-apple-privacy-published.jpg, dep360-apple-siwa-key-created.jpg, dep360-play-iarc-saved.jpg.
+
+
+### Domain OAuth — kiểm tra live 05/10
+
+Chủ sản phẩm đề xuất dep360.supabase.co. CLI vanity-subdomains get xác nhận project ohjrocksurzkypcbfkha đã có vanity active 360dep.supabase.co; check-availability xác nhận dep360 còn trống. Tổ chức Alex Le team trên Pro; tài liệu Supabase hiện coi vanity subdomain là miễn phí/experimental. Public authorize provider Google trên cả URL project-ref và 360dep đều redirect về https://360dep.supabase.co/auth/v1/callback.
+
+Google Cloud project dep360-auth-2026, client 360dep Web, đã có callback project-ref và 360dep. Đã bổ sung https://dep360.supabase.co/auth/v1/callback, UI OAuth client saved và mở lại xác nhận đủ 3 callback. Không đổi client secret/scopes. Auto-review từ chối kích hoạt vanity mới vì đây là cutover auth production chưa xác nhận cụ thể; chưa kích hoạt/xóa domain cũ. Đã hỏi lựa chọn giữ 360dep và duyệt Services ID, hoặc duyệt cutover dep360 và Services ID với callback tương ứng. Apple Services ID vẫn form chuẩn bị, chưa Register.
+
+Tham khảo live: https://supabase.com/docs/guides/platform/custom-domains và https://supabase.com/docs/guides/platform/manage-your-usage/custom-domains. Proof Google callback: local-proofs/dep360-google-vanity-callback-saved.jpg (gitignored).

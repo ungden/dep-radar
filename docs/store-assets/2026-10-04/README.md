@@ -13,3 +13,6 @@ Hồ sơ đang hiển thị là seed/demo. Không dùng ảnh iPhone làm screen
 Android AVD riêng dep360_store_qa đã thử khởi động ngày 2026-10-05, nhưng SDK từ chối vì không đủ dung lượng đĩa. Không khởi động/chỉnh emulator dự án khác và không chạy build trả phí mới. Chỉ dọn tệp xuất/build tạm 360dep và node_modules có thể cài lại bằng npm ci; không đổi source ứng dụng.
 
 Bằng chứng mới trong local-proofs chỉ lưu trên máy và được gitignore vì screenshot native Chrome có thanh tab của các tác vụ khác. Sau khi dung lượng đạt 4,8 GB, SDK vẫn báo cần 7.372,8 MB để tạo userdata; cần khoảng 8 GB để tiếp tục Android.
+
+
+Cập nhật sau duyệt cụ thể 05/10: máy còn khoảng 46 GB; SDK cũ bị gỡ nên đã tải official commandlinetools Google, xác minh SHA256, chấp nhận SDK license được chủ sản phẩm duyệt và cài trong /private/tmp/dep360-android-sdk. Emulator cài xong, image Android 36 Google Play arm64 đang tải. Các đoạn báo thiếu đĩa ở trên là bằng chứng lịch sử, không phải trạng thái hiện tại. Apple Privacy đã Publish, SIWA key đã tạo, Google IARC đã lưu; ảnh xác nhận trong local-proofs. Android screenshot vẫn chờ boot image mới.
