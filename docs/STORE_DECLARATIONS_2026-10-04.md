@@ -1,5 +1,8 @@
 # Bộ khai báo store cho 360dep 1.0.0
 
+Cập nhật mới nhất 06/10: chủ sản phẩm đã lưu số reviewer; readback production xác nhận account có số. Google Sign in details, Target audience 18+ và Data safety 14 loại đã Save; UI xác nhận Change saved, dashboard không còn setup tasks. Apple vẫn Prepare for Submission. Source mới `37625ee` chứa sửa form lỗi và tự đổi số trên web/mobile; web/backend đã triển khai, binary iOS 2 / Android 4 vẫn source cũ. Đang chờ duyệt ngân sách thêm 3 USD để build thay thế; chưa gửi review hoặc phát hành. Các phần dưới là lịch sử.
+
+
 Cập nhật sau đăng nhập 06/10: Apple đã đăng nhập đúng công ty, phiên bản 1.0.0 vẫn Prepare for Submission, build 2 và credential reviewer đã lưu. Google dashboard 360dep truy cập được ở u/6, setup 8/11; không cần Accept trang terms cũ để tiếp tục. Add Sign in details bị validation do chưa xác nhận full access; reviewer vẫn cần chủ sản phẩm tự gắn số điện thoại riêng. Apple Add for Review bị automatic approval review từ chối trước thực thi vì chưa có xác nhận gửi xét duyệt cụ thể và reviewer chưa đầy đủ quyền truy cập. Chưa hoàn tất Sign in details/Target audience/Data safety hoặc gửi review/phát hành. Trạng thái bên dưới là lịch sử.
 
 Cập nhật 06/10: Chrome đã kết nối lại; đúng tài khoản Play alexle@titanlabs.vn hiện ở u/6, bị chặn tại Play Console Terms of Service. Form Accept đã mở, đang chờ duyệt riêng; chưa chấp nhận. Reviewer vẫn cần chủ sản phẩm trực tiếp gắn số điện thoại riêng trước khi xác nhận full access. Apple hết phiên và đang chờ đăng nhập lại sai211dn/2FA. Chưa hoàn tất Sign in details, Target audience/Data safety Google hoặc gửi review/phát hành. Các phần dưới là lịch sử khai báo.
