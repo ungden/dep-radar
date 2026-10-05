@@ -170,12 +170,36 @@ describe.skipIf(!configured)("row level security over the API", () => {
     expect(error).toBeNull()
   })
 
-  it("will not let an account swap its phone number for someone else's", async () => {
-    // set_my_phone() is the only way to write a phone number, and only once.
-    const { error } = await client(tokenFor(customerId)).rpc("set_my_phone" as never, {
-      p_phone: "0900000777",
-    } as never)
-    expect(error?.message).toMatch(/đã có số điện thoại/)
+  it("lets only the account owner change its phone, with uniqueness enforced", async () => {
+    const own = client(tokenFor(customerId))
+    const other = client(tokenFor(otherCustomerId))
+    const { data: original } = await own.from("accounts").select("phone").eq("id", customerId).single()
+    const { data: otherAccount } = await other.from("accounts").select("phone").eq("id", otherCustomerId).single()
+    const replacement = "0900000777"
+    try {
+      const changed = await own.rpc("set_my_phone" as never, { p_phone: replacement } as never)
+      expect(changed.error).toBeNull()
+      expect(changed.data).toBe("+84900000777")
+      const repeated = await own.rpc("set_my_phone" as never, { p_phone: "+84900000777" } as never)
+      expect(repeated.error).toBeNull()
+      const duplicate = await own.rpc("set_my_phone" as never, { p_phone: otherAccount!.phone } as never)
+      expect(duplicate.error?.message).toMatch(/tài khoản khác/)
+      const claimed = await other.rpc("set_my_phone" as never, { p_phone: replacement } as never)
+      expect(claimed.error?.message).toMatch(/tài khoản khác/)
+      const invalid = await own.rpc("set_my_phone" as never, { p_phone: "12345" } as never)
+      expect(invalid.error?.message).toMatch(/không hợp lệ/)
+      const saved = await own.from("accounts").select("phone").eq("id", customerId).single()
+      expect(saved.data?.phone).toBe("+84900000777")
+      expect((await other.from("accounts").select("phone").eq("id", otherCustomerId).single()).data?.phone).toBe(otherAccount!.phone)
+    } finally {
+      const restored = await own.rpc("set_my_phone" as never, { p_phone: original!.phone } as never)
+      expect(restored.error).toBeNull()
+    }
+  })
+
+  it("does not allow anonymous phone changes", async () => {
+    const { error } = await client().rpc("set_my_phone" as never, { p_phone: "0900000777" } as never)
+    expect(error?.message).toMatch(/permission denied/)
   })
 
   it("refuses a listing price that is not one of the catalogue levels", async () => {

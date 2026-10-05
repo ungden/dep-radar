@@ -758,8 +758,6 @@ function BookingFlow({ proId }: { proId: string }) {
                 <span>
                   {pro.name} nhận lịch trong app{responseTime ? `, thường trong ${responseTime}` : ""}; nhận rồi thì thấy số{" "}
                   <b>{formatPhone(session.phone)}</b> của bạn để liên hệ.{" "}
-                  {/* TODO(db): there is no self-service number change yet (set_my_phone
-                      only sets the first number); settings explains how to ask support. */}
                   <Link href="/me/cai-dat" className="font-semibold text-accent underline underline-offset-2">
                     Đổi số
                   </Link>

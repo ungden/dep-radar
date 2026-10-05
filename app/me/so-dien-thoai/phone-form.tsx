@@ -4,21 +4,22 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { Button, Field, inputClass } from "@/components/ui"
 import { setMyPhone } from "@/lib/auth/actions"
-import { isValidPhone } from "@/lib/auth/phone"
+import { formatPhone, isValidPhone, toE164 } from "@/lib/auth/phone"
 
-export function PhoneForm({ next }: { next: string }) {
+export function PhoneForm({ next, currentPhone = "" }: { next: string; currentPhone?: string }) {
   const router = useRouter()
-  const [phone, setPhone] = React.useState("")
+  const [phone, setPhone] = React.useState(currentPhone ? formatPhone(currentPhone) : "")
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   const saving = React.useRef(false)
+  const unchanged = Boolean(currentPhone && toE164(phone) === toE164(currentPhone))
 
   return (
     <form
       className="mt-6 space-y-4"
       onSubmit={async (event) => {
         event.preventDefault()
-        if (saving.current || !isValidPhone(phone)) return
+        if (saving.current || !isValidPhone(phone) || unchanged) return
         saving.current = true
         setBusy(true)
         setError(null)
@@ -38,7 +39,7 @@ export function PhoneForm({ next }: { next: string }) {
         }
       }}
     >
-      <Field label="Số điện thoại di động" hint="Muốn đổi số sau này, liên hệ hỗ trợ.">
+      <Field label="Số điện thoại di động" hint={currentPhone ? "Sau khi lưu, dùng số mới để đăng nhập bằng mật khẩu. Số cũ sẽ không còn đăng nhập tài khoản này." : "Bạn có thể đổi số sau này trong Cài đặt tài khoản."}>
         <input
           className={inputClass}
           value={phone}
@@ -60,8 +61,8 @@ export function PhoneForm({ next }: { next: string }) {
           {error}
         </p>
       )}
-      <Button type="submit" size="lg" className="w-full" disabled={busy || !isValidPhone(phone)}>
-        {busy ? "Đang lưu…" : "Lưu và tiếp tục"}
+      <Button type="submit" size="lg" className="w-full" disabled={busy || !isValidPhone(phone) || unchanged}>
+        {busy ? "Đang lưu…" : currentPhone ? "Lưu số mới" : "Lưu và tiếp tục"}
       </Button>
     </form>
   )

@@ -1,8 +1,9 @@
+import { randomUUID } from "node:crypto"
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js"
 import { absoluteUrl } from "@/lib/env"
 import { requireBackend } from "@/lib/supabase/env"
 import { supabaseAdmin } from "@/lib/supabase/server"
-import { isPhoneEmail, maskEmail, parseIdentifier, phoneEmail } from "./identifier"
+import { isPhoneEmail, maskEmail, parseIdentifier, PHONE_EMAIL_DOMAIN } from "./identifier"
 import { MESSAGES, authErrorKind, checkSignUp } from "./password-rules"
 import { createThrottle } from "./throttle"
 
@@ -13,7 +14,7 @@ import { createThrottle } from "./throttle"
  *
  * - Email sign-up: the auth email is theirs. The phone number is asked after,
  *   like after Google (/me/so-dien-thoai), and required before booking.
- * - Phone sign-up: the auth email is a stand-in built from the number
+ * - Phone sign-up: the auth email is a stable, opaque stand-in (independent of the number)
  *   (identifier.ts) and the number goes in user_metadata, where
  *   handle_new_user() stores it on the account. Adding a real email later
  *   (addRecoveryEmail) makes that the auth email.
@@ -88,16 +89,17 @@ export async function signInWithIdentifier(client: AuthClient, identifier: strin
   const id = parseIdentifier(identifier)
   if (id.kind === "invalid") return { ok: false, status: 400, error: MESSAGES.invalidIdentifier }
   if (!password) return { ok: false, status: 400, error: MESSAGES.noPassword }
-  if (id.kind === "email") return passwordAttempt(client, id.email, password)
+  if (id.kind === "email") {
+    if (isPhoneEmail(id.email)) return { ok: false, status: 401, error: MESSAGES.wrong }
+    return passwordAttempt(client, id.email, password)
+  }
 
-  // The number's account may have a real email by now. Asking first means one
-  // Auth request per sign-in instead of a failed stand-in attempt and a retry,
-  // which matters because Auth rate-limits by IP and all of these come from
-  // this server. If the lookup is down, the stand-in is still worth a try.
+  // Resolve the current owner every time. A phone-derived fallback could sign
+  // into a former owner's account after a number change when lookup is down.
   const found = await authEmailForPhone(id.phone)
-  if (found.status === "none") return { ok: false, status: 401, error: MESSAGES.wrong }
-  const email = found.status === "found" ? found.email : phoneEmail(id.phone)
-  if (!email) return { ok: false, status: 401, error: MESSAGES.wrong }
+  if (found.status === "unavailable") return { ok: false, status: 503, error: MESSAGES.failed }
+  if (found.status === "none" || !found.email) return { ok: false, status: 401, error: MESSAGES.wrong }
+  const email = found.email
   return passwordAttempt(client, email, password)
 }
 
@@ -117,10 +119,13 @@ export async function signUpWithIdentifier(
   if (id.kind === "phone") {
     const found = await authEmailForPhone(id.phone)
     if (found.status === "found") return { ok: false, status: 409, error: taken }
+    if (found.status === "unavailable") return { ok: false, status: 503, error: MESSAGES.failed }
   }
 
   const { data, error } = await client.auth.signUp({
-    email: id.kind === "phone" ? phoneEmail(id.phone) : id.email,
+    // A released phone can be registered again without colliding with its former
+    // owner's internal auth email. Existing stand-in emails keep working via lookup.
+    email: id.kind === "phone" ? `${randomUUID()}@${PHONE_EMAIL_DOMAIN}` : id.email,
     password,
     options: { data: id.kind === "phone" ? { full_name: fullName, phone: id.phone } : { full_name: fullName } },
   })

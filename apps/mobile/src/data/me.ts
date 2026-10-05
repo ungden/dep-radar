@@ -4,7 +4,7 @@ import { supabase, type Row } from "./supabase"
 export interface Account {
   id: string
   fullName: string
-  /** Empty until set once through set_my_phone(). */
+  /** Added or changed by the owner through set_my_phone(). */
   phone: string
   activeRole: "customer" | "pro"
   email: string

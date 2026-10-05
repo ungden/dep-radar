@@ -124,6 +124,8 @@ export default function Me() {
       ) : null}
 
       <Section>
+        <Row icon="edit" label={account?.phone ? "Đổi số điện thoại" : "Thêm số điện thoại"} onPress={() => router.push("/so-dien-thoai")} />
+        <Divider style={{ marginLeft: 52 }} />
         <Row icon="edit" label={hasPassword(user) ? "Đổi mật khẩu" : "Đặt mật khẩu"} onPress={() => router.push("/doi-mat-khau")} />
         <Divider style={{ marginLeft: 52 }} />
         <Row icon="block" label="Người đã chặn" detail={app.blocked.size ? String(app.blocked.size) : undefined} onPress={() => router.push("/da-chan")} />

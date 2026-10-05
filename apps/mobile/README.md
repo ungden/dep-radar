@@ -45,7 +45,7 @@ kéo để tải lại) · Chi tiết bài (ảnh/clip, gói giá, theo dõi, l�
 Hồ sơ người làm · Tìm + bộ lọc (bottom sheet) · Trang dịp · Đặt lịch 3 bước (`free_slots` → `create_booking`,
 lỗi của database hiện nguyên văn) · Lịch hẹn + chi tiết (dòng thời gian, huỷ có lý do qua `cancel_booking`) ·
 Tin nhắn (Realtime, `send_message`, `mark_thread_read`, `open_thread`) · Thông báo · Tôi (đã lưu, địa chỉ,
-đổi sang Đối tác, mật khẩu, đăng xuất, xoá tài khoản) · Đăng nhập bằng số điện thoại hoặc email + mật khẩu (qua `/api/auth/*` của web rồi `setSession`), Google hoặc Apple; số điện thoại hỏi một lần (`set_my_phone`); tài khoản đăng ký bằng số được mời thêm email để lấy lại mật khẩu.
+đổi sang Đối tác, mật khẩu, đăng xuất, xoá tài khoản) · Đăng nhập bằng số điện thoại hoặc email + mật khẩu (qua `/api/auth/*` của web rồi `setSession`), Google hoặc Apple; thêm/đổi số điện thoại trong Tôi (`set_my_phone`); tài khoản đăng ký bằng số được mời thêm email để lấy lại mật khẩu.
 
 Studio: Hôm nay (lịch cần gọi xác nhận với đếm ngược `confirm_by` + bấm để gọi, lịch hôm nay + chỉ đường,
 thu nhập tuần từ lịch đã hoàn thành) · Việc mới (`send_offer` / `withdraw_offer`) · Đăng tác phẩm

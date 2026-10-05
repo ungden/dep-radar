@@ -102,3 +102,27 @@ describe("phone form recovery", () => {
     expect(replace).toHaveBeenCalledWith("/bookings")
   })
 })
+
+
+describe("phone editing", () => {
+  it("pre-fills the current phone and saves only a different valid number", async () => {
+    await act(async () => { root.render(createElement(PhoneForm, { next: "/me/cai-dat", currentPhone: "+84900000321", key: "editing" })) })
+    input = host.querySelector("input")!
+    form = host.querySelector("form")!
+    button = host.querySelector("button")!
+    expect(input.value).toBe("0900 000 321")
+    expect(button.textContent).toBe("Lưu số mới")
+    expect(button.disabled).toBe(true)
+    await enter("+84900000321")
+    await submit()
+    expect(save).not.toHaveBeenCalled()
+    await enter("12345")
+    expect(button.disabled).toBe(true)
+    await enter("0900000322")
+    expect(button.disabled).toBe(false)
+    save.mockResolvedValueOnce({ ok: true })
+    await submit()
+    expect(save).toHaveBeenCalledWith("0900000322")
+    expect(replace).toHaveBeenCalledWith("/me/cai-dat")
+  })
+})

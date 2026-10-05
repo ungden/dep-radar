@@ -4,8 +4,7 @@ import { toE164 } from "./phone"
  * What someone types to sign in: a phone number or an email address.
  *
  * Supabase Auth keys password accounts by email. An account created with a
- * phone number gets a stand-in address built from that number
- * (84912345678@sdt.360dep.vn) until the person adds a real email; after that
+ * phone number gets an opaque stand-in address at sdt.360dep.vn until the person adds a real email; after that
  * the real one is the auth email and the number is looked up server-side
  * (app/api/auth/*). Shared by the web and the app, so both parse the same way.
  */
@@ -26,7 +25,7 @@ export function parseIdentifier(input: string): Identifier {
   return phone ? { kind: "phone", phone } : { kind: "invalid" }
 }
 
-/** The stand-in auth email of an account created with this phone number (E.164). */
+/** Legacy stand-in address format; new accounts use opaque IDs instead. */
 export const phoneEmail = (e164: string) => `${e164.replace(/\D/g, "")}@${PHONE_EMAIL_DOMAIN}`
 
 /** True for a stand-in address: the account has no real email to recover a password through yet. */

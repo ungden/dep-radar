@@ -157,7 +157,7 @@ export async function addRecoveryEmail(rawEmail: string): Promise<{ ok: true; ma
   return { ok: true, masked: maskEmail(id.email) }
 }
 
-/** Once per account. Changing a number later goes through support. */
+/** Add or change the signed-in account's unique phone number. */
 export async function setMyPhone(rawPhone: string): Promise<AuthResult> {
   const phone = toE164(rawPhone)
   if (!phone) return { ok: false, error: "Số điện thoại không hợp lệ. Nhập số di động Việt Nam." }

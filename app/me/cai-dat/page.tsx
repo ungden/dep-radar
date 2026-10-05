@@ -45,8 +45,11 @@ function Settings() {
       </Field>
 
       {session?.phone ? (
-        <Field label="Số điện thoại" hint="Người làm thấy số này khi đã nhận lịch của bạn, cho tới khi lịch kết thúc. Muốn đổi số, liên hệ hỗ trợ.">
-          <input className={inputClass} value={formatPhone(session.phone)} disabled />
+        <Field label="Số điện thoại" hint="Người làm thấy số này khi đã nhận lịch của bạn, cho tới khi lịch kết thúc. Bạn có thể tự đổi số điện thoại tại đây.">
+          <input className={inputClass} value={formatPhone(session.phone)} readOnly />
+          <Link href="/me/so-dien-thoai?next=/me/cai-dat" className="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-accent underline underline-offset-2">
+            Đổi số điện thoại
+          </Link>
         </Field>
       ) : (
         <Card className="p-4">

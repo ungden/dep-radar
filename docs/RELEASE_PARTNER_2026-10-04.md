@@ -194,3 +194,14 @@ Sau khi chủ sản phẩm báo đã đăng nhập, Apple Apps hiển thị đú
 Điều hướng tới dashboard 360dep của đúng developer ở u/6 thành công, setup vẫn 8/11. Vì vậy trạng thái accept-terms cũ không phải blocker hiện tại; không chấp nhận điều khoản mới. Sign in details chưa có khai báo đã lưu. Đã chọn Yes và điền reviewer theo duyệt trước. Click Add trả validation “Is any other information required?” tại checkbox xác nhận full access và “Your changes couldn't be saved”. Chưa tick checkbox vì website reviewer vẫn dừng ở form thêm số điện thoại; form Play được giữ để tiếp tục sau khi chủ sản phẩm tự gắn số. Target audience/Data safety chưa hoàn tất.
 
 Click Apple Add for Review bị automatic approval review từ chối trước khi thực hiện, do thiếu xác nhận cụ thể gửi xét duyệt và quyền truy cập reviewer chưa đầy đủ. Không thử lại qua công cụ khác. Đã báo lý do; đang hoàn tất quyền truy cập trước khi hỏi duyệt bước gửi xét duyệt cuối. Chưa gửi review hoặc phát hành.
+
+
+## 2026-10-06 — tự đổi số điện thoại
+
+Chủ sản phẩm xác nhận đã lưu số reviewer; readback production cho thấy account có số và browser đã về trang chủ. Không đổi số reviewer bằng SQL.
+
+- Web: Tôi → Cài đặt tài khoản → Đổi số điện thoại. Màn đổi số điền sẵn số hiện tại, chỉ lưu số mới hợp lệ; số trùng báo lỗi và cho nhập lại.
+- Native source: thêm hàng Đổi số điện thoại trong Tôi và dùng cùng RPC. Cần binary mới để có hàng này; chưa tạo build trả phí mới.
+- Migration `20261005200341_self_service_phone_change.sql`: bỏ giới hạn chỉ gắn số một lần, vẫn dùng `auth.uid()` của người gọi, khoá row, chuẩn hoá VN, unique index và guard chống update trực tiếp. Không cấp quyền mới cho anonymous và không thay dữ liệu tài khoản hiện có.
+- Password login: lookup theo số hiện tại, bỏ fallback về email nội bộ theo số cũ khi database lỗi. Tài khoản đăng ký bằng số mới dùng email nội bộ UUID để số đã bỏ có thể đăng ký lại; các tài khoản cũ vẫn login qua lookup. Không đổi email đăng nhập thật hoặc mật khẩu.
+- Validation local: 211 unit tests; 30 RLS integration tests thực sự chạy; partner-flow SQL, toàn bộ business rules SQL; web typecheck/lint/build; mobile typecheck/lint; diff check đều pass.

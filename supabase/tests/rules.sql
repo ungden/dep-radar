@@ -372,7 +372,7 @@ begin
     assert msg like 'Cần thêm số điện thoại%', format('refused for another reason: %s', msg);
   end;
 
-  raise notice 'a phone number is set once, normalised, and never shared';
+  raise notice 'a phone number can change, stays normalised, and is never shared';
   begin
     perform public.set_my_phone(other_phone);
     assert false, 'two accounts share a phone number';
@@ -380,13 +380,21 @@ begin
   end;
   assert public.set_my_phone('0900 000 321') = '+84900000321', 'the number was not normalised';
   assert public.set_my_phone('+84900000321') = '+84900000321', 'repeating the same number is harmless';
+  assert public.set_my_phone('0900 000 322') = '+84900000322', 'self-service change failed';
+  assert (select phone from public.accounts where id = google_user) = '+84900000322', 'new phone was not saved';
   begin
-    perform public.set_my_phone('0900 000 322');
-    assert false, 'a phone number was changed without support';
+    perform public.set_my_phone(other_phone);
+    assert false, 'changing a phone stole another account number';
+  exception when check_violation then null;
+  end;
+  begin
+    perform public.set_my_phone('12345');
+    assert false, 'an invalid replacement phone was accepted';
   exception when check_violation then null;
   end;
   update public.accounts set phone = '+84900000999' where id = google_user;
-  assert (select phone from public.accounts where id = google_user) = '+84900000321', 'a plain update changed the phone';
+  assert (select phone from public.accounts where id = google_user) = '+84900000322', 'a plain update changed the phone';
+  assert public.set_my_phone('0900 000 321') = '+84900000321', 'changing back to a released phone failed';
   assert coalesce(current_setting('app.setting_phone', true), '') = '', 'the phone flag outlived the call';
 
   begin

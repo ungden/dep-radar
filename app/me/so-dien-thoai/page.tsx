@@ -21,21 +21,20 @@ export default async function PhonePage({ searchParams }: { searchParams: Promis
   const next = safeNext(rawNext)
   const account = await currentAccount()
   if (!account) redirect(`/login?next=${encodeURIComponent(`/me/so-dien-thoai?next=${next}`)}`)
-  if (account.phone) redirect(next)
   const { data } = await (await supabaseServer()).auth.getUser()
   const hasPassword = Boolean(data.user?.identities?.some((i) => i.provider === "email"))
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pb-10">
-      <PageHeader back="/" />
+      <PageHeader back={account.phone ? "/me/cai-dat" : "/"} />
       <Logo size="lg" />
-      <h1 className="mt-4 text-[28px] font-bold tracking-tight">Thêm số điện thoại</h1>
+      <h1 className="mt-4 text-[28px] font-bold tracking-tight">{account.phone ? "Đổi số điện thoại" : "Thêm số điện thoại"}</h1>
       <p className="mt-1 text-sm text-ink-soft">
         {account.full_name ? `Chào ${account.full_name}. ` : ""}Người làm chỉ thấy số này khi đã nhận lịch của bạn và lịch
         chưa kết thúc, để hai bên liên hệ khi cần.{" "}
         {hasPassword ? "Bạn cũng đăng nhập được bằng số này và mật khẩu. " : ""}Mỗi số điện thoại chỉ gắn với một tài khoản.
       </p>
-      <PhoneForm next={next} />
+      <PhoneForm next={next} currentPhone={account.phone} />
     </div>
   )
 }
