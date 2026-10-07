@@ -128,7 +128,7 @@ export default function OperatingRulesPage() {
             <li>
               Đối tác không đến: từ {NO_SHOW_AFTER_MIN} phút sau giờ hẹn đến {AUTO_COMPLETE_HOURS} giờ sau giờ kết thúc, nếu đối tác chưa bấm “Bắt đầu”, khách báo “Người
               làm không đến”; lịch bị huỷ về phía đối tác, không tính phí. Đối tác chỉ bấm “Bắt đầu” khi đã có mặt (nút mở từ 15 phút trước giờ hẹn). Đối tác cho rằng
-              báo cáo sai thì gửi “Báo cáo vấn đề” kèm chứng cứ trong 24 giờ; 360đẹp xem xét và báo kết quả.
+              báo cáo sai thì bấm “Khiếu nại” trong lịch hẹn, trong 24 giờ, kèm mô tả và chứng cứ; 360đẹp xem xét và báo kết quả.
             </li>
             <li>
               Khách vắng mặt: từ {NO_SHOW_AFTER_MIN} phút sau giờ hẹn, đối tác báo vắng mặt; không tính phí dịch vụ. Nếu lịch có phí di chuyển, 360đẹp (không phải khách)
@@ -149,8 +149,8 @@ export default function OperatingRulesPage() {
               <b className="text-ink">Người khác đi thay:</b> không được phép. Khách có quyền từ chối và báo cáo; đây là vi phạm nghiêm trọng của đối tác.
             </li>
             <li>
-              <b className="text-ink">Làm thêm tại chỗ:</b> phần làm thêm phải đặt thành lịch mới trong ứng dụng theo giá niêm yết. Không thu hay trả tiền làm thêm ngoài ứng
-              dụng.
+              <b className="text-ink">Làm thêm tại chỗ:</b> phần làm thêm được khách đặt bằng nút “Đặt thêm dịch vụ” trong lịch hẹn: nối tiếp ngay sau lịch hiện tại, theo giá
+              niêm yết, không tính phí di chuyển hay phí gấp, đối tác nhận như lịch thường. Không thu hay trả tiền làm thêm ngoài ứng dụng.
             </li>
             <li>
               <b className="text-ink">Đòi thêm tiền:</b> khách chỉ trả đúng tổng tiền ghi trong lịch hẹn. Mọi khoản phụ thu, “giá chưa gồm…”, tiền bồi dưỡng bắt buộc đều bị
@@ -162,7 +162,7 @@ export default function OperatingRulesPage() {
             </li>
             <li>
               <b className="text-ink">Thanh toán:</b> khách trả sau khi làm, tiền mặt hoặc chuyển khoản tới tài khoản đứng tên đối tác, và giữ biên lai hoặc nhắn xác nhận trong
-              tin nhắn của lịch hẹn. Đối tác không bấm hoàn thành khi chưa được trả mà gửi báo cáo ngay; 360đẹp có thể điều chỉnh phí của lịch đó khi xác minh được
+              tin nhắn của lịch hẹn. Nhận đủ tiền thì đối tác bấm “Đã nhận tiền” để lưu xác nhận cho cả hai bên. Đối tác không bấm xác nhận hay hoàn thành khi chưa được trả mà gửi báo cáo ngay; 360đẹp có thể điều chỉnh phí của lịch đó khi xác minh được
               khách không trả.
             </li>
             <li>

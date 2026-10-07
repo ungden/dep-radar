@@ -86,7 +86,12 @@ export default function PolicyPage() {
             <li>
               Người làm huỷ lịch đã nhận (trước giờ hẹn) thì khách không mất gì. Người làm huỷ sát giờ nhiều lần có thể bị hạn chế hoặc khoá hồ sơ.
             </li>
-            <li>Đổi giờ cần cả hai bên đồng ý trong ứng dụng; giá, phí di chuyển và phí đặt gấp giữ nguyên.</li>
+            <li>Đổi giờ: một bên đề nghị giờ mới trong chi tiết lịch, bên kia đồng ý thì đổi; giá, phí di chuyển và phí đặt gấp giữ nguyên.</li>
+            <li>
+              Làm thêm trong buổi hẹn: khách bấm “Đặt thêm dịch vụ”, lịch mới nối tiếp ngay sau lịch hiện tại, theo giá niêm yết, không tính phí di chuyển hay phí gấp;
+              người làm nhận như lịch thường.
+            </li>
+            <li>Nhận tiền xong, người làm bấm “Đã nhận tiền” để lưu xác nhận cho cả hai bên.</li>
           </ul>
         </Section>
 
@@ -111,7 +116,7 @@ export default function PolicyPage() {
               Người làm không đến: khách bấm “Người làm không đến” trong chi tiết lịch hẹn, từ {NO_SHOW_AFTER_MIN} phút sau giờ hẹn tới{" "}
               {AUTO_COMPLETE_HOURS} giờ sau giờ kết thúc, nếu người làm chưa bấm “Bắt đầu” (nút này chỉ mở từ 15 phút trước giờ hẹn). Lịch được huỷ về phía người
               làm, khách không mất phí, không tính phí dịch vụ, và 360dep nhận báo cáo để xem xét. Người làm không đến nhiều lần có thể bị tạm khoá nhận lịch.
-              Người làm cho rằng báo cáo sai thì gửi “Báo cáo vấn đề” kèm bằng chứng trong 24 giờ.
+              Người làm cho rằng báo cáo sai thì bấm “Khiếu nại” trong lịch hẹn, trong 24 giờ, kèm mô tả và bằng chứng.
             </li>
             <li>
               Người làm báo khách vắng mặt (từ {NO_SHOW_AFTER_MIN} phút sau giờ hẹn): không tính phí dịch vụ. Nếu lịch có phí di chuyển, 360dep (không phải khách) bù cho người

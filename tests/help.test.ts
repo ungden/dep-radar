@@ -82,6 +82,12 @@ describe("help assistant", () => {
     expect(b).toMatchObject({ sources: ["k-huy"], covered: true, handoff: false })
   })
 
+  it("accepts ids cited with the prompt's brackets", () => {
+    const a = cleanAnswer({ answer: "Không mất phí.", sources: ["[k-huy]", " k-doi-gio "], covered: true, handoff: false }, "m")
+    expect(a.sources).toEqual(["k-huy", "k-doi-gio"])
+    expect(a.covered).toBe(true)
+  })
+
   it("survives a broken model answer", () => {
     expect(cleanAnswer(null, "m").covered).toBe(false)
     expect(cleanAnswer({ answer: 3 }, "m").answer.length).toBeGreaterThan(10)

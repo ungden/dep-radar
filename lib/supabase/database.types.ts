@@ -181,6 +181,8 @@ export type Database = {
       }
       bookings: {
         Row: {
+          customer_name: string
+          parent_booking_id: string | null
           address: string
           address_note: string
           at_home: boolean
@@ -236,6 +238,8 @@ export type Database = {
           voucher_id: string | null
         }
         Insert: {
+          customer_name?: string
+          parent_booking_id?: string | null
           address?: string
           address_note?: string
           at_home: boolean
@@ -291,6 +295,8 @@ export type Database = {
           voucher_id?: string | null
         }
         Update: {
+          customer_name?: string
+          parent_booking_id?: string | null
           address?: string
           address_note?: string
           at_home?: boolean

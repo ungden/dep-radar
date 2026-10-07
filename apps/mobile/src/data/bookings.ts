@@ -47,6 +47,11 @@ export interface BookingItem {
   startedAt: string | null
   completedAt: string | null
   cancelledAt: string | null
+  /** When the freelancer recorded the customer's payment ("Đã nhận tiền"); 20261007100200. */
+  paidAt: string | null
+  /** A new time one side proposed and the other has not answered. */
+  rescheduleTo: string | null
+  rescheduleBy: "customer" | "pro" | null
   /** Photo & video only, and only once the delivery columns exist. */
   delivery: { dueAt: string | null; deliveredAt: string | null; url: string | null; acceptedAt: string | null } | null
   customer: { id: string; name: string; phone: string | null }
@@ -73,7 +78,14 @@ const WITH_DELIVERY = `${BASE}, delivery_due_at, delivered_at, delivery_url, del
 // 20260925100200_review_rules.sql and 20260925100300_referrals.sql.
 const WITH_CONNECTION = `${WITH_DELIVERY.replace("reviews (booking_id)", "reviews (booking_id, published_at)")},
   voucher_id, discount, customer_reviews (booking_id, rating, body, published_at)`
-const COLUMN_SETS = [`${WITH_CONNECTION}, service_contract`, WITH_CONNECTION, WITH_DELIVERY, BASE]
+// 20261007100200: the name kept on the booking (the freelancer reads the account only once accepted) and "Đã nhận tiền".
+const COLUMN_SETS = [
+  `${WITH_CONNECTION}, service_contract, customer_name, paid_at, reschedule_to, reschedule_by`,
+  `${WITH_CONNECTION}, service_contract`,
+  WITH_CONNECTION,
+  WITH_DELIVERY,
+  BASE,
+]
 
 function toBooking(row: Row): BookingItem {
   const template = getTemplate(row.template_id)
@@ -140,7 +152,10 @@ function toBooking(row: Row): BookingItem {
           acceptedAt: row.delivery_accepted_at ?? null,
         }
       : null,
-    customer: { id: row.customer_id, name: customer.full_name || "Khách hàng", phone: CONTACT_VISIBLE.includes(status) ? customer.phone || null : null },
+    paidAt: row.paid_at ?? null,
+    rescheduleTo: row.reschedule_to ?? null,
+    rescheduleBy: row.reschedule_by === "customer" || row.reschedule_by === "pro" ? row.reschedule_by : null,
+    customer: { id: row.customer_id, name: customer.full_name || row.customer_name || "Khách hàng", phone: CONTACT_VISIBLE.includes(status) ? customer.phone || null : null },
     pro: {
       id: row.pro_id,
       slug: pro.slug ?? "",
@@ -249,6 +264,9 @@ export const confirmBookingDone = (id: string) => rpc("confirm_booking_done", { 
 export const reportProNoShow = (id: string, detail: string) => rpc("report_pro_no_show", { p_booking: id, p_detail: detail })
 /** The customer's answer to being marked absent, within 24 hours (20260924100700_no_show_hold.sql). */
 export const disputeNoShow = (id: string, reason: string) => rpc<string>("dispute_no_show", { p_booking: id, p_reason: reason })
+export const respondReschedule = (id: string, accept: boolean) => rpc("respond_reschedule", { p_booking: id, p_accept: accept })
+export const acceptDelivery = (id: string) => rpc("accept_delivery", { p_booking: id })
+export const confirmPaymentReceived = (id: string) => rpc("confirm_payment_received", { p_booking: id })
 
 /** Whether the caller already disputed this no-show: their own reports are readable to them. */
 export async function hasDisputedNoShow(bookingId: string, uid: string): Promise<boolean> {

@@ -197,6 +197,25 @@ export async function respondReschedule(bookingId: string, accept: boolean) {
   return rpc<void>("respond_reschedule", { p_booking: bookingId, p_accept: accept }, ["/bookings", "/studio/jobs"])
 }
 
+/** The freelancer records that the customer paid (20261007100200). */
+export async function confirmPaymentReceived(bookingId: string) {
+  return rpc<void>("confirm_payment_received", { p_booking: bookingId }, ["/bookings", "/studio/jobs"])
+}
+
+/** A freelancer reported as "không đến" disputes it, within 24 hours. */
+export async function disputeProNoShow(bookingId: string, reason: string) {
+  return rpc<string>("dispute_pro_no_show", { p_booking: bookingId, p_reason: reason }, ["/bookings"])
+}
+
+/** "Đặt thêm dịch vụ" during an appointment: a booking right after it, same place, no travel or urgent fee. */
+export async function addOnBooking(parentId: string, templateId: string, variantId: string, quantity: number, note: string) {
+  return rpc<string>(
+    "add_on_booking",
+    { p_parent: parentId, p_template: templateId, p_variant: variantId, p_quantity: quantity, p_note: note },
+    ["/bookings", "/studio/jobs"],
+  )
+}
+
 export async function writeReview(input: {
   bookingId: string
   rating: number

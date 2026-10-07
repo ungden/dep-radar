@@ -480,7 +480,9 @@ begin
       'admin_override_ai_decision',
       -- the operations desk (20261004100000), every one behind require_admin()
       'admin_customers', 'admin_set_account_suspended', 'admin_finance_summary', 'admin_finance_by_pro',
-      'admin_finance_bookings', 'admin_wallet_entries', 'admin_adjust_wallet'
+      'admin_finance_bookings', 'admin_wallet_entries', 'admin_adjust_wallet',
+      -- dispute tools (20261007100200)
+      'confirm_payment_received', 'dispute_pro_no_show', 'add_on_booking'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 
@@ -2341,4 +2343,106 @@ begin
   perform public.admin_adjust_wallet(linh, -1000000, 'Trả lại số dư test (gaps)');
   perform set_config('request.jwt.claim.sub', '', true);
   raise notice 'DISPUTE GAP RULES PASS';
+end $$;
+
+
+-- Dispute tools (20261007100200).
+do $$
+declare
+  linh uuid; customer uuid; addr uuid; admin_id uuid; b uuid; extra uuid; n int; msg text; pending uuid; fresh uuid; fresh_addr uuid;
+  monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
+  tz text := public.app_timezone();
+begin
+  select id into linh from public.pros where slug = 'linh-pham';
+  select a.id into customer from public.accounts a where a.full_name = 'Ngọc Hân';
+  select id into addr from public.addresses where account_id = customer;
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          (gen_random_uuid()::text||'-tools-admin@example.invalid'), jsonb_build_object('full_name', 'Quản trị Tools'), now(), now())
+  returning id into admin_id;
+  update public.accounts set is_admin = true where id = admin_id;
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.admin_adjust_wallet(linh, 1000000, 'Số dư cho test (tools)');
+
+  raise notice 'a pending booking shows the name, not the phone';
+  -- A customer who has never booked this freelancer before.
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          (gen_random_uuid()::text||'-fresh@example.invalid'), jsonb_build_object('full_name', 'Khách Mới Tools'), now(), now())
+  returning id into fresh;
+  update public.accounts set phone = '+8490' || lpad((floor(random() * 10000000))::int::text, 7, '0') where id = fresh;
+  insert into public.addresses (account_id, city, district, detail, lat, lng)
+  select fresh, a.city, a.district, a.detail, a.lat, a.lng from public.addresses a where a.id = addr
+  returning id into fresh_addr;
+  perform set_config('request.jwt.claim.sub', fresh::text, true);
+  pending := public.create_booking(linh, 'nail-design', 'simple', ((monday + 10) + time '15:00') at time zone tz, true, fresh_addr, 1, '', 'cash');
+  assert (select customer_name from public.bookings where id = pending) = 'Khách Mới Tools', 'the name was not kept on the booking';
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  set local role authenticated;
+  select count(*) into n from public.accounts where id = fresh;
+  reset role;
+  assert n = 0, 'the freelancer read the customer account before accepting';
+  perform public.confirm_booking(pending);
+  set local role authenticated;
+  select count(*) into n from public.accounts where id = fresh;
+  reset role;
+  assert n = 1, 'the freelancer could not read the customer after accepting';
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.accounts set full_name = 'Khách Đổi Tên' where id = fresh;
+  assert (select customer_name from public.bookings where id = pending) = 'Khách Đổi Tên', 'a new name did not reach the booking';
+
+  raise notice 'the freelancer records the payment, the customer hears it';
+  perform set_config('request.jwt.claim.sub', '', true);
+  -- Clear linh's day around now, so the appointments below can be moved there.
+  update public.bookings set status = 'cancelled', cancelled_at = now(), cancelled_by = 'pro'
+    where pro_id = linh and id <> pending and status in ('pending', 'confirmed', 'in_progress')
+      and blocked_range && tstzrange(now() - interval '8 hours', now() + interval '6 hours');
+  update public.bookings set starts_at = now() - interval '30 minutes' where id = pending;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.start_booking(pending);
+  perform public.confirm_payment_received(pending);
+  assert (select paid_at is not null from public.bookings where id = pending), 'paid_at not set';
+  assert exists (select 1 from public.notifications where account_id = fresh and kind = 'payment_received'), 'customer not told';
+
+  raise notice 'add a service during the appointment, right after it, no travel or urgent fee';
+  perform set_config('request.jwt.claim.sub', fresh::text, true);
+  extra := public.add_on_booking(pending, 'nail-design', 'simple', 1, 'Làm thêm');
+  assert (select status = 'pending' and travel_fee = 0 and urgent_fee = 0 and parent_booking_id = pending
+            and starts_at >= (select ends_at from public.bookings where id = pending)
+          from public.bookings where id = extra), 'the add-on is not what was promised';
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.confirm_booking(extra);
+  assert (select status from public.bookings where id = extra) = 'confirmed', 'the freelancer could not accept the add-on';
+
+  raise notice 'a freelancer reported as not coming can dispute it once, within 24 hours';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  b := public.create_booking(linh, 'nail-design', 'simple', ((monday + 11) + time '15:00') at time zone tz, true, addr, 1, '', 'cash');
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.confirm_booking(b);
+  perform set_config('request.jwt.claim.sub', '', true);
+  -- Earlier in the day, clear of the appointment above.
+  update public.bookings set starts_at = now() - interval '6 hours' where id = b;
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  perform public.report_pro_no_show(b, 'Chờ mãi không thấy');
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.dispute_pro_no_show(b, 'ngắn');
+    assert false, 'a two-word dispute was taken';
+  exception when check_violation then null;
+  end;
+  perform public.dispute_pro_no_show(b, 'Tôi đã tới đúng giờ, có ảnh trước cửa và cuộc gọi.');
+  assert exists (select 1 from public.notifications where account_id = admin_id and kind = 'report_new' and title like '%pro_no_show_dispute%'),
+    'the staff were not told about the dispute';
+  begin
+    perform public.dispute_pro_no_show(b, 'Khiếu nại lần thứ hai cho chắc.');
+    assert false, 'disputed twice';
+  exception when check_violation then null;
+  end;
+
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.admin_adjust_wallet(linh, -1000000, 'Trả lại số dư test (tools)');
+  perform set_config('request.jwt.claim.sub', '', true);
+  raise notice 'DISPUTE TOOL RULES PASS';
 end $$;

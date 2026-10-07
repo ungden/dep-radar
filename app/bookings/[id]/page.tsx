@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { CalendarDays, CalendarPlus, Home, Info, MapPinned, MessageSquare, Phone, Store, Timer } from "lucide-react"
 import { BookingContract } from "@/components/booking-contract"
+import { AddOnServices, PaymentReceipt, ProNoShowDispute, ProposeNewTime } from "@/components/booking-disputes"
 import { ProCard } from "@/components/beauty"
 import { bookingImage, DeclineForm } from "@/components/booking-card"
 import {
@@ -222,6 +223,7 @@ function BookingDetail() {
                 ? `Đã quá hạn huỷ miễn phí. Nếu huỷ, ${Math.round(POLICY.lateCancelRate * 100)}% giá trị lịch hẹn được chuyển cho ${pro.name} để bù thời gian giữ lịch.`
                 : `Đã sát giờ hẹn (dưới ${POLICY.freeCancelHours} tiếng). Huỷ vẫn không mất phí, nhưng hãy báo ${pro.name} sớm để họ sắp xếp lại; huỷ sát giờ nhiều lần có thể bị hạn chế tài khoản.`}
           </p>
+          {!booking.rescheduleTo && <ProposeNewTime booking={booking} />}
           {/* Cancelling is possible, not the point of the page: a text button,
               with one more tap to confirm. */}
           {confirmCancel ? (
@@ -315,9 +317,17 @@ function BookingDetail() {
           customer who was not there. */}
       {isPro && active && <ProTrouble booking={booking} onError={setError} />}
       {isPro && <ReviewCustomer booking={booking} />}
-      {isCustomer && booking.rescheduleTo && booking.rescheduleBy === "pro" && (
-        <RescheduleOffer booking={booking} onError={setError} />
+      {booking.rescheduleTo && active && ((isCustomer && booking.rescheduleBy === "pro") || (isPro && booking.rescheduleBy === "customer")) && (
+        <RescheduleOffer booking={booking} from={isCustomer ? booking.proName : booking.customerName} onError={setError} />
       )}
+      {booking.rescheduleTo && active && ((isCustomer && booking.rescheduleBy === "customer") || (isPro && booking.rescheduleBy === "pro")) && (
+        <p className="text-center text-[13px] text-muted">
+          Đã đề nghị đổi sang {localTime(booking.rescheduleTo)}, {formatDateLong(localDate(booking.rescheduleTo))}. Đang chờ bên kia trả lời.
+        </p>
+      )}
+      <PaymentReceipt booking={booking} isPro={isPro} />
+      {isCustomer && <AddOnServices booking={booking} />}
+      {isPro && <ProNoShowDispute booking={booking} />}
 
       {!active && isCustomer && (booking.status === "declined" || booking.status === "expired") && (
         <Alternatives state={state} booking={booking} pro={pro} />
@@ -559,7 +569,7 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
               ? "Khách không mất phí. Lý do gửi kèm cho khách."
               : `Chỉ báo khi bạn đã tới nơi và chờ quá ${NO_SHOW_WAIT_MINUTES} phút.${
                   travelFee > 0
-                    ? ` Phí di chuyển ${formatPrice(travelFee)} được gửi để 360dep xem xét bù vào ví bạn.`
+                    ? ` 360dep bù phí di chuyển ${formatPrice(travelFee)} vào ví bạn sau 24 giờ nếu khách không khiếu nại.`
                     : ""
                 }`}
           </p>
@@ -597,13 +607,13 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
 }
 
 /** The customer answering a time the freelancer proposed. */
-function RescheduleOffer({ booking, onError }: { booking: Booking; onError: (message: string | null) => void }) {
+function RescheduleOffer({ booking, from, onError }: { booking: Booking; from: string; onError: (message: string | null) => void }) {
   const act = useAct()
   const when = booking.rescheduleTo
   if (!when) return null
   return (
     <Card className="p-4 ring-1 ring-warning/40">
-      <p className="text-sm font-semibold">{booking.proName} đề nghị đổi sang giờ khác</p>
+      <p className="text-sm font-semibold">{from} đề nghị đổi sang giờ khác</p>
       <p className="mt-0.5 text-[13px] text-ink-soft">
         {formatDateLong(localDate(when), true)} · {localTime(when)}
       </p>

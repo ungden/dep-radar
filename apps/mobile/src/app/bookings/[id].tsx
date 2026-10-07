@@ -3,19 +3,24 @@ import { Stack, router, useLocalSearchParams } from "expo-router"
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet"
 import { Alert, Linking, Platform, ScrollView, View } from "react-native"
 import { BLIND_NOTE, POLICY, bookingChatOpen, customerJobActions, reviewWindow, verticalOf } from "@/shared"
+import * as WebBrowser from "expo-web-browser"
 import {
+  acceptDelivery,
   cancelBooking,
   completeBooking,
   confirmBooking,
   confirmBookingDone,
+  confirmPaymentReceived,
   declineBooking,
   disputeNoShow,
   getBooking,
   hasDisputedNoShow,
   reportProNoShow,
+  respondReschedule,
   startBooking,
   type BookingItem,
 } from "@/data/bookings"
+import { webLink } from "@/data/links"
 import { openThread } from "@/data/chat"
 import { formatCountdown, formatDateLong, formatDuration, formatPhone, formatPrice, localDate, localTime } from "@/data/format"
 import type { Result } from "@/data/supabase"
@@ -334,6 +339,47 @@ export default function BookingDetail() {
           <Txt v="meta" color={colors.muted} center>
             Bạn đã khiếu nại. 360dep sẽ xem xét và liên hệ nếu cần thêm thông tin.
           </Txt>
+        ) : null}
+        {/* A new time the other side proposed (20260918040300); the answer re-checks the slot. */}
+        {b.rescheduleTo && active && b.rescheduleBy && b.rescheduleBy !== (iAmPro ? "pro" : "customer") ? (
+          <Card style={{ backgroundColor: colors.warningSoft, gap: 8 }}>
+            <Txt w={700} color={colors.warning}>
+              {iAmPro ? b.customer.name : b.pro.name} đề nghị đổi sang {at(b.rescheduleTo)}
+            </Txt>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Button label="Giữ giờ cũ" size="sm" variant="secondary" full busy={busy === "keep"} onPress={() => void run("keep", () => respondReschedule(b.id, false), "Đã giữ giờ cũ")} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button label="Đồng ý đổi" size="sm" full busy={busy === "move"} onPress={() => void run("move", () => respondReschedule(b.id, true), "Đã đổi giờ hẹn")} />
+              </View>
+            </View>
+          </Card>
+        ) : null}
+        {/* "Đã nhận tiền": the freelancer's record that the customer paid. */}
+        {b.paidAt ? (
+          <Txt v="meta" color={colors.success} center>
+            {iAmPro ? "Bạn" : b.pro.name} đã xác nhận nhận tiền lúc {at(b.paidAt)}.
+          </Txt>
+        ) : iAmPro && (b.status === "in_progress" || b.status === "completed") ? (
+          <Button label="Đã nhận tiền" icon="check" variant="secondary" full busy={busy === "paid"} onPress={() => void run("paid", () => confirmPaymentReceived(b.id), "Đã lưu xác nhận nhận tiền")} />
+        ) : null}
+        {!iAmPro && b.delivery?.deliveredAt && !b.delivery.acceptedAt ? (
+          <Button label="Đã nhận đủ file" icon="check" full busy={busy === "files"} onPress={() => void run("files", () => acceptDelivery(b.id), "Đã xác nhận nhận file")} />
+        ) : null}
+        {!iAmPro && active ? (
+          <Button label="Đổi giờ hoặc đặt thêm dịch vụ (mở trên web)" size="sm" variant="ghost" full onPress={() => void WebBrowser.openBrowserAsync(webLink(`/bookings/${b.id}`))} />
+        ) : null}
+        {iAmPro && b.status === "cancelled" && b.cancelReason === "Người làm không đến" && b.cancelledAt && now <= Date.parse(b.cancelledAt) + 24 * 3_600_000 ? (
+          <Card style={{ backgroundColor: colors.warningSoft, gap: 6 }}>
+            <Txt w={700} color={colors.warning}>
+              Khách báo bạn không đến
+            </Txt>
+            <Txt v="meta" color={colors.warning}>
+              Nếu bạn đã tới, khiếu nại trước {at(new Date(Date.parse(b.cancelledAt) + 24 * 3_600_000))}.
+            </Txt>
+            <Button label="Khiếu nại (mở trên web)" size="sm" variant="secondary" onPress={() => void WebBrowser.openBrowserAsync(webLink(`/bookings/${b.id}`))} />
+          </Card>
         ) : null}
         {iAmPro && b.status === "confirmed" && hoursToStart <= 0.25 ? (
           <Button label="Bắt đầu làm" full busy={busy === "start"} onPress={() => void run("start", () => startBooking(b.id), "Đã bắt đầu")} />
