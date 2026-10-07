@@ -217,10 +217,10 @@ function BookingDetail() {
           <p className="flex gap-2 text-xs text-muted">
             <Info className="mt-0.5 size-3.5 shrink-0" />
             {freeCancel
-              ? `Huỷ miễn phí trước giờ hẹn ${POLICY.freeCancelHours} tiếng${booking.paymentMethod === "online" ? ", hoàn 100% tiền đã thanh toán" : ""}.`
+              ? `Huỷ trước giờ hẹn không mất phí${booking.paymentMethod === "online" ? ", hoàn 100% tiền đã thanh toán" : ""}. Nên huỷ sớm để người làm kịp sắp xếp.`
               : booking.paymentMethod === "online"
                 ? `Đã quá hạn huỷ miễn phí. Nếu huỷ, ${Math.round(POLICY.lateCancelRate * 100)}% giá trị lịch hẹn được chuyển cho ${pro.name} để bù thời gian giữ lịch.`
-                : `Đã quá ${POLICY.freeCancelHours} tiếng trước giờ hẹn. Nếu cần huỷ, báo ${pro.name} sớm để họ sắp xếp lại.`}
+                : `Đã sát giờ hẹn (dưới ${POLICY.freeCancelHours} tiếng). Huỷ vẫn không mất phí, nhưng hãy báo ${pro.name} sớm để họ sắp xếp lại; huỷ sát giờ nhiều lần có thể bị hạn chế tài khoản.`}
           </p>
           {/* Cancelling is possible, not the point of the page: a text button,
               with one more tap to confirm. */}
@@ -354,6 +354,9 @@ function BookingDetail() {
       <div className="flex flex-col items-center gap-2 pt-1">
         {isCustomer && active && <ShareBooking booking={booking} />}
         <ReportButton bookingId={booking.id} targetAccountId={isPro ? booking.customerId : null} />
+        <Link href={isPro ? "/tro-giup?ban=doi-tac" : "/tro-giup"} className="text-[13px] text-muted underline underline-offset-2">
+          Trễ giờ, vắng mặt, phát sinh, chất lượng: xem cách xử lý
+        </Link>
       </div>
 
       {isPro && (

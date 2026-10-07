@@ -4,14 +4,14 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button, Card, EmptyState, PageHeader, StatusBadge, Tabs, inputClass } from "@/components/ui"
-import { decideCheck, overrideAiDecision, recordTopup, resolveReport, setSuspended } from "@/lib/api/admin"
+import { decideCheck, decideNoShowCompensation, overrideAiDecision, recordTopup, resolveReport, setSuspended } from "@/lib/api/admin"
 import type { AdminAction, AdminBooking, AdminPro, AdminReport, AiDecisionItem, FeePolicyView, PendingCheck, PlatformSettings } from "@/lib/api/admin"
-import { CustomersPanel, FinancePanel, SettingsPanel } from "./desk-panels"
+import { CustomersPanel, FinancePanel, HelpQuestionsPanel, SettingsPanel } from "./desk-panels"
 import { useRefresh } from "@/lib/store"
 import type { BookingStatus } from "@/lib/types"
 import { cn, formatPrice, timeAgo } from "@/lib/utils"
 
-type Tab = "checks" | "pros" | "customers" | "finance" | "topup" | "bookings" | "reports" | "ai" | "settings"
+type Tab = "checks" | "pros" | "customers" | "finance" | "topup" | "bookings" | "reports" | "ai" | "help" | "settings"
 
 /**
  * The operations desk: the queue of verifications a vision model was unsure
@@ -61,6 +61,7 @@ export function AdminDesk({
           { value: "bookings", label: "Lịch hẹn" },
           { value: "reports", label: `Báo cáo (${openReports.length})` },
           { value: "ai", label: `Nhật ký AI (${aiLog.last24h})` },
+          { value: "help", label: "Câu hỏi trợ giúp" },
           { value: "settings", label: "Cấu hình" },
         ]}
       />
@@ -119,6 +120,8 @@ export function AdminDesk({
 
       {tab === "finance" && <FinancePanel pros={pros} />}
 
+      {tab === "help" && <HelpQuestionsPanel />}
+
       {tab === "settings" && <SettingsPanel settings={admin.settings} fees={admin.fees} log={admin.log} />}
 
       {tab === "ai" && (
@@ -153,23 +156,7 @@ export function AdminDesk({
         <div className="mt-4 space-y-2">
           {reports.length === 0 && <EmptyState title="Chưa có báo cáo nào" />}
           {reports.map((r) => (
-            <Card key={r.id} className="p-3.5">
-              <p className="text-sm font-semibold">{r.reason}</p>
-              <p className="text-xs text-muted">
-                {r.reporter} · {timeAgo(r.createdAt)} · {r.status}
-              </p>
-              {r.detail && <p className="mt-2 rounded-xl bg-canvas px-3 py-2 text-[13px]">{r.detail}</p>}
-              {(r.status === "open" || r.status === "reviewing") && (
-                <div className="mt-3 flex gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => run(() => resolveReport(r.id, "rejected"))}>
-                    Bỏ qua
-                  </Button>
-                  <Button size="sm" onClick={() => run(() => resolveReport(r.id, "resolved"))}>
-                    Đã xử lý
-                  </Button>
-                </div>
-              )}
-            </Card>
+            <ReportCard key={r.id} report={r} run={run} />
           ))}
         </div>
       )}
@@ -566,4 +553,67 @@ function Flag({ on, label, tone = "success" }: { on: boolean; label: string; ton
     danger: "bg-danger-soft text-danger",
   }
   return <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", tones[tone])}>{label}</span>
+}
+
+const REPORT_REASON: Record<string, string> = {
+  pro_no_show: "Khách báo người làm không đến",
+  no_show_dispute: "Khách khiếu nại bị báo vắng mặt",
+}
+
+/**
+ * One report. The note is what the person who reported reads when it is
+ * closed (resolve_report notifies them). A disputed no-show decides the held
+ * travel-fee compensation instead; both sides are told.
+ */
+function ReportCard({ report: r, run }: { report: AdminReport; run: (fn: () => Promise<{ ok: true } | { ok: false; error: string }>) => void }) {
+  const [note, setNote] = React.useState("")
+  const open = r.status === "open" || r.status === "reviewing"
+  return (
+    <Card className="p-3.5">
+      <p className="text-sm font-semibold">{REPORT_REASON[r.reason] ?? r.reason}</p>
+      <p className="text-xs text-muted">
+        {r.reporter} · {timeAgo(r.createdAt)} · {r.status}
+        {r.bookingId && (
+          <>
+            {" · "}
+            <a href={`/bookings/${r.bookingId}`} target="_blank" rel="noreferrer" className="text-accent underline underline-offset-2">
+              Mở lịch hẹn
+            </a>
+          </>
+        )}
+      </p>
+      {r.detail && <p className="mt-2 rounded-xl bg-canvas px-3 py-2 text-[13px]">{r.detail}</p>}
+      {!open && r.resolution && <p className="mt-2 text-xs text-ink-soft">Kết quả: {r.resolution}</p>}
+      {open && (
+        <div className="mt-3 space-y-2">
+          <input
+            className={cn(inputClass, "h-10 text-sm")}
+            value={note}
+            maxLength={500}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Ghi chú gửi người báo (tuỳ chọn): đã xử lý thế nào"
+          />
+          {r.claim ? (
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="ghost" onClick={() => run(() => decideNoShowCompensation(r.claim!.id, false, note))}>
+                Khách đúng: không bù phí
+              </Button>
+              <Button size="sm" onClick={() => run(() => decideNoShowCompensation(r.claim!.id, true, note))}>
+                Giữ vắng mặt: bù {formatPrice(r.claim.amount)} cho người làm
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button size="sm" variant="ghost" onClick={() => run(() => resolveReport(r.id, "rejected", note))}>
+                Không vi phạm
+              </Button>
+              <Button size="sm" onClick={() => run(() => resolveReport(r.id, "resolved", note))}>
+                Đã xử lý
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
+  )
 }

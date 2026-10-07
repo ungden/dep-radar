@@ -737,6 +737,48 @@ export type Database = {
           },
         ]
       }
+      help_questions: {
+        Row: {
+          account_id: string | null
+          answer: string
+          audience: string
+          covered: boolean
+          created_at: string
+          handoff: boolean
+          helpful: boolean | null
+          id: string
+          model: string
+          question: string
+          sources: string[]
+        }
+        Insert: {
+          account_id?: string | null
+          answer: string
+          audience: string
+          covered: boolean
+          created_at?: string
+          handoff?: boolean
+          helpful?: boolean | null
+          id?: string
+          model: string
+          question: string
+          sources?: string[]
+        }
+        Update: {
+          account_id?: string | null
+          answer?: string
+          audience?: string
+          covered?: boolean
+          created_at?: string
+          handoff?: boolean
+          helpful?: boolean | null
+          id?: string
+          model?: string
+          question?: string
+          sources?: string[]
+        }
+        Relationships: []
+      }
       jobs: {
         Row: {
           address_id: string | null
@@ -907,6 +949,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      no_show_compensation_requests: {
+        Row: {
+          amount: number
+          booking_id: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          dispute_report_id: string | null
+          disputed_at: string | null
+          id: string
+          pro_id: string
+          reason: string
+          release_at: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          booking_id: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          dispute_report_id?: string | null
+          disputed_at?: string | null
+          id?: string
+          pro_id: string
+          reason?: string
+          release_at?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          dispute_report_id?: string | null
+          disputed_at?: string | null
+          id?: string
+          pro_id?: string
+          reason?: string
+          release_at?: string | null
+          status?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {

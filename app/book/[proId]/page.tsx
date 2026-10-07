@@ -774,8 +774,8 @@ function BookingFlow({ proId }: { proId: string }) {
                 <CalendarX2 className="mt-0.5 size-4 shrink-0 text-accent" />
                 <span>
                   {cancel.passed
-                    ? `Lịch bắt đầu trong chưa đầy ${POLICY.freeCancelHours} giờ nên không còn hạn huỷ miễn phí.`
-                    : <>Huỷ miễn phí đến <b>{cancel.label}</b>.</>}{" "}
+                    ? `Huỷ trước giờ hẹn không mất phí; lịch này đã sát giờ nên nếu cần huỷ, hãy báo người làm sớm.`
+                    : <>Huỷ trước giờ hẹn không mất phí; nên huỷ trước <b>{cancel.label}</b> để người làm kịp sắp xếp.</>}{" "}
                   Không cần đặt cọc.{" "}
                   <Link href="/chinh-sach" className="text-accent underline underline-offset-2">
                     Chính sách

@@ -31,7 +31,9 @@ export function ReferralPolicy() {
       </li>
       <li>
         Mỗi người được giới thiệu chỉ tính một lần, trong 90 ngày kể từ khi nhập mã
-        {p.referralMonthlyCap > 0 ? `; mỗi người giới thiệu nhận tối đa ${p.referralMonthlyCap} lượt thưởng một tháng` : ""}.
+        {p.referralMonthlyCap > 0
+          ? `; mỗi người giới thiệu nhận tối đa ${p.referralMonthlyCap} lượt thưởng một tháng`
+          : "; hiện tạm dừng trao thưởng mới"}.
       </li>
       <li>
         Voucher dùng cho một lịch hẹn từ {formatPrice(p.referralMinTotal)}, chọn trước giờ hẹn. Khách trả người làm ít hơn đúng số tiền voucher;
