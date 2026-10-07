@@ -2,12 +2,13 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Download, Lock, Search, Unlock } from "lucide-react"
+import { Download, KeyRound, Lock, Search, Unlock } from "lucide-react"
 import { Button, Card, EmptyState, Field, inputClass } from "@/components/ui"
 import {
   adjustWallet,
   adminCustomers,
   adminHelpQuestions,
+  adminResetPassword,
   financeReport,
   setAccountSuspended,
   updatePlatformSettings,
@@ -34,6 +35,16 @@ export function CustomersPanel() {
   const [error, setError] = React.useState<string | null>(null)
   const [locking, setLocking] = React.useState<AdminCustomer | null>(null)
   const [reason, setReason] = React.useState("")
+  // A password reset waiting for "Xác nhận", then the new password shown once.
+  const [resetting, setResetting] = React.useState<AdminCustomer | null>(null)
+  const [issued, setIssued] = React.useState<{ id: string; password: string } | null>(null)
+
+  const reset = async (c: AdminCustomer) => {
+    const r = await adminResetPassword(c.id)
+    setResetting(null)
+    if (!r.ok) return setError(r.error)
+    setIssued({ id: c.id, password: r.data })
+  }
 
   const load = React.useCallback(async (q: string) => {
     const r = await adminCustomers(q)
@@ -100,6 +111,9 @@ export function CustomersPanel() {
                       </p>
                       {c.suspendedAt && c.suspendReason && <p className="mt-1 text-xs text-danger">Lý do khoá: {c.suspendReason}</p>}
                     </div>
+                    <Button size="sm" variant="ghost" onClick={() => setResetting(c)}>
+                      <KeyRound className="size-4" /> Đặt lại mật khẩu
+                    </Button>
                     {c.suspendedAt ? (
                       <Button size="sm" variant="soft" onClick={() => void toggle(c, false)}>
                         <Unlock className="size-4" /> Mở khoá
@@ -110,6 +124,32 @@ export function CustomersPanel() {
                       </Button>
                     )}
                   </div>
+                  {resetting?.id === c.id && (
+                    <div className="mt-3 space-y-2 rounded-xl bg-warning-soft px-3.5 py-3 text-[13px]">
+                      <p>
+                        Chỉ đặt lại khi người nhắn Zalo dùng <b>đúng số {c.phone || "của tài khoản"}</b>. Mật khẩu cũ hết hiệu lực ngay, chủ tài khoản nhận thông báo.
+                      </p>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => void reset(c)}>
+                          Xác nhận đặt lại
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setResetting(null)}>
+                          Thôi
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {issued?.id === c.id && (
+                    <div className="mt-3 space-y-1 rounded-xl bg-success-soft px-3.5 py-3 text-[13px]">
+                      <p>
+                        Mật khẩu mới (chỉ hiện một lần): <b className="select-all font-mono text-[15px]">{issued.password}</b>
+                      </p>
+                      <p className="text-ink-soft">Gửi qua Zalo cho đúng số {c.phone}. Nhắc khách đăng nhập rồi đổi mật khẩu trong Cài đặt tài khoản.</p>
+                      <Button size="sm" variant="ghost" onClick={() => setIssued(null)}>
+                        Đã gửi, ẩn đi
+                      </Button>
+                    </div>
+                  )}
                   {locking?.id === c.id && (
                     <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                       <input
@@ -508,6 +548,8 @@ function describe(a: AdminAction) {
       return `Khoá tài khoản${d.reason ? `: ${String(d.reason)}` : ""}`
     case "account:unlock":
       return "Mở khoá tài khoản"
+    case "account:reset_password":
+      return "Đặt lại mật khẩu (hỗ trợ qua Zalo)"
     case "wallet:adjust":
       return `Điều chỉnh ví ${formatPrice(Number(d.amount ?? 0))}: ${String(d.note ?? "")}`
     default:

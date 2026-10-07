@@ -53,7 +53,7 @@ export default function OperatingRulesPage() {
 
         <Section title="II. Đăng ký và xác minh">
           <ul className="list-disc space-y-1 pl-5">
-            <li>Khách hàng đăng ký bằng Google, Apple, số điện thoại hoặc email. Cần số điện thoại trước khi đặt lịch.</li>
+            <li>Người dùng đăng ký bằng Apple, Google, email hoặc số điện thoại. Tạo tài khoản không cần số điện thoại; cần thêm số trước khi đặt lịch, đăng yêu cầu, mở hồ sơ đối tác hay ứng tuyển làm mẫu, để hai bên liên lạc sau khi ghép lịch. Tài khoản chỉ có số điện thoại quên mật khẩu thì nhắn Zalo hỗ trợ để được cấp lại sau khi xác minh.</li>
             <li>
               Đối tác mở hồ sơ miễn phí, chọn dịch vụ từ danh mục và chọn một trong các mức giá có sẵn, thêm giờ làm việc và ảnh tác phẩm do chính mình
               làm. Hồ sơ chỉ hiện với khách sau khi qua kiểm duyệt (bằng AI, có nhật ký để nhân viên 360đẹp xem lại và thay đổi quyết định).

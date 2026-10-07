@@ -58,14 +58,14 @@ export function ForgotForm() {
           autoComplete="username"
           autoCapitalize="none"
           spellCheck={false}
-          placeholder="0912 345 678 hoặc ten@gmail.com"
+          placeholder="ten@gmail.com hoặc 0912 345 678"
           autoFocus
         />
       </Field>
       {result && (
         <div role="alert" className="rounded-xl bg-danger-soft px-3.5 py-3 text-[14px] text-danger">
           {result.message}
-          {result.noEmail && <SupportLink size="sm" className="mt-3 flex w-fit" />}
+          {result.noEmail && <SupportLink size="sm" className="mt-3 flex w-fit">Nhắn Zalo hỗ trợ</SupportLink>}
         </div>
       )}
       <Button type="submit" size="lg" className="w-full" disabled={busy}>

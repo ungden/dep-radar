@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { MIN_PASSWORD_LENGTH, parseIdentifier, passwordProblem } from "@/shared"
 import { forgotPassword, loadProviders, needsRecoveryEmail, recoveryEmailAsked } from "@/data/auth"
 import { webLink } from "@/data/links"
+import { loadSupportZalo } from "@/data/support"
 import { hasAcceptedTerms } from "@/data/terms"
 import { supabase } from "@/data/supabase"
 import { Field, InfoNote, PasswordField } from "@/components/auth-fields"
@@ -61,16 +62,19 @@ export default function Login() {
     setInfo(null)
   }
 
-  /** Terms, then phone, then (phone accounts) a recovery email, then back to where they were. */
-  const continueAfterSignIn = async (needsPhone: boolean) => {
+  /**
+   * Terms, then (phone accounts) a recovery email, then back to where they
+   * were. No phone step: booking, posting a request and the partner profile
+   * ask for it when they need it (owner, 07/10/2026).
+   */
+  const continueAfterSignIn = async (_needsPhone: boolean) => {
     haptic.success()
     const { data } = await supabase.auth.getUser()
     const user = data.user
     const agreed = user ? await hasAcceptedTerms(user.id) : true
     const needsEmail = Boolean(user && needsRecoveryEmail(user) && !(await recoveryEmailAsked(user.id)))
-    const after = needsPhone ? "phone" : needsEmail ? "email" : "back"
+    const after = needsEmail ? "email" : "back"
     if (!agreed) router.replace({ pathname: "/dieu-khoan", params: { next: after } })
-    else if (after === "phone") router.replace("/so-dien-thoai")
     else if (after === "email") router.replace({ pathname: "/them-email", params: { first: "1" } })
     else router.back()
   }
@@ -115,6 +119,13 @@ export default function Login() {
     else setError(res.message)
   }
 
+  // A phone account cannot reset its password by e-mail: the support Zalo does it.
+  const [zalo, setZalo] = React.useState<string | null>(null)
+  React.useEffect(() => {
+    void loadSupportZalo().then(setZalo)
+  }, [])
+  const openSupport = () => void WebBrowser.openBrowserAsync(zalo ? `https://zalo.me/${zalo}` : webLink("/tro-giup"))
+
   const showApple = appleAvailable && providers?.apple !== false
   const showGoogle = providers?.google !== false
   const locked = busy !== null
@@ -157,63 +168,8 @@ export default function Login() {
           })}
         </View>
 
-        <View style={{ gap: 14 }}>
-          {signup ? (
-            <Field label="Tên của bạn" value={fullName} onChangeText={setFullName} placeholder="Nguyễn Thu Hà" autoComplete="name" textContentType="name" maxLength={80} />
-          ) : null}
-          <Field
-            label="Số điện thoại hoặc email"
-            value={identifier}
-            onChangeText={setIdentifier}
-            placeholder="0968 112 233 hoặc ban@gmail.com"
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="username"
-            textContentType="username"
-            keyboardType="email-address"
-            hint={signup && typed.kind === "phone" ? "Đăng ký bằng số điện thoại: sau đó thêm email để lấy lại mật khẩu khi quên." : undefined}
-          />
-          <PasswordField
-            value={password}
-            onChangeText={setPassword}
-            isNew={signup}
-            placeholder={signup ? `Ít nhất ${MIN_PASSWORD_LENGTH} ký tự` : undefined}
-            hint={problem ?? undefined}
-            onSubmitEditing={() => canSubmit && !locked && void run("password")}
-            returnKeyType="go"
-          />
-        </View>
-
-        {error ? <ErrorNote text={error} /> : null}
-        {info ? <InfoNote text={info} /> : null}
-
-        <View style={{ gap: 4 }}>
-          <Button
-            label={signup ? "Tạo tài khoản" : "Đăng nhập"}
-            full
-            size="lg"
-            busy={busy === "password"}
-            disabled={!canSubmit || (locked && busy !== "password")}
-            onPress={() => void run("password")}
-          />
-          {signup ? null : (
-            <Press onPress={() => void forgot()} disabled={locked} accessibilityRole="button" style={{ alignSelf: "center", paddingVertical: 10, paddingHorizontal: 12 }}>
-              <Txt w={600} color={colors.accentDark}>
-                {busy === "forgot" ? "Đang gửi…" : "Quên mật khẩu?"}
-              </Txt>
-            </Press>
-          )}
-        </View>
-
         {showApple || showGoogle ? (
           <View style={{ gap: 12 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              <View style={{ flex: 1, height: 1, backgroundColor: colors.line }} />
-              <Txt v="meta" color={colors.muted}>
-                hoặc
-              </Txt>
-              <View style={{ flex: 1, height: 1, backgroundColor: colors.line }} />
-            </View>
             {showApple ? (
               busy === "apple" ? (
                 <Button label="Đang mở Apple…" full size="lg" variant="secondary" busy />
@@ -238,8 +194,80 @@ export default function Login() {
                 onPress={() => void run("google")}
               />
             ) : null}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.line }} />
+              <Txt v="meta" color={colors.muted}>
+                hoặc dùng email
+              </Txt>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.line }} />
+            </View>
           </View>
         ) : null}
+
+        <View style={{ gap: 14 }}>
+          {signup ? (
+            <Field label="Tên của bạn" value={fullName} onChangeText={setFullName} placeholder="Nguyễn Thu Hà" autoComplete="name" textContentType="name" maxLength={80} />
+          ) : null}
+          <Field
+            label="Email hoặc số điện thoại"
+            value={identifier}
+            onChangeText={setIdentifier}
+            placeholder="ban@gmail.com hoặc 0968 112 233"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="username"
+            textContentType="username"
+            keyboardType="email-address"
+            hint={
+              signup && typed.kind === "phone"
+                ? "Nên dùng email (hoặc thêm email sau): tài khoản chỉ có số điện thoại thì quên mật khẩu phải nhắn Zalo hỗ trợ."
+                : signup
+                  ? "Số điện thoại chỉ cần khi bạn đặt lịch hoặc nhận khách."
+                  : undefined
+            }
+          />
+          <PasswordField
+            value={password}
+            onChangeText={setPassword}
+            isNew={signup}
+            placeholder={signup ? `Ít nhất ${MIN_PASSWORD_LENGTH} ký tự` : undefined}
+            hint={problem ?? undefined}
+            onSubmitEditing={() => canSubmit && !locked && void run("password")}
+            returnKeyType="go"
+          />
+        </View>
+
+        {error ? <ErrorNote text={error} /> : null}
+        {error && !signup && typed.kind === "phone" ? (
+          <Press onPress={openSupport} accessibilityRole="link" style={{ alignSelf: "center", paddingVertical: 6 }}>
+            <Txt v="meta" color={colors.inkSoft} center>
+              Quên mật khẩu của tài khoản số điện thoại?{" "}
+              <Txt v="meta" w={700} color={colors.accent}>
+                {zalo ? `Nhắn Zalo hỗ trợ ${zalo}` : "Liên hệ hỗ trợ"}
+              </Txt>{" "}
+              từ chính số đó.
+            </Txt>
+          </Press>
+        ) : null}
+        {info ? <InfoNote text={info} /> : null}
+
+        <View style={{ gap: 4 }}>
+          <Button
+            label={signup ? "Tạo tài khoản" : "Đăng nhập"}
+            full
+            size="lg"
+            busy={busy === "password"}
+            disabled={!canSubmit || (locked && busy !== "password")}
+            onPress={() => void run("password")}
+          />
+          {signup ? null : (
+            <Press onPress={() => void forgot()} disabled={locked} accessibilityRole="button" style={{ alignSelf: "center", paddingVertical: 10, paddingHorizontal: 12 }}>
+              <Txt w={600} color={colors.accentDark}>
+                {busy === "forgot" ? "Đang gửi…" : "Quên mật khẩu?"}
+              </Txt>
+            </Press>
+          )}
+        </View>
 
         <Press onPress={() => void WebBrowser.openBrowserAsync(webLink("/chinh-sach"))} accessibilityRole="link">
           <Txt v="meta" color={colors.muted} center>

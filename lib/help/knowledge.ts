@@ -1,6 +1,6 @@
 import { tierLabels } from "@/lib/catalog"
 import { AUTO_COMPLETE_HOURS, MIN_REVIEWS_FOR_AVERAGE, NO_SHOW_AFTER_MIN, REVIEW_WINDOW_DAYS } from "@/lib/connection"
-import { DEMO_DATA_LIVE, IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
+import { DEMO_DATA_LIVE, IDENTITY_VERIFICATION_OPEN, SUPPORT_ZALO } from "@/lib/launch"
 import { POLICY } from "@/lib/pricing"
 import { VIDEO_MAX_MB, VIDEO_MAX_SECONDS } from "@/lib/video-meta"
 import type { HelpAudience, HelpEntry, HelpTopicId } from "./types"
@@ -77,8 +77,8 @@ const ENTRIES: HelpEntry[] = [
     audience: "chung",
     topic: "bat-dau",
     q: "Liên hệ đội hỗ trợ 360đẹp bằng cách nào?",
-    a: `Việc liên quan một lịch hẹn cụ thể (tranh chấp, sự cố, khiếu nại), hãy ${REPORT_HOW}: báo cáo gắn sẵn lịch hẹn nên đội ngũ có đủ thông tin. Việc khác, bấm "Liên hệ hỗ trợ" cuối trang Trợ giúp. Thông báo của 360đẹp đến qua ứng dụng (thông báo trong app và thông báo đẩy), không qua SMS.`,
-    keywords: ["hotline", "zalo", "email", "cskh", "cham soc khach hang"],
+    a: `Việc liên quan một lịch hẹn cụ thể (tranh chấp, sự cố, khiếu nại), hãy ${REPORT_HOW}: báo cáo gắn sẵn lịch hẹn nên đội ngũ có đủ thông tin. Việc khác (kể cả quên mật khẩu tài khoản số điện thoại), nhắn Zalo hỗ trợ ${SUPPORT_ZALO} hoặc bấm "Liên hệ hỗ trợ" cuối trang Trợ giúp. Thông báo của 360đẹp đến qua ứng dụng (thông báo trong app và thông báo đẩy), không qua SMS.`,
+    keywords: ["hotline", "zalo", "email", "cskh", "cham soc khach hang", SUPPORT_ZALO],
   },
   {
     id: "lua-dao",
@@ -512,15 +512,23 @@ const ENTRIES: HelpEntry[] = [
     audience: "chung",
     topic: "tai-khoan",
     q: "Vì sao phải có số điện thoại? Đổi số thế nào?",
-    a: "Số điện thoại cần để đặt lịch, đăng yêu cầu, mở hồ sơ đối tác và để hai bên liên lạc khi lịch đã được nhận. Mỗi số chỉ gắn với một tài khoản. Bạn tự đổi số trong Cài đặt tài khoản. Hãy dùng đúng số của mình: số sai khiến người làm hoặc khách không liên lạc được và có thể bị xem là vi phạm.",
+    a: "Tạo tài khoản không cần số điện thoại. Nhưng khi đặt lịch, đăng yêu cầu, mở hồ sơ đối tác hay ứng tuyển làm mẫu, 360đẹp sẽ hỏi số, vì khách và người làm cần liên lạc với nhau sau khi ghép lịch. Mỗi số chỉ gắn với một tài khoản. Bạn tự đổi số trong Cài đặt tài khoản. Hãy dùng đúng số của mình: số sai khiến người làm hoặc khách không liên lạc được và có thể bị xem là vi phạm.",
     keywords: ["so dien thoai", "doi so", "sdt"],
+  },
+  {
+    id: "cach-dang-nhap",
+    audience: "chung",
+    topic: "tai-khoan",
+    q: "Nên đăng nhập bằng cách nào? Đăng nhập bằng số điện thoại có cần gì thêm không?",
+    a: `Nên dùng Apple, Google hoặc email: quên mật khẩu bạn tự lấy lại được. Đăng nhập bằng số điện thoại chỉ cần đúng số và mật khẩu, không có mã OTP; nhưng nếu quên mật khẩu thì phải nhắn Zalo hỗ trợ ${SUPPORT_ZALO} để được cấp lại. Dù đăng nhập cách nào, khi đặt lịch hay nhận khách bạn vẫn cần thêm số điện thoại để hai bên liên lạc.`,
+    keywords: ["dang nhap", "apple", "google", "email", "otp", "dang ky"],
   },
   {
     id: "quen-mat-khau",
     audience: "chung",
     topic: "tai-khoan",
     q: "Quên mật khẩu thì làm sao?",
-    a: "Bấm \"Quên mật khẩu\" ở trang đăng nhập; link đặt lại được gửi tới email của tài khoản. Tài khoản tạo bằng số điện thoại mà chưa thêm email thì chưa tự lấy lại được: hãy liên hệ đội hỗ trợ, và sau khi vào lại được, thêm email trong Cài đặt để lần sau tự xử lý. Bạn cũng có thể đăng nhập bằng Google (hoặc Apple trên iPhone) nếu đã dùng cách đó.",
+    a: `Tài khoản có email: bấm "Quên mật khẩu" ở trang đăng nhập, link đặt lại được gửi tới email đó. Tài khoản chỉ có số điện thoại: nhắn Zalo hỗ trợ 360đẹp ${SUPPORT_ZALO} từ chính số điện thoại của tài khoản, nhân viên kiểm tra rồi cấp mật khẩu mới; đăng nhập xong hãy đổi mật khẩu và thêm email trong Cài đặt để lần sau tự lấy lại. Tài khoản đăng nhập bằng Apple hoặc Google thì không cần mật khẩu, cứ bấm nút đó.`,
     keywords: ["quen mat khau", "dang nhap", "mat khau"],
   },
   {

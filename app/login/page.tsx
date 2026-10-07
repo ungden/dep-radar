@@ -32,7 +32,7 @@ async function pendingBooking(next: string) {
 
 export const metadata: Metadata = {
   title: "Đăng nhập",
-  description: "Đăng nhập 360dep bằng Google, số điện thoại hoặc email để đặt lịch làm đẹp, chụp ảnh, quay clip.",
+  description: "Đăng nhập 360dep bằng Apple, Google, email hoặc số điện thoại để đặt lịch làm đẹp, chụp ảnh, quay clip.",
 }
 
 const ERRORS: Record<string, string> = {
@@ -52,10 +52,8 @@ export default async function LoginPage({
   const next = params.next ? safeNext(params.next) : wantsPro ? "/studio/onboarding" : "/"
 
   const account = await currentAccount()
-  if (account) {
-    if (!account.phone) redirect(`/me/so-dien-thoai?next=${encodeURIComponent(next)}`)
-    redirect(wantsPro && account.isPro && !params.next ? "/studio" : next)
-  }
+  // No phone step here: it is asked when booking, posting a request or opening a partner profile (middleware).
+  if (account) redirect(wantsPro && account.isPro && !params.next ? "/studio" : next)
 
   const [providers, booking] = await Promise.all([oauthProviders(), pendingBooking(next)])
   const error = params.loi ? ERRORS[params.loi] : null
@@ -96,12 +94,8 @@ export default async function LoginPage({
         </p>
       )}
 
+      {/* Apple, Google or e-mail first: a password is then recoverable without anyone's help. */}
       <div className="mt-8 space-y-3">
-        <form action={signInWithProvider}>
-          <input type="hidden" name="provider" value="google" />
-          <input type="hidden" name="next" value={next} />
-          <GoogleButton disabled={!providers.google} />
-        </form>
         {/* Apple appears only once it is switched on in Supabase. */}
         {providers.apple && (
           <form action={signInWithProvider}>
@@ -110,25 +104,30 @@ export default async function LoginPage({
             <AppleButton />
           </form>
         )}
+        <form action={signInWithProvider}>
+          <input type="hidden" name="provider" value="google" />
+          <input type="hidden" name="next" value={next} />
+          <GoogleButton disabled={!providers.google} />
+        </form>
       </div>
 
       {!providers.google && (
         <p role="status" className="mt-3 rounded-xl bg-warning-soft px-3.5 py-3 text-[13px] text-ink-soft">
-          Đăng nhập bằng Google đang được thiết lập. Bạn vẫn đăng nhập được bằng số điện thoại hoặc email bên dưới.
+          Đăng nhập bằng Google đang được thiết lập. Bạn vẫn đăng nhập được bằng email hoặc số điện thoại bên dưới.
         </p>
       )}
 
       <div className="my-6 flex items-center gap-3 text-[13px] text-muted" aria-hidden>
         <span className="h-px flex-1 bg-line" />
-        hoặc dùng mật khẩu
+        hoặc dùng email
         <span className="h-px flex-1 bg-line" />
       </div>
 
       <PasswordForm next={next} initialMode={params.tao === "1" ? "tao-tai-khoan" : "dang-nhap"} googleEnabled={providers.google} />
 
       <p className="mt-6 text-center text-[13px] leading-relaxed text-muted">
-        360dep cần số điện thoại của bạn trước khi đặt lịch: người làm chỉ thấy số này khi đã nhận lịch của bạn, cho tới khi lịch
-        kết thúc. Tiếp tục nghĩa là bạn đồng ý để 360dep xử lý tên, email và số điện thoại theo{" "}
+        Tạo tài khoản không cần số điện thoại. Khi đặt lịch, đăng yêu cầu hay mở hồ sơ đối tác, 360dep sẽ hỏi số để hai bên liên lạc
+        sau khi ghép lịch; bên kia chỉ thấy số khi lịch đã được nhận. Tiếp tục nghĩa là bạn đồng ý để 360dep xử lý tên, email và số điện thoại theo{" "}
         <Link href="/chinh-sach" className="underline">
           chính sách
         </Link>
