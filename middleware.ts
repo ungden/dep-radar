@@ -12,8 +12,11 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL, backendEnabled } from "@/lib/supabase/
  */
 const PRIVATE = ["/studio", "/bookings", "/requests", "/me/", "/tin-nhan", "/thong-bao"]
 const ADMIN = "/admin"
-/** Signed-in areas that assume the account has a phone number (for /book: only once signed in). */
-const NEEDS_PHONE = ["/studio", "/bookings", "/requests", "/book", "/tin-nhan"]
+/**
+ * The steps that connect two people, where a phone number is required (the owner, 07/10/2026):
+ * booking, posting a request, the partner studio. Signing up does not need one.
+ */
+const NEEDS_PHONE = ["/book", "/requests/new", "/studio"]
 
 export async function middleware(request: NextRequest) {
   // Without a backend the app is the labelled browser demo: nothing to guard.
@@ -42,8 +45,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(login)
   }
 
-  // Google never provides a phone number, and everything past this point can end
-  // in a call. /me stays open so settings and account deletion are reachable.
+  // Signing up needs no phone number; these steps do, because they end in a call.
+  // The database refuses them without one too (require_phone()).
   if (data.user && NEEDS_PHONE.some((p) => path === p || path.startsWith(`${p}/`))) {
     const { data: account } = await supabase.from("accounts").select("phone").eq("id", data.user.id).maybeSingle()
     if (account && !account.phone) {

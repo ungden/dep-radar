@@ -16,3 +16,10 @@ export const DEMO_DATA_LIVE = true
  * true, deploy. See docs/launch.md.
  */
 export const IDENTITY_VERIFICATION_OPEN = false
+
+/**
+ * The support Zalo, for the help centre's written answers (lib/help/knowledge.ts).
+ * Buttons read the live one from Admin › Cấu hình (platform_settings.support_zalo);
+ * change both together.
+ */
+export const SUPPORT_ZALO = "0987220101"

@@ -21,7 +21,7 @@ export const MESSAGES = {
   emailTaken: "Email này đã có tài khoản. Đăng nhập hoặc lấy lại mật khẩu.",
   tooMany: "Bạn thử nhiều lần quá. Đợi vài phút rồi thử lại.",
   failed: "Chưa xử lý được. Vui lòng thử lại sau ít phút.",
-  noRecoveryEmail: "Tài khoản này chưa có email. Liên hệ hỗ trợ để lấy lại mật khẩu.",
+  noRecoveryEmail: "Tài khoản này chưa có email. Nhắn Zalo hỗ trợ 360dep từ chính số điện thoại này để được cấp lại mật khẩu.",
 } as const
 
 type Valid = Exclude<Identifier, { kind: "invalid" }>

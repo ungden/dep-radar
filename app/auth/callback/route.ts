@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(`/login?loi=${failure}&next=${encodeURIComponent(next)}`, origin))
   }
 
-  const { data: account } = await supabase.from("accounts").select("phone").eq("id", data.user.id).maybeSingle()
-  const target = account?.phone ? next : `/me/so-dien-thoai?next=${encodeURIComponent(next)}`
-  return NextResponse.redirect(new URL(target, origin))
+  // No phone step here: it is asked at the step that needs it (middleware NEEDS_PHONE).
+  return NextResponse.redirect(new URL(next, origin))
 }

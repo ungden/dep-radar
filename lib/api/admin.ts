@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache"
 import { backendEnabled } from "@/lib/supabase/env"
-import { supabaseServer } from "@/lib/supabase/server"
+import { randomInt } from "node:crypto"
+import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
 import { localDate, localTime } from "@/lib/utils"
 import type { ActionResult } from "./actions"
 import { messageFor, orLegacy } from "./errors"
@@ -376,6 +377,51 @@ export async function adminCustomers(query = ""): Promise<ActionResult<AdminCust
 
 export async function setAccountSuspended(accountId: string, suspended: boolean, reason = "") {
   return call("admin_set_account_suspended", { p_account: accountId, p_suspended: suspended, p_reason: reason })
+}
+
+// Support: a new password for a phone account (owner, 07/10/2026) ---------------------
+
+// No 0/O, 1/l/I: read out over Zalo without mistakes.
+const TEMP_ALPHABET = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+/** Ten characters with at least one letter and one digit (the password rules refuse digits only). */
+function temporaryPassword(): string {
+  for (;;) {
+    const p = Array.from({ length: 10 }, () => TEMP_ALPHABET[randomInt(TEMP_ALPHABET.length)]).join("")
+    if (/[a-zA-Z]/.test(p) && /\d/.test(p)) return p
+  }
+}
+
+/**
+ * Support sets a new password for someone who messaged the support Zalo from
+ * the account's own phone number. Returns the password once, for the staff to
+ * send back; it is never stored or logged. The account owner is notified, and
+ * the admin log records who did it.
+ */
+export async function adminResetPassword(accountId: string): Promise<ActionResult<string>> {
+  if (!backendEnabled) return { ok: false, error: "Chưa nối máy chủ." }
+  const supabase = await supabaseServer()
+  const { data: me } = await supabase.auth.getUser()
+  if (!me.user || !(await isAdmin())) return { ok: false, error: "Không có quyền." }
+  if (accountId === me.user.id) return { ok: false, error: "Đổi mật khẩu của chính bạn trong Cài đặt tài khoản." }
+  const password = temporaryPassword()
+  const admin = supabaseAdmin()
+  const { error } = await admin.auth.admin.updateUserById(accountId, { password })
+  if (error) {
+    console.error("adminResetPassword failed:", error.code, error.message)
+    return { ok: false, error: "Chưa đặt lại được mật khẩu, thử lại nhé." }
+  }
+  await Promise.all([
+    admin.from("admin_actions").insert({ actor_id: me.user.id, action: "account:reset_password", target_id: accountId, detail: {} }),
+    admin.from("notifications").insert({
+      account_id: accountId,
+      kind: "password_reset",
+      title: "Mật khẩu của bạn vừa được đặt lại",
+      body: "Hỗ trợ 360dep đã cấp mật khẩu mới theo yêu cầu qua Zalo. Đăng nhập rồi đổi mật khẩu trong Cài đặt tài khoản. Nếu bạn không yêu cầu, nhắn ngay cho hỗ trợ.",
+      link: "/me/cai-dat",
+    }),
+  ])
+  return { ok: true, data: password }
 }
 
 export interface FinanceSummary {

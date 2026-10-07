@@ -18,9 +18,9 @@ import { clientIp } from "./throttle"
  * email (lib/auth/password.ts, shared with the app's /api/auth/* routes). No SMS.
  *
  * Google, Apple and an email sign-up give no phone number, and the number is
- * how the two sides reach each other once a booking is accepted. So those
- * sign-ins end on /me/so-dien-thoai, and the database refuses a booking, a
- * request or a partner profile from an account that has not set one
+ * how the two sides reach each other once a booking is accepted. Signing up
+ * does not ask for it; booking, posting a request and opening a partner profile
+ * do (middleware NEEDS_PHONE), and the database refuses those without one
  * (require_phone()).
  */
 export type AuthResult = { ok: true } | { ok: false; error: string }
@@ -46,11 +46,12 @@ export async function signInWithProvider(formData: FormData): Promise<void> {
 
 export type SignInResult = { ok: true; next: string } | { ok: false; error: string }
 
-/** Where a password sign-in lands: the phone step first if the account has no number. */
-async function landing(userId: string, next: string): Promise<string> {
-  const supabase = await supabaseServer()
-  const { data } = await supabase.from("accounts").select("phone").eq("id", userId).maybeSingle()
-  return data?.phone ? next : `/me/so-dien-thoai?next=${encodeURIComponent(next)}`
+/**
+ * Where a password sign-in lands: where the person was going. A missing phone
+ * number is asked later, at the step that needs it (middleware NEEDS_PHONE).
+ */
+async function landing(_userId: string, next: string): Promise<string> {
+  return next
 }
 
 export async function signInWithPassword(input: { identifier: string; password: string; next?: string }): Promise<SignInResult> {
