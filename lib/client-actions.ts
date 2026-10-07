@@ -192,6 +192,18 @@ export const actions = {
     return asResult(await api.respondReschedule(bookingId, accept))
   },
 
+  async confirmPaymentReceived(bookingId: string): Promise<Result> {
+    return asResult(await api.confirmPaymentReceived(bookingId))
+  },
+
+  async disputeProNoShow(bookingId: string, reason: string): Promise<Result> {
+    return asResult(await api.disputeProNoShow(bookingId, reason))
+  },
+
+  async addOnBooking(parentId: string, templateId: string, variantId: string, quantity: number, note = ""): Promise<Result> {
+    return asResult(await api.addOnBooking(parentId, templateId, variantId, quantity, note))
+  },
+
   // Requests & offers ---------------------------------------------------------
 
   async createJob(input: {

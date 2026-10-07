@@ -71,8 +71,16 @@ const ids = new Set(HELP_ENTRIES.map((e) => e.id))
 export function cleanAnswer(raw: unknown, model: string): HelpAnswer {
   const r = (raw ?? {}) as Record<string, unknown>
   const answer = typeof r.answer === "string" ? r.answer.trim().slice(0, 1200) : ""
+  // Models often cite the way the prompt writes ids: "[k-huy]".
   const sources = Array.isArray(r.sources)
-    ? [...new Set(r.sources.filter((s): s is string => typeof s === "string" && ids.has(s)))].slice(0, 3)
+    ? [
+        ...new Set(
+          r.sources
+            .filter((s): s is string => typeof s === "string")
+            .map((s) => s.replace(/[[\]\s]/g, ""))
+            .filter((s) => ids.has(s)),
+        ),
+      ].slice(0, 3)
     : []
   const covered = r.covered === true && sources.length > 0 && answer.length > 0
   return {

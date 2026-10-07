@@ -313,6 +313,10 @@ export interface Booking {
   completedAt?: string
   /** When it was cancelled, declined or marked a no-show. */
   cancelledAt?: string
+  /** When the freelancer recorded the customer's payment ("Đã nhận tiền"). */
+  paidAt?: string
+  /** Set on a service added during another appointment ("Đặt thêm dịch vụ"). */
+  parentBookingId?: string
   /**
    * A 360dep voucher on this booking. The customer pays the freelancer
    * total - discount; 360dep adds the discount to the freelancer's wallet when

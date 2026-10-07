@@ -495,7 +495,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
             service_price, distance_km, travel_fee, urgent_fee, total, commission_rate, commission, payout,
             payment_method, confirm_by, cancel_reason, cancelled_by, cancelled_at, completed_at,
             reschedule_to, reschedule_by, created_at,
-            ${legacy === 0 ? "service_contract," : ""}
+            ${legacy === 0 ? "service_contract, customer_name, paid_at, parent_booking_id," : ""}
             ${legacy >= 2 ? "" : "usage_scope, consent_repost, booking_group_id, delivery_due_at, delivered_at, delivery_url, delivery_note, delivery_accepted_at,"}
             ${legacy >= 1 ? "" : "discount, voucher_id,"}
             customer:accounts!bookings_customer_id_fkey (full_name, phone),
@@ -606,7 +606,8 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       paymentMethod: row.payment_method as PaymentMethod,
       status: row.status as BookingStatus,
       customerId: row.customer_id,
-      customerName: customer.full_name ?? "Khách hàng",
+      // Before the booking is accepted the freelancer cannot read the account (20261007100200): the name kept on the booking.
+      customerName: customer.full_name ?? row.customer_name ?? "Khách hàng",
       // The other side's number only while the two are matched (accepted and
       // not yet over), the same window as the chat. A customer always has
       // their own.
@@ -638,6 +639,8 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
         : undefined,
       completedAt: row.completed_at ?? undefined,
       cancelledAt: row.cancelled_at ?? undefined,
+      paidAt: row.paid_at ?? undefined,
+      parentBookingId: row.parent_booking_id ?? undefined,
       discount: Number(row.discount ?? 0),
       voucherId: row.voucher_id ?? undefined,
       review: review.booking_id

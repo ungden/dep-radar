@@ -238,7 +238,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "khach",
     topic: "thanh-toan",
     q: "Làm sao để tránh tranh cãi “đã trả / chưa trả”?",
-    a: `Chuyển khoản tới tài khoản đứng tên người làm và giữ ảnh chụp giao dịch; trả tiền mặt thì nhắn một dòng xác nhận trong tin nhắn của lịch hẹn (ví dụ "Em đã trả 350.000đ tiền mặt") trước khi lịch hoàn thành. Hiện ứng dụng chưa có nút "đã nhận tiền", nên tin nhắn và biên lai là bằng chứng nếu có tranh chấp.`,
+    a: `Sau khi trả, nhờ người làm bấm "Đã nhận tiền" trong lịch hẹn: ứng dụng lưu thời điểm xác nhận và báo cho bạn, đó là bằng chứng cho cả hai bên. Chuyển khoản thì chuyển tới tài khoản đứng tên người làm và giữ ảnh chụp giao dịch; trả tiền mặt mà người làm chưa bấm xác nhận thì nhắn một dòng trong tin nhắn của lịch hẹn (ví dụ "Em đã trả 350.000đ tiền mặt").`,
     keywords: ["da tra", "chua tra", "bien lai", "chung tu", "da chuyen"],
   },
   {
@@ -288,7 +288,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "khach",
     topic: "huy-doi",
     q: "Muốn đổi giờ hẹn thì làm sao?",
-    a: "Đổi giờ cần cả hai bên đồng ý trong ứng dụng. Hiện người làm là bên gửi đề nghị đổi giờ; bạn bấm \"Đồng ý đổi\" hoặc \"Giữ giờ cũ\" trong chi tiết lịch trên web. Muốn đổi, hãy nhắn người làm gửi đề nghị giờ mới. Giá, phí di chuyển và phí đặt gấp giữ nguyên khi đổi giờ. Nếu không thống nhất được, bạn có thể huỷ trước giờ hẹn rồi đặt lại.",
+    a: "Đổi giờ cần cả hai bên đồng ý trong ứng dụng. Bạn bấm \"Đề nghị đổi giờ\" trong chi tiết lịch (trên web), chọn ngày giờ mới còn trống trong giờ làm của người làm; người làm đồng ý thì lịch đổi. Người làm cũng có thể đề nghị, khi đó bạn bấm \"Đồng ý đổi\" hoặc \"Giữ giờ cũ\" (trên web và app). Giá, phí di chuyển và phí đặt gấp giữ nguyên. Không thống nhất được thì bạn có thể huỷ trước giờ hẹn rồi đặt lại.",
     keywords: ["doi gio", "doi lich", "doi ngay", "hoan lich"],
   },
   {
@@ -330,7 +330,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "khach",
     topic: "tai-cho",
     q: "Đang làm muốn thêm dịch vụ (thêm người, thêm móng chân…) thì sao?",
-    a: `Hiện chưa thêm dịch vụ vào một lịch đang diễn ra được. Bạn đặt thêm một lịch mới trong ứng dụng theo giá niêm yết (cần đặt trước ít nhất ${POLICY.minLeadMinutes} phút), hoặc để lần sau. Đừng thoả thuận tiền làm thêm ngoài app: khoản đó không được ghi nhận và 360đẹp không hỗ trợ được nếu có tranh chấp.`,
+    a: `Trong lúc buổi hẹn đang diễn ra (từ 15 phút trước giờ hẹn tới 1 giờ sau giờ kết thúc), bấm "Đặt thêm dịch vụ" trong chi tiết lịch (trên web): chọn một dịch vụ người làm đang niêm yết, lịch mới nối tiếp ngay sau lịch hiện tại, cùng địa điểm, theo giá niêm yết và không tính phí di chuyển hay phí gấp. Người làm bấm nhận thì thành lịch. Đừng thoả thuận tiền làm thêm ngoài app: khoản đó không được ghi nhận và 360đẹp không hỗ trợ được nếu có tranh chấp.`,
     keywords: ["lam them", "them dich vu", "phat sinh", "them nguoi"],
   },
   {
@@ -390,7 +390,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "khach",
     topic: "hoan-thanh",
     q: "Bao giờ tôi nhận ảnh/clip? Giao trễ thì sao?",
-    a: `Hạn giao file ghi trong gói (thường 2 đến 7 ngày sau khi hoàn thành) và hiện trong chi tiết lịch. Người làm gửi đường link tải file; bạn kiểm tra rồi bấm "Đã nhận đủ file" (hiện trên web). Quá hạn mà chưa giao, người làm bị nhắc và bạn cũng nhận thông báo. Hãy ${REPORT_HOW} nếu vẫn chưa nhận được, và có thể chọn nhận xét "Giao ảnh trễ".`,
+    a: `Hạn giao file ghi trong gói (thường 2 đến 7 ngày sau khi hoàn thành) và hiện trong chi tiết lịch. Người làm gửi đường link tải file; bạn kiểm tra rồi bấm "Đã nhận đủ file". Quá hạn mà chưa giao, người làm bị nhắc và bạn cũng nhận thông báo. Hãy ${REPORT_HOW} nếu vẫn chưa nhận được, và có thể chọn nhận xét "Giao ảnh trễ".`,
     keywords: ["giao anh", "giao file", "link anh", "tre file", "chua nhan anh"],
   },
   {
@@ -442,7 +442,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "khach",
     topic: "tin-nhan",
     q: "Khi nào nhắn tin được với người làm? Số điện thoại hiện lúc nào?",
-    a: "Tin nhắn mở khi người làm nhận lịch và đóng khi lịch kết thúc (hoàn thành, huỷ, hết hạn hoặc vắng mặt); lịch sử vẫn đọc được. Số điện thoại của hai bên hiện trong ứng dụng khi lịch đã được nhận. Hãy trao đổi qua tin nhắn trong app để có lịch sử khi cần đối chiếu, và đừng gửi mật khẩu, mã OTP hay thông tin thẻ qua tin nhắn.",
+    a: "Tin nhắn mở khi người làm nhận lịch và đóng khi lịch kết thúc (hoàn thành, huỷ, hết hạn hoặc vắng mặt); lịch sử vẫn đọc được. Số điện thoại của bạn chỉ mở cho người làm khi họ đã nhận lịch (lịch còn chờ họ chỉ thấy tên), và số của người làm hiện cho bạn từ lúc đó. Hãy trao đổi qua tin nhắn trong app để có lịch sử khi cần đối chiếu, và đừng gửi mật khẩu, mã OTP hay thông tin thẻ qua tin nhắn.",
     keywords: ["nhan tin", "chat", "so dien thoai", "lien lac"],
   },
   {
@@ -715,7 +715,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "doi-tac",
     topic: "vang-mat",
     q: "Khách báo tôi không đến nhưng tôi có đến?",
-    a: `Lịch đó đã bị huỷ (ghi lỗi về bạn) và đội ngũ được báo. Hãy ${REPORT_HOW} trong vòng 24 giờ, kèm bằng chứng: tin nhắn, cuộc gọi, ảnh tại địa điểm. Nhân viên xem xét và báo kết quả cho bạn. Ứng dụng chưa có nút khiếu nại riêng cho trường hợp này. Không đến nhiều lần có thể bị tạm khoá nhận lịch.`,
+    a: `Lịch đó đã bị huỷ (ghi lỗi về bạn) và đội ngũ được báo. Trong 24 giờ, bấm "Khiếu nại" ngay trong chi tiết lịch hẹn và mô tả chuyện đã xảy ra (giờ tới, cuộc gọi, tin nhắn); ảnh tại địa điểm thì gửi thêm qua "${REPORT}". Mỗi lịch khiếu nại một lần; nhân viên xem xét và báo kết quả cho bạn. Không đến nhiều lần có thể bị tạm khoá nhận lịch.`,
     keywords: ["bi bao khong den", "khieu nai", "toi co den"],
   },
   {
@@ -723,7 +723,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "doi-tac",
     topic: "tai-cho",
     q: "Khách muốn làm thêm tại chỗ, tôi thu thêm tiền được không?",
-    a: `Không thu tiền ngoài lịch hẹn. Phần làm thêm cần được đặt thành một lịch mới trong app theo giá bạn niêm yết (khách đặt trước ít nhất ${POLICY.minLeadMinutes} phút). Thu tiền ngoài app vi phạm quy chế, không được ghi nhận và bạn không được 360đẹp hỗ trợ nếu khách không trả hay khiếu nại.`,
+    a: `Không thu tiền ngoài lịch hẹn. Hãy hướng dẫn khách bấm "Đặt thêm dịch vụ" trong chi tiết lịch: lịch mới nối tiếp ngay sau lịch hiện tại, cùng địa điểm, theo giá bạn niêm yết, không tính phí di chuyển hay phí gấp; bạn bấm "Nhận lịch" như thường. Thu tiền ngoài app vi phạm quy chế, không được ghi nhận và bạn không được 360đẹp hỗ trợ nếu khách không trả hay khiếu nại.`,
     keywords: ["lam them", "thu them", "phat sinh", "them tien"],
   },
   {
@@ -731,7 +731,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "doi-tac",
     topic: "thanh-toan",
     q: "Khách không trả tiền hoặc trả thiếu?",
-    a: `Nhắc khách nhẹ nhàng và nhắn trong tin nhắn của lịch hẹn số tiền còn thiếu. Đừng bấm "Hoàn thành" khi chưa được trả; hãy ${REPORT_HOW} ngay, kèm tin nhắn và biên lai (nếu có). 360đẹp liên hệ khách, có thể khoá tài khoản vi phạm và xem xét điều chỉnh phí của lịch đó trong ví bạn khi xác minh được khách không trả. Nếu bị đe doạ, rời đi và gọi 113.`,
+    a: `Nhắc khách nhẹ nhàng và nhắn trong tin nhắn của lịch hẹn số tiền còn thiếu. Đừng bấm "Đã nhận tiền" hay "Hoàn thành" khi chưa được trả đủ; hãy ${REPORT_HOW} ngay, kèm tin nhắn và biên lai (nếu có). 360đẹp liên hệ khách, có thể khoá tài khoản vi phạm và xem xét điều chỉnh phí của lịch đó trong ví bạn khi xác minh được khách không trả. Nếu bị đe doạ, rời đi và gọi 113.`,
     keywords: ["khong tra tien", "quyt", "tra thieu", "bung tien"],
   },
   {
@@ -757,7 +757,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "doi-tac",
     topic: "hoan-thanh",
     q: "Khi nào bấm “Hoàn thành”? Không bấm thì sao?",
-    a: `Bấm sau khi làm xong và đã nhận tiền. Khách cũng có thể bấm "Xác nhận đã xong"; nếu không ai bấm, lịch tự hoàn thành ${AUTO_COMPLETE_HOURS} giờ sau giờ kết thúc. Khi hoàn thành, hoa hồng được trừ vào ví, tin nhắn đóng và mở phần đánh giá ${REVIEW_WINDOW_DAYS} ngày. Gói nhiều buổi chỉ hoàn thành được khi đã làm đủ các buổi.`,
+    a: `Nhận tiền xong thì bấm "Đã nhận tiền" để lưu xác nhận (khách được báo), rồi bấm "Hoàn thành". Khách cũng có thể bấm "Xác nhận đã xong"; nếu không ai bấm, lịch tự hoàn thành ${AUTO_COMPLETE_HOURS} giờ sau giờ kết thúc. Khi hoàn thành, hoa hồng được trừ vào ví, tin nhắn đóng và mở phần đánh giá ${REVIEW_WINDOW_DAYS} ngày. Gói nhiều buổi chỉ hoàn thành được khi đã làm đủ các buổi.`,
     keywords: ["hoan thanh", "xong viec", "tu hoan thanh"],
   },
   {
