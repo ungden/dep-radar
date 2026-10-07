@@ -2377,7 +2377,7 @@ begin
   select fresh, a.city, a.district, a.detail, a.lat, a.lng from public.addresses a where a.id = addr
   returning id into fresh_addr;
   perform set_config('request.jwt.claim.sub', fresh::text, true);
-  pending := public.create_booking(linh, 'nail-design', 'simple', ((monday + 3) + time '10:00') at time zone tz, true, fresh_addr, 1, '', 'cash');
+  pending := public.create_booking(linh, 'nail-design', 'simple', ((monday + 10) + time '15:00') at time zone tz, true, fresh_addr, 1, '', 'cash');
   assert (select customer_name from public.bookings where id = pending) = 'Khách Mới Tools', 'the name was not kept on the booking';
   perform set_config('request.jwt.claim.sub', linh::text, true);
   set local role authenticated;
@@ -2418,7 +2418,7 @@ begin
 
   raise notice 'a freelancer reported as not coming can dispute it once, within 24 hours';
   perform set_config('request.jwt.claim.sub', customer::text, true);
-  b := public.create_booking(linh, 'nail-design', 'simple', ((monday + 4) + time '10:00') at time zone tz, true, addr, 1, '', 'cash');
+  b := public.create_booking(linh, 'nail-design', 'simple', ((monday + 11) + time '15:00') at time zone tz, true, addr, 1, '', 'cash');
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.confirm_booking(b);
   perform set_config('request.jwt.claim.sub', '', true);
