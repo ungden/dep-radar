@@ -335,7 +335,7 @@ export default function BookingDetail() {
             Bạn đã khiếu nại. 360dep sẽ xem xét và liên hệ nếu cần thêm thông tin.
           </Txt>
         ) : null}
-        {iAmPro && b.status === "confirmed" && hoursToStart < 1 ? (
+        {iAmPro && b.status === "confirmed" && hoursToStart <= 0.25 ? (
           <Button label="Bắt đầu làm" full busy={busy === "start"} onPress={() => void run("start", () => startBooking(b.id), "Đã bắt đầu")} />
         ) : null}
         {iAmPro && b.status === "in_progress" ? (
@@ -388,8 +388,8 @@ export default function BookingDetail() {
         {canCancel && !iAmPro ? (
           <Txt v="meta" color={colors.muted} center>
             {hoursToStart >= POLICY.freeCancelHours
-              ? `Huỷ miễn phí trước giờ hẹn ${POLICY.freeCancelHours} tiếng.`
-              : "Đã quá hạn huỷ miễn phí. Huỷ muộn nhiều lần có thể bị tạm khoá hình thức trả sau."}
+              ? "Huỷ trước giờ hẹn không mất phí."
+              : "Huỷ vẫn không mất phí, nhưng đã sát giờ: báo người làm sớm. Huỷ sát giờ nhiều lần có thể bị hạn chế tài khoản."}
           </Txt>
         ) : null}
       </View>
@@ -427,7 +427,7 @@ export default function BookingDetail() {
             : reasonFor === "dispute"
               ? "Kể ngắn gọn chuyện đã xảy ra (ít nhất 10 ký tự). 360dep sẽ xem xét và liên hệ nếu cần."
               : iAmPro
-                ? `Lý do sẽ gửi cho ${b.customer.name}. Huỷ nhiều ảnh hưởng tới thứ hạng hiển thị của bạn.`
+                ? `Lý do sẽ gửi cho ${b.customer.name}. Huỷ sát giờ nhiều lần có thể bị hạn chế hoặc khoá hồ sơ.`
                 : `Lý do sẽ gửi cho ${b.pro.name}.`}
         </Txt>
         <BottomSheetTextInput

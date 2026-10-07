@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ChevronRight, Contact, Gift, IdCard, ImagePlus, Navigation, Phone, Tags, UserRoundPen, Users } from "lucide-react"
+import { ChevronRight, CircleHelp, Contact, Gift, IdCard, ImagePlus, Navigation, Phone, Tags, UserRoundPen, Users } from "lucide-react"
 import { PartnerAppointments } from "@/components/partner-appointments"
 import { JobBookingRow } from "@/components/booking-card"
 import { MessageButton } from "@/components/message-button"
@@ -196,6 +196,7 @@ function Dashboard() {
             text={waitingApplicants ? `${waitingApplicants} người đang chờ bạn chọn` : myCastings.length ? `${myCastings.length} tin đang mở` : "Tìm mẫu luyện tay, chụp portfolio"}
           />
           <Shortcut href="/studio/services" icon={<Tags className="size-5" />} title="Bảng giá" text="Dịch vụ và giá của bạn" />
+          <Shortcut href="/tro-giup?ban=doi-tac" icon={<CircleHelp className="size-5" />} title="Trợ giúp đối tác" text="Phí, vắng mặt, tranh chấp, hỏi trợ lý" />
           <Shortcut href="/studio/profile/edit" icon={<UserRoundPen className="size-5" />} title="Hồ sơ & giờ làm" text="Giới thiệu, khu vực, lịch tuần" />
           <Shortcut
             href="/studio/khach"

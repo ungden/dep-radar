@@ -62,6 +62,10 @@ export interface AdminReport {
   status: string
   createdAt: string
   reporter: string
+  bookingId: string | null
+  resolution: string | null
+  /** A disputed no-show: the travel-fee compensation waiting for a decision (decide_no_show_compensation). */
+  claim: { id: string; amount: number } | null
 }
 
 const row = (v: unknown) => (Array.isArray(v) ? ((v[0] ?? {}) as Record<string, unknown>) : ((v ?? {}) as Record<string, unknown>))
@@ -176,13 +180,18 @@ export async function adminReports(): Promise<AdminReport[]> {
   const supabase = await supabaseServer()
   const { data, error } = await supabase
     .from("reports")
-    .select("id, reason, detail, status, created_at, accounts!reports_reporter_id_fkey (full_name)")
+    .select("id, reason, detail, status, created_at, booking_id, resolution, accounts!reports_reporter_id_fkey (full_name)")
     .order("created_at", { ascending: false })
     .limit(50)
   if (error) {
     console.error("adminReports failed:", error.message)
     return []
   }
+  const ids = (data ?? []).map((r) => r.id)
+  const { data: claims } = ids.length
+    ? await supabase.from("no_show_compensation_requests").select("id, amount, dispute_report_id").eq("status", "pending").in("dispute_report_id", ids)
+    : { data: [] as { id: string; amount: number; dispute_report_id: string | null }[] }
+  const claimOf = new Map((claims ?? []).map((c) => [c.dispute_report_id, { id: c.id, amount: c.amount }]))
   return (data ?? []).map((r) => ({
     id: r.id,
     reason: r.reason,
@@ -190,6 +199,9 @@ export async function adminReports(): Promise<AdminReport[]> {
     status: r.status,
     createdAt: r.created_at,
     reporter: String(row(r.accounts).full_name ?? "—"),
+    bookingId: r.booking_id,
+    resolution: r.resolution,
+    claim: claimOf.get(r.id) ?? null,
   }))
 }
 
@@ -205,6 +217,11 @@ async function call(fn: string, args: Record<string, unknown>): Promise<ActionRe
 
 export async function decideCheck(checkId: string, approve: boolean, reason = "") {
   return call("decide_identity_check", { p_check: checkId, p_approve: approve, p_reason: reason })
+}
+
+/** A disputed no-show: pay the travel-fee compensation to the freelancer, or not. Both sides are told. */
+export async function decideNoShowCompensation(requestId: string, approve: boolean, note = "") {
+  return call("decide_no_show_compensation", { p_request: requestId, p_approve: approve, p_note: note })
 }
 
 export async function setSuspended(proId: string, suspended: boolean, reason = "") {
@@ -583,4 +600,51 @@ export async function updatePlatformSettings(s: PlatformSettings): Promise<Actio
   revalidatePath("/admin")
   revalidatePath("/", "layout")
   return { ok: true, data: undefined }
+}
+
+// The help assistant's questions (20261007100000) ---------------------------------
+
+export interface AdminHelpQuestion {
+  id: string
+  createdAt: string
+  audience: "khach" | "doi-tac"
+  question: string
+  answer: string
+  sources: string[]
+  covered: boolean
+  handoff: boolean
+  helpful: boolean | null
+  model: string
+}
+
+export type HelpQuestionFilter = "all" | "uncovered" | "unhelpful"
+
+/** Newest first. "uncovered": the help centre had no answer; "unhelpful": a thumbs down. */
+export async function adminHelpQuestions(filter: HelpQuestionFilter = "all"): Promise<ActionResult<AdminHelpQuestion[]>> {
+  if (!backendEnabled) return { ok: true, data: [] }
+  const supabase = await supabaseServer()
+  let query = supabase
+    .from("help_questions")
+    .select("id, created_at, audience, question, answer, sources, covered, handoff, helpful, model")
+    .order("created_at", { ascending: false })
+    .limit(200)
+  if (filter === "uncovered") query = query.eq("covered", false)
+  if (filter === "unhelpful") query = query.eq("helpful", false)
+  const { data, error } = await query
+  if (error) return { ok: false, error: messageFor(error) }
+  return {
+    ok: true,
+    data: (data ?? []).map((r) => ({
+      id: r.id,
+      createdAt: r.created_at,
+      audience: r.audience === "doi-tac" ? "doi-tac" : "khach",
+      question: r.question,
+      answer: r.answer,
+      sources: r.sources ?? [],
+      covered: r.covered,
+      handoff: r.handoff,
+      helpful: r.helpful,
+      model: r.model,
+    })),
+  }
 }

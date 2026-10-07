@@ -7,17 +7,21 @@ import { Button, Card, EmptyState, Field, inputClass } from "@/components/ui"
 import {
   adjustWallet,
   adminCustomers,
+  adminHelpQuestions,
   financeReport,
   setAccountSuspended,
   updatePlatformSettings,
   type AdminAction,
   type AdminCustomer,
+  type AdminHelpQuestion,
   type AdminPro,
   type FeePolicyView,
   type FinanceByPro,
   type FinanceSummary,
+  type HelpQuestionFilter,
   type PlatformSettings,
 } from "@/lib/api/admin"
+import { HELP_ENTRIES } from "@/lib/help/knowledge"
 import { useRefresh } from "@/lib/store"
 import { cn, formatPrice, localDate, timeAgo, todayISO } from "@/lib/utils"
 
@@ -510,4 +514,89 @@ function describe(a: AdminAction) {
       if (a.action.startsWith("settings:")) return `Đổi cấu hình: ${Object.keys(d).join(", ")}`
       return a.action
   }
+}
+
+// Help assistant ------------------------------------------------------------------------
+
+const HELP_FILTERS: { value: HelpQuestionFilter; label: string }[] = [
+  { value: "uncovered", label: "Chưa có câu trả lời" },
+  { value: "unhelpful", label: "Bị chê" },
+  { value: "all", label: "Tất cả" },
+]
+const entryTitle = new Map(HELP_ENTRIES.map((e) => [e.id, e.q]))
+
+/**
+ * What people asked the help assistant. "Chưa có câu trả lời" is the to-do
+ * list: each one is a question lib/help/knowledge.ts should answer.
+ */
+export function HelpQuestionsPanel() {
+  const [filter, setFilter] = React.useState<HelpQuestionFilter>("uncovered")
+  const [rows, setRows] = React.useState<AdminHelpQuestion[] | null>(null)
+  const [error, setError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    let live = true
+    void adminHelpQuestions(filter).then((r) => {
+      if (!live) return
+      if (r.ok) {
+        setRows(r.data)
+        setError(null)
+      } else setError(r.error)
+    })
+    return () => {
+      live = false
+    }
+  }, [filter])
+
+  return (
+    <div className="mt-4 space-y-3">
+      <p className="text-[13px] text-muted">
+        Câu hỏi người dùng gửi trợ lý ở trang Trợ giúp (giữ 180 ngày, đã che số điện thoại và email). Câu chưa có câu trả lời là
+        việc cần bổ sung vào FAQ.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {HELP_FILTERS.map((f) => (
+          <Button
+            key={f.value}
+            size="sm"
+            variant={filter === f.value ? "primary" : "soft"}
+            onClick={() => {
+              setRows(null)
+              setFilter(f.value)
+            }}
+          >
+            {f.label}
+          </Button>
+        ))}
+      </div>
+      {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
+      {rows === null ? (
+        <p className="text-sm text-muted">Đang tải…</p>
+      ) : rows.length === 0 ? (
+        <EmptyState title="Chưa có câu hỏi nào" text="Câu hỏi sẽ hiện ở đây khi người dùng hỏi trợ lý." />
+      ) : (
+        <ul className="space-y-2">
+          {rows.map((q) => (
+            <li key={q.id}>
+              <Card className="space-y-1.5 p-3.5 text-sm">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                  <span className="rounded-full bg-subtle px-2 py-0.5 font-semibold text-ink">{q.audience === "doi-tac" ? "Đối tác" : "Khách"}</span>
+                  {!q.covered && <span className="rounded-full bg-warning-soft px-2 py-0.5 font-semibold text-warning">Chưa có trong FAQ</span>}
+                  {q.helpful === false && <span className="rounded-full bg-danger-soft px-2 py-0.5 font-semibold text-danger">Không hữu ích</span>}
+                  {q.helpful === true && <span className="rounded-full bg-success-soft px-2 py-0.5 font-semibold text-success">Hữu ích</span>}
+                  <span>{timeAgo(q.createdAt)}</span>
+                  <span>· {q.model}</span>
+                </div>
+                <p className="font-semibold">{q.question}</p>
+                <p className="whitespace-pre-line text-ink-soft">{q.answer}</p>
+                {q.sources.length > 0 && (
+                  <p className="text-xs text-muted">Dựa trên: {q.sources.map((id) => entryTitle.get(id) ?? id).join(" · ")}</p>
+                )}
+              </Card>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
 }

@@ -450,7 +450,7 @@ export default function Book() {
                 {quote.urgentFee ? <Line label="Phí gấp" value={formatPrice(quote.urgentFee)} /> : null}
                 <Line label={address || !atHome ? "Tổng, trả sau khi làm xong" : "Tổng ước tính"} value={formatPrice(quote.total)} strong />
                 <Txt v="meta" color={colors.muted}>
-                  Khoảng cách ước tính theo quận. Giá cuối cùng do hệ thống tính lại khi gửi. Huỷ miễn phí trước giờ hẹn {POLICY.freeCancelHours} tiếng.
+                  Khoảng cách ước tính theo quận. Giá cuối cùng do hệ thống tính lại khi gửi. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để người làm kịp sắp xếp.
                 </Txt>
               </Card>
             ) : null}

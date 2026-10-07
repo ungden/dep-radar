@@ -134,7 +134,7 @@ function ProsView() {
 
       {sort === "match" && (
         <p className="mt-3 text-[13px] text-muted">
-          Người đã xác minh danh tính được ưu tiên, sau đó theo đánh giá thật và số lịch đã làm. Không ai trả tiền để lên đầu.
+          Xếp theo đánh giá thật, số lịch đã làm và trạng thái xác minh danh tính. Không ai trả tiền để lên đầu.
         </p>
       )}
 

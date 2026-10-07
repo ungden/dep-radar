@@ -669,6 +669,9 @@ begin
   select count(*) into n from public.notifications
     where account_id = linh and kind = 'delivery_overdue' and link = '/bookings/' || late;
   assert n = 1, format('overdue reminders sent: %s', n);
+  select count(*) into n from public.notifications
+    where account_id = (select customer_id from public.bookings where id = late) and kind = 'delivery_overdue' and link = '/bookings/' || late;
+  assert n = 1, format('customer told about late files: %s', n);
 
   ---------------------------------------------------------------------------
   raise notice 'a combo links two or three of the customer''s own bookings, close in time';
@@ -2254,4 +2257,88 @@ begin
 
   perform set_config('request.jwt.claim.sub', '', true);
   raise notice 'ADMIN DESK RULES PASS';
+end $$;
+
+
+-- Dispute gaps (20261007100100): what the help centre promises.
+do $$
+declare
+  linh uuid; customer uuid; addr uuid; admin_id uuid; n int; msg text; b uuid; j uuid; rep uuid;
+  monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
+  tz text := public.app_timezone();
+begin
+  select id into linh from public.pros where slug = 'linh-pham';
+  select a.id into customer from public.accounts a where a.full_name = 'Ngọc Hân';
+  select id into addr from public.addresses where account_id = customer;
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          (gen_random_uuid()::text||'-gaps-admin@example.invalid'), jsonb_build_object('full_name', 'Quản trị Gaps'), now(), now())
+  returning id into admin_id;
+  update public.accounts set is_admin = true where id = admin_id;
+  -- A clean wallet, so confirming is about the rule under test.
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.admin_adjust_wallet(linh, 1000000, 'Số dư cho test (gaps)');
+
+  raise notice 'a block stops a direct booking too';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  perform public.block_user(linh);
+  begin
+    perform public.create_booking(linh, 'nail-design', 'simple', ((monday + 1) + time '14:00') at time zone tz, true, addr, 1, '', 'cash');
+    assert false, 'a blocked pair could book';
+  exception when check_violation then
+    get stacked diagnostics msg = message_text;
+    assert msg like '%Không đặt được lịch%', format('blocked booking refused for another reason: %s', msg);
+  end;
+  perform public.unblock_user(linh);
+
+  raise notice 'a request cannot ask for online payment';
+  begin
+    perform public.post_job('nail-design', 'simple', ((monday + 1) + time '15:00') at time zone tz, true, addr, 1, '', 'online');
+    assert false, 'an online request was posted';
+  exception when feature_not_supported then null;
+  end;
+
+  raise notice '"Bắt đầu" opens 15 minutes before the start';
+  b := public.create_booking(linh, 'nail-design', 'simple', ((monday + 1) + time '16:00') at time zone tz, true, addr, 1, '', 'cash');
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.confirm_booking(b);
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.bookings set starts_at = now() + interval '40 minutes' where id = b;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.start_booking(b);
+    assert false, 'started 40 minutes early';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.bookings set starts_at = now() + interval '10 minutes' where id = b;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.start_booking(b);
+  assert (select status from public.bookings where id = b) = 'in_progress', 'could not start 10 minutes before';
+
+  raise notice 'a report reaches the staff, and the reporter hears the outcome';
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into public.reports (reporter_id, target_account_id, booking_id, reason, detail)
+  values (customer, linh, b, 'Hành vi không phù hợp', 'Test báo cáo (gaps)')
+  returning id into rep;
+  assert exists (select 1 from public.notifications where account_id = admin_id and kind = 'report_new'), 'the staff were not told';
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.resolve_report(rep, 'resolved', 'Đã nhắc nhở người làm.');
+  assert exists (select 1 from public.notifications where account_id = customer and kind = 'report_resolved' and body = 'Đã nhắc nhở người làm.'),
+    'the reporter did not hear the outcome';
+
+  raise notice 'a request nobody took tells the customer';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  j := public.post_job('nail-design', 'simple', ((monday + 2) + time '15:00') at time zone tz, true, addr, 1, '', 'cash');
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.jobs set starts_at = now() - interval '1 minute' where id = j;
+  perform public.expire_stale_jobs();
+  assert (select status from public.jobs where id = j) = 'expired', 'the request did not expire';
+  assert exists (select 1 from public.notifications where account_id = customer and kind = 'job_expired'), 'the customer was not told';
+
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.admin_adjust_wallet(linh, -1000000, 'Trả lại số dư test (gaps)');
+  perform set_config('request.jwt.claim.sub', '', true);
+  raise notice 'DISPUTE GAP RULES PASS';
 end $$;

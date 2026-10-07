@@ -37,7 +37,7 @@ export default function PartnerPage() {
     {
       icon: HandCoins,
       title: `Phí ${pct}, chỉ khi xong việc`,
-      text: `Không phí đăng ký, không phí duy trì. Khách trả thẳng cho bạn; khi bạn bấm hoàn thành, 360dep tính ${pct} trên giá dịch vụ. Phí di chuyển và phí đặt gấp thuộc về bạn.`,
+      text: `Không phí đăng ký, không phí duy trì. Khách trả thẳng cho bạn; khi lịch hoàn thành, 360dep tính ${pct} trên giá dịch vụ vào ví của bạn. Phí di chuyển và phí đặt gấp thuộc về bạn.`,
     },
     {
       icon: Wallet,
@@ -59,7 +59,7 @@ export default function PartnerPage() {
       <p className="text-[13px] font-semibold uppercase tracking-wide text-accent">360dep Đối tác</p>
       <h1 className="mt-2 text-[32px] font-bold leading-tight tracking-tight md:text-[40px]">Trở thành đối tác 360dep</h1>
       <p className="mt-3 text-[16px] text-ink-soft">
-        Dành cho người làm nghề tự do: thợ làm đẹp, người chụp ảnh, quay clip và người mẫu. Nhận khách quanh bạn, tự chủ giá và
+        Dành cho người làm nghề tự do: thợ làm đẹp, người chụp ảnh, quay clip và người mẫu. Nhận khách quanh bạn, chọn mức giá có sẵn cho từng gói và tự chủ
         giờ làm.
       </p>
       <ButtonLink href={JOIN} size="lg" className="mt-6 w-full md:w-auto">
