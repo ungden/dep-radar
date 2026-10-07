@@ -2395,6 +2395,10 @@ begin
 
   raise notice 'the freelancer records the payment, the customer hears it';
   perform set_config('request.jwt.claim.sub', '', true);
+  -- Clear linh's day around now, so the appointments below can be moved there.
+  update public.bookings set status = 'cancelled', cancelled_at = now(), cancelled_by = 'pro'
+    where pro_id = linh and id <> pending and status in ('pending', 'confirmed', 'in_progress')
+      and blocked_range && tstzrange(now() - interval '8 hours', now() + interval '6 hours');
   update public.bookings set starts_at = now() - interval '30 minutes' where id = pending;
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.start_booking(pending);
