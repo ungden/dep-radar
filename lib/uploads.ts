@@ -17,7 +17,7 @@ import { VIDEO_MAX_BYTES, VIDEO_MAX_MB, VIDEO_MAX_SECONDS, stripVideoLocation } 
 const MAX_EDGE = 1600
 const QUALITY = 0.85
 
-export type Bucket = "avatars" | "works" | "reviews" | "chat" | "payout"
+export type Bucket = "avatars" | "works" | "reviews" | "chat" | "payout" | "references"
 
 async function reencode(file: File, maxEdge = MAX_EDGE): Promise<Blob> {
   const bitmap = await createImageBitmap(file)
@@ -53,11 +53,11 @@ export async function uploadImage(bucket: Bucket, file: File): Promise<string> {
   })
   if (error) throw new Error("Tải ảnh lên không thành công, thử lại nhé.")
 
-  return bucket === "chat" || bucket === "payout" ? path : supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl
+  return bucket === "chat" || bucket === "payout" || bucket === "references" ? path : supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl
 }
 
 export async function removeImage(bucket: Bucket, publicUrl: string): Promise<void> {
-  if (bucket === "chat" || bucket === "payout") return
+  if (bucket === "chat" || bucket === "payout" || bucket === "references") return
   const marker = `/storage/v1/object/public/${bucket}/`
   const index = publicUrl.indexOf(marker)
   if (index === -1) return // A seeded image that lives in the repo, not in storage.

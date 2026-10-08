@@ -319,6 +319,12 @@ export interface Booking {
   paidAt?: string
   /** Set on a service added during another appointment ("Đặt thêm dịch vụ"). */
   parentBookingId?: string
+  /** When the partner said they set off ("Thợ đang di chuyển"); at-home jobs only. */
+  departedAt?: string
+  /** When the partner pressed "Bắt đầu". */
+  startedAt?: string
+  /** 1–3 reference photos the customer sent, paths in the private references bucket. */
+  referencePhotos?: string[]
   /**
    * A 360dep voucher on this booking. The customer pays the freelancer
    * total - discount; 360dep adds the discount to the freelancer's wallet when

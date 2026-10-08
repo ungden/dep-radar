@@ -8,6 +8,7 @@ import { Button, Card, inputClass } from "@/components/ui"
 import { actions, useAct } from "@/lib/client-actions"
 import { getTemplate, getVariant } from "@/lib/catalog"
 import { servicesOf, useApp } from "@/lib/store"
+import { supabaseBrowser } from "@/lib/supabase/client"
 import type { Booking } from "@/lib/types"
 import { cn, formatDateLong, formatDuration, formatPrice, localDate, localTime, todayISO } from "@/lib/utils"
 
@@ -253,5 +254,69 @@ export function ProposeNewTime({ booking, label = "Đề nghị đổi giờ" }:
         </Button>
       </div>
     </Card>
+  )
+}
+
+/** The 1–3 reference photos the customer sent; a private bucket, so short-lived links. */
+export function ReferencePhotos({ booking, isPro }: { booking: Booking; isPro: boolean }) {
+  const paths = booking.referencePhotos ?? []
+  const [urls, setUrls] = React.useState<string[]>([])
+  React.useEffect(() => {
+    if (!paths.length) return
+    let live = true
+    void supabaseBrowser()
+      .storage.from("references")
+      .createSignedUrls(paths, 60 * 60)
+      .then(({ data }) => {
+        if (live) setUrls((data ?? []).flatMap((d) => (d.signedUrl ? [d.signedUrl] : [])))
+      })
+    return () => {
+      live = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paths.join("|")])
+  if (!paths.length) return null
+  return (
+    <Card className="p-4">
+      <p className="text-sm font-semibold">{isPro ? "Ảnh mẫu khách gửi" : "Ảnh mẫu bạn đã gửi"}</p>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        {urls.map((u) => (
+          <a key={u} href={u} target="_blank" rel="noreferrer">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={u} alt="Ảnh mẫu" className="aspect-square w-full rounded-lg bg-subtle object-cover" />
+          </a>
+        ))}
+      </div>
+    </Card>
+  )
+}
+
+/** "Tôi đang đến" for the partner of an at-home job; the customer sees the status. */
+export function TravelStatus({ booking, isPro }: { booking: Booking; isPro: boolean }) {
+  const act = useAct()
+  const now = useNow()
+  const [error, setError] = React.useState<string | null>(null)
+  if (!booking.atHome || booking.status !== "confirmed") return null
+  if (booking.departedAt) {
+    return (
+      <p className="rounded-xl bg-subtle px-3.5 py-2.5 text-center text-[14px] font-semibold">
+        {isPro ? "Bạn đã báo đang di chuyển" : `${booking.proName} đang trên đường tới`} · từ {localTime(booking.departedAt)}
+      </p>
+    )
+  }
+  const { startsAt } = bookingTimes(booking)
+  if (!isPro || now < startsAt.getTime() - 3 * 3_600_000) return null
+  return (
+    <div className="space-y-1">
+      <Button
+        variant="outline"
+        className="w-full"
+        onClick={() => void act(() => actions.markDeparted(booking.id), "Đã báo khách bạn đang đến").then(setError)}
+      >
+        Tôi đang đến
+      </Button>
+      <p className="text-center text-[12px] text-muted">Khách nhận thông báo để chuẩn bị và giữ điện thoại.</p>
+      {error && <p className="text-center text-[13px] text-danger">{error}</p>}
+    </div>
   )
 }

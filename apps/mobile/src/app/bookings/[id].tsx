@@ -12,6 +12,7 @@ import {
   confirmBookingDone,
   confirmPaymentReceived,
   declineBooking,
+  markDeparted,
   disputeNoShow,
   getBooking,
   hasDisputedNoShow,
@@ -339,6 +340,14 @@ export default function BookingDetail() {
           <Txt v="meta" color={colors.muted} center>
             Bạn đã khiếu nại. 360dep sẽ xem xét và liên hệ nếu cần thêm thông tin.
           </Txt>
+        ) : null}
+        {/* "Thợ đang di chuyển" (20261008100100): the partner says they set off; the customer sees it. */}
+        {b.status === "confirmed" && b.atHome && b.departedAt ? (
+          <Txt w={700} center>
+            {iAmPro ? "Bạn đã báo đang di chuyển" : `${b.pro.name} đang trên đường tới`} · từ {localTime(b.departedAt)}
+          </Txt>
+        ) : iAmPro && b.status === "confirmed" && b.atHome && hoursToStart <= 3 ? (
+          <Button label="Tôi đang đến" variant="secondary" full busy={busy === "departed"} onPress={() => void run("departed", () => markDeparted(b.id), "Đã báo khách bạn đang đến")} />
         ) : null}
         {/* A new time the other side proposed (20260918040300); the answer re-checks the slot. */}
         {b.rescheduleTo && active && b.rescheduleBy && b.rescheduleBy !== (iAmPro ? "pro" : "customer") ? (

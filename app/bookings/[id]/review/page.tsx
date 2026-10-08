@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import { useParams } from "next/navigation"
 import { ImagePlus, Star, X } from "lucide-react"
+import { FollowButton } from "@/components/follow-button"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, inputClass } from "@/components/ui"
 import { actions, useAct } from "@/lib/client-actions"
@@ -71,11 +72,18 @@ function ReviewForm() {
         title="Đã lưu đánh giá"
         text={BLIND_NOTE}
         action={
-          <div className="flex flex-wrap justify-center gap-2">
-            <ButtonLink href={`/bookings/${booking.id}`}>Về lịch hẹn</ButtonLink>
-            <Button variant="outline" onClick={() => setSent(false)}>
-              Sửa lại
-            </Button>
+          <div className="flex flex-col items-center gap-3">
+            {/* Saving the partner for next time ("Lưu thợ"), right when the experience is fresh. */}
+            <div className="flex items-center gap-2 rounded-full bg-subtle py-1 pl-4 pr-1 text-[14px]">
+              Lưu người làm này để lần sau đặt nhanh
+              <FollowButton proId={booking.proId} />
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              <ButtonLink href={`/bookings/${booking.id}`}>Về lịch hẹn</ButtonLink>
+              <Button variant="outline" onClick={() => setSent(false)}>
+                Sửa lại
+              </Button>
+            </div>
           </div>
         }
       />
