@@ -3,6 +3,7 @@
 import * as React from "react"
 import { CalendarClock, CheckCircle2, Plus } from "lucide-react"
 import { bookingTimes, useNow } from "@/components/booking-extras"
+import { ShowPaymentQr } from "@/components/payout"
 import { Button, Card, inputClass } from "@/components/ui"
 import { actions, useAct } from "@/lib/client-actions"
 import { getTemplate, getVariant } from "@/lib/catalog"
@@ -46,6 +47,7 @@ export function PaymentReceipt({ booking, isPro }: { booking: Booking; isPro: bo
   return (
     <Card className="flex flex-wrap items-center gap-3 p-3.5">
       <p className="min-w-0 flex-1 text-[13px] text-ink-soft">Khách đã trả đủ {formatPrice(booking.quote.total - (booking.discount ?? 0))}? Bấm để lưu xác nhận; khách được báo.</p>
+      <ShowPaymentQr proId={booking.proId} amount={booking.quote.total - (booking.discount ?? 0)} />
       <Button
         size="sm"
         variant="outline"

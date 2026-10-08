@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/ui"
 import { CATALOG, CATEGORIES } from "@/lib/catalog"
 import { AUTO_COMPLETE_HOURS, MIN_REVIEWS_FOR_AVERAGE, NO_SHOW_AFTER_MIN, REVIEW_WINDOW_DAYS } from "@/lib/connection"
 import { POLICY } from "@/lib/pricing"
-import { DEMO_DATA_LIVE, IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
+import { DEMO_DATA_LIVE, IDENTITY_REQUIRED_FOR_PARTNERS, IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { formatPrice } from "@/lib/utils"
 import { TopupPolicy } from "./fee-policy"
 import { ReferralPolicy } from "./referral-policy"
@@ -95,16 +95,21 @@ export default function PolicyPage() {
           </ul>
         </Section>
 
-        <Section title="5. Xác minh danh tính (tự nguyện)">
+        <Section title={IDENTITY_REQUIRED_FOR_PARTNERS ? "5. Xác minh danh tính (bắt buộc với đối tác)" : "5. Xác minh danh tính (tự nguyện)"}>
           <ul className="list-disc space-y-1 pl-5">
             {!IDENTITY_VERIFICATION_OPEN && (
               <li>
                 <b className="text-ink">Sẽ mở sau:</b> hiện chưa nhận hồ sơ xác minh, nên dấu tick chưa cấp mới và dịch vụ người mẫu, tin tuyển mẫu đang tạm đóng.
               </li>
             )}
-            <li>Người làm chụp CCCD 2 mặt và 1 ảnh selfie. AI đọc CCCD và đối chiếu ảnh chân dung trên thẻ với ảnh selfie; trường hợp chưa chắc chắn được nhân viên xem lại.</li>
+            <li>
+              Người làm chụp CCCD 2 mặt và 1 ảnh chân dung đang cầm thẻ. AI đọc CCCD và đối chiếu khuôn mặt; trường hợp chưa chắc chắn được nhân viên xem ảnh và duyệt.
+              {IDENTITY_REQUIRED_FOR_PARTNERS ? " Hồ sơ đối tác chỉ hiện với khách sau khi xác minh." : ""}
+            </li>
             <li>Đã xác minh: dấu tick cạnh tên, huy hiệu “Đã xác minh danh tính” và được cộng điểm khi xếp thứ tự hiển thị.</li>
-            <li>Ảnh CCCD và selfie chỉ dùng để xác minh, 360dep không lưu lại ảnh. Khách không thấy thông tin CCCD.</li>
+            <li>
+              Ảnh chỉ dùng để xác minh: chỉ lưu kín khi cần nhân viên xem và bị xoá ngay khi duyệt xong. Số CCCD không được lưu. Khách không thấy thông tin CCCD.
+            </li>
           </ul>
         </Section>
 

@@ -1,6 +1,6 @@
 import { tierLabels } from "@/lib/catalog"
 import { AUTO_COMPLETE_HOURS, MIN_REVIEWS_FOR_AVERAGE, NO_SHOW_AFTER_MIN, REVIEW_WINDOW_DAYS } from "@/lib/connection"
-import { DEMO_DATA_LIVE, IDENTITY_VERIFICATION_OPEN, SUPPORT_ZALO } from "@/lib/launch"
+import { DEMO_DATA_LIVE, IDENTITY_REQUIRED_FOR_PARTNERS, IDENTITY_VERIFICATION_OPEN, SUPPORT_ZALO } from "@/lib/launch"
 import { POLICY } from "@/lib/pricing"
 import { VIDEO_MAX_MB, VIDEO_MAX_SECONDS } from "@/lib/video-meta"
 import type { HelpAudience, HelpEntry, HelpTopicId } from "./types"
@@ -94,7 +94,7 @@ const ENTRIES: HelpEntry[] = [
     topic: "an-toan",
     q: "“Đã xác minh danh tính” nghĩa là gì?",
     a: IDENTITY_VERIFICATION_OPEN
-      ? "Người làm tự nguyện gửi ảnh CCCD hai mặt và một ảnh chân dung; AI đọc thẻ và đối chiếu khuôn mặt, trường hợp chưa chắc chắn được nhân viên xem lại. Đạt thì hồ sơ có dấu tick. 360đẹp không lưu ảnh CCCD. Dịch vụ người mẫu và tin tuyển mẫu chỉ dành cho người đã xác minh và đủ 18 tuổi."
+      ? "Mọi đối tác phải xác minh trước khi hồ sơ hiện với khách: chụp CCCD hai mặt và một ảnh chân dung đang cầm chính thẻ đó. AI đọc thẻ và đối chiếu khuôn mặt; trường hợp chưa chắc chắn được nhân viên 360đẹp xem ảnh và duyệt. Ảnh chỉ được lưu kín khi cần nhân viên xem, và bị xoá ngay khi duyệt xong; số CCCD không được lưu (chỉ lưu mã băm một chiều để một thẻ không xác minh nhiều tài khoản). Hồ sơ đã xác minh có dấu tick."
       : "Tính năng xác minh danh tính (CCCD + ảnh chân dung) sẽ mở sau, hiện chưa nhận hồ sơ. Vì vậy dấu tick xác minh chưa cấp mới, và các dịch vụ người mẫu, tin tuyển mẫu (vốn yêu cầu xác minh và đủ 18 tuổi) đang tạm đóng. Trong lúc này, bạn hãy dựa vào tác phẩm, đánh giá thật và số lịch đã làm của người làm.",
     keywords: ["tick", "cccd", "xac thuc", "huy hieu"],
   },
@@ -222,7 +222,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "khach",
     topic: "thanh-toan",
     q: "Trả tiền khi nào, cho ai? Có thanh toán online không?",
-    a: "Bạn trả thẳng cho người làm sau khi xong việc, bằng tiền mặt hoặc chuyển khoản. Không đặt cọc trước. Thanh toán online qua 360đẹp chưa hoạt động. 360đẹp không nhận và không giữ tiền dịch vụ của khách.",
+    a: "Bạn trả thẳng cho người làm sau khi xong việc, bằng tiền mặt hoặc chuyển khoản. Người làm có thể mở mã QR ngân hàng của họ trên điện thoại để bạn quét; hãy kiểm tra tên chủ tài khoản trùng với người làm. Không đặt cọc trước. Thanh toán online qua 360đẹp chưa hoạt động. 360đẹp không nhận và không giữ tiền dịch vụ của khách.",
     keywords: ["thanh toan", "tra tien", "online", "chuyen khoan", "tien mat"],
   },
   {
@@ -554,7 +554,9 @@ const ENTRIES: HelpEntry[] = [
     audience: "doi-tac",
     topic: "ho-so",
     q: "Đăng ký làm đối tác cần những gì? Có mất phí không?",
-    a: "Không có phí đăng ký hay phí duy trì. Cần tài khoản có số điện thoại, rồi làm 6 bước trong Studio: chọn nghề; chọn dịch vụ và mức giá từng gói; nơi phục vụ (tại nhà khách, studio hoặc cả hai, bán kính); xác nhận giờ làm; đăng ít nhất một tác phẩm do chính bạn làm; đọc, xác nhận chính sách rồi gửi duyệt.",
+    a: IDENTITY_REQUIRED_FOR_PARTNERS
+      ? "Không có phí đăng ký hay phí duy trì. Cần tài khoản có số điện thoại, rồi làm các bước trong Studio: chọn nghề; chọn dịch vụ và mức giá từng gói; nơi phục vụ (tại nhà khách, studio hoặc cả hai, bán kính, điểm xuất phát); xác nhận giờ làm; đăng ít nhất một tác phẩm do chính bạn làm; xác minh danh tính (CCCD 2 mặt và ảnh chân dung cầm CCCD); đọc, xác nhận chính sách rồi gửi duyệt. Nên thêm tài khoản ngân hàng và mã QR để khách trả tiền nhanh."
+      : "Không có phí đăng ký hay phí duy trì. Cần tài khoản có số điện thoại, rồi làm 6 bước trong Studio: chọn nghề; chọn dịch vụ và mức giá từng gói; nơi phục vụ (tại nhà khách, studio hoặc cả hai, bán kính); xác nhận giờ làm; đăng ít nhất một tác phẩm do chính bạn làm; đọc, xác nhận chính sách rồi gửi duyệt.",
     keywords: ["dang ky", "doi tac", "mo ho so", "ctv", "lam doi tac"],
     links: [{ label: "Trang đối tác", href: "/doi-tac" }],
   },
@@ -639,7 +641,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "doi-tac",
     topic: "lich-lam",
     q: "Bán kính phục vụ và phí di chuyển tính từ đâu?",
-    a: `Bán kính đặt từ 1 đến 30 km, tính từ khu vực (quận/huyện) bạn khai, không phải địa chỉ nhà bạn. Khách ngoài bán kính không đặt tại nhà được. Phí di chuyển khách trả (miễn phí ${POLICY.freeTravelKm} km đầu, sau đó ${vnd(POLICY.travelFeePerKm)}/km, tối đa ${vnd(POLICY.travelFeeCap)}) thuộc về bạn 100% và không tính hoa hồng.`,
+    a: `Bạn chọn bán kính nhận đơn tại nhà: 3, 5, 10, 15, 20 hoặc 30 km. Khoảng cách tính từ điểm xuất phát: mặc định là tâm quận/huyện bạn khai; bấm "Dùng vị trí hiện tại" trong Hồ sơ → Nơi phục vụ để đặt điểm chính xác hơn (cách khu vực đã khai tối đa 15 km; khách không thấy vị trí chính xác của bạn). Khách ngoài bán kính không đặt tại nhà được. Phí di chuyển khách trả (miễn phí ${POLICY.freeTravelKm} km đầu, sau đó ${vnd(POLICY.travelFeePerKm)}/km, tối đa ${vnd(POLICY.travelFeeCap)}) thuộc về bạn 100% và không tính hoa hồng.`,
     keywords: ["ban kinh", "pham vi", "phi di chuyen", "xa"],
   },
   {
@@ -801,6 +803,24 @@ const ENTRIES: HelpEntry[] = [
     q: "Nạp tiền vào ví thế nào? Ghi sai nội dung thì sao?",
     a: "Mở Studio › Ví: chuyển khoản tới tài khoản hiện trên màn hình với nội dung đúng mã DEP kèm mã riêng của bạn (viết liền, ví dụ DEPAB12CD). Tiền được cộng tự động khi ngân hàng báo về, mỗi giao dịch một lần. Ghi sai hoặc thiếu nội dung, hãy gửi ảnh biên lai cho đội hỗ trợ để được cộng tay. Chỉ chuyển theo thông tin trong ứng dụng, không theo số tài khoản ai đó nhắn cho bạn.",
     keywords: ["nap tien", "chuyen khoan", "noi dung", "dep", "ma nap"],
+  },
+  {
+    id: "d-nhan-tien-qr",
+    audience: "doi-tac",
+    topic: "vi-phi",
+    q: "Lưu tài khoản ngân hàng và mã QR để khách trả tiền thế nào?",
+    a: "Vào Studio → Nhận tiền & mã QR: nhập ngân hàng, số tài khoản, tên chủ tài khoản và tải ảnh mã QR từ ứng dụng ngân hàng của bạn. Chỉ bạn và đội ngũ 360đẹp xem được. Cuối buổi làm, mở lịch hẹn và bấm \"Hiện mã QR nhận tiền\": màn hình hiện số tiền cần trả và mã QR để khách quét; nhận đủ rồi bấm \"Đã nhận tiền\". 360đẹp không thu hộ tiền dịch vụ.",
+    keywords: ["qr", "tai khoan ngan hang", "nhan tien", "chuyen khoan", "stk"],
+  },
+  {
+    id: "d-xac-minh",
+    audience: "doi-tac",
+    topic: "ho-so",
+    q: "Xác minh danh tính cho đối tác làm thế nào, bao lâu?",
+    a: IDENTITY_VERIFICATION_OPEN
+      ? `Vào Studio → Xác minh danh tính: chụp mặt trước, mặt sau CCCD (chụp ngang, đủ 4 góc, không loá) và một ảnh chân dung đang cầm mặt trước thẻ cạnh khuôn mặt. AI trả kết quả trong khoảng 10 đến 20 giây; trường hợp chưa chắc chắn (ảnh mờ, tên trên thẻ khác tên hồ sơ, thẻ đã dùng cho tài khoản khác) được nhân viên duyệt và bạn nhận thông báo. Mỗi ngày thử tối đa 3 lần. ${IDENTITY_REQUIRED_FOR_PARTNERS ? "Hồ sơ chỉ hiện với khách sau khi xác minh xong; nếu bạn gửi duyệt lúc xác minh còn chờ, hồ sơ tự được xét lại khi xác minh được duyệt. " : ""}Đã xác minh thì tên hiển thị theo tên trên thẻ.`
+      : "Xác minh danh tính sẽ mở sau; 360đẹp sẽ báo trong ứng dụng khi mở.",
+    keywords: ["xac minh", "cccd", "kyc", "can cuoc", "cam cccd"],
   },
   {
     id: "d-rut-tien",

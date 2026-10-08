@@ -16,7 +16,7 @@ const complete: ProfileFacts = {
   title: "Nail tại nhà",
   bio: "5 năm làm móng, gel và đắp bột.",
   categories: ["nail"],
-  identityStatus: "none",
+  identityStatus: "verified",
   activeServices: 2,
   hasHours: true,
   visibleWorks: 3,
@@ -35,12 +35,12 @@ describe("profile rules", () => {
     expect(problems).toEqual([RULE_REASONS.noService, RULE_REASONS.noHours, RULE_REASONS.noWork, RULE_REASONS.noName])
   })
 
-  it("asks a model to verify their identity first", () => {
-    expect(profileRuleProblems({ ...complete, categories: ["model-photo"] })).toContain(RULE_REASONS.modelIdentity)
+  it("asks every partner to verify their identity before going live", () => {
+    // IDENTITY_REQUIRED_FOR_PARTNERS (lib/launch.ts): one reason, whatever the trade.
+    expect(profileRuleProblems({ ...complete, identityStatus: "none" })).toEqual([RULE_REASONS.identity])
+    expect(profileRuleProblems({ ...complete, identityStatus: "pending" })).toEqual([RULE_REASONS.identity])
+    expect(profileRuleProblems({ ...complete, categories: ["model-photo"], identityStatus: "rejected" })).toEqual([RULE_REASONS.identity])
     expect(profileRuleProblems({ ...complete, categories: ["model-photo"], identityStatus: "verified" })).toEqual([])
-    expect(profileRuleProblems({ ...complete, categories: ["model-video"], identityStatus: "pending" })).toContain(
-      RULE_REASONS.modelIdentity,
-    )
   })
 
   it("refuses photos from elsewhere, broken photos and banned words", () => {

@@ -156,6 +156,8 @@ const PRO_BASE = `
 const PRO_SELECT = `${PRO_BASE}, equipment`
 /** The caller's own profile also carries where its review stands (20260929100000). */
 const OWN_PRO_SELECT = `${PRO_SELECT}, review_status, review_note`
+/** And where they leave from, when they set it (20261008100000). */
+const OWN_PRO_SELECT_START = `${OWN_PRO_SELECT}, start_label`
 const REVIEW_STATUSES: ReviewStatus[] = ["draft", "pending", "approved", "changes_requested", "rejected"]
 
 /*
@@ -217,6 +219,7 @@ function toPro(row: Row, model?: Row): Pro & { uuid: string } {
     model: model ? toModelProfile(model) : undefined,
     reviewStatus: REVIEW_STATUSES.includes(row.review_status) ? row.review_status : undefined,
     reviewNote: row.review_note || undefined,
+    startLabel: row.start_label || undefined,
   }
 }
 
@@ -256,16 +259,16 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       ),
       // The caller's own profile is not in that list until it is published, and
       // without it their studio cannot see their own services or works.
-      // Generations: 1 = before the review columns, 2 = before equipment.
+      // Generations: 1 = before start_label, 2 = before the review columns, 3 = before equipment.
       me
         ? orLegacy(
             (legacy) =>
               supabase
                 .from("pros")
-                .select(legacy >= 2 ? PRO_BASE : legacy ? PRO_SELECT : OWN_PRO_SELECT)
+                .select(legacy >= 3 ? PRO_BASE : legacy === 2 ? PRO_SELECT : legacy === 1 ? OWN_PRO_SELECT : OWN_PRO_SELECT_START)
                 .eq("id", me)
                 .maybeSingle(),
-            2,
+            3,
           )
         : Promise.resolve({ data: null, error: null }),
       orLegacy((legacy) =>

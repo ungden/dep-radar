@@ -3,7 +3,7 @@ import Link from "next/link"
 import { CompanyInfo } from "@/components/company-info"
 import { PageHeader } from "@/components/ui"
 import { AUTO_COMPLETE_HOURS, MIN_REVIEWS_FOR_AVERAGE, NO_SHOW_AFTER_MIN, REVIEW_WINDOW_DAYS } from "@/lib/connection"
-import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
+import { IDENTITY_REQUIRED_FOR_PARTNERS, IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { POLICY } from "@/lib/pricing"
 import { formatPrice } from "@/lib/utils"
 
@@ -59,8 +59,10 @@ export default function OperatingRulesPage() {
               làm. Hồ sơ chỉ hiện với khách sau khi qua kiểm duyệt (bằng AI, có nhật ký để nhân viên 360đẹp xem lại và thay đổi quyết định).
             </li>
             <li>
-              Đối tác có thể xác minh danh tính bằng CCCD và ảnh chân dung để có dấu “Đã xác minh”; dịch vụ người mẫu và đăng tin tuyển mẫu
-              bắt buộc xác minh. Ảnh chỉ được dùng để đối chiếu và không được lưu trên máy chủ của 360đẹp (xem mục VIII).
+              {IDENTITY_REQUIRED_FOR_PARTNERS
+                ? "Đối tác bắt buộc xác minh danh tính bằng CCCD 2 mặt và ảnh chân dung cầm CCCD trước khi hồ sơ hiện với khách; hồ sơ đã xác minh có dấu “Đã xác minh”."
+                : "Đối tác có thể xác minh danh tính bằng CCCD và ảnh chân dung để có dấu “Đã xác minh”; dịch vụ người mẫu và đăng tin tuyển mẫu bắt buộc xác minh."}{" "}
+              Ảnh chỉ dùng để đối chiếu; chỉ trường hợp cần nhân viên duyệt mới được lưu kín và bị xoá ngay khi duyệt xong (xem mục VIII).
               {!IDENTITY_VERIFICATION_OPEN && " Tính năng xác minh sẽ mở sau; trong thời gian chưa mở, dịch vụ người mẫu và tin tuyển mẫu tạm đóng."}
             </li>
             <li>Mỗi người chỉ dùng một tài khoản, bằng thông tin thật của chính mình.</li>
@@ -220,8 +222,8 @@ export default function OperatingRulesPage() {
             </li>
             <li>
               <b className="text-ink">Bên xử lý dữ liệu:</b> dữ liệu lưu trên hạ tầng đám mây (Supabase, Vercel), có thể đặt ngoài Việt Nam; email gửi qua
-              Resend; đối soát chuyển khoản qua SePay. Ảnh CCCD và chân dung khi xác minh được gửi tới dịch vụ AI của Google để đọc và so khớp, không
-              lưu trên máy chủ 360đẹp; nội dung hồ sơ và ảnh tác phẩm được AI (OpenAI) kiểm duyệt.
+              Resend; đối soát chuyển khoản qua SePay. Ảnh CCCD và chân dung khi xác minh được gửi tới dịch vụ AI của Google để đọc và so khớp; chỉ trường hợp cần
+              nhân viên duyệt mới được lưu kín trên máy chủ 360đẹp và bị xoá ngay khi duyệt xong; nội dung hồ sơ và ảnh tác phẩm được AI (OpenAI) kiểm duyệt.
             </li>
             <li>
               <b className="text-ink">Quyền của bạn:</b> xem và sửa thông tin trong tài khoản, rút lại sự đồng ý, và xoá tài khoản ngay trong ứng

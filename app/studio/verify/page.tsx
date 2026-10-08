@@ -39,7 +39,7 @@ function VerifyLater() {
 const SLOTS: { kind: IdentityImageKind; title: string; hint: string; capture: "environment" | "user"; icon: typeof IdCard }[] = [
   { kind: "front", title: "Mặt trước CCCD", hint: "Chụp ngang, đủ 4 góc thẻ, không loá sáng", capture: "environment", icon: IdCard },
   { kind: "back", title: "Mặt sau CCCD", hint: "Thấy rõ chip và mã QR", capture: "environment", icon: IdCard },
-  { kind: "selfie", title: "Ảnh selfie", hint: "Nhìn thẳng, đủ sáng, không đeo kính râm hay khẩu trang", capture: "user", icon: UserRound },
+  { kind: "selfie", title: "Ảnh chân dung cầm CCCD", hint: "Cầm mặt trước thẻ cạnh khuôn mặt, nhìn thẳng, đủ sáng, không kính râm hay khẩu trang", capture: "user", icon: UserRound },
 ]
 
 type Phase = "form" | "checking" | "done" | "review" | "failed"
