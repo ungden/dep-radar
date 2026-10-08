@@ -28,7 +28,7 @@ export default function OperatingRulesPage() {
   return (
     <div className="mx-auto max-w-2xl pb-10 md:pt-4">
       <PageHeader title="Quy chế hoạt động" back />
-      <p className="text-[13px] text-muted">Nền tảng kết nối 360đẹp (www.360dep.vn và ứng dụng 360đẹp) · Phiên bản 1.1, cập nhật ngày 07/10/2026</p>
+      <p className="text-[13px] text-muted">Nền tảng kết nối 360đẹp (www.360dep.vn và ứng dụng 360đẹp) · Phiên bản 1.2, cập nhật ngày 08/10/2026</p>
 
       <div className="mt-6 space-y-8 text-sm leading-relaxed text-ink-soft">
         <Section title="I. Nguyên tắc chung">
@@ -66,6 +66,13 @@ export default function OperatingRulesPage() {
               {!IDENTITY_VERIFICATION_OPEN && " Tính năng xác minh sẽ mở sau; trong thời gian chưa mở, dịch vụ người mẫu và tin tuyển mẫu tạm đóng."}
             </li>
             <li>Mỗi người chỉ dùng một tài khoản, bằng thông tin thật của chính mình.</li>
+            <li>
+              Ảnh, clip, mô tả và đánh giá người dùng đăng lên vẫn thuộc về người đăng. Khi đăng, người dùng xác nhận mình có quyền với nội dung đó
+              (tác phẩm do chính mình làm, người xuất hiện trong ảnh đã đồng ý) và cho phép 360đẹp lưu trữ, hiển thị, thu nhỏ hoặc cắt khung để
+              hiển thị nội dung đó trên website, ứng dụng và trang mạng xã hội của 360đẹp nhằm giới thiệu hồ sơ của họ, không thu phí và không độc
+              quyền. Quyền này chấm dứt khi người dùng xoá nội dung hoặc xoá tài khoản, trừ bản đã được chia sẻ trước đó và dữ liệu phải lưu theo
+              mục VIII.
+            </li>
           </ul>
         </Section>
 
