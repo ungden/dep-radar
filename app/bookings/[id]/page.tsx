@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { CalendarDays, CalendarPlus, Home, Info, MapPinned, MessageSquare, Phone, Store, Timer } from "lucide-react"
 import { BookingContract } from "@/components/booking-contract"
-import { AddOnServices, PaymentReceipt, ProNoShowDispute, ProposeNewTime } from "@/components/booking-disputes"
+import { AddOnServices, PaymentReceipt, ProNoShowDispute, ProposeNewTime, ReferencePhotos, TravelStatus } from "@/components/booking-disputes"
 import { ProCard } from "@/components/beauty"
 import { bookingImage, DeclineForm } from "@/components/booking-card"
 import {
@@ -103,6 +103,8 @@ function BookingDetail() {
     <div className="space-y-4">
       <BookingTimeline booking={booking} />
       <BookingContract booking={booking} />
+      <TravelStatus booking={booking} isPro={isPro} />
+      <ReferencePhotos booking={booking} isPro={isPro} />
       <DeliveryPanel booking={booking} isPro={isPro} />
       <ComboPartners booking={booking} />
 

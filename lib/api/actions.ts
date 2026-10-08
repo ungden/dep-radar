@@ -216,6 +216,21 @@ export async function addOnBooking(parentId: string, templateId: string, variant
   )
 }
 
+/** Add-ons chosen with a booking, chained right after it (20261008100100). */
+export async function attachAddons(parentId: string, items: { template: string; variant: string; quantity: number }[]) {
+  return rpc<string[]>("attach_addons", { p_parent: parentId, p_items: items }, ["/bookings", "/studio/jobs"])
+}
+
+/** 1–3 reference photos for the partner (paths in the private references bucket). */
+export async function setBookingReferences(bookingId: string, paths: string[]) {
+  return rpc<void>("set_booking_references", { p_booking: bookingId, p_paths: paths }, ["/bookings"])
+}
+
+/** "Tôi đang đến": the partner has set off; the customer is told. */
+export async function markDeparted(bookingId: string) {
+  return rpc<void>("mark_departed", { p_booking: bookingId }, ["/bookings", "/studio/jobs"])
+}
+
 export async function writeReview(input: {
   bookingId: string
   rating: number

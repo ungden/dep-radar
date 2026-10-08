@@ -484,7 +484,9 @@ begin
       -- dispute tools (20261007100200)
       'confirm_payment_received', 'dispute_pro_no_show', 'add_on_booking',
       -- partner onboarding (20261008100000)
-      'set_start_point'
+      'set_start_point',
+      -- at-home booking extras (20261008100100)
+      'attach_addons', 'set_booking_references', 'mark_departed'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 
@@ -2496,4 +2498,64 @@ begin
   delete from public.pro_payout where pro_id = linh;
 
   raise notice 'PARTNER ONBOARDING RULES PASS';
+end $$;
+
+
+-- At-home booking extras: add-ons, reference photos, "đang di chuyển" (20261008100100).
+do $$
+declare linh uuid; customer uuid; addr uuid; admin_id uuid; b uuid; ids uuid[];
+  monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
+  tz text := public.app_timezone();
+begin
+  select id into linh from public.pros where slug = 'linh-pham';
+  select a.id into customer from public.accounts a where a.full_name = 'Ngọc Hân';
+  select id into addr from public.addresses where account_id = customer;
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          (gen_random_uuid()::text||'-extras-admin@example.invalid'), jsonb_build_object('full_name', 'Quản trị Extras'), now(), now())
+  returning id into admin_id;
+  update public.accounts set is_admin = true where id = admin_id;
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.admin_adjust_wallet(linh, 1000000, 'Số dư cho test (extras)');
+
+  raise notice 'add-ons come with the main booking: accepted together, gone together';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  b := public.create_booking(linh, 'nail-design', 'simple', ((monday + 12) + time '10:00') at time zone tz, true, addr, 1, '', 'cash');
+  ids := public.attach_addons(b, '[{"template":"nail-removal","variant":"remove"}]'::jsonb);
+  assert cardinality(ids) = 1, 'no add-on';
+  assert (select travel_fee = 0 and urgent_fee = 0 and parent_booking_id = b and starts_at = (select ends_at from public.bookings where id = b)
+          from public.bookings where id = ids[1]), 'the add-on is not chained after the main booking';
+  begin
+    perform public.attach_addons(b, '[{"template":"nail-removal","variant":"remove"}]'::jsonb);
+    assert false, 'add-ons attached twice';
+  exception when check_violation then null;
+  end;
+
+  raise notice 'reference photos: three at most, from the customer''s own folder';
+  perform public.set_booking_references(b, array[customer::text || '/mau.jpg']);
+  begin
+    perform public.set_booking_references(b, array[linh::text || '/khac.jpg']);
+    assert false, 'someone else''s file was attached';
+  exception when check_violation then null;
+  end;
+
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.confirm_booking(b);
+  assert (select status from public.bookings where id = ids[1]) = 'confirmed', 'the add-on was not accepted with the main booking';
+
+  raise notice '"đang di chuyển" from three hours before, and the customer hears it';
+  begin
+    perform public.mark_departed(b);
+    assert false, 'set off days early';
+  exception when check_violation then null;
+  end;
+
+  perform public.cancel_booking(b, 'Thử huỷ');
+  assert (select status from public.bookings where id = ids[1]) = 'cancelled', 'the add-on outlived the main booking';
+
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.admin_adjust_wallet(linh, -1000000, 'Trả lại số dư test (extras)');
+  perform set_config('request.jwt.claim.sub', '', true);
+  raise notice 'BOOKING EXTRAS RULES PASS';
 end $$;

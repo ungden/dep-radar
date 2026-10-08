@@ -208,6 +208,8 @@ export type Database = {
       }
       bookings: {
         Row: {
+          departed_at: string | null
+          reference_photos: string[]
           customer_name: string
           parent_booking_id: string | null
           address: string
@@ -265,6 +267,8 @@ export type Database = {
           voucher_id: string | null
         }
         Insert: {
+          departed_at?: string | null
+          reference_photos?: string[]
           customer_name?: string
           parent_booking_id?: string | null
           address?: string
@@ -322,6 +326,8 @@ export type Database = {
           voucher_id?: string | null
         }
         Update: {
+          departed_at?: string | null
+          reference_photos?: string[]
           customer_name?: string
           parent_booking_id?: string | null
           address?: string
@@ -2512,6 +2518,9 @@ export type Database = {
       slugify: { Args: { input: string }; Returns: string }
       start_booking: { Args: { p_booking: string }; Returns: undefined }
       set_start_point: { Args: { p_lat: number; p_lng: number; p_label?: string }; Returns: undefined }
+      attach_addons: { Args: { p_parent: string; p_items: Json }; Returns: string[] }
+      set_booking_references: { Args: { p_booking: string; p_paths: string[] }; Returns: undefined }
+      mark_departed: { Args: { p_booking: string }; Returns: undefined }
       travel_distance_km: {
         Args: {
           lat1: number

@@ -91,7 +91,11 @@ export default function PolicyPage() {
               Làm thêm trong buổi hẹn: khách bấm “Đặt thêm dịch vụ”, lịch mới nối tiếp ngay sau lịch hiện tại, theo giá niêm yết, không tính phí di chuyển hay phí gấp;
               người làm nhận như lịch thường.
             </li>
-            <li>Nhận tiền xong, người làm bấm “Đã nhận tiền” để lưu xác nhận cho cả hai bên.</li>
+            <li>Nhận tiền xong, người làm bấm “Đã nhận tiền” để lưu xác nhận cho cả hai bên; người làm có thể mở mã QR ngân hàng của mình để khách quét.</li>
+            <li>
+              Dịch vụ đi kèm chọn lúc đặt (tối đa 3): làm nối tiếp sau dịch vụ chính, theo giá niêm yết, không tính phí di chuyển; người làm nhận lịch chính là nhận luôn,
+              lịch chính không diễn ra thì dịch vụ đi kèm huỷ theo. Khách có thể gửi 1–3 ảnh mẫu, chỉ hai bên của lịch xem được.
+            </li>
           </ul>
         </Section>
 

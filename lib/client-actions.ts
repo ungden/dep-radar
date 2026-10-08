@@ -192,6 +192,18 @@ export const actions = {
     return asResult(await api.respondReschedule(bookingId, accept))
   },
 
+  async attachAddons(parentId: string, items: { template: string; variant: string; quantity: number }[]): Promise<Result> {
+    return asResult(await api.attachAddons(parentId, items))
+  },
+
+  async setBookingReferences(bookingId: string, paths: string[]): Promise<Result> {
+    return asResult(await api.setBookingReferences(bookingId, paths))
+  },
+
+  async markDeparted(bookingId: string): Promise<Result> {
+    return asResult(await api.markDeparted(bookingId))
+  },
+
   async confirmPaymentReceived(bookingId: string): Promise<Result> {
     return asResult(await api.confirmPaymentReceived(bookingId))
   },

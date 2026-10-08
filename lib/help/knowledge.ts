@@ -141,6 +141,22 @@ const ENTRIES: HelpEntry[] = [
     keywords: ["nhom", "nhieu nguoi", "2 le", "buoi dam", "co dau"],
   },
   {
+    id: "k-dich-vu-di-kem",
+    audience: "khach",
+    topic: "dat-lich",
+    q: "Đặt thêm dịch vụ phụ (tháo móng cũ, làm tóc đi kèm…) cùng lúc được không?",
+    a: "Được. Khi đặt trực tiếp, sau khi chọn dịch vụ chính, tích \"Thêm dịch vụ đi kèm\" (tối đa 3) trong bảng giá của chính người làm đó. Các dịch vụ này làm nối tiếp ngay sau dịch vụ chính, cùng địa điểm, theo giá niêm yết và không tính thêm phí di chuyển; tổng cả lịch hiện trước khi gửi. Người làm nhận lịch chính là nhận luôn dịch vụ đi kèm; lịch chính bị từ chối, hết hạn hay huỷ thì dịch vụ đi kèm huỷ theo. Đang trong buổi hẹn muốn làm thêm thì dùng \"Đặt thêm dịch vụ\" trong chi tiết lịch.",
+    keywords: ["dich vu phu", "di kem", "add on", "thao mong", "lam toc kem", "them dich vu"],
+  },
+  {
+    id: "k-anh-mau",
+    audience: "khach",
+    topic: "dat-lich",
+    q: "Gửi ảnh mẫu cho người làm thế nào?",
+    a: "Ở bước xác nhận đặt lịch (đã đăng nhập), bấm \"Thêm ảnh\" trong mục Ảnh mẫu để gửi 1 đến 3 ảnh kiểu móng hay phong cách makeup bạn muốn, để người làm chuẩn bị đúng dụng cụ. Chỉ bạn và người làm của lịch đó xem được ảnh. Ảnh mẫu giúp người làm hiểu ý bạn; kết quả có thể khác đôi chút tuỳ dáng móng, tóc, da của mỗi người.",
+    keywords: ["anh mau", "mau mong", "hinh mau", "gui anh"],
+  },
+  {
     id: "k-dang-yeu-cau",
     audience: "khach",
     topic: "dat-lich",
@@ -314,7 +330,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "khach",
     topic: "tai-cho",
     q: "Người làm đến trễ thì sao?",
-    a: `Người làm phải báo trước qua tin nhắn nếu có thể trễ. Nếu sau giờ hẹn ${NO_SHOW_AFTER_MIN} phút mà người làm chưa tới và chưa bấm "Bắt đầu", bạn có thể bấm "Người làm không đến": lịch được huỷ, bạn không mất gì và 360đẹp được báo. Nếu bạn vẫn đồng ý làm, buổi hẹn diễn ra như bình thường và bạn có thể chọn nhận xét "Trễ giờ" khi đánh giá. Người làm không được rút bớt nội dung gói vì đến trễ.`,
+    a: `Khi người làm lên đường, lịch hẹn hiện "Người làm đang trên đường tới" và bạn nhận thông báo. Người làm phải báo trước qua tin nhắn nếu có thể trễ. Nếu sau giờ hẹn ${NO_SHOW_AFTER_MIN} phút mà người làm chưa tới và chưa bấm "Bắt đầu", bạn có thể bấm "Người làm không đến": lịch được huỷ, bạn không mất gì và 360đẹp được báo. Nếu bạn vẫn đồng ý làm, buổi hẹn diễn ra như bình thường và bạn có thể chọn nhận xét "Trễ giờ" khi đánh giá. Người làm không được rút bớt nội dung gói vì đến trễ.`,
     keywords: ["tre gio", "den muon", "cho lau", "tre"],
   },
   {
@@ -703,6 +719,14 @@ const ENTRIES: HelpEntry[] = [
     q: "Khi nào bấm “Bắt đầu”?",
     a: `Bấm khi bạn đã có mặt và bắt đầu làm; nút mở từ 15 phút trước giờ hẹn. Chỉ bấm khi đã thực sự tới nơi: bấm rồi khách không báo "Người làm không đến" được nữa, nên bấm khi chưa tới là vi phạm.`,
     keywords: ["bat dau", "start", "check in"],
+  },
+  {
+    id: "d-dang-den",
+    audience: "doi-tac",
+    topic: "tai-cho",
+    q: "Báo khách “đang di chuyển” thế nào?",
+    a: "Với lịch làm tại nhà đã nhận, từ 3 giờ trước giờ hẹn, bấm \"Tôi đang đến\" trong chi tiết lịch: khách nhận thông báo và thấy trạng thái \"Người làm đang trên đường tới\". Tới nơi thì bấm \"Bắt đầu\" (mở từ 15 phút trước giờ hẹn). Khách gửi ảnh mẫu thì bạn xem trong chi tiết lịch; dịch vụ đi kèm khách chọn hiện thành các lịch nối tiếp, được nhận cùng lịch chính.",
+    keywords: ["dang den", "dang di chuyen", "len duong", "toi dang den"],
   },
   {
     id: "d-tre-gio",

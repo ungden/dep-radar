@@ -45,7 +45,24 @@ export function BookingTimeline({ booking }: { booking: Booking }) {
     ...(ended
       ? []
       : [
-          { label: "Hoàn thành buổi làm", done: completed, current: accepted && !completed, when: formatDateLong(booking.date) },
+          // At home: "Thợ đang di chuyển" once they say they set off (mark_departed).
+          ...(booking.atHome
+            ? [
+                {
+                  label: "Người làm đang di chuyển",
+                  done: Boolean(booking.departedAt) || booking.status === "in_progress" || completed,
+                  current: booking.status === "confirmed" && Boolean(booking.departedAt),
+                  when: booking.departedAt ? localTime(booking.departedAt) : undefined,
+                },
+              ]
+            : []),
+          {
+            label: "Đang thực hiện",
+            done: booking.status === "in_progress" || completed,
+            current: booking.status === "in_progress",
+            when: booking.startedAt ? localTime(booking.startedAt) : undefined,
+          },
+          { label: "Hoàn thành buổi làm", done: completed, current: false, when: formatDateLong(booking.date) },
           ...(d
             ? [
                 {

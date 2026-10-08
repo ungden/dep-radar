@@ -49,6 +49,8 @@ export interface BookingItem {
   cancelledAt: string | null
   /** When the freelancer recorded the customer's payment ("Đã nhận tiền"); 20261007100200. */
   paidAt: string | null
+  /** When the partner said they set off ("Thợ đang di chuyển"); 20261008100100. */
+  departedAt: string | null
   /** A new time one side proposed and the other has not answered. */
   rescheduleTo: string | null
   rescheduleBy: "customer" | "pro" | null
@@ -80,7 +82,7 @@ const WITH_CONNECTION = `${WITH_DELIVERY.replace("reviews (booking_id)", "review
   voucher_id, discount, customer_reviews (booking_id, rating, body, published_at)`
 // 20261007100200: the name kept on the booking (the freelancer reads the account only once accepted) and "Đã nhận tiền".
 const COLUMN_SETS = [
-  `${WITH_CONNECTION}, service_contract, customer_name, paid_at, reschedule_to, reschedule_by`,
+  `${WITH_CONNECTION}, service_contract, customer_name, paid_at, reschedule_to, reschedule_by, departed_at`,
   `${WITH_CONNECTION}, service_contract`,
   WITH_CONNECTION,
   WITH_DELIVERY,
@@ -153,6 +155,7 @@ function toBooking(row: Row): BookingItem {
         }
       : null,
     paidAt: row.paid_at ?? null,
+    departedAt: row.departed_at ?? null,
     rescheduleTo: row.reschedule_to ?? null,
     rescheduleBy: row.reschedule_by === "customer" || row.reschedule_by === "pro" ? row.reschedule_by : null,
     customer: { id: row.customer_id, name: customer.full_name || row.customer_name || "Khách hàng", phone: CONTACT_VISIBLE.includes(status) ? customer.phone || null : null },
@@ -267,6 +270,7 @@ export const disputeNoShow = (id: string, reason: string) => rpc<string>("disput
 export const respondReschedule = (id: string, accept: boolean) => rpc("respond_reschedule", { p_booking: id, p_accept: accept })
 export const acceptDelivery = (id: string) => rpc("accept_delivery", { p_booking: id })
 export const confirmPaymentReceived = (id: string) => rpc("confirm_payment_received", { p_booking: id })
+export const markDeparted = (id: string) => rpc("mark_departed", { p_booking: id })
 
 /** Whether the caller already disputed this no-show: their own reports are readable to them. */
 export async function hasDisputedNoShow(bookingId: string, uid: string): Promise<boolean> {

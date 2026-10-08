@@ -34,6 +34,7 @@ import {
   todayISO,
   weekdayShort,
 } from "@/lib/utils"
+import { uploadImage } from "@/lib/uploads"
 
 const STEPS = ["Dịch vụ", "Nơi & giờ", "Xác nhận"]
 
@@ -120,6 +121,11 @@ function BookingFlow({ proId }: { proId: string }) {
   // the travel fee. The real address is saved after signing in.
   const [area, setArea] = React.useState<{ city: string; district: string }>(restoredArea ?? { city: pro.city, district: "" })
   const [note, setNote] = React.useState(params.get("note") ?? "")
+  // Add-ons chosen with the booking ("template/variant" keys), chained after the main one (attach_addons).
+  const [addons, setAddons] = React.useState<string[]>(() => (params.get("addons") ?? "").split(",").filter(Boolean).slice(0, 3))
+  // Reference photos: paths in the private references bucket, with a local preview.
+  const [refs, setRefs] = React.useState<{ path: string; preview: string }[]>([])
+  const [refBusy, setRefBusy] = React.useState(false)
   const [payment, setPayment] = React.useState<PaymentMethod>("cash")
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
@@ -136,6 +142,20 @@ function BookingFlow({ proId }: { proId: string }) {
   const durationMin = serviceDuration(variant, heads)
   const canStudio = Boolean(pro.studioAddress)
   const atHome = !tpl.studioOnly && (atHomePref || !canStudio)
+
+  // What can come with the main service: the partner's other single-session options, done at the same place.
+  const addonOptions = servicesOf(state, proId).flatMap((listing) => {
+    const t = getTemplate(listing.templateId)
+    if (!t || (t.studioOnly && atHome)) return []
+    return t.variants
+      .filter((v) => listing.prices[v.id] !== undefined && (v.sessions ?? 1) === 1 && !(t.id === templateId && v.id === variantId))
+      .map((v) => ({ key: `${t.id}/${v.id}`, templateId: t.id, variantId: v.id, name: t.name, label: v.label, price: listing.prices[v.id], minutes: v.durationMin }))
+  })
+  const chosenAddons = addonOptions.filter((o) => addons.includes(o.key))
+  const addonsTotal = chosenAddons.reduce((sum, o) => sum + o.price, 0)
+  const addonsMinutes = chosenAddons.reduce((sum, o) => sum + o.minutes, 0)
+  const toggleAddon = (key: string) =>
+    setAddons((list) => (list.includes(key) ? list.filter((k) => k !== key) : list.length >= 3 ? list : [...list, key]))
 
   // Start on the customer's default address without an effect writing it back.
   const addressId = session ? (pickedAddress ?? defaultAddressId(state.addresses)) : null
@@ -215,6 +235,7 @@ function BookingFlow({ proId }: { proId: string }) {
       q.set("city", area.city)
       q.set("district", area.district)
     }
+    if (addons.length) q.set("addons", addons.join(","))
     if (usageScope === "commercial") q.set("usage", "commercial")
     if (consentRepost) q.set("repost", "1")
     return `/book/${proId}?${q}`
@@ -250,6 +271,17 @@ function BookingFlow({ proId }: { proId: string }) {
     }
     // The booking exists either way; these only add to it, so a failure is
     // reported on the confirmation screen rather than undoing the booking.
+    if (chosenAddons.length) {
+      const attached = await actions.attachAddons(
+        res.id,
+        chosenAddons.map((o) => ({ template: o.templateId, variant: o.variantId, quantity: 1 })),
+      )
+      if (attached.error) setLinkError(`Đã đặt lịch chính, nhưng chưa thêm được dịch vụ đi kèm: ${attached.error}`)
+    }
+    if (refs.length) {
+      const sent = await actions.setBookingReferences(res.id, refs.map((r) => r.path))
+      if (sent.error) setLinkError(`Đã đặt lịch, nhưng chưa gửi được ảnh mẫu: ${sent.error}`)
+    }
     if (usageScope !== "personal" || consentRepost) {
       const terms = await actions.setBookingTerms(res.id, usageScope, consentRepost)
       if (terms.error) setLinkError(terms.error)
@@ -420,6 +452,37 @@ function BookingFlow({ proId }: { proId: string }) {
               )
             })}
           </ul>
+          {addonOptions.length > 0 && (
+            <div className="mt-6">
+              <h2 className="text-[17px] font-bold">Thêm dịch vụ đi kèm (tuỳ chọn)</h2>
+              <p className="mt-0.5 text-[13px] text-ink-soft">
+                Làm nối tiếp ngay sau dịch vụ chính, cùng địa điểm, theo giá {pro.name} niêm yết; không tính thêm phí di chuyển. {pro.name} nhận lịch chính là nhận
+                luôn các dịch vụ này. Tối đa 3.
+              </p>
+              <ul className="mt-3 space-y-2">
+                {addonOptions.map((o) => (
+                  <li key={o.key}>
+                    <label className={cn("flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 text-sm", addons.includes(o.key) ? "border-accent bg-subtle" : "border-line bg-surface")}>
+                      <input
+                        type="checkbox"
+                        checked={addons.includes(o.key)}
+                        disabled={!addons.includes(o.key) && addons.length >= 3}
+                        onChange={() => toggleAddon(o.key)}
+                        className="size-4 accent-[var(--color-accent)]"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-medium">
+                          {o.name} · {o.label}
+                        </span>
+                        <span className="block text-xs text-muted">{formatDuration(o.minutes)}</span>
+                      </span>
+                      <span className="font-semibold tabular-nums">{formatPrice(o.price)}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
       )}
 
@@ -655,6 +718,55 @@ function BookingFlow({ proId }: { proId: string }) {
                 className={cn(inputClass, "mt-2 resize-none text-sm")}
               />
             </div>
+
+            <div className="py-3.5">
+              <p className="text-[13px] text-muted">Ảnh mẫu (tuỳ chọn, tối đa 3): kiểu móng, phong cách makeup bạn muốn</p>
+              {session ? (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {refs.map((r) => (
+                    <span key={r.path} className="relative block size-20 overflow-hidden rounded-lg bg-subtle">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={r.preview} alt="Ảnh mẫu" className="size-full object-cover" />
+                      <button
+                        type="button"
+                        aria-label="Bỏ ảnh này"
+                        onClick={() => setRefs((list) => list.filter((x) => x.path !== r.path))}
+                        className="absolute right-1 top-1 inline-flex size-6 items-center justify-center rounded-full bg-black/60 text-xs text-white"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                  {refs.length < 3 && (
+                    <label className={cn("flex size-20 cursor-pointer items-center justify-center rounded-lg border border-dashed border-line text-[12px] text-ink-soft", refBusy && "opacity-50")}>
+                      {refBusy ? "Đang tải…" : "+ Thêm ảnh"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="sr-only"
+                        disabled={refBusy}
+                        onChange={async (e) => {
+                          const files = [...(e.target.files ?? [])].slice(0, 3 - refs.length)
+                          if (!files.length) return
+                          setRefBusy(true)
+                          try {
+                            const added = await Promise.all(files.map(async (f) => ({ path: await uploadImage("references", f), preview: URL.createObjectURL(f) })))
+                            setRefs((list) => [...list, ...added].slice(0, 3))
+                          } catch (err) {
+                            setError(err instanceof Error ? err.message : "Chưa tải được ảnh mẫu.")
+                          }
+                          setRefBusy(false)
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+              ) : (
+                <p className="mt-1 text-xs text-ink-soft">Đăng nhập để gửi ảnh mẫu cho {pro.name}.</p>
+              )}
+              <p className="mt-1.5 text-xs text-muted">Chỉ bạn và {pro.name} xem được ảnh mẫu.</p>
+            </div>
           </Card>
 
           <Card className="space-y-4 p-4">
@@ -748,6 +860,24 @@ function BookingFlow({ proId }: { proId: string }) {
 
           {multiple && <Card className="space-y-3 p-4"><p className="font-semibold">Buổi thứ hai (đã gồm trong giá)</p><input aria-label="Ngày buổi thứ hai" type="date" min={date} value={secondDate} onChange={(e) => setSecondDate(e.target.value)} className={inputClass} /><input aria-label="Giờ buổi thứ hai" type="time" step={1800} value={secondTime} onChange={(e) => setSecondTime(e.target.value)} className={inputClass} /><p className="text-xs text-muted">Cả hai buổi sẽ được giữ lịch cùng lúc; hệ thống kiểm tra giờ trống khi gửi.</p></Card>}
           <PriceBreakdown quote={quote} paymentMethod={payment} />
+          {chosenAddons.length > 0 && (
+            <Card className="space-y-1.5 p-4 text-[14px]">
+              <p className="font-semibold">Dịch vụ đi kèm</p>
+              {chosenAddons.map((o) => (
+                <p key={o.key} className="flex justify-between gap-3">
+                  <span className="text-ink-soft">
+                    {o.name} · {o.label}
+                  </span>
+                  <span className="tabular-nums">{formatPrice(o.price)}</span>
+                </p>
+              ))}
+              <p className="text-xs text-muted">Làm nối tiếp sau dịch vụ chính (thêm {formatDuration(addonsMinutes)}), không tính phí di chuyển.</p>
+              <p className="flex justify-between gap-3 border-t border-line pt-2 font-bold">
+                <span>Tổng cả lịch</span>
+                <span className="tabular-nums">{formatPrice(quote.total + addonsTotal)}</span>
+              </p>
+            </Card>
+          )}
 
           {/* What happens after sending, in the order it happens: the call, then
               until when the booking can be dropped at no cost. */}
@@ -797,7 +927,7 @@ function BookingFlow({ proId }: { proId: string }) {
         <div className="flex items-center gap-3">
           <div className="min-w-0 shrink-0" aria-live="polite">
             <p className="text-xs text-muted">{step === 1 ? "Giá dịch vụ" : ready ? "Tổng" : "Tạm tính"}</p>
-            <p className="text-[17px] font-bold tabular-nums">{formatPrice(step === 1 ? price : quote.total)}</p>
+            <p className="text-[17px] font-bold tabular-nums">{formatPrice((step === 1 ? price : quote.total) + addonsTotal)}</p>
           </div>
           {step > 1 && (
             <Button variant="outline" size="lg" onClick={() => setStep((s) => s - 1)} className="hidden md:inline-flex md:w-40">
