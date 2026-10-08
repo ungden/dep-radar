@@ -17,7 +17,10 @@ import { VIDEO_MAX_BYTES, VIDEO_MAX_MB, VIDEO_MAX_SECONDS, stripVideoLocation } 
 const MAX_EDGE = 1600
 const QUALITY = 0.85
 
-export type Bucket = "avatars" | "works" | "reviews" | "chat" | "payout" | "references"
+export type Bucket = "avatars" | "works" | "reviews" | "chat" | "payout" | "references" | "evidence"
+
+/** Buckets nobody but the owner (and the staff, or the other party) reads: uploads return the storage path, not a URL. */
+const PRIVATE: Bucket[] = ["chat", "payout", "references", "evidence"]
 
 async function reencode(file: File, maxEdge = MAX_EDGE): Promise<Blob> {
   const bitmap = await createImageBitmap(file)
@@ -53,11 +56,11 @@ export async function uploadImage(bucket: Bucket, file: File): Promise<string> {
   })
   if (error) throw new Error("Tải ảnh lên không thành công, thử lại nhé.")
 
-  return bucket === "chat" || bucket === "payout" || bucket === "references" ? path : supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl
+  return PRIVATE.includes(bucket) ? path : supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl
 }
 
 export async function removeImage(bucket: Bucket, publicUrl: string): Promise<void> {
-  if (bucket === "chat" || bucket === "payout" || bucket === "references") return
+  if (PRIVATE.includes(bucket)) return
   const marker = `/storage/v1/object/public/${bucket}/`
   const index = publicUrl.indexOf(marker)
   if (index === -1) return // A seeded image that lives in the repo, not in storage.
@@ -109,7 +112,7 @@ async function probeVideo(file: File): Promise<{ seconds: number; poster: Blob }
  * instead of starting 200 MB again. Storage policies apply as with any upload.
  */
 async function uploadResumable(
-  bucket: "videos",
+  bucket: "videos" | "evidence",
   path: string,
   body: Blob,
   contentType: string,
@@ -185,3 +188,39 @@ export async function uploadVideo(file: File, onProgress?: (fraction: number) =>
     poster: supabase.storage.from("works").getPublicUrl(posterPath).data.publicUrl,
   }
 }
+
+/**
+ * A clip as evidence for a report: same limits and the same location removal
+ * as a work clip, into the private `evidence` bucket, without a poster.
+ * Returns the storage path.
+ */
+export async function uploadEvidenceVideo(file: File, onProgress?: (fraction: number) => void): Promise<string> {
+  if (!VIDEO_TYPES.includes(file.type)) throw new Error("Chỉ nhận clip MP4, MOV hoặc WebM.")
+  if (file.size > VIDEO_MAX_BYTES) {
+    throw new Error(`Clip quá ${VIDEO_MAX_MB} MB. Cắt ngắn hoặc quay ở 1080p (không dùng 4K) nhé.`)
+  }
+  const supabase = supabaseBrowser()
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) throw new Error("Cần đăng nhập.")
+  const { seconds } = await probeVideo(file)
+  if (!Number.isFinite(seconds) || seconds > VIDEO_MAX_SECONDS + 0.5) {
+    throw new Error(`Clip dài tối đa ${VIDEO_MAX_SECONDS} giây. Cắt đoạn quan trọng nhất nhé.`)
+  }
+  const clean = file.type === "video/webm" ? await file.arrayBuffer() : stripVideoLocation(await file.arrayBuffer()).buffer
+  const extension = file.type === "video/webm" ? "webm" : file.type === "video/quicktime" ? "mov" : "mp4"
+  const path = `${auth.user.id}/${crypto.randomUUID()}.${extension}`
+  try {
+    await uploadResumable("evidence", path, new Blob([clean], { type: file.type }), file.type, onProgress)
+  } catch (err) {
+    console.error("evidence clip upload failed:", err)
+    throw new Error("Tải clip lên không thành công. Kiểm tra mạng rồi thử lại nhé.")
+  }
+  return path
+}
+
+/** Removes evidence the reporter took back before sending. */
+export async function removeEvidence(paths: string[]): Promise<void> {
+  if (paths.length) await supabaseBrowser().storage.from("evidence").remove(paths)
+}
+
+export const isVideoPath = (path: string) => /\.(mp4|mov|webm)$/i.test(path)

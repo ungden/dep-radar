@@ -4,7 +4,8 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button, Card, EmptyState, PageHeader, StatusBadge, Tabs, inputClass } from "@/components/ui"
-import { decideCheck, decideNoShowCompensation, overrideAiDecision, recordTopup, reportChat, resolveReport, setSuspended } from "@/lib/api/admin"
+import { askReportInfo, decideCheck, decideNoShowCompensation, overrideAiDecision, recordTopup, reportChat, resolveReport, setSuspended } from "@/lib/api/admin"
+import { EvidenceGrid } from "@/components/evidence-picker"
 import type { AdminAction, AdminBooking, AdminPro, AdminReport, AiDecisionItem, FeePolicyView, PendingCheck, PlatformSettings, ReportChatMessage } from "@/lib/api/admin"
 import { CatalogPanel, CustomersPanel, FinancePanel, HelpQuestionsPanel, SettingsPanel } from "./desk-panels"
 import { useRefresh } from "@/lib/store"
@@ -585,9 +586,16 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: (fn: () => P
   const open = r.status === "open" || r.status === "reviewing"
   return (
     <Card className="p-3.5">
-      <p className="text-sm font-semibold">{REPORT_REASON[r.reason] ?? r.reason}</p>
-      <p className="text-xs text-muted">
-        {r.reporter} · {timeAgo(r.createdAt)} · {r.status}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", REPORT_STATUS[r.status]?.tone ?? "bg-subtle")}>
+          {REPORT_STATUS[r.status]?.label ?? r.status}
+        </span>
+        <p className="text-sm font-semibold">{REPORT_REASON[r.reason] ?? r.reason}</p>
+      </div>
+      <p className="mt-0.5 text-xs text-muted">
+        {r.reporter}
+        {r.target && ` → ${r.target}`} · {timeAgo(r.createdAt)}
+        {r.updatedAt !== r.createdAt && ` · cập nhật ${timeAgo(r.updatedAt)}`}
         {r.bookingId && (
           <>
             {" · "}
@@ -597,7 +605,9 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: (fn: () => P
           </>
         )}
       </p>
-      {r.detail && <p className="mt-2 rounded-xl bg-canvas px-3 py-2 text-[13px]">{r.detail}</p>}
+      {r.detail && <p className="mt-2 whitespace-pre-wrap rounded-xl bg-canvas px-3 py-2 text-[13px]">{r.detail}</p>}
+      {r.evidence.length > 0 && <EvidenceGrid items={r.evidence} />}
+      {r.staffQuestion && open && <p className="mt-2 text-xs text-warning">Đã hỏi người báo: {r.staffQuestion} (chờ trả lời)</p>}
       {!open && r.resolution && <p className="mt-2 text-xs text-ink-soft">Kết quả: {r.resolution}</p>}
       <ReportChat reportId={r.id} />
       {open && (
@@ -607,8 +617,26 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: (fn: () => P
             value={note}
             maxLength={500}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Ghi chú gửi người báo (tuỳ chọn): đã xử lý thế nào"
+            placeholder="Câu hỏi cho người báo, hoặc ghi chú kết quả gửi họ"
           />
+          <div className="flex flex-wrap gap-2">
+            {r.status === "open" && (
+              <Button size="sm" variant="ghost" onClick={() => run(() => resolveReport(r.id, "reviewing"))}>
+                Nhận xử lý
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={note.trim().length < 5}
+              onClick={() => {
+                run(() => askReportInfo(r.id, note))
+                setNote("")
+              }}
+            >
+              Hỏi thêm thông tin
+            </Button>
+          </div>
           {r.claim ? (
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="ghost" onClick={() => run(() => decideNoShowCompensation(r.claim!.id, false, note))}>
@@ -632,6 +660,13 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: (fn: () => P
       )}
     </Card>
   )
+}
+
+const REPORT_STATUS: Record<string, { label: string; tone: string }> = {
+  open: { label: "Mới", tone: "bg-accent-soft text-accent" },
+  reviewing: { label: "Đang xử lý", tone: "bg-warning-soft text-warning" },
+  resolved: { label: "Đã xử lý", tone: "bg-success-soft text-success" },
+  rejected: { label: "Không vi phạm", tone: "bg-subtle text-muted" },
 }
 
 /**

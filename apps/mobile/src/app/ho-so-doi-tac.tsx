@@ -3,7 +3,7 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { webLink } from "@/data/links"
 import { ActivityIndicator, ScrollView, TextInput, View } from "react-native"
-import { CATEGORIES, CITIES, districtsOf, getTemplate, templatesByCategory, tierLabels, PRICE_LEVEL_NOTE, PARTNER_STEPS, partnerProgress, DEFAULT_WORKING_WINDOWS, type PartnerSetup, type CategoryId } from "@/shared"
+import { CATEGORIES, CITIES, districtsOf, getTemplate, templatesByCategory, tierLabels, PRICE_LEVEL_NOTE, PARTNER_STEPS, partnerProgress, DEFAULT_WORKING_WINDOWS, IDENTITY_VERIFICATION_OPEN, type PartnerSetup, type CategoryId } from "@/shared"
 import { rpc, supabase } from "@/data/supabase"
 import { useApp } from "@/state/app"
 import { colors, gutter, radius, fonts } from "@/theme"
@@ -11,9 +11,6 @@ import { Button } from "@/ui/button"
 import { Txt } from "@/ui/text"
 import { Press } from "@/ui/press"
 import { formatPrice } from "@/data/format"
-
-/** Mirrors IDENTITY_VERIFICATION_OPEN in lib/launch.ts: held back by the owner on 08/10/2026. */
-const IDENTITY_IN_APP = false
 
 export default function PartnerProfile() {
   const app = useApp()
@@ -118,7 +115,7 @@ export default function PartnerProfile() {
       {setup.profile?.review_note && <Txt color={colors.warning}>{setup.profile.review_note}</Txt>}
       {steps.slice(0, 5).map((s, i) => <Choice key={s.label} label={`${s.done ? "✓" : "Còn thiếu:"} ${s.label}`} active={s.done} onPress={() => setStep(i)} />)}
       {/* Identity is asked before the profile is shown once it opens (lib/launch.ts on the web); the check itself runs on the web. */}
-      {IDENTITY_IN_APP && <Choice
+      {IDENTITY_VERIFICATION_OPEN && <Choice
         label={setup.profile?.identity_status === "verified" ? "✓ Xác minh danh tính" : setup.profile?.identity_status === "pending" ? "Xác minh danh tính: đang chờ duyệt" : "Còn thiếu: Xác minh danh tính (CCCD + ảnh cầm CCCD)"}
         active={setup.profile?.identity_status === "verified"}
         onPress={() => void WebBrowser.openBrowserAsync(webLink("/studio/verify"))}

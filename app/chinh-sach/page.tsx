@@ -192,7 +192,7 @@ export default function PolicyPage() {
             <li>Ứng dụng chỉ hiện số điện thoại của hai bên khi người làm đã nhận lịch và lịch chưa kết thúc.</li>
             <li>Chia sẻ lịch hẹn cho người thân bằng nút “Chia sẻ lịch hẹn” trong chi tiết lịch.</li>
             <li>
-              Có vấn đề thì bấm “Báo cáo vấn đề” trong chi tiết lịch hẹn. Báo cáo không hiển thị với phía bên kia; đội ngũ được báo ngay và bạn nhận thông báo khi báo
+              Có vấn đề thì bấm “Báo cáo vấn đề” trong chi tiết lịch hẹn hoặc ở Tôi → Báo cáo vấn đề, kèm tối đa 8 ảnh, clip làm bằng chứng (chỉ bạn và đội ngũ 360dep xem được); theo dõi kết quả ngay tại đó. Báo cáo không hiển thị với phía bên kia; đội ngũ được báo ngay và bạn nhận thông báo khi báo
               cáo được xử lý. Riêng “Người làm không đến” và khiếu nại vắng mặt thì bên kia được báo, vì lịch hẹn thay đổi theo.
             </li>
           </ul>

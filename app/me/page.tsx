@@ -23,6 +23,7 @@ import {
   UserRound,
   Users,
   Contact,
+  Flag,
 } from "lucide-react"
 import { MobileLinks } from "@/components/mobile-links"
 import { Avatar, ButtonLink, Card, Toggle } from "@/components/ui"
@@ -211,6 +212,7 @@ const commonItems: MenuItem[] = [
   { href: "/thong-bao", icon: Bell, label: "Thông báo" },
   { href: "/gioi-thieu", icon: Gift, label: "Giới thiệu bạn bè", sub: "Mã giới thiệu, thưởng và voucher của bạn" },
   { href: "/me/cai-dat", icon: Settings, label: "Cài đặt tài khoản" },
+  { href: "/bao-cao", icon: Flag, label: "Báo cáo vấn đề", sub: "Gửi sự cố kèm ảnh, clip và theo dõi kết quả" },
   { href: "/tro-giup", icon: CircleHelp, label: "Trợ giúp & an toàn" },
   { href: "/chinh-sach", icon: ShieldCheck, label: "Chính sách phí, đặt lịch & huỷ" },
 ]

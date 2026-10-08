@@ -152,6 +152,8 @@ export default function StudioMe() {
           <Divider style={{ marginLeft: 52 }} />
           <Row icon="gift" label="Giới thiệu bạn bè" internal onPress={() => router.push("/gioi-thieu")} />
           <Divider style={{ marginLeft: 52 }} />
+          <Row icon="flag" label="Báo cáo vấn đề" internal onPress={() => router.push("/bao-cao")} />
+          <Divider style={{ marginLeft: 52 }} />
           <Row
             icon="swap"
             label="Chuyển sang chế độ khách"

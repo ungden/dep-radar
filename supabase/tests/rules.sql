@@ -488,7 +488,9 @@ begin
       -- at-home booking extras (20261008100100)
       'attach_addons', 'set_booking_references', 'mark_departed',
       -- staff read the chat behind a report (20261008100200)
-      'admin_report_chat'
+      'admin_report_chat',
+      -- reports with evidence, followed through (20261008100300)
+      'ask_report_info', 'add_report_evidence'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 
@@ -2603,4 +2605,76 @@ begin
   delete from public.threads where id = th;
   delete from public.reports where id = rep;
   raise notice 'REPORT CHAT RULES PASS';
+end $$;
+
+
+-- Reports with evidence, followed through (20261008100300).
+do $$
+declare linh uuid; customer uuid; admin_id uuid; rep uuid; denied boolean;
+begin
+  select id into linh from public.pros where slug = 'linh-pham';
+  select a.id into customer from public.accounts a where a.full_name = 'Ngọc Hân';
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          (gen_random_uuid()::text||'-evidence-admin@example.invalid'), jsonb_build_object('full_name', 'Quản trị Bằng chứng'), now(), now())
+  returning id into admin_id;
+  update public.accounts set is_admin = true where id = admin_id;
+
+  raise notice 'a report is filed open, with the reporter''s own files only';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  set local role authenticated;
+  insert into public.reports (reporter_id, target_account_id, reason, detail, status, resolution, evidence_paths)
+  values (customer, linh, 'Chất lượng không như cam kết', 'Test bằng chứng', 'resolved', 'tự xử', array[customer::text || '/a.jpg'])
+  returning id into rep;
+  reset role;
+  assert (select status = 'open' and resolution is null from public.reports where id = rep), 'a report was filed already decided';
+  denied := false;
+  begin
+    insert into public.reports (reporter_id, reason, evidence_paths) values (customer, 'Khác', array[linh::text || '/b.jpg']);
+  exception when check_violation then denied := true;
+  end;
+  assert denied, 'someone else''s file was attached as evidence';
+
+  raise notice 'the staff ask, the reporter answers with more files';
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.ask_report_info(rep, 'Bạn gửi thêm ảnh sau khi làm nhé');
+  assert (select status = 'reviewing' and staff_question is not null from public.reports where id = rep), 'the question was not kept';
+  assert exists (select 1 from public.notifications where account_id = customer and kind = 'report_question'), 'the reporter was not asked';
+
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  denied := false;
+  begin
+    perform public.add_report_evidence(rep, '{}', 'Không phải của tôi');
+  exception when insufficient_privilege then denied := true;
+  end;
+  assert denied, 'someone else added to a report';
+
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  perform public.add_report_evidence(rep, array[customer::text || '/c.mp4'], 'Clip sau khi làm');
+  assert (select cardinality(evidence_paths) = 2 and staff_question is null and detail like '%Clip sau khi làm%'
+          from public.reports where id = rep), 'the addition was not kept';
+  assert exists (select 1 from public.notifications where account_id = admin_id and kind = 'report_updated'), 'the staff were not told';
+  denied := false;
+  begin
+    perform public.add_report_evidence(rep, array[customer::text||'/1.jpg', customer::text||'/2.jpg', customer::text||'/3.jpg',
+      customer::text||'/4.jpg', customer::text||'/5.jpg', customer::text||'/6.jpg', customer::text||'/7.jpg'], '');
+  exception when check_violation then denied := true;
+  end;
+  assert denied, 'more than 8 files';
+
+  raise notice 'closed is closed';
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.resolve_report(rep, 'resolved', 'Đã nhắc người làm.');
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  denied := false;
+  begin
+    perform public.add_report_evidence(rep, '{}', 'Muộn');
+  exception when check_violation then denied := true;
+  end;
+  assert denied, 'a closed report took more';
+
+  perform set_config('request.jwt.claim.sub', '', true);
+  delete from public.reports where id = rep;
+  raise notice 'REPORT EVIDENCE RULES PASS';
 end $$;

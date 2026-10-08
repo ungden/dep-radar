@@ -2,7 +2,8 @@ import * as React from "react"
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet"
 import { router } from "expo-router"
 import { ActionSheetIOS, Alert, Platform, View } from "react-native"
-import { REPORT_REASONS, fileReport } from "@/data/safety"
+import { REPORT_REASONS, fileReport, removeEvidence } from "@/data/safety"
+import { EvidencePicker } from "@/components/evidence"
 import { useApp } from "@/state/app"
 import { colors, fonts, radius } from "@/theme"
 import { Button } from "@/ui/button"
@@ -35,10 +36,18 @@ export function useSafetyMenu(target: Target | null) {
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [sent, setSent] = React.useState(false)
+  const [evidence, setEvidence] = React.useState<string[]>([])
+  const [uploading, setUploading] = React.useState(false)
+  // A new picker each time the sheet opens, so it starts empty.
+  const [round, setRound] = React.useState(0)
 
   const report = () => {
+    // Files picked for a report that was never sent go before a new one starts.
+    if (!sent) void removeEvidence(evidence)
     setReason(REPORT_REASONS[0])
     setDetail("")
+    setEvidence([])
+    setRound((n) => n + 1)
     setError(null)
     setSent(false)
     sheet.open()
@@ -88,6 +97,7 @@ export function useSafetyMenu(target: Target | null) {
       targetAccountId: target.accountId,
       bookingId: target.bookingId ?? null,
       workId: target.workId ?? null,
+      evidencePaths: evidence,
     })
     setBusy(false)
     if (!res.ok) {
@@ -107,13 +117,17 @@ export function useSafetyMenu(target: Target | null) {
         sent ? (
           <Button label="Xong" full onPress={sheet.close} />
         ) : (
-          <Button label="Gửi báo cáo" full busy={busy} onPress={() => void submit()} />
+          <Button label={uploading ? "Đang tải tệp…" : "Gửi báo cáo"} full busy={busy} disabled={uploading} onPress={() => void submit()} />
         )
       }
     >
       {sent ? (
         <View style={{ gap: 12 }}>
           <Txt color={colors.inkSoft}>Cảm ơn bạn. Đội ngũ 360dep sẽ xem trong 24 giờ và liên hệ nếu cần thêm thông tin.</Txt>
+          <Button label="Theo dõi trong Báo cáo của tôi" variant="secondary" onPress={() => {
+            sheet.close()
+            router.push("/bao-cao")
+          }} />
           <Button label={`Chặn ${target?.name ?? "người này"}`} variant="danger" onPress={() => {
             sheet.close()
             confirmBlock()
@@ -154,13 +168,15 @@ export function useSafetyMenu(target: Target | null) {
           <BottomSheetTextInput
             value={detail}
             onChangeText={setDetail}
-            placeholder="Kể thêm chuyện gì đã xảy ra (không bắt buộc)"
+            placeholder="Kể lại chuyện gì đã xảy ra: lúc nào, ở đâu"
             placeholderTextColor={colors.muted}
             multiline
             maxLength={1000}
             style={{ minHeight: 96, backgroundColor: colors.subtle, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
             accessibilityLabel="Chi tiết báo cáo"
           />
+          <Txt w={600}>Ảnh, clip làm bằng chứng (nếu có)</Txt>
+          {app.uid ? <EvidencePicker key={round} uid={app.uid} onChange={setEvidence} onBusyChange={setUploading} /> : null}
           {error ? <ErrorNote text={error} /> : null}
         </>
       )}

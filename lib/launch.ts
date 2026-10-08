@@ -14,8 +14,8 @@ export const DEMO_DATA_LIVE = true
  * When on, AI decides the clear cases; the uncertain ones wait for the staff
  * (Admin › Xác minh), with their photos kept privately until decided. The hash
  * salt is IDENTITY_HASH_SALT, or derived from the service role key when unset.
- * Turning it on: set this to true, and IDENTITY_IN_APP in
- * apps/mobile/src/app/ho-so-doi-tac.tsx for the next app build.
+ * Turning it on: set this to true; the app reads the same flag (apps/mobile
+ * src/shared.ts) from its next build.
  */
 export const IDENTITY_VERIFICATION_OPEN = false
 

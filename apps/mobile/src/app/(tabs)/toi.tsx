@@ -130,6 +130,8 @@ export default function Me() {
         <Divider style={{ marginLeft: 52 }} />
         <Row icon="block" label="Người đã chặn" detail={app.blocked.size ? String(app.blocked.size) : undefined} onPress={() => router.push("/da-chan")} />
         <Divider style={{ marginLeft: 52 }} />
+        <Row icon="flag" label="Báo cáo vấn đề" detail="kèm ảnh, clip" onPress={() => router.push("/bao-cao")} />
+        <Divider style={{ marginLeft: 52 }} />
         <Row icon="info" label="Chính sách và trợ giúp" detail="mở trên web" onPress={() => void WebBrowser.openBrowserAsync(webLink("/tro-giup"))} />
         <Divider style={{ marginLeft: 52 }} />
         <Row

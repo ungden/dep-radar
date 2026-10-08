@@ -26,6 +26,7 @@ export function routeForLink(link: string): Href | null {
   if ((m = path.match(/^\/works\/([^/]+)$/))) return { pathname: "/works/[id]", params: { id: decodeURIComponent(m[1]) } }
   if ((m = path.match(/^\/dich-vu\/([^/]+)$/))) return { pathname: "/dich-vu/[id]", params: { id: decodeURIComponent(m[1]) } }
   if (path === "/thong-bao") return "/thong-bao"
+  if (path === "/bao-cao") return "/bao-cao"
   if (path === "/gioi-thieu") return "/gioi-thieu"
   if (path === "/me/dia-chi") return "/dia-chi"
   // 'job_new': the board of requests, where "Nhận việc" is.

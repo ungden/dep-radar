@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
 import type { ActionResult } from "./actions"
+import { messageFor } from "./errors"
 import type { NotificationItem, ReferralRewardItem, WalletSummary } from "./types"
 
 /**
@@ -276,7 +277,7 @@ export async function deleteAccount(): Promise<ActionResult> {
  * Storage API with the service key. Best effort: the account is already gone, and
  * a leftover file is logged for a person to remove rather than blocking the user.
  */
-const OWN_BUCKETS = ["avatars", "works", "videos", "reviews", "chat"] as const
+const OWN_BUCKETS = ["avatars", "works", "videos", "reviews", "chat", "evidence"] as const
 
 async function removeOwnFiles(accountId: string) {
   const admin = supabaseAdmin()
@@ -308,18 +309,79 @@ export async function fileReport(input: {
   detail: string
   targetAccountId?: string | null
   bookingId?: string | null
-}): Promise<ActionResult> {
+  evidencePaths?: string[]
+}): Promise<ActionResult<string>> {
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
   if (input.reason.trim().length < 3) return { ok: false, error: "Chọn lý do báo cáo." }
-  const { error } = await supabase.from("reports").insert({
-    reporter_id: auth.user.id,
-    target_account_id: input.targetAccountId ?? null,
-    booking_id: input.bookingId ?? null,
-    reason: input.reason.trim(),
-    detail: input.detail.trim().slice(0, 1000),
-  })
+  const { data, error } = await supabase
+    .from("reports")
+    .insert({
+      reporter_id: auth.user.id,
+      target_account_id: input.targetAccountId ?? null,
+      booking_id: input.bookingId ?? null,
+      reason: input.reason.trim(),
+      detail: input.detail.trim().slice(0, 2000),
+      evidence_paths: (input.evidencePaths ?? []).slice(0, 8),
+    })
+    .select("id")
+    .single()
   if (error) return { ok: false, error: "Không gửi được báo cáo." }
+  return { ok: true, data: data.id }
+}
+
+export interface MyReport {
+  id: string
+  reason: string
+  detail: string
+  status: "open" | "reviewing" | "resolved" | "rejected"
+  resolution: string | null
+  staffQuestion: string | null
+  bookingId: string | null
+  createdAt: string
+  updatedAt: string
+  /** Signed for an hour: the evidence bucket is private. */
+  evidence: { path: string; url: string; video: boolean }[]
+}
+
+/** The caller's reports, newest first, for /bao-cao. Disputes filed by buttons (no-show) are left out: they have their own place. */
+export async function myReports(): Promise<ActionResult<MyReport[]>> {
+  const supabase = await supabaseServer()
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
+  const { data, error } = await supabase
+    .from("reports")
+    .select("id, reason, detail, status, resolution, staff_question, booking_id, created_at, updated_at, evidence_paths")
+    .eq("reporter_id", auth.user.id)
+    .not("reason", "in", "(pro_no_show,no_show_dispute)")
+    .order("created_at", { ascending: false })
+    .limit(50)
+  if (error) return { ok: false, error: messageFor(error) }
+  const paths = (data ?? []).flatMap((r) => r.evidence_paths ?? [])
+  const signed = paths.length ? await supabase.storage.from("evidence").createSignedUrls(paths, 60 * 60) : null
+  const url = new Map((signed?.data ?? []).flatMap((x) => (x.path && x.signedUrl ? [[x.path, x.signedUrl] as const] : [])))
+  return {
+    ok: true,
+    data: (data ?? []).map((r) => ({
+      id: r.id,
+      reason: r.reason,
+      detail: r.detail ?? "",
+      status: r.status as MyReport["status"],
+      resolution: r.resolution,
+      staffQuestion: r.staff_question,
+      bookingId: r.booking_id,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+      evidence: (r.evidence_paths ?? []).map((p) => ({ path: p, url: url.get(p) ?? "", video: /\.(mp4|mov|webm)$/i.test(p) })),
+    })),
+  }
+}
+
+/** A note and more files on an open report; the staff are told. */
+export async function addReportEvidence(reportId: string, paths: string[], note: string): Promise<ActionResult> {
+  const supabase = await supabaseServer()
+  const { error } = await supabase.rpc("add_report_evidence", { p_report: reportId, p_paths: paths, p_note: note })
+  if (error) return { ok: false, error: messageFor(error) }
   return { ok: true, data: undefined }
 }

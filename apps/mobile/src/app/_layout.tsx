@@ -68,6 +68,7 @@ function Navigator() {
       <Stack.Screen name="pros/[id]" options={{ headerTransparent: true, title: "" }} />
       <Stack.Screen name="book/[proId]" options={{ title: "Đặt lịch", presentation: "modal" }} />
       <Stack.Screen name="bookings/[id]" options={{ title: "Lịch hẹn" }} />
+      <Stack.Screen name="bao-cao" options={{ title: "Báo cáo vấn đề" }} />
       <Stack.Screen name="tin-nhan/index" options={{ title: "Tin nhắn" }} />
       <Stack.Screen name="tin-nhan/[id]" options={{ title: "" }} />
       <Stack.Screen name="thong-bao" options={{ title: "Thông báo" }} />
