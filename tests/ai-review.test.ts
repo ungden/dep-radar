@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { followUpDue, followUpMessage, type FollowUpFacts } from "@/lib/ai/followups"
+import { IDENTITY_REQUIRED_FOR_PARTNERS } from "@/lib/launch"
 import { RULE_REASONS, combineProfileDecision, hasContactInfo, profileRuleProblems, type ProfileFacts } from "@/lib/ai/rules"
 import {
   VerdictError,
@@ -35,7 +36,11 @@ describe("profile rules", () => {
     expect(problems).toEqual([RULE_REASONS.noService, RULE_REASONS.noHours, RULE_REASONS.noWork, RULE_REASONS.noName])
   })
 
-  it("asks every partner to verify their identity before going live", () => {
+  it.runIf(!IDENTITY_REQUIRED_FOR_PARTNERS)("does not ask for identity while verification is held back", () => {
+    expect(profileRuleProblems({ ...complete, identityStatus: "none" })).toEqual([])
+  })
+
+  it.runIf(IDENTITY_REQUIRED_FOR_PARTNERS)("asks every partner to verify their identity before going live", () => {
     // IDENTITY_REQUIRED_FOR_PARTNERS (lib/launch.ts): one reason, whatever the trade.
     expect(profileRuleProblems({ ...complete, identityStatus: "none" })).toEqual([RULE_REASONS.identity])
     expect(profileRuleProblems({ ...complete, identityStatus: "pending" })).toEqual([RULE_REASONS.identity])

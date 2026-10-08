@@ -12,6 +12,9 @@ import { Txt } from "@/ui/text"
 import { Press } from "@/ui/press"
 import { formatPrice } from "@/data/format"
 
+/** Mirrors IDENTITY_VERIFICATION_OPEN in lib/launch.ts: held back by the owner on 08/10/2026. */
+const IDENTITY_IN_APP = false
+
 export default function PartnerProfile() {
   const app = useApp()
   const params = useLocalSearchParams<{ step?: string }>()
@@ -114,12 +117,12 @@ export default function PartnerProfile() {
       {setup.profile?.published && !setup.profile.accepting_jobs && <Txt color={colors.warning}>Bạn đang tạm nghỉ nhận khách. Bật “Nhận lịch mới” trong Quản lý đối tác khi sẵn sàng.</Txt>}
       {setup.profile?.review_note && <Txt color={colors.warning}>{setup.profile.review_note}</Txt>}
       {steps.slice(0, 5).map((s, i) => <Choice key={s.label} label={`${s.done ? "✓" : "Còn thiếu:"} ${s.label}`} active={s.done} onPress={() => setStep(i)} />)}
-      {/* Identity is asked before the profile is shown (lib/launch.ts on the web); the check itself runs on the web. */}
-      <Choice
+      {/* Identity is asked before the profile is shown once it opens (lib/launch.ts on the web); the check itself runs on the web. */}
+      {IDENTITY_IN_APP && <Choice
         label={setup.profile?.identity_status === "verified" ? "✓ Xác minh danh tính" : setup.profile?.identity_status === "pending" ? "Xác minh danh tính: đang chờ duyệt" : "Còn thiếu: Xác minh danh tính (CCCD + ảnh cầm CCCD)"}
         active={setup.profile?.identity_status === "verified"}
         onPress={() => void WebBrowser.openBrowserAsync(webLink("/studio/verify"))}
-      />
+      />}
       <Button label="Nhận tiền & mã QR (mở trên web)" variant="ghost" onPress={() => void WebBrowser.openBrowserAsync(webLink("/studio/thanh-toan"))} />
       <Button label="Đọc chính sách phí, nhận việc & hủy lịch" variant="ghost" onPress={() => void WebBrowser.openBrowserAsync(webLink("/chinh-sach"))} />
       <Choice label="Tôi đồng ý chính sách" active={agree} onPress={() => setAgree(!agree)} />
