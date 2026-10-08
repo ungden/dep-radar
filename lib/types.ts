@@ -138,6 +138,8 @@ export interface Pro {
   areas: string[]
   homeService: boolean
   studioAddress?: string
+  /** The partner's own start point label (set_start_point), when they set one; else the district centre. */
+  startLabel?: string
   /** Maximum distance the freelancer travels for home service. */
   maxTravelKm: number
   yearsExp: number

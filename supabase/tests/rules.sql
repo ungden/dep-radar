@@ -482,7 +482,9 @@ begin
       'admin_customers', 'admin_set_account_suspended', 'admin_finance_summary', 'admin_finance_by_pro',
       'admin_finance_bookings', 'admin_wallet_entries', 'admin_adjust_wallet',
       -- dispute tools (20261007100200)
-      'confirm_payment_received', 'dispute_pro_no_show', 'add_on_booking'
+      'confirm_payment_received', 'dispute_pro_no_show', 'add_on_booking',
+      -- partner onboarding (20261008100000)
+      'set_start_point'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 
@@ -2445,4 +2447,53 @@ begin
   perform public.admin_adjust_wallet(linh, -1000000, 'Trả lại số dư test (tools)');
   perform set_config('request.jwt.claim.sub', '', true);
   raise notice 'DISPUTE TOOL RULES PASS';
+end $$;
+
+
+-- Partner onboarding: start point, payout details, identity requeue (20261008100000).
+do $$
+declare linh uuid; thu uuid; c public.pros; t public.pros; n int;
+begin
+  select * into c from public.pros where slug = 'linh-pham';
+  linh := c.id;
+  select * into t from public.pros where slug = 'thu-anh';
+  thu := t.id;
+
+  raise notice 'a start point near the district is kept; a far one is refused';
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.set_start_point(c.lat + 0.009, c.lng, 'Nhà riêng');
+  assert (select start_label = 'Nhà riêng' and lat = c.lat + 0.009 from public.pros where id = linh), 'start point not kept';
+  begin
+    perform public.set_start_point(c.lat + 0.5, c.lng, 'Xa');
+    assert false, 'a start point 50 km away was accepted';
+  exception when check_violation then null;
+  end;
+
+  raise notice 'payout details: the partner and the staff only';
+  insert into public.pro_payout (pro_id, bank_name, account_number, account_holder) values (linh, 'Vietcombank', '0123456789', 'PHAM THUY LINH');
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  set local role authenticated;
+  select count(*) into n from public.pro_payout where pro_id = linh;
+  reset role;
+  assert n = 0, 'another partner read the payout details';
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  set local role authenticated;
+  select count(*) into n from public.pro_payout where pro_id = linh;
+  reset role;
+  assert n = 1, 'the partner could not read their own payout details';
+
+  raise notice 'a profile waiting only on identity goes back to review once verified';
+  perform set_config('request.jwt.claim.sub', '', true);
+  update public.pros set published = false, review_status = 'changes_requested', identity_status = 'pending' where id = thu;
+  update public.pros set identity_status = 'verified' where id = thu;
+  assert (select review_status from public.pros where id = thu) = 'pending', 'not requeued';
+
+  -- Later tests (the API suite) use these two as they were.
+  perform set_config('app.system_write', 'on', true);
+  update public.pros set lat = c.lat, lng = c.lng, start_label = null where id = linh;
+  update public.pros set published = t.published, review_status = t.review_status, identity_status = t.identity_status where id = thu;
+  perform set_config('app.system_write', 'off', true);
+  delete from public.pro_payout where pro_id = linh;
+
+  raise notice 'PARTNER ONBOARDING RULES PASS';
 end $$;

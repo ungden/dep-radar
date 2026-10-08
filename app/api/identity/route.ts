@@ -17,7 +17,10 @@ import { todayISO } from "@/lib/utils"
  * status itself, and locks the display name to the name on the card. Editing
  * localStorage cannot produce a badge.
  *
- * Images are forwarded to the AI and never stored or logged. From the date of
+ * Images go to the AI. When it is sure (verified or rejected), they are not
+ * stored. When a person must look (uncertain face match, name or card clash),
+ * the three photos are kept in the private `identity` bucket for the staff
+ * (20261008100000) and removed when the case is decided. From the date of
  * birth on the card, only two facts are kept: whether the person is 18 or over,
  * and the year of birth. Model work needs the first (20260924100100).
  */
@@ -61,7 +64,7 @@ const MAX_CHECKS_PER_DAY = 3
 
 const PROMPT = `Bạn là bộ phận xác minh danh tính của 360dep, nền tảng đặt lịch làm đẹp tại Việt Nam.
 Người dùng là freelancer đã đồng ý xác minh danh tính. Bạn nhận 3 ảnh theo thứ tự:
-1) mặt trước Căn cước công dân (CCCD) Việt Nam, 2) mặt sau CCCD, 3) ảnh selfie của người đăng ký.
+1) mặt trước Căn cước công dân (CCCD) Việt Nam, 2) mặt sau CCCD, 3) ảnh chân dung của người đăng ký đang cầm chính thẻ CCCD đó.
 
 Hãy kiểm tra và trả về JSON đúng schema:
 - front_is_cccd: ảnh 1 có phải mặt trước một thẻ CCCD/CMND Việt Nam thật (không phải ảnh chụp màn hình, bản vẽ hay giấy tờ khác) và có ảnh chân dung không.
@@ -70,7 +73,8 @@ Hãy kiểm tra và trả về JSON đúng schema:
 - date_of_birth: ngày sinh in trên thẻ, dạng DD/MM/YYYY, chuỗi rỗng nếu không đọc được. Chỉ dùng để tính đủ 18 tuổi hay chưa; không lưu ngày sinh.
 - card_number: số CCCD in trên thẻ, chỉ chữ số, chuỗi rỗng nếu không đọc được. Số này chỉ dùng để băm một chiều nhằm chặn một thẻ xác minh nhiều tài khoản; không lưu bản gốc.
 - selfie_ok: ảnh 3 có đúng một khuôn mặt người thật, nhìn rõ, không che khuất, không phải ảnh chụp lại từ màn hình hay giấy.
-- same_person: "yes" nếu ảnh chân dung trên thẻ và selfie là cùng một người, "no" nếu rõ ràng khác người, "uncertain" nếu không đủ chắc chắn.
+- holding_card: trong ảnh 3, người đó có đang cầm một thẻ CCCD nhìn thấy được (mặt trước), trông giống thẻ ở ảnh 1.
+- same_person: "yes" nếu ảnh chân dung trên thẻ và khuôn mặt ở ảnh 3 là cùng một người, "no" nếu rõ ràng khác người, "uncertain" nếu không đủ chắc chắn.
 - confidence: độ chắc chắn 0..1 cho kết luận same_person.
 - issues: danh sách vấn đề ngắn gọn bằng tiếng Việt để hướng dẫn người dùng chụp lại (ví dụ "Ảnh mặt trước bị loá"), rỗng nếu không có.
 Chỉ trả JSON, không thêm giải thích.`
@@ -84,6 +88,7 @@ const SCHEMA: AiSchema = {
     date_of_birth: { type: "string" },
     card_number: { type: "string" },
     selfie_ok: { type: "boolean" },
+    holding_card: { type: "boolean" },
     same_person: { type: "string", enum: ["yes", "no", "uncertain"] },
     confidence: { type: "number" },
     issues: { type: "array", items: { type: "string" } },
@@ -95,6 +100,7 @@ const SCHEMA: AiSchema = {
     "date_of_birth",
     "card_number",
     "selfie_ok",
+    "holding_card",
     "same_person",
     "confidence",
     "issues",
@@ -109,6 +115,7 @@ interface AiVerdict {
   date_of_birth: string
   card_number: string
   selfie_ok: boolean
+  holding_card: boolean
   same_person: "yes" | "no" | "uncertain"
   confidence: number
   issues: string[]
@@ -140,8 +147,8 @@ function cardHash(cardNumber: string, salt: string) {
 async function toPart(file: FormDataEntryValue | null) {
   if (!(file instanceof File)) return null
   if (!file.type.startsWith("image/") || file.size > MAX_IMAGE_BYTES) return null
-  const data = Buffer.from(await file.arrayBuffer()).toString("base64")
-  return { image: { mimeType: file.type, data } }
+  const raw = Buffer.from(await file.arrayBuffer())
+  return { part: { image: { mimeType: file.type, data: raw.toString("base64") } }, raw }
 }
 
 /** The signed-in freelancer, plus how many checks they have already used today. */
@@ -174,6 +181,42 @@ async function callerPro() {
   return { proId: pro.id, profileName: account?.full_name ?? "", ageOnly }
 }
 
+type Photos = Record<"front" | "back" | "selfie", Buffer>
+
+/**
+ * A case the staff must decide keeps its photos, privately: the `identity`
+ * bucket has no policies, so only the server (service role) reads it. The
+ * paths go on the check; deciding it removes them (lib/api/admin.ts).
+ */
+async function keepPhotos(proId: string, images?: Photos): Promise<string[]> {
+  if (!images) return []
+  const admin = supabaseAdmin()
+  const folder = `${proId}/${crypto.randomUUID()}`
+  const paths: string[] = []
+  for (const kind of ["front", "back", "selfie"] as const) {
+    const path = `${folder}/${kind}.jpg`
+    const { error } = await admin.storage.from("identity").upload(path, images[kind], { contentType: "image/jpeg", upsert: false })
+    if (error) {
+      console.error("identity photo not kept:", error.message)
+      continue
+    }
+    paths.push(path)
+  }
+  return paths
+}
+
+/**
+ * The salt for the one-way hash of a card number. IDENTITY_HASH_SALT when set;
+ * otherwise derived from the service role key, a server secret that already
+ * exists (rotating it would only stop matching cards checked before).
+ */
+function hashSalt(): string | null {
+  const set = process.env.IDENTITY_HASH_SALT?.trim()
+  if (set) return set
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+  return key ? createHash("sha256").update(`360dep-identity:${key}`).digest("hex") : null
+}
+
 /** Record the outcome and let the database own the resulting badge. */
 async function record(input: {
   proId: string
@@ -185,6 +228,8 @@ async function record(input: {
   salt: string
   /** Already verified: only the age is being read. */
   ageOnly?: boolean
+  /** The three photos, kept only if the case waits for a person. */
+  images?: Photos
 }): Promise<{ status: "verified" | "rejected" | "pending"; reason?: string }> {
   const admin = supabaseAdmin()
   const hash = cardHash(input.verdict.card_number, input.salt)
@@ -226,6 +271,7 @@ async function record(input: {
       card_hash: null,
       consent_at: input.consentAt,
       decided_at: status === "pending" ? null : new Date().toISOString(),
+      image_paths: status === "pending" ? await keepPhotos(input.proId, input.images) : [],
     })
     if (checkError) throw new Error("Không ghi được lượt xác minh.")
     if (status === "verified" && age) {
@@ -264,6 +310,7 @@ async function record(input: {
     card_hash: hash,
     consent_at: input.consentAt,
     decided_at: input.status === "pending" ? null : new Date().toISOString(),
+    image_paths: input.status === "pending" ? await keepPhotos(input.proId, input.images) : [],
   })
   if (checkError) throw new Error("Không ghi được lượt xác minh.")
 
@@ -292,7 +339,7 @@ export async function POST(request: Request) {
   if (!apiKey) {
     return NextResponse.json({ error: "Dịch vụ xác minh chưa được cấu hình (thiếu GEMINI_API_KEY)." }, { status: 503 })
   }
-  const salt = process.env.IDENTITY_HASH_SALT?.trim()
+  const salt = hashSalt()
   if (!salt) return NextResponse.json({ error: "Dịch vụ xác minh chưa được cấu hình an toàn." }, { status: 503 })
 
   if (wrongOrigin(request)) return NextResponse.json({ error: "Yêu cầu không hợp lệ." }, { status: 403 })
@@ -329,10 +376,10 @@ export async function POST(request: Request) {
 
   let verdict: AiVerdict
   try {
-    verdict = (await generateJson({ parts: [{ text: PROMPT }, front, back, selfie], schema: SCHEMA, name: "identity_check", provider: "gemini" })) as AiVerdict
+    verdict = (await generateJson({ parts: [{ text: PROMPT }, front.part, back.part, selfie.part], schema: SCHEMA, name: "identity_check", provider: "gemini" })) as AiVerdict
     if (
       typeof verdict.front_is_cccd !== "boolean" || typeof verdict.back_is_cccd !== "boolean" ||
-      typeof verdict.selfie_ok !== "boolean" || !["yes", "no", "uncertain"].includes(verdict.same_person) ||
+      typeof verdict.selfie_ok !== "boolean" || typeof verdict.holding_card !== "boolean" || !["yes", "no", "uncertain"].includes(verdict.same_person) ||
       typeof verdict.confidence !== "number" || verdict.confidence < 0 || verdict.confidence > 1 ||
       typeof verdict.name_on_card !== "string" || typeof verdict.date_of_birth !== "string" ||
       typeof verdict.card_number !== "string" || !Array.isArray(verdict.issues)
@@ -348,6 +395,7 @@ export async function POST(request: Request) {
   }
 
   const hint = verdict.issues?.length ? ` ${verdict.issues.join(". ")}.` : ""
+  const images: Photos = { front: front.raw, back: back.raw, selfie: selfie.raw }
 
   const reject = async (reason: string) => {
     if (proId) await record({ proId, status: "rejected", verdict, nameMatched: null, reason, consentAt, salt, ageOnly })
@@ -356,18 +404,19 @@ export async function POST(request: Request) {
 
   if (!verdict.front_is_cccd) return reject(`Ảnh mặt trước chưa đúng là CCCD.${hint}`)
   if (!verdict.back_is_cccd) return reject(`Ảnh mặt sau chưa đúng là CCCD.${hint}`)
-  if (!verdict.selfie_ok) return reject(`Ảnh selfie chưa đạt: cần một khuôn mặt rõ, chụp trực tiếp.${hint}`)
-  if (verdict.same_person === "no") return reject("Khuôn mặt trên CCCD và ảnh selfie không khớp.")
+  if (!verdict.selfie_ok) return reject(`Ảnh chân dung chưa đạt: cần một khuôn mặt rõ, chụp trực tiếp.${hint}`)
+  if (!verdict.holding_card) return reject(`Ảnh chân dung cần thấy rõ bạn đang cầm thẻ CCCD (mặt trước) bên cạnh khuôn mặt.${hint}`)
+  if (verdict.same_person === "no") return reject("Khuôn mặt trên CCCD và ảnh chân dung không khớp.")
 
   if (verdict.same_person === "yes" && verdict.confidence >= 0.8) {
     const matched = profileName && verdict.name_on_card ? nameMatches(profileName, verdict.name_on_card) : null
     if (matched === false) {
       const reason = `Khuôn mặt khớp, nhưng tên trên thẻ (${verdict.name_on_card}) khác tên hồ sơ. Đội ngũ 360dep sẽ kiểm tra thêm.`
-      if (proId) await record({ proId, status: "pending", verdict, nameMatched: false, reason, consentAt, salt, ageOnly })
+      if (proId) await record({ proId, status: "pending", verdict, nameMatched: false, reason, consentAt, salt, ageOnly, images })
       return NextResponse.json({ status: "review", nameOnCard: verdict.name_on_card, reason })
     }
     const outcome = proId
-      ? await record({ proId, status: "verified", verdict, nameMatched: matched, consentAt, salt, ageOnly })
+      ? await record({ proId, status: "verified", verdict, nameMatched: matched, consentAt, salt, ageOnly, images })
       : { status: "verified" as const, reason: undefined }
     // Only whether the person is 18 or over goes back to the browser, never the date.
     const adult = ageFromCard(verdict.date_of_birth, todayISO())?.adult ?? null
@@ -380,7 +429,7 @@ export async function POST(request: Request) {
         })
   }
 
-  const reason = `AI chưa đủ chắc chắn đây là cùng một người.${hint} Đội ngũ 360dep sẽ kiểm tra thêm, hoặc bạn chụp lại selfie rõ hơn.`
-  if (proId) await record({ proId, status: "pending", verdict, nameMatched: null, reason, consentAt, salt, ageOnly })
+  const reason = `AI chưa đủ chắc chắn đây là cùng một người.${hint} Đội ngũ 360dep sẽ kiểm tra thêm, hoặc bạn chụp lại ảnh chân dung rõ hơn.`
+  if (proId) await record({ proId, status: "pending", verdict, nameMatched: null, reason, consentAt, salt, ageOnly, images })
   return NextResponse.json({ status: "review", nameOnCard: verdict.name_on_card, reason })
 }

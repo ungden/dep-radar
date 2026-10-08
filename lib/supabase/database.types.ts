@@ -716,6 +716,7 @@ export type Database = {
       }
       identity_checks: {
         Row: {
+          image_paths: string[]
           card_hash: string | null
           confidence: number | null
           consent_at: string
@@ -731,6 +732,7 @@ export type Database = {
           status: Database["public"]["Enums"]["verification_status"]
         }
         Insert: {
+          image_paths?: string[]
           card_hash?: string | null
           confidence?: number | null
           consent_at: string
@@ -746,6 +748,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["verification_status"]
         }
         Update: {
+          image_paths?: string[]
           card_hash?: string | null
           confidence?: number | null
           consent_at?: string
@@ -1174,6 +1177,33 @@ export type Database = {
         }
         Relationships: []
       }
+      pro_payout: {
+        Row: {
+          account_holder: string
+          account_number: string
+          bank_name: string
+          pro_id: string
+          qr_path: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_holder: string
+          account_number: string
+          bank_name: string
+          pro_id: string
+          qr_path?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_holder?: string
+          account_number?: string
+          bank_name?: string
+          pro_id?: string
+          qr_path?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pro_service_prices: {
         Row: {
           price: number
@@ -1245,6 +1275,7 @@ export type Database = {
       }
       pros: {
         Row: {
+          start_label: string | null
           accepting_jobs: boolean
           adult: boolean | null
           areas: string[]
@@ -1284,6 +1315,7 @@ export type Database = {
           reviewed_at: string | null
         }
         Insert: {
+          start_label?: string | null
           accepting_jobs?: boolean
           adult?: boolean | null
           areas?: string[]
@@ -1323,6 +1355,7 @@ export type Database = {
           reviewed_at?: string | null
         }
         Update: {
+          start_label?: string | null
           accepting_jobs?: boolean
           adult?: boolean | null
           areas?: string[]
@@ -2478,6 +2511,7 @@ export type Database = {
       }
       slugify: { Args: { input: string }; Returns: string }
       start_booking: { Args: { p_booking: string }; Returns: undefined }
+      set_start_point: { Args: { p_lat: number; p_lng: number; p_label?: string }; Returns: undefined }
       travel_distance_km: {
         Args: {
           lat1: number

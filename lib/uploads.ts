@@ -17,7 +17,7 @@ import { VIDEO_MAX_BYTES, VIDEO_MAX_MB, VIDEO_MAX_SECONDS, stripVideoLocation } 
 const MAX_EDGE = 1600
 const QUALITY = 0.85
 
-export type Bucket = "avatars" | "works" | "reviews" | "chat"
+export type Bucket = "avatars" | "works" | "reviews" | "chat" | "payout"
 
 async function reencode(file: File, maxEdge = MAX_EDGE): Promise<Blob> {
   const bitmap = await createImageBitmap(file)
@@ -35,7 +35,7 @@ async function reencode(file: File, maxEdge = MAX_EDGE): Promise<Blob> {
   return blob
 }
 
-/** Returns a public URL, except chat media which returns a private storage path. */
+/** Returns a public URL, except private buckets (chat media, payout QR codes) which return the storage path. */
 export async function uploadImage(bucket: Bucket, file: File): Promise<string> {
   if (!file.type.startsWith("image/")) throw new Error("Chỉ nhận tệp ảnh.")
   const supabase = supabaseBrowser()
@@ -53,11 +53,11 @@ export async function uploadImage(bucket: Bucket, file: File): Promise<string> {
   })
   if (error) throw new Error("Tải ảnh lên không thành công, thử lại nhé.")
 
-  return bucket === "chat" ? path : supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl
+  return bucket === "chat" || bucket === "payout" ? path : supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl
 }
 
 export async function removeImage(bucket: Bucket, publicUrl: string): Promise<void> {
-  if (bucket === "chat") return
+  if (bucket === "chat" || bucket === "payout") return
   const marker = `/storage/v1/object/public/${bucket}/`
   const index = publicUrl.indexOf(marker)
   if (index === -1) return // A seeded image that lives in the repo, not in storage.

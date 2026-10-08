@@ -1,3 +1,5 @@
+import { IDENTITY_REQUIRED_FOR_PARTNERS } from "@/lib/launch"
+
 /**
  * The rules a profile has to pass whatever the AI says, and how the two
  * answers combine. Pure: tested in tests/ai-review.test.ts.
@@ -35,6 +37,7 @@ export interface ProfileFacts {
 
 export const RULE_REASONS = {
   modelIdentity: "Xác minh danh tính trước khi nhận làm mẫu (Hồ sơ → Xác minh danh tính).",
+  identity: "Xác minh danh tính (CCCD 2 mặt và ảnh chân dung cầm CCCD) trước khi hồ sơ hiện với khách: Studio → Xác minh danh tính.",
   noService: "Bật ít nhất một dịch vụ và chọn mức giá (Dịch vụ & bảng giá).",
   noHours: "Lưu giờ làm việc trong tuần (Hồ sơ → Giờ làm việc).",
   noWork: "Đăng ít nhất một ảnh việc bạn đã làm (Tác phẩm).",
@@ -61,7 +64,9 @@ export function hasContactInfo(text: string): boolean {
 /** What must change before the profile can be approved, in the partner's words. Empty when nothing. */
 export function profileRuleProblems(f: ProfileFacts): string[] {
   const problems: string[] = []
-  if (f.categories.some((c) => c.startsWith("model-")) && f.identityStatus !== "verified") {
+  if (IDENTITY_REQUIRED_FOR_PARTNERS && f.identityStatus !== "verified") {
+    problems.push(RULE_REASONS.identity)
+  } else if (f.categories.some((c) => c.startsWith("model-")) && f.identityStatus !== "verified") {
     problems.push(RULE_REASONS.modelIdentity)
   }
   if (f.activeServices === 0) problems.push(RULE_REASONS.noService)

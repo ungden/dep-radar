@@ -114,6 +114,13 @@ export default function PartnerProfile() {
       {setup.profile?.published && !setup.profile.accepting_jobs && <Txt color={colors.warning}>Bạn đang tạm nghỉ nhận khách. Bật “Nhận lịch mới” trong Quản lý đối tác khi sẵn sàng.</Txt>}
       {setup.profile?.review_note && <Txt color={colors.warning}>{setup.profile.review_note}</Txt>}
       {steps.slice(0, 5).map((s, i) => <Choice key={s.label} label={`${s.done ? "✓" : "Còn thiếu:"} ${s.label}`} active={s.done} onPress={() => setStep(i)} />)}
+      {/* Identity is asked before the profile is shown (lib/launch.ts on the web); the check itself runs on the web. */}
+      <Choice
+        label={setup.profile?.identity_status === "verified" ? "✓ Xác minh danh tính" : setup.profile?.identity_status === "pending" ? "Xác minh danh tính: đang chờ duyệt" : "Còn thiếu: Xác minh danh tính (CCCD + ảnh cầm CCCD)"}
+        active={setup.profile?.identity_status === "verified"}
+        onPress={() => void WebBrowser.openBrowserAsync(webLink("/studio/verify"))}
+      />
+      <Button label="Nhận tiền & mã QR (mở trên web)" variant="ghost" onPress={() => void WebBrowser.openBrowserAsync(webLink("/studio/thanh-toan"))} />
       <Button label="Đọc chính sách phí, nhận việc & hủy lịch" variant="ghost" onPress={() => void WebBrowser.openBrowserAsync(webLink("/chinh-sach"))} />
       <Choice label="Tôi đồng ý chính sách" active={agree} onPress={() => setAgree(!agree)} />
       <Button label="Gửi hồ sơ để duyệt" busy={busy} disabled={!agree || steps.slice(0, 5).some((s) => !s.done) || setup.profile?.review_status === "pending"} onPress={() => void mutate("submit_partner_profile", { p_agree: agree })} />

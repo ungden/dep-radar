@@ -1,8 +1,8 @@
 /**
- * Identity check (client side): validate and shrink the CCCD + selfie photos, then
- * send them to /api/identity where a vision AI (Gemini) reads the card and compares
- * the portrait with the selfie. Photos stay in memory in the browser and are not
- * stored by dep360 on the server.
+ * Identity check (client side): validate and shrink the CCCD photos and the
+ * portrait holding the card, then send them to /api/identity where a vision AI
+ * (Gemini) reads the card and compares the faces. The server keeps the photos
+ * only when the staff must decide (privately, until decided).
  */
 
 export type IdentityImageKind = "front" | "back" | "selfie"

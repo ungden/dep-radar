@@ -15,6 +15,8 @@ import { proView, servicesOf, useApp, useRefresh, worksOf } from "@/lib/store"
 import { uploadImage } from "@/lib/uploads"
 import { cn, todayISO } from "@/lib/utils"
 import { DEFAULT_WORKING_WINDOWS } from "@/lib/working-hours"
+import { IDENTITY_REQUIRED_FOR_PARTNERS } from "@/lib/launch"
+import { supabaseBrowser } from "@/lib/supabase/client"
 
 const DAYS = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]
 const HOURS = Array.from({ length: 49 }, (_, i) => i * 30)
@@ -151,17 +153,28 @@ function ProfileEditor() {
           </div>
           <Toggle label="Nhận làm tại nhà khách" checked={homeService} onChange={setHomeService} />
         </div>
-        <Field label={`Bán kính di chuyển: ${maxTravelKm} km`}>
-          <input
-            type="range"
-            min={1}
-            max={30}
-            step={1}
-            value={maxTravelKm}
-            onChange={(e) => setMaxTravelKm(Number(e.target.value))}
-            className="w-full accent-[var(--color-accent)]"
-          />
-        </Field>
+        <div>
+          <p className="mb-2 text-[13px] font-semibold">Nhận đơn tại nhà trong bán kính</p>
+          <div role="radiogroup" aria-label="Bán kính nhận đơn" className="flex flex-wrap gap-2">
+            {RADII.map((km) => (
+              <button
+                key={km}
+                type="button"
+                role="radio"
+                aria-checked={maxTravelKm === km}
+                onClick={() => setMaxTravelKm(km)}
+                className={cn(
+                  "h-10 rounded-full border px-4 text-[14px] font-semibold",
+                  maxTravelKm === km ? "border-accent bg-accent text-white" : "border-line bg-surface hover:border-ink/30",
+                )}
+              >
+                {km} km
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-muted">Phí di chuyển theo mức chung của 360dep: miễn phí 5 km đầu, sau đó 5.000đ/km, tối đa 100.000đ.</p>
+        </div>
+        <StartPoint />
         <Field label="Địa chỉ studio (nếu có)" hint="Có studio thì bạn nhận được cả dịch vụ chỉ làm tại chỗ.">
           <input className={inputClass} value={studio} onChange={(e) => setStudio(e.target.value)} />
         </Field>
@@ -185,6 +198,64 @@ function ProfileEditor() {
       </Button>
 
       <PublishBox hasService={hasService} hasWork={hasWork} hours={hours} />
+    </div>
+  )
+}
+
+/** Radii a partner picks from (owner, 08/10/2026): no free number. */
+const RADII = [3, 5, 10, 15, 20, 30]
+
+/**
+ * Where the partner leaves from (set_start_point, 20261008100000): their
+ * phone's location, within 15 km of the district they work in. Travel is
+ * measured from there instead of the district centre.
+ */
+function StartPoint() {
+  const state = useApp()
+  const refresh = useRefresh()
+  const pro = proView(state, state.session!.proId!)!
+  const [label, setLabel] = React.useState(pro.startLabel ?? "")
+  const [busy, setBusy] = React.useState(false)
+  const [message, setMessage] = React.useState<{ ok: boolean; text: string } | null>(null)
+
+  const locate = () => {
+    if (!("geolocation" in navigator)) return setMessage({ ok: false, text: "Trình duyệt này không lấy được vị trí." })
+    setBusy(true)
+    setMessage(null)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { error } = await supabaseBrowser().rpc("set_start_point", {
+          p_lat: pos.coords.latitude,
+          p_lng: pos.coords.longitude,
+          p_label: label.trim() || "Vị trí đã lưu",
+        })
+        setBusy(false)
+        if (error) return setMessage({ ok: false, text: error.message })
+        setMessage({ ok: true, text: "Đã lưu điểm xuất phát." })
+        refresh()
+      },
+      () => {
+        setBusy(false)
+        setMessage({ ok: false, text: "Chưa lấy được vị trí. Cho phép trình duyệt dùng vị trí rồi thử lại." })
+      },
+      { enableHighAccuracy: true, timeout: 15000 },
+    )
+  }
+
+  return (
+    <div className="rounded-xl bg-canvas p-3">
+      <p className="text-[13px] font-semibold">Điểm xuất phát</p>
+      <p className="mt-0.5 text-xs text-muted">
+        {pro.startLabel ? `Đang dùng: ${pro.startLabel}.` : `Đang dùng tâm ${pro.district}.`} Khoảng cách và phí di chuyển tính từ điểm này. Khách không thấy vị trí
+        chính xác của bạn.
+      </p>
+      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+        <input className={cn(inputClass, "h-10 text-sm")} value={label} maxLength={120} onChange={(e) => setLabel(e.target.value)} placeholder="Tên gợi nhớ, VD: Nhà ở Nguyễn Trãi" />
+        <Button size="sm" variant="outline" disabled={busy} onClick={locate}>
+          {busy ? "Đang lấy vị trí…" : "Dùng vị trí hiện tại"}
+        </Button>
+      </div>
+      {message && <p className={cn("mt-2 text-xs", message.ok ? "text-success" : "text-danger")}>{message.text}</p>}
     </div>
   )
 }
@@ -292,11 +363,26 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
   // Publishing requires hours explicitly confirmed in the database.
   const hoursReady = hours.saved
   const locationReady = Boolean(pro.homeService || pro.studioAddress?.trim())
-  const ready = hasService && hasWork && hoursReady && locationReady
+  // Identity is asked before the profile is shown (lib/launch.ts); a pending case may be sent, it goes live once verified.
+  const identityReady = !IDENTITY_REQUIRED_FOR_PARTNERS || pro.identity === "verified" || pro.identity === "pending"
+  const ready = hasService && hasWork && hoursReady && locationReady && identityReady
   const items: [boolean, string, string][] = [
     [locationReady, "Nơi phục vụ đã lưu: tại nhà khách hoặc studio", "#noi-phuc-vu"],
     [hasService, "Ít nhất một dịch vụ đang bật, có giá", "/studio/services"],
     [hasWork, "Ít nhất một ảnh tác phẩm", "/studio/works"],
+    ...(IDENTITY_REQUIRED_FOR_PARTNERS
+      ? [
+          [
+            pro.identity === "verified",
+            pro.identity === "verified"
+              ? "Danh tính đã xác minh"
+              : pro.identity === "pending"
+                ? "Xác minh danh tính đang chờ 360dep duyệt (gửi duyệt được, hồ sơ hiện khi xác minh xong)"
+                : "Xác minh danh tính: CCCD 2 mặt và ảnh chân dung cầm CCCD",
+            "/studio/verify",
+          ] as [boolean, string, string],
+        ]
+      : []),
     [
       hours.saved,
       hours.saved

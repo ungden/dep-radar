@@ -513,6 +513,18 @@ function CheckCard({ check, onDecide }: { check: PendingCheck; onDecide: (approv
         <Fact label="Độ chắc chắn" value={check.confidence === null ? "—" : `${Math.round(check.confidence * 100)}%`} />
       </dl>
       {check.reason && <p className="mt-2 rounded-xl bg-canvas px-3 py-2 text-[13px] text-ink-soft">{check.reason}</p>}
+      {check.photos.length > 0 && (
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {check.photos.map((p) => (
+            <a key={p.url} href={p.url} target="_blank" rel="noreferrer" className="block">
+              {/* Short-lived signed links from a private bucket: a plain img, not next/image. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.url} alt={p.label} className="aspect-[4/3] w-full rounded-lg bg-subtle object-cover" />
+              <span className="mt-1 block text-center text-[11px] text-muted">{p.label}</span>
+            </a>
+          ))}
+        </div>
+      )}
 
       <input
         className={cn(inputClass, "mt-3 text-sm")}
@@ -529,8 +541,8 @@ function CheckCard({ check, onDecide }: { check: PendingCheck; onDecide: (approv
         </Button>
       </div>
       <p className="mt-2 text-xs text-muted">
-        Ảnh CCCD và selfie không được lưu, nên quyết định dựa trên kết quả AI ở trên. Nếu cần xem lại ảnh, yêu cầu chuyên
-        viên gửi lại.
+        Ảnh chỉ lưu kín cho lần duyệt này (link hết hạn sau 15 phút, tải lại trang để xem tiếp) và bị xoá ngay khi bạn duyệt hoặc từ chối.
+        Kiểm tra: ảnh thẻ thật, người trong ảnh chân dung đang cầm đúng thẻ đó, khuôn mặt khớp ảnh trên thẻ.
       </p>
     </Card>
   )

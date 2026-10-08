@@ -25,6 +25,8 @@ export interface PendingCheck {
   confidence: number | null
   reason: string | null
   createdAt: string
+  /** The kept photos (front, back, portrait holding the card), as links valid for 15 minutes. */
+  photos: { label: string; url: string }[]
 }
 
 export interface AdminPro {
@@ -86,7 +88,7 @@ export async function pendingChecks(): Promise<PendingCheck[]> {
   const { data, error } = await supabase
     .from("identity_checks")
     .select(`
-      id, pro_id, status, name_on_card, name_matches, same_person, confidence, reject_reason, created_at,
+      id, pro_id, status, name_on_card, name_matches, same_person, confidence, reject_reason, created_at, image_paths,
       pros!identity_checks_pro_id_fkey (slug, display_name)
     `)
     .eq("status", "pending")
@@ -95,21 +97,32 @@ export async function pendingChecks(): Promise<PendingCheck[]> {
     console.error("pendingChecks failed:", error.message)
     return []
   }
-  return (data ?? []).map((r) => {
-    const pro = row(r.pros)
-    return {
-      id: r.id,
-      proId: r.pro_id,
-      proSlug: String(pro.slug ?? ""),
-      proName: String(pro.display_name ?? "Chuyên viên"),
-      nameOnCard: r.name_on_card,
-      nameMatches: r.name_matches,
-      samePerson: r.same_person,
-      confidence: r.confidence === null ? null : Number(r.confidence),
-      reason: r.reject_reason,
-      createdAt: r.created_at,
-    }
-  })
+  // The identity bucket has no policies: only the service role can sign links, and only for an admin.
+  const admin = data?.length && (await isAdmin()) ? supabaseAdmin() : null
+  const LABEL: Record<string, string> = { front: "Mặt trước", back: "Mặt sau", selfie: "Chân dung cầm CCCD" }
+  return Promise.all(
+    (data ?? []).map(async (r) => {
+      const pro = row(r.pros)
+      const paths: string[] = r.image_paths ?? []
+      const signed = admin && paths.length ? await admin.storage.from("identity").createSignedUrls(paths, 15 * 60) : null
+      return {
+        id: r.id,
+        proId: r.pro_id,
+        proSlug: String(pro.slug ?? ""),
+        proName: String(pro.display_name ?? "Chuyên viên"),
+        nameOnCard: r.name_on_card,
+        nameMatches: r.name_matches,
+        samePerson: r.same_person,
+        confidence: r.confidence === null ? null : Number(r.confidence),
+        reason: r.reject_reason,
+        createdAt: r.created_at,
+        photos: (signed?.data ?? [])
+          .flatMap((s) =>
+            s.signedUrl ? [{ label: LABEL[(s.path ?? "").split("/").pop()?.replace(".jpg", "") ?? ""] ?? "Ảnh", url: s.signedUrl }] : [],
+          ),
+      }
+    }),
+  )
 }
 
 export async function adminPros(): Promise<AdminPro[]> {
@@ -216,8 +229,19 @@ async function call(fn: string, args: Record<string, unknown>): Promise<ActionRe
   return { ok: true, data: undefined }
 }
 
+/** Decides a case, then removes its kept photos: they exist only for this decision. */
 export async function decideCheck(checkId: string, approve: boolean, reason = "") {
-  return call("decide_identity_check", { p_check: checkId, p_approve: approve, p_reason: reason })
+  const supabase = await supabaseServer()
+  const { data: before } = await supabase.from("identity_checks").select("image_paths").eq("id", checkId).maybeSingle()
+  const result = await call("decide_identity_check", { p_check: checkId, p_approve: approve, p_reason: reason })
+  const paths: string[] = before?.image_paths ?? []
+  if (result.ok && paths.length) {
+    const admin = supabaseAdmin()
+    const { error } = await admin.storage.from("identity").remove(paths)
+    if (error) console.error("identity photos not removed:", error.message)
+    else await admin.from("identity_checks").update({ image_paths: [] }).eq("id", checkId)
+  }
+  return result
 }
 
 /** A disputed no-show: pay the travel-fee compensation to the freelancer, or not. Both sides are told. */
