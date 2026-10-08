@@ -13,11 +13,12 @@ import { sortPros } from "@/components/trust"
 import { Button, ButtonLink, Chip, PageSkeleton, Tabs, Toggle } from "@/components/ui"
 import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { CATEGORIES, categoryLabel, getTemplate, getVertical, isVertical, verticalOf } from "@/lib/catalog"
+import { priorityFirst } from "@/lib/discovery"
 import { interestsFrom, rankFeed, type VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
 import { serviceOffers } from "@/lib/offers"
 import { categoryTerms, matchesQuery } from "@/lib/search"
-import { distanceToCustomer, fromPrice, proView, servicesOf, useApp, type AppState } from "@/lib/store"
+import { categoryFromPrice, distanceToCustomer, fromPrice, proView, servicesOf, useApp, type AppState } from "@/lib/store"
 import { categoriesInTrade } from "@/lib/trade"
 import { isVerified } from "@/lib/trust"
 import type { CategoryId, Pro, Work } from "@/lib/types"
@@ -152,17 +153,19 @@ function SearchView() {
   }, [state, proOk, vertical, category, comesToYou, maxPrice, query, sort, now])
 
   const pros = React.useMemo(() => {
+    // With a category chosen, "Từ ..." is that category's price, as on the card.
+    const priceOf = (proId: string) => (category ? categoryFromPrice(state, proId, category) : fromPrice(state, proId))
     const list = state.pros.filter((p) => {
       if (!proOk(p)) return false
       if (vertical !== "all" && !p.categories.some((c) => verticalOf(c) === vertical)) return false
       if (category && !p.categories.includes(category)) return false
-      const price = fromPrice(state, p.id)
+      const price = priceOf(p.id)
       if (maxPrice && (price === null || price > maxPrice)) return false
       return matchesQuery(proText(state, p), query)
     })
     if (sort === "near")
       return [...list].sort((a, b) => (distanceToCustomer(state, a.id) ?? Infinity) - (distanceToCustomer(state, b.id) ?? Infinity))
-    if (sort === "price") return [...list].sort((a, b) => (fromPrice(state, a.id) ?? Infinity) - (fromPrice(state, b.id) ?? Infinity))
+    if (sort === "price") return [...list].sort((a, b) => (priceOf(a.id) ?? Infinity) - (priceOf(b.id) ?? Infinity))
     return sortPros(state, list, "match")
   }, [state, proOk, vertical, category, maxPrice, query, sort])
 
@@ -239,7 +242,7 @@ function SearchView() {
       <CategoryTiles
         className="mt-3"
         row={Boolean(query)}
-        items={[{ id: "all", label: "Tất cả" }, ...categoriesInTrade(vertical).map((c) => ({ id: c.id, label: c.short ?? c.label }))]}
+        items={[{ id: "all", label: "Tất cả" }, ...priorityFirst(categoriesInTrade(vertical)).map((c) => ({ id: c.id, label: c.short ?? c.label }))]}
         value={category ?? "all"}
         onChange={(id) => setParams({ category: id === "all" ? null : id })}
       />
@@ -290,7 +293,7 @@ function SearchView() {
             <ul className="mt-5 grid gap-3 md:grid-cols-2 md:gap-4">
               {pros.map((p) => (
                 <li key={p.id}>
-                  <ProCard pro={p} className="h-full" />
+                  <ProCard pro={p} category={category} className="h-full" />
                 </li>
               ))}
             </ul>

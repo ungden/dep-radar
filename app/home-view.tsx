@@ -14,6 +14,7 @@ import { ServiceCard } from "@/components/service-card"
 import { ButtonLink, PageSkeleton, Wordmark } from "@/components/ui"
 import { DEMO_DATA_LIVE } from "@/lib/launch"
 import { CATEGORIES, getVertical, isVertical } from "@/lib/catalog"
+import { pinPriority } from "@/lib/discovery"
 import { actions } from "@/lib/client-actions"
 import { rankFeed, type VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
@@ -68,7 +69,9 @@ function Explore() {
   // ones nobody offers yet, marked "Sắp có") one tap away behind "Xem thêm".
   const categories = CATEGORIES.filter((c) => vertical === "all" || c.vertical === vertical)
   const shownCategory = categories.some((c) => c.id === category) ? category : "all"
-  const tiles = categoryRow(categories, offers, shownCategory)
+  const counted = categoryRow(categories, offers, shownCategory)
+  // Nail and Makeup lead the row whatever is on offer (lib/discovery.ts).
+  const tiles = { ...counted, ...pinPriority(counted, shownCategory) }
   const [allCategories, setAllCategories] = React.useState(false)
   const shownCategoryInfo = CATEGORIES.find((c) => c.id === shownCategory)
   const shown = offers.filter((o) => shownCategory === "all" || o.template.category === shownCategory)

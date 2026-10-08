@@ -12,7 +12,20 @@ import { actions, useAct } from "@/lib/client-actions"
 import { trackWork } from "@/lib/feed-events"
 import type { VerticalFilter } from "@/lib/feed"
 import { serviceOffers } from "@/lib/offers"
-import { distanceToCustomer, fromPrice, proView, useApp, worksOf, type AppState } from "@/lib/store"
+import type { LatLng } from "@/lib/geo"
+import { useHere } from "@/lib/here"
+import { levelName } from "@/lib/levels"
+import {
+  categoryFromPrice,
+  categoryLevel,
+  distanceFrom,
+  fromPrice,
+  mainCategoryOf,
+  proView,
+  useApp,
+  worksOf,
+  type AppState,
+} from "@/lib/store"
 import type { CategoryId, Pro, Work } from "@/lib/types"
 import { showsAverage } from "@/lib/connection"
 import { cn, formatPrice, ratingText } from "@/lib/utils"
@@ -27,11 +40,12 @@ export const CATEGORY_ICON = Object.fromEntries(
 ) as Record<CategoryId, React.ComponentType<{ className?: string }>>
 
 /**
- * "2,4 km" when we know where the customer is; otherwise the district, plus
- * the city when browsing the whole country ("Ba Đình" alone could be anywhere).
+ * "2,4 km" when we know where the customer is (the location they shared in
+ * this tab, else their saved address); otherwise the district, plus the city
+ * when browsing the whole country ("Ba Đình" alone could be anywhere).
  */
-export function whereLabel(state: AppState, pro: Pro) {
-  const km = state.session?.role !== "pro" ? distanceToCustomer(state, pro.id) : null
+export function whereLabel(state: AppState, pro: Pro, here: LatLng | null = null) {
+  const km = state.session?.role !== "pro" ? distanceFrom(state, pro.id, here) : null
   if (km !== null) return `${km.toLocaleString("vi-VN")} km`
   return state.city ? pro.district : `${pro.district}, ${pro.city}`
 }
@@ -278,7 +292,7 @@ export const WorkCard = PostCard
 // ---------------------------------------------------------------------------
 // People
 
-function TrustLine({ pro, state }: { pro: Pro; state: AppState }) {
+function TrustLine({ pro, state, here }: { pro: Pro; state: AppState; here: LatLng | null }) {
   return (
     <p className="flex flex-wrap items-center gap-x-1.5 text-[13px] text-ink-soft">
       {showsAverage(pro.rating.count) ? (
@@ -295,26 +309,53 @@ function TrustLine({ pro, state }: { pro: Pro; state: AppState }) {
         </>
       )}
       <span aria-hidden className="text-line">•</span>
-      <span>{whereLabel(state, pro)}</span>
+      <span>{whereLabel(state, pro, here)}</span>
     </p>
+  )
+}
+
+/**
+ * The price level a person picked most often in a category, as "Nail · Master".
+ * It is the price they chose, not a certificate, and says so to a screen reader.
+ */
+export function LevelBadge({ proId, category, className }: { proId: string; category: CategoryId; className?: string }) {
+  const state = useApp()
+  const level = categoryLevel(state, proId, category)
+  if (level === null) return null
+  return (
+    <span
+      title="Mức giá người làm tự chọn, không phải chứng nhận tay nghề"
+      className={cn("inline-flex max-w-full items-center rounded-full bg-subtle px-2 py-0.5 text-[12px] font-semibold text-ink-soft", className)}
+    >
+      <span className="truncate">
+        {categoryLabel(category)} · {levelName(level)}
+      </span>
+      <span className="sr-only">, mức giá tự chọn</span>
+    </span>
   )
 }
 
 /**
  * A person, for lists: who they are, three recent pieces of work, and the
  * facts that decide a booking. Used where a customer compares people.
+ *
+ * With `category` (the one being browsed) the level, the starting price and
+ * the photos are that category's; without it the level is their main one.
  */
-export function ProCard({ pro: basePro, className }: { pro: Pro; className?: string }) {
+export function ProCard({ pro: basePro, category, className }: { pro: Pro; category?: CategoryId | null; className?: string }) {
   const state = useApp()
+  const { point: here } = useHere()
   const pro = proView(state, basePro.id) ?? basePro
-  const from = fromPrice(state, pro.id)
+  const levelCategory = category ?? mainCategoryOf(state, pro.id)
+  const from = category ? categoryFromPrice(state, pro.id, category) : fromPrice(state, pro.id)
   const photos = worksOf(state, pro.id)
+    .filter((w) => !category || w.category === category)
     .map((w) => w.images[0])
     .filter(Boolean)
     .slice(0, 3)
   return (
     <Link
-      href={`/pros/${pro.id}`}
+      href={`/pros/${pro.id}${category ? `?album=${category}` : ""}`}
       className={cn("group block rounded-[var(--radius-lg)] bg-surface p-3 shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-raised)]", className)}
     >
       <div className="flex items-center gap-3">
@@ -324,6 +365,7 @@ export function ProCard({ pro: basePro, className }: { pro: Pro; className?: str
             <span className="truncate">{pro.name}</span>
             <VerifiedMark pro={pro} />
           </p>
+          {levelCategory && <LevelBadge proId={pro.id} category={levelCategory} className="mt-0.5" />}
           <p className="truncate text-[13px] text-muted">{pro.title || pro.categories.map(categoryLabel).join(" · ")}</p>
         </div>
         <div className="shrink-0 text-right">
@@ -341,7 +383,7 @@ export function ProCard({ pro: basePro, className }: { pro: Pro; className?: str
         </div>
       )}
       <div className="mt-2.5">
-        <TrustLine pro={pro} state={state} />
+        <TrustLine pro={pro} state={state} here={here} />
       </div>
     </Link>
   )

@@ -20,17 +20,18 @@ import {
   Store,
   X,
 } from "lucide-react"
-import { whereLabel } from "@/components/beauty"
+import { LevelBadge, whereLabel } from "@/components/beauty"
 import { FollowButton } from "@/components/follow-button"
 import { ServiceMenu } from "@/components/service-menu"
 import { TradeDot } from "@/components/trade"
 import { RatingSummaryBlock, ReviewItem, VerifiedBadge, VerifiedMark } from "@/components/trust"
 import { Avatar, BottomBar, ButtonLink, Chip, EmptyState, Tabs } from "@/components/ui"
-import { categoryLabel, verticalOf } from "@/lib/catalog"
+import { CATEGORIES, categoryLabel, verticalOf } from "@/lib/catalog"
+import { albumsOf } from "@/lib/discovery"
 import { POLICY, travelFeeFor } from "@/lib/pricing"
 import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp, worksOf } from "@/lib/store"
 import { personWord, tradesOf } from "@/lib/trade"
-import type { ModelProfile, Pro, Work } from "@/lib/types"
+import type { CategoryId, ModelProfile, Pro, Work } from "@/lib/types"
 import { showsAverage } from "@/lib/connection"
 import { cn, formatPrice, formatResponseTime, parseISODate } from "@/lib/utils"
 
@@ -64,6 +65,9 @@ export function ProProfile({ proId }: { proId: string }) {
   const reviews = reviewsOf(state, pro.id)
   const from = fromPrice(state, pro.id)
   const own = state.session?.proId === pro.id
+  // The category the customer came from (a card in the Nail list opens on Nail).
+  const rawAlbum = params.get("album")
+  const album = CATEGORIES.some((c) => c.id === rawAlbum) ? (rawAlbum as CategoryId) : null
 
   const asked = params.get("tab") as Tab | null
   const fallback: Tab = hash === `#${REVIEWS_ANCHOR}` ? "reviews" : asked && TABS.includes(asked) ? asked : works.length ? "works" : "services"
@@ -146,6 +150,12 @@ export function ProProfile({ proId }: { proId: string }) {
             {whereLabel(state, pro) === pro.district ? `, ${pro.city}` : ""}
           </span>
         </p>
+        {/* The price level picked most often in each category: a price, not a certificate. */}
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {pro.categories.map((c) => (
+            <LevelBadge key={c} proId={pro.id} category={c} />
+          ))}
+        </div>
         <VerifiedBadge pro={pro} className="mt-3" />
 
         {/* On a phone the booking facts sit under the name, where the
@@ -194,12 +204,12 @@ export function ProProfile({ proId }: { proId: string }) {
           <div role="tabpanel" aria-labelledby={`tab-${tab}`}>
             {tab === "works" &&
               (works.length ? (
-                <WorkGrid works={works} />
+                <Portfolio works={works} initial={album} />
               ) : (
                 <EmptyState title="Chưa có tác phẩm" text={`${pro.name} chưa đăng tác phẩm nào.`} />
               ))}
 
-            {tab === "services" && <ServiceMenu proId={pro.id} bookable={!own} />}
+            {tab === "services" && <ServiceMenu proId={pro.id} bookable={!own} initialCategory={album} />}
 
             {tab === "reviews" && (
               <div id={REVIEWS_ANCHOR} className="mt-5 scroll-mt-24">
@@ -359,6 +369,44 @@ function WorkBadge({ work }: { work: Work }) {
       <Icon className={cn("size-3.5", work.video && "fill-white")} />
       <span className="sr-only">{label}</span>
     </span>
+  )
+}
+
+/**
+ * The portfolio, one album per category the person works in ("Nail",
+ * "Makeup", ...), so a customer looking for nails sees nails. One category
+ * needs no albums.
+ */
+function Portfolio({ works, initial }: { works: Work[]; initial: CategoryId | null }) {
+  const albums = albumsOf(works)
+  const [chosen, setChosen] = React.useState<CategoryId | null>(null)
+  if (albums.length <= 1) return <WorkGrid works={works} />
+  const current = albums.find((a) => a.category === chosen) ?? albums.find((a) => a.category === initial) ?? albums[0]
+  return (
+    <>
+      <div role="radiogroup" aria-label="Album" className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
+        {albums.map((a) => {
+          const active = a.category === current.category
+          return (
+            <button
+              key={a.category}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => setChosen(a.category)}
+              className={cn(
+                "relative inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-[13px] font-semibold transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
+                active ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
+              )}
+            >
+              {categoryLabel(a.category)}
+              <span className={cn("font-medium", active ? "text-white/80" : "text-muted")}>{a.works.length}</span>
+            </button>
+          )
+        })}
+      </div>
+      <WorkGrid works={current.works} />
+    </>
   )
 }
 
