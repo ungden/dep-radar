@@ -9,6 +9,7 @@ import {
   adminCustomers,
   adminHelpQuestions,
   adminResetPassword,
+  catalogUsage,
   financeReport,
   setAccountSuspended,
   updatePlatformSettings,
@@ -22,7 +23,9 @@ import {
   type HelpQuestionFilter,
   type PlatformSettings,
 } from "@/lib/api/admin"
+import { CATALOG, CATEGORIES, CATALOG_VERSION, PRICE_LEVEL_NOTE, tierLabels } from "@/lib/catalog"
 import { HELP_ENTRIES } from "@/lib/help/knowledge"
+import type { CategoryId } from "@/lib/types"
 import { useRefresh } from "@/lib/store"
 import { cn, formatPrice, localDate, timeAgo, todayISO } from "@/lib/utils"
 
@@ -550,6 +553,8 @@ function describe(a: AdminAction) {
       return "Mở khoá tài khoản"
     case "account:reset_password":
       return "Đặt lại mật khẩu (hỗ trợ qua Zalo)"
+    case "report:view_chat":
+      return "Xem tin nhắn hai bên của một báo cáo"
     case "wallet:adjust":
       return `Điều chỉnh ví ${formatPrice(Number(d.amount ?? 0))}: ${String(d.note ?? "")}`
     default:
@@ -639,6 +644,112 @@ export function HelpQuestionsPanel() {
           ))}
         </ul>
       )}
+    </div>
+  )
+}
+
+// The catalogue ----------------------------------------------------------------------------
+
+/**
+ * The services and the three prices partners choose between, read-only: the
+ * catalogue lives in lib/catalog.ts and reaches the database by migration, so
+ * a change goes through a code review rather than a form. Next to each price,
+ * how many partners picked it.
+ */
+export function CatalogPanel() {
+  const [category, setCategory] = React.useState<CategoryId>("nail")
+  const [usage, setUsage] = React.useState<Record<string, number>>({})
+  const [error, setError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    let live = true
+    catalogUsage().then((r) => {
+      if (!live) return
+      if (r.ok) setUsage(r.data)
+      else setError(r.error)
+    })
+    return () => {
+      live = false
+    }
+  }, [])
+
+  const templates = CATALOG.filter((t) => t.category === category)
+  const labels = tierLabels()
+
+  return (
+    <div className="mt-4 space-y-3">
+      <Card className="p-4 text-sm">
+        <p className="font-semibold">Danh mục dịch vụ & bảng giá (phiên bản {CATALOG_VERSION})</p>
+        <p className="mt-1 text-xs text-muted">
+          {CATALOG.length} dịch vụ trong {CATEGORIES.length} ngành. Đối tác chỉ chọn dịch vụ và một trong 3 mức giá có sẵn, không tự nhập giá. {PRICE_LEVEL_NOTE}
+        </p>
+        <p className="mt-1 text-xs text-muted">Chỉ xem. Muốn thêm hoặc đổi giá: báo đội kỹ thuật cập nhật danh mục.</p>
+        {error && <p className="mt-2 text-xs text-danger">Không tải được số đối tác đã chọn: {error}</p>}
+      </Card>
+      <div className="flex flex-wrap gap-1.5">
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => setCategory(c.id)}
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-xs font-semibold",
+              c.id === category ? "border-ink bg-ink text-canvas" : "border-line hover:bg-subtle",
+            )}
+          >
+            {c.label} ({CATALOG.filter((t) => t.category === c.id).length})
+          </button>
+        ))}
+      </div>
+      {templates.map((t) => (
+        <Card key={t.id} className="p-4">
+          <p className="font-semibold">{t.name}</p>
+          <p className="text-xs text-muted">
+            {t.id}
+            {t.studioOnly && " · chỉ tại studio"}
+            {t.onLocation && " · tại địa điểm khách chọn"}
+            {t.requiresVerification && " · cần xác minh danh tính"}
+            {t.deliverable && ` · giao: ${t.deliverable}`}
+            {t.deliveryDays ? ` trong ${t.deliveryDays} ngày` : ""}
+          </p>
+          <div className="mt-2 overflow-x-auto">
+            <table className="w-full min-w-[420px] text-left text-[13px]">
+              <thead className="text-[11px] text-muted">
+                <tr>
+                  <th className="py-1 pr-2 font-medium">Gói</th>
+                  {labels.map((l) => (
+                    <th key={l} className="py-1 pr-2 font-medium">
+                      {l}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {t.variants.map((v) => (
+                  <tr key={v.id} className="border-t border-line">
+                    <td className="py-1.5 pr-2">
+                      {v.label}
+                      <span className="block text-[11px] text-muted">
+                        {v.durationMin} phút{v.perPerson ? " / người" : ""}
+                        {v.sessions && v.sessions > 1 ? ` · ${v.sessions} buổi` : ""}
+                      </span>
+                    </td>
+                    {v.tiers.map((price) => {
+                      const n = usage[`${t.id}/${v.id}/${price}`] ?? 0
+                      return (
+                        <td key={price} className="py-1.5 pr-2">
+                          {formatPrice(price)}
+                          <span className="block text-[11px] text-muted">{n} đối tác</span>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      ))}
     </div>
   )
 }

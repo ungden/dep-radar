@@ -2521,6 +2521,18 @@ export type Database = {
       attach_addons: { Args: { p_parent: string; p_items: Json }; Returns: string[] }
       set_booking_references: { Args: { p_booking: string; p_paths: string[] }; Returns: undefined }
       mark_departed: { Args: { p_booking: string }; Returns: undefined }
+      admin_report_chat: {
+        Args: { p_report: string }
+        Returns: {
+          message_id: string
+          thread_id: string
+          booking_id: string | null
+          sent_at: string
+          sender: string
+          body: string
+          image_paths: string[]
+        }[]
+      }
       travel_distance_km: {
         Args: {
           lat1: number

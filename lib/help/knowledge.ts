@@ -458,7 +458,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "khach",
     topic: "tin-nhan",
     q: "Khi nào nhắn tin được với người làm? Số điện thoại hiện lúc nào?",
-    a: "Tin nhắn mở khi người làm nhận lịch và đóng khi lịch kết thúc (hoàn thành, huỷ, hết hạn hoặc vắng mặt); lịch sử vẫn đọc được. Số điện thoại của bạn chỉ mở cho người làm khi họ đã nhận lịch (lịch còn chờ họ chỉ thấy tên), và số của người làm hiện cho bạn từ lúc đó. Hãy trao đổi qua tin nhắn trong app để có lịch sử khi cần đối chiếu, và đừng gửi mật khẩu, mã OTP hay thông tin thẻ qua tin nhắn.",
+    a: "Tin nhắn mở khi người làm nhận lịch và đóng khi lịch kết thúc (hoàn thành, huỷ, hết hạn hoặc vắng mặt); lịch sử vẫn đọc được. Số điện thoại của bạn chỉ mở cho người làm khi họ đã nhận lịch (lịch còn chờ họ chỉ thấy tên), và số của người làm hiện cho bạn từ lúc đó. Hãy trao đổi qua tin nhắn trong app để có lịch sử khi cần đối chiếu, và đừng gửi mật khẩu, mã OTP hay thông tin thẻ qua tin nhắn. Đội ngũ 360đẹp không đọc tin nhắn của bạn; chỉ khi có báo cáo liên quan tới hai bên, nhân viên xử lý báo cáo mới được xem tin nhắn giữa hai bên để đối chiếu, và mỗi lần xem đều được ghi lại.",
     keywords: ["nhan tin", "chat", "so dien thoai", "lien lac"],
   },
   {
