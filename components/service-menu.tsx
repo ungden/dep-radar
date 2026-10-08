@@ -4,18 +4,30 @@ import * as React from "react"
 import { Check, ChevronDown, Clock, MapPin, PackageCheck, X } from "lucide-react"
 import { TradeDot } from "@/components/trade"
 import { ButtonLink, Chip, EmptyState } from "@/components/ui"
-import { categoryLabel, getTemplate, verticalOf, tierLabels, PRICE_LEVEL_NOTE } from "@/lib/catalog"
+import { categoryLabel, getTemplate, verticalOf, PRICE_LEVEL_NOTE } from "@/lib/catalog"
+import { levelName, levelOfPrice } from "@/lib/levels"
 import { getPro, servicesOf, useApp } from "@/lib/store"
 import { excludes, personWord, placeLabel } from "@/lib/trade"
 import type { CategoryId, Pro, ProService } from "@/lib/types"
 import { cn, formatDuration, formatPrice } from "@/lib/utils"
 
 /** A freelancer's price list: catalogue services with their own price for each option. */
-export function ServiceMenu({ proId, bookable = true }: { proId: string; bookable?: boolean }) {
+export function ServiceMenu({
+  proId,
+  bookable = true,
+  initialCategory = null,
+}: {
+  proId: string
+  bookable?: boolean
+  /** Opens on this category when the person lists something in it. */
+  initialCategory?: CategoryId | null
+}) {
   const state = useApp()
   const pro = getPro(state, proId)
   const services = servicesOf(state, proId).filter((s) => getTemplate(s.templateId))
-  const [cat, setCat] = React.useState<CategoryId | "all">("all")
+  const [cat, setCat] = React.useState<CategoryId | "all">(() =>
+    initialCategory && services.some((s) => getTemplate(s.templateId)!.category === initialCategory) ? initialCategory : "all",
+  )
   const cats = Array.from(new Set(services.map((s) => getTemplate(s.templateId)!.category)))
   const shown = services.filter((s) => cat === "all" || getTemplate(s.templateId)!.category === cat)
 
@@ -67,6 +79,8 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
   const variant = variants.find((v) => v.id === variantId) ?? variants[0]
   if (!variant) return null
   const includesId = `${service.id}-includes`
+  const price = service.prices[variant.id]
+  const level = levelOfPrice(variant, price)
 
   return (
     <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
@@ -109,11 +123,17 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
 
       <div className="mt-4 flex items-end justify-between gap-3">
         <div>
-          <p className="text-[20px] font-bold tracking-tight">{formatPrice(service.prices[variant.id])}</p>
+          {/* The price this person listed, and which of the option's three levels it is. */}
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="text-[20px] font-bold tracking-tight">{formatPrice(price)}</span>
+            {level !== null && (
+              <span className="rounded-full bg-subtle px-2 py-0.5 text-[12px] font-semibold text-ink-soft">Mức {levelName(level)}</span>
+            )}
+          </p>
           <p className="mt-0.5 flex items-center gap-1 text-[13px] text-muted">
             <Clock className="size-3.5" />
             {variants.length === 1 && !variant.label.startsWith(`${variant.durationMin} phút`) ? `${variant.label} · ` : ""}
-            {formatDuration(variant.durationMin)} · {tierLabels(variant)[variant.tiers.indexOf(service.prices[variant.id])]}
+            {formatDuration(variant.durationMin)}
             {variant.perPerson ? variant.durationRule === "fixed" ? " · thời lượng cả nhóm, giá mỗi người" : " · mỗi người" : ""}
           </p>
         </div>

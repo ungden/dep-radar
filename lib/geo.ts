@@ -34,19 +34,71 @@ export const DISTRICT_COORDS: Record<string, Record<string, [number, number]>> =
 export const CITIES = Object.keys(DISTRICT_COORDS)
 export const districtsOf = (city: string) => Object.keys(DISTRICT_COORDS[city] ?? {})
 
-/** Distance in km on the road between two districts (null when in different cities). */
-export function travelDistanceKm(fromCity: string, fromDistrict: string, toCity: string, toDistrict: string): number | null {
-  if (fromCity !== toCity) return null
-  const a = DISTRICT_COORDS[fromCity]?.[fromDistrict]
-  const b = DISTRICT_COORDS[toCity]?.[toDistrict]
-  if (!a || !b) return null
-  if (fromDistrict === toDistrict) return 2
+/** A point on the map, [latitude, longitude]. */
+export type LatLng = [number, number]
+
+/** Roads are not straight lines: the straight distance times this is the estimate. */
+export const ROAD_FACTOR = 1.35
+/**
+ * The shortest distance we quote. A person's point is their district's centre,
+ * so anything closer than this would be precision we do not have.
+ */
+export const MIN_ROAD_KM = 2
+
+function straightKm(a: LatLng, b: LatLng) {
   const R = 6371
   const toRad = (d: number) => (d * Math.PI) / 180
   const dLat = toRad(b[0] - a[0])
   const dLng = toRad(b[1] - a[1])
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a[0])) * Math.cos(toRad(b[0])) * Math.sin(dLng / 2) ** 2
-  const straight = 2 * R * Math.asin(Math.sqrt(h))
-  // Roads are not straight lines.
-  return Math.round(straight * 1.35 * 10) / 10
+  return 2 * R * Math.asin(Math.sqrt(h))
+}
+
+const roadKm = (a: LatLng, b: LatLng) => Math.round(straightKm(a, b) * ROAD_FACTOR * 10) / 10
+
+export const districtPoint = (city: string, district: string): LatLng | null => DISTRICT_COORDS[city]?.[district] ?? null
+
+/** Distance in km on the road between two districts (null when in different cities). */
+export function travelDistanceKm(fromCity: string, fromDistrict: string, toCity: string, toDistrict: string): number | null {
+  if (fromCity !== toCity) return null
+  const a = districtPoint(fromCity, fromDistrict)
+  const b = districtPoint(toCity, toDistrict)
+  if (!a || !b) return null
+  if (fromDistrict === toDistrict) return MIN_ROAD_KM
+  return roadKm(a, b)
+}
+
+export const isLatLng = (value: unknown): value is LatLng =>
+  Array.isArray(value) &&
+  value.length === 2 &&
+  value.every((n) => typeof n === "number" && Number.isFinite(n)) &&
+  Math.abs(value[0]) <= 90 &&
+  Math.abs(value[1]) <= 180
+
+/** How far from the nearest district centre a point can be and still count as in that city. */
+export const CITY_REACH_KM = 40
+
+/** The city a point is in: the one with the nearest district centre, if it is close enough. */
+export function cityOfPoint(point: LatLng): string | null {
+  let best: { city: string; km: number } | null = null
+  for (const [city, districts] of Object.entries(DISTRICT_COORDS)) {
+    for (const centre of Object.values(districts)) {
+      const km = straightKm(point, centre)
+      if (!best || km < best.km) best = { city, km }
+    }
+  }
+  return best && best.km <= CITY_REACH_KM ? best.city : null
+}
+
+/**
+ * Distance in km on the road from a raw point (the customer's own location)
+ * to a district, with the same road factor and floor as `travelDistanceKm`.
+ * Null when the district is not on the map or the point is in another city,
+ * as `travelDistanceKm` is between cities.
+ */
+export function distanceFromPointKm(point: LatLng, toCity: string, toDistrict: string): number | null {
+  if (!isLatLng(point)) return null
+  const b = districtPoint(toCity, toDistrict)
+  if (!b || cityOfPoint(point) !== toCity) return null
+  return Math.max(MIN_ROAD_KM, roadKm(point, b))
 }

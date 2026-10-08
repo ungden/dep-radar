@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation"
 import { getTemplate } from "./catalog"
 import { buildQuote, isUrgent } from "./pricing"
 import type { AppSnapshot } from "./api/snapshot"
-import { travelDistanceKm } from "./geo"
-import type { CustomerAddress, PriceQuote, Pro, ProService, Review } from "./types"
+import { distanceFromPointKm, travelDistanceKm, type LatLng } from "./geo"
+import { fromPriceIn, mainCategory, proLevelIn, type Level } from "./levels"
+import type { CategoryId, CustomerAddress, PriceQuote, Pro, ProService, Review } from "./types"
 
 /**
  * The client-side view of server state.
@@ -72,6 +73,24 @@ export function fromPrice(s: AppState, proId: string, templateId?: string): numb
   return prices.length ? Math.min(...prices) : null
 }
 
+/** The lowest price a person lists in one category. */
+export function categoryFromPrice(s: AppState, proId: string, category: CategoryId): number | null {
+  const pro = getPro(s, proId)
+  return pro ? fromPriceIn(servicesOf(s, pro.id), pro.id, category) : null
+}
+
+/** The price level a person picked most often in a category (lib/levels.ts). */
+export function categoryLevel(s: AppState, proId: string, category: CategoryId): Level | null {
+  const pro = getPro(s, proId)
+  return pro ? proLevelIn(servicesOf(s, pro.id), pro.id, category) : null
+}
+
+/** The category a person lists the most packages in. */
+export function mainCategoryOf(s: AppState, proId: string): CategoryId | null {
+  const pro = getPro(s, proId)
+  return pro ? mainCategory(servicesOf(s, pro.id), pro) : null
+}
+
 export const reviewsOf = (s: AppState, proId: string): Review[] => s.reviews.filter((r) => r.proId === proId)
 
 export const worksOf = (s: AppState, proId: string) => s.works.filter((w) => w.proId === proId)
@@ -84,6 +103,16 @@ export function distanceToCustomer(
   const pro = getPro(s, proId)
   if (!pro || !address) return null
   return travelDistanceKm(pro.city, pro.district, address.city, address.district)
+}
+
+/**
+ * How far a person is from the customer: from the browser location when the
+ * customer shared it in this tab, otherwise from their saved address.
+ */
+export function distanceFrom(s: AppState, proId: string, here: LatLng | null) {
+  if (!here) return distanceToCustomer(s, proId)
+  const pro = getPro(s, proId)
+  return pro ? distanceFromPointKm(here, pro.city, pro.district) : null
 }
 
 export type HomeAvailability = { ok: true } | { ok: false; reason: string }
