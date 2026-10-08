@@ -4,14 +4,14 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button, Card, EmptyState, PageHeader, StatusBadge, Tabs, inputClass } from "@/components/ui"
-import { decideCheck, decideNoShowCompensation, overrideAiDecision, recordTopup, resolveReport, setSuspended } from "@/lib/api/admin"
-import type { AdminAction, AdminBooking, AdminPro, AdminReport, AiDecisionItem, FeePolicyView, PendingCheck, PlatformSettings } from "@/lib/api/admin"
-import { CustomersPanel, FinancePanel, HelpQuestionsPanel, SettingsPanel } from "./desk-panels"
+import { decideCheck, decideNoShowCompensation, overrideAiDecision, recordTopup, reportChat, resolveReport, setSuspended } from "@/lib/api/admin"
+import type { AdminAction, AdminBooking, AdminPro, AdminReport, AiDecisionItem, FeePolicyView, PendingCheck, PlatformSettings, ReportChatMessage } from "@/lib/api/admin"
+import { CatalogPanel, CustomersPanel, FinancePanel, HelpQuestionsPanel, SettingsPanel } from "./desk-panels"
 import { useRefresh } from "@/lib/store"
 import type { BookingStatus } from "@/lib/types"
 import { cn, formatPrice, timeAgo } from "@/lib/utils"
 
-type Tab = "checks" | "pros" | "customers" | "finance" | "topup" | "bookings" | "reports" | "ai" | "help" | "settings"
+type Tab = "checks" | "pros" | "customers" | "finance" | "topup" | "bookings" | "reports" | "ai" | "help" | "catalog" | "settings"
 
 /**
  * The operations desk: the queue of verifications a vision model was unsure
@@ -62,6 +62,7 @@ export function AdminDesk({
           { value: "reports", label: `Báo cáo (${openReports.length})` },
           { value: "ai", label: `Nhật ký AI (${aiLog.last24h})` },
           { value: "help", label: "Câu hỏi trợ giúp" },
+          { value: "catalog", label: "Danh mục" },
           { value: "settings", label: "Cấu hình" },
         ]}
       />
@@ -121,6 +122,8 @@ export function AdminDesk({
       {tab === "finance" && <FinancePanel pros={pros} />}
 
       {tab === "help" && <HelpQuestionsPanel />}
+
+      {tab === "catalog" && <CatalogPanel />}
 
       {tab === "settings" && <SettingsPanel settings={admin.settings} fees={admin.fees} log={admin.log} />}
 
@@ -596,6 +599,7 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: (fn: () => P
       </p>
       {r.detail && <p className="mt-2 rounded-xl bg-canvas px-3 py-2 text-[13px]">{r.detail}</p>}
       {!open && r.resolution && <p className="mt-2 text-xs text-ink-soft">Kết quả: {r.resolution}</p>}
+      <ReportChat reportId={r.id} />
       {open && (
         <div className="mt-3 space-y-2">
           <input
@@ -627,5 +631,67 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: (fn: () => P
         </div>
       )}
     </Card>
+  )
+}
+
+/**
+ * The chat between the two people a report is about. Closed until the staff
+ * ask for it, and every opening is written to the admin log (Cấu hình › Nhật ký).
+ */
+function ReportChat({ reportId }: { reportId: string }) {
+  const [messages, setMessages] = React.useState<ReportChatMessage[] | null>(null)
+  const [busy, setBusy] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+
+  const load = async () => {
+    setBusy(true)
+    const result = await reportChat(reportId)
+    setBusy(false)
+    if (result.ok) setMessages(result.data)
+    else setError(result.error)
+  }
+
+  if (!messages) {
+    return (
+      <div className="mt-2">
+        <Button size="sm" variant="ghost" disabled={busy} onClick={load}>
+          {busy ? "Đang tải…" : "Xem tin nhắn hai bên"}
+        </Button>
+        <span className="ml-2 text-[11px] text-muted">Mỗi lần xem được ghi vào nhật ký quản trị.</span>
+        {error && <p className="mt-1 text-xs text-danger">{error}</p>}
+      </div>
+    )
+  }
+  return (
+    <div className="mt-3 rounded-xl border border-line p-3">
+      <p className="mb-2 text-xs font-semibold text-ink-soft">Tin nhắn giữa khách và người làm ({messages.length})</p>
+      {messages.length === 0 ? (
+        <p className="text-xs text-muted">Hai bên chưa nhắn tin trong ứng dụng.</p>
+      ) : (
+        <ul className="max-h-96 space-y-2 overflow-y-auto">
+          {messages.map((m) => (
+            <li key={m.id} className={cn("flex", m.sender === "pro" ? "justify-end" : "justify-start")}>
+              <div className={cn("max-w-[80%] rounded-xl px-3 py-2 text-[13px]", m.sender === "pro" ? "bg-accent-soft" : "bg-canvas")}>
+                <span className="block text-[11px] font-semibold text-muted">
+                  {m.sender === "pro" ? "Người làm" : "Khách"} · {new Date(m.sentAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
+                </span>
+                {m.body && <span className="whitespace-pre-wrap">{m.body}</span>}
+                {m.photos.length > 0 && (
+                  <span className="mt-1 grid grid-cols-3 gap-1">
+                    {m.photos.map((u) => (
+                      <a key={u} href={u} target="_blank" rel="noreferrer">
+                        {/* Short-lived signed links from a private bucket: a plain img, not next/image. */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={u} alt="Ảnh trong tin nhắn" className="aspect-square w-full rounded-md bg-subtle object-cover" />
+                      </a>
+                    ))}
+                  </span>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }

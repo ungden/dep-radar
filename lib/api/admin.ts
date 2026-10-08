@@ -718,3 +718,56 @@ export async function adminHelpQuestions(filter: HelpQuestionFilter = "all"): Pr
     })),
   }
 }
+
+// The chat behind a report --------------------------------------------------------------
+
+export interface ReportChatMessage {
+  id: string
+  sentAt: string
+  sender: "customer" | "pro"
+  body: string
+  photos: string[]
+}
+
+/**
+ * The conversation between the two people a report is about, for the staff
+ * deciding it. admin_report_chat checks is_admin() and logs the look; chat
+ * photos are private, so the server signs them for 15 minutes.
+ */
+export async function reportChat(reportId: string): Promise<ActionResult<ReportChatMessage[]>> {
+  if (!backendEnabled) return { ok: true, data: [] }
+  const supabase = await supabaseServer()
+  const { data, error } = await supabase.rpc("admin_report_chat", { p_report: reportId })
+  if (error) return { ok: false, error: messageFor(error) }
+  const rows = data ?? []
+  const paths = rows.flatMap((r) => r.image_paths ?? [])
+  const signed = paths.length ? await supabaseAdmin().storage.from("chat").createSignedUrls(paths, 15 * 60) : null
+  const url = new Map((signed?.data ?? []).flatMap((s) => (s.path && s.signedUrl ? [[s.path, s.signedUrl] as const] : [])))
+  revalidatePath("/admin")
+  return {
+    ok: true,
+    data: rows.map((r) => ({
+      id: r.message_id,
+      sentAt: r.sent_at,
+      sender: r.sender === "pro" ? "pro" : "customer",
+      body: r.body,
+      photos: (r.image_paths ?? []).flatMap((p) => (url.has(p) ? [url.get(p)!] : [])),
+    })),
+  }
+}
+
+// The catalogue -----------------------------------------------------------------------
+
+/** How many partners picked each price: "template/variant/price" → count. Listings are public. */
+export async function catalogUsage(): Promise<ActionResult<Record<string, number>>> {
+  if (!backendEnabled) return { ok: true, data: {} }
+  const supabase = await supabaseServer()
+  const { data, error } = await supabase.from("pro_service_prices").select("template_id, variant_id, price").limit(10000)
+  if (error) return { ok: false, error: messageFor(error) }
+  const counts: Record<string, number> = {}
+  for (const r of data ?? []) {
+    const key = `${r.template_id}/${r.variant_id}/${r.price}`
+    counts[key] = (counts[key] ?? 0) + 1
+  }
+  return { ok: true, data: counts }
+}

@@ -486,7 +486,9 @@ begin
       -- partner onboarding (20261008100000)
       'set_start_point',
       -- at-home booking extras (20261008100100)
-      'attach_addons', 'set_booking_references', 'mark_departed'
+      'attach_addons', 'set_booking_references', 'mark_departed',
+      -- staff read the chat behind a report (20261008100200)
+      'admin_report_chat'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 
@@ -2558,4 +2560,47 @@ begin
   perform public.admin_adjust_wallet(linh, -1000000, 'Trả lại số dư test (extras)');
   perform set_config('request.jwt.claim.sub', '', true);
   raise notice 'BOOKING EXTRAS RULES PASS';
+end $$;
+
+
+-- Staff read the chat behind a report, and every look is logged (20261008100200).
+do $$
+declare linh uuid; customer uuid; admin_id uuid; th uuid; rep uuid; n int; denied boolean := false;
+begin
+  select id into linh from public.pros where slug = 'linh-pham';
+  select a.id into customer from public.accounts a where a.full_name = 'Ngọc Hân';
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          (gen_random_uuid()::text||'-chat-admin@example.invalid'), jsonb_build_object('full_name', 'Quản trị Chat'), now(), now())
+  returning id into admin_id;
+  update public.accounts set is_admin = true where id = admin_id;
+
+  insert into public.threads (customer_id, pro_id) values (customer, linh) returning id into th;
+  insert into public.messages (thread_id, sender_id, body, created_at) values
+    (th, customer, 'Chị ơi mai 9h nhé', now() - interval '2 minutes'),
+    (th, linh, 'Dạ em tới đúng giờ', now() - interval '1 minute');
+  insert into public.reports (reporter_id, target_account_id, reason, detail)
+  values (customer, linh, 'Hành vi không phù hợp', 'Test xem chat') returning id into rep;
+
+  raise notice 'nobody but the staff reads it';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  begin
+    perform * from public.admin_report_chat(rep);
+  exception when insufficient_privilege then denied := true;
+  end;
+  assert denied, 'a customer read the chat behind a report';
+
+  raise notice 'the staff read it in order, and the look is in the log';
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  select count(*) into n from public.admin_report_chat(rep) where thread_id = th;
+  assert n = 2, format('the staff saw %s messages', n);
+  assert (select sender from public.admin_report_chat(rep) where thread_id = th order by sent_at limit 1) = 'customer', 'wrong order or side';
+  assert exists (select 1 from public.admin_actions where actor_id = admin_id and action = 'report:view_chat' and target_id = rep),
+    'reading the chat was not logged';
+
+  perform set_config('request.jwt.claim.sub', '', true);
+  delete from public.threads where id = th;
+  delete from public.reports where id = rep;
+  raise notice 'REPORT CHAT RULES PASS';
 end $$;

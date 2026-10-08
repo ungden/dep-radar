@@ -180,6 +180,10 @@ export default function PolicyPage() {
               chặn được bất cứ lúc nào.
             </li>
             <li>Tin nhắn không lọc số điện thoại hay đường link. Đừng gửi mật khẩu, mã OTP, thông tin thẻ; không đặt cọc hay giao dịch ngoài 360dep.</li>
+            <li>
+              Đội ngũ 360dep không đọc tin nhắn của bạn. Chỉ khi có báo cáo liên quan tới hai bên, nhân viên xử lý báo cáo đó mới được xem
+              tin nhắn giữa hai bên để đối chiếu; mỗi lần xem đều được ghi lại.
+            </li>
           </ul>
         </Section>
 
