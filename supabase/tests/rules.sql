@@ -2452,11 +2452,12 @@ end $$;
 
 -- Partner onboarding: start point, payout details, identity requeue (20261008100000).
 do $$
-declare linh uuid; thu uuid; c public.pros; n int;
+declare linh uuid; thu uuid; c public.pros; t public.pros; n int;
 begin
   select * into c from public.pros where slug = 'linh-pham';
   linh := c.id;
-  select id into thu from public.pros where slug = 'thu-anh';
+  select * into t from public.pros where slug = 'thu-anh';
+  thu := t.id;
 
   raise notice 'a start point near the district is kept; a far one is refused';
   perform set_config('request.jwt.claim.sub', linh::text, true);
@@ -2486,6 +2487,13 @@ begin
   update public.pros set published = false, review_status = 'changes_requested', identity_status = 'pending' where id = thu;
   update public.pros set identity_status = 'verified' where id = thu;
   assert (select review_status from public.pros where id = thu) = 'pending', 'not requeued';
+
+  -- Later tests (the API suite) use these two as they were.
+  perform set_config('app.system_write', 'on', true);
+  update public.pros set lat = c.lat, lng = c.lng, start_label = null where id = linh;
+  update public.pros set published = t.published, review_status = t.review_status, identity_status = t.identity_status where id = thu;
+  perform set_config('app.system_write', 'off', true);
+  delete from public.pro_payout where pro_id = linh;
 
   raise notice 'PARTNER ONBOARDING RULES PASS';
 end $$;
