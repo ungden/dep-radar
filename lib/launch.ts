@@ -8,12 +8,16 @@ export const DEMO_DATA_LIVE = true
 
 /**
  * Identity verification (CCCD front and back + a portrait holding the card,
- * app/api/identity): opened 08/10/2026. AI decides the clear cases; the
- * uncertain ones wait for the staff (Admin › Xác minh), with their photos kept
- * privately until decided. The hash salt is IDENTITY_HASH_SALT, or derived from
- * the service role key when unset.
+ * app/api/identity). Built and tested on 08/10/2026, then held back by the
+ * owner the same day ("khoan cần KYC thật, sau này bật sau"): partners onboard
+ * without it; model services and casting calls stay closed until it opens.
+ * When on, AI decides the clear cases; the uncertain ones wait for the staff
+ * (Admin › Xác minh), with their photos kept privately until decided. The hash
+ * salt is IDENTITY_HASH_SALT, or derived from the service role key when unset.
+ * Turning it on: set this to true, and IDENTITY_IN_APP in
+ * apps/mobile/src/app/ho-so-doi-tac.tsx for the next app build.
  */
-export const IDENTITY_VERIFICATION_OPEN = true
+export const IDENTITY_VERIFICATION_OPEN = false
 
 /**
  * The support Zalo, for the help centre's written answers (lib/help/knowledge.ts).
