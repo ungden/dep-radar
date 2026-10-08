@@ -10,7 +10,7 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL, backendEnabled } from "@/lib/supabase/
  * is still a signed-in RPC. And /me itself, whose signed-out view is the way
  * in (sign in, help, policy) -- everything under it stays private.
  */
-const PRIVATE = ["/studio", "/bookings", "/requests", "/me/", "/tin-nhan", "/thong-bao"]
+const PRIVATE = ["/studio", "/bookings", "/requests", "/me/", "/tin-nhan", "/thong-bao", "/bao-cao"]
 const ADMIN = "/admin"
 /**
  * The steps that connect two people, where a phone number is required (the owner, 07/10/2026):

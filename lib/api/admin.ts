@@ -69,6 +69,12 @@ export interface AdminReport {
   resolution: string | null
   /** A disputed no-show: the travel-fee compensation waiting for a decision (decide_no_show_compensation). */
   claim: { id: string; amount: number } | null
+  /** Who the report is about, when it names someone. */
+  target: string | null
+  staffQuestion: string | null
+  updatedAt: string
+  /** Photos and clips from the reporter, signed for an hour (private evidence bucket). */
+  evidence: { path: string; url: string; video: boolean }[]
 }
 
 const row = (v: unknown) => (Array.isArray(v) ? ((v[0] ?? {}) as Record<string, unknown>) : ((v ?? {}) as Record<string, unknown>))
@@ -194,7 +200,9 @@ export async function adminReports(): Promise<AdminReport[]> {
   const supabase = await supabaseServer()
   const { data, error } = await supabase
     .from("reports")
-    .select("id, reason, detail, status, created_at, booking_id, resolution, accounts!reports_reporter_id_fkey (full_name)")
+    .select(
+      "id, reason, detail, status, created_at, updated_at, booking_id, resolution, staff_question, evidence_paths, accounts!reports_reporter_id_fkey (full_name), target:accounts!reports_target_account_id_fkey (full_name)",
+    )
     .order("created_at", { ascending: false })
     .limit(50)
   if (error) {
@@ -206,6 +214,10 @@ export async function adminReports(): Promise<AdminReport[]> {
     ? await supabase.from("no_show_compensation_requests").select("id, amount, dispute_report_id").eq("status", "pending").in("dispute_report_id", ids)
     : { data: [] as { id: string; amount: number; dispute_report_id: string | null }[] }
   const claimOf = new Map((claims ?? []).map((c) => [c.dispute_report_id, { id: c.id, amount: c.amount }]))
+  // The evidence bucket opens to the reporter and the staff; the server signs for an admin only.
+  const paths = (data ?? []).flatMap((r) => r.evidence_paths ?? [])
+  const signed = paths.length && (await isAdmin()) ? await supabaseAdmin().storage.from("evidence").createSignedUrls(paths, 60 * 60) : null
+  const url = new Map((signed?.data ?? []).flatMap((x) => (x.path && x.signedUrl ? [[x.path, x.signedUrl] as const] : [])))
   return (data ?? []).map((r) => ({
     id: r.id,
     reason: r.reason,
@@ -216,6 +228,10 @@ export async function adminReports(): Promise<AdminReport[]> {
     bookingId: r.booking_id,
     resolution: r.resolution,
     claim: claimOf.get(r.id) ?? null,
+    target: (row(r.target).full_name as string | undefined) ?? null,
+    staffQuestion: r.staff_question,
+    updatedAt: r.updated_at,
+    evidence: (r.evidence_paths ?? []).map((p) => ({ path: p, url: url.get(p) ?? "", video: /\.(mp4|mov|webm)$/i.test(p) })),
   }))
 }
 
@@ -259,6 +275,11 @@ export async function setReviewHidden(bookingId: string, hidden: boolean) {
 
 export async function resolveReport(reportId: string, status: string, resolution = "") {
   return call("resolve_report", { p_report: reportId, p_status: status, p_resolution: resolution })
+}
+
+/** Asks the reporter for more; they answer with a note and files on /bao-cao. */
+export async function askReportInfo(reportId: string, question: string) {
+  return call("ask_report_info", { p_report: reportId, p_question: question })
 }
 
 /**

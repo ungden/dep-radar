@@ -502,8 +502,8 @@ const ENTRIES: HelpEntry[] = [
     audience: "chung",
     topic: "tranh-chap",
     q: "“Báo cáo vấn đề” hoạt động thế nào? Bao lâu có phản hồi?",
-    a: `Nút báo cáo có trong chi tiết lịch hẹn, trong cuộc trò chuyện và trong tin tuyển mẫu. Chọn lý do, mô tả cụ thể (thời gian, chuyện đã xảy ra) và giữ lại ảnh, tin nhắn, biên lai liên quan. Báo cáo chỉ bạn và đội ngũ 360đẹp thấy. Đội ngũ được báo ngay, xác nhận trong 24 giờ làm việc, và bạn nhận thông báo khi báo cáo được xử lý xong.`,
-    keywords: ["bao cao", "khieu nai", "to cao", "phan hoi"],
+    a: `Có hai chỗ gửi: nút "Báo cáo vấn đề" trong chi tiết lịch hẹn, cuộc trò chuyện và tin tuyển mẫu; hoặc mục Tôi → Báo cáo vấn đề (dùng được cả cho lỗi ứng dụng, thanh toán, tài khoản, và chọn lịch hẹn liên quan nếu có). Chọn lý do, mô tả cụ thể (lúc nào, ở đâu, chuyện đã xảy ra) và đính kèm tối đa 8 ảnh hoặc clip làm bằng chứng (clip tối đa 60 giây; ảnh được nén và xoá vị trí GPS trước khi gửi). Bằng chứng chỉ bạn và đội ngũ 360đẹp xem được; phía bên kia không biết ai báo. Đội ngũ được báo ngay và xem trong 24 giờ làm việc. Trong Tôi → Báo cáo vấn đề bạn theo dõi trạng thái (Đã gửi, Đang xử lý, Đã xử lý), trả lời khi đội ngũ hỏi thêm, bổ sung ảnh, clip khi báo cáo còn mở, và đọc kết quả khi xử lý xong.`,
+    keywords: ["bao cao", "khieu nai", "to cao", "phan hoi", "bang chung", "anh", "clip", "video", "loi ung dung", "theo doi"],
   },
   {
     id: "quy-trinh-tranh-chap",

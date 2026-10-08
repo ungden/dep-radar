@@ -90,10 +90,14 @@ export function HelpCenter() {
       <section className="rounded-[var(--radius-lg)] bg-subtle p-5">
         <h2 className="text-[17px] font-bold">Liên hệ hỗ trợ</h2>
         <p className="mt-1 text-[14px] text-ink-soft">
-          Việc liên quan một lịch hẹn cụ thể (tranh chấp, sự cố, khiếu nại), hãy dùng <b>Báo cáo vấn đề</b> trong chi tiết lịch hẹn để
-          đội ngũ có đủ thông tin. Việc khác, nhắn đội hỗ trợ. 360đẹp không bao giờ hỏi mật khẩu, mã OTP hay số tài khoản của bạn.
+          Gặp sự cố, tranh chấp hay lỗi ứng dụng, hãy gửi <b>Báo cáo vấn đề</b> kèm ảnh, clip làm bằng chứng: đội ngũ xem trong 24 giờ làm
+          việc và báo kết quả cho bạn. Việc của một lịch hẹn, gửi từ chi tiết lịch hẹn để đội ngũ có đủ thông tin. 360đẹp không bao giờ
+          hỏi mật khẩu, mã OTP hay số tài khoản của bạn.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
+          <Link href="/bao-cao" className="inline-flex h-9 items-center rounded-full bg-ink px-4 text-[14px] font-semibold text-canvas">
+            Báo cáo vấn đề
+          </Link>
           <Support variant="primary" />
           <Link href="/chinh-sach" className="inline-flex h-9 items-center rounded-full px-3 text-[14px] font-semibold underline underline-offset-2">
             Chính sách phí & đặt lịch
@@ -111,7 +115,7 @@ export function HelpCenter() {
 function Support({ size = "sm", variant = "outline" }: { size?: "sm" | "md"; variant?: "primary" | "outline" }) {
   const { platform } = useApp()
   if (!supportHref(platform).external) {
-    return <span className="text-[13px] text-ink-soft">Dùng “Báo cáo vấn đề” trong chi tiết lịch hẹn để đội ngũ 360đẹp liên hệ bạn.</span>
+    return <span className="text-[13px] text-ink-soft">Dùng “Báo cáo vấn đề” để đội ngũ 360đẹp liên hệ bạn.</span>
   }
   return <SupportLink size={size} variant={variant} />
 }

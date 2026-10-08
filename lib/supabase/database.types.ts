@@ -1499,42 +1499,51 @@ export type Database = {
           booking_id: string | null
           created_at: string
           detail: string
+          evidence_paths: string[]
           id: string
           reason: string
           reporter_id: string
           resolution: string | null
           resolved_at: string | null
           review_booking_id: string | null
+          staff_question: string | null
           status: string
           target_account_id: string | null
+          updated_at: string
           work_id: string | null
         }
         Insert: {
           booking_id?: string | null
           created_at?: string
           detail?: string
+          evidence_paths?: string[]
           id?: string
           reason: string
           reporter_id: string
           resolution?: string | null
           resolved_at?: string | null
           review_booking_id?: string | null
+          staff_question?: string | null
           status?: string
           target_account_id?: string | null
+          updated_at?: string
           work_id?: string | null
         }
         Update: {
           booking_id?: string | null
           created_at?: string
           detail?: string
+          evidence_paths?: string[]
           id?: string
           reason?: string
           reporter_id?: string
           resolution?: string | null
           resolved_at?: string | null
           review_booking_id?: string | null
+          staff_question?: string | null
           status?: string
           target_account_id?: string | null
+          updated_at?: string
           work_id?: string | null
         }
         Relationships: [
@@ -2521,6 +2530,8 @@ export type Database = {
       attach_addons: { Args: { p_parent: string; p_items: Json }; Returns: string[] }
       set_booking_references: { Args: { p_booking: string; p_paths: string[] }; Returns: undefined }
       mark_departed: { Args: { p_booking: string }; Returns: undefined }
+      ask_report_info: { Args: { p_report: string; p_question: string }; Returns: undefined }
+      add_report_evidence: { Args: { p_report: string; p_paths?: string[]; p_note?: string }; Returns: undefined }
       admin_report_chat: {
         Args: { p_report: string }
         Returns: {

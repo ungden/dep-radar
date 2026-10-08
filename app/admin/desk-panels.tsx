@@ -553,6 +553,8 @@ function describe(a: AdminAction) {
       return "Mở khoá tài khoản"
     case "account:reset_password":
       return "Đặt lại mật khẩu (hỗ trợ qua Zalo)"
+    case "report:ask_info":
+      return `Hỏi thêm người báo: ${String(d.question ?? "")}`
     case "report:view_chat":
       return "Xem tin nhắn hai bên của một báo cáo"
     case "wallet:adjust":
