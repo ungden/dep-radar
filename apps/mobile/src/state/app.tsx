@@ -13,7 +13,7 @@ import { myThreadIds } from "@/data/chat"
 import { emptyMe, loadMe, type MeData } from "@/data/me"
 import { loadOnePro, loadPublic, mergePublic, proOfWork, type AppPro, type PublicData } from "@/data/public"
 import { forgetPushToken, registerPushToken } from "@/data/push"
-import { blockUser, loadServerBlocks, readLocalBlocks, unblockUser, writeLocalBlocks } from "@/data/safety"
+import { blockUser, fileReport, loadServerBlocks, readLocalBlocks, unblockUser, writeLocalBlocks } from "@/data/safety"
 import { backendConfigured, supabase } from "@/data/supabase"
 import { hasAcceptedTerms, rememberTerms } from "@/data/terms"
 
@@ -272,12 +272,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const block = React.useCallback(
     async (accountId: string) => {
       if (!uid) return { ok: false, message: "Cần đăng nhập." }
+      // A new block also reaches the admin queue as a report (App Store 1.2).
+      if (!blocked.has(accountId)) {
+        void fileReport(uid, {
+          reason: "Người dùng chặn tài khoản này",
+          detail: "Tự động gửi khi người dùng bấm Chặn. Xem nội dung và tin nhắn của tài khoản bị chặn, xử lý trong 24 giờ.",
+          targetAccountId: accountId,
+        })
+      }
       const next = new Set(blocked)
       next.add(accountId)
       setBlocked(next)
       await writeLocalBlocks(uid, [...next])
       const res = await blockUser(accountId)
-      if (res.ok) return { ok: true, message: "Đã chặn. Bạn sẽ không thấy người này nữa." }
+      if (res.ok) return { ok: true, message: "Đã chặn. Bạn sẽ không thấy người này nữa, và 360dep đã được báo để xem xét trong 24 giờ." }
       // TODO(db): until block_user exists the block lives on this phone only.
       return {
         ok: true,

@@ -15,18 +15,22 @@ import { Sheet, useSheet } from "@/ui/sheet"
 import { Txt } from "@/ui/text"
 
 interface Target {
-  /** The other person's account id (a freelancer's `uuid`). */
-  accountId: string
+  /** The other person's account id (a freelancer's `uuid`); absent for a review, whose author is not shown. */
+  accountId?: string | null
   name: string
   bookingId?: string | null
   workId?: string | null
+  reviewBookingId?: string | null
   /** After a block: usually leave the screen. */
   onBlocked?: () => void
+  /** After a report went through, e.g. to hide what was reported. */
+  onReported?: () => void
 }
 
 /**
- * "Báo cáo" and "Chặn người này" for a person, from a ⋯ button. Returns the
- * function that opens the menu and the report sheet to render once.
+ * "Báo cáo" and "Chặn người này" for a person, from a ⋯ button, or only
+ * "Báo cáo" for a review. Returns the function that opens the menu and the
+ * report sheet to render once.
  */
 export function useSafetyMenu(target: Target | null) {
   const app = useApp()
@@ -54,14 +58,15 @@ export function useSafetyMenu(target: Target | null) {
   }
 
   const confirmBlock = () => {
-    if (!target) return
-    Alert.alert(`Chặn ${target.name}?`, "Bạn sẽ không thấy hồ sơ, bài đăng và tin nhắn của người này nữa. Bỏ chặn được trong Tôi.", [
+    const accountId = target?.accountId
+    if (!target || !accountId) return
+    Alert.alert(`Chặn ${target.name}?`, "Bạn sẽ không thấy hồ sơ, bài đăng và tin nhắn của người này nữa, và 360dep được báo để xem xét. Bỏ chặn được trong Tôi.", [
       { text: "Thôi", style: "cancel" },
       {
         text: "Chặn",
         style: "destructive",
         onPress: async () => {
-          const res = await app.block(target.accountId)
+          const res = await app.block(accountId)
           haptic.success()
           Alert.alert("Đã chặn", res.message)
           target.onBlocked?.()
@@ -94,9 +99,10 @@ export function useSafetyMenu(target: Target | null) {
     const res = await fileReport(app.uid, {
       reason,
       detail,
-      targetAccountId: target.accountId,
+      targetAccountId: target.accountId ?? null,
       bookingId: target.bookingId ?? null,
       workId: target.workId ?? null,
+      reviewBookingId: target.reviewBookingId ?? null,
       evidencePaths: evidence,
     })
     setBusy(false)
@@ -106,6 +112,7 @@ export function useSafetyMenu(target: Target | null) {
     }
     haptic.success()
     setSent(true)
+    target.onReported?.()
   }
 
   const element = (
@@ -128,10 +135,12 @@ export function useSafetyMenu(target: Target | null) {
             sheet.close()
             router.push("/bao-cao")
           }} />
-          <Button label={`Chặn ${target?.name ?? "người này"}`} variant="danger" onPress={() => {
-            sheet.close()
-            confirmBlock()
-          }} />
+          {target?.accountId ? (
+            <Button label={`Chặn ${target.name}`} variant="danger" onPress={() => {
+              sheet.close()
+              confirmBlock()
+            }} />
+          ) : null}
         </View>
       ) : (
         <>

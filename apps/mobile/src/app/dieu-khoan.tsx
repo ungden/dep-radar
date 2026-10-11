@@ -11,18 +11,21 @@ import { Icon } from "@/ui/icon"
 import { Txt } from "@/ui/text"
 
 const POINTS = [
-  "Không đăng hay gửi nội dung khiêu dâm, bạo lực, lừa đảo hoặc xúc phạm người khác.",
+  "360dep không dung thứ nội dung phản cảm hay người dùng lạm dụng. Không đăng hay gửi nội dung khiêu dâm, bạo lực, thù ghét, lừa đảo hoặc xúc phạm người khác.",
   "Không yêu cầu hay chuyển tiền cọc ngoài lịch hẹn. 360dep không bao giờ thu phí hồ sơ.",
-  "Báo cáo hoặc chặn bất kỳ ai làm bạn khó chịu; 360dep xử lý báo cáo trong 24 giờ và gỡ nội dung vi phạm.",
-  "Tài khoản vi phạm có thể bị khoá.",
+  "Bấm ⋯ trên hồ sơ, tác phẩm, cuộc trò chuyện, hoặc Báo cáo dưới một đánh giá, để báo cáo hay chặn người làm bạn khó chịu. Người bị chặn biến mất khỏi máy bạn ngay và 360dep được báo.",
+  "360dep xử lý mọi báo cáo trong 24 giờ: gỡ nội dung vi phạm và khoá tài khoản đã đăng nội dung đó.",
 ]
 
 /**
- * The terms, agreed once per person on this phone (stored in the Keychain).
- * Declining signs out: the app shows nothing that needs an account without them.
+ * The terms. The login screen links here to read them (mode=read) before
+ * anyone signs in; people who signed in before that agree here once, per
+ * person on this phone (stored in the Keychain). Declining signs out: the app
+ * shows nothing that needs an account without them.
  */
 export default function Terms() {
-  const { next } = useLocalSearchParams<{ next?: string }>()
+  const { next, mode } = useLocalSearchParams<{ next?: string; mode?: string }>()
+  const reading = mode === "read"
   const app = useApp()
   const insets = useSafeAreaInsets()
   const [busy, setBusy] = React.useState(false)
@@ -46,7 +49,7 @@ export default function Terms() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
       <ScrollView contentContainerStyle={{ padding: gutter, gap: 16 }}>
-        <Txt v="h2">Trước khi bắt đầu</Txt>
+        <Txt v="h2">{reading ? "Điều khoản sử dụng" : "Trước khi bắt đầu"}</Txt>
         <Txt color={colors.inkSoft}>360dep là nơi khách và người làm gặp nhau. Để ai cũng an toàn, bạn đồng ý với điều khoản sử dụng:</Txt>
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.md, padding: 16, gap: 12 }}>
           {POINTS.map((p) => (
@@ -64,8 +67,14 @@ export default function Terms() {
         />
       </ScrollView>
       <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 16), gap: 8, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line }}>
-        <Button label="Tôi đồng ý" full size="lg" busy={busy} onPress={() => void accept()} />
-        <Button label="Không đồng ý, đăng xuất" variant="ghost" full onPress={() => void decline()} />
+        {reading ? (
+          <Button label="Đóng" full size="lg" onPress={() => router.back()} />
+        ) : (
+          <>
+            <Button label="Tôi đồng ý" full size="lg" busy={busy} onPress={() => void accept()} />
+            <Button label="Không đồng ý, đăng xuất" variant="ghost" full onPress={() => void decline()} />
+          </>
+        )}
       </View>
     </View>
   )

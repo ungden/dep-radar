@@ -29,6 +29,23 @@ export default function ProProfile() {
 
   const isMine = Boolean(pro && app.uid === pro.uuid)
   const safety = useSafetyMenu(pro && !isMine ? { accountId: pro.uuid, name: pro.name, onBlocked: () => router.back() } : null)
+  // A reported review disappears from this screen at once. A review's id is its booking id.
+  const [flagged, setFlagged] = React.useState<{ bookingId: string; author: string } | null>(null)
+  const [hiddenReviews, setHiddenReviews] = React.useState<ReadonlySet<string>>(new Set())
+  const reviewSafety = useSafetyMenu(
+    flagged
+      ? {
+          name: `đánh giá của ${flagged.author}`,
+          reviewBookingId: flagged.bookingId,
+          onReported: () => setHiddenReviews((s) => new Set(s).add(flagged.bookingId)),
+        }
+      : null,
+  )
+  const reportReview = (bookingId: string, author: string) => {
+    if (!app.uid) return router.push("/login")
+    setFlagged({ bookingId, author })
+    reviewSafety.report()
+  }
 
   React.useEffect(() => {
     if (pro) void loadProExtras(pro.uuid).then(setExtras).catch(() => {})
@@ -53,7 +70,7 @@ export default function ProProfile() {
   }
 
   const works = app.data?.works.filter((w) => w.proId === pro.id) ?? []
-  const reviews = app.data?.reviews.filter((r) => r.proId === pro.id) ?? []
+  const reviews = app.data?.reviews.filter((r) => r.proId === pro.id && !hiddenReviews.has(r.id)) ?? []
   const listings = app.data?.services.filter((s) => s.proId === pro.id && s.active && Object.keys(s.prices).length) ?? []
   const km = app.distanceTo(pro)
   const response = formatResponseTime(pro.stats.responseMinutes)
@@ -70,6 +87,7 @@ export default function ProProfile() {
         />
       ) : null}
       {safety.element}
+      {reviewSafety.element}
       {/* Cover: the first three real photos, uncropped 4:5 */}
       <View style={{ flexDirection: "row", gap: 2, paddingTop: insets.top + 44 }}>
         {[0, 1, 2].map((i) => (
@@ -241,6 +259,17 @@ export default function ProProfile() {
                     <Txt v="meta">{r.reply}</Txt>
                   </View>
                 ) : null}
+                <Press
+                  onPress={() => reportReview(r.id, r.author)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Báo cáo đánh giá của ${r.author}`}
+                  style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 4 }}
+                >
+                  <Icon name="flag" size={13} color={colors.muted} />
+                  <Txt v="meta" color={colors.muted}>
+                    Báo cáo
+                  </Txt>
+                </Press>
               </Card>
             ))
           ) : (
