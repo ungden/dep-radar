@@ -1,8 +1,10 @@
 "use client"
 
 import * as React from "react"
+import { moveRadio } from "@/lib/radio-navigation"
 import Link from "next/link"
-import { Pencil, Plus, Store, Trash2, X } from "lucide-react"
+import { Pencil, Plus, Store, Trash2 } from "lucide-react"
+import { Sheet } from "@/components/sheet"
 import { PartnerProgress } from "@/components/partner-progress"
 import { RequireSession } from "@/components/require-session"
 import { Button, ButtonLink, Card, PageHeader, Toggle } from "@/components/ui"
@@ -110,7 +112,7 @@ function ServicesManager() {
       <ButtonLink href="/studio/profile/edit#noi-phuc-vu" className="mt-5">Tiếp tục: nơi phục vụ & giờ làm</ButtonLink>
       {editing && <PriceEditor templateId={editing} onClose={() => setEditing(null)} />}
       {adding && (
-        <Sheet title="Thêm dịch vụ từ danh mục" onClose={() => setAdding(false)}>
+        <Sheet open title="Thêm dịch vụ từ danh mục" onClose={() => setAdding(false)}>
           <ul className="space-y-2">
             {available.map((t) => {
               // Model services open only after identity verification; the
@@ -191,7 +193,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
   }
 
   return (
-    <Sheet title={tpl.name} onClose={onClose}>
+    <Sheet open title={tpl.name} onClose={onClose}>
       <p className="text-body text-ink-soft">{tpl.description}</p>
       <p className="mt-1 text-label text-muted">Bao gồm: {tpl.includes.join(" · ")}</p>
 
@@ -216,20 +218,22 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
               <p className="mt-2 text-label text-muted">{v.deliverable ?? tpl.deliverable}{v.revisions ? ` · ${v.revisions} lượt sửa` : ""}{v.sessions ? ` · ${v.sessions} buổi` : ""}{v.followupDays ? ` · dặm trong ${v.followupDays} ngày` : ""}</p>
               {on && (
                 <>
-                  <div role="radiogroup" aria-label={`Mức giá ${v.label}`} className={cn("mt-3 grid gap-2", v.tiers.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
+                  <div role="radiogroup" aria-label={`Mức giá ${v.label}`} className={cn("mt-3 grid gap-2", v.tiers.length === 3 ? "grid-cols-1 min-[400px]:grid-cols-3" : "grid-cols-1 min-[400px]:grid-cols-2")}>
                     {v.tiers.map((tier, i) => (
                       <button
                         key={tier}
                         type="button"
                         role="radio"
                         aria-checked={price === tier}
+                        tabIndex={price === tier ? 0 : -1}
+                        onKeyDown={(e) => moveRadio(e, () => setPrices((x) => ({ ...x, [v.id]: tier })))}
                         onClick={() => setPrices((x) => ({ ...x, [v.id]: tier }))}
                         className={cn(
                           "rounded-xl border px-2 py-2.5 text-center transition-colors",
                           price === tier ? "border-accent bg-accent text-white" : "border-line bg-canvas hover:border-ink/30",
                         )}
                       >
-                        <span className={cn("block text-label", price === tier ? "text-white/85" : "text-muted")}>{labels[i]}</span>
+                        <span className={cn("block text-label", price === tier ? "text-white" : "text-muted")}>{labels[i]}</span>
                         <span className="block text-body font-semibold">{formatPrice(tier)}</span>
                       </button>
                     ))}
@@ -270,26 +274,5 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
         Vì sao giá theo mức có sẵn?
       </ButtonLink>
     </Sheet>
-  )
-}
-
-function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-accent/40 md:items-center" onClick={onClose}>
-      <div
-        role="dialog"
-        aria-label={title}
-        onClick={(e) => e.stopPropagation()}
-        className="pb-safe max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-canvas p-5 md:rounded-3xl"
-      >
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{title}</h2>
-          <button type="button" aria-label="Đóng" onClick={onClose} className="inline-flex size-9 items-center justify-center rounded-full hover:bg-subtle">
-            <X className="size-5" />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
   )
 }

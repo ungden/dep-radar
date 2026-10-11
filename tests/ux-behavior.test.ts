@@ -5,7 +5,7 @@ import { sortServiceOffers, type ServiceOffer } from "@/lib/offers"
 import type { Pro } from "@/lib/types"
 
 const pro = (id: string): Pro => ({ id, uuid: id, name: id, title: "", phone: "", tone: "#fff", categories: ["nail"], city: "Hà Nội", district: "Cầu Giấy", areas: [], homeService: true, maxTravelKm: 10, yearsExp: 0, acceptingJobs: true, published: true, joinedAt: "2026-10-11", bio: "", highlights: [], identity: "none", stats: { completedJobs: 0, responseMinutes: 0 }, rating: { average: 0, count: 0 } })
-const offer = (id: string, people: string[], price = 120000): ServiceOffer => ({ template: { ...getTemplate("nail-gel")!, id }, pros: people.map(pro), fromPrice: price })
+const offer = (id: string, people: string[], price = 120000): ServiceOffer => ({ template: { ...getTemplate("nail-gel")!, id }, pros: people.map(pro), fromPrice: price, minimumTotal: price, minimumQuantity: 1, durationMin: 45, variant: getTemplate("nail-gel")!.variants[0] })
 
 describe("service sorting", () => {
   const input = [offer("unknown", ["u"]), offer("far", ["f"]), offer("near", ["f", "n"]), offer("unknown-2", ["u2"])]

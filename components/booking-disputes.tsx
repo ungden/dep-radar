@@ -188,7 +188,7 @@ export function AddOnServices({ booking }: { booking: Booking }) {
       {maxQ > 1 && (
         <label className="flex items-center gap-2 text-meta">
           Số người
-          <input type="number" min={1} max={maxQ} value={quantity} onChange={(e) => setQuantity(Math.min(maxQ, Math.max(1, Number(e.target.value) || 1)))} className={cn(inputClass, "h-9 w-20 text-body")} />
+          <input type="number" min={1} max={maxQ} value={quantity} onChange={(e) => setQuantity(Math.min(maxQ, Math.max(1, Number(e.target.value) || 1)))} className={cn(inputClass, "min-h-[52px] w-20 text-body")} />
         </label>
       )}
       {error && <p className="text-meta text-danger">{error}</p>}

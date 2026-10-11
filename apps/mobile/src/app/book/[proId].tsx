@@ -1,4 +1,5 @@
 import * as React from "react"
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet"
 import { Stack, router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router"
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View, useWindowDimensions } from "react-native"
 import { appointmentAt, CITIES, POLICY, buildQuote, districtsOf, getTemplate, isUrgent, travelDistanceKm, serviceQuantity, type PriceQuote } from "@/shared"
@@ -21,7 +22,6 @@ import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
 
-const SLOT_COLUMNS = 4
 const SLOT_GAP = 8
 
 /**
@@ -34,12 +34,17 @@ const SLOT_GAP = 8
  * which stays mounted, so every choice is still here when they come back.
  */
 export default function Book() {
-  const params = useLocalSearchParams<{ proId: string; template?: string }>()
+  // Picker portals belong to this native modal, above its content and footer.
+  return <BottomSheetModalProvider><BookingFlow /></BottomSheetModalProvider>
+}
+
+function BookingFlow() {
+  const params = useLocalSearchParams<{ proId: string; template?: string; variant?: string }>()
   const app = useApp()
   const pro = usePro(params.proId)
   const navigation = useNavigation()
   const keyboard = useKeyboardVisible()
-  const { width } = useWindowDimensions()
+  const { width, fontScale } = useWindowDimensions()
 
   const listings = React.useMemo(
     () => (pro ? (app.data?.services ?? []).filter((s) => s.proId === pro.id && s.active && Object.keys(s.prices).length && getTemplate(s.templateId)) : []),
@@ -57,6 +62,7 @@ export default function Book() {
   const [estDistrict, setEstDistrict] = React.useState<string | null>(null)
   const [note, setNote] = React.useState("")
   const [slots, setSlots] = React.useState<{ key: string; list: { startsAt: string; time: string }[] } | null>(null)
+  const [slotRetry, retrySlots] = React.useReducer((n: number) => n + 1, 0)
   const [slotError, setSlotError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -74,7 +80,7 @@ export default function Book() {
   const listing = listings.find((s) => s.templateId === templateId) ?? listings.find((s) => s.templateId === params.template) ?? listings[0]
   const template = listing ? getTemplate(listing.templateId) : undefined
   const offered = template && listing ? template.variants.filter((v) => listing.prices[v.id] != null) : []
-  const variant = offered.find((v) => v.id === variantId) ?? offered[0]
+  const variant = offered.find((v) => v.id === variantId) ?? offered.find((v) => v.id === params.variant) ?? offered[0]
   const heads = variant ? serviceQuantity(variant, quantity) : 1
   const unit = variant && listing ? listing.prices[variant.id] : 0
   const servicePrice = unit * heads
@@ -98,26 +104,29 @@ export default function Book() {
     if (!pro || !listing || !variant) return
     let live = true
     setSlotError(null)
+    setSlots(null)
     fetchSlots({ proUuid: pro.uuid, templateId: listing.templateId, variantId: variant.id, quantity: heads, date, atHome, addressId: atHome ? chosenId : null })
       .then((list) => live && setSlots({ key: slotKey, list }))
       .catch((e: Error) => live && setSlotError(e.message))
     return () => {
       live = false
     }
-  }, [slotKey, pro, listing, variant, heads, date, atHome, chosenId])
+  }, [slotKey, pro, listing, variant, heads, date, atHome, chosenId, slotRetry])
   const daySlots = slots?.key === slotKey ? slots.list : null
   const picked = time && daySlots?.some((s) => s.startsAt === time.startsAt) ? time : null
 
-  const quoteKey = [slotKey, picked?.startsAt, app.uid].join("|")
+  const quoteKey = [slotKey, picked?.startsAt, app.uid, app.me?.account?.phone].join("|")
+  const [quoteRetry, retryQuote] = React.useReducer((n: number) => n + 1, 0)
   const [verified, setVerified] = React.useState<{ key: string; quote?: PriceQuote & { unitPrice: number; expiresAt: string }; error?: string } | null>(null)
   const [secondDate, setSecondDate] = React.useState("")
   const [secondTime, setSecondTime] = React.useState("09:00")
   React.useEffect(() => {
     if (!app.uid || !pro || !listing || !variant || !picked || (atHome && !address)) return
     let live = true
-    void rpc<PriceQuote & { unitPrice: number; expiresAt: string }>("booking_quote", { p_pro: pro.uuid, p_template: listing.templateId, p_variant: variant.id, p_starts_at: picked.startsAt, p_at_home: atHome, p_address_id: atHome ? chosenId : null, p_quantity: heads }).then((r) => { if (live) setVerified({ key: quoteKey, ...(r.ok ? { quote: r.data } : { error: r.error }) }) })
+    setVerified(null)
+    void rpc<PriceQuote & { unitPrice: number; expiresAt: string }>("booking_quote", { p_pro: pro.uuid, p_template: listing.templateId, p_variant: variant.id, p_starts_at: picked.startsAt, p_at_home: atHome, p_address_id: atHome ? chosenId : null, p_quantity: heads }).then((r) => { if (live) setVerified({ key: quoteKey, ...(r.ok ? { quote: r.data } : { error: r.error }) }) }).catch(() => { if (live) setVerified({ key: quoteKey, error: "Không xác nhận được tổng tiền. Kiểm tra kết nối và thử lại." }) })
     return () => { live = false }
-  }, [quoteKey, app.uid, pro, listing, variant, picked, atHome, address, chosenId, heads])
+  }, [quoteKey, app.uid, pro, listing, variant, picked, atHome, address, chosenId, heads, quoteRetry])
   const confirmedQuote = verified?.key === quoteKey ? verified.quote : null
   const quote = confirmedQuote ?? (picked ? buildQuote({ servicePrice, atHome, distanceKm: km, urgent: isUrgent(date, picked.time) }) : null)
 
@@ -215,9 +224,11 @@ export default function Book() {
   // Step 3 never dead-ends: signed out it leads to sign-in, without an address to the address form.
   const canNext = step === 1 ? true : step === 2 ? Boolean(picked) : Boolean(picked) && !tooFar
   const action =
-    step < 3 ? "Tiếp tục" : !app.uid ? "Đăng nhập để đặt" : atHome && !address ? "Thêm địa chỉ" : "Gửi lịch hẹn"
+    step < 3 ? "Tiếp tục" : !app.uid ? "Đăng nhập để đặt" : atHome && !address ? "Thêm địa chỉ" : !app.me.account?.phone ? "Thêm số điện thoại" : "Gửi lịch hẹn"
   const days = Array.from({ length: 14 }, (_, i) => addDays(todayISO(), i))
-  const slotWidth = Math.floor((width - gutter * 2 - SLOT_GAP * (SLOT_COLUMNS - 1)) / SLOT_COLUMNS)
+  const slotColumns = Math.max(1, Math.min(4, Math.floor((width - gutter * 2 + SLOT_GAP) / (Math.max(76, 62 * fontScale) + SLOT_GAP))))
+  const slotWidth = Math.floor((width - gutter * 2 - SLOT_GAP * (slotColumns - 1)) / slotColumns)
+  const needsQuote = Boolean(app.uid && app.me.account?.phone && picked && (!atHome || address))
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.canvas }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}>
@@ -225,7 +236,7 @@ export default function Book() {
         options={{
           title: `Bước ${step}/3`,
           gestureEnabled: !dirty,
-          headerLeft: step > 1 ? () => <Button label="Quay lại" variant="ghost" size="sm" onPress={() => setStep(step - 1)} /> : undefined,
+          headerLeft: step > 1 ? () => <IconButton name="back" label="Quay lại bước trước" onPress={() => setStep(step - 1)} /> : undefined,
           headerRight: () => <IconButton name="close" label="Đóng" onPress={() => router.back()} />,
         }}
       />
@@ -314,7 +325,7 @@ export default function Book() {
                     }}
                     accessibilityState={{ selected }}
                     accessibilityLabel={d === todayISO() ? `Hôm nay, ${formatDateLong(d)}` : formatDateLong(d)}
-                    style={{ width: 56, paddingVertical: 10, borderRadius: radius.md, alignItems: "center", backgroundColor: selected ? colors.accent : colors.surface }}
+                    style={{ width: Math.max(56, 40 * fontScale), paddingVertical: 10, borderRadius: radius.md, alignItems: "center", backgroundColor: selected ? colors.accent : colors.surface }}
                   >
                     <Txt v="meta" color={selected ? colors.surface : colors.muted}>
                       {d === todayISO() ? "Nay" : weekdayShort(d)}
@@ -327,7 +338,7 @@ export default function Book() {
               })}
             </ScrollView>
             {slotError ? (
-              <ErrorNote text={slotError} />
+              <ErrorNote text="Không tải được giờ trống. Kiểm tra kết nối và thử lại." onRetry={retrySlots} />
             ) : !daySlots ? (
               <ActivityIndicator color={colors.accent} />
             ) : daySlots.length ? (
@@ -341,7 +352,7 @@ export default function Book() {
                       onPress={() => setTime(s)}
                       accessibilityState={{ selected }}
                       accessibilityLabel={`${s.time}, ${formatDateLong(date)}`}
-                      style={{ width: slotWidth, height: 44, borderRadius: radius.sm, alignItems: "center", justifyContent: "center", backgroundColor: selected ? colors.accent : colors.surface }}
+                      style={{ width: slotWidth, minHeight: Math.max(48, 26 * fontScale + 24), paddingVertical: 12, borderRadius: radius.sm, alignItems: "center", justifyContent: "center", backgroundColor: selected ? colors.accent : colors.surface }}
                     >
                       <Txt w={700} tabular color={selected ? colors.surface : colors.ink}>
                         {s.time}
@@ -436,7 +447,7 @@ export default function Book() {
                 <Button label="Chọn lại giờ" variant="secondary" size="sm" onPress={() => setStep(2)} />
               </View>
             ) : null}
-            {app.uid && !confirmedQuote && <ErrorNote text={verified?.key === quoteKey && verified.error ? verified.error : "Đang xác nhận tổng tiền…"} />}
+            {needsQuote && !confirmedQuote && (verified?.key === quoteKey && verified.error ? <ErrorNote text={verified.error} onRetry={retryQuote} /> : <Txt v="meta" color={colors.inkSoft}>Đang xác nhận tổng tiền…</Txt>)}
             {(variant.sessions ?? 1) > 1 && <View style={{ gap: 8 }}><Txt w={700}>Buổi thứ hai (đã gồm trong giá)</Txt><DateField label="Ngày buổi thứ hai" value={secondDate} onChange={setSecondDate} minDate={date} /><TimeField label="Giờ buổi thứ hai" value={secondTime} onChange={setSecondTime} /><Txt v="meta">Hệ thống giữ cả hai buổi cùng lúc và kiểm tra giờ trống khi gửi.</Txt></View>}
             {quote && picked ? (
               <Card>
@@ -467,7 +478,7 @@ export default function Book() {
         title={quote ? `Tổng ${formatPrice(quote.total)}` : servicePrice ? formatPrice(servicePrice) : null}
         note={picked ? `${date.split("-").reverse().slice(0, 2).join("/")} · ${picked.time}` : variant.label}
         action={action}
-        disabled={!canNext || (step === 3 && Boolean(app.uid) && !confirmedQuote)}
+        disabled={!canNext || (step === 3 && needsQuote && !confirmedQuote)}
         busy={busy}
         onPress={next}
       />

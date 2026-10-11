@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { moveRadio } from "@/lib/radio-navigation"
 import { Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Info } from "lucide-react"
@@ -219,20 +220,22 @@ function NewRequestForm() {
           {heads > 1 && <span className="text-meta text-muted"> ({formatPrice(unit)} × {heads} người)</span>}
         </p>
         <p className="mt-0.5 text-meta text-ink-soft">Người làm nhận trước sẽ làm với giá này.</p>
-        <div role="radiogroup" aria-label="Mức giá" className={cn("mt-3 grid gap-2", variant.tiers.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
+        <div role="radiogroup" aria-label="Mức giá" className={cn("mt-3 grid gap-2", variant.tiers.length === 3 ? "grid-cols-1 min-[400px]:grid-cols-3" : "grid-cols-1 min-[400px]:grid-cols-2")}>
           {variant.tiers.map((t, i) => (
             <button
               key={t}
               type="button"
               role="radio"
               aria-checked={unit === t}
+              tabIndex={unit === t ? 0 : -1}
+              onKeyDown={(e) => moveRadio(e, () => setTier(t))}
               onClick={() => setTier(t)}
               className={cn(
                 "rounded-xl border px-2 py-2.5 text-center transition-colors",
                 unit === t ? "border-accent bg-accent text-white" : "border-line bg-canvas hover:border-ink/30",
               )}
             >
-              <span className={cn("block text-label", unit === t ? "text-white/85" : "text-muted")}>{labels[i]}</span>
+              <span className={cn("block text-label", unit === t ? "text-white" : "text-muted")}>{labels[i]}</span>
               <span className="block text-body font-semibold">
                 {formatPrice(t)}
                 {heads > 1 ? "/người" : ""}

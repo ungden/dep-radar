@@ -352,7 +352,7 @@ export function Field({
 }
 
 export const inputClass =
-  "w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-body text-ink placeholder:text-muted focus:border-accent focus:outline-none"
+  "min-h-[52px] w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-body text-ink placeholder:text-muted focus:border-accent focus:outline-none"
 
 export function Toggle({
   checked,

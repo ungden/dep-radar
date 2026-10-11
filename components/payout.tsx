@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ImagePlus, QrCode, X } from "lucide-react"
+import { ImagePlus, QrCode } from "lucide-react"
+import { Sheet } from "@/components/sheet"
 import { Button, Card, Field, inputClass } from "@/components/ui"
 import { supabaseBrowser } from "@/lib/supabase/client"
 import { uploadImage } from "@/lib/uploads"
@@ -146,13 +147,8 @@ export function ShowPaymentQr({ proId, amount }: { proId: string; amount: number
         <QrCode className="size-4" /> Hiện mã QR nhận tiền
       </Button>
       {open && (
-        <div role="dialog" aria-label="Mã QR nhận tiền" className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setOpen(false)}>
+        <Sheet open={open} title="Mã QR nhận tiền" onClose={() => setOpen(false)}>
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center text-ink" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-end">
-              <button type="button" aria-label="Đóng" onClick={() => setOpen(false)} className="inline-flex size-9 items-center justify-center rounded-full hover:bg-subtle">
-                <X className="size-5" />
-              </button>
-            </div>
             {data === null ? (
               <p className="py-10 text-body text-muted">Đang tải…</p>
             ) : !data.payout ? (
@@ -180,7 +176,7 @@ export function ShowPaymentQr({ proId, amount }: { proId: string; amount: number
               </>
             )}
           </div>
-        </div>
+        </Sheet>
       )}
     </>
   )

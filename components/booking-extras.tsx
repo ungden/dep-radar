@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { moveRadio } from "@/lib/radio-navigation"
 import Link from "next/link"
 import { Check, CheckCircle2, Clock, Download, Link2, Star, Ticket, UserX } from "lucide-react"
 import { Sheet } from "@/components/sheet"
@@ -531,8 +532,8 @@ export function ReviewCustomer({ booking }: { booking: Booking }) {
       </p>
       <div className="mt-2 flex gap-1" role="radiogroup" aria-label="Số sao">
         {[1, 2, 3, 4, 5].map((n) => (
-          <button key={n} type="button" role="radio" aria-checked={rating === n} aria-label={`${n} sao`} onClick={() => setRating(n)} className="p-1">
-            <Star className={cn("size-7", n <= rating ? "fill-ink text-ink" : "text-line")} />
+          <button key={n} type="button" role="radio" aria-checked={rating === n} tabIndex={rating === n || (!rating && n === 1) ? 0 : -1} onKeyDown={(e) => moveRadio(e, () => setRating(n))} aria-label={`${n} sao`} onClick={() => setRating(n)} className="inline-flex size-11 items-center justify-center rounded-lg">
+            <Star className={cn("size-7", n <= rating ? "fill-ink text-ink" : "text-ink-soft")} />
           </button>
         ))}
       </div>

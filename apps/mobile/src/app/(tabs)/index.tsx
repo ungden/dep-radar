@@ -332,20 +332,19 @@ function Grid({ children, rowGap = 24 }: { children: React.ReactNode; rowGap?: n
  */
 const ServiceCard = React.memo(function ServiceCard({ offer, photo, width }: { offer: ServiceOffer; photo: string | undefined; width: number }) {
   const { template, pros, fromPrice } = offer
-  const shortest = Math.min(...template.variants.map((v) => v.durationMin))
   const who = pros.length === 1 ? pros[0].name : `${pros.length} người nhận`
   return (
     <Press
       onPress={() => router.push({ pathname: "/dich-vu/[id]", params: { id: template.id } })}
-      accessibilityLabel={`${template.name}, từ ${formatPrice(fromPrice)}, ${who}`}
+      accessibilityLabel={`${template.name}, từ ${formatPrice(fromPrice)}${offer.variant.perPerson ? " mỗi người" : ""}${offer.minimumQuantity > 1 ? `, tối thiểu ${offer.minimumQuantity} người` : ""}, ${who}`}
       style={{ width, ...card }}
     >
       <View style={{ borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, overflow: "hidden" }}>
         {photo ? (
           <Photo uri={photo} ratio={4 / 3} rounded={0} recyclingKey={template.id} />
         ) : (
-          <View style={{ aspectRatio: 16 / 7, backgroundColor: colors.subtle, alignItems: "center", justifyContent: "center" }}>
-            <CategoryIcon id={template.category} size={44} />
+          <View style={{ height: 56, backgroundColor: colors.subtle, alignItems: "center", justifyContent: "center" }}>
+            <CategoryIcon id={template.category} size={28} />
           </View>
         )}
       </View>
@@ -356,10 +355,11 @@ const ServiceCard = React.memo(function ServiceCard({ offer, photo, width }: { o
       <Txt v="lead" color={colors.ink} tabular>
         Từ{" "}
         <Txt v="lead" w={700} color={colors.ink}>
-          {formatPrice(fromPrice)}
+          {formatPrice(fromPrice)}{offer.variant.perPerson ? "/người" : ""}
         </Txt>{" "}
-        · {formatDuration(shortest)}
+        · {formatDuration(offer.durationMin)}
       </Txt>
+      {offer.minimumQuantity > 1 && <Txt v="meta" color={colors.inkSoft}>Tối thiểu {offer.minimumQuantity} người · từ {formatPrice(offer.minimumTotal)}/nhóm</Txt>}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 4 }}>
         <Txt v="meta" color={colors.inkSoft} style={{ flexShrink: 1 }}>
           {who}

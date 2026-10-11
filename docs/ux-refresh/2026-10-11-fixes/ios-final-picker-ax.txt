@@ -1,0 +1,75 @@
+Window: "R2R iPhone 17 Pro", App: Simulator.
+0 standard window R2R iPhone 17 Pro – iOS 26.5, Secondary Actions: Raise
+	1 button Action
+	2 button Volume Up
+	3 button Volume Down
+	4 button Sleep/Wake
+	5 container
+		6 image Description: gearshape.fill, Secondary Actions: Cancel
+		7 text Description: Địa điểm và giá, Secondary Actions: Cancel
+		8 text Description: Tại studio, Secondary Actions: Cancel
+		9 text Description: Địa điểm QA, Secondary Actions: Cancel
+		10 text Description: Ghi chú cho QA Hà Nội, Secondary Actions: Cancel
+		11 Group Description: Ghi chú cho QA Hà Nội Mẫu bạn thích, dị ứng, chỗ đỗ xe…, Secondary Actions: Cancel
+		12 text Description: Buổi thứ hai (đã gồm trong giá), Secondary Actions: Cancel
+		13 text Description: Ngày buổi thứ hai, Secondary Actions: Cancel
+		14 button Description: Ngày buổi thứ hai, chưa chọn. Chọn ngày, Secondary Actions: Cancel
+		15 text Description: Giờ buổi thứ hai, Secondary Actions: Cancel
+		16 button Description: Giờ buổi thứ hai, 09:00. Chọn giờ, Secondary Actions: Cancel
+		17 text Description: Hệ thống giữ cả hai buổi cùng lúc và kiểm tra giờ trống khi gửi., Secondary Actions: Cancel
+		18 text Description: Makeup cô dâu · Trọn gói 2 lễ (2 buổi × 120 phút), Secondary Actions: Cancel
+		19 text Description: 12/10/2026 lúc 09:00, Secondary Actions: Cancel
+		20 text Description: Dịch vụ, Secondary Actions: Cancel
+		21 text Description: 4.800.000đ, Secondary Actions: Cancel
+		22 text Description: Tổng, trả sau khi làm xong, Secondary Actions: Cancel
+		23 text Description: 4.800.000đ, Secondary Actions: Cancel
+		24 text Secondary Actions: Cancel, Description: Khoảng cách ước tính theo quận. Giá cuối cùng do hệ thống tính lại khi gửi. Huỷ trước giờ hẹn không mất phí; nên huỷ trước 12 tiếng để người làm kịp sắp xếp.
+		25 slider Description: Bottom sheet handle, Help: Drag up or down to extend or minimize the bottom sheet, Secondary Actions: Increment, Decrement, Cancel
+		26 button Description: Bottom Sheet, Secondary Actions: Cancel
+		27 text Description: Ngày buổi thứ hai, Secondary Actions: Cancel
+		28 button Description: Đóng, Secondary Actions: Cancel
+		29 button Description: Tháng sau, Secondary Actions: Cancel
+		30 text Description: Tháng 10, 2026, Secondary Actions: Cancel
+		31 slider Description: Thứ 2, 12/10, Value: radio button, unchecked, Secondary Actions: Increment, Decrement, Cancel
+		32 button Description: Thứ 3, 13/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		33 button Description: Thứ 4, 14/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		34 button Description: Thứ 5, 15/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		35 button Description: Thứ 6, 16/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		36 button Description: Thứ 7, 17/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		37 button Description: Chủ nhật, 18/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		38 button Description: Thứ 2, 19/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		39 button Description: Thứ 3, 20/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		40 button Description: Thứ 4, 21/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		41 button Description: Thứ 5, 22/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		42 element Description: Thứ 6, 23/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		43 element Description: Thứ 7, 24/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		44 element Description: Chủ nhật, 25/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		45 element Description: Thứ 2, 26/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		46 element Description: Thứ 3, 27/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		47 element Description: Thứ 4, 28/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		48 element Description: Thứ 5, 29/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		49 element Description: Thứ 6, 30/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		50 element Description: Thứ 7, 31/10, Value: radio button, unchecked, Secondary Actions: Cancel
+		51 button Description: Bottom sheet backdrop, Help: Tap to close the bottom sheet, Secondary Actions: Cancel
+		52 button Description: Đăng nhập để đặt, Secondary Actions: Cancel
+		53 text Description: Tổng 4.800.000đ, Secondary Actions: Cancel
+		54 text Description: 12/10 · 09:00, Secondary Actions: Cancel
+	55 toolbar
+		56 button Description: Home, Secondary Actions: Move previous, Move next, Remove from toolbar
+		57 button Description: Save Screen, Secondary Actions: Move previous, Move next, Remove from toolbar
+		58 button Description: Rotate, Secondary Actions: Move previous, Move next, Remove from toolbar
+	59 close button
+	60 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	61 minimize button
+	62 text R2R iPhone 17 Pro iOS 26.5
+63 menu bar
+	64 Simulator
+	65 File
+	66 Edit
+	67 Device
+	68 I/O
+	69 Features
+	70 Window
+	71 Help
+
+The focused UI element is 0 standard window R2R iPhone 17 Pro – iOS 26.5, Secondary Actions: Raise

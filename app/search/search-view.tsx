@@ -18,9 +18,9 @@ import { CATEGORIES, categoryLabel, getTemplate, getVertical, isVertical, vertic
 import { priorityFirst } from "@/lib/discovery"
 import { interestsFrom, rankFeed, type VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
-import { serviceOffers, sortServiceOffers } from "@/lib/offers"
+import { listedOptions, serviceOffers, sortServiceOffers } from "@/lib/offers"
 import { categoryTerms, matchesQuery } from "@/lib/search"
-import { categoryFromPrice, distanceToCustomer, fromPrice, proView, servicesOf, useApp, type AppState } from "@/lib/store"
+import { distanceToCustomer, fromPrice, proView, servicesOf, useApp, type AppState } from "@/lib/store"
 import { categoriesInTrade } from "@/lib/trade"
 import { isVerified } from "@/lib/trust"
 import type { CategoryId, Pro, Work } from "@/lib/types"
@@ -109,11 +109,10 @@ function SearchView() {
   // matched on the service itself -- its name, description and category.
   const services = React.useMemo(() => {
     const pros = state.pros.filter(proOk)
-    const list = serviceOffers({ pros, proServices: state.proServices, works: state.works, city: city || null, vertical }).filter(
+    const list = serviceOffers({ pros, proServices: state.proServices, works: state.works, city: city || null, vertical, priceFilter: maxPrice ? (total) => total <= maxPrice : undefined }).filter(
       (o) =>
         (!category || o.template.category === category) &&
         (!comesToYou || !o.template.studioOnly) &&
-        (!maxPrice || o.fromPrice <= maxPrice) &&
         matchesQuery(`${o.template.name} ${o.template.description} ${categoryLabel(o.template.category)}`, query),
     )
     return sortServiceOffers(list, sort, (id) => distanceToCustomer(state, id))
@@ -127,8 +126,8 @@ function SearchView() {
       if (category && w.category !== category) return false
       const tpl = getTemplate(w.templateId)
       if (comesToYou && tpl?.studioOnly) return false
-      const price = fromPrice(state, w.proId, w.templateId)
-      if (maxPrice && (price === null || price > maxPrice)) return false
+      const options = tpl ? listedOptions(tpl, servicesOf(state, w.proId).find((s) => s.templateId === w.templateId)?.prices ?? {}) : []
+      if (maxPrice && !options.some((o) => o.minimumTotal <= maxPrice)) return false
       // The work itself, not the person: "nail" should not return a makeup
       // photo because its author also does nails.
       return matchesQuery(`${w.title} ${w.description} ${tpl?.name ?? ""} ${categoryLabel(w.category)}`, query)
@@ -157,7 +156,13 @@ function SearchView() {
 
   const pros = React.useMemo(() => {
     // With a category chosen, "Từ ..." is that category's price, as on the card.
-    const priceOf = (proId: string) => (category ? categoryFromPrice(state, proId, category) : fromPrice(state, proId))
+    const priceOf = (proId: string) => {
+      const prices = servicesOf(state, proId).flatMap((listing) => {
+        const t = getTemplate(listing.templateId)
+        return !t || (category && t.category !== category) || (vertical !== "all" && verticalOf(t.category) !== vertical) || (comesToYou && t.studioOnly) ? [] : listedOptions(t, listing.prices).map((o) => o.minimumTotal)
+      })
+      return prices.length ? Math.min(...prices) : null
+    }
     const list = state.pros.filter((p) => {
       if (!proOk(p)) return false
       if (vertical !== "all" && !p.categories.some((c) => verticalOf(c) === vertical)) return false
@@ -170,7 +175,7 @@ function SearchView() {
       return [...list].sort((a, b) => (distanceToCustomer(state, a.id) ?? Infinity) - (distanceToCustomer(state, b.id) ?? Infinity))
     if (sort === "price") return [...list].sort((a, b) => (priceOf(a.id) ?? Infinity) - (priceOf(b.id) ?? Infinity))
     return sortPros(state, list, "match")
-  }, [state, proOk, vertical, category, maxPrice, query, sort])
+  }, [state, proOk, vertical, category, maxPrice, query, sort, comesToYou])
 
   const active = [cityParam !== null && city !== (state.city ?? ""), maxPrice, verifiedOnly, openOnly, comesToYou, sort !== "match"].filter(
     Boolean,
@@ -276,7 +281,7 @@ function SearchView() {
             services.length ? (
               <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
                 {services.map((o, i) => (
-                  <ServiceCard key={o.template.id} offer={o} priority={i < 4} />
+                  <ServiceCard key={o.template.id} offer={o} priority={i < 4} href={`/dich-vu/${o.template.id}?${params.toString()}`} />
                 ))}
               </div>
             ) : (
@@ -392,6 +397,7 @@ function Filters({
       </FilterGroup>
 
       <FilterGroup title="Ngân sách tối đa">
+        <p className="mb-2 text-meta text-ink-soft">Tính theo tổng dịch vụ tối thiểu, chưa gồm phí di chuyển và phí đặt gấp.</p>
         <div role="radiogroup" aria-label="Giá" className="flex flex-wrap gap-2">
           {PRICE_OPTIONS.map((p) => (
             <Choice key={p.value} active={String(maxPrice || "") === p.value} onClick={() => onChange({ price: p.value || null })}>

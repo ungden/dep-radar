@@ -10,6 +10,7 @@ import { PriceBreakdown } from "@/components/price-breakdown"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, Skeleton, inputClass, PageSkeleton } from "@/components/ui"
 import { getTemplate, getVertical, verticalOf, serviceQuantity, serviceDuration } from "@/lib/catalog"
+import { appointmentAt } from "@/lib/appointments"
 import { bookingQuote } from "@/lib/api/actions"
 import { actions } from "@/lib/client-actions"
 import { formatPhone } from "@/lib/auth/phone"
@@ -148,7 +149,7 @@ function BookingFlow({ proId }: { proId: string }) {
     const t = getTemplate(listing.templateId)
     if (!t || (t.studioOnly && atHome)) return []
     return t.variants
-      .filter((v) => listing.prices[v.id] !== undefined && (v.sessions ?? 1) === 1 && !(t.id === templateId && v.id === variantId))
+      .filter((v) => listing.prices[v.id] !== undefined && (v.sessions ?? 1) === 1 && serviceQuantity(v) === 1 && !(t.id === templateId && v.id === variantId))
       .map((v) => ({ key: `${t.id}/${v.id}`, templateId: t.id, variantId: v.id, name: t.name, label: v.label, price: listing.prices[v.id], minutes: v.durationMin }))
   })
   const chosenAddons = addonOptions.filter((o) => addons.includes(o.key))
@@ -183,18 +184,21 @@ function BookingFlow({ proId }: { proId: string }) {
   // answer is tagged with what was asked, so a stale reply is simply ignored
   // rather than having to be cleared from state first. Works signed out too:
   // without an address the server measures from the freelancer's own location.
-  const slotKey = [proId, templateId, variantId, heads, date, atHome, addressId].join("|")
-  const [loaded, setLoaded] = React.useState<{ key: string; list: { startsAt: string; time: string }[] } | null>(null)
+  const [slotRetry, retrySlots] = React.useReducer((n: number) => n + 1, 0)
+  const slotKey = [proId, templateId, variantId, heads, date, atHome, addressId, slotRetry].join("|")
+  const [loaded, setLoaded] = React.useState<{ key: string; list?: { startsAt: string; time: string }[]; error?: string } | null>(null)
   React.useEffect(() => {
     let live = true
     void actions
       .slotsFor({ proId, templateId, variantId, quantity: heads, date, atHome, addressId })
-      .then((list) => live && setLoaded({ key: slotKey, list }))
+      .then((result) => { if (live) setLoaded({ key: slotKey, ...(result.ok ? { list: result.data } : { error: result.error }) }) })
+      .catch(() => { if (live) setLoaded({ key: slotKey, error: "Không tải được giờ trống. Kiểm tra kết nối và thử lại." }) })
     return () => {
       live = false
     }
-  }, [slotKey, proId, templateId, variantId, heads, date, atHome, addressId])
-  const slots = loaded?.key === slotKey ? loaded.list : null
+  }, [slotKey, proId, templateId, variantId, heads, date, atHome, addressId, slotRetry])
+  const slots = loaded?.key === slotKey ? loaded.list ?? null : null
+  const slotError = loaded?.key === slotKey ? loaded.error : null
 
   // A time picked for another day, service or address may no longer be on offer.
   const time = slots && pickedTime && !slots.some((s) => s.time === pickedTime) ? null : pickedTime
@@ -207,18 +211,21 @@ function BookingFlow({ proId }: { proId: string }) {
     distanceKm: atHome && address ? travelDistanceKm(pro.city, pro.district, address.city, address.district) : null,
     urgent: time ? isUrgent(date, time) : false,
   })
-  const quoteKey = [slotKey, time, session?.phone].join("|")
+  const [quoteRetry, retryQuote] = React.useReducer((n: number) => n + 1, 0)
+  const quoteKey = [slotKey, time, session?.phone, quoteRetry].join("|")
   const [verified, setVerified] = React.useState<{ key: string; quote?: PriceQuote & { unitPrice: number; expiresAt: string }; error?: string } | null>(null)
-  const [secondDate, setSecondDate] = React.useState("")
-  const [secondTime, setSecondTime] = React.useState("09:00")
+  const [secondDate, setSecondDate] = React.useState(() => /^\d{4}-\d{2}-\d{2}$/.test(params.get("secondDate") ?? "") ? params.get("secondDate")! : "")
+  const [secondTime, setSecondTime] = React.useState(() => /^([01]\d|2[0-3]):[0-5]\d$/.test(params.get("secondTime") ?? "") ? params.get("secondTime")! : "09:00")
   React.useEffect(() => {
     if (!session || !time || !locationOk) return
     let live = true
     void bookingQuote({ proId, templateId, variantId, startsAt: toTimestamptz(date, time), atHome, addressId: atHome ? addressId : null, quantity: heads })
       .then((result) => { if (live) setVerified({ key: quoteKey, ...(result.ok ? { quote: result.data } : { error: result.error }) }) })
+      .catch(() => { if (live) setVerified({ key: quoteKey, error: "Không xác nhận được tổng tiền. Kiểm tra kết nối và thử lại." }) })
     return () => { live = false }
-  }, [quoteKey, proId, templateId, variantId, date, time, atHome, addressId, heads, locationOk, session])
+  }, [quoteKey, proId, templateId, variantId, date, time, atHome, addressId, heads, locationOk, session, quoteRetry])
   const confirmedQuote = verified?.key === quoteKey ? verified.quote : null
+  const quoteError = verified?.key === quoteKey ? verified.error : null
   const quote = confirmedQuote ?? estimate
   const multiple = (variant.sessions ?? 1) > 1
   const ready = Boolean(time) && locationOk
@@ -238,6 +245,7 @@ function BookingFlow({ proId }: { proId: string }) {
     if (addons.length) q.set("addons", addons.join(","))
     if (usageScope === "commercial") q.set("usage", "commercial")
     if (consentRepost) q.set("repost", "1")
+    if (multiple && secondDate) { q.set("secondDate", secondDate); q.set("secondTime", secondTime) }
     return `/book/${proId}?${q}`
   }
 
@@ -248,7 +256,7 @@ function BookingFlow({ proId }: { proId: string }) {
       return
     }
     if (!confirmedQuote) return setError(verified?.error ?? "Đang xác nhận tổng tiền. Thử lại sau.")
-    if (multiple && (!secondDate || secondDate < date)) return setError("Chọn ngày cho buổi thứ hai sau buổi đầu.")
+    if (multiple && (!appointmentAt(secondDate, secondTime) || Date.parse(appointmentAt(secondDate, secondTime)!) <= Date.parse(toTimestamptz(date, time!)))) return setError("Chọn ngày, giờ hợp lệ cho buổi thứ hai sau buổi đầu.")
     setBusy(true)
     const res = await actions.createBooking({
       proId,
@@ -594,7 +602,9 @@ function BookingFlow({ proId }: { proId: string }) {
                 {pickedTime} không còn trống với lựa chọn này. Chọn giờ khác nhé.
               </p>
             )}
-            {slots === null ? (
+            {slotError ? (
+              <div role="alert" className="rounded-xl bg-danger-soft p-4 text-body text-danger"><p>{slotError}</p><Button variant="outline" className="mt-3" onClick={retrySlots}>Thử tải lại giờ trống</Button></div>
+            ) : slots === null ? (
               <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5">
                 {Array.from({ length: 10 }).map((_, i) => (
                   <Skeleton key={i} className="h-12 rounded-xl" />
@@ -667,7 +677,6 @@ function BookingFlow({ proId }: { proId: string }) {
         </section>
       )}
 
-      {step === 3 && session && !confirmedQuote && <p role="status" className="mb-3 text-body text-warning">{verified?.key === quoteKey && verified.error ? verified.error : "Đang xác nhận tổng tiền…"}</p>}
       {step === 3 && ready && time && (
         <section className="space-y-4">
           <ServiceSummary name={tpl.name} variant={variantText} price={price} duration={durationMin} />
@@ -859,6 +868,9 @@ function BookingFlow({ proId }: { proId: string }) {
           </Card>
 
           {multiple && <Card className="space-y-3 p-4"><p className="font-semibold">Buổi thứ hai (đã gồm trong giá)</p><input aria-label="Ngày buổi thứ hai" type="date" min={date} value={secondDate} onChange={(e) => setSecondDate(e.target.value)} className={inputClass} /><input aria-label="Giờ buổi thứ hai" type="time" step={1800} value={secondTime} onChange={(e) => setSecondTime(e.target.value)} className={inputClass} /><p className="text-label text-muted">Cả hai buổi sẽ được giữ lịch cùng lúc; hệ thống kiểm tra giờ trống khi gửi.</p></Card>}
+          {session && time && locationOk && !confirmedQuote && (
+            quoteError ? <div role="alert" className="rounded-xl bg-danger-soft p-4 text-body text-danger"><p>{quoteError}</p><Button variant="outline" className="mt-3" onClick={retryQuote}>Thử xác nhận lại giá</Button></div> : <p role="status" className="text-meta text-ink-soft">Đang xác nhận tổng tiền…</p>
+          )}
           <PriceBreakdown quote={quote} paymentMethod={payment} />
           {chosenAddons.length > 0 && (
             <Card className="space-y-1.5 p-4 text-body">
@@ -937,12 +949,14 @@ function BookingFlow({ proId }: { proId: string }) {
           <Button
             size="lg"
             className="flex-1"
-            disabled={(step < 3 && !canNext) || (step === 3 && (slots === null || (Boolean(session) && !confirmedQuote))) || isOwnProfile || paused || busy}
-            onClick={() => (step < 3 ? setStep((s) => s + 1) : ready ? void submit() : setStep(2))}
+            disabled={(step < 3 && !canNext) || (step === 3 && ready && !slotError && (slots === null || (Boolean(session) && !confirmedQuote))) || isOwnProfile || paused || busy}
+            onClick={() => (step < 3 ? setStep((s) => s + 1) : slotError ? setStep(2) : ready ? void submit() : setStep(2))}
           >
             {step < 3
               ? "Tiếp tục"
-              : slots === null
+              : slotError
+                ? "Chọn lại giờ"
+                : slots === null
                 ? "Đang kiểm tra giờ…"
                 : !ready
                   ? "Chọn lại"
@@ -1037,10 +1051,10 @@ function Stepper({ step, onJump }: { step: number; onJump: (s: number) => void }
 
 function ServiceSummary({ name, variant, price, duration }: { name: string; variant: string; price: number; duration: number }) {
   return (
-    <Card className="flex items-center justify-between gap-3 p-4">
+    <Card className="flex flex-wrap items-center justify-between gap-3 p-4">
       <div className="min-w-0">
         <p className="font-semibold">{name}</p>
-        <p className="flex items-center gap-1 text-body text-ink-soft">
+        <p className="flex flex-wrap items-center gap-1 text-body text-ink-soft">
           {variant} · <Clock className="size-3.5" /> {formatDuration(duration)}
         </p>
       </div>

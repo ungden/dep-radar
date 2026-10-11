@@ -12,6 +12,7 @@ import {
   isVertical,
   rankScore,
   serviceOffers,
+  listedOptions,
   verticalOf,
   type CategoryId,
   type ServiceOffer,
@@ -103,8 +104,8 @@ export default function Search() {
       if (filters.place === "studio" && !p.studioAddress) return false
       if (filters.place === "location" && !templates.some((t) => t.onLocation)) return false
       const inCategory = filters.category ? listed.filter((s) => getTemplate(s.templateId)?.category === filters.category) : listed
-      const prices = inCategory.flatMap((s) => Object.values(s.prices))
-      if (!priceOk(filters.price, prices.length ? Math.min(...prices) : null)) return false
+      const prices = inCategory.flatMap((s) => { const t = getTemplate(s.templateId); return t && (filters.vertical === "all" || verticalOf(t.category) === filters.vertical) && (filters.place !== "home" || !t.studioOnly) && (filters.place !== "location" || t.onLocation) ? listedOptions(t, s.prices).map((o) => o.minimumTotal) : [] })
+      if (filters.price !== "any" && !prices.some((price) => priceOk(filters.price, price))) return false
       if (!q.length) return true
       const haystack = fold(
         [p.name, p.title, p.district, p.city, ...p.areas, ...p.categories.map((c) => CATEGORIES.find((x) => x.id === c)?.label ?? ""), ...templates.map((t) => t.name)].join(" "),
@@ -124,23 +125,23 @@ export default function Search() {
   // The same cards as Khám phá: a service someone here offers, from its lowest real price.
   const services = React.useMemo(() => {
     const q = words(query)
-    const all = serviceOffers({ pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical: filters.vertical })
+    const all = serviceOffers({ pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical: filters.vertical,
+      proFilter: (p) => (!filters.verified || p.identity === "verified") && (filters.place !== "home" || p.homeService) && (filters.place !== "studio" || Boolean(p.studioAddress)),
+      priceFilter: (total) => priceOk(filters.price, total),
+    })
     const nearest = (o: ServiceOffer) => Math.min(...o.pros.map((p) => app.distanceTo(p) ?? Number.POSITIVE_INFINITY))
     return all
       .filter((o) => {
         const t = o.template
         if (filters.category && t.category !== filters.category) return false
-        if (!priceOk(filters.price, o.fromPrice)) return false
-        if (filters.verified && !o.pros.some((p) => p.identity === "verified")) return false
-        if (filters.place === "home" && (t.studioOnly || !o.pros.some((p) => p.homeService))) return false
-        if (filters.place === "studio" && !o.pros.some((p) => p.studioAddress)) return false
+        if (filters.place === "home" && t.studioOnly) return false
         if (filters.place === "location" && !t.onLocation) return false
         if (!q.length) return true
         const haystack = fold([t.name, t.description, categoryLabel(t.category), ...o.pros.map((p) => p.name)].join(" "))
         return q.every((word) => haystack.includes(word))
       })
       .sort((a, b) => {
-        if (sort === "cheap") return a.fromPrice - b.fromPrice
+        if (sort === "cheap") return a.minimumTotal - b.minimumTotal
         if (sort === "near") { const da = nearest(a); const db = nearest(b); return da === db ? 0 : da - db }
         return 0
       })
@@ -288,7 +289,7 @@ export default function Search() {
           keyboardDismissMode="on-drag"
           renderItem={({ item }) => (
             <View style={{ paddingBottom: 12 }}>
-              <ServiceRow offer={item} />
+              <ServiceRow offer={item} filters={filters} />
             </View>
           )}
           refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}
@@ -341,6 +342,7 @@ export default function Search() {
           ))}
         </Group>
         <Group title="Khoảng giá khởi điểm">
+          <Txt v="meta" color={colors.inkSoft}>Theo tổng dịch vụ tối thiểu, chưa gồm phí di chuyển hoặc đặt gấp.</Txt>
           {(Object.keys(PRICE_LABEL) as PriceBand[]).map((b) => (
             <Chip key={b} label={PRICE_LABEL[b]} selected={draft.price === b} onPress={() => setDraft({ ...draft, price: b })} />
           ))}
@@ -360,14 +362,13 @@ export default function Search() {
 }
 
 /** A service for sale, as a row: its photo (or icon), the lowest price here, how many people offer it. */
-function ServiceRow({ offer }: { offer: ServiceOffer }) {
+function ServiceRow({ offer, filters }: { offer: ServiceOffer; filters: Filters }) {
   const { template, pros, fromPrice, photo } = offer
-  const shortest = Math.min(...template.variants.map((v) => v.durationMin))
   const who = pros.length === 1 ? pros[0].name : `${pros.length} người nhận`
   return (
     <Press
-      onPress={() => router.push({ pathname: "/dich-vu/[id]", params: { id: template.id } })}
-      accessibilityLabel={`${template.name}, từ ${formatPrice(fromPrice)}, ${who}`}
+      onPress={() => router.push({ pathname: "/dich-vu/[id]", params: { id: template.id, place: filters.place, verified: filters.verified ? "1" : "", minTotal: filters.price === "300to600" ? "300000" : filters.price === "gt600" ? "600001" : "", maxTotal: filters.price === "lt300" ? "299999" : filters.price === "300to600" ? "600000" : "" } })}
+      accessibilityLabel={`${template.name}, từ ${formatPrice(fromPrice)}${offer.variant.perPerson ? " mỗi người" : ""}${offer.minimumQuantity > 1 ? `, tối thiểu ${offer.minimumQuantity} người` : ""}, ${who}`}
       style={{ ...card, flexDirection: "row", gap: 12, padding: 10, alignItems: "center" }}
     >
       <View style={{ width: 72, borderRadius: radius.md, overflow: "hidden" }}>
@@ -386,10 +387,11 @@ function ServiceRow({ offer }: { offer: ServiceOffer }) {
         <Txt v="meta" color={colors.muted} tabular >
           Từ{" "}
           <Txt v="meta" w={700} color={colors.accentDark}>
-            {formatPrice(fromPrice)}
+            {formatPrice(fromPrice)}{offer.variant.perPerson ? "/người" : ""}
           </Txt>{" "}
-          · {formatDuration(shortest)}
+          · {formatDuration(offer.durationMin)}
         </Txt>
+        {offer.minimumQuantity > 1 && <Txt v="meta" color={colors.inkSoft}>Tối thiểu {offer.minimumQuantity} người · {formatPrice(offer.minimumTotal)}/nhóm</Txt>}
         <Txt v="meta" color={colors.inkSoft} >
           {categoryLabel(template.category)} · {who}
         </Txt>

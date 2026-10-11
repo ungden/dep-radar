@@ -1,4 +1,4 @@
-import { View } from "react-native"
+import { View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { colors, gutter } from "@/theme"
 import { Button } from "@/ui/button"
@@ -28,6 +28,8 @@ export function BookingBar({
   keyboard?: boolean
 }) {
   const insets = useSafeAreaInsets()
+  const { width, fontScale } = useWindowDimensions()
+  const stacked = fontScale > 1.2 || width < 360
   return (
     <View
       style={{
@@ -38,24 +40,24 @@ export function BookingBar({
         paddingHorizontal: gutter,
         paddingTop: 12,
         paddingBottom: keyboard ? 12 : Math.max(insets.bottom, 12),
-        flexDirection: "row",
-        alignItems: "center",
+        flexDirection: stacked ? "column" : "row",
+        alignItems: stacked ? "stretch" : "center",
         gap: 12,
       }}
     >
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: stacked ? undefined : 1, minWidth: 0 }}>
         {title ? (
-          <Txt v="lead" w={700} tabular numberOfLines={1}>
+          <Txt v="lead" w={700} tabular>
             {title}
           </Txt>
         ) : null}
         {note ? (
-          <Txt v="meta" color={colors.inkSoft} numberOfLines={2}>
+          <Txt v="meta" color={colors.inkSoft}>
             {note}
           </Txt>
         ) : null}
       </View>
-      <Button label={action} onPress={onPress} disabled={disabled} busy={busy} size="lg" />
+      <Button label={action} onPress={onPress} disabled={disabled} busy={busy} size="lg" full={stacked} style={stacked ? undefined : { maxWidth: "52%" }} />
     </View>
   )
 }

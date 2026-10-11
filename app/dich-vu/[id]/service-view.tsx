@@ -2,13 +2,16 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
+import { listedOptions } from "@/lib/offers"
+import { isVerified } from "@/lib/trust"
+import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { Check, Clock, MapPin, Package } from "lucide-react"
 import { DataUnavailable } from "@/components/data-unavailable"
 import { PostCard, whereLabel } from "@/components/beauty"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar, ButtonLink, PageHeader } from "@/components/ui"
-import { categoryLabel, getTemplate } from "@/lib/catalog"
-import { actions } from "@/lib/client-actions"
+import { categoryLabel, getTemplate, serviceDuration, serviceQuantity } from "@/lib/catalog"
 import { distanceToCustomer, servicesOf, useApp } from "@/lib/store"
 import { excludes, placeLabel } from "@/lib/trade"
 import { rankScore } from "@/lib/trust"
@@ -23,11 +26,18 @@ import { cn, formatDuration, formatPrice, ratingText } from "@/lib/utils"
 export function ServiceView({ templateId }: { templateId: string }) {
   const state = useApp()
   const template = getTemplate(templateId)!
-  const { city } = state
+  const params = useSearchParams()
+  const router = useRouter()
+  const cityParam = params.get("city")
+  const city = cityParam === "all" ? null : cityParam ?? state.city
+  const maxPrice = Math.max(0, Number(params.get("price")) || 0)
+  const comesToYou = params.get("home") === "1"
+  const optionsOf = (p: Pro) => listedOptions(template, servicesOf(state, p.id).find((s) => s.templateId === templateId)?.prices ?? {}).filter((o) => !maxPrice || o.minimumTotal <= maxPrice)
+  const proOk = (p: Pro) => (!comesToYou || (p.homeService && !template.studioOnly)) && (params.get("open") !== "1" || p.acceptingJobs) && (!IDENTITY_VERIFICATION_OPEN || params.get("verified") !== "1" || isVerified(p))
   if (state.catalogError) return <div className="py-8"><DataUnavailable /></div>
 
   const offering = (p: Pro) => servicesOf(state, p.id).find((s) => s.templateId === templateId)
-  const all = state.pros.filter((p) => p.published && offering(p))
+  const all = state.pros.filter((p) => p.published && offering(p) && proOk(p) && optionsOf(p).length > 0)
   const near = all.filter((p) => !city || p.city === city)
   const elsewhere = all.filter((p) => city && p.city !== city)
 
@@ -39,11 +49,15 @@ export function ServiceView({ templateId }: { templateId: string }) {
     return rankScore(b) - rankScore(a)
   })
 
+  const availablePackages = template.variants.flatMap((variant) => {
+    const prices = near.filter((p) => p.acceptingJobs).flatMap((p) => optionsOf(p).filter((o) => o.variant.id === variant.id).map((o) => o.unitPrice))
+    return prices.length ? [{ variant, price: Math.min(...prices) }] : []
+  })
   const works = state.works.filter((w) => w.templateId === templateId && (!city || near.some((p) => p.id === w.proId))).slice(0, 8)
 
   return (
     <div className="mx-auto max-w-5xl md:pt-4">
-      <PageHeader back="/" />
+      <PageHeader back={params.toString() ? `/search?${params.toString()}` : "/"} />
 
       {/* On a phone the options come right after the description, before the
           people: price first is the point of this page. */}
@@ -76,27 +90,25 @@ export function ServiceView({ templateId }: { templateId: string }) {
 
         <aside className="md:sticky md:top-24 md:col-start-2 md:row-span-2 md:row-start-1 md:self-start">
           <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-5">
-            <p className="text-body font-bold">Các gói</p>
-            <ul className="mt-3 divide-y divide-line">
-              {template.variants.map((v) => (
-                <li key={v.id} className="flex items-start justify-between gap-3 py-3 text-body">
-                  <span>
-                    <span className="block font-semibold">{v.label}</span>
-                    <span className="flex items-center gap-1 text-ink-soft">
-                      <Clock className="size-3.5" /> {formatDuration(v.durationMin)}
-                      {v.perPerson ? " · mỗi người" : ""}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-right font-semibold">
-                    Từ {formatPrice(v.minPrice)}
-                    <span className="block text-label font-normal text-muted">{v.tiers.map((t) => formatPrice(t)).join(" · ")}</span>
-                  </span>
+            <p className="text-lead font-bold">Gói đang có người nhận</p>
+            {availablePackages.length ? <ul className="mt-3 divide-y divide-line">
+              {availablePackages.map(({ variant: v, price }) => (
+                <li key={v.id} className="space-y-2 py-4 text-body">
+                  <p className="font-semibold">{v.label}</p>
+                  <p className="flex items-start gap-2 text-meta text-ink-soft"><Clock className="mt-1 size-4 shrink-0" />{formatDuration(serviceDuration(v, serviceQuantity(v)))}</p>
+                  <p className="text-price font-bold">Từ {formatPrice(price)}{v.perPerson ? "/người" : ""}</p>
+                  {(v.minQuantity ?? 1) > 1 && <p className="text-meta text-ink-soft">Tối thiểu {v.minQuantity} người · từ {formatPrice(price * v.minQuantity!)}/nhóm</p>}
                 </li>
               ))}
-            </ul>
-            <p className="mt-3 text-meta text-ink-soft">
-              Mỗi gói có đúng 3 mức giá có sẵn; người làm chọn một mức. Khách không trả phí nền tảng.
-            </p>
+            </ul> : <p className="mt-3 text-body text-ink-soft">Chưa có gói phù hợp với lựa chọn này.</p>}
+            <details className="mt-4 border-t border-line pt-4">
+              <summary className="cursor-pointer text-meta font-semibold">Xem khung 3 mức giá của 360đẹp</summary>
+              <p className="mt-3 text-meta text-ink-soft">Khung giá tham khảo. Người làm chọn một mức cho từng gói; mức đang nhận lịch nằm ở trên.</p>
+              <ul className="mt-3 space-y-4">
+                {template.variants.map((v) => <li key={v.id} className="min-w-0 space-y-2"><p className="text-meta font-semibold">{v.label}</p><div className="flex flex-wrap gap-2">{v.tiers.map((tier) => <span key={tier} className="rounded-lg bg-subtle px-2 py-1 text-label">{formatPrice(tier)}{v.perPerson ? "/người" : ""}</span>)}</div></li>)}
+              </ul>
+              <p className="mt-3 text-meta text-ink-soft">Khách không trả phí nền tảng.</p>
+            </details>
           </div>
         </aside>
 
@@ -119,7 +131,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
                   {elsewhere.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => void actions.setCity(null)}
+                      onClick={() => { const next = new URLSearchParams(params.toString()); next.set("city", "all"); router.replace(`/dich-vu/${templateId}?${next}`) }}
                       className="inline-flex h-11 items-center rounded-full border border-line-strong bg-surface px-5 text-body font-semibold hover:border-accent"
                     >
                       Xem cả nước
@@ -131,7 +143,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
               <ul className="mt-4 space-y-3">
                 {ranked.map((p) => (
                   <li key={p.id}>
-                    <ProOffer pro={p} templateId={templateId} />
+                    <ProOffer pro={p} templateId={templateId} maxPrice={maxPrice} />
                   </li>
                 ))}
               </ul>
@@ -155,11 +167,11 @@ export function ServiceView({ templateId }: { templateId: string }) {
   )
 }
 
-function ProOffer({ pro, templateId }: { pro: Pro; templateId: string }) {
+function ProOffer({ pro, templateId, maxPrice }: { pro: Pro; templateId: string; maxPrice: number }) {
   const state = useApp()
   const listing = servicesOf(state, pro.id).find((s) => s.templateId === templateId)
-  const prices = Object.values(listing?.prices ?? {})
-  const from = prices.length ? Math.min(...prices) : null
+  const start = listedOptions(getTemplate(templateId)!, listing?.prices ?? {}).filter((o) => !maxPrice || o.minimumTotal <= maxPrice).sort((a, b) => a.minimumTotal - b.minimumTotal)[0]
+  const from = start?.unitPrice ?? null
   const photos = state.works
     .filter((w) => w.proId === pro.id)
     .sort((a, b) => Number(b.templateId === templateId) - Number(a.templateId === templateId))
@@ -169,7 +181,7 @@ function ProOffer({ pro, templateId }: { pro: Pro; templateId: string }) {
 
   return (
     <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-3.5">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Link href={`/pros/${pro.id}`} className="flex min-w-0 flex-1 items-center gap-3">
           <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={48} />
           <span className="min-w-0">
@@ -187,7 +199,7 @@ function ProOffer({ pro, templateId }: { pro: Pro; templateId: string }) {
           {from !== null && (
             <p className="text-body">
               <span className="text-label text-muted">Từ </span>
-              <span className="font-bold">{formatPrice(from)}</span>
+              <span className="font-bold">{formatPrice(from)}{start?.variant.perPerson ? "/người" : ""}</span>
             </p>
           )}
         </div>
@@ -206,7 +218,7 @@ function ProOffer({ pro, templateId }: { pro: Pro; templateId: string }) {
           Xem hồ sơ
         </ButtonLink>
         {pro.acceptingJobs ? (
-          <ButtonLink href={`/book/${pro.id}?service=${templateId}`} size="sm" className="flex-1">
+          <ButtonLink href={`/book/${pro.id}?service=${templateId}&variant=${start?.variant.id ?? ""}${start && start.minimumQuantity > 1 ? `&qty=${start.minimumQuantity}` : ""}`} size="sm" className="flex-1">
             Đặt lịch
           </ButtonLink>
         ) : (

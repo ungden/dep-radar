@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Camera, CheckCircle2, Circle } from "lucide-react"
+import { DataUnavailable } from "@/components/data-unavailable"
 import { PartnerProgress } from "@/components/partner-progress"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, Button, Card, Field, PageHeader, Toggle, inputClass } from "@/components/ui"
@@ -27,10 +28,16 @@ export default function EditProfilePage() {
     <div className="mx-auto max-w-2xl md:pt-4">
       <PageHeader title="Hồ sơ của bạn" back="/studio/profile" />
       <RequireSession role="pro">
-        <ProfileEditor />
+        <ProfileGate />
       </RequireSession>
     </div>
   )
+}
+
+function ProfileGate() {
+  const state = useApp()
+  const id = state.session?.proId
+  return id && proView(state, id) ? <ProfileEditor key={id} /> : <DataUnavailable />
 }
 
 function ProfileEditor() {
@@ -92,9 +99,10 @@ function ProfileEditor() {
           ) : (
             <Avatar name={displayName} tone={pro.tone} size={64} />
           )}
-          <label className="absolute -bottom-1 -right-1 inline-flex size-7 cursor-pointer items-center justify-center rounded-full bg-accent text-white">
-            <Camera className="size-3.5" />
+          <label className="absolute -bottom-1 -right-1 inline-flex size-11 cursor-pointer items-center justify-center rounded-full bg-accent text-white">
+            <Camera className="size-5" />
             <input
+              aria-label="Đổi ảnh đại diện"
               type="file"
               accept="image/*"
               className="sr-only"
@@ -250,7 +258,7 @@ function StartPoint() {
         chính xác của bạn.
       </p>
       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-        <input className={cn(inputClass, "h-10 text-body")} value={label} maxLength={120} onChange={(e) => setLabel(e.target.value)} placeholder="Tên gợi nhớ, VD: Nhà ở Nguyễn Trãi" />
+        <input className={cn(inputClass, "min-h-[52px] text-body")} value={label} maxLength={120} onChange={(e) => setLabel(e.target.value)} placeholder="Tên gợi nhớ, VD: Nhà ở Nguyễn Trãi" />
         <Button size="sm" variant="outline" disabled={busy} onClick={locate}>
           {busy ? "Đang lấy vị trí…" : "Dùng vị trí hiện tại"}
         </Button>
@@ -503,7 +511,7 @@ function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (
                 <>
                   <select
                     aria-label={`Bắt đầu ${DAYS[weekday]}`}
-                    className={cn(inputClass, "h-9 w-24 text-body")}
+                    className={cn(inputClass, "min-h-[52px] w-24 text-body")}
                     value={day.start}
                     onChange={(e) => setDays((d) => ({ ...d, [weekday]: { ...d[weekday], start: Number(e.target.value) } }))}
                   >
@@ -516,7 +524,7 @@ function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (
                   <span className="text-muted">–</span>
                   <select
                     aria-label={`Kết thúc ${DAYS[weekday]}`}
-                    className={cn(inputClass, "h-9 w-24 text-body")}
+                    className={cn(inputClass, "min-h-[52px] w-24 text-body")}
                     value={day.end}
                     onChange={(e) => setDays((d) => ({ ...d, [weekday]: { ...d[weekday], end: Number(e.target.value) } }))}
                   >
@@ -534,8 +542,8 @@ function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (
       </ul>
       {hours.extra.map((window, i) => days[window.weekday].on && <div key={i} className="mt-2 flex flex-wrap items-center gap-2">
         <span className="w-20 text-meta">{DAYS[window.weekday]}</span>
-        <input aria-label={`Bắt đầu khoảng thêm ${i + 1}`} type="time" className={cn(inputClass, "h-9 w-28")} value={label(window.startMin)} onChange={(e) => { const [h, m] = e.target.value.split(":").map(Number); if (Number.isFinite(h + m)) hours.setExtra((xs) => xs.map((x, j) => j === i ? { ...x, startMin: h * 60 + m } : x)) }} />
-        <span>–</span><input aria-label={`Kết thúc khoảng thêm ${i + 1}`} type="time" className={cn(inputClass, "h-9 w-28")} value={label(window.endMin)} onChange={(e) => { const [h, m] = e.target.value.split(":").map(Number); if (Number.isFinite(h + m)) hours.setExtra((xs) => xs.map((x, j) => j === i ? { ...x, endMin: h * 60 + m } : x)) }} />
+        <input aria-label={`Bắt đầu khoảng thêm ${i + 1}`} type="time" className={cn(inputClass, "min-h-[52px] w-28")} value={label(window.startMin)} onChange={(e) => { const [h, m] = e.target.value.split(":").map(Number); if (Number.isFinite(h + m)) hours.setExtra((xs) => xs.map((x, j) => j === i ? { ...x, startMin: h * 60 + m } : x)) }} />
+        <span>–</span><input aria-label={`Kết thúc khoảng thêm ${i + 1}`} type="time" className={cn(inputClass, "min-h-[52px] w-28")} value={label(window.endMin)} onChange={(e) => { const [h, m] = e.target.value.split(":").map(Number); if (Number.isFinite(h + m)) hours.setExtra((xs) => xs.map((x, j) => j === i ? { ...x, endMin: h * 60 + m } : x)) }} />
         <Button size="sm" variant="ghost" onClick={() => hours.setExtra((xs) => xs.filter((_, j) => j !== i))}>Bỏ khoảng</Button>
       </div>)}
       <div className="mt-3 flex flex-wrap gap-2">{[1, 2, 3, 4, 5, 6, 0].filter((d) => days[d].on).map((d) => <Button key={d} size="sm" variant="ghost" disabled={!loaded || busy} onClick={() => hours.setExtra((xs) => [...xs, { weekday: d, startMin: days[d].end, endMin: Math.min(1440, days[d].end + 60) }])}>+ Khoảng giờ {DAYS[d]}</Button>)}</div>

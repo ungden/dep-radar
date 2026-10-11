@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { moveRadio } from "@/lib/radio-navigation"
 import Image from "next/image"
 import { useParams } from "next/navigation"
 import { ImagePlus, Star, X } from "lucide-react"
@@ -236,8 +237,8 @@ function StarInput({ value, onChange, label }: { value: number; onChange: (v: nu
   return (
     <div role="radiogroup" aria-label={label} className="mt-2 inline-flex gap-2">
       {[1, 2, 3, 4, 5].map((n) => (
-        <button key={n} type="button" role="radio" aria-checked={value === n} aria-label={`${n} sao`} onClick={() => onChange(n)}>
-          <Star className={cn("size-9", n <= value ? "fill-[#e0a33a] text-[#e0a33a]" : "fill-line text-line")} />
+        <button key={n} type="button" role="radio" aria-checked={value === n} tabIndex={value === n || (!value && n === 1) ? 0 : -1} onKeyDown={(e) => moveRadio(e, () => onChange(n))} aria-label={`${n} sao`} onClick={() => onChange(n)} className="inline-flex size-11 items-center justify-center rounded-lg">
+          <Star className={cn("size-9", n <= value ? "fill-[#e0a33a] text-[#89601b]" : "fill-transparent text-ink-soft")} />
         </button>
       ))}
     </div>
