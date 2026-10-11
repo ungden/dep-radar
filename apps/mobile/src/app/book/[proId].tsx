@@ -45,12 +45,15 @@ function BookingFlow() {
   const navigation = useNavigation()
   const keyboard = useKeyboardVisible()
   const { width, fontScale } = useWindowDimensions()
+  const content = React.useRef<ScrollView>(null)
+  const largeText = fontScale >= 1.5
 
   const listings = React.useMemo(
     () => (pro ? (app.data?.services ?? []).filter((s) => s.proId === pro.id && s.active && Object.keys(s.prices).length && getTemplate(s.templateId)) : []),
     [app.data, pro],
   )
   const [step, setStep] = React.useState(1)
+  React.useEffect(() => { content.current?.scrollTo({ y: 0, animated: false }) }, [step])
   const [templateId, setTemplateId] = React.useState<string | null>(null)
   const [variantId, setVariantId] = React.useState<string | null>(null)
   const [quantity, setQuantity] = React.useState(1)
@@ -61,6 +64,7 @@ function BookingFlow() {
   const [estCity, setEstCity] = React.useState<string | null>(null)
   const [estDistrict, setEstDistrict] = React.useState<string | null>(null)
   const [note, setNote] = React.useState("")
+  const [noteOpen, setNoteOpen] = React.useState(false)
   const [slots, setSlots] = React.useState<{ key: string; list: { startsAt: string; time: string }[] } | null>(null)
   const [slotRetry, retrySlots] = React.useReducer((n: number) => n + 1, 0)
   const [slotError, setSlotError] = React.useState<string | null>(null)
@@ -228,20 +232,33 @@ function BookingFlow() {
   const days = Array.from({ length: 14 }, (_, i) => addDays(todayISO(), i))
   const slotColumns = Math.max(1, Math.min(4, Math.floor((width - gutter * 2 + SLOT_GAP) / (Math.max(76, 62 * fontScale) + SLOT_GAP))))
   const slotWidth = Math.floor((width - gutter * 2 - SLOT_GAP * (slotColumns - 1)) / slotColumns)
+  const slotGroups = [
+    { label: "Buổi sáng", from: 0, to: 12 },
+    { label: "Buổi chiều", from: 12, to: 18 },
+    { label: "Buổi tối", from: 18, to: 24 },
+  ].map(group => ({ ...group, slots: daySlots?.filter(slot => Number(slot.time.slice(0, 2)) >= group.from && Number(slot.time.slice(0, 2)) < group.to) ?? [] })).filter(group => group.slots.length)
+  const chooseDate = (value: string) => { setDate(value); setTime(null) }
+  const priceLabel = quote ? confirmedQuote ? "Tổng tiền" : "Tạm tính" : "Giá dịch vụ"
+  const displayedPrice = formatPrice(quote?.total ?? servicePrice)
   const needsQuote = Boolean(app.uid && app.me.account?.phone && picked && (!atHome || address))
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.canvas }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}>
       <Stack.Screen
         options={{
-          title: `Bước ${step}/3`,
+          title: step === 1 ? "Chọn dịch vụ" : step === 2 ? "Chọn lịch" : "Xác nhận lịch",
           gestureEnabled: !dirty,
           headerLeft: step > 1 ? () => <IconButton name="back" label="Quay lại bước trước" onPress={() => setStep(step - 1)} /> : undefined,
           headerRight: () => <IconButton name="close" label="Đóng" onPress={() => router.back()} />,
         }}
       />
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: gutter, gap: 20, paddingBottom: 32 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
-        <Txt v="h2">{step === 1 ? "Chọn dịch vụ" : step === 2 ? "Chọn ngày giờ" : "Địa điểm và giá"}</Txt>
+      <ScrollView ref={content} style={{ flex: 1 }} contentContainerStyle={{ padding: gutter, gap: 24, paddingBottom: 32 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
+        <View style={{ gap: 10 }} accessibilityLabel={`Bước ${step} trên 3`} accessible>
+          <View style={{ flexDirection: "row", gap: 6 }}>
+            {[1, 2, 3].map(number => <View key={number} style={{ flex: 1, height: 3, borderRadius: 2, backgroundColor: number <= step ? colors.accent : colors.subtleStrong }} />)}
+          </View>
+          <Txt v="meta" color={colors.inkSoft}>Bước {step} trên 3</Txt>
+        </View>
 
         {step === 1 ? (
           <>
@@ -312,54 +329,63 @@ function BookingFlow() {
 
         {step === 2 ? (
           <>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: gutter }} style={{ marginHorizontal: -gutter }}>
-              {days.map((d) => {
-                const selected = d === date
-                return (
-                  <Press
-                    key={d}
-                    haptic="select"
-                    onPress={() => {
-                      setDate(d)
-                      setTime(null)
-                    }}
-                    accessibilityState={{ selected }}
-                    accessibilityLabel={d === todayISO() ? `Hôm nay, ${formatDateLong(d)}` : formatDateLong(d)}
-                    style={{ width: Math.max(56, 40 * fontScale), paddingVertical: 10, borderRadius: radius.md, alignItems: "center", backgroundColor: selected ? colors.accent : colors.surface }}
-                  >
-                    <Txt v="meta" color={selected ? colors.surface : colors.muted}>
-                      {d === todayISO() ? "Nay" : weekdayShort(d)}
-                    </Txt>
-                    <Txt v="lead" w={700} color={selected ? colors.surface : colors.ink}>
-                      {Number(d.slice(8))}
-                    </Txt>
-                  </Press>
-                )
-              })}
-            </ScrollView>
+            {largeText ? <DateField label="Ngày hẹn" hideLabel value={date} onChange={chooseDate} maxDate={days[days.length - 1]} /> : <View style={{ gap: 12 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Icon name="calendar" size={20} color={colors.accentDark} />
+                <Txt w={600}>{formatDateLong(date)} · {date.slice(0, 4)}</Txt>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: gutter }} style={{ marginHorizontal: -gutter }}>
+                {days.map((d) => {
+                  const selected = d === date
+                  return (
+                    <Press
+                      key={d}
+                      haptic="select"
+                      onPress={() => chooseDate(d)}
+                      accessibilityState={{ selected }}
+                      accessibilityLabel={d === todayISO() ? `Hôm nay, ${formatDateLong(d)}` : formatDateLong(d)}
+                      style={{ width: Math.max(58, 44 * fontScale), paddingVertical: 10, gap: 2, borderRadius: radius.md, borderWidth: 1, borderColor: selected ? colors.accentDark : colors.line, alignItems: "center", backgroundColor: selected ? colors.accent : colors.surface }}
+                    >
+                      <Txt v="meta" color={selected ? colors.surface : colors.muted}>
+                        {d === todayISO() ? "Nay" : weekdayShort(d)}
+                      </Txt>
+                      <Txt v="lead" w={700} color={selected ? colors.surface : colors.ink}>
+                        {Number(d.slice(8))}
+                      </Txt>
+                    </Press>
+                  )
+                })}
+              </ScrollView>
+            </View>}
             {slotError ? (
               <ErrorNote text="Không tải được giờ trống. Kiểm tra kết nối và thử lại." onRetry={retrySlots} />
             ) : !daySlots ? (
               <ActivityIndicator color={colors.accent} />
             ) : daySlots.length ? (
-              <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: SLOT_GAP, rowGap: SLOT_GAP }}>
-                {daySlots.map((s) => {
-                  const selected = picked?.startsAt === s.startsAt
-                  return (
-                    <Press
-                      key={s.startsAt}
-                      haptic="select"
-                      onPress={() => setTime(s)}
-                      accessibilityState={{ selected }}
-                      accessibilityLabel={`${s.time}, ${formatDateLong(date)}`}
-                      style={{ width: slotWidth, minHeight: Math.max(48, 26 * fontScale + 24), paddingVertical: 12, borderRadius: radius.sm, alignItems: "center", justifyContent: "center", backgroundColor: selected ? colors.accent : colors.surface }}
-                    >
-                      <Txt w={700} tabular color={selected ? colors.surface : colors.ink}>
-                        {s.time}
-                      </Txt>
-                    </Press>
-                  )
-                })}
+              <View style={{ gap: 24 }}>
+                {slotGroups.map(group => <View key={group.label} style={{ gap: 10 }}>
+                  <Txt v="meta" w={600} color={colors.inkSoft}>{group.label}</Txt>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: SLOT_GAP }}>
+                    {group.slots.map((s) => {
+                      const selected = picked?.startsAt === s.startsAt
+                      return (
+                        <Press
+                          key={s.startsAt}
+                          haptic="select"
+                          onPress={() => setTime(s)}
+                          accessibilityState={{ selected }}
+                          accessibilityLabel={`${s.time}, ${formatDateLong(date)}`}
+                          style={{ width: slotWidth, minHeight: 52, paddingVertical: 12, borderRadius: radius.md, borderWidth: 1, borderColor: selected ? colors.accentDark : colors.lineStrong, alignItems: "center", justifyContent: "center", backgroundColor: selected ? colors.accentSoft : colors.surface }}
+                        >
+                          {selected ? <View accessible={false} style={{ position: "absolute", top: 3, right: 3 }}><Icon name="check" size={14} color={colors.accentDark} /></View> : null}
+                          <Txt w={selected ? 700 : 500} tabular color={selected ? colors.accentDark : colors.ink}>
+                            {s.time}
+                          </Txt>
+                        </Press>
+                      )
+                    })}
+                  </View>
+                </View>)}
               </View>
             ) : (
               <Txt color={colors.inkSoft}>Không còn giờ trống ngày này. Thử ngày khác nhé.</Txt>
@@ -426,21 +452,6 @@ function BookingFlow() {
                 <Txt color={colors.inkSoft}>{pro.studioAddress}</Txt>
               </Card>
             )}
-            <View style={{ gap: 8 }}>
-              <Txt v="lead" w={700}>
-                Ghi chú cho {pro.name}
-              </Txt>
-              <TextInput
-                value={note}
-                onChangeText={setNote}
-                placeholder="Mẫu bạn thích, dị ứng, chỗ đỗ xe…"
-                placeholderTextColor={colors.muted}
-                multiline
-                maxLength={500}
-                accessibilityLabel={`Ghi chú cho ${pro.name}`}
-                style={{ minHeight: 88, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
-              />
-            </View>
             {time && daySlots && !picked ? (
               <View style={{ gap: 8 }}>
                 <Txt color={colors.danger}>Giờ {time.time} không còn trống với địa điểm này.</Txt>
@@ -461,22 +472,43 @@ function BookingFlow() {
                 <Line label="Dịch vụ" value={formatPrice(quote.servicePrice)} />
                 {quote.travelFee ? <Line label={`Phí di chuyển${quote.distanceKm !== null ? ` (~${formatKm(quote.distanceKm)})` : ""}`} value={formatPrice(quote.travelFee)} /> : null}
                 {quote.urgentFee ? <Line label="Phí gấp" value={formatPrice(quote.urgentFee)} /> : null}
-                <Line label={address || !atHome ? "Tổng, trả sau khi làm xong" : "Tổng ước tính"} value={formatPrice(quote.total)} strong />
+                <Line label={confirmedQuote ? "Tổng tiền" : "Tạm tính"} value={formatPrice(quote.total)} strong />
                 <Txt v="meta" color={colors.muted}>
-                  Khoảng cách ước tính theo quận. Giá cuối cùng do hệ thống tính lại khi gửi. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để người làm kịp sắp xếp.
+                  Thanh toán sau khi làm xong. {atHome ? "Khoảng cách ước tính theo quận. " : ""}Giá được xác nhận lại khi gửi lịch. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để người làm kịp sắp xếp.
                 </Txt>
               </Card>
             ) : null}
+            {noteOpen ? <View style={{ gap: 8 }}>
+              <Txt v="lead" w={700}>
+                Ghi chú (không bắt buộc)
+              </Txt>
+              <TextInput
+                value={note}
+                onChangeText={setNote}
+                placeholder="Mẫu bạn thích, dị ứng, chỗ đỗ xe…"
+                placeholderTextColor={colors.muted}
+                multiline
+                maxLength={500}
+                accessibilityLabel={`Ghi chú cho ${pro.name}`}
+                style={{ minHeight: 88, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
+              />
+            </View> : <Button label="Thêm ghi chú" icon="plus" variant="secondary" full onPress={() => setNoteOpen(true)} />}
             {error ? <ErrorNote text={error} /> : null}
           </>
         ) : null}
+        {largeText && step < 3 ? <View style={{ gap: 4, borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 20 }}>
+          <Txt v="meta" color={colors.inkSoft}>{priceLabel}</Txt>
+          <Txt v="lead" w={700} tabular>{displayedPrice}</Txt>
+          <Txt v="meta" color={colors.inkSoft}>{template.name} · {variant.label}{heads > 1 ? ` × ${heads}` : ""}</Txt>
+        </View> : null}
       </ScrollView>
 
       <BookingBar
         inline
         keyboard={keyboard}
-        title={quote ? `Tổng ${formatPrice(quote.total)}` : servicePrice ? formatPrice(servicePrice) : null}
-        note={picked ? `${date.split("-").reverse().slice(0, 2).join("/")} · ${picked.time}` : variant.label}
+        title={displayedPrice}
+        summaryLabel={priceLabel}
+        actionOnly={largeText}
         action={action}
         disabled={!canNext || (step === 3 && needsQuote && !confirmedQuote)}
         busy={busy}
@@ -487,14 +519,16 @@ function BookingFlow() {
 }
 
 function Option({ selected, title, subtitle, right, onPress }: { selected: boolean; title: string; subtitle?: string; right?: string; onPress: () => void }) {
+  const { fontScale, width } = useWindowDimensions()
+  const stacked = Boolean(right) && (fontScale > 1.2 || width < 360)
   return (
     <Press
       onPress={onPress}
       haptic="select"
       accessibilityState={{ selected }}
       style={{
-        flexDirection: "row",
-        alignItems: "center",
+        flexDirection: stacked ? "column" : "row",
+        alignItems: stacked ? "stretch" : "center",
         gap: 12,
         padding: 14,
         borderRadius: radius.md,
@@ -503,7 +537,7 @@ function Option({ selected, title, subtitle, right, onPress }: { selected: boole
         borderColor: selected ? colors.accent : "transparent",
       }}
     >
-      <View style={{ flex: 1, gap: 2 }}>
+      <View style={{ flex: stacked ? undefined : 1, gap: 2 }}>
         <Txt w={selected ? 700 : 600}>{title}</Txt>
         {subtitle ? (
           <Txt v="meta" color={colors.inkSoft}>

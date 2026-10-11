@@ -1,12 +1,13 @@
 import { View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { colors, gutter } from "@/theme"
+import { colors, gutter, radius } from "@/theme"
 import { Button } from "@/ui/button"
 import { Txt } from "@/ui/text"
 
 /** The price and the one main action, stuck to the bottom of the screen. */
 export function BookingBar({
   title,
+  summaryLabel,
   note,
   action,
   onPress,
@@ -14,9 +15,12 @@ export function BookingBar({
   busy,
   inline,
   keyboard,
+  actionOnly = false,
 }: {
   /** Already formatted, e.g. "Từ 250.000đ" or "Tổng 330.000đ". */
   title: string | null
+  /** A short label above the formatted price, e.g. "Tổng tạm tính". */
+  summaryLabel?: string
   note?: string
   action: string
   onPress: () => void
@@ -26,10 +30,12 @@ export function BookingBar({
   inline?: boolean
   /** The keyboard is up: no home-indicator padding. */
   keyboard?: boolean
+  /** Keep only the action here when the summary belongs in the scrollable content. */
+  actionOnly?: boolean
 }) {
   const insets = useSafeAreaInsets()
   const { width, fontScale } = useWindowDimensions()
-  const stacked = fontScale > 1.2 || width < 360
+  const stacked = actionOnly || fontScale > 1.2 || width < 360
   return (
     <View
       style={{
@@ -45,19 +51,40 @@ export function BookingBar({
         gap: 12,
       }}
     >
-      <View style={{ flex: stacked ? undefined : 1, minWidth: 0 }}>
-        {title ? (
-          <Txt v="lead" w={700} tabular>
-            {title}
-          </Txt>
-        ) : null}
-        {note ? (
-          <Txt v="meta" color={colors.inkSoft}>
-            {note}
-          </Txt>
-        ) : null}
-      </View>
-      <Button label={action} onPress={onPress} disabled={disabled} busy={busy} size="lg" full={stacked} style={stacked ? undefined : { maxWidth: "52%" }} />
+      {!actionOnly && (summaryLabel || title || note) ? (
+        <View style={{ flex: stacked ? undefined : 1, minWidth: 0, gap: 2 }}>
+          {summaryLabel ? (
+            <Txt v="meta" color={colors.inkSoft}>
+              {summaryLabel}
+            </Txt>
+          ) : null}
+          {title ? (
+            <Txt v="lead" w={700} tabular>
+              {title}
+            </Txt>
+          ) : null}
+          {note ? (
+            <Txt v="meta" color={colors.inkSoft}>
+              {note}
+            </Txt>
+          ) : null}
+        </View>
+      ) : null}
+      <Button
+        label={action}
+        onPress={onPress}
+        disabled={disabled}
+        busy={busy}
+        size="lg"
+        full={stacked}
+        style={{
+          minHeight: 56,
+          borderRadius: radius.md,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          ...(stacked ? null : { maxWidth: "52%" }),
+        }}
+      />
     </View>
   )
 }

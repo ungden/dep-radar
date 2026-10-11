@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Image } from "expo-image"
-import { Text, View, type StyleProp, type ViewStyle } from "react-native"
+import { Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native"
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated"
 import { initials, formatRating } from "@/data/format"
 import Svg, { Path, Rect } from "react-native-svg"
@@ -222,12 +222,14 @@ export function Logo({ size = 32 }: { size?: number }) {
 
 /** A label/value line in a summary. */
 export function Line({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  const { width, fontScale } = useWindowDimensions()
+  const stacked = fontScale > 1.2 || width < 360
   return (
-    <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12, paddingVertical: 4 }}>
+    <View style={{ flexDirection: stacked ? "column" : "row", justifyContent: "space-between", gap: stacked ? 4 : 12, paddingVertical: 4 }}>
       <Txt color={strong ? colors.ink : colors.inkSoft} w={strong ? 700 : 400} style={{ flexShrink: 1 }}>
         {label}
       </Txt>
-      <Txt w={strong ? 800 : 500} tabular>
+      <Txt w={strong ? 800 : 500} tabular style={{ flexShrink: 1, textAlign: stacked ? "left" : "right" }}>
         {value}
       </Txt>
     </View>
