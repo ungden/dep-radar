@@ -27,7 +27,16 @@ export const REPORT_REASONS = [
 
 export async function fileReport(
   uid: string | null,
-  input: { reason: string; detail: string; targetAccountId?: string | null; bookingId?: string | null; workId?: string | null; evidencePaths?: string[] },
+  input: {
+    reason: string
+    detail: string
+    targetAccountId?: string | null
+    bookingId?: string | null
+    workId?: string | null
+    /** A review is keyed by its booking. */
+    reviewBookingId?: string | null
+    evidencePaths?: string[]
+  },
 ): Promise<Result> {
   if (!uid) return { ok: false, error: "Cần đăng nhập." }
   if (input.reason.trim().length < 3) return { ok: false, error: "Chọn lý do báo cáo." }
@@ -39,6 +48,7 @@ export async function fileReport(
     detail: input.detail.trim().slice(0, 2000),
   }
   if (input.workId) row.work_id = input.workId
+  if (input.reviewBookingId) row.review_booking_id = input.reviewBookingId
   if (input.evidencePaths?.length) row.evidence_paths = input.evidencePaths.slice(0, EVIDENCE_MAX)
   const { error } = await supabase.from("reports").insert(row)
   if (error) return { ok: false, error: "Không gửi được báo cáo. Thử lại nhé." }

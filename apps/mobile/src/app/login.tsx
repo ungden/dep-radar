@@ -8,13 +8,14 @@ import { MIN_PASSWORD_LENGTH, parseIdentifier, passwordProblem } from "@/shared"
 import { forgotPassword, loadProviders, needsRecoveryEmail, recoveryEmailAsked } from "@/data/auth"
 import { webLink } from "@/data/links"
 import { loadSupportZalo } from "@/data/support"
-import { hasAcceptedTerms } from "@/data/terms"
+import { agreedBeforeSignIn, hasAcceptedTerms, rememberAgreementBeforeSignIn } from "@/data/terms"
 import { supabase } from "@/data/supabase"
 import { Field, InfoNote, PasswordField } from "@/components/auth-fields"
 import { useApp } from "@/state/app"
 import { colors, gutter, radius } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
 import { ErrorNote, Logo } from "@/ui/bits"
+import { Icon } from "@/ui/icon"
 import { haptic } from "@/ui/haptics"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
@@ -24,7 +25,9 @@ type Busy = "password" | "forgot" | "google" | "apple" | null
 
 /**
  * Phone number or email with a password, Google, and on iOS Apple too (App
- * Store 4.8). After signing in: the terms once, then the phone number once
+ * Store 4.8). The terms of use are agreed here, before signing in or
+ * registering (App Store 1.2): every button waits for that tick. After signing
+ * in: the terms once for anyone who signed in before that, then the phone number once
  * (Google and Apple give none), then, for an account made with a phone number,
  * an email to recover the password through. Closing returns to where the
  * person was, with whatever they had chosen still there.
@@ -42,6 +45,18 @@ export default function Login() {
   const [appleAvailable, setAppleAvailable] = React.useState(false)
   // null: not known (offline, or still asking). Only a clear "off" hides a button.
   const [providers, setProviders] = React.useState<{ apple: boolean; google: boolean } | null>(null)
+  const [agreed, setAgreed] = React.useState(false)
+
+  React.useEffect(() => {
+    void agreedBeforeSignIn().then(setAgreed)
+  }, [])
+
+  const toggleAgreed = () => {
+    const next = !agreed
+    setAgreed(next)
+    if (next) setError(null)
+    void rememberAgreementBeforeSignIn(next)
+  }
 
   React.useEffect(() => {
     void loadProviders().then(setProviders)
@@ -80,6 +95,11 @@ export default function Login() {
   }
 
   const run = async (which: Exclude<Busy, null | "forgot">) => {
+    if (!agreed) {
+      haptic.error()
+      setError("Đánh dấu đồng ý Điều khoản sử dụng trước khi tiếp tục.")
+      return
+    }
     setBusy(which)
     setError(null)
     setInfo(null)
@@ -168,6 +188,35 @@ export default function Login() {
           })}
         </View>
 
+        <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14 }}>
+          <Press
+            onPress={toggleAgreed}
+            haptic="select"
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: agreed }}
+            accessibilityLabel="Tôi đồng ý với Điều khoản sử dụng của 360dep"
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 7,
+              borderWidth: 2,
+              borderColor: agreed ? colors.accent : colors.muted,
+              backgroundColor: agreed ? colors.accent : colors.surface,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {agreed ? <Icon name="check" size={16} color={colors.surface} /> : null}
+          </Press>
+          <Txt v="meta" style={{ flex: 1 }} onPress={toggleAgreed}>
+            Tôi đồng ý với{" "}
+            <Txt v="meta" w={700} color={colors.accent} onPress={() => router.push({ pathname: "/dieu-khoan", params: { mode: "read" } })}>
+              Điều khoản sử dụng
+            </Txt>{" "}
+            của 360dep: không dung thứ nội dung phản cảm hay người dùng lạm dụng; nội dung vi phạm bị gỡ và tài khoản bị khoá.
+          </Txt>
+        </View>
+
         {showApple || showGoogle ? (
           <View style={{ gap: 12 }}>
             {showApple ? (
@@ -178,7 +227,7 @@ export default function Login() {
                   buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
                   buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE_OUTLINE}
                   cornerRadius={radius.full}
-                  style={{ height: 54, width: "100%", opacity: locked ? 0.45 : 1 }}
+                  style={{ height: 54, width: "100%", opacity: locked || !agreed ? 0.45 : 1 }}
                   onPress={() => !locked && void run("apple")}
                 />
               )
@@ -271,7 +320,7 @@ export default function Login() {
 
         <Press onPress={() => void WebBrowser.openBrowserAsync(webLink("/chinh-sach"))} accessibilityRole="link">
           <Txt v="meta" color={colors.muted} center>
-            Tiếp tục nghĩa là bạn đồng ý với{" "}
+            Đọc đầy đủ{" "}
             <Txt v="meta" w={600} color={colors.accent}>
               điều khoản và chính sách
             </Txt>{" "}
