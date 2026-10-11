@@ -26,7 +26,7 @@ function VerifyLater() {
         <ShieldCheck className="size-8" />
       </span>
       <p className="mt-4 font-semibold">Xác minh danh tính sẽ mở sau</p>
-      <p className="mt-1 max-w-sm text-sm text-ink-soft">
+      <p className="mt-1 max-w-sm text-body text-ink-soft">
         Bạn chưa cần làm gì. Khi mở, 360dep sẽ báo trong ứng dụng; hồ sơ, dịch vụ và tác phẩm của bạn vẫn hiện với khách bình thường.
       </p>
       <ButtonLink href="/studio" className="mt-6">
@@ -111,7 +111,7 @@ function VerifyFlow() {
       <div className="flex min-h-[60dvh] flex-col items-center justify-center text-center">
         <Loader2 className="size-10 animate-spin text-accent" />
         <p className="mt-4 font-semibold">AI đang đối chiếu CCCD với ảnh selfie</p>
-        <p className="mt-1 text-sm text-muted">Đọc thẻ và so khuôn mặt, thường mất 10–20 giây.</p>
+        <p className="mt-1 text-body text-muted">Đọc thẻ và so khuôn mặt, thường mất 10–20 giây.</p>
       </div>
     )
   }
@@ -123,7 +123,7 @@ function VerifyFlow() {
           <Clock className="size-8" />
         </span>
         <p className="mt-4 font-semibold">Đang chờ kiểm tra thêm</p>
-        <p className="mt-1 max-w-sm text-sm text-ink-soft">{reason}</p>
+        <p className="mt-1 max-w-sm text-body text-ink-soft">{reason}</p>
         <div className="mt-6 flex gap-2">
           <Button variant="outline" onClick={() => setPhase("form")}>
             <RotateCcw className="size-4" /> Chụp lại
@@ -140,7 +140,7 @@ function VerifyFlow() {
           <X className="size-8" />
         </span>
         <p className="mt-4 font-semibold">Chưa xác minh được</p>
-        <p className="mt-1 max-w-sm text-sm text-ink-soft">{reason}</p>
+        <p className="mt-1 max-w-sm text-body text-ink-soft">{reason}</p>
         <Button className="mt-6" onClick={() => setPhase("form")}>
           <RotateCcw className="size-4" /> Chụp lại
         </Button>
@@ -152,7 +152,7 @@ function VerifyFlow() {
     <div className="space-y-5">
       <Card className="p-4">
         <p className="font-semibold">Vì sao nên xác minh?</p>
-        <ul className="mt-2 space-y-1.5 text-sm text-ink-soft">
+        <ul className="mt-2 space-y-1.5 text-body text-ink-soft">
           <li className="flex gap-2">
             <ShieldCheck className="mt-0.5 size-4 shrink-0 text-accent" /> Dấu tick cạnh tên và huy hiệu “Đã xác minh danh tính”.
           </li>
@@ -160,7 +160,7 @@ function VerifyFlow() {
             <TrendingUp className="mt-0.5 size-4 shrink-0 text-accent" /> Được xếp trước hồ sơ chưa xác minh khi khách tìm kiếm.
           </li>
         </ul>
-        <p className="mt-2 flex items-start gap-1.5 text-xs text-muted">
+        <p className="mt-2 flex items-start gap-1.5 text-label text-muted">
           <ScanFace className="mt-px size-3.5 shrink-0" />
           Bắt buộc nếu bạn nhận làm mẫu; các nghề khác thì tuỳ bạn. Khoảng 2 phút: AI đọc CCCD và so ảnh chân dung trên thẻ
           với ảnh selfie của bạn.
@@ -195,13 +195,13 @@ function VerifyFlow() {
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">{slot.title}</span>
-                  <span className={cn("block text-xs", issue ? "text-danger" : "text-muted")}>{issue ?? slot.hint}</span>
+                  <span className="block text-body font-medium">{slot.title}</span>
+                  <span className={cn("block text-label", issue ? "text-danger" : "text-muted")}>{issue ?? slot.hint}</span>
                 </span>
                 {img && !issue ? (
                   <CheckCircle2 className="size-5 text-success" />
                 ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-subtle px-3 py-1.5 text-xs font-medium text-accent-dark">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-subtle px-3 py-1.5 text-label font-medium text-accent-dark">
                     <Camera className="size-3.5" /> {img ? "Chụp lại" : "Chụp"}
                   </span>
                 )}
@@ -221,7 +221,7 @@ function VerifyFlow() {
         })}
       </ul>
 
-      <label className="flex items-start gap-2.5 rounded-2xl bg-canvas p-3.5 text-[13px] text-ink-soft">
+      <label className="flex items-start gap-2.5 rounded-2xl bg-canvas p-3.5 text-meta text-ink-soft">
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-[var(--color-accent)]" />
         <span>
           Tôi đồng ý cho 360dep gửi ảnh CCCD và ảnh chân dung của tôi tới dịch vụ AI (Google Gemini) chỉ để xác minh danh tính, theo Nghị định 13/2023/NĐ-CP. 360dep không
@@ -245,8 +245,8 @@ function Result({ nameOnCard }: { nameOnCard: string }) {
         <CheckCircle2 className="size-8" />
       </span>
       <p className="mt-4 font-semibold">Đã xác minh danh tính</p>
-      {nameOnCard && <p className="mt-1 text-sm text-success">AI xác nhận ảnh CCCD của {nameOnCard} và selfie là cùng một người</p>}
-      <p className="mt-1 max-w-sm text-sm text-ink-soft">Hồ sơ của bạn đã có dấu tick và được ưu tiên hiển thị khi khách tìm kiếm.</p>
+      {nameOnCard && <p className="mt-1 text-body text-success">AI xác nhận ảnh CCCD của {nameOnCard} và selfie là cùng một người</p>}
+      <p className="mt-1 max-w-sm text-body text-ink-soft">Hồ sơ của bạn đã có dấu tick và được ưu tiên hiển thị khi khách tìm kiếm.</p>
       <div className="mt-6 flex gap-2">
         <ButtonLink href="/studio" variant="outline">
           Về Studio

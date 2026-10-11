@@ -84,7 +84,9 @@ export function Chip({ label, selected, onPress, icon }: { label: string; select
       haptic="select"
       accessibilityState={{ selected }}
       style={{
-        height: 36,
+        minHeight: 44,
+        paddingVertical: 10,
+        maxWidth: "100%",
         paddingHorizontal: 14,
         borderRadius: radius.full,
         backgroundColor: selected ? colors.accent : colors.subtle,
@@ -94,7 +96,7 @@ export function Chip({ label, selected, onPress, icon }: { label: string; select
       }}
     >
       {icon}
-      <Txt v="meta" w={600} color={selected ? colors.surface : colors.ink} numberOfLines={1}>
+      <Txt v="meta" w={600} color={selected ? colors.surface : colors.ink} style={{ flexShrink: 1 }}>
         {label}
       </Txt>
     </Press>

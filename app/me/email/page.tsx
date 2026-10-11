@@ -30,7 +30,7 @@ export default async function AddEmailPage({ searchParams }: { searchParams: Pro
       <PageHeader back={next} />
       <Logo size="lg" />
       <h1 className="mt-4 text-[28px] font-bold tracking-tight">Thêm email để lấy lại mật khẩu khi quên</h1>
-      <p className="mt-1 text-sm text-ink-soft">
+      <p className="mt-1 text-body text-ink-soft">
         Tài khoản của bạn đang chỉ có số điện thoại. Có email, khi quên mật khẩu 360dep gửi link đặt lại tới đó. 360dep không gửi
         quảng cáo vào email này.
       </p>

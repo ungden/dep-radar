@@ -159,8 +159,8 @@ export default function Login() {
       >
         <View style={{ gap: 12 }}>
           <Logo />
-          <Txt v="h1">Đặt người giúp bạn lên hình đẹp</Txt>
-          <Txt color={colors.inkSoft}>Làm đẹp, chụp ảnh, quay clip, người mẫu. Đăng nhập để đặt lịch, lưu mẫu và nhắn tin.</Txt>
+          <Txt v="h1">Chào mừng bạn</Txt>
+          <Txt color={colors.inkSoft}>Đăng nhập để đặt lịch, lưu mẫu và nhắn tin.</Txt>
         </View>
 
         <View accessibilityRole="tablist" style={{ flexDirection: "row", backgroundColor: colors.subtle, borderRadius: radius.full, padding: 4 }}>
@@ -178,7 +178,7 @@ export default function Login() {
                 accessibilityRole="tab"
                 accessibilityState={{ selected }}
                 haptic="select"
-                style={{ flex: 1, height: 40, borderRadius: radius.full, alignItems: "center", justifyContent: "center", backgroundColor: selected ? colors.surface : "transparent" }}
+                style={{ flex: 1, minHeight: 48, paddingVertical: 10, borderRadius: radius.full, alignItems: "center", justifyContent: "center", backgroundColor: selected ? colors.surface : "transparent" }}
               >
                 <Txt w={selected ? 700 : 500} color={selected ? colors.ink : colors.muted}>
                   {t.label}
@@ -196,8 +196,8 @@ export default function Login() {
             accessibilityState={{ checked: agreed }}
             accessibilityLabel="Tôi đồng ý với Điều khoản sử dụng của 360dep"
             style={{
-              width: 26,
-              height: 26,
+              width: 44,
+              height: 44,
               borderRadius: 7,
               borderWidth: 2,
               borderColor: agreed ? colors.accent : colors.muted,
@@ -213,7 +213,7 @@ export default function Login() {
             <Txt v="meta" w={700} color={colors.accent} onPress={() => router.push({ pathname: "/dieu-khoan", params: { mode: "read" } })}>
               Điều khoản sử dụng
             </Txt>{" "}
-            của 360dep: không dung thứ nội dung phản cảm hay người dùng lạm dụng; nội dung vi phạm bị gỡ và tài khoản bị khoá.
+            của 360dep và chính sách xử lý nội dung vi phạm trong điều khoản.
           </Txt>
         </View>
 

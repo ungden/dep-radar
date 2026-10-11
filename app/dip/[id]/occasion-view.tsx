@@ -86,7 +86,7 @@ export function OccasionView({ occasionId }: { occasionId: string }) {
       {/* Hero */}
       <header className="md:grid md:grid-cols-[1fr_1.05fr] md:items-center md:gap-12">
         <div>
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] font-semibold text-ink-soft">
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta font-semibold text-ink-soft">
             <span className="text-ink">Theo dịp</span>
             {trades.map((v) => (
               <span key={v} className="inline-flex items-center gap-1.5">
@@ -96,9 +96,9 @@ export function OccasionView({ occasionId }: { occasionId: string }) {
             ))}
           </p>
           <h1 className="mt-3 text-[34px] font-bold leading-[1.05] tracking-[-0.03em] md:text-[48px]">{occasion.title}</h1>
-          <p className="mt-3 max-w-md text-[17px] leading-relaxed text-ink-soft">{occasion.subtitle}.</p>
+          <p className="mt-3 max-w-md text-lead leading-relaxed text-ink-soft">{occasion.subtitle}.</p>
           {occasion.months.length > 0 && (
-            <p className="mt-3 text-[14px] text-muted">Mùa cao điểm: tháng {occasion.months.join(", ")}</p>
+            <p className="mt-3 text-body text-muted">Mùa cao điểm: tháng {occasion.months.join(", ")}</p>
           )}
         </div>
 
@@ -134,8 +134,8 @@ export function OccasionView({ occasionId }: { occasionId: string }) {
             <Users className="size-5" />
           </span>
           <div>
-            <h2 className="text-[17px] font-bold tracking-tight">Đặt nhiều người cho một buổi</h2>
-            <p className="mt-1 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
+            <h2 className="text-lead font-bold tracking-tight">Đặt nhiều người cho một buổi</h2>
+            <p className="mt-1 max-w-2xl text-body leading-relaxed text-ink-soft">
               Mỗi người làm là một lịch hẹn riêng: bạn đặt từng người cho cùng giờ, cùng địa điểm. Khi đặt, chọn “Đặt chung
               một buổi” để các lịch hẹn được gắn với nhau. Mỗi người vẫn tự nhận lịch của mình.
             </p>
@@ -145,7 +145,7 @@ export function OccasionView({ occasionId }: { occasionId: string }) {
 
       <section className="mt-10 md:mt-14">
         <h2 className="text-[24px] font-bold tracking-tight md:text-[32px]">Cần những ai</h2>
-        <p className="mt-1 text-[15px] text-ink-soft">
+        <p className="mt-1 text-body text-ink-soft">
           Theo thứ tự trong buổi{city ? `, với người làm ở ${city}` : ""}.
         </p>
         <ol className="mt-6 space-y-12 md:mt-8 md:space-y-16">
@@ -163,7 +163,7 @@ export function OccasionView({ occasionId }: { occasionId: string }) {
               <li key={o.id}>
                 <Link
                   href={`/dip/${o.id}`}
-                  className="inline-flex h-10 items-center rounded-full border border-line bg-surface px-4 text-[14px] font-medium hover:border-ink/30"
+                  className="inline-flex h-10 items-center rounded-full border border-line bg-surface px-4 text-body font-medium hover:border-ink/30"
                 >
                   {o.title}
                 </Link>
@@ -186,22 +186,22 @@ function Step({ index, template: t, state, city }: { index: number; template: Se
       <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-10">
         <div>
           <div className="flex items-center gap-3">
-            <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-[15px] font-bold text-white">
+            <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-body font-bold text-white">
               {index}
             </span>
             <CategoryTag category={t.category} href={`/search?category=${t.category}`} />
           </div>
           <h3 className="mt-3 text-[20px] font-bold leading-snug tracking-tight md:text-[24px]">{t.name}</h3>
-          <p className="mt-1 text-[15px] text-ink-soft">{t.description}</p>
+          <p className="mt-1 text-body text-ink-soft">{t.description}</p>
           {band && (
-            <p className="mt-3 text-[15px]">
+            <p className="mt-3 text-body">
               <span className="text-muted">Giá </span>
               <span className="font-bold">
                 {formatPrice(band[0])} – {formatPrice(band[1])}
               </span>
             </p>
           )}
-          <ul className="mt-3 space-y-1.5 text-[14px] text-ink">
+          <ul className="mt-3 space-y-1.5 text-body text-ink">
             <li className="flex items-start gap-2">
               <MapPin className="mt-0.5 size-4 shrink-0 text-muted" />
               {placeLabel(t)}
@@ -232,7 +232,7 @@ function Step({ index, template: t, state, city }: { index: number; template: Se
                     <li key={p.id} className="flex flex-col">
                       <ProCard pro={p} className="flex-1 rounded-b-none" />
                       <div className="flex items-center justify-between gap-3 rounded-b-[var(--radius-lg)] border border-t-0 border-line bg-surface px-3 py-2.5">
-                        <p className="min-w-0 truncate text-[13px] text-ink-soft">
+                        <p className="min-w-0 truncate text-meta text-ink-soft">
                           {price !== null ? (
                             <>
                               Dịch vụ này từ <span className="font-bold text-ink">{formatPrice(price)}</span>
@@ -252,7 +252,7 @@ function Step({ index, template: t, state, city }: { index: number; template: Se
               {local.length > 4 && (
                 <Link
                   href={`/search?category=${t.category}&tab=pros`}
-                  className="mt-3 inline-flex min-h-11 items-center text-[14px] font-semibold underline-offset-4 hover:underline"
+                  className="mt-3 inline-flex min-h-11 items-center text-body font-semibold underline-offset-4 hover:underline"
                 >
                   Xem tất cả {local.length} {who}
                 </Link>
@@ -260,10 +260,10 @@ function Step({ index, template: t, state, city }: { index: number; template: Se
             </>
           ) : (
             <div className="rounded-[var(--radius-lg)] border border-dashed border-line-strong px-5 py-8 text-center">
-              <p className="text-[15px] font-bold">
+              <p className="text-body font-bold">
                 Chưa có ai {city ? `ở ${city} ` : ""}nhận “{t.name}”
               </p>
-              <p className="mx-auto mt-1 max-w-sm text-[14px] text-ink-soft">
+              <p className="mx-auto mt-1 max-w-sm text-body text-ink-soft">
                 {all.length > 0
                   ? `Có ${all.length} ${who} ở thành phố khác đang nhận dịch vụ này. Hoặc đăng yêu cầu: người làm quanh bạn được báo, ai nhận trước sẽ làm.`
                   : "Đăng yêu cầu: khi có người làm việc này quanh bạn, họ được báo và ai nhận trước sẽ làm."}

@@ -84,7 +84,7 @@ function ProfileEditor() {
   return (
     <div className="space-y-5">
       <PartnerProgress />
-      <Link href="/studio/onboarding" className="text-sm text-accent underline">Sửa nghề và khu vực phục vụ</Link>
+      <Link href="/studio/onboarding" className="text-body text-accent underline">Sửa nghề và khu vực phục vụ</Link>
       <Card className="flex items-center gap-4 p-4">
         <span className="relative">
           {avatar ? (
@@ -112,7 +112,7 @@ function ProfileEditor() {
             />
           </label>
         </span>
-        <div className="min-w-0 flex-1 text-sm text-ink-soft">
+        <div className="min-w-0 flex-1 text-body text-ink-soft">
           Ảnh đại diện rõ mặt giúp khách yên tâm hơn khi mở cửa cho người lạ.
         </div>
       </Card>
@@ -148,13 +148,13 @@ function ProfileEditor() {
       <Card id="noi-phuc-vu" className="space-y-3 p-4">
         <div className="flex items-center gap-3">
           <div className="flex-1">
-            <p className="text-sm font-semibold">Nhận làm tại nhà khách</p>
-            <p className="text-xs text-muted">Tắt nếu bạn chỉ làm tại studio.</p>
+            <p className="text-body font-semibold">Nhận làm tại nhà khách</p>
+            <p className="text-label text-muted">Tắt nếu bạn chỉ làm tại studio.</p>
           </div>
           <Toggle label="Nhận làm tại nhà khách" checked={homeService} onChange={setHomeService} />
         </div>
         <div>
-          <p className="mb-2 text-[13px] font-semibold">Nhận đơn tại nhà trong bán kính</p>
+          <p className="mb-2 text-meta font-semibold">Nhận đơn tại nhà trong bán kính</p>
           <div role="radiogroup" aria-label="Bán kính nhận đơn" className="flex flex-wrap gap-2">
             {RADII.map((km) => (
               <button
@@ -164,7 +164,7 @@ function ProfileEditor() {
                 aria-checked={maxTravelKm === km}
                 onClick={() => setMaxTravelKm(km)}
                 className={cn(
-                  "h-10 rounded-full border px-4 text-[14px] font-semibold",
+                  "h-10 rounded-full border px-4 text-body font-semibold",
                   maxTravelKm === km ? "border-accent bg-accent text-white" : "border-line bg-surface hover:border-ink/30",
                 )}
               >
@@ -172,7 +172,7 @@ function ProfileEditor() {
               </button>
             ))}
           </div>
-          <p className="mt-1.5 text-xs text-muted">Phí di chuyển theo mức chung của 360dep: miễn phí 5 km đầu, sau đó 5.000đ/km, tối đa 100.000đ.</p>
+          <p className="mt-1.5 text-label text-muted">Phí di chuyển theo mức chung của 360dep: miễn phí 5 km đầu, sau đó 5.000đ/km, tối đa 100.000đ.</p>
         </div>
         <StartPoint />
         <Field label="Địa chỉ studio (nếu có)" hint="Có studio thì bạn nhận được cả dịch vụ chỉ làm tại chỗ.">
@@ -187,11 +187,11 @@ function ProfileEditor() {
       <DaysOffEditor onError={setError} />
 
       {error && (
-        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
           {error}
         </p>
       )}
-      {saved && !error && <p className="text-sm text-success">Đã lưu.</p>}
+      {saved && !error && <p className="text-body text-success">Đã lưu.</p>}
 
       <Button size="lg" className="w-full" disabled={busy} onClick={() => void save()}>
         {busy ? "Đang lưu…" : "Lưu hồ sơ"}
@@ -244,18 +244,18 @@ function StartPoint() {
 
   return (
     <div className="rounded-xl bg-canvas p-3">
-      <p className="text-[13px] font-semibold">Điểm xuất phát</p>
-      <p className="mt-0.5 text-xs text-muted">
+      <p className="text-meta font-semibold">Điểm xuất phát</p>
+      <p className="mt-0.5 text-label text-muted">
         {pro.startLabel ? `Đang dùng: ${pro.startLabel}.` : `Đang dùng tâm ${pro.district}.`} Khoảng cách và phí di chuyển tính từ điểm này. Khách không thấy vị trí
         chính xác của bạn.
       </p>
       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-        <input className={cn(inputClass, "h-10 text-sm")} value={label} maxLength={120} onChange={(e) => setLabel(e.target.value)} placeholder="Tên gợi nhớ, VD: Nhà ở Nguyễn Trãi" />
+        <input className={cn(inputClass, "h-10 text-body")} value={label} maxLength={120} onChange={(e) => setLabel(e.target.value)} placeholder="Tên gợi nhớ, VD: Nhà ở Nguyễn Trãi" />
         <Button size="sm" variant="outline" disabled={busy} onClick={locate}>
           {busy ? "Đang lấy vị trí…" : "Dùng vị trí hiện tại"}
         </Button>
       </div>
-      {message && <p className={cn("mt-2 text-xs", message.ok ? "text-success" : "text-danger")}>{message.text}</p>}
+      {message && <p className={cn("mt-2 text-label", message.ok ? "text-success" : "text-danger")}>{message.text}</p>}
     </div>
   )
 }
@@ -407,14 +407,14 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
   return (
     <Card id="mo-ho-so" className="scroll-mt-20 p-4">
       <p className="font-semibold">{heading}</p>
-      {pro.published && !pro.acceptingJobs && <p className="mt-2 text-sm text-warning">Bạn đang tạm nghỉ nhận khách. <Link href="/studio" className="underline">Bật nhận khách mới</Link> khi sẵn sàng.</p>}
+      {pro.published && !pro.acceptingJobs && <p className="mt-2 text-body text-warning">Bạn đang tạm nghỉ nhận khách. <Link href="/studio" className="underline">Bật nhận khách mới</Link> khi sẵn sàng.</p>}
       {pending && (
-        <p className="mt-1 text-[13px] text-ink-soft">
+        <p className="mt-1 text-meta text-ink-soft">
           360dep đang xem ảnh, dịch vụ và phần giới thiệu của bạn. Duyệt xong bạn nhận thông báo, và khách thấy hồ sơ ngay.
         </p>
       )}
       {refused && reasons.length > 0 && (
-        <div className="mt-2 rounded-xl bg-warning-soft px-3 py-2.5 text-[13px]">
+        <div className="mt-2 rounded-xl bg-warning-soft px-3 py-2.5 text-meta">
           <p className="font-semibold text-warning">Cần sửa:</p>
           <ul className="mt-1 list-disc space-y-1 pl-5 text-ink">
             {reasons.map((reason) => (
@@ -425,7 +425,7 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
         </div>
       )}
       {!pending && (
-        <ul className="mt-2 space-y-1.5 text-[13px]">
+        <ul className="mt-2 space-y-1.5 text-meta">
           {items.map(([done, text, href]) => (
             <li key={href} className="flex items-center gap-2">
               {done ? <CheckCircle2 className="size-4 shrink-0 text-success" /> : <Circle className="size-4 shrink-0 text-muted" />}
@@ -441,11 +441,11 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
         </ul>
       )}
       {error && (
-        <p role="alert" className="mt-2 text-xs text-danger">
+        <p role="alert" className="mt-2 text-label text-danger">
           {error}
         </p>
       )}
-      {!pro.published && !pending && <label className="mt-3 flex gap-2 text-sm"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} /> <span>Tôi đồng ý <Link href="/chinh-sach" className="underline">chính sách phí, nhận việc và hủy lịch</Link>.</span></label>}
+      {!pro.published && !pending && <label className="mt-3 flex gap-2 text-body"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} /> <span>Tôi đồng ý <Link href="/chinh-sach" className="underline">chính sách phí, nhận việc và hủy lịch</Link>.</span></label>}
       {!pending && (
         <Button
           className="mt-3"
@@ -464,7 +464,7 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
         </Button>
       )}
       {!pro.published && !pending && status !== "approved" && (
-        <p className="mt-2 text-xs text-muted">Hồ sơ mới được 360dep duyệt trước khi hiện với khách, thường trong vài phút.</p>
+        <p className="mt-2 text-label text-muted">Hồ sơ mới được 360dep duyệt trước khi hiện với khách, thường trong vài phút.</p>
       )}
     </Card>
   )
@@ -478,21 +478,21 @@ function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (
   return (
     <Card id="gio-lam" className="scroll-mt-20 p-4">
       <p className="font-semibold">Giờ làm việc</p>
-      <p className="mt-0.5 text-xs text-muted">
+      <p className="mt-0.5 text-label text-muted">
         Khách thấy giờ đã lưu, đã trừ thời lượng dịch vụ và thời gian di chuyển. Thay đổi bên dưới chỉ có hiệu lực sau khi bấm Lưu.
       </p>
       {loaded && !stored && (
-        <p className="mt-2 rounded-[var(--radius-md)] bg-warning-soft px-3 py-2 text-[13px] text-warning">
+        <p className="mt-2 rounded-[var(--radius-md)] bg-warning-soft px-3 py-2 text-meta text-warning">
           Chưa lưu. Giờ bên dưới là gợi ý (Thứ 2 – Thứ 7, 9:00 – 19:00); khách chưa đặt được cho tới khi bạn lưu.
         </p>
       )}
-      {hours.loadError && <p role="alert" className="mt-2 text-sm text-danger">{hours.loadError} <button type="button" className="underline" onClick={hours.retry}>Thử lại</button></p>}
+      {hours.loadError && <p role="alert" className="mt-2 text-body text-danger">{hours.loadError} <button type="button" className="underline" onClick={hours.retry}>Thử lại</button></p>}
       <ul className="mt-3 space-y-2">
         {[1, 2, 3, 4, 5, 6, 0].map((weekday) => {
           const day = days[weekday]
           return (
             <li key={weekday} className="flex flex-wrap items-center gap-2">
-              <span className="w-20 text-[13px]">{DAYS[weekday]}</span>
+              <span className="w-20 text-meta">{DAYS[weekday]}</span>
               <Toggle
                 label={`Làm việc ${DAYS[weekday]}`}
                 checked={day.on}
@@ -503,7 +503,7 @@ function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (
                 <>
                   <select
                     aria-label={`Bắt đầu ${DAYS[weekday]}`}
-                    className={cn(inputClass, "h-9 w-24 text-sm")}
+                    className={cn(inputClass, "h-9 w-24 text-body")}
                     value={day.start}
                     onChange={(e) => setDays((d) => ({ ...d, [weekday]: { ...d[weekday], start: Number(e.target.value) } }))}
                   >
@@ -516,7 +516,7 @@ function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (
                   <span className="text-muted">–</span>
                   <select
                     aria-label={`Kết thúc ${DAYS[weekday]}`}
-                    className={cn(inputClass, "h-9 w-24 text-sm")}
+                    className={cn(inputClass, "h-9 w-24 text-body")}
                     value={day.end}
                     onChange={(e) => setDays((d) => ({ ...d, [weekday]: { ...d[weekday], end: Number(e.target.value) } }))}
                   >
@@ -533,7 +533,7 @@ function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (
         })}
       </ul>
       {hours.extra.map((window, i) => days[window.weekday].on && <div key={i} className="mt-2 flex flex-wrap items-center gap-2">
-        <span className="w-20 text-[13px]">{DAYS[window.weekday]}</span>
+        <span className="w-20 text-meta">{DAYS[window.weekday]}</span>
         <input aria-label={`Bắt đầu khoảng thêm ${i + 1}`} type="time" className={cn(inputClass, "h-9 w-28")} value={label(window.startMin)} onChange={(e) => { const [h, m] = e.target.value.split(":").map(Number); if (Number.isFinite(h + m)) hours.setExtra((xs) => xs.map((x, j) => j === i ? { ...x, startMin: h * 60 + m } : x)) }} />
         <span>–</span><input aria-label={`Kết thúc khoảng thêm ${i + 1}`} type="time" className={cn(inputClass, "h-9 w-28")} value={label(window.endMin)} onChange={(e) => { const [h, m] = e.target.value.split(":").map(Number); if (Number.isFinite(h + m)) hours.setExtra((xs) => xs.map((x, j) => j === i ? { ...x, endMin: h * 60 + m } : x)) }} />
         <Button size="sm" variant="ghost" onClick={() => hours.setExtra((xs) => xs.filter((_, j) => j !== i))}>Bỏ khoảng</Button>
@@ -554,7 +554,7 @@ function WorkingHoursEditor({ hours, onError }: { hours: WorkingWeek; onError: (
       >
         {busy ? "Đang lưu…" : loaded ? "Lưu giờ làm việc" : "Đang tải giờ làm việc…"}
       </Button>
-      {saved && <span className="ml-2 text-sm text-success">Đã lưu.</span>}
+      {saved && <span className="ml-2 text-body text-success">Đã lưu.</span>}
     </Card>
   )
 }
@@ -583,12 +583,12 @@ function DaysOffEditor({ onError }: { onError: (message: string | null) => void 
   return (
     <Card className="p-4">
       <p className="font-semibold">Ngày nghỉ</p>
-      <p className="mt-0.5 text-xs text-muted">Khách sẽ không thấy khung giờ nào trong những ngày này.</p>
+      <p className="mt-0.5 text-label text-muted">Khách sẽ không thấy khung giờ nào trong những ngày này.</p>
 
       {rows && rows.length > 0 && (
         <ul className="mt-3 space-y-2">
           {rows.map((row) => (
-            <li key={row.id} className="flex items-center gap-2 rounded-xl bg-canvas px-3 py-2 text-[13px]">
+            <li key={row.id} className="flex items-center gap-2 rounded-xl bg-canvas px-3 py-2 text-meta">
               <span className="min-w-0 flex-1">
                 {row.startsOn === row.endsOn ? row.startsOn : `${row.startsOn} → ${row.endsOn}`}
                 {row.reason && <span className="ml-2 text-muted">{row.reason}</span>}
@@ -614,7 +614,7 @@ function DaysOffEditor({ onError }: { onError: (message: string | null) => void 
         <Field label="Từ ngày">
           <input
             type="date"
-            className={cn(inputClass, "text-sm")}
+            className={cn(inputClass, "text-body")}
             value={from}
             min={todayISO()}
             onChange={(e) => {
@@ -626,7 +626,7 @@ function DaysOffEditor({ onError }: { onError: (message: string | null) => void 
         <Field label="Đến ngày">
           <input
             type="date"
-            className={cn(inputClass, "text-sm")}
+            className={cn(inputClass, "text-body")}
             value={to}
             min={from}
             onChange={(e) => setTo(e.target.value)}
@@ -636,7 +636,7 @@ function DaysOffEditor({ onError }: { onError: (message: string | null) => void 
       <div className="mt-2">
         <Field label="Lý do (tuỳ chọn)">
           <input
-            className={cn(inputClass, "text-sm")}
+            className={cn(inputClass, "text-body")}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Về quê, đi học, nghỉ phép…"
@@ -691,8 +691,8 @@ function ModelCardEditor() {
   return (
     <Card className="space-y-4 p-4">
       <div>
-        <p className="text-[17px] font-bold tracking-tight">Thẻ người mẫu</p>
-        <p className="text-[13px] text-ink-soft">Hiện trên hồ sơ để bên thuê biết bạn có hợp không. Không cần số đo ba vòng.</p>
+        <p className="text-lead font-bold tracking-tight">Thẻ người mẫu</p>
+        <p className="text-meta text-ink-soft">Hiện trên hồ sơ để bên thuê biết bạn có hợp không. Không cần số đo ba vòng.</p>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Field label="Chiều cao (cm)">
@@ -717,7 +717,7 @@ function ModelCardEditor() {
       <Field label="Không nhận" hint="Hiện rõ trên hồ sơ để không ai phải hỏi. VD: đồ bơi, chụp đêm">
         <input className={inputClass} value={refuses} onChange={(e) => setRefuses(e.target.value)} />
       </Field>
-      {error && <p className="text-[14px] text-danger">{error}</p>}
+      {error && <p className="text-body text-danger">{error}</p>}
       <Button
         variant="outline"
         onClick={() =>

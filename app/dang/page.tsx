@@ -40,8 +40,8 @@ export default function PostPage() {
                 <o.icon className="size-6" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[16px] font-bold">{o.title}</span>
-                <span className="mt-0.5 block text-[14px] text-ink-soft">{o.text}</span>
+                <span className="block text-body font-bold">{o.title}</span>
+                <span className="mt-0.5 block text-body text-ink-soft">{o.text}</span>
               </span>
               <ArrowRight className="size-5 shrink-0 text-muted" />
             </Link>

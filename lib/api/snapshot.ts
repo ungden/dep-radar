@@ -1,3 +1,4 @@
+import { catalogReadStatus } from "@/lib/catalog-read"
 import { cookies } from "next/headers"
 import { getTemplate, getVariant } from "@/lib/catalog"
 import { supabaseServer } from "@/lib/supabase/server"
@@ -39,6 +40,9 @@ import type { AddressItem, CustomerReviewItem, PlatformSettings, TimeBlock, Vouc
 export const CITY_COOKIE = "dep360_city"
 
 export interface AppSnapshot {
+  /** Failed reads are distinct from a successfully loaded empty catalogue. */
+  catalogError?: boolean
+  worksError?: boolean
   session: Session | null
   /** Which city the customer is browsing; null means the whole country. */
   city: string | null
@@ -458,7 +462,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       }
     : emptyPlatform
 
-  const base: AppSnapshot = { ...emptySnapshot, city, pros, works, reviews, proServices, workStats, castings, platform }
+  const base: AppSnapshot = { ...emptySnapshot, ...catalogReadStatus({ pros: prosRes, prices: pricesRes, listings: listingsRes, works: worksRes }), city, pros, works, reviews, proServices, workStats, castings, platform }
   if (!me) return base
 
   // Signed in: their own bookings, requests, addresses and shortlist.

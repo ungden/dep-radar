@@ -41,19 +41,19 @@ function WorksManager() {
 
   return (
     <>
-      <p className="mb-4 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px] text-ink-soft">
+      <p className="mb-4 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-body text-ink-soft">
         Tác phẩm là thứ khách xem đầu tiên. Chỉ đăng ảnh, clip do chính bạn làm: nội dung lấy trên mạng sẽ bị gỡ và có thể
         bị khoá hồ sơ. Ảnh và clip được xoá thông tin vị trí trước khi tải lên.
       </p>
 
       {listings.length === 0 && (
-        <p className="mb-4 rounded-2xl bg-warning-soft px-4 py-3 text-[13px] text-warning">
+        <p className="mb-4 rounded-2xl bg-warning-soft px-4 py-3 text-meta text-warning">
           Thêm ít nhất một dịch vụ trước, để gắn tác phẩm vào đúng dịch vụ.
         </p>
       )}
 
       {error && (
-        <p role="alert" className="mb-4 rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+        <p role="alert" className="mb-4 rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
           {error}
         </p>
       )}
@@ -89,7 +89,7 @@ function WorksManager() {
                 <div className="relative aspect-[4/5] bg-subtle">
                   <Image src={work.images[work.kind === "before_after" ? 1 : 0] ?? work.images[0]} alt={work.title} fill sizes="200px" className="object-cover" />
                   {(work.video || work.kind === "before_after") && (
-                    <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-xs font-semibold text-white">
+                    <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-label font-semibold text-white">
                       {work.video ? (
                         <>
                           <Play className="size-3 fill-white" /> Clip
@@ -101,10 +101,10 @@ function WorksManager() {
                   )}
                 </div>
                 <div className="p-2.5">
-                  <p className="truncate text-[14px] font-semibold">{work.title}</p>
-                  <p className="truncate text-xs text-muted">{getTemplate(work.templateId)?.name}</p>
+                  <p className="truncate text-body font-semibold">{work.title}</p>
+                  <p className="truncate text-label text-muted">{getTemplate(work.templateId)?.name}</p>
                   {work.hiddenReason && (
-                    <p className="mt-1.5 rounded-lg bg-danger-soft px-2 py-1.5 text-xs text-danger">
+                    <p className="mt-1.5 rounded-lg bg-danger-soft px-2 py-1.5 text-label text-danger">
                       <b>Đã ẩn với khách.</b> {work.hiddenReason}
                     </p>
                   )}
@@ -112,7 +112,7 @@ function WorksManager() {
                     {published && !work.hiddenReason && (
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-accent"
+                        className="inline-flex items-center gap-1 text-label font-semibold text-accent"
                         onClick={() => setSharing({ id: work.id, title: work.title })}
                       >
                         <Share2 className="size-3.5" /> Ảnh đăng
@@ -120,7 +120,7 @@ function WorksManager() {
                     )}
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1 text-xs text-muted hover:text-danger"
+                      className="inline-flex items-center gap-1 text-label text-muted hover:text-danger"
                       onClick={async () => {
                         const result = await deleteWork(work.dbId)
                         if (!result.ok) return setError(result.error)
@@ -225,7 +225,7 @@ function WorkForm({
             aria-checked={kind === value}
             onClick={() => setKind(value)}
             className={cn(
-              "inline-flex h-11 items-center justify-center gap-1.5 rounded-full border text-[14px] font-semibold transition-colors",
+              "inline-flex h-11 items-center justify-center gap-1.5 rounded-full border text-body font-semibold transition-colors",
               kind === value ? "border-accent bg-accent text-white" : "border-line bg-surface hover:border-ink/30",
             )}
           >
@@ -237,7 +237,7 @@ function WorkForm({
 
       {kind === "photos" && (
         <div>
-          <p className="mb-2 text-[13px] font-semibold">Ảnh ({images.length}/5) · ảnh đầu tiên là ảnh bìa</p>
+          <p className="mb-2 text-meta font-semibold">Ảnh ({images.length}/5) · ảnh đầu tiên là ảnh bìa</p>
           <div className="flex flex-wrap gap-2">
             {images.map((src) => (
               <Thumb key={src} src={src} onRemove={() => setImages((list) => list.filter((x) => x !== src))} />
@@ -256,7 +256,7 @@ function WorkForm({
             ] as const
           ).map(([label, src, set]) => (
             <div key={label}>
-              <p className="mb-2 text-[13px] font-semibold">{label}</p>
+              <p className="mb-2 text-meta font-semibold">{label}</p>
               {src ? (
                 <Thumb src={src} large onRemove={() => set(null)} />
               ) : (
@@ -264,20 +264,20 @@ function WorkForm({
               )}
             </div>
           ))}
-          <p className="col-span-2 text-[13px] text-ink-soft">Chụp cùng góc, cùng ánh sáng để khách so sánh công bằng.</p>
+          <p className="col-span-2 text-meta text-ink-soft">Chụp cùng góc, cùng ánh sáng để khách so sánh công bằng.</p>
         </div>
       )}
 
       {kind === "clip" && (
         <div>
-          <p className="mb-2 text-[13px] font-semibold">Clip dọc, tối đa {VIDEO_MAX_SECONDS} giây, dưới {VIDEO_MAX_MB} MB (quay 1080p, không cần 4K)</p>
+          <p className="mb-2 text-meta font-semibold">Clip dọc, tối đa {VIDEO_MAX_SECONDS} giây, dưới {VIDEO_MAX_MB} MB (quay 1080p, không cần 4K)</p>
           {clipProgress !== null ? (
             <div role="status" className="rounded-[var(--radius-md)] bg-subtle px-4 py-5">
-              <p className="text-[14px] font-semibold">Đang tải clip lên… {Math.round(clipProgress * 100)}%</p>
+              <p className="text-body font-semibold">Đang tải clip lên… {Math.round(clipProgress * 100)}%</p>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-line">
                 <div className="h-full bg-accent transition-[width]" style={{ width: `${Math.round(clipProgress * 100)}%` }} />
               </div>
-              <p className="mt-2 text-[13px] text-ink-soft">Giữ trang này mở. Mạng chập chờn thì clip tự tải tiếp, không phải chọn lại.</p>
+              <p className="mt-2 text-meta text-ink-soft">Giữ trang này mở. Mạng chập chờn thì clip tự tải tiếp, không phải chọn lại.</p>
             </div>
           ) : clip ? (
             <div className="flex items-start gap-3">
@@ -289,7 +289,7 @@ function WorkForm({
           ) : (
             <PickTile accept="video/mp4,video/quicktime,video/webm" large onPick={pickClip} label="Chọn clip" />
           )}
-          <p className="mt-2 text-[13px] text-ink-soft">Vị trí quay (GPS) trong clip được xoá trước khi tải lên.</p>
+          <p className="mt-2 text-meta text-ink-soft">Vị trí quay (GPS) trong clip được xoá trước khi tải lên.</p>
         </div>
       )}
 
@@ -375,7 +375,7 @@ function PickTile({
   return (
     <label
       className={cn(
-        "flex cursor-pointer flex-col items-center justify-center gap-1 rounded-[var(--radius-md)] border border-dashed border-line text-[13px] text-ink-soft hover:border-ink/40 hover:text-ink",
+        "flex cursor-pointer flex-col items-center justify-center gap-1 rounded-[var(--radius-md)] border border-dashed border-line text-meta text-ink-soft hover:border-ink/40 hover:text-ink",
         large ? "aspect-[4/5] w-full" : "aspect-[4/5] w-20",
       )}
     >

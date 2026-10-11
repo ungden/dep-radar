@@ -112,7 +112,7 @@ function BookingDetail() {
         {isPro ? <Avatar name={booking.customerName} size={48} /> : <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={48} />}
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{isPro ? booking.customerName : pro.name}</p>
-          <p className="text-xs text-muted">
+          <p className="text-label text-muted">
             {/* The number comes with the match and goes when the job ends. */}
             {isPro ? (booking.customerPhone ? `Khách hàng · ${formatPhone(booking.customerPhone)}` : "Khách hàng") : pro.title}
           </p>
@@ -126,18 +126,18 @@ function BookingDetail() {
         </div>
         <div>
           <p className="font-semibold">{booking.serviceName}</p>
-          <p className="text-sm text-ink-soft">
+          <p className="text-body text-ink-soft">
             {booking.variantLabel}
             {booking.quantity > 1 ? ` · ${booking.quantity} người` : ""} · {formatPrice(booking.quote.servicePrice)} ·{" "}
             {formatDuration(booking.durationMin)}
           </p>
-          {booking.source === "job" && <p className="mt-0.5 text-xs text-accent">Từ yêu cầu đã đăng</p>}
+          {booking.source === "job" && <p className="mt-0.5 text-label text-accent">Từ yêu cầu đã đăng</p>}
         </div>
       </Card>
 
-      <Card className="divide-y divide-line px-4 text-sm">
+      <Card className="divide-y divide-line px-4 text-body">
         <div className="flex gap-4 py-3.5">
-          <span className="w-20 shrink-0 text-[13px] text-muted">Thời gian</span>
+          <span className="w-20 shrink-0 text-meta text-muted">Thời gian</span>
           <span className="font-medium">
             {formatDateLong(booking.date, true)}
             <br />
@@ -145,9 +145,9 @@ function BookingDetail() {
           </span>
         </div>
         <div className="flex gap-4 py-3.5">
-          <span className="w-20 shrink-0 text-[13px] text-muted">Địa điểm</span>
+          <span className="w-20 shrink-0 text-meta text-muted">Địa điểm</span>
           <span className="font-medium">
-            <span className="mb-0.5 flex items-center gap-1 text-xs font-normal text-accent">
+            <span className="mb-0.5 flex items-center gap-1 text-label font-normal text-accent">
               {booking.atHome ? <Home className="size-3.5" /> : <Store className="size-3.5" />}
               {booking.atHome ? (onLocation ? "Địa điểm khách chọn" : "Làm tại nhà khách") : "Tại studio"}
             </span>
@@ -156,7 +156,7 @@ function BookingDetail() {
         </div>
         {(booking.usageScope === "commercial" || booking.consentRepost || onLocation) && (
           <div className="flex gap-4 py-3.5">
-            <span className="w-20 shrink-0 text-[13px] text-muted">Hình ảnh</span>
+            <span className="w-20 shrink-0 text-meta text-muted">Hình ảnh</span>
             <span className="text-ink-soft">
               {booking.usageScope === "commercial" ? "Dùng cho kinh doanh" : "Dùng cá nhân"}
               <br />
@@ -166,7 +166,7 @@ function BookingDetail() {
         )}
         {booking.note && (
           <div className="flex gap-4 py-3.5">
-            <span className="w-20 shrink-0 text-[13px] text-muted">Ghi chú</span>
+            <span className="w-20 shrink-0 text-meta text-muted">Ghi chú</span>
             <span className="text-ink-soft">{booking.note}</span>
           </div>
         )}
@@ -176,13 +176,13 @@ function BookingDetail() {
       {isCustomer && <VoucherPanel booking={booking} />}
 
       {error && (
-        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
           {error}
         </p>
       )}
 
       {isPro && booking.status === "pending" && (
-        <p className="flex gap-2 rounded-xl bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning">
+        <p className="flex gap-2 rounded-xl bg-warning-soft px-3.5 py-2.5 text-meta text-warning">
           <Timer className="mt-0.5 size-4 shrink-0" />
           Xem giờ, địa chỉ và yêu cầu ở trên rồi bấm Nhận lịch, trong {POLICY.confirmWithinHours} giờ. Nhận rồi thì hai bên
           nhắn tin và gọi được cho nhau.
@@ -217,7 +217,7 @@ function BookingDetail() {
           come (CustomerFinish above); cancelling is for before. */}
       {isCustomer && active && !started && (
         <div className="space-y-2">
-          <p className="flex gap-2 text-xs text-muted">
+          <p className="flex gap-2 text-label text-muted">
             <Info className="mt-0.5 size-3.5 shrink-0" />
             {freeCancel
               ? `Huỷ trước giờ hẹn không mất phí${booking.paymentMethod === "online" ? ", hoàn 100% tiền đã thanh toán" : ""}. Nên huỷ sớm để người làm kịp sắp xếp.`
@@ -230,7 +230,7 @@ function BookingDetail() {
               with one more tap to confirm. */}
           {confirmCancel ? (
             <div className="flex flex-wrap items-center gap-2 rounded-xl bg-danger-soft px-3.5 py-2.5">
-              <span className="flex-1 text-[14px] font-semibold text-danger">Huỷ lịch hẹn này?</span>
+              <span className="flex-1 text-body font-semibold text-danger">Huỷ lịch hẹn này?</span>
               <Button variant="ghost" size="sm" onClick={() => setConfirmCancel(false)}>
                 Giữ lịch
               </Button>
@@ -249,7 +249,7 @@ function BookingDetail() {
             <button
               type="button"
               onClick={() => setConfirmCancel(true)}
-              className="inline-flex min-h-11 items-center text-[14px] font-semibold text-danger underline underline-offset-4"
+              className="inline-flex min-h-11 items-center text-body font-semibold text-danger underline underline-offset-4"
             >
               Huỷ lịch
             </button>
@@ -284,7 +284,7 @@ function BookingDetail() {
                   Nhận lịch
                 </Button>
               </div>
-              {owed > 0 && <p className="mt-2 text-center text-[13px] text-danger">{FEE_BLOCK_REASON}</p>}
+              {owed > 0 && <p className="mt-2 text-center text-meta text-danger">{FEE_BLOCK_REASON}</p>}
             </>
           )}
           {isPro && (booking.status === "confirmed" || booking.status === "in_progress") && (
@@ -307,7 +307,7 @@ function BookingDetail() {
             </div>
           )}
           {isPro && (booking.status === "confirmed" || booking.status === "in_progress") && !started && (
-            <p className="mt-2 text-center text-[13px] text-muted">
+            <p className="mt-2 text-center text-meta text-muted">
               Bấm hoàn thành được từ {booking.time}, {formatDateLong(booking.date)}.
             </p>
           )}
@@ -323,7 +323,7 @@ function BookingDetail() {
         <RescheduleOffer booking={booking} from={isCustomer ? booking.proName : booking.customerName} onError={setError} />
       )}
       {booking.rescheduleTo && active && ((isCustomer && booking.rescheduleBy === "customer") || (isPro && booking.rescheduleBy === "pro")) && (
-        <p className="text-center text-[13px] text-muted">
+        <p className="text-center text-meta text-muted">
           Đã đề nghị đổi sang {localTime(booking.rescheduleTo)}, {formatDateLong(localDate(booking.rescheduleTo))}. Đang chờ bên kia trả lời.
         </p>
       )}
@@ -357,7 +357,7 @@ function BookingDetail() {
           <MessageButton booking={booking} label={isPro ? "Nhắn tin với khách" : `Nhắn tin với ${pro.name}`} />
         </div>
       ) : booking.status === "pending" ? (
-        <p className="flex items-center justify-center gap-2 pt-2 text-[13px] text-muted">
+        <p className="flex items-center justify-center gap-2 pt-2 text-meta text-muted">
           <MessageSquare className="size-4" />
           {isPro ? "Nhắn tin mở khi bạn nhận lịch" : "Nhắn tin mở khi người làm nhận lịch"}
         </p>
@@ -366,13 +366,13 @@ function BookingDetail() {
       <div className="flex flex-col items-center gap-2 pt-1">
         {isCustomer && active && <ShareBooking booking={booking} />}
         <ReportButton bookingId={booking.id} targetAccountId={isPro ? booking.customerId : null} />
-        <Link href={isPro ? "/tro-giup?ban=doi-tac" : "/tro-giup"} className="text-[13px] text-muted underline underline-offset-2">
+        <Link href={isPro ? "/tro-giup?ban=doi-tac" : "/tro-giup"} className="text-meta text-muted underline underline-offset-2">
           Trễ giờ, vắng mặt, phát sinh, chất lượng: xem cách xử lý
         </Link>
       </div>
 
       {isPro && (
-        <p className="text-center text-xs text-muted">
+        <p className="text-center text-label text-muted">
           <Link href="/studio/schedule" className="underline underline-offset-2">
             Về lịch làm
           </Link>
@@ -397,12 +397,12 @@ function CustomerConfirmWait({ booking, proName }: { booking: Booking; proName: 
   const minutes = Math.max(0, Math.round((deadline - now) / 60000))
   const left = minutes >= 60 ? `${Math.floor(minutes / 60)} giờ ${minutes % 60} phút` : `${minutes} phút`
   return (
-    <div className="rounded-xl bg-subtle px-3.5 py-3 text-[14px]">
+    <div className="rounded-xl bg-subtle px-3.5 py-3 text-body">
       <p className="flex items-center gap-2 font-semibold text-accent-dark">
         <Timer className="size-4 shrink-0" />
         {minutes === 0 ? "Đã hết thời gian chờ nhận lịch" : `Chờ ${proName} nhận lịch · còn ${left}`}
       </p>
-      <p className="mt-1 flex gap-2 text-[13px] text-ink-soft">
+      <p className="mt-1 flex gap-2 text-meta text-ink-soft">
         <MessageSquare className="mt-0.5 size-3.5 shrink-0" />
         <span>
           {proName} xem lịch và bấm nhận trong app trước {localTime(booking.confirmBy)}. Nhận rồi thì hai bên nhắn tin, gọi
@@ -432,7 +432,7 @@ function Alternatives({ state, booking, pro }: { state: AppState; booking: Booki
     .slice(0, 3)
   return (
     <section>
-      <h2 className="text-[17px] font-bold tracking-tight">Người khác nhận dịch vụ này</h2>
+      <h2 className="text-lead font-bold tracking-tight">Người khác nhận dịch vụ này</h2>
       {others.length ? (
         <ul className="mt-3 space-y-3">
           {others.map((p) => (
@@ -445,7 +445,7 @@ function Alternatives({ state, booking, pro }: { state: AppState; booking: Booki
           ))}
         </ul>
       ) : (
-        <p className="mt-1.5 text-[14px] text-ink-soft">
+        <p className="mt-1.5 text-body text-ink-soft">
           Chưa có ai khác ở {pro.city} nhận {booking.serviceName.toLowerCase()}.{" "}
           <Link href={`/requests/new?service=${booking.templateId}`} className="font-semibold text-accent underline underline-offset-2">
             Đăng yêu cầu
@@ -515,7 +515,7 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
 
   if (mode === "none") {
     return (
-      <div className="flex flex-wrap gap-3 text-[13px]">
+      <div className="flex flex-wrap gap-3 text-meta">
         <button type="button" className="text-muted underline underline-offset-2" onClick={() => setMode("reschedule")}>
           Đề nghị đổi giờ
         </button>
@@ -538,13 +538,13 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
     <Card className="space-y-3 p-4">
       {mode === "reschedule" && (
         <>
-          <p className="text-sm font-semibold">Đề nghị giờ khác</p>
-          <p className="text-xs text-muted">Khách phải đồng ý thì lịch mới đổi. Gọi trước cho khách sẽ nhanh hơn.</p>
+          <p className="text-body font-semibold">Đề nghị giờ khác</p>
+          <p className="text-label text-muted">Khách phải đồng ý thì lịch mới đổi. Gọi trước cho khách sẽ nhanh hơn.</p>
           <div className="grid grid-cols-2 gap-2">
             <input
               type="date"
               aria-label="Ngày mới"
-              className={cn(inputClass, "text-sm")}
+              className={cn(inputClass, "text-body")}
               value={date}
               min={todayISO()}
               onChange={(e) => setDate(e.target.value)}
@@ -553,7 +553,7 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
               type="time"
               aria-label="Giờ mới"
               step={1800}
-              className={cn(inputClass, "text-sm")}
+              className={cn(inputClass, "text-body")}
               value={time}
               onChange={(e) => setTime(e.target.value)}
             />
@@ -563,10 +563,10 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
 
       {mode !== "reschedule" && (
         <>
-          <p className="text-sm font-semibold">
+          <p className="text-body font-semibold">
             {mode === "cancel" ? "Huỷ job đã nhận" : "Báo khách vắng mặt"}
           </p>
-          <p className="text-xs text-muted">
+          <p className="text-label text-muted">
             {mode === "cancel"
               ? "Khách không mất phí. Lý do gửi kèm cho khách."
               : `Chỉ báo khi bạn đã tới nơi và chờ quá ${NO_SHOW_WAIT_MINUTES} phút.${
@@ -576,7 +576,7 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
                 }`}
           </p>
           <input
-            className={cn(inputClass, "text-sm")}
+            className={cn(inputClass, "text-body")}
             placeholder="Lý do (gửi cho khách)"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -615,8 +615,8 @@ function RescheduleOffer({ booking, from, onError }: { booking: Booking; from: s
   if (!when) return null
   return (
     <Card className="p-4 ring-1 ring-warning/40">
-      <p className="text-sm font-semibold">{from} đề nghị đổi sang giờ khác</p>
-      <p className="mt-0.5 text-[13px] text-ink-soft">
+      <p className="text-body font-semibold">{from} đề nghị đổi sang giờ khác</p>
+      <p className="mt-0.5 text-meta text-ink-soft">
         {formatDateLong(localDate(when), true)} · {localTime(when)}
       </p>
       <div className="mt-3 grid grid-cols-2 gap-2">

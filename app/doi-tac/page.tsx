@@ -56,9 +56,9 @@ export default function PartnerPage() {
   return (
     <div className="mx-auto max-w-2xl pb-10 md:pt-4">
       <PageHeader back="/" />
-      <p className="text-[13px] font-semibold uppercase tracking-wide text-accent">360dep Đối tác</p>
+      <p className="text-meta font-semibold uppercase tracking-wide text-accent">360dep Đối tác</p>
       <h1 className="mt-2 text-[32px] font-bold leading-tight tracking-tight md:text-[40px]">Trở thành đối tác 360dep</h1>
-      <p className="mt-3 text-[16px] text-ink-soft">
+      <p className="mt-3 text-body text-ink-soft">
         Dành cho người làm nghề tự do: thợ làm đẹp, người chụp ảnh, quay clip và người mẫu. Nhận khách quanh bạn, chọn mức giá có sẵn cho từng gói và tự chủ
         giờ làm.
       </p>
@@ -77,8 +77,8 @@ export default function PartnerPage() {
                   <Icon className="size-5" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[16px] font-bold">{step.title}</span>
-                  <span className="mt-0.5 block text-[14px] leading-relaxed text-ink-soft">{step.text}</span>
+                  <span className="block text-body font-bold">{step.title}</span>
+                  <span className="mt-0.5 block text-body leading-relaxed text-ink-soft">{step.text}</span>
                 </span>
               </li>
             )
@@ -91,8 +91,8 @@ export default function PartnerPage() {
         <ul className="mt-4 space-y-3">
           {VERTICALS.map((vertical) => (
             <li key={vertical.id}>
-              <p className="text-[15px] font-semibold">{vertical.label}</p>
-              <p className="text-[14px] text-ink-soft">
+              <p className="text-body font-semibold">{vertical.label}</p>
+              <p className="text-body text-ink-soft">
                 {categoriesOf(vertical.id)
                   .map((c) => c.label)
                   .join(", ")}
@@ -100,19 +100,19 @@ export default function PartnerPage() {
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-[13px] text-muted">{CATEGORIES.length} danh mục. Mỗi gói có đúng 3 mức giá có sẵn, bạn chọn mức hợp với tay nghề.</p>
+        <p className="mt-3 text-meta text-muted">{CATEGORIES.length} danh mục. Mỗi gói có đúng 3 mức giá có sẵn, bạn chọn mức hợp với tay nghề.</p>
       </section>
 
       <section className="mt-10 rounded-[var(--radius-lg)] bg-subtle p-5">
         <h2 className="text-[18px] font-bold tracking-tight">Bắt đầu</h2>
-        <p className="mt-1.5 text-[14px] text-ink-soft">
+        <p className="mt-1.5 text-body text-ink-soft">
           Đăng nhập hoặc tạo tài khoản, rồi lưu đủ sáu bước: nghề, dịch vụ và giá, nơi phục vụ, giờ làm, tác phẩm và xác nhận chính sách.
           Gửi hồ sơ để duyệt; khi được duyệt, bật nhận khách mới lúc bạn sẵn sàng.
         </p>
         <ButtonLink href={JOIN} className="mt-4">
           Mở hồ sơ đối tác
         </ButtonLink>
-        <p className="mt-4 text-[13px] text-muted">
+        <p className="mt-4 text-meta text-muted">
           Chi tiết phí và ví trong{" "}
           <Link href="/chinh-sach" className="underline underline-offset-2">
             chính sách

@@ -1,5 +1,8 @@
 "use client"
 
+import { moveRadio } from "@/lib/radio-navigation"
+import { DataUnavailable } from "@/components/data-unavailable"
+
 import * as React from "react"
 import { Suspense } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -11,7 +14,7 @@ import { Button, ButtonLink, Chip, EmptyState, PageSkeleton } from "@/components
 import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { CATEGORIES, PRICE_LEVEL_NOTE, categoryLabel, isVertical, verticalOf } from "@/lib/catalog"
 import { actions } from "@/lib/client-actions"
-import { DEFAULT_CATEGORY, PRIORITY_CATEGORIES, RADII_KM, isRadius, priorityFirst, withinRadius, type RadiusKm } from "@/lib/discovery"
+import { PRIORITY_CATEGORIES, RADII_KM, isRadius, priorityFirst, withinRadius, type RadiusKm } from "@/lib/discovery"
 import type { VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
 import { useHere, type HereStatus } from "@/lib/here"
@@ -62,9 +65,7 @@ function ProsView() {
   const trade = isVertical(rawTrade) ? rawTrade : null
   const category: CategoryId | null = CATEGORIES.some((c) => c.id === rawCategory)
     ? (rawCategory as CategoryId)
-    : rawCategory !== "all" && (!trade || trade === "beauty")
-      ? DEFAULT_CATEGORY
-      : null
+    : null
   // A category link carries its trade with it.
   const vertical: VerticalFilter = trade ?? (category ? verticalOf(category) : "all")
   const focus: Focus = category === "nail" || category === "makeup" ? category : "other"
@@ -128,7 +129,7 @@ function ProsView() {
         <div className="min-w-0">
           <h1 className="text-[28px] font-bold leading-tight tracking-tight md:text-[36px]">{TITLE[vertical]}</h1>
           {pros.length > 0 && (
-            <p className="mt-1 text-[15px] text-ink-soft">
+            <p className="mt-1 text-body text-ink-soft">
               {pros.length.toLocaleString("vi-VN")} người
               {category ? ` làm ${categoryLabel(category)}` : ""} {city ? `ở ${city}` : "trên toàn quốc"}
             </p>
@@ -162,7 +163,7 @@ function ProsView() {
       <div className="mt-4 space-y-3">
         {category && (
           <div>
-            <FilterRow label="Cấp độ">
+            <FilterRow label="Mức giá">
               <Choice active={level === null} onClick={() => setParams({ cap: null })}>
                 Tất cả
               </Choice>
@@ -172,7 +173,7 @@ function ProsView() {
                 </Choice>
               ))}
             </FilterRow>
-            <p className="mt-1.5 text-[12.5px] leading-snug text-muted">{PRICE_LEVEL_NOTE}</p>
+            <p className="mt-1.5 text-label leading-snug text-muted">{PRICE_LEVEL_NOTE}</p>
           </div>
         )}
         {!isPro && (
@@ -200,7 +201,7 @@ function ProsView() {
       </div>
 
       <div className="no-scrollbar -mx-4 mt-4 flex items-center gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
-        <label className="relative inline-flex h-10 shrink-0 items-center gap-1 rounded-full border border-line bg-surface pl-4 pr-3 text-[13px] font-medium">
+        <label className="relative inline-flex min-h-12 focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-2 shrink-0 items-center gap-1 rounded-full border border-line bg-surface pl-4 pr-3 text-meta font-medium">
           <span className="sr-only">Sắp xếp</span>
           {SORT_LABEL[sort]}
           <ChevronDown className="size-4 text-muted" />
@@ -228,12 +229,12 @@ function ProsView() {
       </div>
 
       {sort === "match" && (
-        <p className="mt-3 text-[13px] text-muted">
+        <p className="mt-3 text-meta text-muted">
           Xếp theo đánh giá thật, số lịch đã làm và trạng thái xác minh danh tính. Không ai trả tiền để lên đầu.
         </p>
       )}
 
-      {pros.length ? (
+      {state.catalogError ? <DataUnavailable /> : pros.length ? (
         <ul className="mt-5 grid gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
           {pros.map((p) => (
             <li key={p.id}>
@@ -251,7 +252,7 @@ function ProsView() {
                 ? "Ngành này vừa mở trên 360dep. Đăng yêu cầu để người làm quanh bạn thấy và nhận việc."
                 : city
                   ? `Chưa có ai ở ${city} nhận việc này. Thử khu vực khác, hoặc đăng yêu cầu để người làm quanh bạn nhận việc.`
-                  : "Thử đổi ngành hoặc danh mục."
+                  : "Thử chọn dịch vụ hoặc khu vực khác. Bạn cũng có thể đăng yêu cầu; việc có người nhận phụ thuộc nguồn cung."
           }
           action={narrowed ? undefined : <ButtonLink href="/requests/new">Đăng yêu cầu</ButtonLink>}
         />
@@ -295,7 +296,7 @@ function FilterRow({ label, children }: { label: string; children: React.ReactNo
   return (
     // The label sits above the choices on a phone, so all four fit in one row.
     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-      <span id={id} className="shrink-0 whitespace-nowrap text-[13px] font-semibold text-ink sm:w-[88px]">
+      <span id={id} className="shrink-0 whitespace-nowrap text-meta font-semibold text-ink sm:w-[88px]">
         {label}
       </span>
       {/* Scrolls on its own on a very narrow phone, so the page never does. */}
@@ -316,9 +317,11 @@ function Choice({ active, onClick, children }: { active: boolean; onClick: () =>
       type="button"
       role="radio"
       aria-checked={active}
+      tabIndex={active ? 0 : -1}
+      onKeyDown={(event) => moveRadio(event, onClick)}
       onClick={onClick}
       className={cn(
-        "relative inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-full border px-3 text-[13px] font-medium transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
+        "relative inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full border px-3 text-meta font-medium transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
         active ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
       )}
     >
@@ -367,7 +370,7 @@ function WhereFrom({
 
   if (point)
     return (
-      <div className="mt-1 text-[12.5px] leading-snug text-muted">
+      <div className="mt-1 text-label leading-snug text-muted">
         <p>
           Tính từ vị trí hiện tại của bạn, tới quận của người làm. Vị trí chỉ lưu trên trình duyệt này, không gửi đi đâu.
         </p>
@@ -379,7 +382,7 @@ function WhereFrom({
 
   if (address)
     return (
-      <div className="mt-1 text-[12.5px] leading-snug text-muted">
+      <div className="mt-1 text-label leading-snug text-muted">
         <p>
           Tính từ địa chỉ đã lưu ({address.district}, {address.city}), theo quận.
         </p>
@@ -390,7 +393,7 @@ function WhereFrom({
 
   if (radius === null)
     return (
-      <div className="mt-1 text-[12.5px] text-muted">
+      <div className="mt-1 text-label text-muted">
         {locate}
         {problem && <p className="text-warning">{problem}</p>}
       </div>
@@ -398,7 +401,7 @@ function WhereFrom({
 
   return (
     <div className="mt-2 rounded-[var(--radius-lg)] border border-line bg-surface p-3.5">
-      <p className="flex items-start gap-2 text-[14px] font-semibold">
+      <p className="flex items-start gap-2 text-body font-semibold">
         <MapPin className="mt-0.5 size-4 shrink-0 text-muted" aria-hidden />
         Bạn ở đâu? Chưa lọc theo khoảng cách vì chưa biết vị trí của bạn.
       </p>
@@ -411,15 +414,15 @@ function WhereFrom({
           Chọn địa chỉ
         </ButtonLink>
       </div>
-      {problem && <p className="mt-2 text-[13px] text-warning">{problem}</p>}
-      <p className="mt-2 text-[12.5px] text-muted">Vị trí chỉ dùng trên trình duyệt này để tính khoảng cách, không gửi đi đâu.</p>
+      {problem && <p className="mt-2 text-meta text-warning">{problem}</p>}
+      <p className="mt-2 text-label text-muted">Vị trí chỉ dùng trên trình duyệt này để tính khoảng cách, không gửi đi đâu.</p>
     </div>
   )
 }
 
 function CityPicker({ value }: { value: string | null }) {
   return (
-    <label className="relative inline-flex h-11 items-center gap-1.5 rounded-full border border-line bg-surface pl-4 pr-3 text-[14px] font-semibold">
+    <label className="relative inline-flex min-h-12 focus-within:rounded-lg focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-2 items-center gap-1.5 rounded-full border border-line bg-surface pl-4 pr-3 text-body font-semibold">
       <MapPin className="size-4" />
       {value ?? "Toàn quốc"}
       <ChevronDown className="size-4 text-muted" />

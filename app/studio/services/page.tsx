@@ -47,7 +47,7 @@ function ServicesManager() {
           </Button>
         }
       />
-      <div className="mb-4 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px] text-ink-soft">
+      <div className="mb-4 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-body text-ink-soft">
         <p>
           Bạn chọn dịch vụ từ danh mục chuẩn của 360dep, mỗi gói chọn 1 trong đúng 3 mức giá có sẵn, để khách so sánh công bằng. Giá đã gồm vật tư, không thu
           thêm phụ phí ngoài phí di chuyển / đặt gấp do hệ thống tính.
@@ -69,7 +69,7 @@ function ServicesManager() {
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold">{tpl.name}</p>
-                    <p className="text-xs text-muted">
+                    <p className="text-label text-muted">
                       {categoryLabel(tpl.category)}
                       {tpl.studioOnly && " · chỉ tại studio"}
                       {tpl.deliveryDays ? ` · giao file trong ${tpl.deliveryDays} ngày` : ""}
@@ -93,9 +93,9 @@ function ServicesManager() {
                   {tpl.variants
                     .filter((v) => l.prices[v.id] !== undefined)
                     .map((v) => (
-                      <li key={v.id} className="rounded-xl bg-canvas px-3 py-2 text-[13px]">
+                      <li key={v.id} className="rounded-xl bg-canvas px-3 py-2 text-meta">
                         <span className="text-ink-soft">{v.label}</span> · <b>{formatPrice(l.prices[v.id])}</b>
-                        <span className="block text-xs text-muted">
+                        <span className="block text-label text-muted">
                           {tierLabels(v)[v.tiers.indexOf(l.prices[v.id])]} · {formatDuration(v.durationMin)} · bạn nhận {formatPrice(payoutFor(l.prices[v.id], rate))}
                         </span>
                       </li>
@@ -130,11 +130,11 @@ function ServicesManager() {
                     <span className="min-w-0 flex-1">
                       <span className="block font-medium">{t.name}</span>
                       {locked && (
-                        <span className="block text-[13px] font-medium text-warning">
+                        <span className="block text-meta font-medium text-warning">
                           {IDENTITY_VERIFICATION_OPEN ? "Cần xác minh danh tính trước" : "Sắp mở, cùng lúc với xác minh danh tính"}
                         </span>
                       )}
-                      <span className="block text-xs text-muted">
+                      <span className="block text-label text-muted">
                         {t.variants.length} gói · giá từ {formatPrice(Math.min(...t.variants.map((v) => v.minPrice)))} – {formatPrice(Math.max(...t.variants.map((v) => v.maxPrice)))}
                       </span>
                     </span>
@@ -145,7 +145,7 @@ function ServicesManager() {
             })}
           </ul>
           {IDENTITY_VERIFICATION_OPEN && pro.identity !== "verified" && (
-            <p className="mt-4 text-xs text-muted">
+            <p className="mt-4 text-label text-muted">
               Mẹo:{" "}
               <Link href="/studio/verify" className="text-accent underline underline-offset-2">
                 xác minh danh tính
@@ -192,8 +192,8 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
 
   return (
     <Sheet title={tpl.name} onClose={onClose}>
-      <p className="text-sm text-ink-soft">{tpl.description}</p>
-      <p className="mt-1 text-xs text-muted">Bao gồm: {tpl.includes.join(" · ")}</p>
+      <p className="text-body text-ink-soft">{tpl.description}</p>
+      <p className="mt-1 text-label text-muted">Bao gồm: {tpl.includes.join(" · ")}</p>
 
       <ul className="mt-4 space-y-3">
         {tpl.variants.map((v) => {
@@ -209,11 +209,11 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
                   onChange={(e) => setPrices((x) => ({ ...x, [v.id]: e.target.checked ? v.suggestedPrice : undefined }))}
                   className="size-4 accent-[var(--color-accent)]"
                 />
-                <span className="flex-1 text-sm font-medium">
+                <span className="flex-1 text-body font-medium">
                   {v.label} <span className="font-normal text-muted">· {formatDuration(v.durationMin)}</span>
                 </span>
               </label>
-              <p className="mt-2 text-xs text-muted">{v.deliverable ?? tpl.deliverable}{v.revisions ? ` · ${v.revisions} lượt sửa` : ""}{v.sessions ? ` · ${v.sessions} buổi` : ""}{v.followupDays ? ` · dặm trong ${v.followupDays} ngày` : ""}</p>
+              <p className="mt-2 text-label text-muted">{v.deliverable ?? tpl.deliverable}{v.revisions ? ` · ${v.revisions} lượt sửa` : ""}{v.sessions ? ` · ${v.sessions} buổi` : ""}{v.followupDays ? ` · dặm trong ${v.followupDays} ngày` : ""}</p>
               {on && (
                 <>
                   <div role="radiogroup" aria-label={`Mức giá ${v.label}`} className={cn("mt-3 grid gap-2", v.tiers.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
@@ -229,12 +229,12 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
                           price === tier ? "border-accent bg-accent text-white" : "border-line bg-canvas hover:border-ink/30",
                         )}
                       >
-                        <span className={cn("block text-[12px]", price === tier ? "text-white/85" : "text-muted")}>{labels[i]}</span>
-                        <span className="block text-[14px] font-semibold">{formatPrice(tier)}</span>
+                        <span className={cn("block text-label", price === tier ? "text-white/85" : "text-muted")}>{labels[i]}</span>
+                        <span className="block text-body font-semibold">{formatPrice(tier)}</span>
                       </button>
                     ))}
                   </div>
-                  <p className="mt-2 text-xs text-ink-soft">
+                  <p className="mt-2 text-label text-ink-soft">
                     Bạn nhận {formatPrice(payoutFor(price, rate))}
                     {v.perPerson ? " mỗi người" : ""} sau hoa hồng {Math.round(rate * 100)}%
                   </p>
@@ -244,9 +244,9 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
           )
         })}
       </ul>
-      <p className="mt-3 text-xs text-muted">{PRICE_LEVEL_NOTE}</p>
+      <p className="mt-3 text-label text-muted">{PRICE_LEVEL_NOTE}</p>
 
-      {error && <p className="mt-3 rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
+      {error && <p className="mt-3 rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">{error}</p>}
 
       <div className="mt-5 flex gap-2">
         {existing && (

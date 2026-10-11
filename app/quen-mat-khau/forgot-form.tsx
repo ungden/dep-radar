@@ -22,7 +22,7 @@ export function ForgotForm() {
         <p role="status" className="mt-3 font-semibold">
           {result.message}
         </p>
-        <p className="mt-1.5 text-[14px] text-ink-soft">
+        <p className="mt-1.5 text-body text-ink-soft">
           Mở thư và bấm link để đặt mật khẩu mới. Thư có thể tới chậm vài phút; không thấy thì xem mục Spam hoặc Quảng cáo.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -63,7 +63,7 @@ export function ForgotForm() {
         />
       </Field>
       {result && (
-        <div role="alert" className="rounded-xl bg-danger-soft px-3.5 py-3 text-[14px] text-danger">
+        <div role="alert" className="rounded-xl bg-danger-soft px-3.5 py-3 text-body text-danger">
           {result.message}
           {result.noEmail && <SupportLink size="sm" className="mt-3 flex w-fit">Nhắn Zalo hỗ trợ</SupportLink>}
         </div>

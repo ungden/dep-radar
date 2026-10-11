@@ -23,7 +23,7 @@ export function CategoryTag({ category, href, className }: { category: CategoryI
     </>
   )
   const cls = cn(
-    "inline-flex h-8 items-center gap-1.5 rounded-full bg-subtle px-3 text-[13px] font-semibold text-ink",
+    "inline-flex h-8 items-center gap-1.5 rounded-full bg-subtle px-3 text-meta font-semibold text-ink",
     href && "transition-colors hover:bg-subtle-strong",
     className,
   )

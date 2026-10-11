@@ -1,12 +1,14 @@
 import * as React from "react"
-import { TextInput, View } from "react-native"
+import { View } from "react-native"
+import { DateField } from "./date-field"
+import { TimeField } from "./time-field"
 import { appointmentAt } from "@/shared"
 import type { BookingItem } from "@/data/bookings"
 import { rpc, supabase } from "@/data/supabase"
 import { localDate, localTime } from "@/data/format"
 import { useAsync } from "@/state/use-async"
 import { useApp } from "@/state/app"
-import { colors, radius } from "@/theme"
+import { colors } from "@/theme"
 import { Card, ErrorNote } from "@/ui/bits"
 import { Txt } from "@/ui/text"
 import { Button } from "@/ui/button"
@@ -25,7 +27,6 @@ export function BookingContract({ booking: b }: { booking: BookingItem }) {
   const [error, setError] = React.useState<string | null>(null)
   const run = async (fn: string, args: Record<string, unknown>) => { setBusy(true); setError(null); try { const r = await rpc(fn, args); if (!r.ok) setError(r.error); else await appointments.reload() } catch { setError("Không lưu được lịch. Kiểm tra kết nối và thử lại.") } finally { setBusy(false) } }
   if (!c) return null
-  const inputStyle = { minHeight: 46, borderWidth: 1, borderColor: colors.line, padding: 12, borderRadius: radius.md, color: colors.ink }
   return <Card style={{ gap: 10 }}>
     <Txt w={700}>Phạm vi dịch vụ đã chốt</Txt>
     <Txt>{c.variantLabel} · {c.tierLabel} · {c.durationMin} phút{c.sessions > 1 ? ` / buổi, ${c.sessions} buổi` : ""}</Txt>
@@ -35,7 +36,7 @@ export function BookingContract({ booking: b }: { booking: BookingItem }) {
     {appointments.loading && <Txt>Đang tải các buổi…</Txt>}
     {appointments.error && <ErrorNote text={appointments.error} onRetry={() => void appointments.reload()} />}
     {appointments.value?.map((s) => <View key={s.id} style={{ gap: 8 }}><Txt>Buổi {s.sequence}: {localTime(s.starts_at)} {localDate(s.starts_at)} · {s.duration_min} phút · {s.confirmed ? "đã xác nhận" : "chờ xác nhận"}</Txt>{!s.confirmed && s.proposed_by !== app.uid && <Button label="Xác nhận buổi dặm" busy={busy} onPress={() => void run("confirm_followup", { p_session: s.id })} />}</View>)}
-    {c.followupDays && b.status === "completed" && <View style={{ gap: 8 }}><TextInput accessibilityLabel="Ngày dặm YYYY-MM-DD" placeholder="YYYY-MM-DD" value={date} onChangeText={setDate} style={inputStyle} /><TextInput accessibilityLabel="Giờ dặm HH:mm" value={time} onChangeText={setTime} style={inputStyle} /><Button label="Đề xuất lịch dặm" disabled={!appointmentAt(date, time)} busy={busy} onPress={() => void run("propose_followup", { p_booking: b.id, p_starts_at: appointmentAt(date, time) })} /></View>}
+    {c.followupDays && b.status === "completed" && <View style={{ gap: 8 }}><DateField label="Ngày dặm" value={date} onChange={setDate} /><TimeField label="Giờ dặm" value={time} onChange={setTime} /><Button label="Đề xuất lịch dặm" disabled={!appointmentAt(date, time)} busy={busy} onPress={() => void run("propose_followup", { p_booking: b.id, p_starts_at: appointmentAt(date, time) })} /></View>}
     {error && <ErrorNote text={error} />}
   </Card>
 }

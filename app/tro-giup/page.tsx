@@ -38,7 +38,7 @@ export default function HelpPage() {
         <HelpCenter />
       </Suspense>
       {/* The footer with these details is desktop-only; on a phone this is where they are. */}
-      <CompanyInfo className="mt-6 text-xs text-muted" />
+      <CompanyInfo className="mt-6 text-label text-muted" />
     </div>
   )
 }

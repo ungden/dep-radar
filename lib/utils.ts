@@ -1,6 +1,11 @@
 import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { extendTailwindMerge } from "tailwind-merge"
 import { showsAverage } from "./connection"
+
+// Semantic sizes must not be mistaken for colours (which would remove text-white).
+const twMerge = extendTailwindMerge({
+  extend: { classGroups: { "font-size": [{ text: ["label", "meta", "body", "lead", "card-title", "price"] }] } },
+})
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

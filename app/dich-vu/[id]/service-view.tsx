@@ -3,6 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Check, Clock, MapPin, Package } from "lucide-react"
+import { DataUnavailable } from "@/components/data-unavailable"
 import { PostCard, whereLabel } from "@/components/beauty"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar, ButtonLink, PageHeader } from "@/components/ui"
@@ -23,6 +24,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
   const state = useApp()
   const template = getTemplate(templateId)!
   const { city } = state
+  if (state.catalogError) return <div className="py-8"><DataUnavailable /></div>
 
   const offering = (p: Pro) => servicesOf(state, p.id).find((s) => s.templateId === templateId)
   const all = state.pros.filter((p) => p.published && offering(p))
@@ -47,11 +49,11 @@ export function ServiceView({ templateId }: { templateId: string }) {
           people: price first is the point of this page. */}
       <div className="grid gap-8 md:grid-cols-[1fr_340px] md:gap-x-8 md:gap-y-2">
         <div className="md:col-start-1">
-          <p className="text-[13px] font-semibold text-muted">{categoryLabel(template.category)}</p>
+          <p className="text-meta font-semibold text-muted">{categoryLabel(template.category)}</p>
           <h1 className="mt-1 text-[30px] font-bold leading-tight tracking-tight md:text-[38px]">{template.name}</h1>
-          <p className="mt-2 text-[16px] text-ink-soft">{template.description}</p>
+          <p className="mt-2 text-body text-ink-soft">{template.description}</p>
 
-          <ul className="mt-5 space-y-2 text-[15px]">
+          <ul className="mt-5 space-y-2 text-body">
             <li className="flex gap-2.5">
               <MapPin className="mt-0.5 size-4 shrink-0" />
               {placeLabel(template)}
@@ -74,10 +76,10 @@ export function ServiceView({ templateId }: { templateId: string }) {
 
         <aside className="md:sticky md:top-24 md:col-start-2 md:row-span-2 md:row-start-1 md:self-start">
           <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-5">
-            <p className="text-[15px] font-bold">Các gói</p>
+            <p className="text-body font-bold">Các gói</p>
             <ul className="mt-3 divide-y divide-line">
               {template.variants.map((v) => (
-                <li key={v.id} className="flex items-start justify-between gap-3 py-3 text-[14px]">
+                <li key={v.id} className="flex items-start justify-between gap-3 py-3 text-body">
                   <span>
                     <span className="block font-semibold">{v.label}</span>
                     <span className="flex items-center gap-1 text-ink-soft">
@@ -87,12 +89,12 @@ export function ServiceView({ templateId }: { templateId: string }) {
                   </span>
                   <span className="shrink-0 text-right font-semibold">
                     Từ {formatPrice(v.minPrice)}
-                    <span className="block text-[12px] font-normal text-muted">{v.tiers.map((t) => formatPrice(t)).join(" · ")}</span>
+                    <span className="block text-label font-normal text-muted">{v.tiers.map((t) => formatPrice(t)).join(" · ")}</span>
                   </span>
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-[13px] text-ink-soft">
+            <p className="mt-3 text-meta text-ink-soft">
               Mỗi gói có đúng 3 mức giá có sẵn; người làm chọn một mức. Khách không trả phí nền tảng.
             </p>
           </div>
@@ -102,12 +104,12 @@ export function ServiceView({ templateId }: { templateId: string }) {
           <section className="md:mt-2">
             <h2 className="text-[22px] font-bold tracking-tight">
               Chọn người làm{city ? ` ở ${city}` : ""}
-              {ranked.length > 0 && <span className="ml-2 text-[15px] font-medium text-muted">{ranked.length}</span>}
+              {ranked.length > 0 && <span className="ml-2 text-body font-medium text-muted">{ranked.length}</span>}
             </h2>
             {ranked.length === 0 ? (
               <div className="mt-4 rounded-[var(--radius-lg)] border border-dashed border-line-strong px-5 py-8 text-center">
-                <p className="text-[16px] font-bold">Chưa có ai nhận dịch vụ này{city ? ` ở ${city}` : ""}</p>
-                <p className="mx-auto mt-1 max-w-sm text-[14px] text-ink-soft">
+                <p className="text-body font-bold">Chưa có ai nhận dịch vụ này{city ? ` ở ${city}` : ""}</p>
+                <p className="mx-auto mt-1 max-w-sm text-body text-ink-soft">
                   {elsewhere.length
                     ? `Có ${elsewhere.length} người nhận ở thành phố khác. Hoặc đăng yêu cầu: người làm quanh bạn được báo, ai nhận trước sẽ làm.`
                     : "Đăng yêu cầu: khi có người làm việc này quanh bạn, họ được báo và ai nhận trước sẽ làm. Không mất phí."}
@@ -118,7 +120,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
                     <button
                       type="button"
                       onClick={() => void actions.setCity(null)}
-                      className="inline-flex h-11 items-center rounded-full border border-line-strong bg-surface px-5 text-sm font-semibold hover:border-accent"
+                      className="inline-flex h-11 items-center rounded-full border border-line-strong bg-surface px-5 text-body font-semibold hover:border-accent"
                     >
                       Xem cả nước
                     </button>
@@ -171,11 +173,11 @@ function ProOffer({ pro, templateId }: { pro: Pro; templateId: string }) {
         <Link href={`/pros/${pro.id}`} className="flex min-w-0 flex-1 items-center gap-3">
           <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={48} />
           <span className="min-w-0">
-            <span className="flex items-center gap-1.5 text-[16px] font-bold">
+            <span className="flex items-center gap-1.5 text-body font-bold">
               <span className="truncate">{pro.name}</span>
               <VerifiedMark pro={pro} />
             </span>
-            <span className="block truncate text-[13px] text-ink-soft">
+            <span className="block truncate text-meta text-ink-soft">
               {pro.rating.count ? `${ratingText(pro.rating)} · ` : ""}
               {whereLabel(state, pro)}
             </span>
@@ -183,8 +185,8 @@ function ProOffer({ pro, templateId }: { pro: Pro; templateId: string }) {
         </Link>
         <div className="shrink-0 text-right">
           {from !== null && (
-            <p className="text-[15px]">
-              <span className="text-[12px] text-muted">Từ </span>
+            <p className="text-body">
+              <span className="text-label text-muted">Từ </span>
               <span className="font-bold">{formatPrice(from)}</span>
             </p>
           )}
@@ -208,7 +210,7 @@ function ProOffer({ pro, templateId }: { pro: Pro; templateId: string }) {
             Đặt lịch
           </ButtonLink>
         ) : (
-          <span className="flex flex-1 items-center justify-center rounded-full bg-subtle text-[13px] text-ink-soft">Đang tạm nghỉ</span>
+          <span className="flex flex-1 items-center justify-center rounded-full bg-subtle text-meta text-ink-soft">Đang tạm nghỉ</span>
         )}
       </div>
     </div>

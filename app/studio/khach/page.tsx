@@ -87,7 +87,7 @@ function Clients() {
 
   return (
     <div className="space-y-4">
-      <p className="text-[14px] text-ink-soft">
+      <p className="text-body text-ink-soft">
         {clients.length} khách đã làm xong · {returning} khách quay lại từ 2 lần trở lên
       </p>
       {clients.length > 6 && (
@@ -107,19 +107,19 @@ function Clients() {
               <div className="flex items-start gap-3">
                 <Avatar name={c.name} size={44} />
                 <div className="min-w-0 flex-1">
-                  <p className="flex flex-wrap items-center gap-2 text-[15px] font-bold">
+                  <p className="flex flex-wrap items-center gap-2 text-body font-bold">
                     {c.name}
                     {c.visits > 1 && (
-                      <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent-dark">{c.visits} lần</span>
+                      <span className="rounded-full bg-accent-soft px-2 py-0.5 text-label font-semibold text-accent-dark">{c.visits} lần</span>
                     )}
                   </p>
-                  <p className="text-[13px] text-ink-soft">
+                  <p className="text-meta text-ink-soft">
                     Lần gần nhất:{" "}
                     <Link href={`/bookings/${c.last.id}`} className="underline-offset-2 hover:underline">
                       {c.last.serviceName} · {formatDateLong(c.last.date, true)}
                     </Link>
                   </p>
-                  <p className="text-[13px] text-ink-soft">
+                  <p className="text-meta text-ink-soft">
                     Đã chi <b className="text-ink">{formatPrice(c.spent)}</b>
                     {c.visits > 1 ? ` qua ${c.visits} lần` : ""}
                   </p>
@@ -136,16 +136,16 @@ function Clients() {
                       Xem lịch hẹn
                     </Link>
                   )}
-                  <MessageButton booking={c.live} label="Nhắn tin" className="h-9 text-[13px]" />
+                  <MessageButton booking={c.live} label="Nhắn tin" className="h-9 text-meta" />
                 </div>
               ) : (
-                <p className={cn("mt-3 text-[13px] text-muted")}>Gọi và nhắn tin mở lại khi khách đặt lịch mới với bạn.</p>
+                <p className={cn("mt-3 text-meta text-muted")}>Gọi và nhắn tin mở lại khi khách đặt lịch mới với bạn.</p>
               )}
             </Card>
           </li>
         ))}
       </ul>
-      {q && !shown.length && <p className="text-center text-[14px] text-ink-soft">Không có khách nào khớp “{query}”.</p>}
+      {q && !shown.length && <p className="text-center text-body text-ink-soft">Không có khách nào khớp “{query}”.</p>}
     </div>
   )
 }

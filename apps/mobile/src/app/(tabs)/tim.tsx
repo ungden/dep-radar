@@ -1,7 +1,7 @@
 import * as React from "react"
 import { FlashList } from "@shopify/flash-list"
 import { router, useLocalSearchParams } from "expo-router"
-import { ScrollView, TextInput, View } from "react-native"
+import { ScrollView, TextInput, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
   CATEGORIES,
@@ -72,6 +72,7 @@ export default function Search() {
   const app = useApp()
   const browse = useBrowse()
   const insets = useSafeAreaInsets()
+  const { fontScale } = useWindowDimensions()
   const sheet = useSheet()
   const input = React.useRef<TextInput>(null)
   const [mode, setMode] = React.useState<Mode>("services")
@@ -114,7 +115,7 @@ export default function Search() {
     return out
       .map((pro) => ({ pro, km: app.distanceTo(pro) }))
       .sort((a, b) => {
-        if (sort === "near" && a.km !== null && b.km !== null) return a.km - b.km
+        if (sort === "near") { const da = a.km ?? Infinity; const db = b.km ?? Infinity; return da === db ? 0 : da - db }
         if (sort === "cheap") return price(a.pro) - price(b.pro)
         return rankScore(b.pro) - rankScore(a.pro)
       })
@@ -140,7 +141,7 @@ export default function Search() {
       })
       .sort((a, b) => {
         if (sort === "cheap") return a.fromPrice - b.fromPrice
-        if (sort === "near") return nearest(a) - nearest(b)
+        if (sort === "near") { const da = nearest(a); const db = nearest(b); return da === db ? 0 : da - db }
         return 0
       })
   }, [browse, filters, query, sort, app])
@@ -192,7 +193,7 @@ export default function Search() {
           <View
             style={{
               flex: 1,
-              height: 48,
+              minHeight: 48, paddingVertical: 8,
               borderRadius: radius.full,
               backgroundColor: colors.surface,
               borderWidth: 1,
@@ -212,7 +213,7 @@ export default function Search() {
               placeholderTextColor={colors.muted}
               returnKeyType="search"
               clearButtonMode="while-editing"
-              style={{ flex: 1, fontFamily: fonts[400], fontSize: 15, color: colors.ink }}
+              style={{ flex: 1, fontFamily: fonts[400], fontSize: 17, color: colors.ink }}
               accessibilityLabel="Tìm dịch vụ hoặc người làm"
             />
           </View>
@@ -222,7 +223,7 @@ export default function Search() {
               sheet.open()
             }}
             accessibilityLabel={active.length ? `Bộ lọc, đang bật ${active.length}` : "Bộ lọc"}
-            style={{ height: 48, paddingHorizontal: 16, borderRadius: radius.full, backgroundColor: active.length ? colors.accent : colors.subtle, flexDirection: "row", alignItems: "center", gap: 6 }}
+            style={{ minHeight: 48, paddingVertical: 8, paddingHorizontal: 16, borderRadius: radius.full, backgroundColor: active.length ? colors.accent : colors.subtle, flexDirection: "row", alignItems: "center", gap: 6 }}
           >
             <Icon name="filter" size={18} color={active.length ? colors.surface : colors.ink} />
             {active.length ? (
@@ -241,7 +242,7 @@ export default function Search() {
                 haptic="select"
                 onPress={() => setFilters((cur) => ({ ...cur, ...f.clear }))}
                 accessibilityLabel={`Bỏ lọc ${f.label}`}
-                style={{ height: 34, paddingLeft: 12, paddingRight: 8, borderRadius: radius.full, backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accent, flexDirection: "row", alignItems: "center", gap: 6 }}
+                style={{ minHeight: 44, paddingVertical: 8, paddingLeft: 12, paddingRight: 8, borderRadius: radius.full, backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accent, flexDirection: "row", alignItems: "center", gap: 6 }}
               >
                 <Txt v="meta" w={600} color={colors.accentDark}>
                   {f.label}
@@ -249,7 +250,7 @@ export default function Search() {
                 <Icon name="close" size={12} color={colors.accentDark} />
               </Press>
             ))}
-            <Press onPress={() => setFilters(NONE)} accessibilityLabel="Xoá tất cả bộ lọc" style={{ height: 34, paddingHorizontal: 8, justifyContent: "center" }}>
+            <Press onPress={() => setFilters(NONE)} accessibilityLabel="Xoá tất cả bộ lọc" style={{ minHeight: 44, paddingVertical: 8, paddingHorizontal: 8, justifyContent: "center" }}>
               <Txt v="meta" w={600} color={colors.inkSoft}>
                 Xoá lọc
               </Txt>
@@ -268,14 +269,14 @@ export default function Search() {
             ]}
           />
         </View>
-        <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: gutter, alignItems: "center" }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: gutter, alignItems: "center" }}>
           <Chip label="Phù hợp" selected={sort === "match"} onPress={() => setSort("match")} />
           {hasAddress ? <Chip label="Gần nhất" selected={sort === "near"} onPress={() => setSort("near")} /> : null}
           <Chip label="Giá thấp" selected={sort === "cheap"} onPress={() => setSort("cheap")} />
           <Txt v="meta" color={colors.muted} style={{ marginLeft: "auto" }}>
             {loading ? "" : `${count}${app.city ? ` ở ${app.city}` : ""}`}
           </Txt>
-        </View>
+        </ScrollView>
         <OfflineNote />
       </View>
 
@@ -314,12 +315,12 @@ export default function Search() {
         title="Bộ lọc"
         size="tall"
         footer={
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <Button label="Xoá lọc" variant="secondary" onPress={() => setDraft(NONE)} />
+          <View style={{ flexDirection: fontScale > 1.6 ? "column" : "row", gap: 10 }}>
+            <Button full={fontScale > 1.6} label="Xoá lọc" variant="secondary" onPress={() => setDraft(NONE)} />
             <Button
               label="Xem kết quả"
               full
-              style={{ flex: 1 }}
+              style={fontScale > 1.6 ? undefined : { flex: 1 }}
               onPress={() => {
                 setFilters(draft)
                 sheet.close()
@@ -339,7 +340,7 @@ export default function Search() {
             <Chip key={c.id} label={c.label} selected={draft.category === c.id} onPress={() => setDraft({ ...draft, category: c.id })} />
           ))}
         </Group>
-        <Group title="Giá từ">
+        <Group title="Khoảng giá khởi điểm">
           {(Object.keys(PRICE_LABEL) as PriceBand[]).map((b) => (
             <Chip key={b} label={PRICE_LABEL[b]} selected={draft.price === b} onPress={() => setDraft({ ...draft, price: b })} />
           ))}
@@ -379,17 +380,17 @@ function ServiceRow({ offer }: { offer: ServiceOffer }) {
         )}
       </View>
       <View style={{ flex: 1, gap: 3 }}>
-        <Txt w={700} numberOfLines={2}>
+        <Txt w={700} >
           {template.name}
         </Txt>
-        <Txt v="meta" color={colors.muted} tabular numberOfLines={1}>
+        <Txt v="meta" color={colors.muted} tabular >
           Từ{" "}
           <Txt v="meta" w={700} color={colors.accentDark}>
             {formatPrice(fromPrice)}
           </Txt>{" "}
           · {formatDuration(shortest)}
         </Txt>
-        <Txt v="meta" color={colors.inkSoft} numberOfLines={1}>
+        <Txt v="meta" color={colors.inkSoft} >
           {categoryLabel(template.category)} · {who}
         </Txt>
       </View>

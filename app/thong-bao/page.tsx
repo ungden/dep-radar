@@ -69,15 +69,15 @@ export default async function NotificationsPage() {
                     <Icon className="size-4" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="flex items-start gap-2 text-sm font-semibold">
+                    <span className="flex items-start gap-2 text-body font-semibold">
                       {!n.readAt && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-accent" />}
                       {n.title}
                     </span>
-                    {n.body && <span className="mt-0.5 block text-[13px] text-ink-soft">{n.body}</span>}
+                    {n.body && <span className="mt-0.5 block text-meta text-ink-soft">{n.body}</span>}
                     {n.kind === "fee_due" && feePaid && (
-                      <span className="mt-1 block text-[13px] font-medium text-success">Đã thanh toán xong, bạn nhận đơn mới được.</span>
+                      <span className="mt-1 block text-meta font-medium text-success">Đã thanh toán xong, bạn nhận đơn mới được.</span>
                     )}
-                    <span className="mt-1 block text-xs text-muted">{timeAgo(n.createdAt)}</span>
+                    <span className="mt-1 block text-label text-muted">{timeAgo(n.createdAt)}</span>
                   </span>
                 </Card>
               )

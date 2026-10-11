@@ -28,7 +28,7 @@ export function Button({
   style?: StyleProp<ViewStyle>
   full?: boolean
 }) {
-  const height = size === "sm" ? 36 : size === "lg" ? 54 : 46
+  const height = size === "sm" ? 44 : size === "lg" ? 56 : 48
   const bg = variant === "primary" ? colors.accent : variant === "ghost" ? "transparent" : colors.surface
   const fg = variant === "primary" ? colors.surface : variant === "danger" ? colors.danger : colors.ink
   return (
@@ -38,7 +38,8 @@ export function Button({
       accessibilityLabel={label}
       style={[
         {
-          height,
+          minHeight: height,
+          paddingVertical: 12,
           paddingHorizontal: size === "sm" ? 14 : 22,
           borderRadius: radius.full,
           backgroundColor: bg,
@@ -51,9 +52,9 @@ export function Button({
         style,
       ]}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, maxWidth: "100%" }}>
         {busy ? <ActivityIndicator size="small" color={fg} /> : icon ? <Icon name={icon} size={size === "sm" ? 16 : 18} color={fg} /> : null}
-        <Txt v={size === "sm" ? "meta" : "body"} w={700} color={fg} numberOfLines={1}>
+        <Txt v={size === "sm" ? "meta" : "body"} w={700} color={fg} style={{ flexShrink: 1 }} center>
           {label}
         </Txt>
       </View>

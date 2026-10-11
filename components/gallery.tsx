@@ -163,7 +163,7 @@ export function Gallery({
       </div>
 
       {(count > 1 || caption) && (
-        <div className="mt-3 flex h-5 items-center justify-between px-4 text-[13px] font-semibold text-ink-soft md:px-0">
+        <div className="mt-3 flex h-5 items-center justify-between px-4 text-meta font-semibold text-ink-soft md:px-0">
           <span className={cn("w-12", !caption && "invisible")}>Trước</span>
           {count > 1 ? (
             <span className="flex items-center gap-1.5" aria-hidden>

@@ -74,7 +74,7 @@ function ReviewForm() {
         action={
           <div className="flex flex-col items-center gap-3">
             {/* Saving the partner for next time ("Lưu thợ"), right when the experience is fresh. */}
-            <div className="flex items-center gap-2 rounded-full bg-subtle py-1 pl-4 pr-1 text-[14px]">
+            <div className="flex items-center gap-2 rounded-full bg-subtle py-1 pl-4 pr-1 text-body">
               Lưu người làm này để lần sau đặt nhanh
               <FollowButton proId={booking.proId} />
             </div>
@@ -117,8 +117,8 @@ function ReviewForm() {
       <Card className="flex items-center gap-3 p-3">
         <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={44} />
         <div>
-          <p className="text-sm font-semibold">{pro.name}</p>
-          <p className="text-xs text-muted">
+          <p className="text-body font-semibold">{pro.name}</p>
+          <p className="text-label text-muted">
             {booking.serviceName} · {booking.variantLabel} · {formatDateLong(booking.date)}
           </p>
         </div>
@@ -138,7 +138,7 @@ function ReviewForm() {
       </div>
 
       <div>
-        <p className="mb-2 text-[13px] font-medium text-ink-soft">
+        <p className="mb-2 text-meta font-medium text-ink-soft">
           {rating > 0 && rating <= 3 ? "Điều chưa tốt (chọn ít nhất một)" : "Điểm bạn thích (tuỳ chọn)"}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -148,17 +148,17 @@ function ReviewForm() {
               type="button"
               aria-pressed={tags.includes(t)}
               onClick={() => setTags((x) => (x.includes(t) ? x.filter((y) => y !== t) : [...x, t]))}
-              className={cn("rounded-full border px-3 py-1.5 text-[13px]", tags.includes(t) ? "border-accent bg-subtle text-accent-dark" : "border-line bg-surface text-ink-soft")}
+              className={cn("rounded-full border px-3 py-1.5 text-meta", tags.includes(t) ? "border-accent bg-subtle text-accent-dark" : "border-line bg-surface text-ink-soft")}
             >
               {t}
             </button>
           ))}
         </div>
-        {needsIssue && <p className="mt-2 text-xs text-warning">Từ 3 sao trở xuống, chọn ít nhất một điều chưa tốt để người sau biết.</p>}
+        {needsIssue && <p className="mt-2 text-label text-warning">Từ 3 sao trở xuống, chọn ít nhất một điều chưa tốt để người sau biết.</p>}
       </div>
 
       <label className="block">
-        <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">Chia sẻ chi tiết (ít nhất 10 ký tự)</span>
+        <span className="mb-1.5 block text-meta font-medium text-ink-soft">Chia sẻ chi tiết (ít nhất 10 ký tự)</span>
         <textarea
           rows={4}
           value={text}
@@ -169,7 +169,7 @@ function ReviewForm() {
       </label>
 
       <div>
-        <p className="mb-1.5 text-[13px] font-medium text-ink-soft">Ảnh kết quả (tuỳ chọn)</p>
+        <p className="mb-1.5 text-meta font-medium text-ink-soft">Ảnh kết quả (tuỳ chọn)</p>
         <div className="flex flex-wrap gap-2">
           {photos.map((src) => (
             <span key={src} className="relative size-20 overflow-hidden rounded-xl bg-subtle">
@@ -209,19 +209,19 @@ function ReviewForm() {
             </label>
           )}
         </div>
-        <p className="mt-1.5 text-xs text-muted">
+        <p className="mt-1.5 text-label text-muted">
           Ảnh được nén và xoá thông tin vị trí trước khi tải lên. Đừng đăng ảnh có mặt người khác mà chưa hỏi.
         </p>
       </div>
 
-      <div className="space-y-1.5 text-xs text-muted">
+      <div className="space-y-1.5 text-label text-muted">
         <p>{BLIND_NOTE}</p>
         <p>
           Bạn sửa được tới khi đánh giá hiện (còn {period.daysLeft} ngày). Đánh giá được gắn nhãn “Đã đặt qua 360dep”; người làm không thể xoá, chỉ
           trả lời công khai một lần.
         </p>
       </div>
-      {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
+      {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">{error}</p>}
 
       <BottomBar>
         <Button type="submit" size="lg" className="w-full" disabled={!valid || busy}>

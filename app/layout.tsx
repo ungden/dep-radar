@@ -57,13 +57,13 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // One server read per navigation feeds every screen; see lib/api/snapshot.ts.
-  const snapshot = backendEnabled ? await loadSnapshot() : emptySnapshot
+  const snapshot = backendEnabled ? await loadSnapshot() : { ...emptySnapshot, catalogError: true, worksError: true }
   return (
     <html lang="vi" className={body.variable}>
       <body className="min-h-dvh">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:shadow"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-surface focus:px-4 focus:py-2 focus:text-body focus:shadow"
         >
           Bỏ qua, tới nội dung chính
         </a>

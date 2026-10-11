@@ -51,7 +51,7 @@ export function ResetForm() {
     return (
       <Card className="mt-6 p-5">
         <p className="font-semibold">{stage === "expired" ? "Link đã hết hạn hoặc đã được dùng" : "Link không hợp lệ"}</p>
-        <p className="mt-1.5 text-[14px] text-ink-soft">
+        <p className="mt-1.5 text-body text-ink-soft">
           Mỗi link đặt lại mật khẩu chỉ dùng được một lần và có thời hạn. Gửi link mới rồi mở link mới nhất trong email.
         </p>
         <ButtonLink href="/quen-mat-khau" className="mt-4">
@@ -67,7 +67,7 @@ export function ResetForm() {
         <p role="status" className="font-semibold">
           Đã đổi mật khẩu
         </p>
-        <p className="mt-1.5 text-[14px] text-ink-soft">Bạn đang đăng nhập. Lần sau dùng mật khẩu mới.</p>
+        <p className="mt-1.5 text-body text-ink-soft">Bạn đang đăng nhập. Lần sau dùng mật khẩu mới.</p>
         <Button
           className="mt-4"
           onClick={() => {

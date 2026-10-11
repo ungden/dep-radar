@@ -54,8 +54,8 @@ export function AddressPicker({
               >
                 <MapPin className={cn("mt-0.5 size-4 shrink-0", value === address.id ? "text-accent" : "text-muted")} />
                 <span className="min-w-0">
-                  <span className="block text-sm font-medium">{address.label}</span>
-                  <span className="block truncate text-xs text-muted">
+                  <span className="block text-body font-medium">{address.label}</span>
+                  <span className="block truncate text-label text-muted">
                     {[address.detail, address.district, address.city].filter(Boolean).join(", ")}
                   </span>
                 </span>
@@ -80,7 +80,7 @@ export function AddressPicker({
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-accent"
+          className="mt-2 inline-flex items-center gap-1.5 text-meta font-medium text-accent"
         >
           <Plus className="size-4" /> Thêm địa chỉ khác
         </button>
@@ -115,11 +115,11 @@ function NewAddressForm({
     <div className="mt-2 rounded-xl border border-line bg-surface p-3">
       <div className="grid grid-cols-2 gap-2">
         <Field label="Tên địa chỉ">
-          <input className={cn(inputClass, "text-sm")} value={label} placeholder="Nhà" onChange={(e) => setLabel(e.target.value)} />
+          <input className={cn(inputClass, "text-body")} value={label} placeholder="Nhà" onChange={(e) => setLabel(e.target.value)} />
         </Field>
         <Field label="Tỉnh/thành">
           <select
-            className={cn(inputClass, "text-sm")}
+            className={cn(inputClass, "text-body")}
             value={city}
             onChange={(e) => {
               setCity(e.target.value)
@@ -134,7 +134,7 @@ function NewAddressForm({
       </div>
       <div className="mt-2">
         <Field label="Quận/huyện">
-          <select className={cn(inputClass, "text-sm")} value={district} onChange={(e) => setDistrict(e.target.value)}>
+          <select className={cn(inputClass, "text-body")} value={district} onChange={(e) => setDistrict(e.target.value)}>
             {districtsOf(city).map((d) => (
               <option key={d}>{d}</option>
             ))}
@@ -144,7 +144,7 @@ function NewAddressForm({
       <div className="mt-2">
         <Field label="Số nhà, đường">
           <input
-            className={cn(inputClass, "text-sm")}
+            className={cn(inputClass, "text-body")}
             value={detail}
             onChange={(e) => setDetail(e.target.value)}
             placeholder="Số nhà, ngõ, đường, toà nhà"
@@ -153,11 +153,11 @@ function NewAddressForm({
       </div>
       <div className="mt-2">
         <Field label="Ghi chú tìm đường" hint="Tầng, số căn hộ, mã cổng, chỗ gửi xe.">
-          <input className={cn(inputClass, "text-sm")} value={note} onChange={(e) => setNote(e.target.value)} />
+          <input className={cn(inputClass, "text-body")} value={note} onChange={(e) => setNote(e.target.value)} />
         </Field>
       </div>
       {error && (
-        <p role="alert" className="mt-2 text-xs text-danger">
+        <p role="alert" className="mt-2 text-label text-danger">
           {error}
         </p>
       )}

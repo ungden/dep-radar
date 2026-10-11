@@ -307,12 +307,12 @@ function BookingFlow({ proId }: { proId: string }) {
           <CheckCircle2 className="size-10" />
         </span>
         <h1 className="mt-5 text-[28px] font-bold tracking-tight">Đã gửi yêu cầu đặt lịch</h1>
-        <p className="mt-2 text-[15px] text-ink-soft">
+        <p className="mt-2 text-body text-ink-soft">
           {pro.name} xem lịch {time} · {formatDateLong(date)} và bấm nhận trong app
           {responseTime ? `, thường trong ${responseTime}` : ""}. Nhận rồi thì hai bên nhắn tin, gọi được cho nhau trong lịch hẹn.
           Nếu không được nhận trong {POLICY.confirmWithinHours} giờ, lịch tự huỷ{payment === "online" ? " và tiền được hoàn 100%" : ""}.
         </p>
-        {linkError && <p className="mt-4 rounded-xl bg-warning-soft px-3.5 py-2.5 text-[14px] text-warning">{linkError}</p>}
+        {linkError && <p className="mt-4 rounded-xl bg-warning-soft px-3.5 py-2.5 text-body text-warning">{linkError}</p>}
         {!partner && <ComboSuggestions bookingId={doneId} templateId={templateId} city={pro.city} className="mt-8 w-full text-left" />}
         <div className="mt-8 grid w-full gap-2">
           <ButtonLink href={`/bookings/${doneId}`} size="lg">
@@ -337,10 +337,10 @@ function BookingFlow({ proId }: { proId: string }) {
       <Card className="mb-4 flex items-center gap-3 p-3">
         <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={44} />
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5 text-sm font-semibold">
+          <p className="flex items-center gap-1.5 text-body font-semibold">
             {pro.name} <VerifiedMark pro={pro} />
           </p>
-          <p className="text-[13px] text-ink-soft">
+          <p className="text-meta text-ink-soft">
             {pro.rating.count ? `${ratingText(pro.rating)} · ` : ""}
             {pro.stats.completedJobs > 0 ? `${pro.stats.completedJobs} lịch đã làm` : "Mới trên 360dep"}
           </p>
@@ -348,7 +348,7 @@ function BookingFlow({ proId }: { proId: string }) {
       </Card>
 
       {partner && (
-        <p className="mb-4 flex gap-2.5 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px]">
+        <p className="mb-4 flex gap-2.5 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-body">
           <Link2 className="mt-0.5 size-4 shrink-0" />
           <span>
             <b>Đặt chung buổi</b> với {partner.serviceName.toLowerCase()} của {partnerPro?.name ?? partner.proName}, {partner.time} ·{" "}
@@ -358,7 +358,7 @@ function BookingFlow({ proId }: { proId: string }) {
       )}
 
       {(isOwnProfile || paused) && (
-        <p className="mb-4 rounded-xl bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning">
+        <p className="mb-4 rounded-xl bg-warning-soft px-3.5 py-2.5 text-meta text-warning">
           {isOwnProfile
             ? "Bạn đang xem dịch vụ của chính mình ở chế độ đối tác. Chuyển sang chế độ đặt lịch để thử luồng khách hàng."
             : `${pro.name} đang tạm nghỉ nhận lịch mới. Bạn có thể đăng yêu cầu để người làm khác nhận việc.`}
@@ -392,16 +392,16 @@ function BookingFlow({ proId }: { proId: string }) {
                     >
                       <span className="min-w-0 flex-1">
                         <span className="block font-medium">{t.name}</span>
-                        <span className="block truncate text-xs text-muted">{t.description}</span>
+                        <span className="block truncate text-label text-muted">{t.description}</span>
                       </span>
-                      <span className="text-sm text-ink-soft">từ {formatPrice(Math.min(...Object.values(s.prices)))}</span>
+                      <span className="text-body text-ink-soft">từ {formatPrice(Math.min(...Object.values(s.prices)))}</span>
                       <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full border", selected ? "border-accent bg-accent text-white" : "border-line-strong")}>
                         {selected && <Check className="size-3.5" />}
                       </span>
                     </button>
                     {selected && variant.perPerson && (
                       <div className="mt-3 flex items-center gap-2 rounded-xl bg-canvas px-3 py-2">
-                        <span className="flex-1 text-[13px]">Số người</span>
+                        <span className="flex-1 text-meta">Số người</span>
                         <button
                           type="button"
                           aria-label="Giảm số người"
@@ -435,12 +435,12 @@ function BookingFlow({ proId }: { proId: string }) {
                               setQuantity(1)
                             }}
                             className={cn(
-                              "rounded-xl border px-3 py-2 text-left text-[13px]",
+                              "rounded-xl border px-3 py-2 text-left text-meta",
                               v.id === variantId ? "border-accent bg-subtle text-accent-dark" : "border-line-strong bg-surface text-ink-soft",
                             )}
                           >
                             <span className="block font-medium">{v.label}</span>
-                            <span className="block text-xs">
+                            <span className="block text-label">
                               {formatPrice(s.prices[v.id])} · {formatDuration(v.durationMin)}
                             </span>
                           </button>
@@ -454,15 +454,15 @@ function BookingFlow({ proId }: { proId: string }) {
           </ul>
           {addonOptions.length > 0 && (
             <div className="mt-6">
-              <h2 className="text-[17px] font-bold">Thêm dịch vụ đi kèm (tuỳ chọn)</h2>
-              <p className="mt-0.5 text-[13px] text-ink-soft">
+              <h2 className="text-lead font-bold">Thêm dịch vụ đi kèm (tuỳ chọn)</h2>
+              <p className="mt-0.5 text-meta text-ink-soft">
                 Làm nối tiếp ngay sau dịch vụ chính, cùng địa điểm, theo giá {pro.name} niêm yết; không tính thêm phí di chuyển. {pro.name} nhận lịch chính là nhận
                 luôn các dịch vụ này. Tối đa 3.
               </p>
               <ul className="mt-3 space-y-2">
                 {addonOptions.map((o) => (
                   <li key={o.key}>
-                    <label className={cn("flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 text-sm", addons.includes(o.key) ? "border-accent bg-subtle" : "border-line bg-surface")}>
+                    <label className={cn("flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 text-body", addons.includes(o.key) ? "border-accent bg-subtle" : "border-line bg-surface")}>
                       <input
                         type="checkbox"
                         checked={addons.includes(o.key)}
@@ -474,7 +474,7 @@ function BookingFlow({ proId }: { proId: string }) {
                         <span className="block font-medium">
                           {o.name} · {o.label}
                         </span>
-                        <span className="block text-xs text-muted">{formatDuration(o.minutes)}</span>
+                        <span className="block text-label text-muted">{formatDuration(o.minutes)}</span>
                       </span>
                       <span className="font-semibold tabular-nums">{formatPrice(o.price)}</span>
                     </label>
@@ -540,27 +540,27 @@ function BookingFlow({ proId }: { proId: string }) {
                 }}
               />
             )}
-            {tpl.studioOnly && <p className="mt-2 text-xs text-ink-soft">Gói dịch vụ này chỉ thực hiện tại studio.</p>}
+            {tpl.studioOnly && <p className="mt-2 text-label text-ink-soft">Gói dịch vụ này chỉ thực hiện tại studio.</p>}
             {atHome && address && !home.ok && (
-              <p className="mt-2 text-xs text-warning">
+              <p className="mt-2 text-label text-warning">
                 {home.reason}
                 {canStudio ? " Bạn có thể đến studio." : ""}
               </p>
             )}
             {atHome && address && home.ok && quote.distanceKm !== null && (
-              <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-soft">
+              <p className="mt-2 flex items-center gap-1.5 text-label text-ink-soft">
                 <Car className="size-3.5" />
                 Khoảng {quote.distanceKm.toLocaleString("vi-VN")} km từ {pro.district}.
                 {quote.travelFee === 0 ? " Miễn phí di chuyển." : ` Phí di chuyển ${formatPrice(quote.travelFee)}.`}
               </p>
             )}
-            {!atHome && canStudio && <p className="mt-2 text-xs text-ink-soft">Studio: {pro.studioAddress}</p>}
+            {!atHome && canStudio && <p className="mt-2 text-label text-ink-soft">Studio: {pro.studioAddress}</p>}
           </section>
 
           <section className="mt-6">
             <h2 className="mb-3 flex items-baseline justify-between font-semibold">
               Chọn ngày
-              <span className="text-xs font-normal text-muted">Tháng {parseISODate(date).getUTCMonth() + 1}</span>
+              <span className="text-label font-normal text-muted">Tháng {parseISODate(date).getUTCMonth() + 1}</span>
             </h2>
             <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
               {days.map((d) => {
@@ -575,11 +575,11 @@ function BookingFlow({ proId }: { proId: string }) {
                       setTime(null)
                     }}
                     className={cn(
-                      "flex w-12 shrink-0 flex-col items-center gap-1.5 rounded-xl border py-2.5 text-sm transition-colors",
+                      "flex w-12 shrink-0 flex-col items-center gap-1.5 rounded-xl border py-2.5 text-body transition-colors",
                       active ? "border-accent bg-subtle text-accent-dark" : "border-line-strong bg-surface text-ink hover:border-accent",
                     )}
                   >
-                    <span className="text-xs text-muted">{d === todayISO() ? "Nay" : weekdayShort(d)}</span>
+                    <span className="text-label text-muted">{d === todayISO() ? "Nay" : weekdayShort(d)}</span>
                     <span className={cn("font-medium", active && "font-semibold")}>{parseISODate(d).getUTCDate()}</span>
                   </button>
                 )
@@ -590,7 +590,7 @@ function BookingFlow({ proId }: { proId: string }) {
           <section className="mt-6">
             <h2 className="mb-3 font-semibold">Chọn khung giờ</h2>
             {lostTime && (
-              <p role="status" className="mb-3 rounded-xl bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning">
+              <p role="status" className="mb-3 rounded-xl bg-warning-soft px-3.5 py-2.5 text-meta text-warning">
                 {pickedTime} không còn trống với lựa chọn này. Chọn giờ khác nhé.
               </p>
             )}
@@ -601,7 +601,7 @@ function BookingFlow({ proId }: { proId: string }) {
                 ))}
               </div>
             ) : slots.length === 0 ? (
-              <p className="rounded-xl bg-canvas px-3.5 py-3 text-[13px] text-ink-soft">
+              <p className="rounded-xl bg-canvas px-3.5 py-3 text-meta text-ink-soft">
                 {pro.name} không nhận khách hoặc đã kín lịch ngày này. Chọn ngày khác nhé.
               </p>
             ) : (
@@ -616,7 +616,7 @@ function BookingFlow({ proId }: { proId: string }) {
                       aria-pressed={active}
                       onClick={() => setTime(slot.time)}
                       className={cn(
-                        "relative h-12 rounded-xl border text-sm transition-colors",
+                        "relative h-12 rounded-xl border text-body transition-colors",
                         active
                           ? "border-accent bg-accent font-semibold text-white"
                           : "border-line-strong bg-surface text-ink hover:border-accent",
@@ -624,7 +624,7 @@ function BookingFlow({ proId }: { proId: string }) {
                     >
                       {slot.time}
                       {urgent && (
-                        <span className="absolute -right-1 -top-2.5 inline-flex items-center gap-0.5 rounded-full bg-warning px-1.5 text-[12px] font-semibold leading-[18px] text-white">
+                        <span className="absolute -right-1 -top-2.5 inline-flex items-center gap-0.5 rounded-full bg-warning px-1.5 text-label font-semibold leading-[18px] text-white">
                           <Zap className="size-3" aria-hidden />
                           Gấp
                         </span>
@@ -634,7 +634,7 @@ function BookingFlow({ proId }: { proId: string }) {
                 })}
               </div>
             )}
-            <p className="mt-3 text-xs text-muted">
+            <p className="mt-3 text-label text-muted">
               Chỉ hiện khung giờ {pro.name} còn trống, đã tính cả thời lượng dịch vụ và thời gian di chuyển giữa hai
               khách. Cần đặt trước ít nhất {POLICY.minLeadMinutes} phút. Khung giờ bắt đầu trong vòng{" "}
               {POLICY.urgentWithinHours} giờ tính phí đặt gấp {formatPrice(POLICY.urgentFee)} để {person} đặt xe tới
@@ -649,10 +649,10 @@ function BookingFlow({ proId }: { proId: string }) {
           sends the customer back to pick again. */}
       {step === 3 && !ready && (
         <section className="rounded-[var(--radius-lg)] border border-line bg-surface px-5 py-8 text-center">
-          <p className="text-[17px] font-bold">
+          <p className="text-lead font-bold">
             {!locationOk ? "Cần chọn nơi làm" : pickedTime ? "Giờ bạn chọn không còn trống" : "Bạn chưa chọn giờ"}
           </p>
-          <p className="mx-auto mt-1.5 max-w-sm text-[15px] text-ink-soft">
+          <p className="mx-auto mt-1.5 max-w-sm text-body text-ink-soft">
             {!locationOk
               ? atHome && session && !chosen
                 ? "Lưu địa chỉ nơi làm để tính phí di chuyển và gửi lịch."
@@ -667,7 +667,7 @@ function BookingFlow({ proId }: { proId: string }) {
         </section>
       )}
 
-      {step === 3 && session && !confirmedQuote && <p role="status" className="mb-3 text-sm text-warning">{verified?.key === quoteKey && verified.error ? verified.error : "Đang xác nhận tổng tiền…"}</p>}
+      {step === 3 && session && !confirmedQuote && <p role="status" className="mb-3 text-body text-warning">{verified?.key === quoteKey && verified.error ? verified.error : "Đang xác nhận tổng tiền…"}</p>}
       {step === 3 && ready && time && (
         <section className="space-y-4">
           <ServiceSummary name={tpl.name} variant={variantText} price={price} duration={durationMin} />
@@ -678,14 +678,14 @@ function BookingFlow({ proId }: { proId: string }) {
               <br />
               {time} - {addMinutes(time, durationMin)}
               {quote.urgentFee > 0 && (
-                <span className="ml-2 inline-flex items-center gap-0.5 rounded-full bg-warning-soft px-1.5 py-0.5 text-xs font-semibold text-warning">
+                <span className="ml-2 inline-flex items-center gap-0.5 rounded-full bg-warning-soft px-1.5 py-0.5 text-label font-semibold text-warning">
                   <Zap className="size-3" /> Đặt gấp
                 </span>
               )}
             </SummaryRow>
 
             <SummaryRow label="Địa điểm" onEdit={() => setStep(2)}>
-              <span className="mb-0.5 flex items-center gap-1 text-xs font-normal text-accent">
+              <span className="mb-0.5 flex items-center gap-1 text-label font-normal text-accent">
                 {atHome ? <Home className="size-3.5" /> : <Store className="size-3.5" />}
                 {atHome ? placeLabelText : "Tại studio"}
               </span>
@@ -695,18 +695,18 @@ function BookingFlow({ proId }: { proId: string }) {
                   : `${area.district}, ${area.city}`
                 : pro.studioAddress}
               {atHome && quote.distanceKm !== null && (
-                <span className="mt-0.5 flex items-center gap-1.5 text-xs font-normal text-ink-soft">
+                <span className="mt-0.5 flex items-center gap-1.5 text-label font-normal text-ink-soft">
                   <Car className="size-3.5" />~{quote.distanceKm.toLocaleString("vi-VN")} km ·{" "}
                   {quote.travelFee === 0 ? "miễn phí di chuyển" : `phí di chuyển ${formatPrice(quote.travelFee)}`}
                 </span>
               )}
               {atHome && !session && (
-                <span className="mt-0.5 block text-xs font-normal text-ink-soft">Số nhà, đường bạn điền sau khi đăng nhập.</span>
+                <span className="mt-0.5 block text-label font-normal text-ink-soft">Số nhà, đường bạn điền sau khi đăng nhập.</span>
               )}
             </SummaryRow>
 
             <div className="py-3.5">
-              <label className="text-[13px] text-muted" htmlFor="note">
+              <label className="text-meta text-muted" htmlFor="note">
                 Ghi chú cho {pro.name}
               </label>
               <textarea
@@ -715,12 +715,12 @@ function BookingFlow({ proId }: { proId: string }) {
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="VD: muốn làm giống mẫu milky, có thú cưng trong nhà, gửi xe ở hầm B1…"
-                className={cn(inputClass, "mt-2 resize-none text-sm")}
+                className={cn(inputClass, "mt-2 resize-none text-body")}
               />
             </div>
 
             <div className="py-3.5">
-              <p className="text-[13px] text-muted">Ảnh mẫu (tuỳ chọn, tối đa 3): kiểu móng, phong cách makeup bạn muốn</p>
+              <p className="text-meta text-muted">Ảnh mẫu (tuỳ chọn, tối đa 3): kiểu móng, phong cách makeup bạn muốn</p>
               {session ? (
                 <div className="mt-2 flex flex-wrap gap-2">
                   {refs.map((r) => (
@@ -731,14 +731,14 @@ function BookingFlow({ proId }: { proId: string }) {
                         type="button"
                         aria-label="Bỏ ảnh này"
                         onClick={() => setRefs((list) => list.filter((x) => x.path !== r.path))}
-                        className="absolute right-1 top-1 inline-flex size-6 items-center justify-center rounded-full bg-black/60 text-xs text-white"
+                        className="absolute right-1 top-1 inline-flex size-6 items-center justify-center rounded-full bg-black/60 text-label text-white"
                       >
                         ✕
                       </button>
                     </span>
                   ))}
                   {refs.length < 3 && (
-                    <label className={cn("flex size-20 cursor-pointer items-center justify-center rounded-lg border border-dashed border-line text-[12px] text-ink-soft", refBusy && "opacity-50")}>
+                    <label className={cn("flex size-20 cursor-pointer items-center justify-center rounded-lg border border-dashed border-line text-label text-ink-soft", refBusy && "opacity-50")}>
                       {refBusy ? "Đang tải…" : "+ Thêm ảnh"}
                       <input
                         type="file"
@@ -763,16 +763,16 @@ function BookingFlow({ proId }: { proId: string }) {
                   )}
                 </div>
               ) : (
-                <p className="mt-1 text-xs text-ink-soft">Đăng nhập để gửi ảnh mẫu cho {pro.name}.</p>
+                <p className="mt-1 text-label text-ink-soft">Đăng nhập để gửi ảnh mẫu cho {pro.name}.</p>
               )}
-              <p className="mt-1.5 text-xs text-muted">Chỉ bạn và {pro.name} xem được ảnh mẫu.</p>
+              <p className="mt-1.5 text-label text-muted">Chỉ bạn và {pro.name} xem được ảnh mẫu.</p>
             </div>
           </Card>
 
           <Card className="space-y-4 p-4">
             {trade !== "beauty" && (
               <div>
-                <p className="mb-2 text-[13px] font-semibold">Ảnh, clip dùng để làm gì?</p>
+                <p className="mb-2 text-meta font-semibold">Ảnh, clip dùng để làm gì?</p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {(
                     [
@@ -790,13 +790,13 @@ function BookingFlow({ proId }: { proId: string }) {
                         usageScope === value ? "border-accent bg-subtle" : "border-line-strong bg-surface hover:border-accent",
                       )}
                     >
-                      <span className="block text-[15px] font-semibold">{label}</span>
-                      <span className="block text-[13px] text-ink-soft">{hint}</span>
+                      <span className="block text-body font-semibold">{label}</span>
+                      <span className="block text-meta text-ink-soft">{hint}</span>
                     </button>
                   ))}
                 </div>
                 {usageScope === "commercial" && (
-                  <p className="mt-2 text-[13px] text-ink-soft">
+                  <p className="mt-2 text-meta text-ink-soft">
                     {trade === "model"
                       ? `Dùng hình ảnh một người để kinh doanh cần sự đồng ý của họ. ${pro.name} sẽ thấy mục đích này trước khi nhận lịch.`
                       : `${pro.name} sẽ thấy mục đích này trước khi nhận lịch, và hai bên trao đổi thêm về quyền sử dụng qua tin nhắn sau đó.`}
@@ -811,7 +811,7 @@ function BookingFlow({ proId }: { proId: string }) {
                 onChange={(e) => setConsentRepost(e.target.checked)}
                 className="mt-0.5 size-5 shrink-0 accent-[var(--color-accent)]"
               />
-              <span className="text-[14px]">
+              <span className="text-body">
                 <span className="font-semibold">Cho {pro.name} đăng ảnh kết quả làm tác phẩm</span>
                 <span className="block text-ink-soft">Không bắt buộc. Nếu không chọn, ảnh của bạn chỉ dùng cho bạn.</span>
               </span>
@@ -819,7 +819,7 @@ function BookingFlow({ proId }: { proId: string }) {
           </Card>
 
           {tpl.deliverable && (
-            <p className="flex gap-2 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px]">
+            <p className="flex gap-2 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-body">
               <Info className="mt-0.5 size-4 shrink-0" />
               <span>
                 Bạn nhận: <b>{variant.deliverable ?? tpl.deliverable}</b>
@@ -829,7 +829,7 @@ function BookingFlow({ proId }: { proId: string }) {
           )}
 
           <Card className="p-4">
-            <p className="mb-2 text-[13px] text-muted">Thanh toán</p>
+            <p className="mb-2 text-meta text-muted">Thanh toán</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {(
                 [
@@ -850,18 +850,18 @@ function BookingFlow({ proId }: { proId: string }) {
                 >
                   <Icon className={cn("mt-0.5 size-4 shrink-0", payment === value ? "text-ink" : "text-muted")} />
                   <span>
-                    <span className="block text-sm font-medium">{label}</span>
-                    <span className="block text-xs text-muted">{hint}</span>
+                    <span className="block text-body font-medium">{label}</span>
+                    <span className="block text-label text-muted">{hint}</span>
                   </span>
                 </button>
               ))}
             </div>
           </Card>
 
-          {multiple && <Card className="space-y-3 p-4"><p className="font-semibold">Buổi thứ hai (đã gồm trong giá)</p><input aria-label="Ngày buổi thứ hai" type="date" min={date} value={secondDate} onChange={(e) => setSecondDate(e.target.value)} className={inputClass} /><input aria-label="Giờ buổi thứ hai" type="time" step={1800} value={secondTime} onChange={(e) => setSecondTime(e.target.value)} className={inputClass} /><p className="text-xs text-muted">Cả hai buổi sẽ được giữ lịch cùng lúc; hệ thống kiểm tra giờ trống khi gửi.</p></Card>}
+          {multiple && <Card className="space-y-3 p-4"><p className="font-semibold">Buổi thứ hai (đã gồm trong giá)</p><input aria-label="Ngày buổi thứ hai" type="date" min={date} value={secondDate} onChange={(e) => setSecondDate(e.target.value)} className={inputClass} /><input aria-label="Giờ buổi thứ hai" type="time" step={1800} value={secondTime} onChange={(e) => setSecondTime(e.target.value)} className={inputClass} /><p className="text-label text-muted">Cả hai buổi sẽ được giữ lịch cùng lúc; hệ thống kiểm tra giờ trống khi gửi.</p></Card>}
           <PriceBreakdown quote={quote} paymentMethod={payment} />
           {chosenAddons.length > 0 && (
-            <Card className="space-y-1.5 p-4 text-[14px]">
+            <Card className="space-y-1.5 p-4 text-body">
               <p className="font-semibold">Dịch vụ đi kèm</p>
               {chosenAddons.map((o) => (
                 <p key={o.key} className="flex justify-between gap-3">
@@ -871,7 +871,7 @@ function BookingFlow({ proId }: { proId: string }) {
                   <span className="tabular-nums">{formatPrice(o.price)}</span>
                 </p>
               ))}
-              <p className="text-xs text-muted">Làm nối tiếp sau dịch vụ chính (thêm {formatDuration(addonsMinutes)}), không tính phí di chuyển.</p>
+              <p className="text-label text-muted">Làm nối tiếp sau dịch vụ chính (thêm {formatDuration(addonsMinutes)}), không tính phí di chuyển.</p>
               <p className="flex justify-between gap-3 border-t border-line pt-2 font-bold">
                 <span>Tổng cả lịch</span>
                 <span className="tabular-nums">{formatPrice(quote.total + addonsTotal)}</span>
@@ -881,7 +881,7 @@ function BookingFlow({ proId }: { proId: string }) {
 
           {/* What happens after sending, in the order it happens: the call, then
               until when the booking can be dropped at no cost. */}
-          <div className="space-y-2.5 rounded-[var(--radius-lg)] bg-subtle px-4 py-3.5 text-[14px]">
+          <div className="space-y-2.5 rounded-[var(--radius-lg)] bg-subtle px-4 py-3.5 text-body">
             <p className="flex gap-2.5">
               <Phone className="mt-0.5 size-4 shrink-0 text-accent" />
               {session ? (
@@ -915,7 +915,7 @@ function BookingFlow({ proId }: { proId: string }) {
             )}
           </div>
           {error && (
-            <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+            <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
               {error}
             </p>
           )}
@@ -926,8 +926,8 @@ function BookingFlow({ proId }: { proId: string }) {
       <BottomBar className="md:sticky md:bottom-0 md:bg-canvas/95 md:py-3 md:backdrop-blur">
         <div className="flex items-center gap-3">
           <div className="min-w-0 shrink-0" aria-live="polite">
-            <p className="text-xs text-muted">{step === 1 ? "Giá dịch vụ" : ready ? "Tổng" : "Tạm tính"}</p>
-            <p className="text-[17px] font-bold tabular-nums">{formatPrice((step === 1 ? price : quote.total) + addonsTotal)}</p>
+            <p className="text-label text-muted">{step === 1 ? "Giá dịch vụ" : ready ? "Tổng" : "Tạm tính"}</p>
+            <p className="text-lead font-bold tabular-nums">{formatPrice((step === 1 ? price : quote.total) + addonsTotal)}</p>
           </div>
           {step > 1 && (
             <Button variant="outline" size="lg" onClick={() => setStep((s) => s - 1)} className="hidden md:inline-flex md:w-40">
@@ -968,9 +968,9 @@ function AreaPicker({
     <div className="mt-3">
       <div className="grid grid-cols-2 gap-2">
         <label className="block">
-          <span className="mb-1 block text-[13px] font-semibold">Thành phố</span>
+          <span className="mb-1 block text-meta font-semibold">Thành phố</span>
           <select
-            className={cn(inputClass, "text-sm")}
+            className={cn(inputClass, "text-body")}
             value={value.city}
             onChange={(e) => onChange({ city: e.target.value, district: "" })}
           >
@@ -980,9 +980,9 @@ function AreaPicker({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-[13px] font-semibold">Quận/huyện</span>
+          <span className="mb-1 block text-meta font-semibold">Quận/huyện</span>
           <select
-            className={cn(inputClass, "text-sm")}
+            className={cn(inputClass, "text-body")}
             value={value.district}
             onChange={(e) => onChange({ city: value.city, district: e.target.value })}
           >
@@ -993,17 +993,17 @@ function AreaPicker({
           </select>
         </label>
       </div>
-      <p className="mt-1.5 text-xs text-muted">Để tính phí di chuyển. Số nhà, đường bạn điền sau khi đăng nhập.</p>
+      <p className="mt-1.5 text-label text-muted">Để tính phí di chuyển. Số nhà, đường bạn điền sau khi đăng nhập.</p>
     </div>
   )
 }
 
 function SummaryRow({ label, onEdit, children }: { label: string; onEdit: () => void; children: React.ReactNode }) {
   return (
-    <div className="flex gap-4 py-3.5 text-sm">
-      <span className="w-20 shrink-0 text-[13px] text-muted">{label}</span>
+    <div className="flex gap-4 py-3.5 text-body">
+      <span className="w-20 shrink-0 text-meta text-muted">{label}</span>
       <span className="min-w-0 flex-1 font-medium">{children}</span>
-      <button type="button" onClick={onEdit} className="-my-1 h-8 shrink-0 text-[13px] font-semibold text-accent underline-offset-2 hover:underline">
+      <button type="button" onClick={onEdit} className="-my-1 h-8 shrink-0 text-meta font-semibold text-accent underline-offset-2 hover:underline">
         Đổi
       </button>
     </div>
@@ -1023,11 +1023,11 @@ function Stepper({ step, onJump }: { step: number; onJump: (s: number) => void }
             <button
               type="button"
               onClick={() => onJump(n)}
-              className={cn("relative z-10 flex size-7 items-center justify-center rounded-full text-xs font-semibold", active || done ? "bg-accent text-white" : "bg-subtle-strong text-ink-soft")}
+              className={cn("relative z-10 flex size-7 items-center justify-center rounded-full text-label font-semibold", active || done ? "bg-accent text-white" : "bg-subtle-strong text-ink-soft")}
             >
               {done ? <Check className="size-3.5" /> : n}
             </button>
-            <span className={cn("mt-1.5 text-xs", active ? "font-medium text-ink" : "text-muted")}>{label}</span>
+            <span className={cn("mt-1.5 text-label", active ? "font-medium text-ink" : "text-muted")}>{label}</span>
           </li>
         )
       })}
@@ -1040,7 +1040,7 @@ function ServiceSummary({ name, variant, price, duration }: { name: string; vari
     <Card className="flex items-center justify-between gap-3 p-4">
       <div className="min-w-0">
         <p className="font-semibold">{name}</p>
-        <p className="flex items-center gap-1 text-sm text-ink-soft">
+        <p className="flex items-center gap-1 text-body text-ink-soft">
           {variant} · <Clock className="size-3.5" /> {formatDuration(duration)}
         </p>
       </div>
@@ -1069,7 +1069,7 @@ function PlaceOption({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "flex h-11 items-center justify-center gap-2 rounded-full border text-[14px] transition-colors disabled:opacity-40",
+        "flex h-11 items-center justify-center gap-2 rounded-full border text-body transition-colors disabled:opacity-40",
         active ? "border-accent bg-accent font-semibold text-white" : "border-line text-ink hover:border-ink/30",
       )}
     >

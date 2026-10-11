@@ -24,11 +24,10 @@ const buttonVariants: Record<ButtonVariant, string> = {
   danger: "border border-danger/40 bg-surface text-danger hover:bg-danger-soft",
 }
 const buttonSizes: Record<ButtonSize, string> = {
-  // 36px is below the 44px recommendation, so a small button keeps a larger
-  // invisible hit area around it.
-  sm: "h-9 rounded-full px-4 text-[13px] [&]:relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
-  md: "h-11 rounded-full px-5 text-sm font-semibold",
-  lg: "h-13 rounded-full px-7 text-[15px] font-semibold",
+  // Visible controls themselves meet the touch target minimum.
+  sm: "min-h-11 rounded-full px-4 py-2 text-meta",
+  md: "min-h-12 rounded-full px-5 py-2.5 text-body font-semibold",
+  lg: "min-h-14 rounded-full px-7 py-3 text-body font-semibold",
 }
 
 export function buttonClass(variant: ButtonVariant = "primary", size: ButtonSize = "md", className?: string) {
@@ -142,8 +141,8 @@ export function Chip({
       type="button"
       aria-pressed={active}
       className={cn(
-        "relative inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-4 text-[13px] font-medium transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
-        active ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
+        "relative inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-4 text-meta font-medium transition-colors",
+        active ? "border-accent bg-accent text-white" : "border-line-strong bg-surface text-ink hover:border-accent",
         className,
       )}
       {...props}
@@ -159,13 +158,13 @@ export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
 export function Rating({ value, count, className }: { value: number; count?: number; className?: string }) {
   if (count !== undefined && !showsAverage(count))
     return (
-      <span className={cn("inline-flex items-center gap-1 text-[13px] text-ink-soft", className)}>
+      <span className={cn("inline-flex items-center gap-1 text-meta text-ink-soft", className)}>
         <span className="font-medium text-ink">Mới</span>
         {count > 0 && <span className="text-muted">· {count} đánh giá</span>}
       </span>
     )
   return (
-    <span className={cn("inline-flex items-center gap-1 text-[13px] text-ink-soft", className)}>
+    <span className={cn("inline-flex items-center gap-1 text-meta text-ink-soft", className)}>
       <Star className="size-3.5 fill-ink text-ink" aria-hidden />
       <span className="font-medium text-ink">{value.toFixed(1)}</span>
       {count !== undefined && <span className="text-muted">({count})</span>}
@@ -186,13 +185,13 @@ const STATUS: Record<BookingStatus, { label: string; className: string }> = {
 
 export function StatusBadge({ status, label }: { status: BookingStatus; label?: string }) {
   const s = STATUS[status]
-  return <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", s.className)}>{label ?? s.label}</span>
+  return <span className={cn("rounded-full px-2.5 py-1 text-label font-semibold", s.className)}>{label ?? s.label}</span>
 }
 
 export function Pill({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) {
   return (
     <span
-      className={cn("inline-flex items-center gap-1 rounded-full bg-subtle px-2.5 py-1 text-xs font-medium text-ink-soft", className)}
+      className={cn("inline-flex items-center gap-1 rounded-full bg-subtle px-2.5 py-1 text-label font-medium text-ink-soft", className)}
       {...props}
     />
   )
@@ -224,7 +223,7 @@ export function PageHeader({
           <ChevronLeft className="size-5" />
         </button>
       )}
-      {title && <h1 className={cn("flex-1 truncate text-[17px] font-bold md:text-2xl md:font-bold", back && "text-center md:text-left")}>{title}</h1>}
+      {title && <h1 className={cn("flex-1 truncate text-lead font-bold md:text-2xl md:font-bold", back && "text-center md:text-left")}>{title}</h1>}
       {!title && <div className="flex-1" />}
       <div className={cn("flex min-w-10 justify-end", !action && back && "md:hidden")}>{action}</div>
     </div>
@@ -257,7 +256,7 @@ export function Tabs<T extends string>({
   }
 
   return (
-    <div role="tablist" className={cn("no-scrollbar flex gap-6 overflow-x-auto border-b border-line", className)}>
+    <div role="tablist" className={cn("no-scrollbar flex gap-4 overflow-x-auto border-b border-line md:gap-6", className)}>
       {items.map((it, index) => (
         <button
           key={it.value}
@@ -283,7 +282,7 @@ export function Tabs<T extends string>({
           }}
           onClick={() => onChange(it.value)}
           className={cn(
-            "relative shrink-0 pb-3 pt-1 text-[15px] transition-colors",
+            "relative min-h-12 shrink-0 pb-3 pt-1 text-meta transition-colors sm:text-body",
             value === it.value ? "font-semibold text-accent" : "font-medium text-muted hover:text-ink",
           )}
         >
@@ -309,8 +308,8 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center px-6 py-14 text-center">
       {icon && <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-subtle text-ink">{icon}</div>}
-      <p className="text-[17px] font-bold">{title}</p>
-      {text && <p className="mt-1.5 max-w-xs text-[15px] text-ink-soft">{text}</p>}
+      <p className="text-lead font-bold">{title}</p>
+      {text && <p className="mt-1.5 max-w-xs text-body text-ink-soft">{text}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
   )
@@ -345,15 +344,15 @@ export function Field({
 }) {
   return (
     <label className={cn("block", className)}>
-      <span className="mb-1.5 block text-[13px] font-semibold text-ink">{label}</span>
+      <span className="mb-1.5 block text-meta font-semibold text-ink">{label}</span>
       {children}
-      {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
+      {hint && <span className="mt-1 block text-label text-muted">{hint}</span>}
     </label>
   )
 }
 
 export const inputClass =
-  "w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-[15px] text-ink placeholder:text-muted focus:border-accent focus:outline-none"
+  "w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-body text-ink placeholder:text-muted focus:border-accent focus:outline-none"
 
 export function Toggle({
   checked,
@@ -374,9 +373,9 @@ export function Toggle({
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={cn("relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:opacity-50", checked ? "bg-accent" : "bg-subtle-strong")}
+      className="relative flex h-12 w-14 shrink-0 items-center justify-center rounded-lg focus-visible:outline-accent disabled:opacity-50"
     >
-      <span className={cn("absolute top-1 size-5 rounded-full bg-white shadow transition-all", checked ? "left-6" : "left-1")} />
+      <span aria-hidden className={cn("relative h-7 w-12 rounded-full", checked ? "bg-accent" : "bg-line-strong")}><span className={cn("absolute top-1 size-5 rounded-full bg-white shadow transition-all", checked ? "left-6" : "left-1")} /></span>
     </button>
   )
 }

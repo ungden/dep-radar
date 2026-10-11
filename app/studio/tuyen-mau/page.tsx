@@ -35,7 +35,7 @@ function Castings() {
 
   return (
     <div className="space-y-8">
-      <p className="text-[15px] text-ink-soft">
+      <p className="text-body text-ink-soft">
         Cần mẫu để luyện tay, thử kiểu mới hay chụp portfolio? Đăng tin, khách quanh bạn ứng tuyển, bạn chọn người phù hợp
         rồi nhắn tin trao đổi. Ảnh chụp được dùng làm tác phẩm khi mẫu đồng ý.
       </p>
@@ -158,7 +158,7 @@ function CastingForm({ onDone }: { onDone: () => void }) {
       </Field>
 
       <fieldset>
-        <legend className="mb-2 text-[13px] font-semibold">Mẫu được gì</legend>
+        <legend className="mb-2 text-meta font-semibold">Mẫu được gì</legend>
         <div className="grid gap-2 sm:grid-cols-3">
           {(
             [
@@ -174,7 +174,7 @@ function CastingForm({ onDone }: { onDone: () => void }) {
               aria-pressed={compensation === value}
               onClick={() => setCompensation(value)}
               className={cn(
-                "h-11 rounded-full border px-4 text-[14px] font-semibold transition-colors disabled:opacity-40",
+                "h-11 rounded-full border px-4 text-body font-semibold transition-colors disabled:opacity-40",
                 compensation === value ? "border-accent bg-accent text-white" : "border-line bg-surface hover:border-ink/30",
               )}
             >
@@ -183,7 +183,7 @@ function CastingForm({ onDone }: { onDone: () => void }) {
           ))}
         </div>
         {!verified && (
-          <p className="mt-2 text-[13px] text-ink-soft">
+          <p className="mt-2 text-meta text-ink-soft">
             {IDENTITY_VERIFICATION_OPEN
               ? "Đăng tin tuyển mẫu cần xác minh danh tính; tin có thù lao cần thêm đủ 18 tuổi."
               : "Đăng tin tuyển mẫu cần xác minh danh tính, sẽ mở sau."}
@@ -209,12 +209,12 @@ function CastingForm({ onDone }: { onDone: () => void }) {
         </Field>
       )}
 
-      <p className="rounded-[var(--radius-md)] bg-subtle p-3 text-[13px] text-ink-soft">
+      <p className="rounded-[var(--radius-md)] bg-subtle p-3 text-meta text-ink-soft">
         Không nhận tin chụp nội y, khoả thân, nội dung nhạy cảm, và không được thu bất kỳ khoản tiền nào của mẫu. Tin vi phạm bị gỡ và hồ sơ có thể bị khoá.
       </p>
 
       {error && (
-        <p role="alert" className="text-[14px] text-danger">
+        <p role="alert" className="text-body text-danger">
           {error}
         </p>
       )}
@@ -241,13 +241,13 @@ function CastingManager({ casting }: { casting: Casting }) {
     <article className={cn("rounded-[var(--radius-lg)] border border-line bg-surface p-4", casting.status !== "open" && "opacity-70")}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[13px] font-medium text-muted">
+          <p className="text-meta font-medium text-muted">
             {categoryLabel(casting.category)} · {compensationLabel(casting)}
           </p>
-          <Link href={`/tuyen-mau/${casting.id}`} className="mt-0.5 block text-[16px] font-bold hover:underline">
+          <Link href={`/tuyen-mau/${casting.id}`} className="mt-0.5 block text-body font-bold hover:underline">
             {casting.title}
           </Link>
-          <p className="mt-0.5 text-[13px] text-ink-soft">
+          <p className="mt-0.5 text-meta text-ink-soft">
             {formatDateLong(casting.date)}, {casting.time} · {casting.district} · đã chọn {accepted.length}/{casting.slots}
           </p>
         </div>
@@ -256,28 +256,28 @@ function CastingManager({ casting }: { casting: Casting }) {
             Đóng tin
           </Button>
         ) : (
-          <span className="rounded-full bg-subtle px-3 py-1 text-xs font-semibold">Đã đóng</span>
+          <span className="rounded-full bg-subtle px-3 py-1 text-label font-semibold">Đã đóng</span>
         )}
       </div>
 
       {casting.applications.length === 0 ? (
-        <p className="mt-4 rounded-[var(--radius-md)] bg-subtle px-3 py-4 text-center text-[14px] text-ink-soft">Chưa có ai ứng tuyển.</p>
+        <p className="mt-4 rounded-[var(--radius-md)] bg-subtle px-3 py-4 text-center text-body text-ink-soft">Chưa có ai ứng tuyển.</p>
       ) : (
         <ul className="mt-4 divide-y divide-line">
           {[...accepted, ...pending, ...casting.applications.filter((a) => a.status === "rejected")].map((a) => (
             <li key={a.id} className="flex items-start gap-3 py-3">
               <Avatar name={a.applicantName} size={40} />
               <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-semibold">
-                  {a.applicantName} <span className="text-[13px] font-normal text-muted">· {timeAgo(a.createdAt)}</span>
+                <p className="text-body font-semibold">
+                  {a.applicantName} <span className="text-meta font-normal text-muted">· {timeAgo(a.createdAt)}</span>
                 </p>
-                {a.message && <p className="mt-0.5 text-[14px] text-ink-soft">{a.message}</p>}
+                {a.message && <p className="mt-0.5 text-body text-ink-soft">{a.message}</p>}
                 {a.status === "accepted" && (
-                  <Link href="/tin-nhan" className="mt-1.5 inline-flex items-center gap-1 text-[13px] font-semibold text-success">
+                  <Link href="/tin-nhan" className="mt-1.5 inline-flex items-center gap-1 text-meta font-semibold text-success">
                     <MessageCircle className="size-4" /> Đã chọn · nhắn tin
                   </Link>
                 )}
-                {a.status === "rejected" && <p className="mt-1 text-[13px] text-muted">Không chọn</p>}
+                {a.status === "rejected" && <p className="mt-1 text-meta text-muted">Không chọn</p>}
               </div>
               {a.status === "pending" && casting.status === "open" && (
                 <div className="flex shrink-0 gap-1.5">
@@ -294,7 +294,7 @@ function CastingManager({ casting }: { casting: Casting }) {
                     disabled={full}
                     aria-label={`Chọn ${a.applicantName}`}
                     onClick={() => void act(() => actions.decideApplication(a.id, true), "Đã chọn mẫu").then(setError)}
-                    className="inline-flex h-10 items-center gap-1 rounded-full bg-accent px-4 text-[13px] font-semibold text-white disabled:opacity-40"
+                    className="inline-flex h-10 items-center gap-1 rounded-full bg-accent px-4 text-meta font-semibold text-white disabled:opacity-40"
                   >
                     <Check className="size-4" /> Chọn
                   </button>
@@ -305,11 +305,11 @@ function CastingManager({ casting }: { casting: Casting }) {
         </ul>
       )}
       {error && (
-        <p role="alert" className="mt-2 text-[14px] text-danger">
+        <p role="alert" className="mt-2 text-body text-danger">
           {error}
         </p>
       )}
-      {full && casting.status === "open" && <p className="mt-2 text-[13px] text-ink-soft">Đã đủ người. Đóng tin để không nhận thêm ứng tuyển.</p>}
+      {full && casting.status === "open" && <p className="mt-2 text-meta text-ink-soft">Đã đủ người. Đóng tin để không nhận thêm ứng tuyển.</p>}
     </article>
   )
 }

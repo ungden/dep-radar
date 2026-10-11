@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-11",
+  "dataSource": "temporary read-only local UI fixtures; no authenticated writes",
+  "web": {
+    "productionBuild": "passed",
+    "generatedRoutes": 84,
+    "bodyFontPx": 16,
+    "widthsWithoutDocumentOverflow": [320, 390, 1280],
+    "desktopCategoryRowsAt1280": 1,
+    "firstSearchResultTopAt320Px": 358,
+    "primaryFilterButton": {"fontPx": 16, "heightPx": 56, "color": "rgb(255, 255, 255)"},
+    "keyboardBudgetSelection": "ArrowRight selected price=300000",
+    "emptyInventory": "one request action, partner entry",
+    "outageRecovery": "retry restored three services"
+  },
+  "native": {
+    "runtime": "Expo Go 57, existing iPhone 17 Pro simulator, iOS 26.5",
+    "systemTextSizes": ["large", "accessibility-large"],
+    "largeTextNavigation": "menu routes verified to guest account",
+    "largeTextFilters": "stacked footer, individual controls exposed to accessibility, apply closes sheet",
+    "dateSelectionReturned": "2026-10-12",
+    "exactTimeSelectionReturned": "10:16",
+    "productionBundleExport": "passed",
+    "temporaryQaRouteRemoved": true,
+    "physicalDeviceProof": false
+  },
+  "tests": {"passed": 249, "skipped": 31},
+  "deployment": "local implementation only"
+}

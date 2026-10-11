@@ -75,21 +75,21 @@ export function CustomersPanel() {
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
         <input
-          className={cn(inputClass, "pl-9 text-sm")}
+          className={cn(inputClass, "pl-9 text-body")}
           placeholder="Tìm theo tên, số điện thoại hoặc email"
           aria-label="Tìm khách hàng"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
-      {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
+      {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">{error}</p>}
       {rows === null ? (
-        <p className="text-sm text-muted">Đang tải…</p>
+        <p className="text-body text-muted">Đang tải…</p>
       ) : rows.length === 0 ? (
         <EmptyState title="Không tìm thấy tài khoản nào" />
       ) : (
         <>
-          <p className="text-[13px] text-muted">
+          <p className="text-meta text-muted">
             {rows.length} tài khoản{rows.length === 200 ? " (200 gần nhất, tìm để lọc thêm)" : ""}. Khoá một tài khoản thì người đó không đặt lịch, đăng
             yêu cầu hay nhắn tin được nữa; lịch đã đặt vẫn giữ.
           </p>
@@ -101,18 +101,18 @@ export function CustomersPanel() {
                     <div className="min-w-0 flex-1">
                       <p className="flex flex-wrap items-center gap-2 font-semibold">
                         {c.name}
-                        {c.isPro && <span className="rounded-full bg-subtle px-2 py-0.5 text-[11px] font-semibold text-ink-soft">Đối tác</span>}
-                        {c.suspendedAt && <span className="rounded-full bg-danger-soft px-2 py-0.5 text-[11px] font-semibold text-danger">Đã khoá</span>}
+                        {c.isPro && <span className="rounded-full bg-subtle px-2 py-0.5 text-label font-semibold text-ink-soft">Đối tác</span>}
+                        {c.suspendedAt && <span className="rounded-full bg-danger-soft px-2 py-0.5 text-label font-semibold text-danger">Đã khoá</span>}
                       </p>
-                      <p className="text-xs text-muted">
+                      <p className="text-label text-muted">
                         {c.phone || "chưa có SĐT"}
                         {c.email ? ` · ${c.email}` : ""} · tham gia {localDate(c.createdAt)}
                       </p>
-                      <p className="mt-1 text-xs text-ink-soft">
+                      <p className="mt-1 text-label text-ink-soft">
                         {c.bookings} lịch · {c.completed} xong · {c.cancelled} tự huỷ · {c.noShows} vắng mặt · đã chi {formatPrice(c.spent)}
                         {c.lastBookingAt ? ` · lịch gần nhất ${localDate(c.lastBookingAt)}` : ""}
                       </p>
-                      {c.suspendedAt && c.suspendReason && <p className="mt-1 text-xs text-danger">Lý do khoá: {c.suspendReason}</p>}
+                      {c.suspendedAt && c.suspendReason && <p className="mt-1 text-label text-danger">Lý do khoá: {c.suspendReason}</p>}
                     </div>
                     <Button size="sm" variant="ghost" onClick={() => setResetting(c)}>
                       <KeyRound className="size-4" /> Đặt lại mật khẩu
@@ -128,7 +128,7 @@ export function CustomersPanel() {
                     )}
                   </div>
                   {resetting?.id === c.id && (
-                    <div className="mt-3 space-y-2 rounded-xl bg-warning-soft px-3.5 py-3 text-[13px]">
+                    <div className="mt-3 space-y-2 rounded-xl bg-warning-soft px-3.5 py-3 text-meta">
                       <p>
                         Chỉ đặt lại khi người nhắn Zalo dùng <b>đúng số {c.phone || "của tài khoản"}</b>. Mật khẩu cũ hết hiệu lực ngay, chủ tài khoản nhận thông báo.
                       </p>
@@ -143,9 +143,9 @@ export function CustomersPanel() {
                     </div>
                   )}
                   {issued?.id === c.id && (
-                    <div className="mt-3 space-y-1 rounded-xl bg-success-soft px-3.5 py-3 text-[13px]">
+                    <div className="mt-3 space-y-1 rounded-xl bg-success-soft px-3.5 py-3 text-meta">
                       <p>
-                        Mật khẩu mới (chỉ hiện một lần): <b className="select-all font-mono text-[15px]">{issued.password}</b>
+                        Mật khẩu mới (chỉ hiện một lần): <b className="select-all font-mono text-body">{issued.password}</b>
                       </p>
                       <p className="text-ink-soft">Gửi qua Zalo cho đúng số {c.phone}. Nhắc khách đăng nhập rồi đổi mật khẩu trong Cài đặt tài khoản.</p>
                       <Button size="sm" variant="ghost" onClick={() => setIssued(null)}>
@@ -156,7 +156,7 @@ export function CustomersPanel() {
                   {locking?.id === c.id && (
                     <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                       <input
-                        className={cn(inputClass, "text-sm")}
+                        className={cn(inputClass, "text-body")}
                         placeholder="Lý do (VD: bùng lịch nhiều lần, quấy rối người làm)"
                         aria-label="Lý do khoá"
                         value={reason}
@@ -230,10 +230,10 @@ export function FinancePanel({ pros }: { pros: AdminPro[] }) {
     <div className="mt-4 space-y-4">
       <Card className="flex flex-wrap items-end gap-3 p-4">
         <Field label="Từ ngày">
-          <input type="date" className={cn(inputClass, "text-sm")} value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
+          <input type="date" className={cn(inputClass, "text-body")} value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
         </Field>
         <Field label="Đến ngày">
-          <input type="date" className={cn(inputClass, "text-sm")} value={to} min={from} onChange={(e) => setTo(e.target.value)} />
+          <input type="date" className={cn(inputClass, "text-body")} value={to} min={from} onChange={(e) => setTo(e.target.value)} />
         </Field>
         <div className="flex flex-wrap gap-2">
           {presets.map((p) => (
@@ -252,7 +252,7 @@ export function FinancePanel({ pros }: { pros: AdminPro[] }) {
         </div>
       </Card>
 
-      {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
+      {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">{error}</p>}
 
       {s && (
         <>
@@ -267,7 +267,7 @@ export function FinancePanel({ pros }: { pros: AdminPro[] }) {
               tone={s.owed > 0 ? "danger" : undefined}
             />
           </div>
-          <Card className="grid grid-cols-2 gap-x-6 gap-y-1.5 p-4 text-sm md:grid-cols-3">
+          <Card className="grid grid-cols-2 gap-x-6 gap-y-1.5 p-4 text-body md:grid-cols-3">
             <Line label="Lịch tạo mới" value={String(s.created)} />
             <Line label="Khách/người làm huỷ" value={String(s.cancelled)} />
             <Line label="Vắng mặt" value={String(s.noShows)} />
@@ -282,26 +282,26 @@ export function FinancePanel({ pros }: { pros: AdminPro[] }) {
 
           <Card className="p-4">
             <p className="font-semibold">Xuất file cho kế toán</p>
-            <p className="mt-0.5 text-[13px] text-muted">
+            <p className="mt-0.5 text-meta text-muted">
               File CSV mở bằng Excel. Hoa hồng là doanh thu của công ty để xuất hoá đơn và kê khai; danh sách theo người làm có họ tên trên
               CCCD và doanh thu, dùng khi cung cấp thông tin người bán cho cơ quan thuế.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <a className="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-2 text-sm font-semibold hover:bg-subtle" href={`/admin/export?kind=bookings&${range}`}>
+              <a className="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-2 text-body font-semibold hover:bg-subtle" href={`/admin/export?kind=bookings&${range}`}>
                 <Download className="size-4" /> Lịch hẹn & hoa hồng
               </a>
-              <a className="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-2 text-sm font-semibold hover:bg-subtle" href={`/admin/export?kind=pros&${range}`}>
+              <a className="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-2 text-body font-semibold hover:bg-subtle" href={`/admin/export?kind=pros&${range}`}>
                 <Download className="size-4" /> Theo người làm
               </a>
-              <a className="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-2 text-sm font-semibold hover:bg-subtle" href={`/admin/export?kind=wallet&${range}`}>
+              <a className="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-2 text-body font-semibold hover:bg-subtle" href={`/admin/export?kind=wallet&${range}`}>
                 <Download className="size-4" /> Sổ ví (đối chiếu ngân hàng)
               </a>
             </div>
           </Card>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="text-xs text-muted">
+            <table className="w-full min-w-[640px] text-left text-body">
+              <thead className="text-label text-muted">
                 <tr>
                   <th className="py-2 pr-2 font-medium">Người làm</th>
                   <th className="py-2 pr-2 text-right font-medium">Lịch xong</th>
@@ -318,7 +318,7 @@ export function FinancePanel({ pros }: { pros: AdminPro[] }) {
                       <Link href={`/pros/${p.slug}`} className="font-semibold hover:underline">
                         {p.name}
                       </Link>
-                      <span className="block text-xs text-muted">
+                      <span className="block text-label text-muted">
                         {p.nameOnCard ? `CCCD: ${p.nameOnCard}` : "Chưa xác minh CCCD"} · {p.district}, {p.city}
                       </span>
                     </td>
@@ -343,9 +343,9 @@ export function FinancePanel({ pros }: { pros: AdminPro[] }) {
 function Figure({ label, value, hint, strong, tone }: { label: string; value: string; hint?: string; strong?: boolean; tone?: "danger" }) {
   return (
     <Card className={cn("p-3.5", strong && "ring-1 ring-accent/30")}>
-      <p className="text-[12px] text-muted">{label}</p>
+      <p className="text-label text-muted">{label}</p>
       <p className={cn("mt-0.5 text-[20px] font-bold tabular-nums", tone === "danger" && "text-danger")}>{value}</p>
-      {hint && <p className="mt-0.5 text-[11px] text-muted">{hint}</p>}
+      {hint && <p className="mt-0.5 text-label text-muted">{hint}</p>}
     </Card>
   )
 }
@@ -374,14 +374,14 @@ function AdjustWallet({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }
     <Card className="space-y-3 p-4">
       <div>
         <p className="font-semibold">Điều chỉnh ví đối tác</p>
-        <p className="text-[13px] text-muted">
+        <p className="text-meta text-muted">
           Cho tranh chấp và nhầm lẫn: hoàn phí của lịch không diễn ra, bù thiệt hại, sửa khoản nạp sai. Số âm để trừ. Bắt buộc ghi lý do; mọi điều
           chỉnh được ghi vào nhật ký. Tiền chuyển khoản vào thì dùng tab Nạp ví.
         </p>
       </div>
       <div className="grid gap-3 md:grid-cols-[1fr_160px]">
         <Field label="Đối tác">
-          <select className={cn(inputClass, "text-sm")} value={proId} onChange={(e) => setProId(e.target.value)}>
+          <select className={cn(inputClass, "text-body")} value={proId} onChange={(e) => setProId(e.target.value)}>
             <option value="">Chọn đối tác</option>
             {pros.map((p) => (
               <option key={p.id} value={p.id}>
@@ -391,11 +391,11 @@ function AdjustWallet({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }
           </select>
         </Field>
         <Field label="Số tiền (đ)" hint={value ? (value > 0 ? `Cộng ${formatPrice(value)}` : `Trừ ${formatPrice(-value)}`) : undefined}>
-          <input className={cn(inputClass, "text-sm")} inputMode="numeric" placeholder="27000 hoặc -27000" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <input className={cn(inputClass, "text-body")} inputMode="numeric" placeholder="27000 hoặc -27000" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </Field>
       </div>
       <Field label="Lý do">
-        <input className={cn(inputClass, "text-sm")} placeholder="VD: Hoàn phí lịch #… khách huỷ sau khi đã bấm hoàn thành" value={note} onChange={(e) => setNote(e.target.value)} />
+        <input className={cn(inputClass, "text-body")} placeholder="VD: Hoàn phí lịch #… khách huỷ sau khi đã bấm hoàn thành" value={note} onChange={(e) => setNote(e.target.value)} />
       </Field>
       <div className="flex items-center gap-3">
         <Button
@@ -416,7 +416,7 @@ function AdjustWallet({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }
         >
           Điều chỉnh
         </Button>
-        {result && <p className={cn("text-[13px]", result.ok ? "text-success" : "text-danger")}>{result.text}</p>}
+        {result && <p className={cn("text-meta", result.ok ? "text-success" : "text-danger")}>{result.text}</p>}
       </div>
     </Card>
   )
@@ -433,13 +433,13 @@ export function SettingsPanel({ settings, fees, log }: { settings: PlatformSetti
   const set = <K extends keyof PlatformSettings>(k: K, v: PlatformSettings[K]) => setS((x) => ({ ...x, [k]: v }))
   const text = (k: keyof PlatformSettings, label: string, hint?: string, placeholder?: string) => (
     <Field label={label} hint={hint}>
-      <input className={cn(inputClass, "text-sm")} value={String(s[k] ?? "")} placeholder={placeholder} onChange={(e) => set(k, e.target.value as never)} />
+      <input className={cn(inputClass, "text-body")} value={String(s[k] ?? "")} placeholder={placeholder} onChange={(e) => set(k, e.target.value as never)} />
     </Field>
   )
   const money = (k: keyof PlatformSettings, label: string, hint?: string) => (
     <Field label={label} hint={hint}>
       <input
-        className={cn(inputClass, "text-sm")}
+        className={cn(inputClass, "text-body")}
         inputMode="numeric"
         value={String(s[k] ?? 0)}
         onChange={(e) => set(k, (Number(e.target.value.replace(/\D/g, "")) || 0) as never)}
@@ -452,7 +452,7 @@ export function SettingsPanel({ settings, fees, log }: { settings: PlatformSetti
     <div className="mt-4 space-y-4">
       <Card className="space-y-4 p-4">
         <p className="font-semibold">Thông tin công ty</p>
-        <p className="-mt-3 text-[13px] text-muted">Hiện ở chân trang, trang Quy chế hoạt động và khi khách/đối tác cần liên hệ.</p>
+        <p className="-mt-3 text-meta text-muted">Hiện ở chân trang, trang Quy chế hoạt động và khi khách/đối tác cần liên hệ.</p>
         <div className="grid gap-3 md:grid-cols-2">
           {text("companyName", "Tên công ty")}
           {text("companyTaxId", "Mã số thuế")}
@@ -464,7 +464,7 @@ export function SettingsPanel({ settings, fees, log }: { settings: PlatformSetti
 
       <Card className="space-y-4 p-4">
         <p className="font-semibold">Tài khoản nhận phí từ đối tác</p>
-        <p className="-mt-3 text-[13px] text-muted">
+        <p className="-mt-3 text-meta text-muted">
           Hiện trên mã VietQR khi đối tác thanh toán phí. Đổi tài khoản ở đây thì phải đổi cả tài khoản nhận webhook trên SePay, nếu không tiền sẽ không tự
           cộng vào ví.
         </p>
@@ -477,7 +477,7 @@ export function SettingsPanel({ settings, fees, log }: { settings: PlatformSetti
 
       <Card className="space-y-4 p-4">
         <p className="font-semibold">Chương trình giới thiệu</p>
-        <label className="-mt-2 flex items-center gap-2 text-sm">
+        <label className="-mt-2 flex items-center gap-2 text-body">
           <input type="checkbox" checked={s.referralEnabled} onChange={(e) => set("referralEnabled", e.target.checked)} /> Đang chạy
         </label>
         <div className="grid gap-3 md:grid-cols-3">
@@ -502,16 +502,16 @@ export function SettingsPanel({ settings, fees, log }: { settings: PlatformSetti
         >
           Lưu cấu hình
         </Button>
-        {result && <p className={cn("text-[13px]", result.ok ? "text-success" : "text-danger")}>{result.text}</p>}
+        {result && <p className={cn("text-meta", result.ok ? "text-success" : "text-danger")}>{result.text}</p>}
       </div>
 
       <Card className="p-4">
         <p className="font-semibold">Phí và quy định đặt lịch</p>
-        <p className="mt-0.5 text-[13px] text-muted">
+        <p className="mt-0.5 text-meta text-muted">
           Chỉ xem. Các con số này cũng được in trên trang Đối tác, Trợ giúp, Quy chế và trong app, nên đổi phí cần sửa cả nội dung đó cùng lúc: nhờ
           đội kỹ thuật đổi, đừng sửa riêng database.
         </p>
-        <div className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1.5 text-sm md:grid-cols-2">
+        <div className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1.5 text-body md:grid-cols-2">
           <Line label="Hoa hồng trên giá dịch vụ" value={pct(fees.commissionRate)} />
           <Line label="Ví âm tối đa trước khi bị chặn" value={formatPrice(fees.walletFloor)} />
           <Line label="Người làm phải nhận lịch trong" value={`${fees.confirmWithinHours} giờ`} />
@@ -524,15 +524,15 @@ export function SettingsPanel({ settings, fees, log }: { settings: PlatformSetti
 
       <Card className="p-4">
         <p className="font-semibold">Nhật ký thao tác quản trị</p>
-        <p className="mt-0.5 text-[13px] text-muted">Khoá/mở tài khoản, điều chỉnh ví, đổi cấu hình: ai làm, lúc nào, đổi gì.</p>
+        <p className="mt-0.5 text-meta text-muted">Khoá/mở tài khoản, điều chỉnh ví, đổi cấu hình: ai làm, lúc nào, đổi gì.</p>
         {log.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">Chưa có thao tác nào.</p>
+          <p className="mt-3 text-body text-muted">Chưa có thao tác nào.</p>
         ) : (
-          <ul className="mt-3 divide-y divide-line text-sm">
+          <ul className="mt-3 divide-y divide-line text-body">
             {log.map((a) => (
               <li key={a.id} className="py-2">
                 <span className="font-semibold">{describe(a)}</span>
-                <span className="block text-xs text-muted">
+                <span className="block text-label text-muted">
                   {a.actor} · {timeAgo(a.createdAt)}
                 </span>
               </li>
@@ -599,7 +599,7 @@ export function HelpQuestionsPanel() {
 
   return (
     <div className="mt-4 space-y-3">
-      <p className="text-[13px] text-muted">
+      <p className="text-meta text-muted">
         Câu hỏi người dùng gửi trợ lý ở trang Trợ giúp (giữ 180 ngày, đã che số điện thoại và email). Câu chưa có câu trả lời là
         việc cần bổ sung vào FAQ.
       </p>
@@ -618,17 +618,17 @@ export function HelpQuestionsPanel() {
           </Button>
         ))}
       </div>
-      {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
+      {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">{error}</p>}
       {rows === null ? (
-        <p className="text-sm text-muted">Đang tải…</p>
+        <p className="text-body text-muted">Đang tải…</p>
       ) : rows.length === 0 ? (
         <EmptyState title="Chưa có câu hỏi nào" text="Câu hỏi sẽ hiện ở đây khi người dùng hỏi trợ lý." />
       ) : (
         <ul className="space-y-2">
           {rows.map((q) => (
             <li key={q.id}>
-              <Card className="space-y-1.5 p-3.5 text-sm">
-                <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+              <Card className="space-y-1.5 p-3.5 text-body">
+                <div className="flex flex-wrap items-center gap-2 text-label text-muted">
                   <span className="rounded-full bg-subtle px-2 py-0.5 font-semibold text-ink">{q.audience === "doi-tac" ? "Đối tác" : "Khách"}</span>
                   {!q.covered && <span className="rounded-full bg-warning-soft px-2 py-0.5 font-semibold text-warning">Chưa có trong FAQ</span>}
                   {q.helpful === false && <span className="rounded-full bg-danger-soft px-2 py-0.5 font-semibold text-danger">Không hữu ích</span>}
@@ -639,7 +639,7 @@ export function HelpQuestionsPanel() {
                 <p className="font-semibold">{q.question}</p>
                 <p className="whitespace-pre-line text-ink-soft">{q.answer}</p>
                 {q.sources.length > 0 && (
-                  <p className="text-xs text-muted">Dựa trên: {q.sources.map((id) => entryTitle.get(id) ?? id).join(" · ")}</p>
+                  <p className="text-label text-muted">Dựa trên: {q.sources.map((id) => entryTitle.get(id) ?? id).join(" · ")}</p>
                 )}
               </Card>
             </li>
@@ -680,13 +680,13 @@ export function CatalogPanel() {
 
   return (
     <div className="mt-4 space-y-3">
-      <Card className="p-4 text-sm">
+      <Card className="p-4 text-body">
         <p className="font-semibold">Danh mục dịch vụ & bảng giá (phiên bản {CATALOG_VERSION})</p>
-        <p className="mt-1 text-xs text-muted">
+        <p className="mt-1 text-label text-muted">
           {CATALOG.length} dịch vụ trong {CATEGORIES.length} ngành. Đối tác chỉ chọn dịch vụ và một trong 3 mức giá có sẵn, không tự nhập giá. {PRICE_LEVEL_NOTE}
         </p>
-        <p className="mt-1 text-xs text-muted">Chỉ xem. Muốn thêm hoặc đổi giá: báo đội kỹ thuật cập nhật danh mục.</p>
-        {error && <p className="mt-2 text-xs text-danger">Không tải được số đối tác đã chọn: {error}</p>}
+        <p className="mt-1 text-label text-muted">Chỉ xem. Muốn thêm hoặc đổi giá: báo đội kỹ thuật cập nhật danh mục.</p>
+        {error && <p className="mt-2 text-label text-danger">Không tải được số đối tác đã chọn: {error}</p>}
       </Card>
       <div className="flex flex-wrap gap-1.5">
         {CATEGORIES.map((c) => (
@@ -695,7 +695,7 @@ export function CatalogPanel() {
             type="button"
             onClick={() => setCategory(c.id)}
             className={cn(
-              "rounded-full border px-3 py-1.5 text-xs font-semibold",
+              "rounded-full border px-3 py-1.5 text-label font-semibold",
               c.id === category ? "border-ink bg-ink text-canvas" : "border-line hover:bg-subtle",
             )}
           >
@@ -706,7 +706,7 @@ export function CatalogPanel() {
       {templates.map((t) => (
         <Card key={t.id} className="p-4">
           <p className="font-semibold">{t.name}</p>
-          <p className="text-xs text-muted">
+          <p className="text-label text-muted">
             {t.id}
             {t.studioOnly && " · chỉ tại studio"}
             {t.onLocation && " · tại địa điểm khách chọn"}
@@ -715,8 +715,8 @@ export function CatalogPanel() {
             {t.deliveryDays ? ` trong ${t.deliveryDays} ngày` : ""}
           </p>
           <div className="mt-2 overflow-x-auto">
-            <table className="w-full min-w-[420px] text-left text-[13px]">
-              <thead className="text-[11px] text-muted">
+            <table className="w-full min-w-[420px] text-left text-meta">
+              <thead className="text-label text-muted">
                 <tr>
                   <th className="py-1 pr-2 font-medium">Gói</th>
                   {labels.map((l) => (
@@ -731,7 +731,7 @@ export function CatalogPanel() {
                   <tr key={v.id} className="border-t border-line">
                     <td className="py-1.5 pr-2">
                       {v.label}
-                      <span className="block text-[11px] text-muted">
+                      <span className="block text-label text-muted">
                         {v.durationMin} phút{v.perPerson ? " / người" : ""}
                         {v.sessions && v.sessions > 1 ? ` · ${v.sessions} buổi` : ""}
                       </span>
@@ -741,7 +741,7 @@ export function CatalogPanel() {
                       return (
                         <td key={price} className="py-1.5 pr-2">
                           {formatPrice(price)}
-                          <span className="block text-[11px] text-muted">{n} đối tác</span>
+                          <span className="block text-label text-muted">{n} đối tác</span>
                         </td>
                       )
                     })}

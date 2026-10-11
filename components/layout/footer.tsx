@@ -29,7 +29,7 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-[1.2fr_1fr_1fr_1fr]">
           <div>
             <Logo />
-            <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-ink-soft">
+            <p className="mt-3 max-w-xs text-meta leading-relaxed text-ink-soft">
               Đặt thợ làm đẹp, người chụp ảnh và người mẫu gần bạn. Giá theo khung chuẩn, khách không trả phí nền
               tảng, miễn phí di chuyển trong {POLICY.freeTravelKm} km đầu.
             </p>
@@ -38,8 +38,8 @@ export function Footer() {
           <nav>
             {VERTICALS.map((v) => (
               <div key={v.id} className="mb-5 last:mb-0">
-                <h2 className="text-sm font-bold">{v.label}</h2>
-                <ul className="mt-2 space-y-1.5 text-[13px] text-ink-soft">
+                <h2 className="text-body font-bold">{v.label}</h2>
+                <ul className="mt-2 space-y-1.5 text-meta text-ink-soft">
                   {CATEGORIES.filter((c) => c.vertical === v.id).map((c) => (
                     <li key={c.id}>
                       <Link href={`/search?category=${c.id}`} className="hover:text-ink">
@@ -53,8 +53,8 @@ export function Footer() {
           </nav>
 
           <nav>
-            <h2 className="text-sm font-bold">Theo dịp</h2>
-            <ul className="mb-5 mt-2 space-y-1.5 text-[13px] text-ink-soft">
+            <h2 className="text-body font-bold">Theo dịp</h2>
+            <ul className="mb-5 mt-2 space-y-1.5 text-meta text-ink-soft">
               {OCCASIONS.map((o) => (
                 <li key={o.id}>
                   <Link href={`/dip/${o.id}`} className="hover:text-ink">
@@ -63,8 +63,8 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-            <h2 className="text-sm font-bold">Khu vực</h2>
-            <ul className="mt-3 space-y-1.5 text-[13px] text-ink-soft">
+            <h2 className="text-body font-bold">Khu vực</h2>
+            <ul className="mt-3 space-y-1.5 text-meta text-ink-soft">
               {CITIES.map((city) => (
                 <li key={city}>
                   <Link href={`/${citySlug(city)}/nail`} className="hover:text-ink">
@@ -83,8 +83,8 @@ export function Footer() {
           </nav>
 
           <nav>
-            <h2 className="text-sm font-bold">360dep</h2>
-            <ul className="mt-3 space-y-1.5 text-[13px] text-ink-soft">
+            <h2 className="text-body font-bold">360dep</h2>
+            <ul className="mt-3 space-y-1.5 text-meta text-ink-soft">
               <li>
                 <Link href="/tro-giup" className="hover:text-ink">
                   Trợ giúp & an toàn
@@ -124,7 +124,7 @@ export function Footer() {
           </nav>
         </div>
 
-        <div className="mt-8 space-y-1 border-t border-line pt-5 text-xs text-muted">
+        <div className="mt-8 space-y-1 border-t border-line pt-5 text-label text-muted">
           <CompanyInfo />
           {DEMO_DATA_LIVE && <p>Bản demo: nhiều hồ sơ người làm và tác phẩm là dữ liệu mẫu, thanh toán online chưa hoạt động.</p>}
         </div>

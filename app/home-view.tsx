@@ -10,6 +10,7 @@ import { bookingImage } from "@/components/booking-card"
 import { PostCard, VerticalSwitch } from "@/components/beauty"
 import { CategoryTiles } from "@/components/category-icon"
 import { MobileLinks } from "@/components/mobile-links"
+import { DataUnavailable } from "@/components/data-unavailable"
 import { ServiceCard } from "@/components/service-card"
 import { ButtonLink, PageSkeleton, Wordmark } from "@/components/ui"
 import { DEMO_DATA_LIVE } from "@/lib/launch"
@@ -69,7 +70,7 @@ function Explore() {
   // ones nobody offers yet, marked "Sắp có") one tap away behind "Xem thêm".
   const categories = CATEGORIES.filter((c) => vertical === "all" || c.vertical === vertical)
   const shownCategory = categories.some((c) => c.id === category) ? category : "all"
-  const counted = categoryRow(categories, offers, shownCategory)
+  const counted = categoryRow(categories, offers, shownCategory, 4)
   // Nail and Makeup lead the row whatever is on offer (lib/discovery.ts).
   const tiles = { ...counted, ...pinPriority(counted, shownCategory) }
   const [allCategories, setAllCategories] = React.useState(false)
@@ -102,8 +103,8 @@ function Explore() {
   const rowIds = new Set(tiles.row.map((c) => c.id))
   const tileItems = (allCategories ? tiles.ordered : [...tiles.row, ...tiles.ordered.filter((c) => !rowIds.has(c.id))]).map((c) => ({
     id: c.id,
-    label: c.short ?? c.label,
-    soon: !tiles.offered.has(c.id),
+    label: c.id === "photophone" || c.id === "skincare" ? c.label : c.short ?? c.label,
+    soon: !state.catalogError && !tiles.offered.has(c.id),
     className: allCategories || rowIds.has(c.id) ? undefined : "hidden lg:flex",
   }))
 
@@ -112,23 +113,20 @@ function Explore() {
       <TopBar />
       {DEMO_DATA_LIVE && <DemoNotice />}
 
-      <section className="md:grid md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] md:items-center md:gap-10 lg:gap-14">
+      <section className="mt-5 grid gap-6 md:mt-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-center md:gap-10 lg:gap-14">
         <div>
-          <h1 className="mt-1 text-[24px] font-bold leading-tight tracking-[-0.02em] md:mt-0 md:text-[44px] md:leading-[1.05] md:tracking-[-0.03em]">
-            Đặt dịch vụ, xem giá ngay.
+          <p className="mb-3 text-meta font-semibold uppercase tracking-[0.12em] text-accent-dark">Làm đẹp · Chụp ảnh · Người mẫu</p>
+          <h1 className="max-w-xl text-[30px] min-[360px]:text-[34px] font-bold leading-[1.14] tracking-[-0.035em] md:text-[48px] lg:text-[54px]">
+            Đẹp hơn,<br />theo cách của bạn.
           </h1>
-          <p className="mt-3 hidden max-w-xl text-[17px] text-ink-soft md:block">
-            Làm đẹp, chụp ảnh, người mẫu gần bạn. Giá niêm yết, người làm nhận lịch trong app rồi hai bên nhắn tin với nhau.
+          <p className="mt-4 max-w-lg text-body text-ink-soft md:text-lead">
+            Tìm dịch vụ phù hợp, xem giá rõ ràng và chọn người làm bạn tin tưởng.
           </p>
-          <SearchBox className="mt-3 md:hidden" large />
+          <SearchBox className="mt-5 md:hidden" large />
           <HeroSearch city={city} className="mt-7 hidden md:flex" />
-          <p className="mt-4 hidden text-[14px] text-muted md:block">
-            {offers.length > 0
-              ? `${offers.length} dịch vụ đang nhận lịch${city ? ` ở ${city}` : ""} · trả tiền trực tiếp cho người làm sau khi xong`
-              : "Chưa có dịch vụ nào ở khu vực này. Đăng yêu cầu để người làm quanh bạn nhận việc."}
-          </p>
+          <p className="mt-3 text-meta text-muted">Xem giá trước khi đặt · Trả trực tiếp sau khi xong</p>
         </div>
-        <HeroPhotos offers={offers} className="hidden md:grid" />
+        <HeroPhotos offers={offers} />
       </section>
 
       {/* Sticky under the mobile top bar, so the trade is always one tap away. */}
@@ -162,19 +160,19 @@ function Explore() {
             <button
               type="button"
               onClick={() => setCategory("all")}
-              className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-subtle pl-3 pr-2.5 text-[13px] font-semibold text-ink hover:bg-subtle-strong"
+              className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-subtle pl-3 pr-2.5 text-meta font-semibold text-ink hover:bg-subtle-strong"
             >
               Tất cả <X className="size-3.5" aria-hidden />
             </button>
           ) : (
-            shown.length > 0 && <span className="shrink-0 text-[14px] text-muted">{shown.length} dịch vụ</span>
+            shown.length > 0 && <span className="shrink-0 text-body text-muted">{shown.length} dịch vụ</span>
           )}
         </div>
 
-        {shown.length === 0 ? (
+        {state.catalogError ? <DataUnavailable /> : shown.length === 0 ? (
           <EmptySupply vertical={vertical} city={city} elsewhere={elsewhere} category={shownCategoryInfo} />
         ) : (
-          <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:gap-x-5 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {visible.map((o, i) => (
               <ServiceCard key={o.template.id} offer={o} priority={i < 4} />
             ))}
@@ -184,7 +182,7 @@ function Explore() {
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            className="mt-6 h-12 w-full rounded-full border border-line text-[15px] font-semibold hover:border-ink/30 md:w-auto md:px-8"
+            className="mt-6 h-12 w-full rounded-full border border-line text-body font-semibold hover:border-ink/30 md:w-auto md:px-8"
           >
             Xem tất cả {shown.length} dịch vụ
           </button>
@@ -202,15 +200,17 @@ function Explore() {
         </section>
       )}
 
-      <section className="mt-14 flex flex-col gap-3 rounded-[var(--radius-xl)] bg-subtle p-6 md:flex-row md:items-center md:justify-between md:p-8">
+      {shown.length > 0 && <section className="mt-14 flex flex-col gap-3 rounded-[var(--radius-xl)] bg-subtle p-6 md:flex-row md:items-center md:justify-between md:p-8">
         <div>
           <p className="text-[20px] font-bold tracking-tight">Không thấy dịch vụ bạn cần?</p>
-          <p className="mt-1 text-[15px] text-ink-soft">Đăng yêu cầu với giá niêm yết, người làm gần bạn nhận việc. Không mất phí.</p>
+          <p className="mt-1 text-body text-ink-soft">Đăng yêu cầu với giá niêm yết, người làm gần bạn nhận việc. Không mất phí.</p>
         </div>
         <ButtonLink href="/requests/new" size="lg" className="shrink-0">
           Đăng yêu cầu
         </ButtonLink>
       </section>
+
+      }
 
       {/* The footer is desktop-only; on a phone these are the links it would have given. */}
       <MobileLinks className="mt-10" />
@@ -238,7 +238,7 @@ function Rebook() {
   if (!list.length) return null
   return (
     <section className="mt-5">
-      <h2 className="mb-3 text-[17px] font-bold tracking-tight">Đặt lại</h2>
+      <h2 className="mb-3 text-lead font-bold tracking-tight">Đặt lại</h2>
       <ul className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 md:mx-0 md:grid md:grid-cols-4 md:px-0">
         {list.map((b) => {
           const image = bookingImage(state, b)
@@ -252,9 +252,9 @@ function Rebook() {
                   {image && <Image src={image} alt="" fill sizes="56px" className="object-cover" />}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-semibold">{b.serviceName}</span>
-                  <span className="block truncate text-[13px] text-ink-soft">{b.proName}</span>
-                  <span className="mt-0.5 inline-flex items-center gap-1 text-[13px] font-semibold text-accent">
+                  <span className="block truncate text-body font-semibold">{b.serviceName}</span>
+                  <span className="block truncate text-meta text-ink-soft">{b.proName}</span>
+                  <span className="mt-0.5 inline-flex items-center gap-1 text-meta font-semibold text-accent">
                     <RotateCcw className="size-3.5" aria-hidden /> Đặt lại
                   </span>
                 </span>
@@ -273,9 +273,9 @@ function TopBar() {
   const state = useApp()
   const { city, session } = state
   return (
-    <div className="flex h-12 items-center justify-between md:hidden">
+    <div className="flex min-h-12 flex-wrap items-center justify-between gap-x-3 gap-y-1 md:hidden">
       <CityPicker value={city} />
-      <Link href="/" aria-label="360dep">
+      <Link href="/" aria-label="360dep" className="hidden min-[360px]:block">
         <Wordmark size={24} />
       </Link>
       <div className="flex items-center">
@@ -287,14 +287,14 @@ function TopBar() {
             <Link href="/thong-bao" aria-label="Thông báo" className="relative inline-flex size-11 items-center justify-center">
               <Bell className="size-[22px]" />
               {state.unreadNotifications > 0 && (
-                <span className="absolute right-1.5 top-1.5 min-w-[18px] rounded-full bg-accent px-1 text-center text-xs font-bold leading-[18px] text-white">
+                <span className="absolute right-1.5 top-1.5 min-w-[18px] rounded-full bg-accent px-1 text-center text-label font-bold leading-[18px] text-white">
                   {state.unreadNotifications > 9 ? "9+" : state.unreadNotifications}
                 </span>
               )}
             </Link>
           </>
         ) : (
-          <Link href="/login" className="inline-flex h-9 items-center rounded-full bg-accent px-4 text-[13px] font-semibold text-white">
+          <Link href="/login" className="inline-flex min-h-11 items-center rounded-full bg-accent px-3 text-meta font-semibold text-white">
             Đăng nhập
           </Link>
         )}
@@ -322,11 +322,11 @@ function HeroSearch({ city, className }: { city: string | null; className?: stri
         router.push(`/search${q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ""}`)
       }}
     >
-      <label className="relative flex h-12 shrink-0 cursor-pointer items-center gap-2 rounded-full px-4 hover:bg-subtle">
+      <label className="relative flex h-12 shrink-0 cursor-pointer focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-2 items-center gap-2 rounded-full px-4 hover:bg-subtle">
         <MapPin className="size-5 text-accent" aria-hidden />
         <span className="flex flex-col leading-tight">
-          <span className="text-[12px] font-semibold text-muted">Khu vực</span>
-          <span className="flex items-center gap-1 text-[15px] font-semibold text-ink">
+          <span className="text-label font-semibold text-muted">Khu vực</span>
+          <span className="flex items-center gap-1 text-body font-semibold text-ink">
             {city ?? "Toàn quốc"} <ChevronDown className="size-4 text-muted" aria-hidden />
           </span>
         </span>
@@ -358,10 +358,10 @@ function HeroSearch({ city, className }: { city: string | null; className?: stri
           type="search"
           placeholder="Nail, makeup, chụp ảnh…"
           aria-label="Tìm kiếm"
-          className="h-full min-w-0 flex-1 bg-transparent text-[16px] placeholder:text-muted focus:outline-none"
+          className="h-full min-w-0 flex-1 bg-transparent text-body placeholder:text-muted focus:outline-none"
         />
       </label>
-      <button type="submit" className="inline-flex h-12 shrink-0 items-center rounded-full bg-accent px-7 text-[15px] font-semibold text-white hover:bg-accent-dark">
+      <button type="submit" className="inline-flex h-12 shrink-0 items-center rounded-full bg-accent px-7 text-body font-semibold text-white hover:bg-accent-dark">
         Tìm
       </button>
     </form>
@@ -375,9 +375,14 @@ function HeroSearch({ city, className }: { city: string | null; className?: stri
  */
 function HeroPhotos({ offers, className }: { offers: ServiceOffer[]; className?: string }) {
   const picks = offers.filter((o) => o.photo).slice(0, 3)
-  if (picks.length < 3) return null
+  if (picks.length < 3) return (
+    <figure className="relative overflow-hidden rounded-[28px] bg-subtle md:rounded-[36px]">
+      <Image src="/images/beauty-editorial.webp" alt="Khoảnh khắc trang điểm trong studio" width={1440} height={960} priority sizes="(min-width: 768px) 50vw, 100vw" className="aspect-[2/1] w-full object-cover object-[50%_40%] md:aspect-[4/3]" />
+      <figcaption className="absolute bottom-3 right-3 rounded-full bg-surface/95 px-3 py-1 text-meta text-ink-soft">Ảnh minh họa</figcaption>
+    </figure>
+  )
   return (
-    <div className={cn("h-[380px] grid-cols-2 grid-rows-2 gap-3", className)}>
+    <div className={cn("grid h-[260px] grid-cols-2 grid-rows-2 gap-3 md:h-[380px]", className)}>
       {picks.map((o, i) => (
         <Link
           key={o.template.id}
@@ -396,8 +401,8 @@ function HeroPhotos({ offers, className }: { offers: ServiceOffer[]; className?:
             className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
           <span className="absolute inset-x-3 bottom-3 rounded-2xl bg-surface/95 px-3 py-2 shadow-[var(--shadow-soft)] backdrop-blur">
-            <span className="block truncate text-[14px] font-semibold text-ink">{o.template.name}</span>
-            <span className="block text-[13px] text-ink-soft">
+            <span className="block truncate text-body font-semibold text-ink">{o.template.name}</span>
+            <span className="block text-meta text-ink-soft">
               Từ <span className="font-semibold text-accent-dark">{formatPrice(o.fromPrice)}</span> · {o.pros.length} người nhận
             </span>
           </span>
@@ -427,7 +432,7 @@ function SearchBox({ className, large }: { className?: string; large?: boolean }
         placeholder="Bạn muốn làm gì hôm nay?"
         aria-label="Tìm kiếm"
         className={cn(
-          "w-full rounded-full border border-line-strong bg-surface pl-12 pr-4 text-[16px] shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-accent focus:outline-none",
+          "w-full rounded-full border border-line-strong bg-surface pl-12 pr-4 text-body shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-accent focus:outline-none",
           large ? "h-14" : "h-12",
         )}
       />
@@ -456,7 +461,7 @@ function DemoNotice() {
   const hidden = dismissed || stored
   if (hidden) return null
   return (
-    <p className="mb-3 flex items-center gap-2 rounded-full bg-warning-soft py-1 pl-3.5 pr-1 text-[13px] text-warning md:mb-8 md:w-fit md:max-w-full">
+    <p className="mb-3 flex items-center gap-2 rounded-full bg-warning-soft py-1 pl-3.5 pr-1 text-meta text-warning md:mb-8 md:w-fit md:max-w-full">
       <span className="flex-1">
         <span className="md:hidden">Bản demo: hồ sơ là dữ liệu mẫu.</span>
         <span className="hidden md:inline">Bản demo: nhiều hồ sơ là dữ liệu mẫu, thanh toán online chưa hoạt động.</span>{" "}
@@ -499,12 +504,12 @@ function EmptySupply({
   const label = category ? category.label : vertical === "all" ? null : getVertical(vertical).label
   const where = city ? ` ở ${city}` : ""
   return (
-    <div className="mt-5 rounded-[var(--radius-lg)] border border-dashed border-line-strong px-6 py-10 text-center">
-      <p className="text-[17px] font-bold">{label ? `${label}: chưa có ai nhận lịch${where}` : `Chưa có dịch vụ nào${where}`}</p>
-      <p className="mx-auto mt-1.5 max-w-sm text-[15px] text-ink-soft">
+    <div className="mt-5 rounded-[var(--radius-lg)] border border-line bg-surface px-5 py-8 shadow-[var(--shadow-soft)] text-center">
+      <p className="text-lead font-bold">{label ? `${label}: chưa có ai nhận lịch${where}` : `Chưa có dịch vụ nào${where}`}</p>
+      <p className="mx-auto mt-1.5 max-w-sm text-body text-ink-soft">
         {elsewhere > 0
-          ? `Có ${elsewhere} dịch vụ ở thành phố khác. Hoặc đăng yêu cầu: người làm quanh bạn được báo, ai nhận trước sẽ làm.`
-          : "Đăng yêu cầu: khi có người làm việc này quanh bạn, họ được báo và ai nhận trước sẽ làm. Không mất phí."}
+          ? `Có ${elsewhere} dịch vụ ở thành phố khác. Hoặc đăng yêu cầu: người làm phù hợp có thể xem và nhận việc.`
+          : "Đăng yêu cầu: khi có người làm việc này quanh bạn, họ có thể xem và nhận việc. Không mất phí đăng."}
       </p>
       <div className="mt-5 flex flex-wrap justify-center gap-2">
         <ButtonLink
@@ -522,12 +527,13 @@ function EmptySupply({
           <button
             type="button"
             onClick={() => void actions.setCity(null)}
-            className="inline-flex h-11 items-center rounded-full border border-line-strong bg-surface px-5 text-sm font-semibold hover:border-accent"
+            className="inline-flex h-11 items-center rounded-full border border-line-strong bg-surface px-5 text-body font-semibold hover:border-accent"
           >
             Xem cả nước
           </button>
         )}
       </div>
+      <Link href="/doi-tac" className="mt-5 inline-flex min-h-11 items-center text-meta font-semibold text-accent-dark underline underline-offset-4">Bạn làm trong ngành? Trở thành đối tác</Link>
     </div>
   )
 }
@@ -537,7 +543,7 @@ function SectionTitle({ title, href }: { title: string; href?: string }) {
     <div className="mb-4 flex items-baseline justify-between gap-4">
       <h2 className="text-[20px] font-bold tracking-tight md:text-[24px]">{title}</h2>
       {href && (
-        <Link href={href} className="shrink-0 text-[14px] font-semibold text-ink underline-offset-4 hover:underline">
+        <Link href={href} className="shrink-0 text-body font-semibold text-ink underline-offset-4 hover:underline">
           Xem tất cả
         </Link>
       )}
@@ -547,9 +553,9 @@ function SectionTitle({ title, href }: { title: string; href?: string }) {
 
 function CityPicker({ value }: { value: string | null }) {
   return (
-    <label className="relative inline-flex h-11 items-center gap-1 text-[14px] font-semibold text-ink">
+    <label className="relative inline-flex min-h-12 focus-within:rounded-lg focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-2 items-center gap-1 text-body font-semibold text-ink">
       <MapPin className="size-4" />
-      <span>{value ?? "Toàn quốc"}</span>
+      <span className="max-w-[120px] truncate">{value ?? "Toàn quốc"}</span>
       <ChevronDown className="size-4 text-muted" />
       <select
         aria-label="Chọn khu vực"

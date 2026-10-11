@@ -26,7 +26,7 @@ function Addresses() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-ink-soft">
+      <p className="text-body text-ink-soft">
         Người làm đi tới đây, và khoảng cách quyết định phí di chuyển. Địa chỉ chỉ bạn và người làm đã nhận lịch của
         bạn nhìn thấy.
       </p>
@@ -43,14 +43,14 @@ function Addresses() {
         <Card key={address.id} className="flex items-start gap-3 p-4">
           <MapPin className="mt-0.5 size-4 shrink-0 text-accent" />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold">
+            <p className="text-body font-semibold">
               {address.label}
-              {address.isDefault && <span className="ml-2 text-xs font-normal text-muted">Mặc định</span>}
+              {address.isDefault && <span className="ml-2 text-label font-normal text-muted">Mặc định</span>}
             </p>
-            <p className="text-xs text-muted">
+            <p className="text-label text-muted">
               {[address.detail, address.district, address.city].filter(Boolean).join(", ")}
             </p>
-            {address.note && <p className="mt-0.5 text-xs text-muted">{address.note}</p>}
+            {address.note && <p className="mt-0.5 text-label text-muted">{address.note}</p>}
           </div>
           <button
             type="button"
@@ -67,7 +67,7 @@ function Addresses() {
       ))}
 
       {error && (
-        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
           {error}
         </p>
       )}

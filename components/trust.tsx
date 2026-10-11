@@ -22,7 +22,7 @@ export function VerifiedBadge({ pro, className }: { pro: Pro; className?: string
   return (
     <span
       title="Đã đối chiếu CCCD và ảnh chân dung"
-      className={cn("inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-[13px] font-semibold text-success", className)}
+      className={cn("inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-meta font-semibold text-success", className)}
     >
       <IdCard className="size-3.5" /> Đã xác minh danh tính
     </span>
@@ -45,7 +45,7 @@ export function RatingSummaryBlock({ rating }: { rating: RatingSummary }) {
     return (
       <div className="flex items-center gap-4">
         <p className="text-4xl font-bold leading-none tracking-tight">Mới</p>
-        <p className="text-[13px] text-ink-soft">
+        <p className="text-meta text-ink-soft">
           {rating.count > 0 ? `${rating.count} đánh giá từ khách đã đặt lịch. ` : "Chưa có đánh giá. "}
           Điểm trung bình hiện từ 3 đánh giá.
         </p>
@@ -56,7 +56,7 @@ export function RatingSummaryBlock({ rating }: { rating: RatingSummary }) {
       <p className="text-5xl font-bold leading-none tracking-tight">{rating.average.toFixed(1)}</p>
       <div>
         <Stars value={rating.average} />
-        <p className="mt-1.5 text-[13px] text-ink-soft">{rating.count.toLocaleString("vi-VN")} đánh giá từ khách đã đặt lịch</p>
+        <p className="mt-1.5 text-meta text-ink-soft">{rating.count.toLocaleString("vi-VN")} đánh giá từ khách đã đặt lịch</p>
       </div>
     </div>
   )
@@ -77,13 +77,13 @@ export function ReviewItem({ review, onReply }: { review: Review; onReply?: (tex
       <div className="flex items-center gap-3">
         <Avatar name={review.author} size={36} />
         <div className="min-w-0 flex-1">
-          <p className="flex flex-wrap items-center gap-1.5 text-[15px] font-semibold">
+          <p className="flex flex-wrap items-center gap-1.5 text-body font-semibold">
             {review.author}
-            <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-[12px] font-semibold text-success">
+            <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-label font-semibold text-success">
               <BadgeCheck className="size-3" /> Đã đặt qua 360dep
             </span>
           </p>
-          <p className="truncate text-[13px] text-muted">
+          <p className="truncate text-meta text-muted">
             {review.serviceName} · {parseISODate(review.date).toLocaleDateString("vi-VN")}
           </p>
         </div>
@@ -92,21 +92,21 @@ export function ReviewItem({ review, onReply }: { review: Review; onReply?: (tex
       {review.tags.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {review.tags.map((t) => (
-            <span key={t} className="rounded-full bg-subtle px-2.5 py-1 text-[13px] text-ink-soft">
+            <span key={t} className="rounded-full bg-subtle px-2.5 py-1 text-meta text-ink-soft">
               {t}
             </span>
           ))}
         </div>
       )}
-      <p className="mt-2 text-[15px] leading-relaxed text-ink">{review.text}</p>
+      <p className="mt-2 text-body leading-relaxed text-ink">{review.text}</p>
       {review.photo && (
         <div className="relative mt-3 aspect-[4/5] w-28 overflow-hidden rounded-[var(--radius-md)] bg-subtle">
           <Image src={review.photo} alt="Ảnh khách gửi kèm đánh giá" fill sizes="112px" className="object-cover" />
         </div>
       )}
       {review.reply && (
-        <div className="mt-3 rounded-[var(--radius-md)] bg-subtle px-3.5 py-3 text-[14px]">
-          <p className="mb-1 flex items-center gap-1.5 text-[13px] font-semibold text-ink">
+        <div className="mt-3 rounded-[var(--radius-md)] bg-subtle px-3.5 py-3 text-body">
+          <p className="mb-1 flex items-center gap-1.5 text-meta font-semibold text-ink">
             <MessageCircleReply className="size-4" /> Người làm trả lời
           </p>
           <p className="text-ink-soft">{review.reply}</p>
@@ -135,17 +135,17 @@ export function ReviewItem({ review, onReply }: { review: Review; onReply?: (tex
                 onChange={(e) => setText(e.target.value)}
                 aria-label="Trả lời đánh giá"
                 placeholder="Cảm ơn khách, giải thích nếu có vấn đề…"
-                className="h-11 min-w-0 flex-1 rounded-full border border-line bg-surface px-4 text-[15px] focus:border-accent focus:outline-none"
+                className="h-11 min-w-0 flex-1 rounded-full border border-line bg-surface px-4 text-body focus:border-accent focus:outline-none"
               />
-              <button type="submit" disabled={busy} className="h-11 rounded-full bg-accent px-5 text-[14px] font-semibold text-white disabled:opacity-40">
+              <button type="submit" disabled={busy} className="h-11 rounded-full bg-accent px-5 text-body font-semibold text-white disabled:opacity-40">
                 Gửi
               </button>
             </div>
-            <p className="mt-1.5 text-xs text-muted">Trả lời công khai, một lần, không sửa được. Khách được báo khi bạn trả lời.</p>
-            {error && <p className="mt-1 text-[13px] text-danger">{error}</p>}
+            <p className="mt-1.5 text-label text-muted">Trả lời công khai, một lần, không sửa được. Khách được báo khi bạn trả lời.</p>
+            {error && <p className="mt-1 text-meta text-danger">{error}</p>}
           </form>
         ) : (
-          <button type="button" onClick={() => setReplying(true)} className="mt-2 min-h-11 text-[14px] font-semibold text-ink underline underline-offset-4">
+          <button type="button" onClick={() => setReplying(true)} className="mt-2 min-h-11 text-body font-semibold text-ink underline underline-offset-4">
             Phản hồi
           </button>
         ))}

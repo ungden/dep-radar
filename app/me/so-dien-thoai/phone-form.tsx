@@ -57,7 +57,7 @@ export function PhoneForm({ next, currentPhone = "" }: { next: string; currentPh
         />
       </Field>
       {error && (
-        <p id="phone-error" role="alert" className="rounded-xl bg-danger/10 px-3.5 py-3 text-[13px] text-danger">
+        <p id="phone-error" role="alert" className="rounded-xl bg-danger/10 px-3.5 py-3 text-meta text-danger">
           {error}
         </p>
       )}

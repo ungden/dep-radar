@@ -104,3 +104,18 @@ export function categoryRow(
   if (chosen && !row.includes(chosen)) row[row.length - 1] = chosen
   return { ordered, row, more: true, offered }
 }
+
+/** Sort by the nearest provider actually eligible for this offer; unknown distances stay last. */
+export function sortServiceOffers(
+  offers: readonly ServiceOffer[],
+  sort: "match" | "price" | "near",
+  distanceTo: (proId: string) => number | null,
+): ServiceOffer[] {
+  if (sort === "price") return [...offers].sort((a, b) => a.fromPrice - b.fromPrice)
+  if (sort !== "near") return [...offers]
+  const ranked = offers.map((offer) => ({
+    offer,
+    distance: Math.min(...offer.pros.map((pro) => distanceTo(pro.id) ?? Number.POSITIVE_INFINITY)),
+  }))
+  return ranked.sort((a, b) => a.distance === b.distance ? 0 : a.distance - b.distance).map(({ offer }) => offer)
+}

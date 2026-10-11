@@ -19,7 +19,7 @@ export default function OfflinePage() {
         <WifiOff className="size-8" />
       </span>
       <h1 className="mt-4 text-xl font-semibold">Không có kết nối</h1>
-      <p className="mt-1 max-w-sm text-sm text-ink-soft">
+      <p className="mt-1 max-w-sm text-body text-ink-soft">
         360dep cần mạng để hiện giá, khung giờ trống và trạng thái lịch hẹn đúng lúc, nên chúng tôi không hiện bản lưu
         tạm — một khung giờ trống từ một tiếng trước có thể đã có người đặt.
       </p>

@@ -59,7 +59,7 @@ export function HelpCenter() {
             aria-checked={audience === value}
             onClick={() => setAudience(value)}
             className={cn(
-              "h-11 rounded-full border text-[15px] font-semibold transition-colors",
+              "h-11 rounded-full border text-body font-semibold transition-colors",
               audience === value ? "border-accent bg-accent text-white" : "border-line bg-surface hover:border-ink/30",
             )}
           >
@@ -88,21 +88,21 @@ export function HelpCenter() {
       })}
 
       <section className="rounded-[var(--radius-lg)] bg-subtle p-5">
-        <h2 className="text-[17px] font-bold">Liên hệ hỗ trợ</h2>
-        <p className="mt-1 text-[14px] text-ink-soft">
+        <h2 className="text-lead font-bold">Liên hệ hỗ trợ</h2>
+        <p className="mt-1 text-body text-ink-soft">
           Gặp sự cố, tranh chấp hay lỗi ứng dụng, hãy gửi <b>Báo cáo vấn đề</b> kèm ảnh, clip làm bằng chứng: đội ngũ xem trong 24 giờ làm
           việc và báo kết quả cho bạn. Việc của một lịch hẹn, gửi từ chi tiết lịch hẹn để đội ngũ có đủ thông tin. 360đẹp không bao giờ
           hỏi mật khẩu, mã OTP hay số tài khoản của bạn.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Link href="/bao-cao" className="inline-flex h-9 items-center rounded-full bg-ink px-4 text-[14px] font-semibold text-canvas">
+          <Link href="/bao-cao" className="inline-flex h-9 items-center rounded-full bg-ink px-4 text-body font-semibold text-canvas">
             Báo cáo vấn đề
           </Link>
           <Support variant="primary" />
-          <Link href="/chinh-sach" className="inline-flex h-9 items-center rounded-full px-3 text-[14px] font-semibold underline underline-offset-2">
+          <Link href="/chinh-sach" className="inline-flex h-9 items-center rounded-full px-3 text-body font-semibold underline underline-offset-2">
             Chính sách phí & đặt lịch
           </Link>
-          <Link href="/quy-che" className="inline-flex h-9 items-center rounded-full px-3 text-[14px] font-semibold underline underline-offset-2">
+          <Link href="/quy-che" className="inline-flex h-9 items-center rounded-full px-3 text-body font-semibold underline underline-offset-2">
             Quy chế hoạt động
           </Link>
         </div>
@@ -115,7 +115,7 @@ export function HelpCenter() {
 function Support({ size = "sm", variant = "outline" }: { size?: "sm" | "md"; variant?: "primary" | "outline" }) {
   const { platform } = useApp()
   if (!supportHref(platform).external) {
-    return <span className="text-[13px] text-ink-soft">Dùng “Báo cáo vấn đề” để đội ngũ 360đẹp liên hệ bạn.</span>
+    return <span className="text-meta text-ink-soft">Dùng “Báo cáo vấn đề” để đội ngũ 360đẹp liên hệ bạn.</span>
   }
   return <SupportLink size={size} variant={variant} />
 }
@@ -123,13 +123,13 @@ function Support({ size = "sm", variant = "outline" }: { size?: "sm" | "md"; var
 function Entry({ entry, open, onToggle }: { entry: HelpEntry; open: boolean; onToggle: (open: boolean) => void }) {
   return (
     <details id={entry.id} open={open} onToggle={(e) => onToggle((e.currentTarget as HTMLDetailsElement).open)} className="group scroll-mt-24 px-4">
-      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 py-3.5 text-[15px] font-semibold [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 py-3.5 text-body font-semibold [&::-webkit-details-marker]:hidden">
         {entry.q}
         <span aria-hidden className="mt-0.5 text-muted transition-transform group-open:rotate-45">
           +
         </span>
       </summary>
-      <div className="pb-4 text-[14px] leading-relaxed text-ink-soft">
+      <div className="pb-4 text-body leading-relaxed text-ink-soft">
         <p className="whitespace-pre-line">{entry.a}</p>
         {entry.links && entry.links.length > 0 && (
           <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
@@ -199,7 +199,7 @@ function Assistant({
 
   return (
     <section aria-labelledby="ask-title" className="rounded-[var(--radius-lg)] border border-line bg-surface p-4 md:p-5">
-      <h2 id="ask-title" className="flex items-center gap-2 text-[17px] font-bold">
+      <h2 id="ask-title" className="flex items-center gap-2 text-lead font-bold">
         <MessageCircleQuestion className="size-5 text-accent" /> Bạn cần hỏi gì?
       </h2>
       <form
@@ -228,7 +228,7 @@ function Assistant({
           />
         </div>
         <div className="mt-2 flex items-center justify-between gap-3">
-          <p className="text-[12px] text-muted">Đừng gửi số điện thoại, số tài khoản hay mật khẩu.</p>
+          <p className="text-label text-muted">Đừng gửi số điện thoại, số tài khoản hay mật khẩu.</p>
           <Button type="submit" size="sm" disabled={busy || query.trim().length < 3}>
             {busy ? <Loader2 className="size-4 animate-spin" /> : null} Hỏi trợ lý
           </Button>
@@ -237,11 +237,11 @@ function Assistant({
 
       {matches.length > 0 && !reply && !busy && (
         <div className="mt-3">
-          <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">Câu hỏi gần giống</p>
+          <p className="text-label font-semibold uppercase tracking-wide text-muted">Câu hỏi gần giống</p>
           <ul className="mt-1">
             {matches.map((m) => (
               <li key={m.id}>
-                <button type="button" onClick={() => onReveal(m.id)} className="w-full py-1.5 text-left text-[14px] text-accent hover:underline">
+                <button type="button" onClick={() => onReveal(m.id)} className="w-full py-1.5 text-left text-body text-accent hover:underline">
                   {m.q}
                 </button>
               </li>
@@ -250,20 +250,20 @@ function Assistant({
         </div>
       )}
 
-      {error && <p role="alert" className="mt-3 rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">{error}</p>}
 
       {reply && (
         <div role="status" className="mt-4 rounded-[var(--radius-md)] bg-subtle p-4">
-          <p className="whitespace-pre-line text-[15px] leading-relaxed">{reply.answer}</p>
+          <p className="whitespace-pre-line text-body leading-relaxed">{reply.answer}</p>
           {reply.sources.length > 0 && (
             <div className="mt-3">
-              <p className="text-[12px] font-semibold text-muted">Xem quy định đầy đủ:</p>
+              <p className="text-label font-semibold text-muted">Xem quy định đầy đủ:</p>
               <ul className="mt-1 space-y-1">
                 {reply.sources.map((id) => {
                   const e = getEntry(id)
                   return e ? (
                     <li key={id}>
-                      <button type="button" onClick={() => onReveal(id)} className="text-left text-[14px] font-semibold text-accent underline underline-offset-2">
+                      <button type="button" onClick={() => onReveal(id)} className="text-left text-body font-semibold text-accent underline underline-offset-2">
                         {e.q}
                       </button>
                     </li>
@@ -277,7 +277,7 @@ function Assistant({
               <Support />
             </div>
           )}
-          <div className="mt-3 flex items-center gap-2 text-[13px] text-muted">
+          <div className="mt-3 flex items-center gap-2 text-meta text-muted">
             {reply.id && (
               <>
                 <span>{voted === null ? "Câu trả lời có giúp được bạn?" : "Cảm ơn bạn đã góp ý."}</span>
@@ -294,7 +294,7 @@ function Assistant({
               </>
             )}
           </div>
-          <p className="mt-2 text-[12px] text-muted">
+          <p className="mt-2 text-label text-muted">
             Trợ lý AI trả lời theo quy định đang áp dụng trên trang này và có thể sai. Quyết định về tranh chấp, hoàn tiền hay tài khoản do
             đội ngũ 360đẹp đưa ra.
           </p>

@@ -62,8 +62,8 @@ export default async function LoginPage({
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pb-10">
       <PageHeader back />
       <Logo size="lg" />
-      <h1 className="mt-8 text-[32px] font-bold leading-tight tracking-tight">{wantsPro ? "Trở thành đối tác 360dep" : "Đăng nhập"}</h1>
-      <p className="mt-2 text-[15px] text-ink-soft">
+      <h1 className="mt-4 text-[28px] font-bold leading-tight tracking-tight">{wantsPro ? "Trở thành đối tác 360dep" : "Chào mừng bạn"}</h1>
+      <p className="mt-2 text-body text-ink-soft">
         {wantsPro ? (
           <>
             Đăng nhập hoặc tạo tài khoản, rồi mở hồ sơ đối tác miễn phí.{" "}
@@ -77,25 +77,25 @@ export default async function LoginPage({
       </p>
 
       {booking && (
-        <p className="mt-5 flex gap-3 rounded-[var(--radius-lg)] bg-accent-soft px-4 py-3.5 text-[15px] text-ink">
+        <p className="mt-5 flex gap-3 rounded-[var(--radius-lg)] bg-accent-soft px-4 py-3.5 text-body text-ink">
           <CalendarCheck className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
           <span>
             <span className="block font-semibold">
               Đăng nhập để gửi lịch với {booking.name} · {booking.when}
             </span>
-            {booking.service && <span className="block text-[14px] text-ink-soft">{booking.service}. Lựa chọn của bạn được giữ nguyên.</span>}
+            {booking.service && <span className="block text-body text-ink-soft">{booking.service}. Lựa chọn của bạn được giữ nguyên.</span>}
           </span>
         </p>
       )}
 
       {error && (
-        <p role="alert" className="mt-5 rounded-xl bg-danger-soft px-3.5 py-3 text-[14px] text-danger">
+        <p role="alert" className="mt-5 rounded-xl bg-danger-soft px-3.5 py-3 text-body text-danger">
           {error}
         </p>
       )}
 
       {/* Apple, Google or e-mail first: a password is then recoverable without anyone's help. */}
-      <div className="mt-8 space-y-3">
+      <div className="mt-5 space-y-3">
         {/* Apple appears only once it is switched on in Supabase. */}
         {providers.apple && (
           <form action={signInWithProvider}>
@@ -112,12 +112,12 @@ export default async function LoginPage({
       </div>
 
       {!providers.google && (
-        <p role="status" className="mt-3 rounded-xl bg-warning-soft px-3.5 py-3 text-[13px] text-ink-soft">
+        <p role="status" className="mt-3 rounded-xl bg-warning-soft px-3.5 py-3 text-meta text-ink-soft">
           Đăng nhập bằng Google đang được thiết lập. Bạn vẫn đăng nhập được bằng email hoặc số điện thoại bên dưới.
         </p>
       )}
 
-      <div className="my-6 flex items-center gap-3 text-[13px] text-muted" aria-hidden>
+      <div className="my-6 flex items-center gap-3 text-meta text-muted" aria-hidden>
         <span className="h-px flex-1 bg-line" />
         hoặc dùng email
         <span className="h-px flex-1 bg-line" />
@@ -125,14 +125,14 @@ export default async function LoginPage({
 
       <PasswordForm next={next} initialMode={params.tao === "1" ? "tao-tai-khoan" : "dang-nhap"} googleEnabled={providers.google} />
 
-      <p className="mt-6 text-center text-[13px] leading-relaxed text-muted">
+      <details className="mt-6 text-meta leading-relaxed text-muted"><summary className="min-h-11 cursor-pointer py-3 font-semibold text-ink-soft">Quyền riêng tư và chính sách tài khoản</summary><p className="mt-2">
         Tạo tài khoản không cần số điện thoại. Khi đặt lịch, đăng yêu cầu hay mở hồ sơ đối tác, 360dep sẽ hỏi số để hai bên liên lạc
         sau khi ghép lịch; bên kia chỉ thấy số khi lịch đã được nhận. Tiếp tục nghĩa là bạn đồng ý để 360dep xử lý tên, email và số điện thoại theo{" "}
         <Link href="/chinh-sach" className="underline">
           chính sách
         </Link>
         .
-      </p>
+      </p></details>
     </div>
   )
 }

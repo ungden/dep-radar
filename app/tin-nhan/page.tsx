@@ -35,17 +35,17 @@ export default async function InboxPage() {
                     <Avatar name={t.otherName} src={t.otherAvatar ?? undefined} size={44} />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
-                        <span className="truncate text-sm font-semibold">{t.otherName}</span>
+                        <span className="truncate text-body font-semibold">{t.otherName}</span>
                         {/* Kept as history: readable, no longer writable. */}
                         {t.chatStatus === "closed" && (
-                          <span className="shrink-0 rounded-full bg-canvas px-2 py-0.5 text-[11px] font-medium text-muted">Đã kết thúc</span>
+                          <span className="shrink-0 rounded-full bg-canvas px-2 py-0.5 text-label font-medium text-muted">Đã kết thúc</span>
                         )}
-                        <span className="ml-auto shrink-0 text-xs text-muted">{timeAgo(t.lastMessageAt)}</span>
+                        <span className="ml-auto shrink-0 text-label text-muted">{timeAgo(t.lastMessageAt)}</span>
                       </span>
                       <span className="mt-0.5 flex items-center gap-2">
-                        <span className="truncate text-[13px] text-ink-soft">{t.lastMessage}</span>
+                        <span className="truncate text-meta text-ink-soft">{t.lastMessage}</span>
                         {t.unread > 0 && (
-                          <span className="ml-auto shrink-0 rounded-full bg-accent px-1.5 text-xs font-semibold text-white">
+                          <span className="ml-auto shrink-0 rounded-full bg-accent px-1.5 text-label font-semibold text-white">
                             {t.unread}
                           </span>
                         )}

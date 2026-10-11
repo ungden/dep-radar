@@ -61,22 +61,22 @@ export function TimeBlocks() {
 
   return (
     <Card className="mt-6 p-4">
-      <p className="flex items-center gap-2 text-[17px] font-bold tracking-tight">
+      <p className="flex items-center gap-2 text-lead font-bold tracking-tight">
         <Ban className="size-4 text-accent" /> Chặn giờ
       </p>
-      <p className="mt-0.5 text-[13px] text-ink-soft">
+      <p className="mt-0.5 text-meta text-ink-soft">
         Bận vài tiếng trong ngày? Chặn lại để khách không đặt vào đó. Nghỉ cả ngày thì thêm ở trang Hồ sơ.
       </p>
 
       {blocks.length > 0 && (
         <ul className="mt-3 space-y-2">
           {blocks.map((b) => (
-            <li key={b.id} className="flex items-center gap-2 rounded-[var(--radius-md)] bg-canvas px-3 py-2 text-[14px]">
+            <li key={b.id} className="flex items-center gap-2 rounded-[var(--radius-md)] bg-canvas px-3 py-2 text-body">
               <span className="min-w-0 flex-1">
                 <span className="font-medium">
                   {formatDateLong(b.date)} · {b.from}–{b.to}
                 </span>
-                {b.note && <span className="block truncate text-[13px] text-muted">{b.note}</span>}
+                {b.note && <span className="block truncate text-meta text-muted">{b.note}</span>}
               </span>
               <button
                 type="button"
@@ -105,20 +105,20 @@ export function TimeBlocks() {
       >
         <div className="grid grid-cols-3 gap-2">
           <Field label="Ngày">
-            <input type="date" required className={cn(inputClass, "text-sm")} value={date} min={today} onChange={(e) => setDate(e.target.value)} />
+            <input type="date" required className={cn(inputClass, "text-body")} value={date} min={today} onChange={(e) => setDate(e.target.value)} />
           </Field>
           <Field label="Từ">
-            <input type="time" required step={1800} className={cn(inputClass, "text-sm")} value={from} onChange={(e) => setFrom(e.target.value)} />
+            <input type="time" required step={1800} className={cn(inputClass, "text-body")} value={from} onChange={(e) => setFrom(e.target.value)} />
           </Field>
           <Field label="Đến">
-            <input type="time" required step={1800} className={cn(inputClass, "text-sm")} value={to} onChange={(e) => setTo(e.target.value)} />
+            <input type="time" required step={1800} className={cn(inputClass, "text-body")} value={to} onChange={(e) => setTo(e.target.value)} />
           </Field>
         </div>
         <Field label="Ghi chú (tuỳ chọn)" className="mt-2">
-          <input className={cn(inputClass, "text-sm")} value={note} maxLength={120} onChange={(e) => setNote(e.target.value)} placeholder="Đón con, khách quen hẹn riêng…" />
+          <input className={cn(inputClass, "text-body")} value={note} maxLength={120} onChange={(e) => setNote(e.target.value)} placeholder="Đón con, khách quen hẹn riêng…" />
         </Field>
         {error && (
-          <p role="alert" className="mt-2 text-[13px] text-danger">
+          <p role="alert" className="mt-2 text-meta text-danger">
             {error}
           </p>
         )}

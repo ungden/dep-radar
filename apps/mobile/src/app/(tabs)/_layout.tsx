@@ -8,7 +8,7 @@ import { colors } from "@/theme"
 const SPECS: Record<string, TabSpec> = {
   index: { label: "Khám phá", icon: "explore" },
   tim: { label: "Tìm", icon: "search" },
-  dang: { label: "Đăng", icon: "plus", center: true },
+  dang: { label: "Yêu cầu", icon: "plus", center: true },
   "lich-hen": { label: "Lịch hẹn", icon: "calendar" },
   toi: { label: "Tôi", icon: "person" },
 }

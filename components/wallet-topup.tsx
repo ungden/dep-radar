@@ -62,8 +62,8 @@ export function WalletTopUp({ balance, className }: { balance: number; className
 
   if (!bin || !account) {
     return (
-      <div className={cn("mt-4 rounded-[var(--radius-md)] bg-subtle p-3.5 text-[13px] text-ink-soft", className)}>
-        <p className="text-[15px] font-semibold text-ink">Nạp ví</p>
+      <div className={cn("mt-4 rounded-[var(--radius-md)] bg-subtle p-3.5 text-meta text-ink-soft", className)}>
+        <p className="text-body font-semibold text-ink">Nạp ví</p>
         <p className="mt-1">
           Hiện nạp ví do nhân viên 360dep ghi nhận bằng tay, chưa tự động.{" "}
           <a href={support.href} {...(support.external ? { target: "_blank", rel: "noreferrer" } : {})} className="text-accent underline underline-offset-2">
@@ -71,7 +71,7 @@ export function WalletTopUp({ balance, className }: { balance: number; className
           </a>{" "}
           để lấy số tài khoản. Khi chuyển khoản, ghi đúng nội dung này để tiền vào đúng ví của bạn:
         </p>
-        <p className="mt-2 flex items-center gap-2 rounded-[var(--radius-sm)] bg-surface px-3 py-2 font-mono text-[15px] font-semibold text-ink">
+        <p className="mt-2 flex items-center gap-2 rounded-[var(--radius-sm)] bg-surface px-3 py-2 font-mono text-body font-semibold text-ink">
           <span className="flex-1">{memo}</span>
           <CopyButton text={memo} label="Chép nội dung chuyển khoản" copied={copied} onCopy={copy} />
         </p>
@@ -82,8 +82,8 @@ export function WalletTopUp({ balance, className }: { balance: number; className
   const qr = `https://img.vietqr.io/image/${encodeURIComponent(bin)}-${encodeURIComponent(account)}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(accountName)}`
 
   return (
-    <div className={cn("mt-4 rounded-[var(--radius-md)] bg-subtle p-3.5 text-[13px] text-ink-soft", className)}>
-      <p className="text-[15px] font-semibold text-ink">Nạp ví bằng chuyển khoản</p>
+    <div className={cn("mt-4 rounded-[var(--radius-md)] bg-subtle p-3.5 text-meta text-ink-soft", className)}>
+      <p className="text-body font-semibold text-ink">Nạp ví bằng chuyển khoản</p>
       <p className="mt-1">Quét mã bằng app ngân hàng. {note}</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {[...new Set([suggested, ...AMOUNTS])].map((value) => (
@@ -104,7 +104,7 @@ export function WalletTopUp({ balance, className }: { balance: number; className
         />
         <dl className="w-full min-w-0 flex-1 space-y-1.5">
           <div>
-            <dt className="text-xs text-muted">Số tài khoản</dt>
+            <dt className="text-label text-muted">Số tài khoản</dt>
             <dd className="flex items-center gap-1 font-semibold text-ink">
               <span className="flex-1 break-all">{account}</span>
               <CopyButton text={account} label="Chép số tài khoản" copied={copied} onCopy={copy} />
@@ -112,12 +112,12 @@ export function WalletTopUp({ balance, className }: { balance: number; className
           </div>
           {accountName && (
             <div>
-              <dt className="text-xs text-muted">Chủ tài khoản</dt>
+              <dt className="text-label text-muted">Chủ tài khoản</dt>
               <dd className="font-semibold text-ink">{accountName}</dd>
             </div>
           )}
           <div>
-            <dt className="text-xs text-muted">Nội dung (bắt buộc ghi đúng)</dt>
+            <dt className="text-label text-muted">Nội dung (bắt buộc ghi đúng)</dt>
             <dd className="flex items-center gap-1 font-mono font-semibold text-ink">
               <span className="flex-1">{memo}</span>
               <CopyButton text={memo} label="Chép nội dung chuyển khoản" copied={copied} onCopy={copy} />

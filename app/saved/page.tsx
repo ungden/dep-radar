@@ -96,7 +96,7 @@ function Empty({ photos = [], title, text, action }: { photos?: string[]; title:
         </div>
       )}
       <p className="text-[20px] font-bold tracking-tight">{title}</p>
-      <p className="mt-1.5 max-w-sm text-[15px] text-ink-soft">{text}</p>
+      <p className="mt-1.5 max-w-sm text-body text-ink-soft">{text}</p>
       <div className="mt-6">{action}</div>
     </div>
   )

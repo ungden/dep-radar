@@ -49,8 +49,8 @@ function BookingsView() {
             <Megaphone className="size-5" />
           </span>
           <span className="flex-1">
-            <span className="block text-sm font-semibold">Yêu cầu đã đăng</span>
-            <span className="block text-xs text-muted">
+            <span className="block text-body font-semibold">Yêu cầu đã đăng</span>
+            <span className="block text-label text-muted">
               {openJobs.length ? `${openJobs.length} yêu cầu đang tìm người làm` : `${myJobs.length} yêu cầu đã đăng`}
             </span>
           </span>

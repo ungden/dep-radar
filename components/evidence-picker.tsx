@@ -88,12 +88,12 @@ export function EvidencePicker({
             )}
             {item.video && <Film className="absolute left-1 top-1 size-4 text-white drop-shadow" />}
             {!item.path && !item.error && (
-              <span className="absolute inset-x-0 bottom-0 bg-black/55 px-1 py-0.5 text-center text-[10px] text-white">
+              <span className="absolute inset-x-0 bottom-0 bg-black/55 px-1 py-0.5 text-center text-label text-white">
                 {item.video ? `${Math.round(item.progress * 100)}%` : "Đang tải…"}
               </span>
             )}
             {item.error && (
-              <span className="absolute inset-0 flex items-center bg-danger/85 p-1 text-center text-[10px] leading-tight text-white">{item.error}</span>
+              <span className="absolute inset-0 flex items-center bg-danger/85 p-1 text-center text-label leading-tight text-white">{item.error}</span>
             )}
             <button
               type="button"
@@ -110,7 +110,7 @@ export function EvidencePicker({
             type="button"
             onClick={() => input.current?.click()}
             className={cn(
-              "flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-line text-[11px] text-muted hover:bg-subtle",
+              "flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-line text-label text-muted hover:bg-subtle",
             )}
           >
             <ImagePlus className="size-5" />
@@ -118,7 +118,7 @@ export function EvidencePicker({
           </button>
         )}
       </div>
-      <p className="mt-1.5 text-[11px] text-muted">
+      <p className="mt-1.5 text-label text-muted">
         Tối đa {max} tệp. Clip dài tối đa {VIDEO_MAX_SECONDS} giây, dưới {VIDEO_MAX_MB} MB. Chỉ bạn và đội ngũ 360dep xem được.
       </p>
       <input

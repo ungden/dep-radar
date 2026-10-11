@@ -151,7 +151,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
     <div className="pt-4 md:pt-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
 
-      <nav aria-label="Đường dẫn" className="flex flex-wrap items-center gap-1 text-[13px] text-muted">
+      <nav aria-label="Đường dẫn" className="flex flex-wrap items-center gap-1 text-meta text-muted">
         <Link href="/" className="inline-flex min-h-8 items-center hover:text-ink">
           360dep
         </Link>
@@ -166,7 +166,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
       <header className="mt-3 max-w-3xl">
         <CategoryTag category={category.id} />
         <h1 className="mt-3 text-[32px] font-bold leading-[1.08] tracking-[-0.025em] md:text-[44px]">{title}</h1>
-        <p className="mt-3 text-[17px] leading-relaxed text-ink-soft">{intro(category, city, pros.length)}</p>
+        <p className="mt-3 text-lead leading-relaxed text-ink-soft">{intro(category, city, pros.length)}</p>
       </header>
 
       <div className="mt-8 md:mt-10 md:grid md:grid-cols-[minmax(0,1fr)_340px] md:gap-10 lg:gap-14">
@@ -200,12 +200,12 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
               </ul>
             ) : (
               <div className="mt-4 rounded-[var(--radius-lg)] border border-dashed border-line px-6 py-10 text-center">
-                <p className="text-[17px] font-bold">
+                <p className="text-lead font-bold">
                   {category.vertical === "beauty"
                     ? `Chưa có ${person} ${category.label.toLowerCase()} ở ${city}`
                     : `Chưa có ${person} nào ở ${city}`}
                 </p>
-                <p className="mx-auto mt-1.5 max-w-sm text-[15px] text-ink-soft">
+                <p className="mx-auto mt-1.5 max-w-sm text-body text-ink-soft">
                   Đăng yêu cầu: {person} quanh bạn được báo, ai nhận trước sẽ làm.
                 </p>
                 <div className="mt-5 flex flex-wrap justify-center gap-2">
@@ -244,15 +244,15 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
 
         <aside className="mt-12 md:mt-0">
           <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-5 md:sticky md:top-24">
-            <h2 className="text-[17px] font-bold tracking-tight">Giá trên 360dep</h2>
+            <h2 className="text-lead font-bold tracking-tight">Giá trên 360dep</h2>
             <ul className="mt-3 divide-y divide-line">
               {templates.map((t) => {
                 const band = priceBand(t)
                 return (
                   <li key={t.id} className="py-2.5">
-                    <p className="text-[15px] font-semibold">{t.name}</p>
+                    <p className="text-body font-semibold">{t.name}</p>
                     {band && (
-                      <p className="text-[14px] text-ink-soft">
+                      <p className="text-body text-ink-soft">
                         {formatPrice(band[0])} – {formatPrice(band[1])}
                       </p>
                     )}
@@ -260,7 +260,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
                 )
               })}
             </ul>
-            <p className="mt-3 text-[13px] leading-relaxed text-muted">
+            <p className="mt-3 text-meta leading-relaxed text-muted">
               Mỗi gói có đúng 3 mức giá có sẵn; {person} chọn một mức, nên bạn so sánh được giữa các hồ sơ.{" "}
               <Link href="/chinh-sach" className="font-semibold text-ink underline underline-offset-2">
                 Chính sách phí
@@ -298,13 +298,13 @@ function LinkGroup({ title, links }: { title: string; links: { href: string; lab
   if (!links.length) return null
   return (
     <div className="mb-6 last:mb-0">
-      <h2 className="text-[15px] font-bold">{title}</h2>
+      <h2 className="text-body font-bold">{title}</h2>
       <ul className="mt-2.5 flex flex-wrap gap-2">
         {links.map((l) => (
           <li key={l.href}>
             <Link
               href={l.href}
-              className="inline-flex h-10 items-center rounded-full border border-line bg-surface px-4 text-[14px] text-ink hover:border-ink/30"
+              className="inline-flex h-10 items-center rounded-full border border-line bg-surface px-4 text-body text-ink hover:border-ink/30"
             >
               {l.label}
             </Link>

@@ -97,8 +97,8 @@ export function BookingTimeline({ booking }: { booking: Booking }) {
             {s.done && !s.bad && <Check className="size-3.5" />}
           </span>
           <div className="min-w-0 pt-0.5">
-            <p className={cn("text-[15px]", s.done || s.current ? "font-semibold text-ink" : "text-muted", s.bad && "text-danger")}>{s.label}</p>
-            {s.when && <p className="text-[13px] text-ink-soft">{s.when}</p>}
+            <p className={cn("text-body", s.done || s.current ? "font-semibold text-ink" : "text-muted", s.bad && "text-danger")}>{s.label}</p>
+            {s.when && <p className="text-meta text-ink-soft">{s.when}</p>}
           </div>
         </li>
       ))}
@@ -120,8 +120,8 @@ export function DeliveryPanel({ booking, isPro }: { booking: Booking; isPro: boo
   if (d.deliveredAt && d.url)
     return (
       <section className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
-        <p className="text-[17px] font-bold tracking-tight">File đã giao</p>
-        {d.note && <p className="mt-1 whitespace-pre-line text-[14px] text-ink-soft">{d.note}</p>}
+        <p className="text-lead font-bold tracking-tight">File đã giao</p>
+        {d.note && <p className="mt-1 whitespace-pre-line text-body text-ink-soft">{d.note}</p>}
         <a href={d.url} target="_blank" rel="noreferrer noopener" className={cn(buttonClass("primary", "md"), "mt-3 w-full")}>
           <Download className="size-4" /> Mở link tải file
         </a>
@@ -134,14 +134,14 @@ export function DeliveryPanel({ booking, isPro }: { booking: Booking; isPro: boo
             Đã nhận đủ file
           </Button>
         )}
-        {d.acceptedAt && <p className="mt-2 text-center text-[13px] font-semibold text-success">Khách đã xác nhận nhận file</p>}
-        {error && <p className="mt-2 text-[14px] text-danger">{error}</p>}
+        {d.acceptedAt && <p className="mt-2 text-center text-meta font-semibold text-success">Khách đã xác nhận nhận file</p>}
+        {error && <p className="mt-2 text-body text-danger">{error}</p>}
       </section>
     )
 
   if (!isPro)
     return (
-      <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px]">
+      <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-body">
         {getPro(state, booking.proId)?.name ?? booking.proName} đang chỉnh ảnh/clip.
         {d.dueAt ? ` Hạn giao: ${formatDateLong(localDate(d.dueAt))}.` : ""} Link tải file sẽ hiện ở đây.
       </p>
@@ -155,8 +155,8 @@ export function DeliveryPanel({ booking, isPro }: { booking: Booking; isPro: boo
         void act(() => actions.deliverBooking(booking.id, url.trim(), note.trim()), "Đã giao file cho khách").then(setError)
       }}
     >
-      <p className="text-[17px] font-bold tracking-tight">Giao file cho khách</p>
-      <p className="mt-1 text-[14px] text-ink-soft">
+      <p className="text-lead font-bold tracking-tight">Giao file cho khách</p>
+      <p className="mt-1 text-body text-ink-soft">
         Dán link Google Drive, Google Photos hoặc iCloud đã mở quyền xem.
         {d.dueAt ? ` Hạn: ${formatDateLong(localDate(d.dueAt))}` : days ? ` Hạn: ${days} ngày sau buổi chụp` : ""}.
       </p>
@@ -180,7 +180,7 @@ export function DeliveryPanel({ booking, isPro }: { booking: Booking; isPro: boo
       <Button type="submit" className="mt-3 w-full" disabled={!/^https?:\/\//.test(url.trim())}>
         Giao file
       </Button>
-      {error && <p className="mt-2 text-[14px] text-danger">{error}</p>}
+      {error && <p className="mt-2 text-body text-danger">{error}</p>}
     </form>
   )
 }
@@ -193,13 +193,13 @@ export function ComboPartners({ booking }: { booking: Booking }) {
   if (!others.length) return null
   return (
     <section className="rounded-[var(--radius-lg)] bg-subtle p-4">
-      <p className="flex items-center gap-2 text-[15px] font-bold">
+      <p className="flex items-center gap-2 text-body font-bold">
         <Link2 className="size-4" /> Cùng buổi này
       </p>
       <ul className="mt-2 space-y-1.5">
         {others.map((b) => (
           <li key={b.id}>
-            <Link href={`/bookings/${b.id}`} className="block text-[14px] underline-offset-4 hover:underline">
+            <Link href={`/bookings/${b.id}`} className="block text-body underline-offset-4 hover:underline">
               {b.serviceName} · {b.proName} · {b.time}
             </Link>
           </li>
@@ -227,8 +227,8 @@ export function CustomerHistory({ booking }: { booking: Booking }) {
     return (
       <section className="rounded-[var(--radius-lg)] bg-subtle px-4 py-3">
         {/* Not "khách mới": a customer can have finished jobs nobody reviewed. */}
-        <p className="text-[15px] font-semibold">{visitsWithMe ? `Khách quen · đã làm với bạn ${visitsWithMe} lần` : "Chưa có đánh giá về khách này"}</p>
-        <p className="text-[13px] text-ink-soft">Chưa người làm nào trên 360dep chấm điểm khách này.</p>
+        <p className="text-body font-semibold">{visitsWithMe ? `Khách quen · đã làm với bạn ${visitsWithMe} lần` : "Chưa có đánh giá về khách này"}</p>
+        <p className="text-meta text-ink-soft">Chưa người làm nào trên 360dep chấm điểm khách này.</p>
       </section>
     )
   }
@@ -237,20 +237,20 @@ export function CustomerHistory({ booking }: { booking: Booking }) {
   const withText = reviews.filter((r) => r.body.trim()).slice(0, 2)
   return (
     <section className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
-      <p className="flex items-center gap-2 text-[15px] font-semibold">
+      <p className="flex items-center gap-2 text-body font-semibold">
         <Star className="size-4 fill-accent text-accent" aria-hidden />
         Khách được chấm {average.toFixed(1)}/5 · {reviews.length} lượt
       </p>
-      <p className="text-[13px] text-ink-soft">
+      <p className="text-meta text-ink-soft">
         Người làm trên 360dep đánh giá sau khi làm xong
         {visitsWithMe ? ` · đã làm với bạn ${visitsWithMe} lần` : ""}.
       </p>
       {withText.length > 0 && (
         <ul className="mt-2 space-y-2">
           {withText.map((r) => (
-            <li key={r.bookingId} className="rounded-[var(--radius-md)] bg-canvas px-3 py-2 text-[14px]">
+            <li key={r.bookingId} className="rounded-[var(--radius-md)] bg-canvas px-3 py-2 text-body">
               <p>“{r.body}”</p>
-              <p className="mt-0.5 text-[12px] text-muted">
+              <p className="mt-0.5 text-label text-muted">
                 ★ {r.rating} · {r.mine ? "Bạn" : r.proName} · {formatDateLong(localDate(r.createdAt))}
               </p>
             </li>
@@ -305,7 +305,7 @@ export function CustomerFinish({ booking }: { booking: Booking }) {
     <section className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
       {any && (
         <>
-          <p className="text-[15px] font-bold">Buổi làm thế nào?</p>
+          <p className="text-body font-bold">Buổi làm thế nào?</p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {job.confirmDone && (
               <Button size="sm" onClick={() => setConfirm("done")}>
@@ -320,14 +320,14 @@ export function CustomerFinish({ booking }: { booking: Booking }) {
           </div>
         </>
       )}
-      <p className={cn("flex gap-2 text-[13px] text-ink-soft", any && "mt-3")}>
+      <p className={cn("flex gap-2 text-meta text-ink-soft", any && "mt-3")}>
         <Clock className="mt-0.5 size-3.5 shrink-0" />
         <span>
           Tự hoàn thành lúc {when(job.autoCompleteAt.toISOString())} nếu không ai bấm.
           {any ? "" : " Từ giờ hẹn, bạn tự xác nhận được khi đã làm xong."}
         </span>
       </p>
-      {error && <p className="mt-2 text-[14px] text-danger">{error}</p>}
+      {error && <p className="mt-2 text-body text-danger">{error}</p>}
 
       <Sheet
         open={confirm === "done"}
@@ -342,7 +342,7 @@ export function CustomerFinish({ booking }: { booking: Booking }) {
           </div>
         }
       >
-        <p className="text-[15px]">
+        <p className="text-body">
           Lịch hẹn chuyển sang hoàn thành và bạn có 14 ngày để đánh giá {booking.proName}. Không đổi lại được sau khi xác nhận.
         </p>
       </Sheet>
@@ -362,7 +362,7 @@ export function CustomerFinish({ booking }: { booking: Booking }) {
           </div>
         }
       >
-        <p className="text-[15px]">
+        <p className="text-body">
           Lịch hẹn sẽ được huỷ, bạn không mất phí, và 360dep nhận báo cáo để xem xét. Chỉ báo khi {booking.proName} thật sự không đến.
         </p>
         <textarea
@@ -372,7 +372,7 @@ export function CustomerFinish({ booking }: { booking: Booking }) {
           onChange={(e) => setDetail(e.target.value)}
           aria-label="Ghi chú cho 360dep"
           placeholder="Ghi chú cho 360dep (tuỳ chọn): đã gọi chưa, chờ bao lâu…"
-          className={cn(inputClass, "mt-3 resize-none text-sm")}
+          className={cn(inputClass, "mt-3 resize-none text-body")}
         />
       </Sheet>
     </section>
@@ -391,7 +391,7 @@ export function NoShowDispute({ booking }: { booking: Booking }) {
   if (booking.status !== "no_show" || !booking.cancelledAt) return null
   if (booking.disputed)
     return (
-      <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px]">
+      <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-body">
         Bạn đã khiếu nại việc báo vắng mặt. 360dep đang xem xét và sẽ liên hệ nếu cần thêm thông tin.
       </p>
     )
@@ -405,8 +405,8 @@ export function NoShowDispute({ booking }: { booking: Booking }) {
         void act(() => actions.disputeNoShow(booking.id, reason.trim()), "Đã gửi khiếu nại").then(setError)
       }}
     >
-      <p className="text-[15px] font-bold">{booking.proName} báo bạn vắng mặt</p>
-      <p className="mt-1 text-[13px] text-ink-soft">
+      <p className="text-body font-bold">{booking.proName} báo bạn vắng mặt</p>
+      <p className="mt-1 text-meta text-ink-soft">
         Nếu có nhầm lẫn, kể lại chuyện gì đã xảy ra trước {when(new Date(until).toISOString())}. 360dep xem xét rồi mới xử lý.
       </p>
       <textarea
@@ -416,13 +416,13 @@ export function NoShowDispute({ booking }: { booking: Booking }) {
         onChange={(e) => setReason(e.target.value)}
         aria-label="Chuyện gì đã xảy ra"
         placeholder="Mình có mặt đúng giờ, đã gọi người làm 2 lần…"
-        className={cn(inputClass, "mt-3 resize-none text-sm")}
+        className={cn(inputClass, "mt-3 resize-none text-body")}
       />
-      <p className="mt-1 text-xs text-muted">Ít nhất 10 ký tự.</p>
+      <p className="mt-1 text-label text-muted">Ít nhất 10 ký tự.</p>
       <Button type="submit" size="sm" className="mt-2" disabled={reason.trim().length < 10}>
         Gửi khiếu nại
       </Button>
-      {error && <p className="mt-2 text-[14px] text-danger">{error}</p>}
+      {error && <p className="mt-2 text-body text-danger">{error}</p>}
     </form>
   )
 }
@@ -441,13 +441,13 @@ export function VoucherPanel({ booking }: { booking: Booking }) {
 
   if (booking.voucherId || booking.discount > 0)
     return (
-      <div className="flex flex-wrap items-center gap-2 rounded-[var(--radius-lg)] bg-success-soft px-4 py-3 text-[14px] text-success">
+      <div className="flex flex-wrap items-center gap-2 rounded-[var(--radius-lg)] bg-success-soft px-4 py-3 text-body text-success">
         <Ticket className="size-4 shrink-0" />
         <span className="flex-1 font-semibold">Đang dùng voucher −{formatPrice(booking.discount)}</span>
         <Button variant="ghost" size="sm" onClick={() => void act(() => actions.removeVoucher(booking.id), "Đã bỏ voucher").then(setError)}>
           Bỏ voucher
         </Button>
-        {error && <p className="w-full text-[13px] text-danger">{error}</p>}
+        {error && <p className="w-full text-meta text-danger">{error}</p>}
       </div>
     )
 
@@ -457,21 +457,21 @@ export function VoucherPanel({ booking }: { booking: Booking }) {
   if (!usable.length) return null
   return (
     <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
-      <p className="flex items-center gap-2 text-[15px] font-bold">
+      <p className="flex items-center gap-2 text-body font-bold">
         <Ticket className="size-4" /> Bạn có voucher 360dep
       </p>
       <ul className="mt-2 space-y-2">
         {usable.map((v) => (
           <li key={v.id} className="flex items-center gap-2">
-            <span className="flex-1 text-[13px] text-ink-soft">Hạn {formatDateLong(localDate(v.expiresAt))}</span>
+            <span className="flex-1 text-meta text-ink-soft">Hạn {formatDateLong(localDate(v.expiresAt))}</span>
             <Button size="sm" onClick={() => void act(() => actions.applyVoucher(booking.id, v.id), "Đã dùng voucher").then(setError)}>
               Dùng voucher −{formatPrice(Math.min(v.amount, booking.quote.total))}
             </Button>
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-xs text-muted">Bạn trả người làm ít hơn; 360dep trả phần voucher cho người làm khi xong.</p>
-      {error && <p className="mt-2 text-[13px] text-danger">{error}</p>}
+      <p className="mt-2 text-label text-muted">Bạn trả người làm ít hơn; 360dep trả phần voucher cho người làm khi xong.</p>
+      {error && <p className="mt-2 text-meta text-danger">{error}</p>}
     </div>
   )
 }
@@ -497,12 +497,12 @@ export function ReviewCustomer({ booking }: { booking: Booking }) {
 
   if (written)
     return (
-      <section className="space-y-2 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px]">
+      <section className="space-y-2 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-body">
         <p>
           Bạn đã đánh giá khách: <b>★ {written.rating}</b>
           {written.body ? ` · ${written.body}` : ""}
         </p>
-        {!written.publishedAt && <p className="text-[13px] text-ink-soft">{BLIND_NOTE}</p>}
+        {!written.publishedAt && <p className="text-meta text-ink-soft">{BLIND_NOTE}</p>}
         {theirs?.publishedAt && (
           <p>
             Khách đánh giá bạn: <b>★ {theirs.rating}</b>
@@ -513,7 +513,7 @@ export function ReviewCustomer({ booking }: { booking: Booking }) {
     )
 
   if (!period.open)
-    return <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px] text-ink-soft">Hết hạn đánh giá khách (14 ngày sau khi xong).</p>
+    return <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-body text-ink-soft">Hết hạn đánh giá khách (14 ngày sau khi xong).</p>
 
   const needsReason = rating > 0 && rating <= 2 && text.trim().length < 10
   return (
@@ -524,8 +524,8 @@ export function ReviewCustomer({ booking }: { booking: Booking }) {
         void act(() => actions.reviewCustomer(booking.id, rating, text.trim()), "Đã đánh giá khách").then(setError)
       }}
     >
-      <p className="text-[15px] font-bold">Đánh giá khách để xem khách đánh giá bạn</p>
-      <p className="mt-0.5 text-[13px] text-ink-soft">
+      <p className="text-body font-bold">Đánh giá khách để xem khách đánh giá bạn</p>
+      <p className="mt-0.5 text-meta text-ink-soft">
         {booking.customerName} thế nào? Còn {period.daysLeft} ngày để đánh giá. Người làm khác thấy đánh giá này khi khách đặt lịch với họ. Không
         sửa được sau khi gửi.
       </p>
@@ -544,12 +544,12 @@ export function ReviewCustomer({ booking }: { booking: Booking }) {
         placeholder={rating > 0 && rating <= 2 ? "Lý do (bắt buộc, ít nhất 10 ký tự)" : "Đúng giờ, lịch sự… (tuỳ chọn)"}
         className={cn(inputClass, "mt-2")}
       />
-      {needsReason && <p className="mt-1 text-xs text-warning">Từ 2 sao trở xuống, cho người làm khác biết lý do (ít nhất 10 ký tự).</p>}
-      <p className="mt-2 text-xs text-muted">{BLIND_NOTE}</p>
+      {needsReason && <p className="mt-1 text-label text-warning">Từ 2 sao trở xuống, cho người làm khác biết lý do (ít nhất 10 ký tự).</p>}
+      <p className="mt-2 text-label text-muted">{BLIND_NOTE}</p>
       <Button type="submit" size="sm" className="mt-3" disabled={!rating || needsReason}>
         Gửi đánh giá
       </Button>
-      {error && <p className="mt-2 text-[14px] text-danger">{error}</p>}
+      {error && <p className="mt-2 text-body text-danger">{error}</p>}
     </form>
   )
 }
@@ -565,7 +565,7 @@ export function CustomerReviewStatus({ booking }: { booking: Booking }) {
   const aboutMe = state.customerReviews.find((r) => r.bookingId === booking.id && !r.mine)
 
   return (
-    <section className="space-y-1.5 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px]">
+    <section className="space-y-1.5 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-body">
       {mine ? (
         <p>
           Bạn đã đánh giá: <b>★ {mine.rating}</b>
@@ -576,7 +576,7 @@ export function CustomerReviewStatus({ booking }: { booking: Booking }) {
       ) : (
         <p className="text-ink-soft">Hết hạn đánh giá (14 ngày sau khi xong).</p>
       )}
-      {mine && !mine.publishedAt && <p className="text-[13px] text-ink-soft">{BLIND_NOTE}</p>}
+      {mine && !mine.publishedAt && <p className="text-meta text-ink-soft">{BLIND_NOTE}</p>}
       {aboutMe && (
         <p>
           {booking.proName} đánh giá bạn: <b>★ {aboutMe.rating}</b>

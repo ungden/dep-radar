@@ -47,15 +47,15 @@ function Settings() {
       {session?.phone ? (
         <Field label="Số điện thoại" hint="Người làm thấy số này khi đã nhận lịch của bạn, cho tới khi lịch kết thúc. Bạn có thể tự đổi số điện thoại tại đây.">
           <input className={inputClass} value={formatPhone(session.phone)} readOnly />
-          <Link href="/me/so-dien-thoai?next=/me/cai-dat" className="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-accent underline underline-offset-2">
+          <Link href="/me/so-dien-thoai?next=/me/cai-dat" className="mt-2 inline-flex min-h-11 items-center text-body font-medium text-accent underline underline-offset-2">
             Đổi số điện thoại
           </Link>
         </Field>
       ) : (
         <Card className="p-4">
           <p className="font-semibold">Chưa có số điện thoại</p>
-          <p className="mt-1 text-[13px] text-ink-soft">Cần số điện thoại trước khi đặt lịch.</p>
-          <Link href="/me/so-dien-thoai?next=/me/cai-dat" className="mt-2 inline-block text-sm font-medium text-accent underline underline-offset-2">
+          <p className="mt-1 text-meta text-ink-soft">Cần số điện thoại trước khi đặt lịch.</p>
+          <Link href="/me/so-dien-thoai?next=/me/cai-dat" className="mt-2 inline-block text-body font-medium text-accent underline underline-offset-2">
             Thêm số điện thoại
           </Link>
         </Card>
@@ -75,7 +75,7 @@ function Settings() {
       ) : login ? (
         <Card className="p-4">
           <p className="font-semibold">Chưa có email</p>
-          <p className="mt-1 text-[13px] text-ink-soft">Thêm email để lấy lại mật khẩu khi quên. Email cần được xác nhận qua link 360dep gửi tới.</p>
+          <p className="mt-1 text-meta text-ink-soft">Thêm email để lấy lại mật khẩu khi quên. Email cần được xác nhận qua link 360dep gửi tới.</p>
           <div className="mt-3">
             <EmailForm pending={login.pendingEmail} embedded />
           </div>
@@ -83,11 +83,11 @@ function Settings() {
       ) : null}
 
       {error && (
-        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
           {error}
         </p>
       )}
-      {message && <p className="text-sm text-success">{message}</p>}
+      {message && <p className="text-body text-success">{message}</p>}
 
       <Button
         disabled={busy || name.trim().length < 2}
@@ -110,7 +110,7 @@ function Settings() {
 
       <Card className="p-4">
         <p className="font-semibold">Dữ liệu của bạn</p>
-        <p className="mt-1 text-[13px] text-ink-soft">
+        <p className="mt-1 text-meta text-ink-soft">
           360dep lưu tên, số điện thoại, email, địa chỉ bạn tự nhập và lịch sử đặt lịch. Ảnh CCCD và ảnh selfie khi xác minh
           không được lưu ở đâu cả. Chi tiết trong{" "}
           <Link href="/chinh-sach" className="text-accent underline underline-offset-2">
@@ -124,7 +124,7 @@ function Settings() {
           button here rather than an email to support. */}
       <Card className="p-4 ring-1 ring-danger/30">
         <p className="font-semibold text-danger">Xoá tài khoản</p>
-        <p className="mt-1 text-[13px] text-ink-soft">
+        <p className="mt-1 text-meta text-ink-soft">
           Xoá tên, số điện thoại, email, địa chỉ, mẫu đã lưu và quyền đăng nhập của bạn. Các lịch đã hoàn thành và đánh giá vẫn
           còn, nhưng không còn gắn với tên bạn — vì đó cũng là hồ sơ của phía bên kia. Không thể hoàn tác.
         </p>
@@ -199,12 +199,12 @@ function ChangePassword() {
           hint={`Ít nhất ${MIN_PASSWORD_LENGTH} ký tự, không chỉ có số.`}
         />
         {error && (
-          <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+          <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
             {error}
           </p>
         )}
         {done && (
-          <p role="status" className="text-sm text-success">
+          <p role="status" className="text-body text-success">
             Đã đổi mật khẩu.
           </p>
         )}
@@ -212,7 +212,7 @@ function ChangePassword() {
           <Button type="submit" variant="outline" disabled={busy}>
             {busy ? "Đang đổi…" : "Đổi mật khẩu"}
           </Button>
-          <Link href="/quen-mat-khau" className="inline-flex min-h-11 items-center text-[13px] text-ink-soft underline underline-offset-2">
+          <Link href="/quen-mat-khau" className="inline-flex min-h-11 items-center text-meta text-ink-soft underline underline-offset-2">
             Quên mật khẩu hiện tại?
           </Link>
         </div>

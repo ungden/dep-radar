@@ -8,6 +8,8 @@ import { toTimestamptz } from "@/data/format"
 import { createBooking, fetchSlots } from "@/data/bookings"
 import { addDays, formatDateLong, formatDuration, formatKm, formatPrice, todayISO, weekdayShort } from "@/data/format"
 import { askForPushPermission } from "@/data/push"
+import { DateField } from "@/components/date-field"
+import { TimeField } from "@/components/time-field"
 import { BookingBar } from "@/components/booking-bar"
 import { useApp, usePro } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
@@ -435,7 +437,7 @@ export default function Book() {
               </View>
             ) : null}
             {app.uid && !confirmedQuote && <ErrorNote text={verified?.key === quoteKey && verified.error ? verified.error : "Đang xác nhận tổng tiền…"} />}
-            {(variant.sessions ?? 1) > 1 && <View style={{ gap: 8 }}><Txt w={700}>Buổi thứ hai (đã gồm trong giá)</Txt><TextInput accessibilityLabel="Ngày buổi thứ hai YYYY-MM-DD" placeholder="Ngày YYYY-MM-DD" value={secondDate} onChangeText={setSecondDate} style={{ padding: 12, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, color: colors.ink }} /><TextInput accessibilityLabel="Giờ buổi thứ hai HH:mm" value={secondTime} onChangeText={setSecondTime} style={{ padding: 12, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, color: colors.ink }} /><Txt v="meta">Hệ thống giữ cả hai buổi cùng lúc và kiểm tra giờ trống khi gửi.</Txt></View>}
+            {(variant.sessions ?? 1) > 1 && <View style={{ gap: 8 }}><Txt w={700}>Buổi thứ hai (đã gồm trong giá)</Txt><DateField label="Ngày buổi thứ hai" value={secondDate} onChange={setSecondDate} minDate={date} /><TimeField label="Giờ buổi thứ hai" value={secondTime} onChange={setSecondTime} /><Txt v="meta">Hệ thống giữ cả hai buổi cùng lúc và kiểm tra giờ trống khi gửi.</Txt></View>}
             {quote && picked ? (
               <Card>
                 <Txt w={700}>

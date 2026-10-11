@@ -90,11 +90,11 @@ export function ShareLinkCard({
 
   return (
     <Card className={cn("p-4", className)}>
-      <p className="text-[17px] font-bold tracking-tight">{title}</p>
-      <p className="mt-0.5 text-[13px] text-ink-soft">{text}</p>
+      <p className="text-lead font-bold tracking-tight">{title}</p>
+      <p className="mt-0.5 text-meta text-ink-soft">{text}</p>
       <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start">
         <div className="min-w-0 flex-1">
-          <p className="select-all break-all rounded-[var(--radius-md)] bg-subtle px-3 py-2.5 text-[14px] font-medium">{url}</p>
+          <p className="select-all break-all rounded-[var(--radius-md)] bg-subtle px-3 py-2.5 text-body font-medium">{url}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={() => void copy()}>
               {note === "Đã chép link" ? <Check className="size-4" /> : <Copy className="size-4" />} Chép link
@@ -104,7 +104,7 @@ export function ShareLinkCard({
             </Button>
           </div>
           {note && (
-            <p role="status" className="mt-2 text-[13px] text-ink-soft">
+            <p role="status" className="mt-2 text-meta text-ink-soft">
               {note}
             </p>
           )}
@@ -114,7 +114,7 @@ export function ShareLinkCard({
             {/* A data: URL made in this browser; next/image has nothing to optimise. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={qr} alt={`Mã QR mở ${url}`} width={128} height={128} className="size-32 rounded-[var(--radius-md)] border border-line" />
-            <a href={qr} download={qrFile} className="inline-flex items-center gap-1 text-[13px] font-semibold text-accent">
+            <a href={qr} download={qrFile} className="inline-flex items-center gap-1 text-meta font-semibold text-accent">
               <Download className="size-3.5" /> Tải mã QR
             </a>
           </div>

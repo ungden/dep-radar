@@ -27,7 +27,7 @@ export default function StudioPage() {
     <div className="mx-auto max-w-4xl pt-2 md:pt-8">
       <div className="flex h-12 items-center gap-2 md:hidden">
         <LogoMark size={28} />
-        <span className="text-[15px] font-bold tracking-tight">Studio</span>
+        <span className="text-body font-bold tracking-tight">Studio</span>
       </div>
       <RequireSession role="pro">
         <Dashboard />
@@ -70,7 +70,7 @@ function Dashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-[13px] font-medium text-muted">{formatDateLong(today)}</p>
+        <p className="text-meta font-medium text-muted">{formatDateLong(today)}</p>
         <h1 className="mt-1 text-[28px] font-bold leading-tight tracking-tight md:text-[34px]">
           {pending.length
             ? `${pending.length} khách đang chờ bạn nhận lịch`
@@ -83,8 +83,8 @@ function Dashboard() {
       <div className={cn("flex items-center gap-3 rounded-[var(--radius-lg)] border p-4", state.acceptingJobs ? "border-line bg-surface" : "border-warning/30 bg-warning-soft")}>
         <span className={cn("size-2.5 rounded-full", state.acceptingJobs ? "bg-success" : "bg-warning")} />
         <div className="flex-1">
-          <p className="text-[15px] font-bold">{state.acceptingJobs ? "Đang nhận khách mới" : "Đang tạm nghỉ"}</p>
-          <p className="text-[13px] text-ink-soft">
+          <p className="text-body font-bold">{state.acceptingJobs ? "Đang nhận khách mới" : "Đang tạm nghỉ"}</p>
+          <p className="text-meta text-ink-soft">
             {state.acceptingJobs ? `Trong bán kính ${pro.maxTravelKm} km quanh ${pro.district}` : "Hồ sơ vẫn hiện nhưng khách không đặt được lịch mới"}
           </p>
         </div>
@@ -112,7 +112,7 @@ function Dashboard() {
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-[13px] text-ink-soft">
+          <p className="mt-2 text-meta text-ink-soft">
             Xem giờ, địa chỉ, yêu cầu rồi bấm Nhận lịch; nhận rồi thì hai bên nhắn tin, gọi được cho nhau. Quá{" "}
             {POLICY.confirmWithinHours} giờ, yêu cầu tự hết hạn và khung giờ được trả lại.
           </p>
@@ -134,7 +134,7 @@ function Dashboard() {
                           <Phone className="size-4" /> Gọi khách
                         </a>
                       ) : (
-                        <MessageButton booking={b} label="Nhắn khách" className="h-9 text-[13px]" />
+                        <MessageButton booking={b} label="Nhắn khách" className="h-9 text-meta" />
                       )}
                       <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.address)}`}
@@ -151,7 +151,7 @@ function Dashboard() {
             ))}
           </ul>
         ) : (
-          <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-6 text-center text-[15px] text-ink-soft">Hôm nay trống lịch.</p>
+          <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-6 text-center text-body text-ink-soft">Hôm nay trống lịch.</p>
         )}
       </section>
 
@@ -231,7 +231,7 @@ function Dashboard() {
             ))}
           </ul>
         ) : (
-          <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-6 text-center text-[15px] text-ink-soft">Chưa có yêu cầu mới phù hợp với bạn.</p>
+          <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-6 text-center text-body text-ink-soft">Chưa có yêu cầu mới phù hợp với bạn.</p>
         )}
       </section>
     </div>
@@ -242,8 +242,8 @@ function Shortcut({ href, icon, title, text }: { href: string; icon: React.React
   return (
     <Link href={href} className="block rounded-[var(--radius-lg)] border border-line bg-surface p-4 transition-colors hover:border-ink/30">
       <span className="flex size-10 items-center justify-center rounded-xl bg-subtle">{icon}</span>
-      <p className="mt-3 text-[15px] font-bold">{title}</p>
-      <p className="mt-0.5 text-[13px] text-ink-soft">{text}</p>
+      <p className="mt-3 text-body font-bold">{title}</p>
+      <p className="mt-0.5 text-meta text-ink-soft">{text}</p>
     </Link>
   )
 }
@@ -251,9 +251,9 @@ function Shortcut({ href, icon, title, text }: { href: string; icon: React.React
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
-      <p className="text-[13px] font-medium text-muted">{label}</p>
+      <p className="text-meta font-medium text-muted">{label}</p>
       <p className="mt-1 text-[22px] font-bold tracking-tight">{value}</p>
-      {sub && <p className="mt-0.5 text-[12.5px] leading-snug text-ink-soft">{sub}</p>}
+      {sub && <p className="mt-0.5 text-label leading-snug text-ink-soft">{sub}</p>}
     </div>
   )
 }
@@ -263,9 +263,9 @@ function SectionTitle({ title, href, count }: { title: string; href: string; cou
     <div className="mb-3 flex items-center justify-between">
       <h2 className="flex items-center gap-2 text-[20px] font-bold tracking-tight">
         {title}
-        {count ? <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold text-white">{count}</span> : null}
+        {count ? <span className="rounded-full bg-accent px-2 py-0.5 text-label font-bold text-white">{count}</span> : null}
       </h2>
-      <Link href={href} className="inline-flex items-center text-[14px] font-semibold text-ink">
+      <Link href={href} className="inline-flex items-center text-body font-semibold text-ink">
         Xem tất cả <ChevronRight className="size-4" />
       </Link>
     </div>
@@ -281,8 +281,8 @@ function VerifyNudge({ pro }: { pro: Pro }) {
           <IdCard className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-bold">{pro.identity === "pending" ? "Đang xác minh danh tính" : "Xác minh danh tính để được ưu tiên"}</p>
-          <p className="text-[13px] text-ink-soft">
+          <p className="text-body font-bold">{pro.identity === "pending" ? "Đang xác minh danh tính" : "Xác minh danh tính để được ưu tiên"}</p>
+          <p className="text-meta text-ink-soft">
             {pro.identity === "rejected"
               ? "Lần trước chưa thành công, chụp lại CCCD và selfie nhé."
               : "Chụp CCCD 2 mặt + 1 ảnh selfie. Có dấu tick và được xếp trước khi khách tìm kiếm."}

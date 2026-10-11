@@ -58,10 +58,10 @@ export default function CastingPage() {
       <div className="grid gap-8 md:grid-cols-[1fr_360px]">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-subtle px-3 py-1 text-[13px] font-semibold">{categoryLabel(casting.category)}</span>
+            <span className="rounded-full bg-subtle px-3 py-1 text-meta font-semibold">{categoryLabel(casting.category)}</span>
             <span
               className={cn(
-                "rounded-full px-3 py-1 text-[13px] font-bold",
+                "rounded-full px-3 py-1 text-meta font-bold",
                 casting.compensation === "paid" ? "bg-success-soft text-success" : "bg-accent-soft text-accent-dark",
               )}
             >
@@ -70,7 +70,7 @@ export default function CastingPage() {
           </div>
           <h1 className="mt-3 text-[28px] font-bold leading-tight tracking-tight md:text-[34px]">{casting.title}</h1>
 
-          <dl className="mt-5 grid gap-3 text-[15px] sm:grid-cols-3">
+          <dl className="mt-5 grid gap-3 text-body sm:grid-cols-3">
             <Fact icon={<CalendarDays className="size-5" />} label="Khi nào">
               {formatDateLong(casting.date)}, {casting.time}
             </Fact>
@@ -82,8 +82,8 @@ export default function CastingPage() {
             </Fact>
           </dl>
 
-          {casting.description && <p className="mt-6 whitespace-pre-line text-[15px] leading-relaxed">{casting.description}</p>}
-          <p className="mt-4 text-[14px] text-ink-soft">Địa chỉ cụ thể được gửi trong tin nhắn khi bạn được chọn.</p>
+          {casting.description && <p className="mt-6 whitespace-pre-line text-body leading-relaxed">{casting.description}</p>}
+          <p className="mt-4 text-body text-ink-soft">Địa chỉ cụ thể được gửi trong tin nhắn khi bạn được chọn.</p>
 
           {pro && (
             <section className="mt-8">
@@ -91,10 +91,10 @@ export default function CastingPage() {
               <Link href={`/pros/${pro.id}`} className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-line bg-surface p-4 hover:border-ink/30">
                 <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={52} />
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1.5 text-[16px] font-bold">
+                  <p className="flex items-center gap-1.5 text-body font-bold">
                     {pro.name} <VerifiedMark pro={pro} />
                   </p>
-                  <p className="text-[13px] text-ink-soft">
+                  <p className="text-meta text-ink-soft">
                     {pro.title || trade.label}
                     {pro.rating.count ? ` · ${ratingText(pro.rating)}` : ""}
                   </p>
@@ -118,14 +118,14 @@ export default function CastingPage() {
           <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-5">
             {mine ? (
               <>
-                <p className="text-[15px] font-bold">Tin của bạn</p>
+                <p className="text-body font-bold">Tin của bạn</p>
                 <ButtonLink href="/studio/tuyen-mau" className="mt-3 w-full">
                   Xem người ứng tuyển
                 </ButtonLink>
               </>
             ) : application && application.status !== "withdrawn" ? (
               <>
-                <p className="text-[13px] font-medium text-muted">Trạng thái</p>
+                <p className="text-meta font-medium text-muted">Trạng thái</p>
                 <p className={cn("mt-1 text-[18px] font-bold", application.status === "accepted" && "text-success")}>
                   {APPLICATION_LABEL[application.status]}
                 </p>
@@ -141,11 +141,11 @@ export default function CastingPage() {
                 )}
               </>
             ) : casting.status !== "open" || left === 0 ? (
-              <p className="text-[15px] font-bold">Tin đã đủ người hoặc đã đóng</p>
+              <p className="text-body font-bold">Tin đã đủ người hoặc đã đóng</p>
             ) : !state.session ? (
               <>
-                <p className="text-[15px] font-bold">Muốn làm mẫu?</p>
-                <p className="mt-1 text-[14px] text-ink-soft">Đăng nhập để ứng tuyển. Người tuyển sẽ thấy tên của bạn và lời nhắn.</p>
+                <p className="text-body font-bold">Muốn làm mẫu?</p>
+                <p className="mt-1 text-body text-ink-soft">Đăng nhập để ứng tuyển. Người tuyển sẽ thấy tên của bạn và lời nhắn.</p>
                 <ButtonLink href={`/login?next=${encodeURIComponent(`/tuyen-mau/${casting.id}`)}`} className="mt-4 w-full">
                   Đăng nhập để ứng tuyển
                 </ButtonLink>
@@ -157,7 +157,7 @@ export default function CastingPage() {
                   void run(() => actions.applyCasting(casting.id, message.trim()), "Đã gửi ứng tuyển")
                 }}
               >
-                <label htmlFor="message" className="text-[15px] font-bold">
+                <label htmlFor="message" className="text-body font-bold">
                   Lời nhắn cho {pro?.name ?? "người tuyển"}
                 </label>
                 <textarea
@@ -175,7 +175,7 @@ export default function CastingPage() {
               </form>
             )}
             {error && (
-              <p role="alert" className="mt-3 text-[14px] text-danger">
+              <p role="alert" className="mt-3 text-body text-danger">
                 {error}
               </p>
             )}
@@ -197,7 +197,7 @@ function Fact({ icon, label, children }: { icon: React.ReactNode; label: string;
     <div className="flex gap-3 rounded-[var(--radius-lg)] bg-subtle p-3.5">
       <span className="mt-0.5 shrink-0">{icon}</span>
       <div>
-        <dt className="text-[13px] font-medium text-muted">{label}</dt>
+        <dt className="text-meta font-medium text-muted">{label}</dt>
         <dd className="font-semibold">{children}</dd>
       </div>
     </div>

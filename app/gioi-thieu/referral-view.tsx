@@ -26,7 +26,7 @@ export function ReferralView({ code, rewards }: { code: string | null; rewards: 
   const { session, platform } = state
   // Paused (or not live yet): no promises, only what is already yours.
   const paused = (
-    <p className="flex gap-2 rounded-[var(--radius-lg)] bg-warning-soft px-4 py-3 text-[14px] text-warning">
+    <p className="flex gap-2 rounded-[var(--radius-lg)] bg-warning-soft px-4 py-3 text-body text-warning">
       <PauseCircle className="mt-0.5 size-4 shrink-0" />
       <span>Chương trình giới thiệu đang tạm dừng.{session ? " Voucher bạn đã có vẫn dùng được tới hạn." : ""}</span>
     </p>
@@ -67,7 +67,7 @@ export function ReferralView({ code, rewards }: { code: string | null; rewards: 
               qrFile={`360dep-gioi-thieu-${code}.png`}
             />
           ) : (
-            <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-[14px] text-ink-soft">
+            <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-body text-ink-soft">
               Chưa lấy được mã giới thiệu của bạn. Tải lại trang sau ít phút.
             </p>
           )}
@@ -91,8 +91,8 @@ function Intro() {
         <Gift className="size-5" />
       </span>
       <div>
-        <p className="text-[17px] font-bold tracking-tight">Rủ bạn bè dùng 360dep</p>
-        <p className="mt-0.5 text-[14px] text-ink-soft">
+        <p className="text-lead font-bold tracking-tight">Rủ bạn bè dùng 360dep</p>
+        <p className="mt-0.5 text-body text-ink-soft">
           {platform.referralCustomerAmount > 0
             ? `Khi bạn bè dùng dịch vụ lần đầu, cả hai cùng nhận voucher ${formatPrice(platform.referralCustomerAmount)}.`
             : "Khi bạn bè dùng dịch vụ lần đầu, cả hai cùng nhận ưu đãi."}{" "}
@@ -110,8 +110,8 @@ function Rules() {
   if (!p.referralCustomerAmount && !p.referralProAmount) return null
   return (
     <section>
-      <h2 className="text-[17px] font-bold tracking-tight">Cách tính</h2>
-      <ul className="mt-2 list-disc space-y-1.5 pl-5 text-[14px] leading-relaxed text-ink-soft">
+      <h2 className="text-lead font-bold tracking-tight">Cách tính</h2>
+      <ul className="mt-2 list-disc space-y-1.5 pl-5 text-body leading-relaxed text-ink-soft">
         <li>
           Bạn bè <b className="text-ink">đặt lịch</b>: khi lịch hẹn đầu tiên từ {formatPrice(p.referralMinTotal)} của họ hoàn thành, cả hai nhận
           voucher {formatPrice(p.referralCustomerAmount)}, dùng trong {p.voucherDays} ngày.
@@ -151,7 +151,7 @@ function ClaimCode() {
   const [done, setDone] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
 
-  if (done) return <p className="rounded-[var(--radius-lg)] bg-success-soft px-4 py-3 text-[14px] text-success">Đã nhận lời giới thiệu từ {done}.</p>
+  if (done) return <p className="rounded-[var(--radius-lg)] bg-success-soft px-4 py-3 text-body text-success">Đã nhận lời giới thiệu từ {done}.</p>
   // Null before the referral migration, or signed out; the rest is the database's rule.
   if (!referral || referral.referredBy) return null
   if (now - Date.parse(referral.joinedAt) > 30 * DAY) return null
@@ -171,10 +171,10 @@ function ClaimCode() {
         refresh()
       }}
     >
-      <p className="flex items-center gap-2 text-[15px] font-bold">
+      <p className="flex items-center gap-2 text-body font-bold">
         <UserPlus className="size-4" /> Bạn được bạn bè giới thiệu?
       </p>
-      <p className="mt-0.5 text-[13px] text-ink-soft">Nhập mã của họ. Chỉ nhập được một lần, trong 30 ngày đầu.</p>
+      <p className="mt-0.5 text-meta text-ink-soft">Nhập mã của họ. Chỉ nhập được một lần, trong 30 ngày đầu.</p>
       <div className="mt-3 flex gap-2">
         <input
           value={code}
@@ -188,7 +188,7 @@ function ClaimCode() {
           Nhập mã
         </Button>
       </div>
-      {error && <p className="mt-2 text-[13px] text-danger">{error}</p>}
+      {error && <p className="mt-2 text-meta text-danger">{error}</p>}
     </form>
   )
 }
@@ -196,13 +196,13 @@ function ClaimCode() {
 function Rewards({ rewards }: { rewards: ReferralRewardItem[] }) {
   return (
     <section>
-      <h2 className="text-[17px] font-bold tracking-tight">Thưởng giới thiệu</h2>
+      <h2 className="text-lead font-bold tracking-tight">Thưởng giới thiệu</h2>
       {rewards.length === 0 ? (
-        <p className="mt-1.5 text-[14px] text-ink-soft">Chưa có lượt thưởng nào. Thưởng hiện ở đây khi bạn bè dùng dịch vụ lần đầu.</p>
+        <p className="mt-1.5 text-body text-ink-soft">Chưa có lượt thưởng nào. Thưởng hiện ở đây khi bạn bè dùng dịch vụ lần đầu.</p>
       ) : (
         <ul className="mt-2 divide-y divide-line rounded-[var(--radius-card)] border border-line bg-surface">
           {rewards.map((r, i) => (
-            <li key={`${r.createdAt}-${i}`} className="flex items-center gap-3 px-4 py-3 text-[14px]">
+            <li key={`${r.createdAt}-${i}`} className="flex items-center gap-3 px-4 py-3 text-body">
               <span className="min-w-0 flex-1">
                 <span className="block">
                   {r.iInvited
@@ -213,7 +213,7 @@ function Rewards({ rewards }: { rewards: ReferralRewardItem[] }) {
                       ? "Quà giới thiệu: bạn đã xong 3 job đầu tiên"
                       : "Quà lần đầu dùng 360dep qua lời giới thiệu"}
                 </span>
-                <span className="block text-xs text-muted">{formatDateLong(localDate(r.createdAt), true)}</span>
+                <span className="block text-label text-muted">{formatDateLong(localDate(r.createdAt), true)}</span>
               </span>
               <span className="font-semibold text-success">+{formatPrice(r.amount)}</span>
             </li>
@@ -228,9 +228,9 @@ function Vouchers({ vouchers }: { vouchers: VoucherItem[] }) {
   const now = useNow(60_000)
   return (
     <section>
-      <h2 className="text-[17px] font-bold tracking-tight">Voucher của bạn</h2>
+      <h2 className="text-lead font-bold tracking-tight">Voucher của bạn</h2>
       {vouchers.length === 0 ? (
-        <p className="mt-1.5 text-[14px] text-ink-soft">Chưa có voucher nào.</p>
+        <p className="mt-1.5 text-body text-ink-soft">Chưa có voucher nào.</p>
       ) : (
         <ul className="mt-2 space-y-2">
           {vouchers.map((v) => {
@@ -248,15 +248,15 @@ function Vouchers({ vouchers }: { vouchers: VoucherItem[] }) {
                     <Ticket className="size-5" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[15px] font-bold">−{formatPrice(v.amount)}</span>
-                    <span className="block text-xs text-ink-soft">
+                    <span className="block text-body font-bold">−{formatPrice(v.amount)}</span>
+                    <span className="block text-label text-ink-soft">
                       {v.minTotal > 0 ? `Cho lịch hẹn từ ${formatPrice(v.minTotal)} · ` : ""}
                       {status.text}
                     </span>
-                    {v.note && <span className="block truncate text-xs text-muted">{v.note}</span>}
+                    {v.note && <span className="block truncate text-label text-muted">{v.note}</span>}
                   </span>
                   {v.bookingId && !v.usedAt && (
-                    <Link href={`/bookings/${v.bookingId}`} className="shrink-0 text-[13px] font-semibold text-accent underline underline-offset-2">
+                    <Link href={`/bookings/${v.bookingId}`} className="shrink-0 text-meta font-semibold text-accent underline underline-offset-2">
                       Xem lịch
                     </Link>
                   )}
@@ -266,7 +266,7 @@ function Vouchers({ vouchers }: { vouchers: VoucherItem[] }) {
           })}
         </ul>
       )}
-      <p className="mt-2 text-xs text-muted">Dùng voucher trong chi tiết lịch hẹn, trước giờ hẹn.</p>
+      <p className="mt-2 text-label text-muted">Dùng voucher trong chi tiết lịch hẹn, trước giờ hẹn.</p>
     </section>
   )
 }
