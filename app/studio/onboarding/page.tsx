@@ -87,7 +87,7 @@ function OnboardingForm() {
                         onClick={() => toggle(c.id)}
                         className={cn(
                           "min-h-12 rounded-full border px-4 text-body font-medium transition-colors disabled:opacity-50",
-                          categories.includes(c.id) ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
+                          categories.includes(c.id) ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink",
                         )}
                       >
                         {c.label}

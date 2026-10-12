@@ -173,7 +173,7 @@ function ProfileEditor() {
                 onClick={() => setMaxTravelKm(km)}
                 className={cn(
                   "h-10 rounded-full border px-4 text-body font-semibold",
-                  maxTravelKm === km ? "border-accent bg-accent text-white" : "border-line bg-surface hover:border-ink/30",
+                  maxTravelKm === km ? "border-ink bg-ink text-white" : "border-line bg-surface hover:border-ink",
                 )}
               >
                 {km} km

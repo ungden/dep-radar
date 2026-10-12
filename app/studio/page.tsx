@@ -240,7 +240,7 @@ function Dashboard() {
 
 function Shortcut({ href, icon, title, text }: { href: string; icon: React.ReactNode; title: string; text: string }) {
   return (
-    <Link href={href} className="block rounded-[var(--radius-lg)] border border-line bg-surface p-4 transition-colors hover:border-ink/30">
+    <Link href={href} className="block rounded-[var(--radius-lg)] border border-line bg-surface p-4 transition-colors hover:border-ink">
       <span className="flex size-10 items-center justify-center rounded-xl bg-subtle">{icon}</span>
       <p className="mt-3 text-body font-bold">{title}</p>
       <p className="mt-0.5 text-meta text-ink-soft">{text}</p>
@@ -276,7 +276,7 @@ function VerifyNudge({ pro }: { pro: Pro }) {
   if (!IDENTITY_VERIFICATION_OPEN || pro.identity === "verified") return null
   return (
     <Link href="/studio/verify" className="block">
-      <Card className="flex items-center gap-3 p-4 transition-colors hover:border-ink/30">
+      <Card className="flex items-center gap-3 p-4 transition-colors hover:border-ink">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-subtle text-ink">
           <IdCard className="size-5" />
         </span>

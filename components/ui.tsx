@@ -10,24 +10,27 @@ import { BRAND_DARK, BRAND_GOLD, LOGO_EYE_PATH, LOGO_EYE_STROKE, LOGO_EYE_STROKE
 import { showsAverage } from "@/lib/connection"
 import { cn, initials } from "@/lib/utils"
 
-type ButtonVariant = "primary" | "outline" | "soft" | "ghost" | "danger"
+type ButtonVariant = "primary" | "dark" | "highlight" | "outline" | "soft" | "ghost" | "danger"
 type ButtonSize = "sm" | "md" | "lg"
 
 const buttonBase =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-[background-color,border-color,transform] duration-150 disabled:pointer-events-none disabled:opacity-40 active:scale-[0.98]"
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-[background-color,border-color,color,transform,box-shadow] duration-150 disabled:pointer-events-none disabled:opacity-40 active:scale-[0.98]"
 const buttonVariants: Record<ButtonVariant, string> = {
-  // The main action is black; the accent is kept for marks, not buttons.
-  primary: "bg-accent text-white hover:bg-accent-dark",
-  outline: "border border-line bg-surface text-ink hover:border-ink/40",
+  // Rose is the action; ink is for search and confirmations that sit next to
+  // it; gold invites (become a partner, the hero), always with ink text.
+  primary: "bg-accent text-white shadow-[0_6px_16px_-8px_rgb(187_52_96/0.6)] hover:bg-accent-dark",
+  dark: "bg-ink text-white hover:bg-ink-soft",
+  highlight: "bg-highlight text-ink hover:brightness-95",
+  outline: "border border-line bg-surface text-ink hover:border-ink",
   soft: "bg-subtle text-ink hover:bg-subtle-strong",
-  ghost: "text-ink-soft hover:bg-subtle",
+  ghost: "text-ink-soft hover:bg-subtle hover:text-ink",
   danger: "border border-danger/40 bg-surface text-danger hover:bg-danger-soft",
 }
 const buttonSizes: Record<ButtonSize, string> = {
   // Visible controls themselves meet the touch target minimum.
   sm: "min-h-11 rounded-full px-4 py-2 text-meta",
-  md: "min-h-12 rounded-full px-5 py-2.5 text-body font-semibold",
-  lg: "min-h-14 rounded-full px-7 py-3 text-body font-semibold",
+  md: "min-h-12 rounded-full px-5 py-2.5 text-body",
+  lg: "min-h-14 rounded-full px-7 py-3 text-body",
 }
 
 export function buttonClass(variant: ButtonVariant = "primary", size: ButtonSize = "md", className?: string) {
@@ -102,7 +105,7 @@ export function Logo({ className, size = "md" }: { className?: string; size?: "m
 
 export function Avatar({
   name,
-  tone = "#EAD6D0",
+  tone = "#EDE7E0",
   src,
   size = 44,
   className,
@@ -141,8 +144,8 @@ export function Chip({
       type="button"
       aria-pressed={active}
       className={cn(
-        "relative inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-4 text-meta font-medium transition-colors",
-        active ? "border-accent bg-accent text-white" : "border-line-strong bg-surface text-ink hover:border-accent",
+        "relative inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-4 text-meta font-semibold transition-colors",
+        active ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink",
         className,
       )}
       {...props}
@@ -151,7 +154,7 @@ export function Chip({
 }
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("rounded-[var(--radius-card)] border border-line bg-surface", className)} {...props} />
+  return <div className={cn("rounded-[var(--radius-card)] border border-line bg-surface shadow-[0_1px_2px_rgb(28_24_18/0.03)]", className)} {...props} />
 }
 
 /** A freelancer's rating. With a count under three it says "Mới" rather than an average of one or two reviews. */
@@ -165,7 +168,7 @@ export function Rating({ value, count, className }: { value: number; count?: num
     )
   return (
     <span className={cn("inline-flex items-center gap-1 text-meta text-ink-soft", className)}>
-      <Star className="size-3.5 fill-ink text-ink" aria-hidden />
+      <Star className="size-3.5 fill-highlight text-[#D9A21F]" aria-hidden />
       <span className="font-medium text-ink">{value.toFixed(1)}</span>
       {count !== undefined && <span className="text-muted">({count})</span>}
     </span>
@@ -176,7 +179,7 @@ const STATUS: Record<BookingStatus, { label: string; className: string }> = {
   pending: { label: "Chờ nhận lịch", className: "bg-warning-soft text-warning" },
   confirmed: { label: "Đã xác nhận", className: "bg-success-soft text-success" },
   in_progress: { label: "Đang làm", className: "bg-success-soft text-success" },
-  completed: { label: "Hoàn thành", className: "bg-subtle text-ink" },
+  completed: { label: "Hoàn thành", className: "bg-ink text-white" },
   declined: { label: "Bị từ chối", className: "bg-danger-soft text-danger" },
   cancelled: { label: "Đã huỷ", className: "bg-canvas text-muted" },
   expired: { label: "Hết hạn chờ", className: "bg-canvas text-muted" },
@@ -212,7 +215,7 @@ export function PageHeader({
 }) {
   const router = useRouter()
   return (
-    <div className={cn("sticky top-0 z-30 -mx-4 mb-2 flex h-14 items-center gap-2 bg-canvas/90 px-4 backdrop-blur md:static md:mx-0 md:px-0 md:bg-transparent", className)}>
+    <div className={cn("sticky top-0 z-30 -mx-4 mb-2 flex h-14 items-center gap-2 border-b border-line/70 bg-canvas/90 px-4 backdrop-blur-md md:static md:mx-0 md:mb-4 md:h-auto md:border-0 md:px-0 md:pt-8 md:bg-transparent", className)}>
       {back && (
         <button
           type="button"
@@ -223,7 +226,7 @@ export function PageHeader({
           <ChevronLeft className="size-5" />
         </button>
       )}
-      {title && <h1 className={cn("flex-1 truncate text-lead font-bold md:text-2xl md:font-bold", back && "text-center md:text-left")}>{title}</h1>}
+      {title && <h1 className={cn("flex-1 truncate text-lead font-bold tracking-tight md:text-[30px] md:font-extrabold md:leading-tight", back && "text-center md:text-left")}>{title}</h1>}
       {!title && <div className="flex-1" />}
       <div className={cn("flex min-w-10 justify-end", !action && back && "md:hidden")}>{action}</div>
     </div>
@@ -283,11 +286,11 @@ export function Tabs<T extends string>({
           onClick={() => onChange(it.value)}
           className={cn(
             "relative min-h-12 shrink-0 pb-3 pt-1 text-meta transition-colors sm:text-body",
-            value === it.value ? "font-semibold text-accent" : "font-medium text-muted hover:text-ink",
+            value === it.value ? "font-bold text-ink" : "font-medium text-muted hover:text-ink",
           )}
         >
           {it.label}
-          {value === it.value && <span className="absolute inset-x-0 -bottom-px h-[3px] rounded-full bg-accent" />}
+          {value === it.value && <span className="absolute inset-x-0 -bottom-px h-[2.5px] rounded-full bg-ink" />}
         </button>
       ))}
     </div>
@@ -307,7 +310,7 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center px-6 py-14 text-center">
-      {icon && <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-subtle text-ink">{icon}</div>}
+      {icon && <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-highlight-soft text-ink">{icon}</div>}
       <p className="text-lead font-bold">{title}</p>
       {text && <p className="mt-1.5 max-w-xs text-body text-ink-soft">{text}</p>}
       {action && <div className="mt-5">{action}</div>}
@@ -328,7 +331,7 @@ export function PageSkeleton() {
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-2xl bg-subtle", className)} />
+  return <div className={cn("animate-pulse rounded-[var(--radius-lg)] bg-subtle", className)} />
 }
 
 export function Field({
@@ -352,7 +355,7 @@ export function Field({
 }
 
 export const inputClass =
-  "min-h-[52px] w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-body text-ink placeholder:text-muted focus:border-accent focus:outline-none"
+  "min-h-[52px] w-full rounded-[var(--radius-md)] border border-line-strong bg-surface px-4 py-3 text-body text-ink placeholder:text-muted transition-shadow focus:border-ink focus:outline-none focus:ring-4 focus:ring-ink/[0.06]"
 
 export function Toggle({
   checked,
@@ -373,9 +376,9 @@ export function Toggle({
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className="relative flex h-12 w-14 shrink-0 items-center justify-center rounded-lg focus-visible:outline-accent disabled:opacity-50"
+      className="relative flex h-12 w-14 shrink-0 items-center justify-center rounded-lg focus-visible:outline-ink disabled:opacity-50"
     >
-      <span aria-hidden className={cn("relative h-7 w-12 rounded-full", checked ? "bg-accent" : "bg-line-strong")}><span className={cn("absolute top-1 size-5 rounded-full bg-white shadow transition-all", checked ? "left-6" : "left-1")} /></span>
+      <span aria-hidden className={cn("relative h-7 w-12 rounded-full transition-colors", checked ? "bg-success" : "bg-line-strong")}><span className={cn("absolute top-1 size-5 rounded-full bg-white shadow transition-all", checked ? "left-6" : "left-1")} /></span>
     </button>
   )
 }
@@ -386,7 +389,7 @@ export function BottomBar({ children, className }: { children: React.ReactNode; 
       <div className="h-24 md:hidden" />
       <div
         className={cn(
-          "pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 px-4 pt-3 backdrop-blur md:static md:mt-6 md:border-0 md:bg-transparent md:p-0",
+          "pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 px-4 pt-3 shadow-[0_-8px_24px_-16px_rgb(28_24_18/0.18)] backdrop-blur-md md:static md:mt-6 md:border-0 md:bg-transparent md:p-0 md:shadow-none",
           className,
         )}
       >

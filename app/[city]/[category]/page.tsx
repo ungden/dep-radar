@@ -304,7 +304,7 @@ function LinkGroup({ title, links }: { title: string; links: { href: string; lab
           <li key={l.href}>
             <Link
               href={l.href}
-              className="inline-flex h-10 items-center rounded-full border border-line bg-surface px-4 text-body text-ink hover:border-ink/30"
+              className="inline-flex h-10 items-center rounded-full border border-line bg-surface px-4 text-body text-ink hover:border-ink"
             >
               {l.label}
             </Link>

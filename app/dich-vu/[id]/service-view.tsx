@@ -11,6 +11,9 @@ import { DataUnavailable } from "@/components/data-unavailable"
 import { PostCard, whereLabel } from "@/components/beauty"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar, ButtonLink, PageHeader } from "@/components/ui"
+import { CategoryIcon } from "@/components/category-icon"
+import { CATEGORY_TINTS } from "@/lib/design/category-icons"
+import { categoryPhoto } from "@/lib/design/photos"
 import { categoryLabel, getTemplate, serviceDuration, serviceQuantity } from "@/lib/catalog"
 import { distanceToCustomer, servicesOf, useApp } from "@/lib/store"
 import { excludes, placeLabel } from "@/lib/trade"
@@ -54,6 +57,9 @@ export function ServiceView({ templateId }: { templateId: string }) {
     return prices.length ? [{ variant, price: Math.min(...prices) }] : []
   })
   const works = state.works.filter((w) => w.templateId === templateId && (!city || near.some((p) => p.id === w.proId))).slice(0, 8)
+  // A real photo of this service when someone posted one; otherwise its category's illustration, labelled.
+  const realPhoto = works[0]?.images[0]
+  const tint = CATEGORY_TINTS[template.category]
 
   return (
     <div className="mx-auto max-w-5xl md:pt-4">
@@ -63,11 +69,18 @@ export function ServiceView({ templateId }: { templateId: string }) {
           people: price first is the point of this page. */}
       <div className="grid gap-8 md:grid-cols-[1fr_340px] md:gap-x-8 md:gap-y-2">
         <div className="md:col-start-1">
-          <p className="text-meta font-semibold text-muted">{categoryLabel(template.category)}</p>
-          <h1 className="mt-1 text-[30px] font-bold leading-tight tracking-tight md:text-[38px]">{template.name}</h1>
-          <p className="mt-2 text-body text-ink-soft">{template.description}</p>
+          <figure className="relative -mx-4 mb-6 aspect-[16/10] overflow-hidden bg-subtle sm:mx-0 sm:rounded-[var(--radius-xl)] md:aspect-[16/8]">
+            <Image src={realPhoto ?? categoryPhoto(template.category)} alt={realPhoto ? template.name : ""} fill priority sizes="(min-width: 1024px) 640px, 100vw" className="object-cover" />
+            {!realPhoto && <figcaption className="absolute bottom-3 right-3 rounded-full bg-black/45 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur">Ảnh minh hoạ</figcaption>}
+          </figure>
+          <span className="inline-flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-3 text-label font-bold" style={{ background: tint.bg, color: tint.fg }}>
+            <CategoryIcon id={template.category} className="size-4" />
+            {categoryLabel(template.category)}
+          </span>
+          <h1 className="mt-3 text-[30px] font-extrabold leading-[1.1] tracking-[-0.03em] md:text-[42px]">{template.name}</h1>
+          <p className="mt-3 text-lead text-ink-soft">{template.description}</p>
 
-          <ul className="mt-5 space-y-2 text-body">
+          <ul className="mt-6 space-y-2.5 rounded-[var(--radius-lg)] border border-line bg-surface p-5 text-body">
             <li className="flex gap-2.5">
               <MapPin className="mt-0.5 size-4 shrink-0" />
               {placeLabel(template)}
@@ -89,8 +102,8 @@ export function ServiceView({ templateId }: { templateId: string }) {
         </div>
 
         <aside className="md:sticky md:top-24 md:col-start-2 md:row-span-2 md:row-start-1 md:self-start">
-          <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-5">
-            <p className="text-lead font-bold">Gói đang có người nhận</p>
+          <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-5 shadow-[var(--shadow-soft)]">
+            <p className="text-lead font-extrabold tracking-tight">Gói đang có người nhận</p>
             {availablePackages.length ? <ul className="mt-3 divide-y divide-line">
               {availablePackages.map(({ variant: v, price }) => (
                 <li key={v.id} className="space-y-2 py-4 text-body">
@@ -100,12 +113,12 @@ export function ServiceView({ templateId }: { templateId: string }) {
                   {(v.minQuantity ?? 1) > 1 && <p className="text-meta text-ink-soft">Tối thiểu {v.minQuantity} người · từ {formatPrice(price * v.minQuantity!)}/nhóm</p>}
                 </li>
               ))}
-            </ul> : <p className="mt-3 text-body text-ink-soft">Chưa có gói phù hợp với lựa chọn này.</p>}
-            <details className="mt-4 border-t border-line pt-4">
-              <summary className="cursor-pointer text-meta font-semibold">Xem khung 3 mức giá của 360đẹp</summary>
+            </ul> : <p className="mt-2 text-meta text-ink-soft">Chưa có ai nhận gói này ở đây. Giá dưới đây là khung giá niêm yết của 360đẹp.</p>}
+            <details className="mt-4 border-t border-line pt-4" open={!availablePackages.length}>
+              <summary className="cursor-pointer text-meta font-bold">Khung 3 mức giá của 360đẹp</summary>
               <p className="mt-3 text-meta text-ink-soft">Khung giá tham khảo. Người làm chọn một mức cho từng gói; mức đang nhận lịch nằm ở trên.</p>
               <ul className="mt-3 space-y-4">
-                {template.variants.map((v) => <li key={v.id} className="min-w-0 space-y-2"><p className="text-meta font-semibold">{v.label}</p><div className="flex flex-wrap gap-2">{v.tiers.map((tier) => <span key={tier} className="rounded-lg bg-subtle px-2 py-1 text-label">{formatPrice(tier)}{v.perPerson ? "/người" : ""}</span>)}</div></li>)}
+                {template.variants.map((v) => <li key={v.id} className="min-w-0 space-y-2"><p className="text-meta font-semibold">{v.label}</p><div className="flex flex-wrap gap-2">{v.tiers.map((tier) => <span key={tier} className="rounded-full border border-line bg-canvas px-2.5 py-1 text-label font-semibold">{formatPrice(tier)}{v.perPerson ? "/người" : ""}</span>)}</div></li>)}
               </ul>
               <p className="mt-3 text-meta text-ink-soft">Khách không trả phí nền tảng.</p>
             </details>
@@ -114,12 +127,12 @@ export function ServiceView({ templateId }: { templateId: string }) {
 
         <div className="md:col-start-1">
           <section className="md:mt-2">
-            <h2 className="text-[22px] font-bold tracking-tight">
+            <h2 className="text-[24px] font-extrabold tracking-tight">
               Chọn người làm{city ? ` ở ${city}` : ""}
               {ranked.length > 0 && <span className="ml-2 text-body font-medium text-muted">{ranked.length}</span>}
             </h2>
             {ranked.length === 0 ? (
-              <div className="mt-4 rounded-[var(--radius-lg)] border border-dashed border-line-strong px-5 py-8 text-center">
+              <div className="mt-4 rounded-[var(--radius-lg)] bg-highlight-soft px-5 py-8 text-center">
                 <p className="text-body font-bold">Chưa có ai nhận dịch vụ này{city ? ` ở ${city}` : ""}</p>
                 <p className="mx-auto mt-1 max-w-sm text-body text-ink-soft">
                   {elsewhere.length
@@ -132,7 +145,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
                     <button
                       type="button"
                       onClick={() => { const next = new URLSearchParams(params.toString()); next.set("city", "all"); router.replace(`/dich-vu/${templateId}?${next}`) }}
-                      className="inline-flex h-11 items-center rounded-full border border-line-strong bg-surface px-5 text-body font-semibold hover:border-accent"
+                      className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-5 text-body font-semibold hover:border-ink"
                     >
                       Xem cả nước
                     </button>
@@ -152,7 +165,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
 
           {works.length > 0 && (
             <section className="mt-12">
-              <h2 className="mb-4 text-[22px] font-bold tracking-tight">Ảnh thật của dịch vụ này</h2>
+              <h2 className="mb-4 text-[24px] font-extrabold tracking-tight">Ảnh thật của dịch vụ này</h2>
               <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3">
                 {works.map((w) => (
                   <PostCard key={w.id} work={w} />

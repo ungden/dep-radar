@@ -3,54 +3,60 @@
  * native app (apps/mobile). One source, so a colour cannot drift between them;
  * tests/design-tokens.test.ts fails when globals.css disagrees with this file.
  *
- * Direction: "hồng đất sáng". A warm, light page where real photos sit on
- * white cards; text is a deep warm brown rather than black; the brand rose is
- * the colour of every action and every selected state. Nothing is black:
- * an earlier all-black version read as heavy and dark.
+ * Direction (12/10/2026): "giấy sáng, chữ đậm". A warm paper page, white
+ * cards with a hairline edge, near-black text that reads at a glance, one
+ * vivid rose for actions and a champagne-gold highlight for invitations.
+ * Colour lives in the photos and in the category tints
+ * (lib/design/category-icons.ts), not in the chrome. The previous dusty-rose
+ * page put pink on pink and brown on pink; text washed out.
  *
- * Every text colour here reaches WCAG AA (4.5:1) on canvas and surface, and
- * white text reaches it on accent and accentDark.
+ * Every text colour here reaches WCAG AA (4.5:1) on canvas, surface and
+ * subtle, and white text reaches it on accent, accentDark and ink.
  */
 export const colors = {
-  canvas: "#FAF6F4",
+  canvas: "#FAF8F5",
   surface: "#FFFFFF",
   /** Quiet fill: unselected chips, image placeholders, secondary buttons. */
-  subtle: "#F5ECE9",
-  subtleStrong: "#EADBD7",
-  line: "#EFE3DF",
+  subtle: "#F2EFEA",
+  subtleStrong: "#E6E1D9",
+  line: "#E8E3DB",
   /**
    * Borders that have to be seen to be used: text fields, unselected time
    * slots and date chips. 3.3:1 on surface, 3.1:1 on canvas (WCAG 1.4.11).
    * `line` stays for dividers and card edges, which are decoration.
    */
-  lineStrong: "#A5877F",
-  ink: "#3A2A2C",
-  inkSoft: "#65575A",
-  /** 5.3:1 on canvas, 4.9:1 on subtle, 4.7:1 on accentSoft. */
-  muted: "#736366",
-  /** Hồng đất: buttons, selected chips and tabs, links, the saved heart. */
-  accent: "#A8535D",
-  accentDark: "#8F434C",
-  accentSoft: "#F6E6E6",
-  success: "#2F6F4B",
-  successSoft: "#E5F2EA",
+  lineStrong: "#948B83",
+  /** Text and the selected state of chips and tabs. 18.7:1 on surface. */
+  ink: "#141213",
+  inkSoft: "#3D3739",
+  /** 6.0:1 on canvas, 5.5:1 on subtle. Secondary text, never body copy. */
+  muted: "#655E60",
+  /** Son hồng: the main button, links, the saved heart. */
+  accent: "#BB3460",
+  accentDark: "#9A2A4F",
+  accentSoft: "#FCEAF0",
+  /** Champagne gold: invitations (become a partner, hero calls to action), always with ink text. */
+  highlight: "#F6C453",
+  highlightSoft: "#FFF4D6",
+  success: "#21704A",
+  successSoft: "#E3F4EA",
   warning: "#8A5410",
-  warningSoft: "#FBEFDC",
-  danger: "#A13A3A",
-  dangerSoft: "#F8E4E2",
+  warningSoft: "#FDF0D9",
+  danger: "#B3261E",
+  dangerSoft: "#FBE6E3",
   /** Small marks only (a dot, a label), never a large fill. */
   vertical: {
-    beauty: "#A8535D",
-    photo: "#4A67C9",
-    model: "#86508F",
+    beauty: "#BB3460",
+    photo: "#2F62C9",
+    model: "#7B47C7",
   },
 } as const
 
 export const radius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
+  sm: 10,
+  md: 14,
+  lg: 20,
+  xl: 28,
   full: 999,
 } as const
 

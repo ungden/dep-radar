@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Heart, Layers, Play } from "lucide-react"
 import { CategoryIcon } from "@/components/category-icon"
+import { CATEGORY_TINTS } from "@/lib/design/category-icons"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar } from "@/components/ui"
 import { CATEGORIES, VERTICALS, categoryLabel } from "@/lib/catalog"
@@ -79,8 +80,8 @@ export function VerticalSwitch({
             onKeyDown={(event) => moveRadio(event, () => onChange(it.id))}
             onClick={() => onChange(it.id)}
             className={cn(
-              "inline-flex min-h-12 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-body font-semibold transition-colors",
-              active ? "bg-accent text-white" : "bg-subtle text-ink hover:bg-subtle-strong",
+              "inline-flex min-h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border px-4.5 text-[15px] font-semibold transition-colors",
+              active ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink",
             )}
           >
             {it.id !== "all" && (
@@ -91,7 +92,7 @@ export function VerticalSwitch({
                   it.id === "beauty" && "bg-beauty",
                   it.id === "photo" && "bg-photo",
                   it.id === "model" && "bg-model",
-                  active && "ring-2 ring-white/30",
+                  active && "ring-2 ring-white/40",
                 )}
               />
             )}
@@ -118,11 +119,11 @@ export function CategoryBubbles({ vertical = "all", className }: { vertical?: Ve
         const src = cover(c.id)
         return (
           <Link key={c.id} href={`/search?category=${c.id}`} className="group flex w-[68px] shrink-0 flex-col items-center gap-1.5 text-center">
-            <span className="relative flex size-16 items-center justify-center overflow-hidden rounded-full bg-subtle ring-1 ring-line transition-transform group-active:scale-95">
+            <span className="relative flex size-16 items-center justify-center overflow-hidden rounded-full bg-subtle ring-1 ring-line transition-transform group-active:scale-95" style={src ? undefined : { background: CATEGORY_TINTS[c.id].bg, color: CATEGORY_TINTS[c.id].fg }}>
               {src ? (
                 <Image src={src} alt="" fill sizes="64px" className="object-cover" />
               ) : (
-                <Icon className="size-7 text-accent" />
+                <Icon className="size-7" />
               )}
             </span>
             <span className="text-label font-medium leading-tight text-ink">{c.label}</span>
@@ -232,7 +233,7 @@ export function PostCard({ work, priority, className }: { work: Work; priority?:
       ref={ref}
       href={`/works/${work.id}`}
       className={cn(
-        "group block animate-fade-up overflow-hidden rounded-[var(--radius-lg)] bg-surface shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-raised)]",
+        "group block animate-fade-up overflow-hidden rounded-[var(--radius-lg)] border border-line bg-surface transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)]",
         className,
       )}
     >
@@ -249,7 +250,7 @@ export function PostCard({ work, priority, className }: { work: Work; priority?:
         )}
         {/* A fact, not a slogan: the person has bookings switched on. */}
         {pro.acceptingJobs && (
-          <span className="absolute left-2.5 top-2.5 rounded-full bg-white/90 px-2.5 py-1 text-label font-semibold text-accent backdrop-blur">
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-white/95 px-2.5 py-1 text-[11.5px] font-bold text-ink shadow-sm backdrop-blur"><span aria-hidden className="mr-1 inline-block size-1.5 -translate-y-px rounded-full bg-success" />
             Có thể đặt
           </span>
         )}
@@ -262,7 +263,7 @@ export function PostCard({ work, priority, className }: { work: Work; priority?:
           {price !== null ? (
             <>
               <span className="text-muted">Từ </span>
-              <span className="font-semibold text-accent-dark">{formatPrice(price)}</span>
+              <span className="font-bold text-ink">{formatPrice(price)}</span>
             </>
           ) : (
             <span className="text-muted">{categoryLabel(work.category)}</span>
@@ -357,7 +358,7 @@ export function ProCard({ pro: basePro, category, className }: { pro: Pro; categ
   return (
     <Link
       href={`/pros/${pro.id}${category ? `?album=${category}` : ""}`}
-      className={cn("group block rounded-[var(--radius-lg)] bg-surface p-3 shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-raised)]", className)}
+      className={cn("group block rounded-[var(--radius-lg)] border border-line bg-surface p-3.5 transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)]", className)}
     >
       <div className="flex items-center gap-3">
         <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={52} />

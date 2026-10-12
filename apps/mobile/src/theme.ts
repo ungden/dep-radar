@@ -3,13 +3,13 @@ import { aspect, colors, fontSize, motion, radius, space } from "@/shared"
 /** The shared tokens (lib/design/tokens.ts), plus what only the app needs. */
 export { aspect, colors, fontSize, motion, radius, space }
 
-/** Be Vietnam Pro, loaded in app/_layout.tsx. A custom font ignores fontWeight, so each weight is its own family. */
+/** Inter, as on the web; loaded in app/_layout.tsx. A custom font ignores fontWeight, so each weight is its own family. */
 export const fonts = {
-  400: "BeVietnamPro_400Regular",
-  500: "BeVietnamPro_500Medium",
-  600: "BeVietnamPro_600SemiBold",
-  700: "BeVietnamPro_700Bold",
-  800: "BeVietnamPro_800ExtraBold",
+  400: "Inter_400Regular",
+  500: "Inter_500Medium",
+  600: "Inter_600SemiBold",
+  700: "Inter_700Bold",
+  800: "Inter_800ExtraBold",
 } as const
 
 export type Weight = keyof typeof fonts
@@ -36,7 +36,7 @@ export const controlMetrics = {
 export const card = {
   backgroundColor: colors.surface,
   borderRadius: radius.lg,
-  shadowColor: "#3A2A2C",
+  shadowColor: "#141213",
   shadowOpacity: 0.1,
   shadowRadius: 12,
   shadowOffset: { width: 0, height: 4 },

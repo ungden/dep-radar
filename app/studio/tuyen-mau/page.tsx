@@ -175,7 +175,7 @@ function CastingForm({ onDone }: { onDone: () => void }) {
               onClick={() => setCompensation(value)}
               className={cn(
                 "h-11 rounded-full border px-4 text-body font-semibold transition-colors disabled:opacity-40",
-                compensation === value ? "border-accent bg-accent text-white" : "border-line bg-surface hover:border-ink/30",
+                compensation === value ? "border-ink bg-ink text-white" : "border-line bg-surface hover:border-ink",
               )}
             >
               {label}
@@ -285,7 +285,7 @@ function CastingManager({ casting }: { casting: Casting }) {
                     type="button"
                     aria-label={`Không chọn ${a.applicantName}`}
                     onClick={() => void act(() => actions.decideApplication(a.id, false), "Đã từ chối").then(setError)}
-                    className="inline-flex size-10 items-center justify-center rounded-full border border-line hover:border-ink/30"
+                    className="inline-flex size-10 items-center justify-center rounded-full border border-line hover:border-ink"
                   >
                     <X className="size-4" />
                   </button>

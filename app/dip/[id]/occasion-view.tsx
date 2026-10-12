@@ -163,7 +163,7 @@ export function OccasionView({ occasionId }: { occasionId: string }) {
               <li key={o.id}>
                 <Link
                   href={`/dip/${o.id}`}
-                  className="inline-flex h-10 items-center rounded-full border border-line bg-surface px-4 text-body font-medium hover:border-ink/30"
+                  className="inline-flex h-10 items-center rounded-full border border-line bg-surface px-4 text-body font-medium hover:border-ink"
                 >
                   {o.title}
                 </Link>

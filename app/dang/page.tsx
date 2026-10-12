@@ -34,7 +34,7 @@ export default function PostPage() {
           <li key={o.href}>
             <Link
               href={session ? o.href : `/login?next=${encodeURIComponent(o.href)}`}
-              className="flex items-center gap-4 rounded-[var(--radius-lg)] border border-line bg-surface p-4 transition-colors hover:border-ink/30"
+              className="flex items-center gap-4 rounded-[var(--radius-lg)] border border-line bg-surface p-4 transition-colors hover:border-ink"
             >
               <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-subtle">
                 <o.icon className="size-6" />

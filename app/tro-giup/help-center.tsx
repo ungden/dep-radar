@@ -60,7 +60,7 @@ export function HelpCenter() {
             onClick={() => setAudience(value)}
             className={cn(
               "h-11 rounded-full border text-body font-semibold transition-colors",
-              audience === value ? "border-accent bg-accent text-white" : "border-line bg-surface hover:border-ink/30",
+              audience === value ? "border-ink bg-ink text-white" : "border-line bg-surface hover:border-ink",
             )}
           >
             {label}

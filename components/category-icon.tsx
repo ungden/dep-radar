@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { ChevronUp } from "lucide-react"
-import { CATEGORY_ICONS, ICON_SOFT_OPACITY, ICON_STROKE, type CategoryIconId } from "@/lib/design/category-icons"
+import { CATEGORY_ICONS, CATEGORY_TINTS, ICON_SOFT_OPACITY, ICON_STROKE, type CategoryIconId } from "@/lib/design/category-icons"
 import { moveRadio } from "@/lib/radio-navigation"
 import { cn } from "@/lib/utils"
 
@@ -59,7 +59,7 @@ export function CategoryTiles({
       role="radiogroup"
       aria-label="Danh mục"
       className={cn(
-        "grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-6 lg:flex lg:flex-wrap lg:gap-x-1.5 xl:gap-x-2 lg:gap-y-4",
+        "grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-6 lg:grid-cols-[repeat(auto-fill,minmax(80px,1fr))] lg:gap-x-2",
         className,
       )}
     >
@@ -75,17 +75,16 @@ export function CategoryTiles({
             onKeyDown={(event) => moveRadio(event, () => onChange(it.id))}
             onClick={() => onChange(it.id)}
             aria-label={it.soon ? `${it.label}, chưa có người nhận lịch` : it.label}
-            className={cn("group relative flex min-w-0 flex-col items-center gap-2 text-center", !row && "lg:w-[68px] xl:w-[84px]", it.className)}
+            className={cn("group relative flex min-w-0 flex-col items-center gap-2 text-center", it.className)}
           >
             <span
+              // Each category keeps its own colour; the chosen one gets an ink ring.
+              style={{ background: CATEGORY_TINTS[it.id].bg, color: CATEGORY_TINTS[it.id].fg }}
               className={cn(
-                "flex items-center justify-center transition-colors",
-                row ? "size-11 rounded-[14px]" : "size-[52px] rounded-[18px] lg:size-[60px] lg:rounded-[20px]",
-                active
-                  ? "bg-accent text-white shadow-[var(--shadow-raised)]"
-                  : it.soon
-                    ? "bg-subtle text-muted group-hover:bg-subtle-strong"
-                    : "bg-accent-soft text-accent group-hover:bg-subtle-strong",
+                "flex items-center justify-center rounded-full transition-[transform,box-shadow] duration-200 group-hover:-translate-y-0.5",
+                row ? "size-11" : "size-[54px] lg:size-[60px]",
+                active ? "shadow-[0_0_0_2.5px_var(--color-canvas),0_0_0_4.5px_var(--color-ink)]" : "group-hover:shadow-[var(--shadow-soft)]",
+                it.soon && !active && "opacity-60 saturate-50",
               )}
             >
               <CategoryIcon id={it.id} className={cn(row ? "size-5" : "size-6 lg:size-7")} />
@@ -94,7 +93,7 @@ export function CategoryTiles({
               className={cn(
                 // Names wrap instead of shrinking or hiding the service behind an ellipsis.
                 "w-full min-h-10 text-label leading-5 [overflow-wrap:anywhere]",
-                active ? "font-semibold text-accent-dark" : "font-medium text-ink",
+                active ? "font-bold text-ink" : "font-semibold text-ink-soft",
               )}
               title={it.label}
             >
@@ -108,12 +107,12 @@ export function CategoryTiles({
           type="button"
           onClick={more.onToggle}
           aria-expanded={more.open}
-          className={cn("group flex min-w-0 flex-col items-center gap-2 text-center", !row && "lg:w-[68px] xl:w-[84px]", more.className)}
+          className={cn("group flex min-w-0 flex-col items-center gap-2 text-center", more.className)}
         >
           <span
             className={cn(
-              "flex items-center justify-center border border-line bg-surface text-ink-soft transition-colors group-hover:border-accent group-hover:text-accent",
-              row ? "size-11 rounded-[14px]" : "size-[52px] rounded-[18px] lg:size-[60px] lg:rounded-[20px]",
+              "flex items-center justify-center rounded-full border border-line bg-surface text-ink transition-colors group-hover:border-ink",
+              row ? "size-11" : "size-[54px] lg:size-[60px]",
             )}
           >
             {more.open ? (
@@ -122,7 +121,7 @@ export function CategoryTiles({
               <CategoryIcon id="all" className={cn(row ? "size-5" : "size-6 lg:size-7")} />
             )}
           </span>
-          <span className="w-full min-h-10 text-label font-medium leading-5 text-ink">{more.open ? "Thu gọn" : "Xem thêm"}</span>
+          <span className="w-full min-h-10 text-label font-semibold leading-5 text-ink-soft">{more.open ? "Thu gọn" : "Xem thêm"}</span>
         </button>
       )}
     </div>

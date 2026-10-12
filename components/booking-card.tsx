@@ -235,7 +235,7 @@ export function DeclineForm({
             onClick={() => setReason(reason === r ? "" : r)}
             className={cn(
               "rounded-full border px-3 py-1.5 text-meta",
-              reason === r ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink",
+              reason === r ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink",
             )}
           >
             {r}

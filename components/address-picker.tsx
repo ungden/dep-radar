@@ -49,7 +49,7 @@ export function AddressPicker({
                 }}
                 className={cn(
                   "flex w-full gap-2.5 rounded-xl border p-3 text-left",
-                  value === address.id && !adding ? "border-accent bg-subtle" : "border-line bg-surface",
+                  value === address.id && !adding ? "border-ink bg-subtle" : "border-line bg-surface",
                 )}
               >
                 <MapPin className={cn("mt-0.5 size-4 shrink-0", value === address.id ? "text-accent" : "text-muted")} />

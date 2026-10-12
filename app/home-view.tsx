@@ -5,24 +5,27 @@ import { Suspense } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Bell, ChevronDown, MapPin, MessageCircle, RotateCcw, Search, X } from "lucide-react"
+import { ArrowRight, Bell, ChevronDown, ChevronLeft, ChevronRight, MapPin, MessageCircle, Pause, Play, RotateCcw, Search, Sparkles, X } from "lucide-react"
 import { bookingImage } from "@/components/booking-card"
 import { PostCard, VerticalSwitch } from "@/components/beauty"
 import { CategoryTiles } from "@/components/category-icon"
 import { MobileLinks } from "@/components/mobile-links"
 import { DataUnavailable } from "@/components/data-unavailable"
-import { ServiceCard } from "@/components/service-card"
-import { ButtonLink, PageSkeleton, Wordmark } from "@/components/ui"
+import { CatalogCard, ServiceCard } from "@/components/service-card"
+import { Button, ButtonLink, LogoMark, PageSkeleton, Wordmark } from "@/components/ui"
 import { DEMO_DATA_LIVE } from "@/lib/launch"
-import { CATEGORIES, getVertical, isVertical } from "@/lib/catalog"
+import { CATALOG, CATEGORIES, getVertical, isVertical } from "@/lib/catalog"
+import { HERO_PHOTOS, OCCASION_PHOTOS } from "@/lib/design/photos"
 import { pinPriority } from "@/lib/discovery"
 import { actions } from "@/lib/client-actions"
 import { rankFeed, type VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
-import { categoryRow, serviceOffers, type ServiceOffer } from "@/lib/offers"
+import { occasionTemplates, occasionsFor, suggestionsFor } from "@/lib/occasions"
+import { categoryRow, serviceOffers } from "@/lib/offers"
+import { POLICY } from "@/lib/pricing"
 import { distanceToCustomer, getPro, useApp } from "@/lib/store"
 import type { Booking, Category, CategoryId } from "@/lib/types"
-import { cn, formatPrice } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 
 const DEMO_KEY = "dep360_demo_notice"
 /** Set once the visitor has answered "Bạn ở đâu?" (or picked a city some other way). */
@@ -66,8 +69,6 @@ function Explore() {
     () => (city ? serviceOffers({ pros: state.pros, proServices: state.proServices, works: [], city: null, vertical }).length : 0),
     [state.pros, state.proServices, city, vertical],
   )
-  // One row of the categories with the most on offer here; the rest (and the
-  // ones nobody offers yet, marked "Sắp có") one tap away behind "Xem thêm".
   const categories = CATEGORIES.filter((c) => vertical === "all" || c.vertical === vertical)
   const shownCategory = categories.some((c) => c.id === category) ? category : "all"
   const counted = categoryRow(categories, offers, shownCategory, 4)
@@ -79,6 +80,13 @@ function Explore() {
   // The most offered first; the rest one tap away, so the first screen stays short.
   const [expanded, setExpanded] = React.useState(false)
   const visible = expanded || shownCategory !== "all" ? shown : shown.slice(0, SERVICES_FIRST)
+
+  // Nobody offers anything here yet: show 360đẹp's own price list instead of an
+  // empty box. The prices are the platform's, so they are true before anyone signs up.
+  const catalog =
+    shownCategory !== "all"
+      ? CATALOG.filter((t) => t.category === shownCategory).slice(0, 8)
+      : categories.flatMap((c) => CATALOG.filter((t) => t.category === c.id).slice(0, vertical === "all" ? 1 : 2)).slice(0, 8)
 
   // A short row of real work under the services, as proof, not as the page.
   const proof = React.useMemo(() => {
@@ -104,75 +112,83 @@ function Explore() {
   const tileItems = (allCategories ? tiles.ordered : [...tiles.row, ...tiles.ordered.filter((c) => !rowIds.has(c.id))]).map((c) => ({
     id: c.id,
     label: c.id === "photophone" || c.id === "skincare" ? c.label : c.short ?? c.label,
-    soon: !state.catalogError && !tiles.offered.has(c.id),
+    soon: !state.catalogError && !tiles.offered.has(c.id) && offers.length > 0,
     className: allCategories || rowIds.has(c.id) ? undefined : "hidden lg:flex",
   }))
 
+  const sectionTitle = `${shownCategoryInfo ? shownCategoryInfo.label : vertical === "all" ? "Dịch vụ" : getVertical(vertical).label}${city ? ` ở ${city}` : ""}`
+  const pickCategory = (id: CategoryId | "all") => {
+    setCategory(id)
+    setAllCategories(false)
+    document.getElementById("dich-vu")?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
   return (
-    <div className="pt-1 md:pt-6">
+    <div className="pt-1 md:pt-8">
       <TopBar />
       {DEMO_DATA_LIVE && <DemoNotice />}
 
-      <section className="mt-5 grid gap-6 md:mt-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-center md:gap-10 lg:gap-14">
-        <div>
-          <p className="mb-3 text-meta font-semibold uppercase tracking-[0.12em] text-accent-dark">Làm đẹp · Chụp ảnh · Người mẫu</p>
-          <h1 className="max-w-xl text-[30px] min-[360px]:text-[34px] font-bold leading-[1.14] tracking-[-0.035em] md:text-[48px] lg:text-[54px]">
-            Đẹp hơn,<br />theo cách của bạn.
-          </h1>
-          <p className="mt-4 max-w-lg text-body text-ink-soft md:text-lead">
-            Tìm dịch vụ phù hợp, xem giá rõ ràng và chọn người làm bạn tin tưởng.
-          </p>
-          <SearchBox className="mt-5 md:hidden" large />
-          <HeroSearch city={city} className="mt-7 hidden md:flex" />
-          <p className="mt-3 text-meta text-muted">Xem giá trước khi đặt · Trả trực tiếp sau khi xong</p>
-        </div>
-        <HeroPhotos offers={offers} />
-      </section>
-
-      {/* Sticky under the mobile top bar, so the trade is always one tap away. */}
-      <div className="sticky top-0 z-30 -mx-4 mt-4 bg-canvas/95 px-4 py-2.5 backdrop-blur md:top-16 md:mx-0 md:mt-10 md:px-0">
-        <VerticalSwitch value={vertical} onChange={(v) => { setVertical(v); setCategory("all"); setAllCategories(false) }} />
+      {/* Search first, like a map app: where, then what. */}
+      <div className="mt-3 flex items-center gap-2 md:mx-auto md:mt-0 md:max-w-3xl">
+        <SearchBox className="flex-1 md:hidden" />
+        <HeroSearch city={city} className="hidden flex-1 md:flex" />
       </div>
+      <Suggestions now={now} />
 
-      <Rebook />
-
-      <section className="mt-5">
+      {/* "Hôm nay bạn muốn làm gì?": the trade, then a category, in one card. */}
+      <section aria-labelledby="pick-title" className="mt-5 rounded-[var(--radius-xl)] border border-line bg-surface p-4 shadow-[0_1px_2px_rgb(28_24_18/0.03)] md:mt-8 md:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="pick-title" className="text-[19px] font-extrabold tracking-tight md:text-[22px]">Hôm nay bạn muốn làm gì?</h2>
+          <VerticalSwitch value={vertical} onChange={(v) => { setVertical(v); setCategory("all"); setAllCategories(false) }} className="-mx-1 px-1" />
+        </div>
         {categories.length > 1 && (
           <CategoryTiles
-            className="mb-6 md:mb-8"
+            className="mt-5"
             items={tileItems}
             value={shownCategory}
             // Tapping the chosen category again goes back to everything.
-            onChange={(id) => {
-              setCategory(id === shownCategory ? "all" : (id as CategoryId))
-              setAllCategories(false)
-            }}
+            onChange={(id) => pickCategory(id === shownCategory ? "all" : (id as CategoryId))}
             more={tiles.more ? { open: allCategories, onToggle: () => setAllCategories((v) => !v), className: allCategories ? undefined : "lg:hidden" } : undefined}
           />
         )}
+      </section>
 
-        <div className="mb-4 flex items-baseline justify-between gap-4">
-          <h2 className="text-[22px] font-bold tracking-tight md:text-[26px]">
-            {shownCategoryInfo ? shownCategoryInfo.label : vertical === "all" ? "Dịch vụ" : getVertical(vertical).label}
-            {city ? ` ở ${city}` : ""}
-          </h2>
+      <HeroCarousel now={now} onVertical={(v) => { setVertical(v); setCategory("all") }} />
+
+      <Rebook />
+
+      <section id="dich-vu" className="mt-12 scroll-mt-20 md:mt-16 md:scroll-mt-24">
+        <div className="mb-5 flex items-end justify-between gap-4">
+          <div>
+            <p className="eyebrow">{shown.length > 0 ? "Đang nhận lịch" : "Bảng giá 360đẹp"}</p>
+            <h2 className="mt-1.5 text-[24px] font-extrabold leading-tight tracking-tight md:text-[30px]">{sectionTitle}</h2>
+          </div>
           {shownCategoryInfo ? (
             <button
               type="button"
               onClick={() => setCategory("all")}
-              className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-subtle pl-3 pr-2.5 text-meta font-semibold text-ink hover:bg-subtle-strong"
+              className="inline-flex h-10 shrink-0 items-center gap-1 rounded-full border border-line bg-surface pl-3.5 pr-3 text-meta font-semibold text-ink hover:border-ink"
             >
               Tất cả <X className="size-3.5" aria-hidden />
             </button>
           ) : (
-            shown.length > 0 && <span className="shrink-0 text-body text-muted">{shown.length} dịch vụ</span>
+            <Link href="/search" className="hidden shrink-0 items-center gap-1 text-body font-bold text-ink hover:text-accent sm:inline-flex">
+              Xem tất cả <ArrowRight className="size-4" aria-hidden />
+            </Link>
           )}
         </div>
 
         {state.catalogError ? <DataUnavailable /> : shown.length === 0 ? (
-          <EmptySupply vertical={vertical} city={city} elsewhere={elsewhere} category={shownCategoryInfo} />
+          <>
+            <EmptySupply vertical={vertical} city={city} elsewhere={elsewhere} category={shownCategoryInfo} />
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+              {catalog.map((t, i) => (
+                <CatalogCard key={t.id} template={t} index={i} priority={i < 2} />
+              ))}
+            </div>
+          </>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
             {visible.map((o, i) => (
               <ServiceCard key={o.template.id} offer={o} priority={i < 4} />
             ))}
@@ -182,17 +198,19 @@ function Explore() {
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            className="mt-6 h-12 w-full rounded-full border border-line text-body font-semibold hover:border-ink/30 md:w-auto md:px-8"
+            className="mt-6 h-12 w-full rounded-full border border-line bg-surface text-body font-semibold hover:border-ink md:w-auto md:px-8"
           >
             Xem tất cả {shown.length} dịch vụ
           </button>
         )}
       </section>
 
+      <Occasions now={now} />
+
       {proof.length > 0 && (
-        <section className="mt-14">
-          <SectionTitle title="Tác phẩm thật từ người làm" href="/search?tab=works" />
-          <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 md:gap-x-5 lg:grid-cols-4">
+        <section className="mt-14 md:mt-20">
+          <SectionTitle eyebrow="Tác phẩm" title="Ảnh thật từ người làm" href="/search?tab=works" />
+          <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:gap-x-5 lg:grid-cols-4">
             {proof.map((w) => (
               <PostCard key={w.id} work={w} />
             ))}
@@ -200,21 +218,204 @@ function Explore() {
         </section>
       )}
 
-      {shown.length > 0 && <section className="mt-14 flex flex-col gap-3 rounded-[var(--radius-xl)] bg-subtle p-6 md:flex-row md:items-center md:justify-between md:p-8">
-        <div>
-          <p className="text-[20px] font-bold tracking-tight">Không thấy dịch vụ bạn cần?</p>
-          <p className="mt-1 text-body text-ink-soft">Đăng yêu cầu với giá niêm yết, người làm gần bạn nhận việc. Không mất phí.</p>
-        </div>
-        <ButtonLink href="/requests/new" size="lg" className="shrink-0">
-          Đăng yêu cầu
-        </ButtonLink>
-      </section>
+      <HowItWorks />
 
-      }
+      <section className="mt-14 overflow-hidden rounded-[var(--radius-xl)] bg-highlight-soft md:mt-20">
+        <div className="flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between md:p-10">
+          <div className="max-w-xl">
+            <p className="eyebrow text-[#7A5A0E]">Đăng yêu cầu</p>
+            <p className="mt-2 font-display text-[26px] font-semibold leading-tight tracking-tight md:text-[34px]">Không thấy đúng thứ bạn cần?</p>
+            <p className="mt-2 text-body text-ink-soft">Chọn dịch vụ, giờ và nơi làm với giá niêm yết. Người làm gần bạn được báo, ai nhận trước sẽ gọi xác nhận. Không mất phí đăng.</p>
+          </div>
+          <ButtonLink href="/requests/new" size="lg" variant="dark" className="shrink-0">
+            Đăng yêu cầu <ArrowRight className="size-4" aria-hidden />
+          </ButtonLink>
+        </div>
+      </section>
 
       {/* The footer is desktop-only; on a phone these are the links it would have given. */}
       <MobileLinks className="mt-10" />
     </div>
+  )
+}
+
+/**
+ * The big picture under the categories: one slide per trade, plus the
+ * occasion in season. A photo with a dark fade, one line of promise and one
+ * gold button; it turns by itself, and stops when touched or asked to.
+ */
+function HeroCarousel({ now, onVertical }: { now: Date; onVertical: (v: VerticalFilter) => void }) {
+  const occasion = occasionsFor(now)[0]
+  const slides = [
+    {
+      key: "beauty",
+      eyebrow: "Làm đẹp tại nhà",
+      title: "Nail, makeup, gội dưỡng: người làm đến tận nơi",
+      text: "Giá niêm yết cho từng gói, miễn phí di chuyển 5 km đầu. Làm xong mới trả.",
+      cta: "Xem dịch vụ làm đẹp",
+      photo: HERO_PHOTOS.beauty,
+      onClick: () => onVertical("beauty"),
+    },
+    {
+      key: "photo",
+      eyebrow: "Chụp & quay",
+      title: "Lên hình đẹp, chỉ cần một chiếc điện thoại",
+      text: "Người chụp đi cùng bạn ra quán, ra phố, chụp bằng điện thoại hay máy ảnh.",
+      cta: "Xem chụp & quay",
+      photo: HERO_PHOTOS.photo,
+      onClick: () => onVertical("photo"),
+    },
+    {
+      key: "model",
+      eyebrow: "Người mẫu",
+      title: "Mẫu ảnh, mẫu livestream cho shop online",
+      text: "Mẫu ảnh lookbook, mẫu clip và livestream, giá niêm yết theo từng gói.",
+      cta: "Xem người mẫu",
+      photo: HERO_PHOTOS.model,
+      onClick: () => onVertical("model"),
+    },
+    ...(occasion
+      ? [{ key: occasion.id, eyebrow: "Theo dịp", title: occasion.title, text: occasion.subtitle, cta: "Xem gói theo dịp", photo: OCCASION_PHOTOS[occasion.id] ?? HERO_PHOTOS.beauty, href: `/dip/${occasion.id}` }]
+      : []),
+  ]
+  const [index, setIndex] = React.useState(0)
+  const [paused, setPaused] = React.useState(false)
+  React.useEffect(() => {
+    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    const t = window.setInterval(() => setIndex((i) => (i + 1) % slides.length), 6000)
+    return () => window.clearInterval(t)
+  }, [paused, slides.length])
+  const go = (delta: number) => setIndex((i) => (i + delta + slides.length) % slides.length)
+
+  return (
+    <section
+      aria-roledescription="carousel"
+      aria-label="Gợi ý nổi bật"
+      className="relative mt-5 overflow-hidden rounded-[var(--radius-xl)] bg-ink md:mt-8"
+      onPointerEnter={() => setPaused(true)}
+      onPointerLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+    >
+      <div className="relative aspect-[7/8] min-[420px]:aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/8]">
+        {slides.map((s, i) => (
+          <div
+            key={s.key}
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`${i + 1} / ${slides.length}`}
+            aria-hidden={i !== index}
+            className={cn("absolute inset-0 transition-opacity duration-700", i === index ? "opacity-100" : "pointer-events-none opacity-0")}
+          >
+            <Image src={s.photo} alt="" fill priority={i === 0} sizes="(min-width: 1200px) 1150px, 100vw" className="object-cover object-[60%_30%]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/5 md:bg-gradient-to-r md:from-black/75 md:via-black/35 md:to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-5 pb-12 md:inset-y-0 md:flex md:max-w-[58%] md:flex-col md:justify-center md:p-12">
+              <span className="inline-flex w-fit rounded-full border border-white/40 bg-black/25 px-3 py-1 text-[11.5px] font-bold uppercase tracking-[0.08em] text-white backdrop-blur">{s.eyebrow}</span>
+              <p className="mt-3 text-[26px] font-extrabold leading-[1.1] tracking-[-0.03em] text-white md:text-[44px]">{s.title}</p>
+              <p className="mt-2 max-w-md text-meta text-white/85 md:mt-2.5 md:text-lead">{s.text}</p>
+              {"href" in s && s.href ? (
+                <ButtonLink href={s.href} variant="highlight" className="mt-5 w-fit" tabIndex={i === index ? 0 : -1}>
+                  {s.cta} <ArrowRight className="size-4" aria-hidden />
+                </ButtonLink>
+              ) : (
+                <Button
+                  variant="highlight"
+                  className="mt-5 w-fit"
+                  tabIndex={i === index ? 0 : -1}
+                  onClick={() => {
+                    "onClick" in s && s.onClick?.()
+                    document.getElementById("dich-vu")?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  }}
+                >
+                  {s.cta} <ArrowRight className="size-4" aria-hidden />
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+        <span className="absolute right-3 top-3 rounded-full bg-black/40 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur">Ảnh minh hoạ</span>
+      </div>
+      <div className="absolute bottom-3.5 left-5 flex items-center gap-1.5 md:left-12 md:bottom-6">
+        {slides.map((s, i) => (
+          <button
+            key={s.key}
+            type="button"
+            aria-label={`Xem gợi ý ${i + 1}`}
+            aria-current={i === index}
+            onClick={() => setIndex(i)}
+            className="flex h-6 items-center"
+          >
+            <span className={cn("block h-1.5 rounded-full transition-all", i === index ? "w-6 bg-white" : "w-1.5 bg-white/50")} />
+          </button>
+        ))}
+      </div>
+      <div className="absolute bottom-3 right-3 hidden gap-2 md:flex">
+        <button type="button" aria-label="Gợi ý trước" onClick={() => go(-1)} className="inline-flex size-10 items-center justify-center rounded-full bg-white/90 text-ink hover:bg-white"><ChevronLeft className="size-5" /></button>
+        <button type="button" aria-label="Gợi ý sau" onClick={() => go(1)} className="inline-flex size-10 items-center justify-center rounded-full bg-white/90 text-ink hover:bg-white"><ChevronRight className="size-5" /></button>
+        <button type="button" aria-label={paused ? "Tiếp tục tự chuyển" : "Dừng tự chuyển"} onClick={() => setPaused((p) => !p)} className="inline-flex size-10 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60">{paused ? <Play className="size-4" /> : <Pause className="size-4" />}</button>
+      </div>
+    </section>
+  )
+}
+
+/** Search shortcuts chosen by the calendar, under the search box. */
+function Suggestions({ now }: { now: Date }) {
+  return (
+    <div className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 md:mx-auto md:max-w-3xl md:flex-wrap md:justify-center md:px-0">
+      {suggestionsFor(now).map((s) => (
+        <Link key={s.href} href={s.href} className="inline-flex h-9 shrink-0 items-center rounded-full border border-line bg-surface px-3.5 text-meta font-semibold text-ink-soft hover:border-ink hover:text-ink">
+          {s.label}
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+/** "Theo dịp": collections of services booked together, as editorial cards. */
+function Occasions({ now }: { now: Date }) {
+  const list = occasionsFor(now).slice(0, 4)
+  return (
+    <section className="mt-14 md:mt-20">
+      <SectionTitle eyebrow="Theo dịp" title="Chuẩn bị cho dịp sắp tới" />
+      <ul className="no-scrollbar -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:gap-5 md:px-0">
+        {list.map((o) => (
+          <li key={o.id} className="w-[260px] shrink-0 snap-start md:w-auto">
+            <Link href={`/dip/${o.id}`} className="group block overflow-hidden rounded-[var(--radius-lg)] border border-line bg-surface transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)]">
+              <span className="relative block aspect-[4/3] overflow-hidden bg-subtle">
+                <Image src={OCCASION_PHOTOS[o.id] ?? HERO_PHOTOS.beauty} alt="" fill sizes="(min-width: 768px) 280px, 260px" className="object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
+              </span>
+              <span className="block p-4">
+                <span className="eyebrow text-[11px] text-accent">{occasionTemplates(o).length} dịch vụ</span>
+                <span className="mt-1 block font-display text-[21px] font-semibold leading-tight tracking-[-0.01em]">{o.title}</span>
+                <span className="mt-1 block text-meta text-ink-soft">{o.subtitle}</span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/** Three facts that decide whether to trust a stranger with your face. */
+function HowItWorks() {
+  const steps = [
+    { n: "01", title: "Chọn gói, thấy giá trước", text: "Giá niêm yết cho từng gói, khách không trả phí nền tảng, không đặt cọc." },
+    { n: "02", title: "Người làm gọi xác nhận", text: `Người làm gọi cho bạn chốt giờ và nơi làm rồi mới nhận lịch, thường trong ${POLICY.confirmWithinHours} giờ.` },
+    { n: "03", title: "Làm xong mới trả", text: `Trả trực tiếp sau khi xong. Miễn phí di chuyển ${POLICY.freeTravelKm} km đầu; chỉ khách đã làm mới được đánh giá.` },
+  ]
+  return (
+    <section className="mt-14 md:mt-20">
+      <SectionTitle eyebrow="Cách 360đẹp làm việc" title="Rõ giá, rõ người, rõ giờ" href="/chinh-sach" linkLabel="Chính sách" />
+      <ol className="grid gap-4 md:grid-cols-3 md:gap-5">
+        {steps.map((s) => (
+          <li key={s.n} className="rounded-[var(--radius-lg)] border border-line bg-surface p-5 md:p-6">
+            <span className="font-display text-[30px] font-semibold leading-none text-accent">{s.n}</span>
+            <p className="mt-3 text-lead font-bold tracking-tight">{s.title}</p>
+            <p className="mt-1.5 text-body text-ink-soft">{s.text}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
   )
 }
 
@@ -237,8 +438,8 @@ function Rebook() {
   }
   if (!list.length) return null
   return (
-    <section className="mt-5">
-      <h2 className="mb-3 text-lead font-bold tracking-tight">Đặt lại</h2>
+    <section className="mt-8">
+      <h2 className="mb-3 text-[20px] font-extrabold tracking-tight">Đặt lại</h2>
       <ul className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 md:mx-0 md:grid md:grid-cols-4 md:px-0">
         {list.map((b) => {
           const image = bookingImage(state, b)
@@ -246,7 +447,7 @@ function Rebook() {
             <li key={b.id} className="w-[240px] shrink-0 md:w-auto">
               <Link
                 href={`/book/${b.proId}?service=${b.templateId}&variant=${b.variantId}`}
-                className="flex items-center gap-3 rounded-[var(--radius-lg)] bg-surface p-2.5 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-raised)]"
+                className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-line bg-surface p-2.5 hover:border-ink"
               >
                 <span className="relative size-14 shrink-0 overflow-hidden rounded-[var(--radius-md)] bg-subtle">
                   {image && <Image src={image} alt="" fill sizes="56px" className="object-cover" />}
@@ -273,28 +474,29 @@ function TopBar() {
   const state = useApp()
   const { city, session } = state
   return (
-    <div className="flex min-h-12 flex-wrap items-center justify-between gap-x-3 gap-y-1 md:hidden">
-      <CityPicker value={city} />
-      <Link href="/" aria-label="360dep" className="hidden min-[360px]:block">
-        <Wordmark size={24} />
+    <div className="flex min-h-14 items-center justify-between gap-3 md:hidden">
+      <Link href="/" aria-label="360dep" className="flex items-center gap-2">
+        <LogoMark size={30} />
+        <Wordmark size={22} className="hidden min-[340px]:block" />
       </Link>
-      <div className="flex items-center">
+      <div className="flex items-center gap-0.5">
+        <CityPicker value={city} />
         {session ? (
           <>
-            <Link href="/tin-nhan" aria-label="Tin nhắn" className="inline-flex size-11 items-center justify-center">
+            <Link href="/tin-nhan" aria-label="Tin nhắn" className="inline-flex size-11 items-center justify-center rounded-full hover:bg-subtle">
               <MessageCircle className="size-[22px]" />
             </Link>
-            <Link href="/thong-bao" aria-label="Thông báo" className="relative inline-flex size-11 items-center justify-center">
+            <Link href="/thong-bao" aria-label="Thông báo" className="relative inline-flex size-11 items-center justify-center rounded-full hover:bg-subtle">
               <Bell className="size-[22px]" />
               {state.unreadNotifications > 0 && (
-                <span className="absolute right-1.5 top-1.5 min-w-[18px] rounded-full bg-accent px-1 text-center text-label font-bold leading-[18px] text-white">
+                <span className="absolute right-1 top-1 min-w-[18px] rounded-full bg-accent px-1 text-center text-[11px] font-bold leading-[18px] text-white ring-2 ring-canvas">
                   {state.unreadNotifications > 9 ? "9+" : state.unreadNotifications}
                 </span>
               )}
             </Link>
           </>
         ) : (
-          <Link href="/login" className="inline-flex min-h-11 items-center rounded-full bg-accent px-3 text-meta font-semibold text-white">
+          <Link href="/login" className="ml-1 inline-flex min-h-10 items-center whitespace-nowrap rounded-full bg-ink px-3.5 text-meta font-semibold text-white">
             Đăng nhập
           </Link>
         )}
@@ -314,7 +516,7 @@ function HeroSearch({ city, className }: { city: string | null; className?: stri
     <form
       role="search"
       className={cn(
-        "h-16 items-center rounded-full border border-line-strong bg-surface pl-2 pr-2 shadow-[var(--shadow-soft)] focus-within:border-accent",
+        "h-[60px] items-center rounded-full border border-line bg-surface pl-2 pr-2 shadow-[var(--shadow-soft)] transition-shadow focus-within:border-ink focus-within:shadow-[var(--shadow-raised)]",
         className,
       )}
       onSubmit={(e) => {
@@ -322,97 +524,36 @@ function HeroSearch({ city, className }: { city: string | null; className?: stri
         router.push(`/search${q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ""}`)
       }}
     >
-      <label className="relative flex h-12 shrink-0 cursor-pointer focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-2 items-center gap-2 rounded-full px-4 hover:bg-subtle">
-        <MapPin className="size-5 text-accent" aria-hidden />
+      <label className="relative flex h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink hover:bg-subtle">
+        <MapPin className="size-[18px] text-accent" aria-hidden />
         <span className="flex flex-col leading-tight">
-          <span className="text-label font-semibold text-muted">Khu vực</span>
-          <span className="flex items-center gap-1 text-body font-semibold text-ink">
-            {city ?? "Toàn quốc"} <ChevronDown className="size-4 text-muted" aria-hidden />
+          <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-muted">Khu vực</span>
+          <span className="flex items-center gap-1 text-meta font-bold text-ink">
+            {city ?? "Toàn quốc"} <ChevronDown className="size-3.5 text-muted" aria-hidden />
           </span>
         </span>
-        <select
-          aria-label="Chọn khu vực"
-          value={city ?? ""}
-          onChange={(e) => {
-            try {
-              localStorage.setItem(CITY_ASKED_KEY, "1")
-            } catch {}
-            void actions.setCity(e.target.value || null)
-          }}
-          className="absolute inset-0 cursor-pointer opacity-0"
-        >
-          <option value="">Toàn quốc</option>
-          {CITIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+        <CitySelect value={city} />
       </label>
       <span aria-hidden className="mx-1 h-8 w-px bg-line" />
-      <label className="flex h-12 min-w-0 flex-1 items-center gap-3 px-3">
+      <label className="flex h-11 min-w-0 flex-1 items-center gap-3 px-3">
         <Search className="size-5 shrink-0 text-ink" aria-hidden />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           type="search"
-          placeholder="Nail, makeup, chụp ảnh…"
+          placeholder="Tìm nail, makeup, chụp ảnh, người mẫu…"
           aria-label="Tìm kiếm"
           className="h-full min-w-0 flex-1 bg-transparent text-body placeholder:text-muted focus:outline-none"
         />
       </label>
-      <button type="submit" className="inline-flex h-12 shrink-0 items-center rounded-full bg-accent px-7 text-body font-semibold text-white hover:bg-accent-dark">
+      <button type="submit" className="inline-flex h-11 shrink-0 items-center rounded-full bg-ink px-7 text-body font-semibold text-white hover:bg-accent">
         Tìm
       </button>
     </form>
   )
 }
 
-/**
- * Real work next to the headline on a wide screen: three services that are on
- * sale here, each with its lowest price, so the first thing seen is what can
- * be booked and for how much.
- */
-function HeroPhotos({ offers, className }: { offers: ServiceOffer[]; className?: string }) {
-  const picks = offers.filter((o) => o.photo).slice(0, 3)
-  if (picks.length < 3) return (
-    <figure className="relative overflow-hidden rounded-[28px] bg-subtle md:rounded-[36px]">
-      <Image src="/images/beauty-editorial.webp" alt="Khoảnh khắc trang điểm trong studio" width={1440} height={960} priority sizes="(min-width: 768px) 50vw, 100vw" className="aspect-[2/1] w-full object-cover object-[50%_40%] md:aspect-[4/3]" />
-      <figcaption className="absolute bottom-3 right-3 rounded-full bg-surface/95 px-3 py-1 text-meta text-ink-soft">Ảnh minh họa</figcaption>
-    </figure>
-  )
-  return (
-    <div className={cn("grid h-[260px] grid-cols-2 grid-rows-2 gap-3 md:h-[380px]", className)}>
-      {picks.map((o, i) => (
-        <Link
-          key={o.template.id}
-          href={`/dich-vu/${o.template.id}`}
-          className={cn(
-            "group relative overflow-hidden rounded-[var(--radius-xl)] bg-subtle",
-            i === 0 && "row-span-2",
-          )}
-        >
-          <Image
-            src={o.photo!}
-            alt={o.template.name}
-            fill
-            priority={i === 0}
-            sizes="(min-width: 1200px) 300px, 25vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          />
-          <span className="absolute inset-x-3 bottom-3 rounded-2xl bg-surface/95 px-3 py-2 shadow-[var(--shadow-soft)] backdrop-blur">
-            <span className="block truncate text-body font-semibold text-ink">{o.template.name}</span>
-            <span className="block text-meta text-ink-soft">
-              Từ <span className="font-semibold text-accent-dark">{formatPrice(o.fromPrice)}</span> · {o.pros.length} người nhận
-            </span>
-          </span>
-        </Link>
-      ))}
-    </div>
-  )
-}
-
-function SearchBox({ className, large }: { className?: string; large?: boolean }) {
+function SearchBox({ className }: { className?: string }) {
   const router = useRouter()
   const [q, setQ] = React.useState("")
   return (
@@ -429,13 +570,13 @@ function SearchBox({ className, large }: { className?: string; large?: boolean }
         value={q}
         onChange={(e) => setQ(e.target.value)}
         type="search"
-        placeholder="Bạn muốn làm gì hôm nay?"
+        placeholder="Nail, makeup, chụp ảnh…"
         aria-label="Tìm kiếm"
-        className={cn(
-          "w-full rounded-full border border-line-strong bg-surface pl-12 pr-4 text-body shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-accent focus:outline-none",
-          large ? "h-14" : "h-12",
-        )}
+        className="h-[52px] w-full rounded-full border border-line bg-surface pl-12 pr-[72px] text-body shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-ink focus:outline-none"
       />
+      <button type="submit" className="absolute right-1.5 top-1/2 inline-flex h-10 -translate-y-1/2 items-center rounded-full bg-ink px-4 text-meta font-semibold text-white">
+        Tìm
+      </button>
     </form>
   )
 }
@@ -461,7 +602,7 @@ function DemoNotice() {
   const hidden = dismissed || stored
   if (hidden) return null
   return (
-    <p className="mb-3 flex items-center gap-2 rounded-full bg-warning-soft py-1 pl-3.5 pr-1 text-meta text-warning md:mb-8 md:w-fit md:max-w-full">
+    <p className="mb-3 flex items-center gap-2 rounded-full bg-highlight-soft py-1 pl-3.5 pr-1 text-meta text-ink md:mx-auto md:mb-6 md:w-fit md:max-w-full">
       <span className="flex-1">
         <span className="md:hidden">Bản demo: hồ sơ là dữ liệu mẫu.</span>
         <span className="hidden md:inline">Bản demo: nhiều hồ sơ là dữ liệu mẫu, thanh toán online chưa hoạt động.</span>{" "}
@@ -487,8 +628,8 @@ function DemoNotice() {
 }
 
 /**
- * Nobody offers this here. What a customer can do comes first -- ask, or look
- * further afield -- and the invitation to providers is a small line under it.
+ * Nobody offers this here yet. One line that says so and what to do, above
+ * 360đẹp's own price list for it; the invitation to providers is a link.
  */
 function EmptySupply({
   vertical,
@@ -504,15 +645,33 @@ function EmptySupply({
   const label = category ? category.label : vertical === "all" ? null : getVertical(vertical).label
   const where = city ? ` ở ${city}` : ""
   return (
-    <div className="mt-5 rounded-[var(--radius-lg)] border border-line bg-surface px-5 py-8 shadow-[var(--shadow-soft)] text-center">
-      <p className="text-lead font-bold">{label ? `${label}: chưa có ai nhận lịch${where}` : `Chưa có dịch vụ nào${where}`}</p>
-      <p className="mx-auto mt-1.5 max-w-sm text-body text-ink-soft">
-        {elsewhere > 0
-          ? `Có ${elsewhere} dịch vụ ở thành phố khác. Hoặc đăng yêu cầu: người làm phù hợp có thể xem và nhận việc.`
-          : "Đăng yêu cầu: khi có người làm việc này quanh bạn, họ có thể xem và nhận việc. Không mất phí đăng."}
-      </p>
-      <div className="mt-5 flex flex-wrap justify-center gap-2">
+    <div className="flex flex-col gap-4 rounded-[var(--radius-lg)] border border-line bg-surface p-4 sm:flex-row sm:items-center sm:justify-between md:p-5">
+      <div className="flex items-start gap-3">
+        <span aria-hidden className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-highlight-soft text-ink">
+          <Sparkles className="size-5" />
+        </span>
+        <div>
+          <p className="text-body font-bold">{label ? `${label}: chưa có người nhận lịch${where}` : `Chưa có người nhận lịch${where}`}</p>
+          <p className="mt-0.5 text-meta text-ink-soft">
+            {elsewhere > 0
+              ? `Có ${elsewhere} dịch vụ ở thành phố khác. Hoặc đăng yêu cầu theo giá dưới đây: người làm phù hợp sẽ được báo.`
+              : "Đăng yêu cầu theo giá niêm yết dưới đây: khi có người làm gần bạn, họ được báo và ai nhận trước sẽ làm."}{" "}
+            <Link href="/doi-tac" className="font-semibold text-accent-dark underline underline-offset-2">Bạn làm trong ngành?</Link>
+          </p>
+        </div>
+      </div>
+      <div className="flex shrink-0 gap-2">
+        {elsewhere > 0 && (
+          <button
+            type="button"
+            onClick={() => void actions.setCity(null)}
+            className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-4 text-meta font-semibold hover:border-ink"
+          >
+            Xem cả nước
+          </button>
+        )}
         <ButtonLink
+          size="sm"
           href={
             category
               ? `/requests/new?category=${category.id}`
@@ -523,58 +682,57 @@ function EmptySupply({
         >
           Đăng yêu cầu
         </ButtonLink>
-        {elsewhere > 0 && (
-          <button
-            type="button"
-            onClick={() => void actions.setCity(null)}
-            className="inline-flex h-11 items-center rounded-full border border-line-strong bg-surface px-5 text-body font-semibold hover:border-accent"
-          >
-            Xem cả nước
-          </button>
-        )}
       </div>
-      <Link href="/doi-tac" className="mt-5 inline-flex min-h-11 items-center text-meta font-semibold text-accent-dark underline underline-offset-4">Bạn làm trong ngành? Trở thành đối tác</Link>
     </div>
   )
 }
 
-function SectionTitle({ title, href }: { title: string; href?: string }) {
+function SectionTitle({ eyebrow, title, href, linkLabel = "Xem tất cả" }: { eyebrow?: string; title: string; href?: string; linkLabel?: string }) {
   return (
-    <div className="mb-4 flex items-baseline justify-between gap-4">
-      <h2 className="text-[20px] font-bold tracking-tight md:text-[24px]">{title}</h2>
+    <div className="mb-5 flex items-end justify-between gap-4">
+      <div>
+        {eyebrow && <p className="eyebrow">{eyebrow}</p>}
+        <h2 className="mt-1.5 text-[24px] font-extrabold leading-tight tracking-tight md:text-[30px]">{title}</h2>
+      </div>
       {href && (
-        <Link href={href} className="shrink-0 text-body font-semibold text-ink underline-offset-4 hover:underline">
-          Xem tất cả
+        <Link href={href} className="inline-flex shrink-0 items-center gap-1 text-body font-bold text-ink hover:text-accent">
+          {linkLabel} <ArrowRight className="size-4" aria-hidden />
         </Link>
       )}
     </div>
   )
 }
 
+function CitySelect({ value }: { value: string | null }) {
+  return (
+    <select
+      aria-label="Chọn khu vực"
+      value={value ?? ""}
+      onChange={(e) => {
+        try {
+          localStorage.setItem(CITY_ASKED_KEY, "1")
+        } catch {}
+        void actions.setCity(e.target.value || null)
+      }}
+      className="absolute inset-0 cursor-pointer opacity-0"
+    >
+      <option value="">Toàn quốc</option>
+      {CITIES.map((c) => (
+        <option key={c} value={c}>
+          {c}
+        </option>
+      ))}
+    </select>
+  )
+}
+
 function CityPicker({ value }: { value: string | null }) {
   return (
-    <label className="relative inline-flex min-h-12 focus-within:rounded-lg focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-2 items-center gap-1 text-body font-semibold text-ink">
-      <MapPin className="size-4" />
-      <span className="max-w-[120px] truncate">{value ?? "Toàn quốc"}</span>
-      <ChevronDown className="size-4 text-muted" />
-      <select
-        aria-label="Chọn khu vực"
-        value={value ?? ""}
-        onChange={(e) => {
-          try {
-            localStorage.setItem(CITY_ASKED_KEY, "1")
-          } catch {}
-          void actions.setCity(e.target.value || null)
-        }}
-        className="absolute inset-0 cursor-pointer opacity-0"
-      >
-        <option value="">Toàn quốc</option>
-        {CITIES.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
+    <label className="relative inline-flex min-h-10 items-center gap-1 rounded-full border border-line bg-surface px-3 text-meta font-semibold text-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink">
+      <MapPin className="size-4 text-accent" aria-hidden />
+      <span className="max-w-[84px] truncate">{value ?? "Toàn quốc"}</span>
+      <ChevronDown className="size-3.5 text-muted" aria-hidden />
+      <CitySelect value={value} />
     </label>
   )
 }

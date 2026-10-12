@@ -40,7 +40,7 @@ export function InterestPicker({ className }: { className?: string }) {
                     onClick={() => toggle(c.id)}
                     className={cn(
                       "inline-flex h-10 items-center gap-1.5 rounded-full border px-4 text-body font-medium transition-colors",
-                      on ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
+                      on ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink",
                     )}
                   >
                     {on && <Check className="size-4" />}

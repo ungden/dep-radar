@@ -8,10 +8,10 @@ export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 
 /** Colours are lib/design/tokens.ts; this file cannot import CSS variables. */
-const INK = "#3A2A2C"
-const CANVAS = "#FAF6F4"
-const ACCENT = "#A8535D"
-const SUBTLE = "#F5ECE9"
+const INK = "#141213"
+const CANVAS = "#FAF8F5"
+const ACCENT = "#BB3460"
+const SUBTLE = "#F2EFEA"
 
 /** The site's own face, so the preview in Zalo or Facebook looks like 360đẹp. */
 async function fonts() {
@@ -54,7 +54,7 @@ export default async function OpengraphImage() {
           <div style={{ fontSize: 72, fontWeight: 700, color: INK, lineHeight: 1.05, letterSpacing: -2, maxWidth: 960 }}>
             Lên hình đẹp, theo cách của bạn.
           </div>
-          <div style={{ fontSize: 32, color: "#65575A", maxWidth: 960 }}>
+          <div style={{ fontSize: 32, color: "#3D3739", maxWidth: 960 }}>
             Thợ làm đẹp, người chụp ảnh, quay clip và người mẫu gần bạn. Xem tác phẩm thật, giá rõ trước khi đặt.
           </div>
         </div>

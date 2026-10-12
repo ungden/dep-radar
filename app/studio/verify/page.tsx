@@ -177,7 +177,7 @@ function VerifyFlow() {
               <label
                 className={cn(
                   "flex cursor-pointer items-center gap-3 rounded-2xl border bg-surface p-3 transition-colors",
-                  issue ? "border-danger/50" : img ? "border-success/50" : "border-dashed border-line hover:border-accent",
+                  issue ? "border-danger/50" : img ? "border-success/50" : "border-dashed border-line hover:border-ink",
                 )}
               >
                 <span

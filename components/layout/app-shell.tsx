@@ -78,21 +78,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <LiveRegionProvider>
       <div className="min-h-dvh">
-      <header className="sticky top-0 z-40 hidden border-b border-line bg-canvas/90 backdrop-blur md:block">
-        <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-5 px-6">
+      <header className="sticky top-0 z-40 hidden border-b border-line bg-[rgb(255_253_250/0.92)] backdrop-blur-md md:block">
+        <div className="mx-auto flex h-[68px] max-w-[1200px] items-center gap-6 px-6">
           <Link href={isPro ? "/studio" : "/"} aria-label={isPro ? "360dep Đối tác" : "360dep"} className="flex shrink-0 items-center gap-2">
             <Logo />
             {isPro && <span className="rounded-full bg-accent-soft px-2.5 py-1 text-label font-semibold text-accent-dark">Đối tác</span>}
           </Link>
-          <nav className="no-scrollbar flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
+          <nav className="no-scrollbar flex h-full min-w-0 flex-1 items-stretch gap-1 overflow-x-auto">
             {top.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 aria-current={isActive(item) ? "page" : undefined}
                 className={cn(
-                  "shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-body font-semibold transition-colors",
-                  isActive(item) ? "bg-accent-soft text-accent-dark" : "text-ink-soft hover:bg-subtle hover:text-ink",
+                  // An ink underline marks where you are; nothing else is coloured.
+                  "relative inline-flex shrink-0 items-center whitespace-nowrap px-3 text-[15px] font-semibold transition-colors",
+                  isActive(item)
+                    ? "text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-[2.5px] after:rounded-full after:bg-ink"
+                    : "text-ink-soft hover:text-ink",
                 )}
               >
                 {item.label}
@@ -102,9 +105,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {pathname !== "/" && !isPro && (
             <Link
               href="/search"
-              className="hidden h-10 w-44 shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-4 text-body text-muted hover:border-ink/30 xl:inline-flex"
+              className="hidden h-10 w-60 shrink-0 items-center gap-2 overflow-hidden whitespace-nowrap rounded-full border border-line bg-surface px-4 text-meta text-muted shadow-[0_1px_2px_rgb(28_24_18/0.04)] hover:border-ink xl:inline-flex"
             >
-              <Search className="size-4 text-ink" /> Tìm kiếm
+              <Search className="size-4 shrink-0 text-ink" /> <span className="truncate">Tìm nail, makeup, chụp ảnh…</span>
             </Link>
           )}
           {session ? (
@@ -115,7 +118,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link href="/thong-bao" aria-label="Thông báo" className="relative inline-flex size-10 items-center justify-center rounded-full hover:bg-subtle">
                 <Bell className="size-5" />
                 {state.unreadNotifications > 0 && (
-                  <span className="absolute right-0.5 top-0.5 min-w-[18px] rounded-full bg-accent px-1 text-center text-label font-bold leading-[18px] text-white">
+                  <span className="absolute right-0.5 top-0.5 min-w-[18px] rounded-full bg-accent px-1 text-center text-[11px] font-bold leading-[18px] text-white ring-2 ring-surface">
                     {state.unreadNotifications > 9 ? "9+" : state.unreadNotifications}
                   </span>
                 )}
@@ -128,7 +131,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     await actions.switchRole(isPro ? "customer" : "pro")
                     router.push(isPro ? "/" : "/studio")
                   }}
-                  className="ml-1 h-10 rounded-full border border-line px-4 text-meta font-semibold text-ink hover:border-ink/30"
+                  className="ml-1 h-10 rounded-full border border-line bg-surface px-4 text-meta font-semibold text-ink hover:border-ink"
                 >
                   {isPro ? "Chế độ đặt lịch" : "Chế độ đối tác"}
                 </button>
@@ -139,8 +142,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/login" className="inline-flex h-10 items-center rounded-full bg-accent px-5 text-body font-semibold text-white hover:bg-accent-dark">
-                Đăng nhập
+              <Link href="/login" className="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-surface px-4 text-[15px] font-semibold text-ink hover:border-ink">
+                <User className="size-4" aria-hidden /> Đăng nhập
               </Link>
             </div>
           )}
@@ -157,7 +160,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {showTabbar && (
         <nav
           aria-label="Điều hướng chính"
-          className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur md:hidden"
+          className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-[rgb(255_253_250/0.94)] shadow-[0_-8px_24px_-18px_rgb(28_24_18/0.25)] backdrop-blur-md md:hidden"
         >
           <ul className="mx-auto grid max-w-md grid-cols-5">
             {nav.map((item) => {
@@ -170,9 +173,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       href={item.href}
                       aria-label={isPro ? "Đăng tác phẩm hoặc tuyển mẫu" : "Đăng yêu cầu"}
                       aria-current={active ? "page" : undefined}
-                      className="flex min-h-16 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-center text-label font-semibold text-accent-dark"
+                      className="flex min-h-16 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-center text-[11.5px] font-bold text-ink"
                     >
-                      <span className="flex size-9 items-center justify-center rounded-xl bg-accent text-white"><Icon className="size-5" /></span>
+                      <span className="flex size-10 items-center justify-center rounded-full bg-accent text-white shadow-[0_6px_14px_-6px_rgb(187_52_96/0.7)]"><Icon className="size-5 stroke-[2.25]" /></span>
                       {item.label}
                     </Link>
                   </li>
@@ -185,11 +188,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     className={cn(
                       // A tab bar is the most-tapped thing in the app: 44px tall
                       // and a label you can read without squinting.
-                      "flex min-h-14 flex-col items-center justify-center gap-0.5 py-1.5 text-center text-label",
-                      active ? "font-semibold text-accent" : "font-medium text-muted",
+                      "flex min-h-14 flex-col items-center justify-center gap-1 py-1.5 text-center text-[11.5px]",
+                      active ? "font-bold text-ink" : "font-medium text-muted",
                     )}
                   >
-                    <Icon className="size-6 stroke-[1.75]" />
+                    <Icon className={cn("size-6", active ? "stroke-[2.25]" : "stroke-[1.75]")} />
                     {item.label}
                   </Link>
                 </li>

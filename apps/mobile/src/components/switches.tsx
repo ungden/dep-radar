@@ -29,10 +29,10 @@ export function TextTabs<T extends string>({
             accessibilityState={{ selected }}
             style={{ minHeight: 48, paddingTop: 12, paddingBottom: 4, alignItems: "center" }}
           >
-            <Txt v={size} w={selected ? 600 : 500} color={selected ? colors.accent : colors.muted}>
+            <Txt v={size} w={selected ? 600 : 500} color={selected ? colors.ink : colors.muted}>
               {item.label}
             </Txt>
-            <View style={{ height: 3, alignSelf: "stretch", marginTop: 6, borderRadius: 2, backgroundColor: selected ? colors.accent : "transparent" }} />
+            <View style={{ height: 3, alignSelf: "stretch", marginTop: 6, borderRadius: 2, backgroundColor: selected ? colors.ink : "transparent" }} />
           </Press>
         )
       })}

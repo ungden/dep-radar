@@ -162,7 +162,7 @@ export function WorkDetail({ workId }: { workId: string }) {
                         onClick={() => setVariantId(v.id)}
                         className={cn(
                           "flex min-h-14 w-full items-center justify-between gap-3 rounded-[var(--radius-md)] border px-3.5 py-2.5 text-left transition-colors",
-                          active ? "border-accent bg-surface ring-1 ring-accent" : "border-line hover:border-ink/30",
+                          active ? "border-ink bg-surface ring-1 ring-ink" : "border-line hover:border-ink",
                         )}
                       >
                         <span className="min-w-0">

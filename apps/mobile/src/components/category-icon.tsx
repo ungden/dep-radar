@@ -1,7 +1,7 @@
 import * as React from "react"
 import { View } from "react-native"
 import Svg, { Circle, Path, Rect } from "react-native-svg"
-import { CATEGORY_ICONS, ICON_SOFT_OPACITY, ICON_STROKE, type CategoryIconId } from "@/shared"
+import { CATEGORY_ICONS, CATEGORY_TINTS, ICON_SOFT_OPACITY, ICON_STROKE, type CategoryIconId } from "@/shared"
 import { colors } from "@/theme"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -53,18 +53,22 @@ export function CategoryTiles({
             style={{ width: "25%", alignItems: "center", gap: 5 }}
           >
             <View
+              // Each category keeps its own colour (lib/design/category-icons.ts); the chosen one gets an ink ring.
               style={{
-                width: 52,
-                height: 52,
-                borderRadius: 18,
+                width: 54,
+                height: 54,
+                borderRadius: 27,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: active ? colors.accent : it.soon ? colors.subtle : colors.accentSoft,
+                backgroundColor: CATEGORY_TINTS[it.id].bg,
+                borderWidth: active ? 2.5 : 0,
+                borderColor: colors.ink,
+                opacity: it.soon && !active ? 0.6 : 1,
               }}
             >
-              <CategoryIcon id={it.id} size={24} color={active ? colors.surface : it.soon ? colors.muted : colors.accent} />
+              <CategoryIcon id={it.id} size={24} color={CATEGORY_TINTS[it.id].fg} />
             </View>
-            <Txt v="meta" w={active ? 600 : 500} color={active ? colors.accentDark : colors.ink} center style={{ paddingHorizontal: 4 }}>
+            <Txt v="meta" w={active ? 700 : 600} color={active ? colors.ink : colors.inkSoft} center style={{ paddingHorizontal: 4 }}>
               {it.label}
             </Txt>
           </Press>
@@ -80,9 +84,9 @@ export function CategoryTiles({
         >
           <View
             style={{
-              width: 52,
-              height: 52,
-              borderRadius: 18,
+              width: 54,
+              height: 54,
+              borderRadius: 27,
               alignItems: "center",
               justifyContent: "center",
               backgroundColor: colors.surface,
@@ -90,7 +94,7 @@ export function CategoryTiles({
               borderColor: colors.line,
             }}
           >
-            {more.open ? <Icon name="up" size={20} color={colors.inkSoft} /> : <CategoryIcon id="all" size={24} color={colors.inkSoft} />}
+            {more.open ? <Icon name="up" size={20} color={colors.ink} /> : <CategoryIcon id="all" size={24} color={colors.ink} />}
           </View>
           <Txt v="meta" w={500} center style={{ paddingHorizontal: 4 }}>
             {more.open ? "Thu gọn" : "Xem thêm"}
