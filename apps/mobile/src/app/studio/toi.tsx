@@ -99,7 +99,7 @@ export default function StudioMe() {
           <Press
             onPress={() => router.push("/ho-so-doi-tac?step=5")}
             accessibilityRole="link"
-            accessibilityLabel="Sửa hồ sơ và gửi duyệt lại, mở trong app"
+            accessibilityLabel="Sửa hồ sơ và gửi duyệt lại, mở trên web"
             style={{ backgroundColor: colors.warningSoft, borderRadius: radius.md, padding: 16, gap: 6 }}
           >
             <Txt w={700} color={colors.warning}>
@@ -131,20 +131,20 @@ export default function StudioMe() {
         </View>
 
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.md }}>
-          <Row icon="briefcase" label="Dịch vụ và bảng giá" onPress={() => router.push("/ho-so-doi-tac?step=1")} />
+          <Row icon="briefcase" label="Dịch vụ và bảng giá" internal onPress={() => router.push("/ho-so-doi-tac?step=1")} />
           <Divider style={{ marginLeft: 52 }} />
-          <Row icon="clock" label="Giờ làm việc" onPress={() => router.push("/ho-so-doi-tac?step=3")} />
+          <Row icon="clock" label="Giờ làm việc" internal onPress={() => router.push("/ho-so-doi-tac?step=3")} />
           <Divider style={{ marginLeft: 52 }} />
-          <Row icon="person" label="Sửa hồ sơ" onPress={() => router.push("/ho-so-doi-tac?step=0")} />
+          <Row icon="person" label="Sửa hồ sơ" internal onPress={() => router.push("/ho-so-doi-tac?step=0")} />
           <Divider style={{ marginLeft: 52 }} />
-          <Row icon="photos" label="Quản lý tác phẩm" onPress={() => router.push("/ho-so-doi-tac?step=4")} />
+          <Row icon="photos" label="Quản lý tác phẩm" internal onPress={() => router.push("/ho-so-doi-tac?step=4")} />
           <Divider style={{ marginLeft: 52 }} />
           <Row icon="shop" label="Ví và hoa hồng" onPress={web("/studio/wallet")} />
           <Divider style={{ marginLeft: 52 }} />
           <Row icon="verified" label="Xác minh danh tính" onPress={web("/studio/verify")} />
         </View>
         <Txt v="meta" color={colors.muted}>
-          Cài đặt đối tác chưa có trong app: các mục trên mở trang web 360dep ngay trong app, và bạn có thể phải đăng nhập lại ở đó.
+          Ví và xác minh danh tính mở trên web; bạn có thể cần đăng nhập lại.
         </Txt>
 
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.md }}>
@@ -175,9 +175,9 @@ function Row({ icon, label, onPress, internal }: { icon: IconName; label: string
   return (
     <Press
       onPress={onPress}
-      accessibilityLabel={internal ? label : `${label}, mở trong app`}
+      accessibilityLabel={internal ? label : `${label}, mở trên web`}
       accessibilityRole={internal ? "button" : "link"}
-      style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, height: 54 }}
+      style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, minHeight: 56, paddingVertical: 14 }}
     >
       <Icon name={icon} size={20} />
       <Txt w={600} style={{ flex: 1 }}>
@@ -185,7 +185,7 @@ function Row({ icon, label, onPress, internal }: { icon: IconName; label: string
       </Txt>
       {internal ? null : (
         <Txt v="meta" color={colors.muted}>
-          mở trong app
+          mở trên web
         </Txt>
       )}
       <Icon name={internal ? "right" : "external"} size={14} color={colors.muted} />

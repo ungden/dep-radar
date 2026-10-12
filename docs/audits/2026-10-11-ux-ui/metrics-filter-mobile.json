@@ -1,0 +1,246 @@
+{
+  "controls": [
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 44,
+      "text": "Quay lại",
+      "width": 44
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 52,
+      "text": "Tìm kiếm",
+      "width": 322
+    },
+    {
+      "disabled": false,
+      "font": "13px",
+      "height": 40,
+      "text": "Tất cả",
+      "width": 87
+    },
+    {
+      "disabled": false,
+      "font": "13px",
+      "height": 40,
+      "text": "Làm đẹp",
+      "width": 87
+    },
+    {
+      "disabled": false,
+      "font": "13px",
+      "height": 40,
+      "text": "Chụp & quay",
+      "width": 87
+    },
+    {
+      "disabled": false,
+      "font": "13px",
+      "height": 40,
+      "text": "Người mẫu",
+      "width": 87
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 71,
+      "text": "Tất cả",
+      "width": 68
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 71,
+      "text": "Nail",
+      "width": 68
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 71,
+      "text": "Makeup",
+      "width": 68
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 71,
+      "text": "Skincare",
+      "width": 68
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 71,
+      "text": "Tóc",
+      "width": 68
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 71,
+      "text": "Mi & mày",
+      "width": 68
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 71,
+      "text": "Massage",
+      "width": 68
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 71,
+      "text": "Photophone",
+      "width": 68
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 71,
+      "text": "Máy ảnh",
+      "width": 68
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 71,
+      "text": "Clip ngắn",
+      "width": 68
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 71,
+      "text": "Sản phẩm",
+      "width": 68
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 71,
+      "text": "Mẫu ảnh",
+      "width": 68
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 71,
+      "text": "Mẫu clip",
+      "width": 68
+    },
+    {
+      "disabled": false,
+      "font": "13px",
+      "height": 36,
+      "text": "Bộ lọc",
+      "width": 94
+    },
+    {
+      "disabled": false,
+      "font": "15px",
+      "height": 39,
+      "text": "Dịch vụ (0)",
+      "width": 82
+    },
+    {
+      "disabled": false,
+      "font": "15px",
+      "height": 39,
+      "text": "Tác phẩm (0)",
+      "width": 100
+    },
+    {
+      "disabled": false,
+      "font": "15px",
+      "height": 39,
+      "text": "Người làm (0)",
+      "width": 101
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 44,
+      "text": "Đóng",
+      "width": 44
+    },
+    {
+      "disabled": false,
+      "font": "15px",
+      "height": 44,
+      "text": "Toàn quốcHà NộiTP.HCMĐà Nẵng",
+      "width": 350
+    },
+    {
+      "disabled": false,
+      "font": "13px",
+      "height": 36,
+      "text": "Mọi mức giá",
+      "width": 107
+    },
+    {
+      "disabled": false,
+      "font": "13px",
+      "height": 36,
+      "text": "Dưới 300.000đ",
+      "width": 128
+    },
+    {
+      "disabled": false,
+      "font": "13px",
+      "height": 36,
+      "text": "Dưới 500.000đ",
+      "width": 128
+    },
+    {
+      "disabled": false,
+      "font": "13px",
+      "height": 36,
+      "text": "Dưới 1 triệu",
+      "width": 100
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 28,
+      "text": "Đang nhận lịch",
+      "width": 48
+    },
+    {
+      "disabled": false,
+      "font": "16px",
+      "height": 28,
+      "text": "Đến tận nơi",
+      "width": 48
+    },
+    {
+      "disabled": false,
+      "font": "13px",
+      "height": 36,
+      "text": "Phù hợp nhất",
+      "width": 114
+    },
+    {
+      "disabled": false,
+      "font": "13px",
+      "height": 36,
+      "text": "Giá thấp trước",
+      "width": 124
+    },
+    {
+      "disabled": false,
+      "font": "15px",
+      "height": 52,
+      "text": "Không có kết quả",
+      "width": 350
+    }
+  ],
+  "viewport": [
+    390,
+    844
+  ]
+}

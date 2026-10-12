@@ -4,10 +4,12 @@ import * as React from "react"
 import { Suspense } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { ChevronLeft, Search, SlidersHorizontal, X } from "lucide-react"
+import { ChevronDown, ChevronLeft, Search, SlidersHorizontal, X } from "lucide-react"
 import { PostCard, ProCard, VerticalSwitch } from "@/components/beauty"
 import { CategoryTiles } from "@/components/category-icon"
 import { ServiceCard } from "@/components/service-card"
+import { DataUnavailable } from "@/components/data-unavailable"
+import { moveRadio } from "@/lib/radio-navigation"
 import { Sheet } from "@/components/sheet"
 import { sortPros } from "@/components/trust"
 import { Button, ButtonLink, Chip, PageSkeleton, Tabs, Toggle } from "@/components/ui"
@@ -16,9 +18,9 @@ import { CATEGORIES, categoryLabel, getTemplate, getVertical, isVertical, vertic
 import { priorityFirst } from "@/lib/discovery"
 import { interestsFrom, rankFeed, type VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
-import { serviceOffers } from "@/lib/offers"
+import { listedOptions, serviceOffers, sortServiceOffers } from "@/lib/offers"
 import { categoryTerms, matchesQuery } from "@/lib/search"
-import { categoryFromPrice, distanceToCustomer, fromPrice, proView, servicesOf, useApp, type AppState } from "@/lib/store"
+import { distanceToCustomer, fromPrice, proView, servicesOf, useApp, type AppState } from "@/lib/store"
 import { categoriesInTrade } from "@/lib/trade"
 import { isVerified } from "@/lib/trust"
 import type { CategoryId, Pro, Work } from "@/lib/types"
@@ -58,6 +60,7 @@ function SearchView() {
   const query = params.get("q") ?? ""
   const [q, setQ] = React.useState(query)
   const [filtersOpen, setFiltersOpen] = React.useState(false)
+  const [categoriesOpen, setCategoriesOpen] = React.useState(false)
   // Rendered on the server and in the browser: fixing "now" once keeps both in step.
   const [now] = React.useState(() => new Date())
 
@@ -106,15 +109,14 @@ function SearchView() {
   // matched on the service itself -- its name, description and category.
   const services = React.useMemo(() => {
     const pros = state.pros.filter(proOk)
-    const list = serviceOffers({ pros, proServices: state.proServices, works: state.works, city: city || null, vertical }).filter(
+    const list = serviceOffers({ pros, proServices: state.proServices, works: state.works, city: city || null, vertical, priceFilter: maxPrice ? (total) => total <= maxPrice : undefined }).filter(
       (o) =>
         (!category || o.template.category === category) &&
         (!comesToYou || !o.template.studioOnly) &&
-        (!maxPrice || o.fromPrice <= maxPrice) &&
         matchesQuery(`${o.template.name} ${o.template.description} ${categoryLabel(o.template.category)}`, query),
     )
-    return sort === "price" ? [...list].sort((a, b) => a.fromPrice - b.fromPrice) : list
-  }, [state.pros, state.proServices, state.works, proOk, city, vertical, category, comesToYou, maxPrice, query, sort])
+    return sortServiceOffers(list, sort, (id) => distanceToCustomer(state, id))
+  }, [state, proOk, city, vertical, category, comesToYou, maxPrice, query, sort])
 
   const works = React.useMemo(() => {
     const list = state.works.filter((w) => {
@@ -124,8 +126,8 @@ function SearchView() {
       if (category && w.category !== category) return false
       const tpl = getTemplate(w.templateId)
       if (comesToYou && tpl?.studioOnly) return false
-      const price = fromPrice(state, w.proId, w.templateId)
-      if (maxPrice && (price === null || price > maxPrice)) return false
+      const options = tpl ? listedOptions(tpl, servicesOf(state, w.proId).find((s) => s.templateId === w.templateId)?.prices ?? {}) : []
+      if (maxPrice && !options.some((o) => o.minimumTotal <= maxPrice)) return false
       // The work itself, not the person: "nail" should not return a makeup
       // photo because its author also does nails.
       return matchesQuery(`${w.title} ${w.description} ${tpl?.name ?? ""} ${categoryLabel(w.category)}`, query)
@@ -154,7 +156,13 @@ function SearchView() {
 
   const pros = React.useMemo(() => {
     // With a category chosen, "Từ ..." is that category's price, as on the card.
-    const priceOf = (proId: string) => (category ? categoryFromPrice(state, proId, category) : fromPrice(state, proId))
+    const priceOf = (proId: string) => {
+      const prices = servicesOf(state, proId).flatMap((listing) => {
+        const t = getTemplate(listing.templateId)
+        return !t || (category && t.category !== category) || (vertical !== "all" && verticalOf(t.category) !== vertical) || (comesToYou && t.studioOnly) ? [] : listedOptions(t, listing.prices).map((o) => o.minimumTotal)
+      })
+      return prices.length ? Math.min(...prices) : null
+    }
     const list = state.pros.filter((p) => {
       if (!proOk(p)) return false
       if (vertical !== "all" && !p.categories.some((c) => verticalOf(c) === vertical)) return false
@@ -167,7 +175,7 @@ function SearchView() {
       return [...list].sort((a, b) => (distanceToCustomer(state, a.id) ?? Infinity) - (distanceToCustomer(state, b.id) ?? Infinity))
     if (sort === "price") return [...list].sort((a, b) => (priceOf(a.id) ?? Infinity) - (priceOf(b.id) ?? Infinity))
     return sortPros(state, list, "match")
-  }, [state, proOk, vertical, category, maxPrice, query, sort])
+  }, [state, proOk, vertical, category, maxPrice, query, sort, comesToYou])
 
   const active = [cityParam !== null && city !== (state.city ?? ""), maxPrice, verifiedOnly, openOnly, comesToYou, sort !== "match"].filter(
     Boolean,
@@ -192,6 +200,7 @@ function SearchView() {
 
   return (
     <div className="pt-2 md:pt-8">
+      <h1 className="mb-5 text-[28px] font-bold tracking-tight md:text-[36px]">Tìm dịch vụ</h1>
       <div className="flex items-center gap-1">
         <button
           type="button"
@@ -217,7 +226,7 @@ function SearchView() {
             enterKeyHint="search"
             aria-label="Tìm kiếm"
             placeholder="Nail, makeup, chụp ảnh, thuê mẫu…"
-            className="h-13 w-full rounded-full border border-line-strong bg-surface pl-12 pr-12 text-[16px] shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-accent focus:outline-none md:h-14 [&::-webkit-search-cancel-button]:hidden"
+            className="h-13 w-full rounded-full border border-line-strong bg-surface pl-12 pr-12 text-body shadow-[var(--shadow-soft)] placeholder:text-muted focus:border-accent focus:outline-none md:h-14 [&::-webkit-search-cancel-button]:hidden"
           />
           {q && (
             <button
@@ -238,17 +247,12 @@ function SearchView() {
       <div className="sticky top-0 z-30 -mx-4 mt-3 bg-canvas/95 px-4 py-2.5 backdrop-blur md:top-16 md:mx-0 md:mt-5 md:px-0">
         <VerticalSwitch value={vertical} onChange={setVertical} />
       </div>
-      {/* With a query the results matter more than the categories: one row. */}
-      <CategoryTiles
-        className="mt-3"
-        row={Boolean(query)}
-        items={[{ id: "all", label: "Tất cả" }, ...priorityFirst(categoriesInTrade(vertical)).map((c) => ({ id: c.id, label: c.short ?? c.label }))]}
-        value={category ?? "all"}
-        onChange={(id) => setParams({ category: id === "all" ? null : id })}
-      />
-      <div className="mt-4 lg:hidden">
-        <Chip active={active > 0} onClick={() => setFiltersOpen(true)}>
-          <SlidersHorizontal className="size-3.5" /> Bộ lọc{active ? ` · ${active}` : ""}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Chip active={Boolean(category)} onClick={() => setCategoriesOpen(true)}>
+          {category ? categoryLabel(category) : "Tất cả dịch vụ"} <ChevronDown className="size-4" aria-hidden />
+        </Chip>
+        <Chip className="lg:hidden" active={active > 0} onClick={() => setFiltersOpen(true)}>
+          <SlidersHorizontal className="size-4" aria-hidden /> Bộ lọc{active ? ` · ${active}` : ""}
         </Chip>
       </div>
 
@@ -268,16 +272,16 @@ function SearchView() {
             ]}
           />
           {query && (
-            <p className="mt-3 text-[14px] text-ink-soft">
+            <p className="mt-3 text-body text-ink-soft">
               {resultCount ? `${resultCount} kết quả cho “${query}”` : `Không có kết quả cho “${query}”`}
             </p>
           )}
 
-          {mode === "services" ? (
+          {(mode === "works" ? state.worksError : state.catalogError) ? <DataUnavailable /> : mode === "services" ? (
             services.length ? (
-              <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:gap-x-5">
+              <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
                 {services.map((o, i) => (
-                  <ServiceCard key={o.template.id} offer={o} priority={i < 4} />
+                  <ServiceCard key={o.template.id} offer={o} priority={i < 4} href={`/dich-vu/${o.template.id}?${params.toString()}`} />
                 ))}
               </div>
             ) : (
@@ -303,6 +307,14 @@ function SearchView() {
         </div>
       </div>
 
+      <Sheet open={categoriesOpen} onClose={() => setCategoriesOpen(false)} title="Bạn muốn đặt dịch vụ gì?">
+        <CategoryTiles
+          items={[{ id: "all", label: "Tất cả" }, ...priorityFirst(categoriesInTrade(vertical)).map((c) => ({ id: c.id, label: c.label }))]}
+          value={category ?? "all"}
+          onChange={(id) => { setParams({ category: id === "all" ? null : id }); setCategoriesOpen(false) }}
+        />
+      </Sheet>
+
       <Sheet
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}
@@ -310,7 +322,7 @@ function SearchView() {
         className="lg:hidden"
         footer={
           <Button size="lg" className="w-full" onClick={() => setFiltersOpen(false)}>
-            {resultCount ? `Xem ${resultCount} kết quả` : "Không có kết quả"}
+            {resultCount ? `Xem ${resultCount} kết quả` : "Áp dụng bộ lọc"}
           </Button>
         }
       >
@@ -375,7 +387,7 @@ function Filters({
           aria-label="Khu vực"
           value={city}
           onChange={(e) => onChange({ city: e.target.value || "all" })}
-          className="h-11 w-full rounded-full border border-line-strong bg-surface px-4 text-[15px] focus:border-accent focus:outline-none"
+          className="h-11 w-full rounded-full border border-line-strong bg-surface px-4 text-body focus:border-accent focus:outline-none"
         >
           <option value="">Toàn quốc</option>
           {CITIES.map((c) => (
@@ -384,7 +396,8 @@ function Filters({
         </select>
       </FilterGroup>
 
-      <FilterGroup title="Giá từ">
+      <FilterGroup title="Ngân sách tối đa">
+        <p className="mb-2 text-meta text-ink-soft">Tính theo tổng dịch vụ tối thiểu, chưa gồm phí di chuyển và phí đặt gấp.</p>
         <div role="radiogroup" aria-label="Giá" className="flex flex-wrap gap-2">
           {PRICE_OPTIONS.map((p) => (
             <Choice key={p.value} active={String(maxPrice || "") === p.value} onClick={() => onChange({ price: p.value || null })}>
@@ -426,7 +439,7 @@ function Filters({
           )}
         </div>
         {!hasAddress && (
-          <p className="mt-2 text-[13px] text-muted">
+          <p className="mt-2 text-meta text-muted">
             <Link href="/me/dia-chi" className="font-semibold text-ink underline underline-offset-2">
               Thêm địa chỉ
             </Link>{" "}
@@ -436,7 +449,7 @@ function Filters({
       </FilterGroup>
 
       {onClear && (
-        <button type="button" onClick={onClear} className="min-h-11 text-[14px] font-semibold underline underline-offset-4">
+        <button type="button" onClick={onClear} className="min-h-11 text-body font-semibold underline underline-offset-4">
           Xoá bộ lọc
         </button>
       )}
@@ -447,7 +460,7 @@ function Filters({
 function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <fieldset>
-      <legend className="mb-2.5 text-[15px] font-bold">{title}</legend>
+      <legend className="mb-2.5 text-body font-bold">{title}</legend>
       {children}
     </fieldset>
   )
@@ -459,9 +472,11 @@ function Choice({ active, onClick, children }: { active: boolean; onClick: () =>
       type="button"
       role="radio"
       aria-checked={active}
+      tabIndex={active ? 0 : -1}
+      onKeyDown={(event) => moveRadio(event, onClick)}
       onClick={onClick}
       className={cn(
-        "relative inline-flex h-9 items-center rounded-full border px-3.5 text-[13px] font-medium transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
+        "relative inline-flex min-h-11 items-center rounded-full border px-3.5 text-meta font-medium transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
         active ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
       )}
     >
@@ -474,8 +489,8 @@ function ToggleRow({ label, hint, checked, onChange }: { label: string; hint?: s
   return (
     <div className="flex min-h-13 items-center justify-between gap-3 py-2">
       <span>
-        <span className="block text-[15px]">{label}</span>
-        {hint && <span className="block text-[13px] text-muted">{hint}</span>}
+        <span className="block text-body">{label}</span>
+        {hint && <span className="block text-meta text-muted">{hint}</span>}
       </span>
       <Toggle checked={checked} onChange={onChange} label={label} />
     </div>
@@ -486,13 +501,13 @@ function NoResults({ vertical, filtered, onClear }: { vertical: VerticalFilter; 
   const trade = vertical === "all" ? null : getVertical(vertical)
   return (
     <div className="mt-6 rounded-[var(--radius-lg)] border border-dashed border-line px-6 py-12 text-center">
-      <p className="text-[17px] font-bold">Chưa thấy kết quả phù hợp</p>
-      <p className="mx-auto mt-1.5 max-w-sm text-[15px] text-ink-soft">
+      <p className="text-lead font-bold">Chưa thấy kết quả phù hợp</p>
+      <p className="mx-auto mt-1.5 max-w-sm text-body text-ink-soft">
         {filtered
           ? "Thử bỏ bớt bộ lọc hoặc đổi từ khoá."
           : trade && trade.id !== "beauty"
             ? `${trade.label} vừa mở trên 360dep, người làm còn ít. Đăng yêu cầu để ai phù hợp liên hệ bạn.`
-            : "Đăng yêu cầu, người làm gần bạn được báo và ai nhận trước sẽ làm."}
+            : "Bạn có thể đăng yêu cầu với giá đã chọn. Khi có người phù hợp nhận việc, hai bên mới liên hệ; chưa có cam kết sẽ có người nhận."}
       </p>
       <div className="mt-5 flex justify-center">
         {filtered ? (

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { moveRadio } from "@/lib/radio-navigation"
 import { Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Info } from "lucide-react"
@@ -111,13 +112,13 @@ function NewRequestForm() {
         router.replace(`/requests/${result.id}`)
       }}
     >
-      <p className="rounded-2xl bg-subtle px-4 py-3 text-[13px] text-accent-dark">
+      <p className="rounded-2xl bg-subtle px-4 py-3 text-meta text-accent-dark">
         Chọn dịch vụ, giờ và địa chỉ. 360dep báo cho mọi người làm phù hợp quanh bạn, ai nhận trước sẽ làm với giá bên dưới.
         Người làm nhận rồi thì hai bên nhắn tin được với nhau trong lịch hẹn.
       </p>
 
       <fieldset>
-        <legend className="mb-2 text-[13px] font-medium text-ink-soft">Bạn cần làm gì?</legend>
+        <legend className="mb-2 text-meta font-medium text-ink-soft">Bạn cần làm gì?</legend>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
           {CATEGORIES.map((c) => {
             const Icon = CATEGORY_ICON[c.id]
@@ -129,7 +130,7 @@ function NewRequestForm() {
                 aria-pressed={active}
                 onClick={() => pickCategory(c.id)}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 rounded-2xl py-3 text-[12.5px] transition-colors",
+                  "flex flex-col items-center gap-1.5 rounded-2xl py-3 text-label transition-colors",
                   active ? "bg-accent font-semibold text-white" : "bg-accent-soft text-ink hover:bg-subtle-strong",
                 )}
               >
@@ -141,8 +142,8 @@ function NewRequestForm() {
         </div>
       </fieldset>
 
-      <p className="text-xs text-muted">{PRICE_LEVEL_NOTE}</p>
-      <Field label="Phí di chuyển tối đa bạn đồng ý"><select className={inputClass} value={feeLimit} onChange={(e) => setFeeLimit(Number(e.target.value))}>{[0, 25000, 50000, 100000].map((n) => <option key={n} value={n}>{formatPrice(n)}</option>)}</select><p className="mt-2 text-sm">Tổng tối đa: {formatPrice(maxTotal)} (đã tính phí đặt gấp nếu có). Chỉ người làm có cùng mức giá, đủ điều kiện và không vượt tổng này mới nhận được.</p></Field>
+      <p className="text-label text-muted">{PRICE_LEVEL_NOTE}</p>
+      <Field label="Phí di chuyển tối đa bạn đồng ý"><select className={inputClass} value={feeLimit} onChange={(e) => setFeeLimit(Number(e.target.value))}>{[0, 25000, 50000, 100000].map((n) => <option key={n} value={n}>{formatPrice(n)}</option>)}</select><p className="mt-2 text-body">Tổng tối đa: {formatPrice(maxTotal)} (đã tính phí đặt gấp nếu có). Chỉ người làm có cùng mức giá, đủ điều kiện và không vượt tổng này mới nhận được.</p></Field>
       {(variant.sessions ?? 1) > 1 && <p role="alert" className="text-warning">Gói nhiều buổi: hãy đặt trực tiếp từ hồ sơ đối tác để chọn đủ lịch.</p>}
       <Field label="Dịch vụ">
         <select
@@ -163,7 +164,7 @@ function NewRequestForm() {
       </Field>
 
       <fieldset>
-        <legend className="mb-2 text-[13px] font-medium text-ink-soft">Gói</legend>
+        <legend className="mb-2 text-meta font-medium text-ink-soft">Gói</legend>
         <div className="grid gap-2 sm:grid-cols-2">
           {tpl.variants.map((v) => (
             <button
@@ -172,24 +173,24 @@ function NewRequestForm() {
               aria-pressed={v.id === variant.id}
               onClick={() => pickVariant(v.id)}
               className={cn(
-                "rounded-xl border px-3 py-2.5 text-left text-sm",
+                "rounded-xl border px-3 py-2.5 text-left text-body",
                 v.id === variant.id ? "border-accent bg-subtle text-accent-dark" : "border-line bg-surface text-ink-soft",
               )}
             >
               <span className="block font-medium">
                 {v.label} · {formatDuration(v.durationMin)}
               </span>
-              <span className="block text-xs">
+              <span className="block text-label">
                 Từ {formatPrice(v.minPrice)}
                 {v.perPerson ? " / người" : ""}
               </span>
             </button>
           ))}
         </div>
-        <p className="mt-2 text-xs text-muted">Bao gồm: {tpl.includes.join(" · ")}</p>
+        <p className="mt-2 text-label text-muted">Bao gồm: {tpl.includes.join(" · ")}</p>
         {variant.perPerson && (
           <div className="mt-3 flex items-center gap-2 rounded-xl bg-canvas px-3 py-2">
-            <span className="flex-1 text-[13px]">Số người</span>
+            <span className="flex-1 text-meta">Số người</span>
             <button
               type="button"
               aria-label="Giảm số người"
@@ -214,33 +215,35 @@ function NewRequestForm() {
       </fieldset>
 
       <section aria-labelledby="request-price" className="rounded-2xl border border-line bg-surface p-4">
-        <p id="request-price" className="text-[15px]">
-          Giá: <b className="text-[17px]">{formatPrice(unit * heads)}</b>
-          {heads > 1 && <span className="text-[13px] text-muted"> ({formatPrice(unit)} × {heads} người)</span>}
+        <p id="request-price" className="text-body">
+          Giá: <b className="text-lead">{formatPrice(unit * heads)}</b>
+          {heads > 1 && <span className="text-meta text-muted"> ({formatPrice(unit)} × {heads} người)</span>}
         </p>
-        <p className="mt-0.5 text-[13px] text-ink-soft">Người làm nhận trước sẽ làm với giá này.</p>
-        <div role="radiogroup" aria-label="Mức giá" className={cn("mt-3 grid gap-2", variant.tiers.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
+        <p className="mt-0.5 text-meta text-ink-soft">Người làm nhận trước sẽ làm với giá này.</p>
+        <div role="radiogroup" aria-label="Mức giá" className={cn("mt-3 grid gap-2", variant.tiers.length === 3 ? "grid-cols-1 min-[400px]:grid-cols-3" : "grid-cols-1 min-[400px]:grid-cols-2")}>
           {variant.tiers.map((t, i) => (
             <button
               key={t}
               type="button"
               role="radio"
               aria-checked={unit === t}
+              tabIndex={unit === t ? 0 : -1}
+              onKeyDown={(e) => moveRadio(e, () => setTier(t))}
               onClick={() => setTier(t)}
               className={cn(
                 "rounded-xl border px-2 py-2.5 text-center transition-colors",
                 unit === t ? "border-accent bg-accent text-white" : "border-line bg-canvas hover:border-ink/30",
               )}
             >
-              <span className={cn("block text-[12px]", unit === t ? "text-white/85" : "text-muted")}>{labels[i]}</span>
-              <span className="block text-[14px] font-semibold">
+              <span className={cn("block text-label", unit === t ? "text-white" : "text-muted")}>{labels[i]}</span>
+              <span className="block text-body font-semibold">
                 {formatPrice(t)}
                 {heads > 1 ? "/người" : ""}
               </span>
             </button>
           ))}
         </div>
-        <p className="mt-2 text-[12px] text-muted">{PRICE_LEVEL_NOTE}</p>
+        <p className="mt-2 text-label text-muted">{PRICE_LEVEL_NOTE}</p>
       </section>
 
       <Field label="Mô tả thêm (tuỳ chọn)" hint="Tình trạng da/móng/tóc, phong cách mong muốn, số người…">
@@ -268,7 +271,7 @@ function NewRequestForm() {
       </div>
 
       <fieldset>
-        <legend className="mb-2 text-[13px] font-medium text-ink-soft">Địa điểm</legend>
+        <legend className="mb-2 text-meta font-medium text-ink-soft">Địa điểm</legend>
         <div className="grid grid-cols-2 gap-2">
           {[
             { v: true, l: "Làm tại nhà tôi" },
@@ -281,7 +284,7 @@ function NewRequestForm() {
               aria-pressed={atHome === o.v}
               onClick={() => setAtHome(o.v)}
               className={cn(
-                "h-11 rounded-xl border text-sm disabled:opacity-40",
+                "h-11 rounded-xl border text-body disabled:opacity-40",
                 atHome === o.v ? "border-accent bg-subtle font-medium text-accent-dark" : "border-line bg-surface text-ink-soft",
               )}
             >
@@ -289,9 +292,9 @@ function NewRequestForm() {
             </button>
           ))}
         </div>
-        {tpl.studioOnly && <p className="mt-2 text-xs text-warning">Dịch vụ này cần thiết bị tại studio.</p>}
+        {tpl.studioOnly && <p className="mt-2 text-label text-warning">Dịch vụ này cần thiết bị tại studio.</p>}
         {!atHome && (
-          <p className="mt-2 text-xs text-warning">
+          <p className="mt-2 text-label text-warning">
             Đăng yêu cầu hiện chỉ dành cho dịch vụ làm tại nhà. Với dịch vụ tại studio, hãy đặt lịch trực tiếp với
             người làm.
           </p>
@@ -309,7 +312,7 @@ function NewRequestForm() {
       </fieldset>
 
       <fieldset>
-        <legend className="mb-2 text-[13px] font-medium text-ink-soft">Thanh toán</legend>
+        <legend className="mb-2 text-meta font-medium text-ink-soft">Thanh toán</legend>
         <div className="grid grid-cols-2 gap-2">
           {(["cash", "online"] as const).map((m) => (
             <button
@@ -319,7 +322,7 @@ function NewRequestForm() {
               aria-pressed={paymentMethod === m}
               onClick={() => m === "cash" && setPaymentMethod(m)}
               className={cn(
-                "h-11 rounded-xl border text-sm disabled:opacity-50",
+                "h-11 rounded-xl border text-body disabled:opacity-50",
                 paymentMethod === m ? "border-accent bg-subtle font-medium text-accent-dark" : "border-line bg-surface text-ink-soft",
               )}
             >
@@ -327,19 +330,19 @@ function NewRequestForm() {
             </button>
           ))}
         </div>
-        <p className="mt-2 text-xs text-muted">
+        <p className="mt-2 text-label text-muted">
           Trả tiền mặt hoặc chuyển khoản cho người làm sau khi làm. Không cần đặt cọc.
         </p>
       </fieldset>
 
-      <p className="flex gap-2 text-xs text-muted">
+      <p className="flex gap-2 text-label text-muted">
         <Info className="mt-0.5 size-3.5 shrink-0" />
         Khách không mất phí đăng yêu cầu. Nếu nhà bạn cách người nhận việc xa hơn {POLICY.freeTravelKm} km hoặc giờ hẹn trong vòng{" "}
         {POLICY.urgentWithinHours} giờ tới, lịch hẹn cộng thêm phí di chuyển / đặt gấp theo quy định, hiện rõ trong lịch hẹn.
       </p>
 
       {error && (
-        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
           {error}
         </p>
       )}

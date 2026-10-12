@@ -5,6 +5,19 @@
   /* Body and headings in Be Vietnam Pro; the serif is for the wordmark only. */
   --font-display: var(--font-body), ui-sans-serif, system-ui, sans-serif;
 
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.45;
+  --text-meta: 0.875rem;
+  --text-meta--line-height: 1.5;
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+  --text-lead: 1.125rem;
+  --text-lead--line-height: 1.5;
+  --text-card-title: 1.125rem;
+  --text-card-title--line-height: 1.4;
+  --text-price: 1.25rem;
+  --text-price--line-height: 1.4;
+
   /* Mirrors lib/design/tokens.ts; tests/design-tokens.test.ts keeps them equal. */
   --color-canvas: #FAF6F4;
   --color-surface: #FFFFFF;
@@ -59,6 +72,8 @@
     background: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
   h1,
@@ -94,4 +109,10 @@
   .motion-scale {
     transform: none !important;
   }
+}
+
+/* File inputs stay visually hidden; their visible upload label owns the focus ring. */
+label:has(input[type="file"]:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
 }

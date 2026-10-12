@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Image } from "expo-image"
-import { Text, View, type StyleProp, type ViewStyle } from "react-native"
+import { Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native"
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated"
 import { initials, formatRating } from "@/data/format"
 import Svg, { Path, Rect } from "react-native-svg"
@@ -84,7 +84,9 @@ export function Chip({ label, selected, onPress, icon }: { label: string; select
       haptic="select"
       accessibilityState={{ selected }}
       style={{
-        height: 36,
+        minHeight: 44,
+        paddingVertical: 10,
+        maxWidth: "100%",
         paddingHorizontal: 14,
         borderRadius: radius.full,
         backgroundColor: selected ? colors.accent : colors.subtle,
@@ -94,7 +96,7 @@ export function Chip({ label, selected, onPress, icon }: { label: string; select
       }}
     >
       {icon}
-      <Txt v="meta" w={600} color={selected ? colors.surface : colors.ink} numberOfLines={1}>
+      <Txt v="meta" w={600} color={selected ? colors.surface : colors.ink} style={{ flexShrink: 1 }}>
         {label}
       </Txt>
     </Press>
@@ -220,12 +222,14 @@ export function Logo({ size = 32 }: { size?: number }) {
 
 /** A label/value line in a summary. */
 export function Line({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  const { width, fontScale } = useWindowDimensions()
+  const stacked = fontScale > 1.2 || width < 360
   return (
-    <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12, paddingVertical: 4 }}>
+    <View style={{ flexDirection: stacked ? "column" : "row", justifyContent: "space-between", gap: stacked ? 4 : 12, paddingVertical: 4 }}>
       <Txt color={strong ? colors.ink : colors.inkSoft} w={strong ? 700 : 400} style={{ flexShrink: 1 }}>
         {label}
       </Txt>
-      <Txt w={strong ? 800 : 500} tabular>
+      <Txt w={strong ? 800 : 500} tabular style={{ flexShrink: 1, textAlign: stacked ? "left" : "right" }}>
         {value}
       </Txt>
     </View>

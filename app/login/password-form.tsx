@@ -43,7 +43,7 @@ function PhoneRecovery() {
   const zalo = platform.supportZalo?.replace(/\D/g, "")
   const { href } = supportHref(platform)
   return (
-    <span className="mt-1 block text-[13px] text-ink-soft">
+    <span className="mt-1 block text-meta text-ink-soft">
       Quên mật khẩu của tài khoản số điện thoại?{" "}
       <a href={href} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent underline underline-offset-2">
         {zalo ? `Nhắn Zalo hỗ trợ ${zalo}` : "Liên hệ hỗ trợ"}
@@ -92,16 +92,16 @@ function SignIn({ next, googleEnabled }: { next: string; googleEnabled: boolean 
       </Field>
       <PasswordField label="Mật khẩu" value={password} onChange={setPassword} autoComplete="current-password" />
       <div className="-mt-1 text-right">
-        <Link href="/quen-mat-khau" className="inline-flex min-h-11 items-center text-[14px] font-medium text-accent underline-offset-2 hover:underline">
+        <Link href="/quen-mat-khau" className="inline-flex min-h-11 items-center text-body font-medium text-accent underline-offset-2 hover:underline">
           Quên mật khẩu?
         </Link>
       </div>
       {error && (
-        <div role="alert" className="rounded-xl bg-danger-soft px-3.5 py-3 text-[14px] text-danger">
+        <div role="alert" className="rounded-xl bg-danger-soft px-3.5 py-3 text-body text-danger">
           {error}
           {error === MESSAGES.wrong && parseIdentifier(identifier).kind === "phone" && <PhoneRecovery />}
           {error === MESSAGES.wrong && googleEnabled && parseIdentifier(identifier).kind !== "phone" && (
-            <span className="mt-1 block text-[13px] text-ink-soft">Nếu bạn từng vào 360dep bằng Google hoặc Apple, dùng nút ở trên.</span>
+            <span className="mt-1 block text-meta text-ink-soft">Nếu bạn từng vào 360dep bằng Google hoặc Apple, dùng nút ở trên.</span>
           )}
         </div>
       )}
@@ -164,7 +164,7 @@ function SignUp({ next }: { next: string }) {
         />
         <FieldError text={fieldError("identifier")} />
         {!fieldError("identifier") && (
-          <span className="mt-1 block text-xs text-muted">
+          <span className="mt-1 block text-label text-muted">
             {id.kind === "phone"
               ? `Bạn sẽ đăng nhập bằng số ${formatPhone(id.phone)}. Nên dùng email (hoặc thêm email sau): tài khoản chỉ có số điện thoại thì quên mật khẩu phải nhắn Zalo hỗ trợ.`
               : id.kind === "email"
@@ -182,7 +182,7 @@ function SignUp({ next }: { next: string }) {
         error={fieldError("password")}
       />
       {problem && !problem.field && (
-        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-3 text-[14px] text-danger">
+        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-3 text-body text-danger">
           {problem.error}
         </p>
       )}

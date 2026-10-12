@@ -1,0 +1,158 @@
+{
+  "date": "2026-10-11",
+  "source_head": "dc071613457f73a47337542553ad78ab607753e4",
+  "screenshots": [
+    {
+      "file": "01-home-desktop.jpg",
+      "title": "1 · Trang chủ desktop",
+      "note": "Không có dịch vụ; các danh mục đều Sắp có; vùng hero bên phải bỏ trống.",
+      "bytes": 67980,
+      "sha256": "9d95809b6e5dc93fb15af776dede8788c787e6efce33e1b9e786313c595279cb",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "07-home-mobile-web.jpg",
+      "title": "1 · Trang chủ mobile web",
+      "note": "390px: danh mục và chữ phụ nhỏ, hai khối đăng yêu cầu nối tiếp.",
+      "bytes": 43384,
+      "sha256": "d8f1beaf3a6013ef6c9ed4ff8d8f8b1dd2cd8df9984b64d24c270bbcf5c52b6c",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "08-categories-expanded-mobile-web.jpg",
+      "title": "2 · Mở rộng danh mục",
+      "note": "5 cột; Photophone bị cắt; badge Sắp có lặp lại làm nhiễu.",
+      "bytes": 47528,
+      "sha256": "de488cf9a7e3b64a4b33d0e7d033f4cb39af17b5326581762aceb027c8853f1d",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "02-pros-desktop.jpg",
+      "title": "3 · Danh sách người làm",
+      "note": "Mặc định Nail, nhiều filter, không có ai phù hợp trong trạng thái quan sát.",
+      "bytes": 44436,
+      "sha256": "4a36d9985ade6933f476e90bc1424e8728c05adcec7b1df587380fb547957e68",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "03-search-desktop.jpg",
+      "title": "4 · Tìm kiếm desktop",
+      "note": "Danh mục cuối xuống hàng lẻ; nhiều lớp lọc trước kết quả.",
+      "bytes": 54204,
+      "sha256": "e31d48322ca19c2eb77db6faf580f260e7f1e423be17795761f83e27e24fce2e",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "09-search-mobile-web.jpg",
+      "title": "4 · Tìm kiếm 390px",
+      "note": "Kết quả bắt đầu ở khoảng nửa dưới màn; Dịch vụ/Tác phẩm/Người làm đều 0.",
+      "bytes": 36083,
+      "sha256": "a96dad58b3b47e266af41c3f295989d51951b3cf3a580655aa8f2cbffcb3aa15",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "13-search-320-mobile-web.jpg",
+      "title": "4 · Tìm kiếm 320px",
+      "note": "Không overflow toàn trang, nhưng tên danh mục và tab thứ ba bị cắt.",
+      "bytes": 30700,
+      "sha256": "b52ea35644118bd706400feb9de37a7257e87c7da4116b19b87129454633d162",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "10-search-filter-mobile-web.jpg",
+      "title": "5 · Bộ lọc mobile",
+      "note": "Giá từ đi cùng Dưới; chip 13px; switch tắt tương phản yếu. Escape hoạt động.",
+      "bytes": 31152,
+      "sha256": "add702591e5904b2c8f2d3ced2384f5c8d11d6d8c6c4e416781ebd997b69f13c",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "04-request-login-gate-desktop.jpg",
+      "title": "6 · Đăng yêu cầu → login",
+      "note": "CTA từ trạng thái trống chuyển khách tới màn đăng nhập.",
+      "bytes": 33402,
+      "sha256": "4cf1138bf327bc436ccbffb43cc3f2f9148726004f9321ab88a7eb225ce51e8e",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "05-login-mobile-web.jpg",
+      "title": "6 · Login mobile web",
+      "note": "Nhãn/hint nhỏ; form và phần giải thích kéo dài theo chiều dọc.",
+      "bytes": 32698,
+      "sha256": "27b5c5497b407969a24d0f46b17216dad92d8c0d8cc5e0c142393fb60727857f",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "06-signup-mobile-web.jpg",
+      "title": "6 · Tạo tài khoản mobile web",
+      "note": "Heading vẫn Đăng nhập khi đang chọn Tạo tài khoản; ảnh ở vị trí cuộn sau khi chọn tab.",
+      "bytes": 35041,
+      "sha256": "bf8ca4dbd3f354b7ec78b17a7220742c24dc8926d7d5f2f61a5154f80e801baa",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "11-partner-mobile-web.jpg",
+      "title": "7 · Giới thiệu đối tác",
+      "note": "CTA rõ; nội dung sau đó là nhiều card dài bằng chữ.",
+      "bytes": 48510,
+      "sha256": "aaf2e7fb27e13cd1c9f228299ce9783bcc1f5864b5e43ba5a30a738b42a92b2c",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "12-partner-login-mobile-web.jpg",
+      "title": "7 · Cổng đăng nhập đối tác",
+      "note": "Đến được login riêng theo role; onboarding chưa kiểm tra bằng tài khoản.",
+      "bytes": 34779,
+      "sha256": "8f50b812304f7bc94fe6d067aae743646b696da6c0351667d5e4a84405ebae68",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "native-home-empty.png",
+      "title": "8 · Native: trang chủ",
+      "note": "Bản cài 1.0.0 build 1: nguồn cung trống, lặp fallback. Không chứng minh backend hiện tại.",
+      "bytes": 199048,
+      "sha256": "01178cc294f913f0363bf14bba291bc9849d0e31a038b1c776a6ee9b3597c53e",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "native-search-empty.png",
+      "title": "8 · Native: tìm kiếm",
+      "note": "Bản cài: không có dịch vụ/người làm để kiểm tra card hoặc đi tiếp booking.",
+      "bytes": 140149,
+      "sha256": "d194543234be715b417e9267710bb689aa5d39ff3af966abd457ff54a57ff254",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "native-filters.png",
+      "title": "8 · Native: bộ lọc",
+      "note": "Nhiều chip và nhóm lựa chọn trong cùng một sheet.",
+      "bytes": 174466,
+      "sha256": "bfe942522481a0d2e81d24692ddc2c9e18cc6b5706ac320ebe433020ae9fd437",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "native-account-signed-out.png",
+      "title": "8 · Native: tài khoản guest",
+      "note": "Chỉ có cổng đăng nhập; không thấy lối vào tìm hiểu làm đối tác.",
+      "bytes": 120539,
+      "sha256": "1590c1b6c2fb0393fbe43c4bbb71294299871ac1e6221e8a7b34ceb5d4194425",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "native-login.png",
+      "title": "8 · Native: đăng nhập",
+      "note": "Marketing và điều khoản chiếm màn đầu, nút login nằm dưới. Checkbox là trạng thái sẵn có, audit không đổi.",
+      "bytes": 206287,
+      "sha256": "7dc4e6524e7848e81b7df2155461ff6be6f8368f20f40f2cae4b7093e7f96806",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    },
+    {
+      "file": "14-city-keyboard-focus-mobile-web.jpg",
+      "title": "Bổ sung · Focus chọn khu vực",
+      "note": "Select đang nhận focus bằng Tab nhưng không có dấu hiệu nhìn thấy vì opacity 0.",
+      "bytes": 43402,
+      "sha256": "572b0fa5f91562966d33e43b9d7182245b341bad10b853dc708c6a39dbea6562",
+      "source": "Current-run CUA browser or Simulator capture; unmodified"
+    }
+  ]
+}

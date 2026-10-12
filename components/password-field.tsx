@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 export function FieldError({ text }: { text: string | null | undefined }) {
   if (!text) return null
   return (
-    <span role="alert" className="mt-1 block text-[13px] text-danger">
+    <span role="alert" className="mt-1 block text-meta text-danger">
       {text}
     </span>
   )
@@ -34,7 +34,7 @@ export function PasswordField({
   const inputId = React.useId()
   return (
     <div>
-      <label htmlFor={inputId} className="mb-1.5 block text-[13px] font-semibold text-ink">
+      <label htmlFor={inputId} className="mb-1.5 block text-meta font-semibold text-ink">
         {label}
       </label>
       <div className="relative">
@@ -60,7 +60,7 @@ export function PasswordField({
         </button>
       </div>
       <FieldError text={error} />
-      {hint && !error && <span className="mt-1 block text-xs text-muted">{hint}</span>}
+      {hint && !error && <span className="mt-1 block text-label text-muted">{hint}</span>}
     </div>
   )
 }

@@ -35,20 +35,20 @@ export function BookingCard({ booking }: { booking: Booking }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <p className="truncate text-[15px] font-bold">{booking.serviceName}</p>
+            <p className="truncate text-body font-bold">{booking.serviceName}</p>
             <StatusBadge status={booking.status} label={booking.status === "completed" && booking.delivery && !booking.delivery.acceptedAt ? booking.delivery.deliveredAt ? "Chờ xác nhận sản phẩm" : "Chờ giao sản phẩm" : undefined} />
           </div>
-          <p className="truncate text-[13px] text-ink-soft">
+          <p className="truncate text-meta text-ink-soft">
             {booking.variantLabel} · {pro.name}
           </p>
-          <p className="mt-1.5 text-[13px] font-medium text-ink">{formatDateLong(booking.date)}</p>
-          <p className="mt-0.5 flex items-center gap-1 text-[13px] text-ink-soft">
+          <p className="mt-1.5 text-meta font-medium text-ink">{formatDateLong(booking.date)}</p>
+          <p className="mt-0.5 flex items-center gap-1 text-meta text-ink-soft">
             <Clock className="size-3.5" />
             {booking.time} – {addMinutes(booking.time, booking.durationMin)}
-            <span className="ml-auto text-[15px] font-bold text-ink">{formatPrice(booking.quote.total - booking.discount)}</span>
+            <span className="ml-auto text-body font-bold text-ink">{formatPrice(booking.quote.total - booking.discount)}</span>
           </p>
           {booking.discount > 0 && (
-            <p className="mt-0.5 text-right text-xs text-success">
+            <p className="mt-0.5 text-right text-label text-success">
               Voucher −{formatPrice(booking.discount)} · tổng {formatPrice(booking.quote.total)}
             </p>
           )}
@@ -62,7 +62,7 @@ export function BookingCard({ booking }: { booking: Booking }) {
           </ButtonLink>
           {/* The number and the chat come once the freelancer accepts. */}
           {booking.status === "pending" ? (
-            <span className="flex items-center justify-center rounded-full bg-subtle px-3 text-center text-[13px] text-ink-soft">
+            <span className="flex items-center justify-center rounded-full bg-subtle px-3 text-center text-meta text-ink-soft">
               Chờ {booking.proName} nhận lịch
             </span>
           ) : booking.proPhone ? (
@@ -70,7 +70,7 @@ export function BookingCard({ booking }: { booking: Booking }) {
               <Phone className="size-3.5" /> Gọi {booking.proName}
             </a>
           ) : (
-            <MessageButton booking={booking} className="h-9 px-3 text-[13px]" />
+            <MessageButton booking={booking} className="h-9 px-3 text-meta" />
           )}
         </div>
       )}
@@ -105,27 +105,27 @@ export function JobBookingRow({ booking, actions }: { booking: Booking; actions?
     <Card className="p-3.5">
       <Link href={`/bookings/${booking.id}`} className="flex gap-3">
         <div className="flex w-16 shrink-0 flex-col items-center justify-center rounded-[var(--radius-md)] bg-accent py-2 text-white">
-          <span className="text-[16px] font-bold tabular-nums">{booking.time}</span>
-          <span className="text-xs text-white/70">{Math.round(booking.durationMin)} phút</span>
+          <span className="text-body font-bold tabular-nums">{booking.time}</span>
+          <span className="text-label text-white/70">{Math.round(booking.durationMin)} phút</span>
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <p className="truncate text-[15px] font-bold">
+            <p className="truncate text-body font-bold">
               {booking.serviceName} <span className="font-normal text-muted">· {booking.variantLabel}</span>
               {booking.quantity > 1 && <span className="font-normal text-muted"> · {booking.quantity} người</span>}
             </p>
             <StatusBadge status={booking.status} label={booking.status === "completed" && booking.delivery && !booking.delivery.acceptedAt ? booking.delivery.deliveredAt ? "Chờ xác nhận sản phẩm" : "Chờ giao sản phẩm" : undefined} />
           </div>
-          <p className="mt-0.5 flex items-center gap-1.5 text-[13px] text-ink-soft">
+          <p className="mt-0.5 flex items-center gap-1.5 text-meta text-ink-soft">
             <Avatar name={booking.customerName} size={20} />
             {booking.customerName}
             <span className="text-muted">· {formatDateLong(booking.date)}</span>
           </p>
-          <p className="mt-1 flex items-center gap-1 truncate text-[13px] text-ink-soft">
+          <p className="mt-1 flex items-center gap-1 truncate text-meta text-ink-soft">
             {booking.atHome ? (getTemplate(booking.templateId)?.onLocation ? <MapPin className="size-3.5 shrink-0" /> : <Home className="size-3.5 shrink-0" />) : <Store className="size-3.5 shrink-0" />}
             <span className="truncate">{booking.address}</span>
           </p>
-          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px]">
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-meta">
             {booking.quote.travelFee > 0 && (
               <span className="inline-flex items-center gap-0.5 text-ink-soft">
                 <Car className="size-3.5" />+{formatPrice(booking.quote.travelFee)}
@@ -141,11 +141,11 @@ export function JobBookingRow({ booking, actions }: { booking: Booking; actions?
               </span>
             )}
             <span className="ml-auto text-muted">
-              Bạn nhận <b className="text-[15px] text-success">{formatPrice(booking.quote.payout)}</b>
+              Bạn nhận <b className="text-body text-success">{formatPrice(booking.quote.payout)}</b>
             </span>
           </p>
           {booking.discount > 0 && (
-            <p className="mt-1 text-xs text-ink-soft">
+            <p className="mt-1 text-label text-ink-soft">
               Khách dùng voucher −{formatPrice(booking.discount)}: khách trả bạn {formatPrice(booking.quote.total - booking.discount)}, 360dep cộng{" "}
               {formatPrice(booking.discount)} vào ví khi xong.
             </p>
@@ -185,7 +185,7 @@ export function PendingJobActions({ booking }: { booking: Booking }) {
         </Button>
       </div>
       {owed > 0 && (
-        <p className="mt-2 text-xs text-danger">
+        <p className="mt-2 text-label text-danger">
           {FEE_BLOCK_REASON}{" "}
           <Link href="/studio/wallet" className="font-semibold underline underline-offset-2">
             Thanh toán
@@ -193,7 +193,7 @@ export function PendingJobActions({ booking }: { booking: Booking }) {
         </p>
       )}
       {error && (
-        <p role="alert" className="mt-2 text-xs text-danger">
+        <p role="alert" className="mt-2 text-label text-danger">
           {error}
         </p>
       )}
@@ -224,8 +224,8 @@ export function DeclineForm({
   const [error, setError] = React.useState<string | null>(null)
   return (
     <div className={cn("rounded-[var(--radius-md)] border border-danger/30 bg-surface p-3", className)}>
-      <p className="text-[15px] font-semibold">Từ chối lịch của {booking.customerName}?</p>
-      <p className="text-[13px] text-ink-soft">Khách được báo ngay. Lý do (tuỳ chọn) gửi kèm cho khách.</p>
+      <p className="text-body font-semibold">Từ chối lịch của {booking.customerName}?</p>
+      <p className="text-meta text-ink-soft">Khách được báo ngay. Lý do (tuỳ chọn) gửi kèm cho khách.</p>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {DECLINE_REASONS.map((r) => (
           <button
@@ -234,7 +234,7 @@ export function DeclineForm({
             aria-pressed={reason === r}
             onClick={() => setReason(reason === r ? "" : r)}
             className={cn(
-              "rounded-full border px-3 py-1.5 text-[13px]",
+              "rounded-full border px-3 py-1.5 text-meta",
               reason === r ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink",
             )}
           >
@@ -248,10 +248,10 @@ export function DeclineForm({
         maxLength={300}
         onChange={(e) => setReason(e.target.value)}
         placeholder="Hoặc tự viết lý do"
-        className={cn(inputClass, "mt-2 py-2.5 text-[14px]")}
+        className={cn(inputClass, "mt-2 py-2.5 text-body")}
       />
       {error && (
-        <p role="alert" className="mt-2 text-xs text-danger">
+        <p role="alert" className="mt-2 text-label text-danger">
           {error}
         </p>
       )}
@@ -292,7 +292,7 @@ export function ConfirmCountdown({ booking }: { booking: Booking }) {
   const minutes = Math.max(0, Math.round(left / 60000))
   const urgent = minutes <= 30
   return (
-    <p className={cn("mt-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold", urgent ? "bg-danger-soft text-danger" : "bg-warning-soft text-warning")}>
+    <p className={cn("mt-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-meta font-semibold", urgent ? "bg-danger-soft text-danger" : "bg-warning-soft text-warning")}>
       <Timer className="size-4" />
       {minutes === 0
         ? "Đã quá hạn nhận lịch"
@@ -306,12 +306,12 @@ export function DeliveryLine({ booking, forPro }: { booking: Booking; forPro?: b
   const [now] = React.useState(() => Date.now())
   const d = booking.delivery
   if (!d || booking.status !== "completed") return null
-  if (d.acceptedAt) return <p className="mt-1.5 text-[13px] font-medium text-success">Đã nhận file</p>
-  if (d.deliveredAt) return <p className="mt-1.5 text-[13px] font-medium text-success">{forPro ? "Đã giao file, chờ khách xác nhận" : "Đã giao file · mở để xem"}</p>
+  if (d.acceptedAt) return <p className="mt-1.5 text-meta font-medium text-success">Đã nhận file</p>
+  if (d.deliveredAt) return <p className="mt-1.5 text-meta font-medium text-success">{forPro ? "Đã giao file, chờ khách xác nhận" : "Đã giao file · mở để xem"}</p>
   if (!d.dueAt) return null
   const overdue = Date.parse(d.dueAt) < now
   return (
-    <p className={cn("mt-1.5 text-[13px] font-medium", overdue ? "text-danger" : "text-warning")}>
+    <p className={cn("mt-1.5 text-meta font-medium", overdue ? "text-danger" : "text-warning")}>
       {overdue ? "Quá hạn giao file" : `Đang chỉnh, hạn giao ${formatDateLong(localDate(d.dueAt))}`}
     </p>
   )

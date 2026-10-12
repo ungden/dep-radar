@@ -49,12 +49,12 @@ function RequestDetail() {
 
       {job.status === "open" && (
         <div className="rounded-2xl bg-subtle px-4 py-3.5">
-          <p className="flex items-center gap-2 text-[15px] font-semibold text-accent-dark">
+          <p className="flex items-center gap-2 text-body font-semibold text-accent-dark">
             <Hourglass className="size-4 shrink-0" />
             Đang tìm người làm
             {job.notified !== null && job.notified > 0 && ` · đã báo cho ${job.notified} người`}
           </p>
-          <p className="mt-1 text-[13px] text-ink-soft">
+          <p className="mt-1 text-meta text-ink-soft">
             {job.notified === 0
               ? "Lúc đăng chưa có người làm nào rảnh và nhận dịch vụ này gần bạn. "
               : "Người làm nhận trước sẽ làm với giá trên. "}
@@ -65,7 +65,7 @@ function RequestDetail() {
       )}
 
       {job.status === "booked" && (
-        <div className="flex items-center justify-between gap-3 rounded-2xl bg-success-soft px-4 py-3 text-sm text-success">
+        <div className="flex items-center justify-between gap-3 rounded-2xl bg-success-soft px-4 py-3 text-body text-success">
           <span className="flex items-center gap-2 font-semibold">
             <CircleCheck className="size-4 shrink-0" />
             {taker ? `${taker.name} đã nhận việc` : "Đã có người nhận việc"}
@@ -79,11 +79,11 @@ function RequestDetail() {
       )}
 
       {job.status === "closed" && (
-        <p className="rounded-2xl bg-canvas px-4 py-3 text-sm text-muted">Yêu cầu đã đóng. Cần làm thì đăng yêu cầu mới hoặc đặt lịch trực tiếp với người làm.</p>
+        <p className="rounded-2xl bg-canvas px-4 py-3 text-body text-muted">Yêu cầu đã đóng. Cần làm thì đăng yêu cầu mới hoặc đặt lịch trực tiếp với người làm.</p>
       )}
 
       {error && (
-        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
           {error}
         </p>
       )}
@@ -96,7 +96,7 @@ function RequestDetail() {
             if (message) setError(message)
             else router.replace("/requests")
           }}
-          className="mx-auto block py-2 text-sm text-muted underline underline-offset-2"
+          className="mx-auto block py-2 text-body text-muted underline underline-offset-2"
         >
           Xoá yêu cầu
         </button>

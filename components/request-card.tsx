@@ -15,7 +15,7 @@ export function JobStatusLabel({ job }: { job: JobPost }) {
     closed: ["Đã đóng", "bg-canvas text-muted"],
   } as const
   const [label, cls] = map[job.status]
-  return <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold", cls)}>{label}</span>
+  return <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-label font-semibold", cls)}>{label}</span>
 }
 
 export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: string; footer?: React.ReactNode; extra?: React.ReactNode }) {
@@ -33,18 +33,18 @@ export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: 
             <div className="flex items-start justify-between gap-2">
               <p className="font-semibold leading-snug">
                 {job.contract?.serviceName ?? tpl.name} <span className="font-normal text-muted">· {job.contract?.variantLabel ?? variant.label}</span>
-                {job.quantity > 1 && <span className="ml-1.5 inline-block rounded-full bg-accent-soft px-2 py-0.5 align-middle text-xs font-semibold text-accent-dark">{job.quantity} người</span>}
+                {job.quantity > 1 && <span className="ml-1.5 inline-block rounded-full bg-accent-soft px-2 py-0.5 align-middle text-label font-semibold text-accent-dark">{job.quantity} người</span>}
               </p>
               <JobStatusLabel job={job} />
             </div>
-            <p className="mt-0.5 text-xs text-muted">
+            <p className="mt-0.5 text-label text-muted">
               {job.district}, {job.city} · {job.atHome ? "Tại nhà khách" : "Khách đến studio"} ·{" "}
               {formatDuration(job.contract?.durationMin ?? serviceDuration(variant, job.quantity))}
             </p>
-            {job.mine && job.status === "open" && job.contract && job.contract.version < CATALOG_VERSION && <p className="mt-2 text-sm text-warning">Gói đã cập nhật. Đóng yêu cầu và đăng lại để xác nhận phạm vi mới.</p>}
-            {job.maxTotal != null && <p className="mt-2 text-xs text-muted">Tổng tối đa đã đồng ý, gồm phụ phí: {formatPrice(job.maxTotal)}</p>}
-            {job.description && <p className="mt-2 line-clamp-2 text-[13px] text-ink-soft">{job.description}</p>}
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
+            {job.mine && job.status === "open" && job.contract && job.contract.version < CATALOG_VERSION && <p className="mt-2 text-body text-warning">Gói đã cập nhật. Đóng yêu cầu và đăng lại để xác nhận phạm vi mới.</p>}
+            {job.maxTotal != null && <p className="mt-2 text-label text-muted">Tổng tối đa đã đồng ý, gồm phụ phí: {formatPrice(job.maxTotal)}</p>}
+            {job.description && <p className="mt-2 line-clamp-2 text-meta text-ink-soft">{job.description}</p>}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-meta">
               <span>
                 {formatDateLong(job.date)} · {job.time}
               </span>

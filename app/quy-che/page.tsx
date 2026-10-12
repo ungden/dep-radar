@@ -28,9 +28,9 @@ export default function OperatingRulesPage() {
   return (
     <div className="mx-auto max-w-2xl pb-10 md:pt-4">
       <PageHeader title="Quy chế hoạt động" back />
-      <p className="text-[13px] text-muted">Nền tảng kết nối 360đẹp (www.360dep.vn và ứng dụng 360đẹp) · Phiên bản 1.2, cập nhật ngày 08/10/2026</p>
+      <p className="text-meta text-muted">Nền tảng kết nối 360đẹp (www.360dep.vn và ứng dụng 360đẹp) · Phiên bản 1.2, cập nhật ngày 08/10/2026</p>
 
-      <div className="mt-6 space-y-8 text-sm leading-relaxed text-ink-soft">
+      <div className="mt-6 space-y-8 text-body leading-relaxed text-ink-soft">
         <Section title="I. Nguyên tắc chung">
           <p>
             360đẹp là nền tảng trung gian kết nối dịch vụ, do công ty có thông tin ở cuối trang này sở hữu và vận hành, hoạt động theo hình thức
@@ -300,7 +300,7 @@ export default function OperatingRulesPage() {
         </Section>
 
         <Section title="XIII. Thông tin doanh nghiệp và liên hệ">
-          <CompanyInfo className="text-sm" />
+          <CompanyInfo className="text-body" />
         </Section>
       </div>
     </div>
@@ -310,7 +310,7 @@ export default function OperatingRulesPage() {
 function Section({ title, id, children }: { title: string; id?: string; children: React.ReactNode }) {
   return (
     <section id={id} className={id ? "scroll-mt-24" : undefined}>
-      <h2 className="mb-2 text-[17px] font-bold tracking-tight text-ink">{title}</h2>
+      <h2 className="mb-2 text-lead font-bold tracking-tight text-ink">{title}</h2>
       {children}
     </section>
   )

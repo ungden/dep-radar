@@ -1,0 +1,128 @@
+{
+  "date": "2026-10-11",
+  "commit": "f542020",
+  "baseline": "dc07161",
+  "fixture": "Read-only localhost HTTP fixture, fake QA providers, valid catalogue prices, no real account or booking writes",
+  "web": {
+    "server": "127.0.0.1:3011",
+    "viewports": [
+      [
+        390,
+        844
+      ],
+      [
+        320,
+        740
+      ]
+    ],
+    "tableOverflow": {
+      "width": 320,
+      "documentScrollWidth": 332,
+      "maxPriceRight": 332.6640625
+    },
+    "runtimeConfirmed": [
+      "city context reset",
+      "per-person budget mismatch:150000 -> minimum750000",
+      "card duration45min vs offered90min",
+      "503 free_slots misreported as fully booked"
+    ]
+  },
+  "native": {
+    "device": "R2R iPhone 17 Pro",
+    "udid": "43C9D44F-D8D5-4958-9F28-39CCD91A6F11",
+    "os": "iOS26.5",
+    "runtime": "Expo Go57",
+    "contentSize": [
+      "large",
+      "accessibility-large"
+    ],
+    "runtimeConfirmed": [
+      "slot text clipping",
+      "footer price ellipsis / obscured by guest CTA",
+      "date/time picker not visible after tapping in real booking modal"
+    ],
+    "rootCauseCaveat": "Picker host topology is probable explanation from source, sheet behind modal not directly observed."
+  },
+  "excluded": [
+    "production deployment",
+    "physical device",
+    "Android",
+    "real authenticated booking",
+    "payments",
+    "full WCAG conformance"
+  ],
+  "screenshots": [
+    {
+      "file": "screenshots/01-home-390.png",
+      "bytes": 90624,
+      "sha256": "97fe7ca7d686181943bce72f7f341f03429c1be59dd0ca6864d643ef7ed8d4cc",
+      "captured_this_audit": true
+    },
+    {
+      "file": "screenshots/02-search-hanoi.png",
+      "bytes": 44421,
+      "sha256": "5320300b0b3296fbc0ab68b73842f82ce8a93267284eccd012fdc660df97b586",
+      "captured_this_audit": true
+    },
+    {
+      "file": "screenshots/03-detail-city-reset.png",
+      "bytes": 46523,
+      "sha256": "5e319381ea930609cb7182728848e75a61b0b23d7eb5c3ea472fccf6badb2c72",
+      "captured_this_audit": true
+    },
+    {
+      "file": "screenshots/04-detail-320.png",
+      "bytes": 49815,
+      "sha256": "46a660c771008eb36ce2ba9b8453cca193065bff5d43ad3f9bd6e4f8b9a8c6e6",
+      "captured_this_audit": true
+    },
+    {
+      "file": "screenshots/05-budget-filter.png",
+      "bytes": 31097,
+      "sha256": "7a17f641cf1a2747ea1cebb55fa47db845929f87b5a19382049ed29f2e3d4390",
+      "captured_this_audit": true
+    },
+    {
+      "file": "screenshots/06-budget-result.png",
+      "bytes": 29440,
+      "sha256": "1c301d216337e31aeced476da800c1a9ec79d359e0bec64d88c1e8e82a448d6c",
+      "captured_this_audit": true
+    },
+    {
+      "file": "screenshots/07-native-slots-large.png",
+      "bytes": 199600,
+      "sha256": "53efcec6320a25092151eb95c5096925426934dad3edf261ff1748fa241f4450",
+      "captured_this_audit": true
+    },
+    {
+      "file": "screenshots/08-native-date-modal-large.png",
+      "bytes": 197492,
+      "sha256": "db4335b57ec71e9299d302d248e30ab0ba643b7f89d5c3a79a0672b7db8cd082",
+      "captured_this_audit": true
+    },
+    {
+      "file": "screenshots/09-native-date-after-tap.png",
+      "bytes": 197488,
+      "sha256": "175d2645868bcdf0940e6661e4300e86a08494cf9bd0bc4bbcf69b598ae70c01",
+      "captured_this_audit": true
+    },
+    {
+      "file": "screenshots/10-native-time-after-tap.png",
+      "bytes": 210010,
+      "sha256": "03799289a7df63fdc0f8f2bf400b3e3e5e086f1463fe89b726159d12eb588ee5",
+      "captured_this_audit": true
+    },
+    {
+      "file": "screenshots/11-booking-minimum-total.png",
+      "bytes": 47726,
+      "sha256": "d550484fe86f8a95d1ee3ab3d03cac8dd4ca367e86ae97d457e64354e9f4d112",
+      "captured_this_audit": true
+    },
+    {
+      "file": "screenshots/12-slots-error-as-full.png",
+      "bytes": 55031,
+      "sha256": "e5fc72b1ecd0ffced26cc49a0cd814f51a27eafa333025c80b39424b0bcdf55f",
+      "captured_this_audit": true
+    }
+  ]
+}

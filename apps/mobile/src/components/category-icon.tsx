@@ -23,7 +23,7 @@ export function CategoryIcon({ id, size = 28, color = colors.accent }: { id: Cat
 }
 
 /**
- * Categories as a wrapping grid of icon tiles, five to a row. Nothing to
+ * Categories as a wrapping grid of icon tiles, four to a row. Nothing to
  * swipe. `more` adds a last tile that opens or closes the rest (the home
  * screen keeps one row).
  */
@@ -49,8 +49,8 @@ export function CategoryTiles({
             onPress={() => onChange(it.id)}
             accessibilityRole="radio"
             accessibilityState={{ checked: active }}
-            accessibilityLabel={it.soon ? `${it.label}, sắp có` : it.label}
-            style={{ width: "20%", alignItems: "center", gap: 5 }}
+            accessibilityLabel={it.soon ? `${it.label}, chưa có người nhận lịch` : it.label}
+            style={{ width: "25%", alignItems: "center", gap: 5 }}
           >
             <View
               style={{
@@ -64,14 +64,7 @@ export function CategoryTiles({
             >
               <CategoryIcon id={it.id} size={24} color={active ? colors.surface : it.soon ? colors.muted : colors.accent} />
             </View>
-            {it.soon ? (
-              <View style={{ position: "absolute", top: -4, right: 2, paddingHorizontal: 5, borderRadius: 999, backgroundColor: colors.surface }}>
-                <Txt v="label" w={600} color={colors.muted}>
-                  Sắp có
-                </Txt>
-              </View>
-            ) : null}
-            <Txt v="meta" w={active ? 600 : 500} color={active ? colors.accentDark : colors.ink} center numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+            <Txt v="meta" w={active ? 600 : 500} color={active ? colors.accentDark : colors.ink} center style={{ paddingHorizontal: 4 }}>
               {it.label}
             </Txt>
           </Press>
@@ -83,7 +76,7 @@ export function CategoryTiles({
           accessibilityRole="button"
           accessibilityState={{ expanded: more.open }}
           accessibilityLabel={more.open ? "Thu gọn danh mục" : "Xem thêm danh mục"}
-          style={{ width: "20%", alignItems: "center", gap: 5 }}
+          style={{ width: "25%", alignItems: "center", gap: 5 }}
         >
           <View
             style={{
@@ -99,7 +92,7 @@ export function CategoryTiles({
           >
             {more.open ? <Icon name="up" size={20} color={colors.inkSoft} /> : <CategoryIcon id="all" size={24} color={colors.inkSoft} />}
           </View>
-          <Txt v="meta" w={500} center numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+          <Txt v="meta" w={500} center style={{ paddingHorizontal: 4 }}>
             {more.open ? "Thu gọn" : "Xem thêm"}
           </Txt>
         </Press>

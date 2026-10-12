@@ -27,7 +27,7 @@ export function TextTabs<T extends string>({
             onPress={() => onChange(item.value)}
             accessibilityRole="tab"
             accessibilityState={{ selected }}
-            style={{ paddingTop: 10, alignItems: "center" }}
+            style={{ minHeight: 48, paddingTop: 12, paddingBottom: 4, alignItems: "center" }}
           >
             <Txt v={size} w={selected ? 600 : 500} color={selected ? colors.accent : colors.muted}>
               {item.label}

@@ -37,7 +37,7 @@ export function ShareBooking({ booking }: { booking: Booking }) {
           // The share sheet was dismissed; nothing to report.
         }
       }}
-      className="inline-flex items-center gap-1.5 text-[13px] text-muted underline underline-offset-2 hover:text-ink"
+      className="inline-flex items-center gap-1.5 text-meta text-muted underline underline-offset-2 hover:text-ink"
     >
       <Share2 className="size-3.5" />
       {copied ? "Đã chép thông tin lịch hẹn" : "Chia sẻ lịch hẹn cho người thân"}

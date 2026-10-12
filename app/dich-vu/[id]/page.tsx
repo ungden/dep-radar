@@ -1,3 +1,5 @@
+import { Suspense } from "react"
+import { PageSkeleton } from "@/components/ui"
 import type { Metadata } from "next"
 import { openGraph } from "@/lib/seo"
 import { notFound } from "next/navigation"
@@ -24,5 +26,5 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function ServicePage({ params }: { params: Params }) {
   const template = getTemplate((await params).id)
   if (!template) notFound()
-  return <ServiceView templateId={template.id} />
+  return <Suspense fallback={<PageSkeleton />}><ServiceView templateId={template.id} /></Suspense>
 }

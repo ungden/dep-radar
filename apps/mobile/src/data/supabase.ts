@@ -1,5 +1,5 @@
 import "react-native-url-polyfill/auto"
-import { AppState } from "react-native"
+import { AppState, Platform } from "react-native"
 import * as SecureStore from "expo-secure-store"
 import { createClient } from "@supabase/supabase-js"
 
@@ -47,7 +47,8 @@ const storage = {
 
 export const supabase = createClient(SUPABASE_URL || "https://invalid.localhost", SUPABASE_KEY || "missing", {
   auth: {
-    storage,
+    // Supabase uses browser storage on web; SecureStore is native-only.
+    storage: Platform.OS === "web" ? undefined : storage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,

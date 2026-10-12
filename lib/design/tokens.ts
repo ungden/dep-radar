@@ -54,14 +54,14 @@ export const radius = {
   full: 999,
 } as const
 
-/** px. Body copy is 15; nothing a person needs to read goes under 13, and nothing at all under 12. */
+/** Readable text roles, shared with the web semantic type scale. Native values are in points. */
 export const fontSize = {
-  label: 12,
-  meta: 13,
-  body: 15,
-  lead: 17,
-  title: 20,
-  h2: 24,
+  label: 14,
+  meta: 14,
+  body: 17,
+  lead: 18,
+  title: 22,
+  h2: 26,
   h1: 32,
   hero: 44,
 } as const

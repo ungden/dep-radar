@@ -37,14 +37,19 @@ export function Sheet({
   children,
   footer,
   size = "medium",
+  onDismiss,
+  compact = false,
 }: {
   sheet: ReturnType<typeof useSheet>
   title: string
   children: React.ReactNode
   footer?: React.ReactNode
   size?: keyof typeof SNAP
+  onDismiss?: () => void
+  compact?: boolean
 }) {
   const insets = useSafeAreaInsets()
+  const [footerHeight, setFooterHeight] = React.useState(FOOTER_HEIGHT + insets.bottom)
   const snapPoints = React.useMemo(() => [...SNAP[size]], [size])
   const backdrop = React.useCallback(
     (props: BottomSheetBackdropProps) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.35} pressBehavior="close" />,
@@ -55,6 +60,7 @@ export function Sheet({
     (props: BottomSheetFooterProps) => (
       <BottomSheetFooter {...props}>
         <View
+          onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
           style={{
             paddingHorizontal: 20,
             paddingTop: 10,
@@ -73,6 +79,8 @@ export function Sheet({
   return (
     <BottomSheetModal
       ref={sheet.ref}
+      accessible={false}
+      onDismiss={onDismiss}
       snapPoints={snapPoints}
       enableDynamicSizing={false}
       backdropComponent={backdrop}
@@ -84,13 +92,13 @@ export function Sheet({
       handleIndicatorStyle={{ backgroundColor: colors.subtleStrong, width: 40 }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingLeft: 20, paddingRight: 8, paddingBottom: 4 }}>
-        <Txt v="title" w={700} style={{ flexShrink: 1 }}>
+        <Txt v={compact ? "control" : "title"} w={compact ? 600 : 700} style={{ flexShrink: 1 }}>
           {title}
         </Txt>
         <IconButton name="close" label="Đóng" size={18} color={colors.inkSoft} onPress={sheet.close} />
       </View>
       <BottomSheetScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: footer ? FOOTER_HEIGHT + insets.bottom + 16 : insets.bottom + 20, gap: 16 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: footer ? footerHeight + 16 : insets.bottom + 20, gap: compact ? 8 : 16 }}
         keyboardShouldPersistTaps="handled"
       >
         {children}

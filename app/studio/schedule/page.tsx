@@ -85,18 +85,18 @@ function Schedule() {
                   aria-pressed={activeDay}
                   onClick={() => setDay(d)}
                   className={cn(
-                    "relative flex w-13 shrink-0 flex-col items-center gap-1 rounded-2xl border py-2.5 text-sm",
+                    "relative flex w-13 shrink-0 flex-col items-center gap-1 rounded-2xl border py-2.5 text-body",
                     activeDay ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink",
                   )}
                 >
-                  <span className={cn("text-xs", activeDay ? "text-white/80" : "text-muted")}>{d === today ? "Nay" : weekdayShort(d)}</span>
+                  <span className={cn("text-label", activeDay ? "text-white/80" : "text-muted")}>{d === today ? "Nay" : weekdayShort(d)}</span>
                   <span className="font-semibold">{parseISODate(d).getDate()}</span>
                   <span className={cn("size-1.5 rounded-full", n ? (activeDay ? "bg-white" : "bg-accent") : "bg-transparent")} />
                 </button>
               )
             })}
           </div>
-          <h2 className="mb-3 mt-5 text-sm font-semibold text-ink-soft">
+          <h2 className="mb-3 mt-5 text-body font-semibold text-ink-soft">
             {formatDateLong(day)} · {dayList.length} lịch
           </h2>
           {dayList.length ? (

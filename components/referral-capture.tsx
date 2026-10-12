@@ -74,7 +74,7 @@ export function ReferralCapture() {
   return (
     <div
       role="status"
-      className="fixed inset-x-4 top-4 z-50 mx-auto flex max-w-md items-center gap-3 rounded-[var(--radius-lg)] bg-accent px-4 py-3 text-[14px] font-semibold text-white shadow-[var(--shadow-overlay)]"
+      className="fixed inset-x-4 top-4 z-50 mx-auto flex max-w-md items-center gap-3 rounded-[var(--radius-lg)] bg-accent px-4 py-3 text-body font-semibold text-white shadow-[var(--shadow-overlay)]"
     >
       <span className="flex-1">{notice}</span>
       <button type="button" aria-label="Đóng" onClick={() => setNotice(null)} className="-mr-1 inline-flex size-8 items-center justify-center rounded-full hover:bg-white/15">

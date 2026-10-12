@@ -7,6 +7,7 @@ import { CATEGORIES, CITIES, districtsOf, getTemplate, templatesByCategory, tier
 import { rpc, supabase } from "@/data/supabase"
 import { useApp } from "@/state/app"
 import { colors, gutter, radius, fonts } from "@/theme"
+import { TimeField } from "@/components/time-field"
 import { Button } from "@/ui/button"
 import { Txt } from "@/ui/text"
 import { Press } from "@/ui/press"
@@ -103,7 +104,7 @@ export default function PartnerProfile() {
     </>}
     {step === 3 && <>
       <Txt color={colors.inkSoft}>Giờ bên dưới chỉ có hiệu lực khi bấm lưu. Có thể thêm nhiều khoảng trong một ngày.</Txt>
-      {hours.map((h, i) => <View key={i} style={{ gap: 8 }}><Txt w={700}>{h.weekday === 0 ? "Chủ nhật" : `Thứ ${h.weekday + 1}`}</Txt><Field label="Bắt đầu HH:mm" value={h.start} onChange={(x) => setHours((s) => s.map((w, n) => n === i ? { ...w, start: x } : w))} /><Field label="Kết thúc HH:mm" value={h.end} onChange={(x) => setHours((s) => s.map((w, n) => n === i ? { ...w, end: x } : w))} /><Button label="Bỏ khoảng giờ" variant="ghost" onPress={() => setHours((s) => s.filter((_, n) => n !== i))} /></View>)}
+      {hours.map((h, i) => <View key={i} style={{ gap: 8 }}><Txt w={700}>{h.weekday === 0 ? "Chủ nhật" : `Thứ ${h.weekday + 1}`}</Txt><TimeField label="Bắt đầu" value={h.start} onChange={(x) => setHours((s) => s.map((w, n) => n === i ? { ...w, start: x } : w))} /><TimeField allowEndOfDay label="Kết thúc" value={h.end} onChange={(x) => setHours((s) => s.map((w, n) => n === i ? { ...w, end: x } : w))} /><Button label="Bỏ khoảng giờ" variant="ghost" onPress={() => setHours((s) => s.filter((_, n) => n !== i))} /></View>)}
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{[1, 2, 3, 4, 5, 6, 0].map((d) => <Button key={d} label={`+ ${d === 0 ? "CN" : `T${d + 1}`}`} variant="secondary" size="sm" onPress={() => setHours((s) => [...s, { weekday: d, start: "09:00", end: "19:00" }])} />)}</View>
       {!hours.length && <Button label="Dùng giờ gợi ý T2–T7, 9–19h" variant="secondary" onPress={() => setHours(DEFAULT_WORKING_WINDOWS.map((h) => ({ weekday: h.weekday, start: timeLabel(h.startMin), end: timeLabel(h.endMin) })))} />}
       <Button label="Xác nhận & lưu giờ làm" busy={busy} disabled={!hours.length || hours.some((h) => !/^\d{2}:\d{2}$/.test(h.start) || !/^\d{2}:\d{2}$/.test(h.end) || !Number.isFinite(minutes(h.start)) || !Number.isFinite(minutes(h.end)) || minutes(h.start) >= minutes(h.end))} onPress={() => void mutate("confirm_partner_hours", { p_windows: hours.map((h) => ({ weekday: h.weekday, startMin: minutes(h.start), endMin: minutes(h.end) })) }, 4)} />
@@ -131,5 +132,5 @@ export default function PartnerProfile() {
 }
 function timeLabel(m: number) { return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}` }
 function minutes(s: string) { const [h, m] = s.split(":").map(Number); return h >= 0 && h <= 24 && m >= 0 && m < 60 && (h < 24 || m === 0) ? h * 60 + m : NaN }
-function Field({ label, value, onChange, numeric, multiline }: { label: string; value: string; onChange: (s: string) => void; numeric?: boolean; multiline?: boolean }) { return <View style={{ gap: 6 }}><Txt v="meta" w={600}>{label}</Txt><TextInput accessibilityLabel={label} value={value} onChangeText={onChange} keyboardType={numeric ? "numeric" : "default"} multiline={multiline} style={{ minHeight: 46, padding: 12, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, color: colors.ink, fontFamily: fonts[400], backgroundColor: colors.surface }} /></View> }
+function Field({ label, value, onChange, numeric, multiline }: { label: string; value: string; onChange: (s: string) => void; numeric?: boolean; multiline?: boolean }) { return <View style={{ gap: 6 }}><Txt v="meta" w={600}>{label}</Txt><TextInput accessibilityLabel={label} value={value} onChangeText={onChange} keyboardType={numeric ? "numeric" : "default"} multiline={multiline} style={{ fontSize: 17, minHeight: 48, padding: 12, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, color: colors.ink, fontFamily: fonts[400], backgroundColor: colors.surface }} /></View> }
 function Choice({ label, active, disabled, onPress }: { label: string; active?: boolean; disabled?: boolean; onPress: () => void }) { return <Press accessibilityLabel={label} accessibilityRole="button" accessibilityState={{ selected: active, disabled }} disabled={disabled} onPress={onPress} style={{ minHeight: 44, justifyContent: "center", padding: 12, borderWidth: 1, borderColor: active ? colors.accent : colors.line, backgroundColor: active ? colors.accentSoft : colors.surface, borderRadius: radius.md }}><Txt v="meta" color={active ? colors.accent : colors.ink}>{label}</Txt></Press> }

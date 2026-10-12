@@ -1,9 +1,9 @@
 import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import { ScrollView, View, useWindowDimensions } from "react-native"
-import { categoryLabel, excludes, getTemplate, placeLabel, rankScore } from "@/shared"
+import { categoryLabel, excludes, getTemplate, placeLabel, rankScore, listedOptions, serviceDuration, serviceQuantity } from "@/shared"
 import { formatDuration, formatKm, formatPrice } from "@/data/format"
-import { fromPrice, type AppPro, type AppWork } from "@/data/public"
+import { type AppPro, type AppWork } from "@/data/public"
 import { PostCard, ProCardSkeleton } from "@/components/cards"
 import { useApp } from "@/state/app"
 import { colors, gutter, radius } from "@/theme"
@@ -22,7 +22,12 @@ const COLUMN_GAP = 12
  * booking. Where a service card on Khám phá leads; mirrors /dich-vu/[id] on the web.
  */
 export default function ServiceScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const params = useLocalSearchParams<{ id: string; place?: string; verified?: string; minTotal?: string; maxTotal?: string }>()
+  const { id } = params
+  const [showPriceFrame, setShowPriceFrame] = React.useState(false)
+  const minTotal = Math.max(0, Number(params.minTotal) || 0)
+  const maxTotal = Math.max(0, Number(params.maxTotal) || 0)
+  const priceOk = (total: number) => total >= minTotal && (!maxTotal || total <= maxTotal)
   const app = useApp()
   const { width } = useWindowDimensions()
   const template = getTemplate(id)
@@ -31,8 +36,8 @@ export default function ServiceScreen() {
   const { ranked, elsewhere, works } = React.useMemo(() => {
     if (!data || !template) return { ranked: [] as AppPro[], elsewhere: 0, works: [] as AppWork[] }
     const offers = (p: AppPro) =>
-      data.services.some((s) => s.proId === p.id && s.templateId === template.id && s.active && Object.keys(s.prices).length > 0)
-    const all = data.pros.filter((p) => p.published && offers(p) && !app.blocked.has(p.uuid))
+      data.services.some((s) => s.proId === p.id && s.templateId === template.id && s.active && listedOptions(template, s.prices).some((o) => priceOk(o.minimumTotal)))
+    const all = data.pros.filter((p) => p.published && offers(p) && !app.blocked.has(p.uuid) && (params.verified !== "1" || p.identity === "verified") && (params.place !== "home" || (p.homeService && !template.studioOnly)) && (params.place !== "studio" || Boolean(p.studioAddress)) && (params.place !== "location" || template.onLocation))
     const near = all.filter((p) => !city || p.city === city)
     const ranked = [...near].sort((a, b) => {
       if (a.acceptingJobs !== b.acceptingJobs) return a.acceptingJobs ? -1 : 1
@@ -44,13 +49,17 @@ export default function ServiceScreen() {
     const nearIds = new Set(near.map((p) => p.id))
     const works = data.works.filter((w) => w.templateId === template.id && w.images[0] && (!city || nearIds.has(w.proId))).slice(0, 8)
     return { ranked, elsewhere: all.length - near.length, works }
-  }, [data, template, city, app])
+  }, [data, template, city, app, params.verified, params.place, minTotal, maxTotal])
 
   if (!template) return <EmptyState title="Không có dịch vụ này" text="Có thể dịch vụ đã đổi tên." action="Về Khám phá" onAction={() => router.replace("/")} />
 
   const loadingFirst = (!data || app.stale) && !app.dataError && app.configured
   const cardWidth = (width - gutter * 2 - COLUMN_GAP) / 2
   const where = city ? ` ở ${city}` : ""
+  const availablePackages = template.variants.flatMap((variant) => {
+    const prices = ranked.filter((p) => p.acceptingJobs).flatMap((p) => (data?.services ?? []).filter((s) => s.proId === p.id && s.templateId === template.id && s.active).flatMap((s) => listedOptions(template, s.prices).filter((o) => o.variant.id === variant.id && priceOk(o.minimumTotal)).map((o) => o.unitPrice)))
+    return prices.length ? [{ variant, price: Math.min(...prices) }] : []
+  })
 
   return (
     <ScrollView
@@ -85,35 +94,21 @@ export default function ServiceScreen() {
       {/* Options, price first */}
       <View style={{ paddingHorizontal: gutter }}>
         <Card style={{ padding: 18, gap: 0, borderWidth: 1, borderColor: colors.line }}>
-          <Txt w={700}>Các gói</Txt>
-          {template.variants.map((v, i) => (
-            <View key={v.id}>
-              {i > 0 ? <Divider /> : null}
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 12, paddingVertical: 12 }}>
-                <View style={{ flex: 1, gap: 2 }}>
-                  <Txt w={600}>{v.label}</Txt>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <Icon name="clock" size={13} color={colors.inkSoft} />
-                    <Txt v="meta" color={colors.inkSoft}>
-                      {formatDuration(v.durationMin)}
-                      {v.perPerson ? " · mỗi người" : ""}
-                    </Txt>
-                  </View>
-                </View>
-                <View style={{ alignItems: "flex-end" }}>
-                  <Txt w={700} tabular>
-                    Từ {formatPrice(v.minPrice)}
-                  </Txt>
-                  <Txt v="meta" color={colors.muted} tabular>
-                    {v.tiers.map((t) => formatPrice(t)).join(" · ")}
-                  </Txt>
-                </View>
-              </View>
+          <Txt v="lead" w={700}>Gói đang có người nhận</Txt>
+          {availablePackages.length ? availablePackages.map(({ variant: v, price }, i) => <View key={v.id}>
+            {i > 0 && <Divider />}
+            <View style={{ gap: 8, paddingVertical: 14 }}>
+              <Txt w={600}>{v.label}</Txt>
+              <Txt v="meta" color={colors.inkSoft}>{formatDuration(serviceDuration(v, serviceQuantity(v)))}</Txt>
+              <Txt v="lead" w={700} tabular>Từ {formatPrice(price)}{v.perPerson ? "/người" : ""}</Txt>
+              {(v.minQuantity ?? 1) > 1 && <Txt v="meta" color={colors.inkSoft}>Tối thiểu {v.minQuantity} người · từ {formatPrice(price * v.minQuantity!)}/nhóm</Txt>}
             </View>
-          ))}
-          <Txt v="meta" color={colors.inkSoft} style={{ marginTop: 4 }}>
-            Mỗi gói có đúng 3 mức giá có sẵn; người làm chọn một mức. Khách không trả phí nền tảng.
-          </Txt>
+          </View>) : <Txt color={colors.inkSoft} style={{ marginVertical: 12 }}>Chưa có gói phù hợp với lựa chọn này.</Txt>}
+          <Button label={showPriceFrame ? "Ẩn khung giá tham khảo" : "Xem khung 3 mức giá"} variant="ghost" full onPress={() => setShowPriceFrame((v) => !v)} />
+          {showPriceFrame && <View style={{ gap: 16, marginTop: 12 }}>
+            <Txt v="meta" color={colors.inkSoft}>Khung giá tham khảo. Người làm chọn một mức cho từng gói; mức đang nhận lịch nằm ở trên.</Txt>
+            {template.variants.map((v) => <View key={v.id} style={{ gap: 8 }}><Txt w={600}>{v.label}</Txt><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{v.tiers.map((tier) => <Txt key={tier} v="meta" style={{ backgroundColor: colors.subtle, padding: 8, borderRadius: radius.sm }}>{formatPrice(tier)}{v.perPerson ? "/người" : ""}</Txt>)}</View></View>)}
+          </View>}
         </Card>
       </View>
 
@@ -156,7 +151,7 @@ export default function ServiceScreen() {
             </View>
           </View>
         ) : (
-          ranked.map((p) => <ProOffer key={p.id} pro={p} templateId={template.id} />)
+          ranked.map((p) => <ProOffer key={p.id} pro={p} templateId={template.id} minTotal={minTotal} maxTotal={maxTotal} />)
         )}
       </View>
 
@@ -192,9 +187,11 @@ function Fact({ icon, text, soft }: { icon?: "pin" | "box" | "check"; text: stri
 }
 
 /** One person who does this service here: their price, their work, and the way to book them. */
-function ProOffer({ pro, templateId }: { pro: AppPro; templateId: string }) {
+function ProOffer({ pro, templateId, minTotal, maxTotal }: { pro: AppPro; templateId: string; minTotal: number; maxTotal: number }) {
   const app = useApp()
-  const price = fromPrice(app.data?.services ?? [], pro.id, templateId)
+  const listing = app.data?.services.find((s) => s.proId === pro.id && s.templateId === templateId && s.active)
+  const start = listedOptions(getTemplate(templateId)!, listing?.prices ?? {}).filter((o) => o.minimumTotal >= minTotal && (!maxTotal || o.minimumTotal <= maxTotal)).sort((a, b) => a.minimumTotal - b.minimumTotal)[0]
+  const price = start?.unitPrice ?? null
   const km = app.distanceTo(pro)
   const photos = React.useMemo(
     () =>
@@ -209,7 +206,7 @@ function ProOffer({ pro, templateId }: { pro: AppPro; templateId: string }) {
 
   return (
     <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, padding: 14, gap: 12 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
         <Press onPress={openProfile} accessibilityLabel={pro.name} style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 12 }}>
           <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={48} />
           <View style={{ flex: 1, gap: 2 }}>
@@ -233,7 +230,7 @@ function ProOffer({ pro, templateId }: { pro: AppPro; templateId: string }) {
               Từ
             </Txt>
             <Txt w={700} tabular>
-              {formatPrice(price)}
+              {formatPrice(price)}{start?.variant.perPerson ? "/người" : ""}
             </Txt>
           </View>
         ) : null}
@@ -258,7 +255,7 @@ function ProOffer({ pro, templateId }: { pro: AppPro; templateId: string }) {
           <Button
             label="Đặt lịch"
             size="sm"
-            onPress={() => router.push({ pathname: "/book/[proId]", params: { proId: pro.id, template: templateId } })}
+            onPress={() => router.push({ pathname: "/book/[proId]", params: { proId: pro.id, template: templateId, variant: start?.variant.id ?? "" } })}
             style={{ flex: 1 }}
           />
         ) : (

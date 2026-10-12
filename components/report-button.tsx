@@ -57,7 +57,7 @@ export function ReportButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 text-[13px] text-muted underline underline-offset-2 hover:text-ink"
+        className="inline-flex items-center gap-1.5 text-meta text-muted underline underline-offset-2 hover:text-ink"
       >
         <Flag className="size-3.5" /> {label}
       </button>
@@ -66,7 +66,7 @@ export function ReportButton({
 
   if (state === "sent") {
     return (
-      <Card className="p-4 text-[13px] text-ink-soft">
+      <Card className="p-4 text-meta text-ink-soft">
         <p className="font-semibold text-ink">Đã gửi báo cáo</p>
         <p className="mt-1">
           Đội ngũ 360dep sẽ xem trong 24 giờ làm việc và liên hệ nếu cần thêm thông tin. Việc bạn báo cáo không hiển thị với phía bên kia.
@@ -80,10 +80,10 @@ export function ReportButton({
 
   return (
     <Card className="space-y-3 p-4">
-      <p className="text-sm font-semibold">Báo cáo vấn đề</p>
+      <p className="text-body font-semibold">Báo cáo vấn đề</p>
       <select
         aria-label="Lý do"
-        className={cn(inputClass, "text-sm")}
+        className={cn(inputClass, "text-body")}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
       >
@@ -94,17 +94,17 @@ export function ReportButton({
       <textarea
         aria-label="Mô tả"
         rows={3}
-        className={cn(inputClass, "resize-none text-sm")}
+        className={cn(inputClass, "resize-none text-body")}
         value={detail}
         onChange={(e) => setDetail(e.target.value)}
         placeholder="Kể lại chuyện gì đã xảy ra: lúc nào, ở đâu, ai liên quan. Càng cụ thể càng dễ xử lý."
       />
       <div>
-        <p className="mb-1.5 text-xs font-semibold text-ink-soft">Ảnh, clip làm bằng chứng (nếu có)</p>
+        <p className="mb-1.5 text-label font-semibold text-ink-soft">Ảnh, clip làm bằng chứng (nếu có)</p>
         <EvidencePicker onChange={setEvidence} onBusyChange={setUploading} />
       </div>
       {error && (
-        <p role="alert" className="text-xs text-danger">
+        <p role="alert" className="text-label text-danger">
           {error}
         </p>
       )}

@@ -35,27 +35,27 @@ export default async function WalletPage() {
       <PageHeader title="Ví & thu nhập" back="/studio" />
       <RequireSession role="pro">
         <Card className={blocked ? "p-4 ring-1 ring-danger/40" : "p-4"}>
-          <p className="text-xs text-muted">Số dư ví</p>
+          <p className="text-label text-muted">Số dư ví</p>
           <p className={`mt-1 text-3xl font-semibold ${wallet.balance < 0 ? "text-danger" : ""}`}>
             {formatPrice(wallet.balance)}
           </p>
-          <p className="mt-1 text-[13px] text-ink-soft">
+          <p className="mt-1 text-meta text-ink-soft">
             Khách trả tiền trực tiếp cho bạn. Mỗi lịch hoàn thành trừ phí dịch vụ 360dep ({Math.round(POLICY.commissionRate * 100)}% giá
             dịch vụ) vào ví này. Phần voucher 360dep khách dùng và thưởng giới thiệu được cộng vào đây.
           </p>
           {blocked ? (
-            <p className="mt-2 rounded-xl bg-danger-soft px-3 py-2 text-[13px] text-danger">
+            <p className="mt-2 rounded-xl bg-danger-soft px-3 py-2 text-meta text-danger">
               Thanh toán phí {formatPrice(-wallet.balance)} để nhận đơn tiếp. Khi ví còn âm, bạn chưa nhận được lịch mới hay
               việc mới; trả xong là nhận lại được ngay.
             </p>
           ) : (
-            <p className="mt-2 text-[13px] text-ink-soft">
+            <p className="mt-2 text-meta text-ink-soft">
               Phí được trả trước đơn tiếp theo: ví âm thì tạm chưa nhận đơn mới cho tới khi thanh toán. Nạp dư để lần sau khỏi
               chờ.
             </p>
           )}
           <WalletTopUp balance={wallet.balance} />
-          <p className="mt-3 flex gap-2 text-xs text-muted">
+          <p className="mt-3 flex gap-2 text-label text-muted">
             <Info className="mt-0.5 size-3.5 shrink-0" />
             <Link href="/chinh-sach" className="text-accent underline underline-offset-2">
               Chính sách phí và hoa hồng
@@ -69,10 +69,10 @@ export default async function WalletPage() {
             <ul className="space-y-2">
               {months.map((m) => (
                 <li key={m.month}>
-                  <Card className="flex flex-wrap items-center gap-3 p-3.5 text-sm">
+                  <Card className="flex flex-wrap items-center gap-3 p-3.5 text-body">
                     <span className="min-w-0 flex-1">
                       <span className="block font-medium">Tháng {m.month.slice(5)}/{m.month.slice(0, 4)}</span>
-                      <span className="block text-xs text-muted">
+                      <span className="block text-label text-muted">
                         {m.jobs} job · khách trả {formatPrice(m.gross)} · hoa hồng {formatPrice(m.commission)}
                       </span>
                     </span>
@@ -81,7 +81,7 @@ export default async function WalletPage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-xs text-muted">
+            <p className="mt-2 text-label text-muted">
               “Bạn nhận” là tiền khách trả trừ hoa hồng. Phí di chuyển và phí đặt gấp thuộc 100% về bạn.
             </p>
           </section>
@@ -94,15 +94,15 @@ export default async function WalletPage() {
           ) : (
             <ul className="divide-y divide-line rounded-[var(--radius-card)] bg-surface">
               {wallet.entries.map((e) => (
-                <li key={e.id} className="flex items-center gap-3 px-4 py-3 text-sm">
+                <li key={e.id} className="flex items-center gap-3 px-4 py-3 text-body">
                   <span className="min-w-0 flex-1">
                     <span className="block">{KIND_LABEL[e.kind] ?? e.kind}</span>
-                    <span className="block text-xs text-muted">
+                    <span className="block text-label text-muted">
                       {formatDateLong(localDate(e.createdAt), true)} · {localTime(e.createdAt)}
                     </span>
-                    {e.note && e.note !== KIND_LABEL[e.kind] && <span className="block truncate text-xs text-muted">{e.note}</span>}
+                    {e.note && e.note !== KIND_LABEL[e.kind] && <span className="block truncate text-label text-muted">{e.note}</span>}
                     {e.bookingId && (
-                      <Link href={`/bookings/${e.bookingId}`} className="text-xs text-accent underline underline-offset-2">
+                      <Link href={`/bookings/${e.bookingId}`} className="text-label text-accent underline underline-offset-2">
                         Xem lịch hẹn
                       </Link>
                     )}

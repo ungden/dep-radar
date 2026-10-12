@@ -86,7 +86,7 @@ export function ShareImages({ base, fileName, className }: { base: string; fileN
           />
         </div>
         <div className="min-w-0 flex-1 space-y-3">
-          <p className="text-[14px] text-ink-soft">
+          <p className="text-body text-ink-soft">
             {format === "story"
               ? "Đăng lên story Facebook, Instagram, Zalo hoặc làm ảnh bìa TikTok."
               : "Đăng lên trang cá nhân, fanpage hoặc bảng tin Instagram."}{" "}
@@ -101,11 +101,11 @@ export function ShareImages({ base, fileName, className }: { base: string; fileN
             </Button>
           </div>
           {note && (
-            <p role="status" className="text-[13px] text-ink-soft">
+            <p role="status" className="text-meta text-ink-soft">
               {note}
             </p>
           )}
-          <p className="text-[12px] text-muted">Ảnh tự cập nhật theo tác phẩm, đánh giá và bảng giá mới nhất của bạn.</p>
+          <p className="text-label text-muted">Ảnh tự cập nhật theo tác phẩm, đánh giá và bảng giá mới nhất của bạn.</p>
         </div>
       </div>
     </div>
@@ -116,16 +116,16 @@ export function ShareImages({ base, fileName, className }: { base: string; fileN
 export function PortfolioCard({ slug, published, className }: { slug: string; published: boolean; className?: string }) {
   return (
     <Card className={cn("p-4", className)}>
-      <p className="flex items-center gap-2 text-[17px] font-bold tracking-tight">
+      <p className="flex items-center gap-2 text-lead font-bold tracking-tight">
         <ImageIcon className="size-5 text-accent" /> Ảnh portfolio để đăng mạng xã hội
       </p>
-      <p className="mt-0.5 text-[13px] text-ink-soft">
+      <p className="mt-0.5 text-meta text-ink-soft">
         Tự làm từ tác phẩm đẹp nhất, đánh giá và giá của bạn, có mã QR để khách đặt lịch.
       </p>
       {published ? (
         <ShareImages base={`/pros/${slug}/portfolio`} fileName={`360dep-${slug}`} className="mt-3" />
       ) : (
-        <p className="mt-3 rounded-[var(--radius-md)] bg-subtle px-3 py-2.5 text-[13px] text-ink-soft">
+        <p className="mt-3 rounded-[var(--radius-md)] bg-subtle px-3 py-2.5 text-meta text-ink-soft">
           Có ảnh portfolio khi hồ sơ của bạn đã mở với khách.
         </p>
       )}

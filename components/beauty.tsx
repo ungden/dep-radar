@@ -14,6 +14,7 @@ import type { VerticalFilter } from "@/lib/feed"
 import { serviceOffers } from "@/lib/offers"
 import type { LatLng } from "@/lib/geo"
 import { useHere } from "@/lib/here"
+import { moveRadio } from "@/lib/radio-navigation"
 import { levelName } from "@/lib/levels"
 import {
   categoryFromPrice,
@@ -64,10 +65,8 @@ export function VerticalSwitch({
 }) {
   const items: { id: VerticalFilter; label: string }[] = [{ id: "all", label: "Tất cả" }, ...VERTICALS]
   return (
-    // Four equal places on a phone, so all trades fit without a sideways
-    // scroll. A trade nobody offers yet is not flagged here: its category
-    // tiles say "Sắp có".
-    <div role="radiogroup" aria-label="Ngành" className={cn("grid grid-cols-4 gap-1 sm:flex sm:gap-2", className)}>
+    // Keep full labels readable; overflow stays inside this horizontal row.
+    <div role="radiogroup" aria-label="Ngành" className={cn("no-scrollbar flex gap-2 overflow-x-auto pb-1", className)}>
       {items.map((it) => {
         const active = value === it.id
         return (
@@ -76,9 +75,11 @@ export function VerticalSwitch({
             type="button"
             role="radio"
             aria-checked={active}
+            tabIndex={active ? 0 : -1}
+            onKeyDown={(event) => moveRadio(event, () => onChange(it.id))}
             onClick={() => onChange(it.id)}
             className={cn(
-              "inline-flex h-10 min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-full px-0.5 text-[clamp(12px,3.5vw,13px)] font-semibold tracking-[-0.01em] transition-colors sm:shrink-0 sm:px-4 sm:text-[14px] sm:tracking-normal",
+              "inline-flex min-h-12 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-body font-semibold transition-colors",
               active ? "bg-accent text-white" : "bg-subtle text-ink hover:bg-subtle-strong",
             )}
           >
@@ -124,7 +125,7 @@ export function CategoryBubbles({ vertical = "all", className }: { vertical?: Ve
                 <Icon className="size-7 text-accent" />
               )}
             </span>
-            <span className="text-[12.5px] font-medium leading-tight text-ink">{c.label}</span>
+            <span className="text-label font-medium leading-tight text-ink">{c.label}</span>
           </Link>
         )
       })}
@@ -195,19 +196,19 @@ function useImpression(work: Work) {
 function MediaBadge({ work }: { work: Work }) {
   if (work.video)
     return (
-      <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
+      <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-label font-semibold text-white backdrop-blur">
         <Play className="size-3 fill-white" /> Clip
       </span>
     )
   if (work.kind === "before_after")
     return (
-      <span className="absolute bottom-2.5 right-2.5 rounded-full bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
+      <span className="absolute bottom-2.5 right-2.5 rounded-full bg-black/55 px-2 py-1 text-label font-semibold text-white backdrop-blur">
         Trước / sau
       </span>
     )
   if (work.images.length > 1)
     return (
-      <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
+      <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-label font-semibold text-white backdrop-blur">
         <Layers className="size-3" /> {work.images.length}
       </span>
     )
@@ -248,7 +249,7 @@ export function PostCard({ work, priority, className }: { work: Work; priority?:
         )}
         {/* A fact, not a slogan: the person has bookings switched on. */}
         {pro.acceptingJobs && (
-          <span className="absolute left-2.5 top-2.5 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-accent backdrop-blur">
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-white/90 px-2.5 py-1 text-label font-semibold text-accent backdrop-blur">
             Có thể đặt
           </span>
         )}
@@ -256,8 +257,8 @@ export function PostCard({ work, priority, className }: { work: Work; priority?:
         <SaveWorkButton workId={work.id} className="absolute right-0.5 top-0.5" />
       </div>
       <div className="p-3">
-        <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink">{work.title}</p>
-        <p className="mt-0.5 text-[14px] text-ink">
+        <p className="line-clamp-2 text-body font-semibold leading-snug text-ink">{work.title}</p>
+        <p className="mt-0.5 text-body text-ink">
           {price !== null ? (
             <>
               <span className="text-muted">Từ </span>
@@ -270,11 +271,11 @@ export function PostCard({ work, priority, className }: { work: Work; priority?:
         <div className="mt-2.5 flex items-center gap-2">
           <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={28} />
           <div className="min-w-0 flex-1 leading-tight">
-            <p className="flex items-center gap-1 text-[13px] font-semibold text-ink">
+            <p className="flex items-center gap-1 text-meta font-semibold text-ink">
               <span className="truncate">{pro.name}</span>
               <VerifiedMark pro={pro} className="size-3.5" />
             </p>
-            <p className="truncate text-[12.5px] text-ink-soft">
+            <p className="truncate text-label text-ink-soft">
               {pro.rating.count > 0 ? `${ratingText(pro.rating)} · ` : ""}
               {whereLabel(state, pro)}
             </p>
@@ -294,7 +295,7 @@ export const WorkCard = PostCard
 
 function TrustLine({ pro, state, here }: { pro: Pro; state: AppState; here: LatLng | null }) {
   return (
-    <p className="flex flex-wrap items-center gap-x-1.5 text-[13px] text-ink-soft">
+    <p className="flex flex-wrap items-center gap-x-1.5 text-meta text-ink-soft">
       {showsAverage(pro.rating.count) ? (
         <span>
           <span className="font-semibold text-ink">★ {pro.rating.average.toFixed(1)}</span> ({pro.rating.count})
@@ -325,10 +326,10 @@ export function LevelBadge({ proId, category, className }: { proId: string; cate
   return (
     <span
       title="Mức giá người làm tự chọn, không phải chứng nhận tay nghề"
-      className={cn("inline-flex max-w-full items-center rounded-full bg-subtle px-2 py-0.5 text-[12px] font-semibold text-ink-soft", className)}
+      className={cn("inline-flex max-w-full items-center rounded-full bg-subtle px-2 py-0.5 text-label font-semibold text-ink-soft", className)}
     >
       <span className="truncate">
-        {categoryLabel(category)} · {levelName(level)}
+        Mức giá {levelName(level)}
       </span>
       <span className="sr-only">, mức giá tự chọn</span>
     </span>
@@ -361,16 +362,16 @@ export function ProCard({ pro: basePro, category, className }: { pro: Pro; categ
       <div className="flex items-center gap-3">
         <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={52} />
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5 text-[16px] font-bold">
+          <p className="flex items-center gap-1.5 text-body font-bold">
             <span className="truncate">{pro.name}</span>
             <VerifiedMark pro={pro} />
           </p>
           {levelCategory && <LevelBadge proId={pro.id} category={levelCategory} className="mt-0.5" />}
-          <p className="truncate text-[13px] text-muted">{pro.title || pro.categories.map(categoryLabel).join(" · ")}</p>
+          <p className="truncate text-meta text-muted">{pro.title || pro.categories.map(categoryLabel).join(" · ")}</p>
         </div>
         <div className="shrink-0 text-right">
-          <p className="text-xs text-muted">Từ</p>
-          <p className="text-[15px] font-bold">{from !== null ? formatPrice(from) : "—"}</p>
+          <p className="text-label text-muted">Từ</p>
+          <p className="text-body font-bold">{from !== null ? formatPrice(from) : "—"}</p>
         </div>
       </div>
       {photos.length > 0 && (

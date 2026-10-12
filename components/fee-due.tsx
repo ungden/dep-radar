@@ -29,13 +29,13 @@ export function FeeDueCard({ className }: { className?: string }) {
   if (!owed) return null
   return (
     <section id={FEE_ANCHOR} className={cn("scroll-mt-20 rounded-[var(--radius-lg)] border border-danger/30 bg-surface p-4", className)}>
-      <h2 className="text-[17px] font-bold tracking-tight">Thanh toán phí {formatPrice(owed)} để nhận đơn tiếp</h2>
-      <p className="mt-1 text-[14px] text-ink-soft">
+      <h2 className="text-lead font-bold tracking-tight">Thanh toán phí {formatPrice(owed)} để nhận đơn tiếp</h2>
+      <p className="mt-1 text-body text-ink-soft">
         Phí dịch vụ 360dep của lịch hẹn đã xong được trừ vào ví. Khi ví còn âm, bạn chưa nhận được lịch mới hay việc mới;
         trả xong là nhận lại được ngay.
       </p>
       <WalletTopUp balance={-owed} className="mt-3" />
-      <Link href="/studio/wallet" className="mt-3 inline-flex min-h-11 items-center text-[14px] font-semibold text-accent underline-offset-4 hover:underline">
+      <Link href="/studio/wallet" className="mt-3 inline-flex min-h-11 items-center text-body font-semibold text-accent underline-offset-4 hover:underline">
         Xem sổ ví
       </Link>
     </section>

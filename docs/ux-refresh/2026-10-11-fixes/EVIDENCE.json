@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-11",
+  "base": "f542020",
+  "branch": "codex/ux-ui-refresh",
+  "checks": {
+    "webTypecheck": "pass",
+    "webLint": "pass",
+    "mobileTypecheck": "pass",
+    "mobileLint": "pass",
+    "vitest": {
+      "passed": 261,
+      "skipped": 31
+    },
+    "nextBuild": {
+      "status": "pass",
+      "pages": 84
+    },
+    "expoIosExport": "pass"
+  },
+  "runtime": {
+    "backend": "read-only localhost fixture, no writes",
+    "webViewports": [
+      "390x844",
+      "320x720"
+    ],
+    "detail320": {
+      "innerWidth": 320,
+      "scrollWidth": 320,
+      "priceRowRight": 283
+    },
+    "ios": "R2R iPhone17Pro, iOS26.5, ExpoGo",
+    "fontSizes": [
+      "large",
+      "accessibility-large"
+    ],
+    "secondSessionReadback": {
+      "date": "2026-10-13",
+      "time": "10:17"
+    },
+    "combinedFilters": {
+      "home": true,
+      "maxPriceExclusive": 300000,
+      "services": 0,
+      "people": 0
+    },
+    "webSlotRecovery": {
+      "failure": "HTTP503",
+      "retry": "09:00 through16:00 restored",
+      "selectedDate": "2026-10-12"
+    },
+    "webKeyboard": {
+      "ArrowRight": "selected300000",
+      "Escape": "closed dialog, focus returned to Bộ lọc"
+    }
+  },
+  "limitations": [
+    "No real authenticated checkout or partner tool E2E",
+    "No Android or physical-device QA",
+    "No end-to-end VoiceOver or full WCAG certification",
+    "No production deployment, store build, push or database changes"
+  ],
+  "screenshots": [
+    "ios-booking-date-picker.png",
+    "ios-booking-large-confirmation.png",
+    "ios-booking-large-date-picker.png",
+    "ios-booking-large-slots.png",
+    "ios-booking-large-time-picker.png",
+    "ios-booking-time-picker.png",
+    "ios-combined-filters.png",
+    "web-budget-minimum-total.png",
+    "web-package-320.png",
+    "web-search-price-units.png",
+    "web-slot-error.png",
+    "web-slot-recovered.png"
+  ]
+}

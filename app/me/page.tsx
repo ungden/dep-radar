@@ -48,7 +48,7 @@ export default function MePage() {
             <UserRound className="size-7" />
           </span>
           <p className="mt-3 font-semibold">Bạn chưa đăng nhập</p>
-          <p className="mt-1 text-[15px] text-ink-soft">Đăng nhập để đặt lịch, lưu mẫu và đăng yêu cầu.</p>
+          <p className="mt-1 text-body text-ink-soft">Đăng nhập để đặt lịch, lưu mẫu và đăng yêu cầu.</p>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <ButtonLink href="/login">Đăng nhập</ButtonLink>
             <ButtonLink href="/login?tao=1" variant="outline">
@@ -80,7 +80,7 @@ export default function MePage() {
         <Avatar name={session.name} tone={pro?.tone} src={pro?.avatar} size={64} />
         <div className="flex-1">
           <p className="text-lg font-semibold">{session.name}</p>
-          <p className="text-sm text-muted">
+          <p className="text-body text-muted">
             {isPro ? `${pro?.title} · Xem hồ sơ công khai` : formatPhone(session.phone)}
           </p>
         </div>
@@ -94,8 +94,8 @@ export default function MePage() {
             <ArrowLeftRight className="size-5" />
           </span>
           <div className="flex-1">
-            <p className="text-[15px] font-bold">{isPro ? "Đang ở chế độ đối tác" : "Đang ở chế độ đặt lịch"}</p>
-            <p className="text-xs text-muted">{isPro ? "Chuyển sang để đặt lịch cho bản thân" : "Chuyển sang chế độ đối tác"}</p>
+            <p className="text-body font-bold">{isPro ? "Đang ở chế độ đối tác" : "Đang ở chế độ đặt lịch"}</p>
+            <p className="text-label text-muted">{isPro ? "Chuyển sang để đặt lịch cho bản thân" : "Chuyển sang chế độ đối tác"}</p>
           </div>
           <button
             type="button"
@@ -103,7 +103,7 @@ export default function MePage() {
               await actions.switchRole(isPro ? "customer" : "pro")
               router.push(isPro ? "/" : "/studio")
             }}
-            className="h-10 rounded-full bg-accent px-4 text-[13px] font-semibold text-white hover:bg-accent-dark"
+            className="h-10 rounded-full bg-accent px-4 text-meta font-semibold text-white hover:bg-accent-dark"
           >
             Chuyển
           </button>
@@ -117,8 +117,8 @@ export default function MePage() {
             <Mail className="size-5" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-bold">Thêm email để lấy lại mật khẩu khi quên</span>
-            <span className="block text-[13px] text-ink-soft">
+            <span className="block text-body font-bold">Thêm email để lấy lại mật khẩu khi quên</span>
+            <span className="block text-meta text-ink-soft">
               {session.login.pendingEmail
                 ? `Đang chờ bạn bấm link xác nhận gửi tới ${maskEmail(session.login.pendingEmail)}`
                 : "Tài khoản của bạn đang chỉ có số điện thoại"}
@@ -132,13 +132,13 @@ export default function MePage() {
         <>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <Card className="p-4">
-              <p className="text-xs text-muted">Thực nhận (sau hoa hồng)</p>
+              <p className="text-label text-muted">Thực nhận (sau hoa hồng)</p>
               <p className="mt-1 text-lg font-semibold">{formatPrice(earnings)}</p>
             </Card>
             <Card className="flex items-center justify-between gap-2 p-4">
               <div>
-                <p className="text-xs text-muted">Nhận job mới</p>
-                <p className="mt-1 text-sm font-semibold">{state.acceptingJobs ? "Đang bật" : "Tạm nghỉ"}</p>
+                <p className="text-label text-muted">Nhận job mới</p>
+                <p className="mt-1 text-body font-semibold">{state.acceptingJobs ? "Đang bật" : "Tạm nghỉ"}</p>
               </div>
               <Toggle
                 label="Nhận job mới"
@@ -186,7 +186,7 @@ export default function MePage() {
             await actions.signOut()
             router.push("/")
           }}
-          className="flex min-h-14 w-full items-center gap-3.5 px-4 py-3 text-left text-[15px] font-medium text-danger"
+          className="flex min-h-14 w-full items-center gap-3.5 px-4 py-3 text-left text-body font-medium text-danger"
         >
           <LogOut className="size-5" /> Đăng xuất
         </button>
@@ -194,7 +194,7 @@ export default function MePage() {
 
       {/* The one way in to the partner side from a customer account. */}
       {!session.proId && (
-        <Link href="/doi-tac" className="mt-6 flex min-h-14 items-center gap-3 px-1 text-[14px] text-ink-soft hover:text-ink">
+        <Link href="/doi-tac" className="mt-6 flex min-h-14 items-center gap-3 px-1 text-body text-ink-soft hover:text-ink">
           <span className="min-w-0 flex-1">
             Bạn là thợ, người chụp ảnh hay người mẫu? <span className="font-semibold text-ink underline underline-offset-2">Trở thành đối tác 360dep</span>
           </span>
@@ -226,8 +226,8 @@ function Menu({ items }: { items: MenuItem[] }) {
           <Link key={it.label} href={it.href} className="flex min-h-14 items-center gap-3.5 px-4 py-3 hover:bg-subtle/60">
             <Icon className="size-5 text-ink" />
             <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-medium">{it.label}</span>
-              {it.sub && <span className="block truncate text-[13px] text-muted">{it.sub}</span>}
+              <span className="block text-body font-medium">{it.label}</span>
+              {it.sub && <span className="block truncate text-meta text-muted">{it.sub}</span>}
             </span>
             <ChevronRight className="size-4 text-muted" />
           </Link>

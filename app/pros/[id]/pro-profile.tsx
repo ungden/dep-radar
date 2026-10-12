@@ -136,7 +136,7 @@ export function ProProfile({ proId }: { proId: string }) {
           {pro.name}
           <VerifiedMark pro={pro} className="size-6" />
         </h1>
-        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] text-ink-soft">
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-body text-ink-soft">
           <span className="inline-flex items-center gap-1.5">
             {tradesOf(pro.categories).map((v) => (
               <TradeDot key={v} vertical={v} />
@@ -163,7 +163,7 @@ export function ProProfile({ proId }: { proId: string }) {
             they travel and what that costs. */}
         {!own && (
           <div className="mt-4 rounded-[var(--radius-lg)] border border-line bg-surface p-4 md:hidden">
-            <p className="flex flex-wrap items-baseline gap-x-2 text-[14px]">
+            <p className="flex flex-wrap items-baseline gap-x-2 text-body">
               <span className={cn("font-semibold", pro.acceptingJobs ? "text-success" : "text-warning")}>
                 {pro.acceptingJobs ? "Đang nhận lịch" : "Tạm nghỉ nhận lịch mới"}
               </span>
@@ -183,7 +183,7 @@ export function ProProfile({ proId }: { proId: string }) {
         <Stats pro={pro} onReviews={() => openTab("reviews")} />
 
         {/* No messages before a booking: the way to reach them is "Đặt lịch" below. */}
-        {!own && <p className="mt-4 text-[13px] text-muted md:hidden">{MATCH_NOTE(pro.name)}</p>}
+        {!own && <p className="mt-4 text-meta text-muted md:hidden">{MATCH_NOTE(pro.name)}</p>}
       </div>
 
       <div className="mt-6 md:mt-10 md:grid md:grid-cols-[minmax(0,1fr)_340px] md:gap-10 lg:gap-14">
@@ -219,7 +219,7 @@ export function ProProfile({ proId }: { proId: string }) {
                   </div>
                 )}
                 <div className="mt-3 flex items-center gap-3">
-                  <p className="flex-1 text-[13px] text-muted">Chỉ khách đã hoàn thành lịch hẹn qua 360dep mới đánh giá được.</p>
+                  <p className="flex-1 text-meta text-muted">Chỉ khách đã hoàn thành lịch hẹn qua 360dep mới đánh giá được.</p>
                   {reviews.some((r) => r.photo) && (
                     <Chip active={withPhotos} onClick={() => setWithPhotos((v) => !v)}>
                       Có ảnh
@@ -247,8 +247,8 @@ export function ProProfile({ proId }: { proId: string }) {
           <div className="sticky top-24 rounded-[var(--radius-lg)] border border-line bg-surface p-5">
             {own ? (
               <>
-                <p className="text-[17px] font-bold">Đây là hồ sơ của bạn</p>
-                <p className="mt-1 text-[15px] text-ink-soft">Khách thấy trang này khi tìm {personWord(pro.categories)}.</p>
+                <p className="text-lead font-bold">Đây là hồ sơ của bạn</p>
+                <p className="mt-1 text-body text-ink-soft">Khách thấy trang này khi tìm {personWord(pro.categories)}.</p>
                 <ButtonLink href="/studio/profile" variant="outline" className="mt-4 w-full">
                   Sửa hồ sơ
                 </ButtonLink>
@@ -256,23 +256,23 @@ export function ProProfile({ proId }: { proId: string }) {
             ) : (
               <>
                 {from !== null ? (
-                  <p className="text-[14px] text-muted">
+                  <p className="text-body text-muted">
                     Từ <span className="text-[24px] font-bold tracking-tight text-ink">{formatPrice(from)}</span>
                   </p>
                 ) : (
-                  <p className="text-[15px] font-semibold">Chưa có bảng giá</p>
+                  <p className="text-body font-semibold">Chưa có bảng giá</p>
                 )}
-                <p className={cn("mt-1 text-[14px] font-semibold", pro.acceptingJobs ? "text-success" : "text-warning")}>
+                <p className={cn("mt-1 text-body font-semibold", pro.acceptingJobs ? "text-success" : "text-warning")}>
                   {pro.acceptingJobs ? "Đang nhận lịch" : "Tạm nghỉ nhận lịch mới"}
                 </p>
                 <WhereFacts pro={pro} className="mt-4" />
                 <BookButton pro={pro} disabled={!services.length} className="mt-5 w-full" />
-                <p className="mt-2 text-[13px] text-muted">{MATCH_NOTE(pro.name)}</p>
+                <p className="mt-2 text-meta text-muted">{MATCH_NOTE(pro.name)}</p>
                 {services.length > 0 && (
                   <button
                     type="button"
                     onClick={() => openTab("services")}
-                    className="mt-2 inline-flex min-h-11 items-center text-[14px] font-semibold underline-offset-4 hover:underline"
+                    className="mt-2 inline-flex min-h-11 items-center text-body font-semibold underline-offset-4 hover:underline"
                   >
                     Xem bảng giá ({services.length} dịch vụ)
                   </button>
@@ -289,13 +289,13 @@ export function ProProfile({ proId }: { proId: string }) {
           <div className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
               {from !== null ? (
-                <p className="text-[13px] text-muted">
-                  Từ <span className="text-[17px] font-bold text-ink">{formatPrice(from)}</span>
+                <p className="text-meta text-muted">
+                  Từ <span className="text-lead font-bold text-ink">{formatPrice(from)}</span>
                 </p>
               ) : (
-                <p className="text-[14px] font-semibold">Chưa có bảng giá</p>
+                <p className="text-body font-semibold">Chưa có bảng giá</p>
               )}
-              <p className={cn("text-[13px] font-medium", pro.acceptingJobs ? "text-success" : "text-warning")}>
+              <p className={cn("text-meta font-medium", pro.acceptingJobs ? "text-success" : "text-warning")}>
                 {pro.acceptingJobs ? "Đang nhận lịch" : "Tạm nghỉ nhận lịch"}
               </p>
             </div>
@@ -308,17 +308,17 @@ export function ProProfile({ proId }: { proId: string }) {
 }
 
 function BookButton({ pro, disabled, size, className }: { pro: Pro; disabled?: boolean; size?: "md" | "lg"; className?: string }) {
-  if (disabled)
+  if (disabled || !pro.acceptingJobs)
     return (
       <span
         aria-disabled
         className={cn(
-          "inline-flex items-center justify-center rounded-full bg-subtle px-5 text-sm font-semibold text-muted",
+          "inline-flex items-center justify-center rounded-full bg-subtle px-5 text-body font-semibold text-muted",
           size === "lg" ? "h-13" : "h-11",
           className,
         )}
       >
-        Chưa nhận đặt
+        {pro.acceptingJobs ? "Chưa có bảng giá" : "Tạm ngừng nhận lịch"}
       </span>
     )
   return (
@@ -336,7 +336,7 @@ function Stats({ pro, onReviews }: { pro: Pro; onReviews: () => void }) {
     items.push(
       <li key="jobs">
         <p className="text-[20px] font-bold tracking-tight">{pro.stats.completedJobs.toLocaleString("vi-VN")}</p>
-        <p className="text-[13px] text-ink-soft">lịch đã làm</p>
+        <p className="text-meta text-ink-soft">lịch đã làm</p>
       </li>,
     )
   if (pro.rating.count > 0)
@@ -345,7 +345,7 @@ function Stats({ pro, onReviews }: { pro: Pro; onReviews: () => void }) {
         <button type="button" onClick={onReviews} className="text-left">
           {/* An average of one or two reviews is not a number worth showing. */}
           <p className="text-[20px] font-bold tracking-tight">{showsAverage(pro.rating.count) ? `★ ${pro.rating.average.toFixed(1)}` : "Mới"}</p>
-          <p className="text-[13px] text-ink-soft underline decoration-line underline-offset-2">{pro.rating.count} đánh giá</p>
+          <p className="text-meta text-ink-soft underline decoration-line underline-offset-2">{pro.rating.count} đánh giá</p>
         </button>
       </li>,
     )
@@ -353,10 +353,10 @@ function Stats({ pro, onReviews }: { pro: Pro; onReviews: () => void }) {
     items.push(
       <li key="response">
         <p className="text-[20px] font-bold tracking-tight">{response}</p>
-        <p className="text-[13px] text-ink-soft">phản hồi</p>
+        <p className="text-meta text-ink-soft">phản hồi</p>
       </li>,
     )
-  if (!items.length) return <p className="mt-4 text-[14px] text-ink-soft">Mới trên 360dep, chưa có lịch hẹn hay đánh giá nào.</p>
+  if (!items.length) return <p className="mt-4 text-body text-ink-soft">Mới trên 360dep, chưa có lịch hẹn hay đánh giá nào.</p>
   return <ul className="mt-5 flex gap-8 md:gap-12">{items}</ul>
 }
 
@@ -395,7 +395,7 @@ function Portfolio({ works, initial }: { works: Work[]; initial: CategoryId | nu
               aria-checked={active}
               onClick={() => setChosen(a.category)}
               className={cn(
-                "relative inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-[13px] font-semibold transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
+                "relative inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-meta font-semibold transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
                 active ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
               )}
             >
@@ -444,7 +444,7 @@ function WhereFacts({ pro, className }: { pro: Pro; className?: string }) {
   const beauty = pro.categories.some((c) => verticalOf(c) === "beauty")
   const onlyOnLocation = !beauty && pro.categories.length > 0
   return (
-    <ul className={cn("space-y-2.5 text-[14px] text-ink", className)}>
+    <ul className={cn("space-y-2.5 text-body text-ink", className)}>
       <li className="flex items-start gap-2.5">
         <MapPin className="mt-0.5 size-4 shrink-0 text-muted" />
         <span>
@@ -489,12 +489,12 @@ function About({ pro }: { pro: Pro }) {
   const joined = parseISODate(pro.joinedAt)
   return (
     <div className="mt-5 space-y-7">
-      {pro.bio && <p className="whitespace-pre-line text-[15px] leading-relaxed text-ink">{pro.bio}</p>}
+      {pro.bio && <p className="whitespace-pre-line text-body leading-relaxed text-ink">{pro.bio}</p>}
 
       {pro.highlights.length > 0 && (
         <ul className="flex flex-wrap gap-2">
           {pro.highlights.map((t) => (
-            <li key={t} className="inline-flex items-center gap-1.5 rounded-full bg-subtle px-3 py-1.5 text-[13px] font-medium text-ink">
+            <li key={t} className="inline-flex items-center gap-1.5 rounded-full bg-subtle px-3 py-1.5 text-meta font-medium text-ink">
               <Check className="size-3.5" />
               {t}
             </li>
@@ -504,7 +504,7 @@ function About({ pro }: { pro: Pro }) {
 
       <AboutSection title="Làm việc">
         <WhereFacts pro={pro} />
-        <ul className="mt-2.5 space-y-2.5 text-[14px] text-ink">
+        <ul className="mt-2.5 space-y-2.5 text-body text-ink">
           {pro.areas.length > 0 && (
             <li className="flex items-start gap-2.5">
               <MapPin className="mt-0.5 size-4 shrink-0 text-muted" />
@@ -527,7 +527,7 @@ function About({ pro }: { pro: Pro }) {
 
       {pro.equipment && (
         <AboutSection title="Thiết bị">
-          <p className="flex items-start gap-2.5 text-[15px] text-ink">
+          <p className="flex items-start gap-2.5 text-body text-ink">
             <Camera className="mt-0.5 size-4 shrink-0 text-muted" />
             {pro.equipment}
           </p>
@@ -537,7 +537,7 @@ function About({ pro }: { pro: Pro }) {
       {pro.model && <ModelCard model={pro.model} />}
 
       <AboutSection title="Xác minh">
-        <p className="text-[15px] text-ink-soft">
+        <p className="text-body text-ink-soft">
           {pro.identity === "verified"
             ? "360dep đã đối chiếu ảnh CCCD với ảnh chân dung của người này."
             : "Chưa xác minh danh tính với 360dep."}
@@ -550,7 +550,7 @@ function About({ pro }: { pro: Pro }) {
 function AboutSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-3 text-[17px] font-bold tracking-tight">{title}</h2>
+      <h2 className="mb-3 text-lead font-bold tracking-tight">{title}</h2>
       {children}
     </section>
   )
@@ -570,26 +570,26 @@ function ModelCard({ model }: { model: ModelProfile }) {
           <dl className="grid grid-cols-2 gap-4">
             {model.heightCm ? (
               <div>
-                <dt className="flex items-center gap-1.5 text-[13px] text-muted">
+                <dt className="flex items-center gap-1.5 text-meta text-muted">
                   <Ruler className="size-3.5" /> Chiều cao
                 </dt>
-                <dd className="mt-0.5 text-[17px] font-bold">{model.heightCm} cm</dd>
+                <dd className="mt-0.5 text-lead font-bold">{model.heightCm} cm</dd>
               </div>
             ) : null}
             {sizes.length > 0 && (
               <div>
-                <dt className="text-[13px] text-muted">Size</dt>
-                <dd className="mt-0.5 text-[15px] font-semibold">{sizes.join(" · ")}</dd>
+                <dt className="text-meta text-muted">Size</dt>
+                <dd className="mt-0.5 text-body font-semibold">{sizes.join(" · ")}</dd>
               </div>
             )}
           </dl>
         )}
         {model.styles.length > 0 && (
           <div className="mt-4">
-            <p className="text-[13px] text-muted">Phong cách</p>
+            <p className="text-meta text-muted">Phong cách</p>
             <ul className="mt-1.5 flex flex-wrap gap-1.5">
               {model.styles.map((s) => (
-                <li key={s} className="rounded-full bg-subtle px-3 py-1 text-[13px] font-medium">
+                <li key={s} className="rounded-full bg-subtle px-3 py-1 text-meta font-medium">
                   {s}
                 </li>
               ))}
@@ -600,10 +600,10 @@ function ModelCard({ model }: { model: ModelProfile }) {
           <div className="mt-4 grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
             {model.accepts.length > 0 && (
               <div>
-                <p className="text-[14px] font-bold">Nhận</p>
+                <p className="text-body font-bold">Nhận</p>
                 <ul className="mt-1.5 space-y-1.5">
                   {model.accepts.map((s) => (
-                    <li key={s} className="flex items-start gap-2 text-[14px]">
+                    <li key={s} className="flex items-start gap-2 text-body">
                       <Check className="mt-0.5 size-4 shrink-0 text-success" />
                       {s}
                     </li>
@@ -613,10 +613,10 @@ function ModelCard({ model }: { model: ModelProfile }) {
             )}
             {model.refuses.length > 0 && (
               <div>
-                <p className="text-[14px] font-bold">Không nhận</p>
+                <p className="text-body font-bold">Không nhận</p>
                 <ul className="mt-1.5 space-y-1.5">
                   {model.refuses.map((s) => (
-                    <li key={s} className="flex items-start gap-2 text-[14px]">
+                    <li key={s} className="flex items-start gap-2 text-body">
                       <X className="mt-0.5 size-4 shrink-0 text-danger" />
                       {s}
                     </li>
@@ -627,7 +627,7 @@ function ModelCard({ model }: { model: ModelProfile }) {
           </div>
         )}
       </div>
-      <p className="mt-2 text-[13px] text-muted">360dep không thu thập số đo cơ thể của mẫu.</p>
+      <p className="mt-2 text-meta text-muted">360dep không thu thập số đo cơ thể của mẫu.</p>
     </AboutSection>
   )
 }

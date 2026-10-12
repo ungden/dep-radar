@@ -27,7 +27,7 @@ export function PriceBreakdown({
   const Icon = paymentMethod === "online" ? CreditCard : HandCoins
   const paid = quote.total - discount
   return (
-    <Card className="space-y-2 p-4 text-sm">
+    <Card className="space-y-2 p-4 text-body">
       <Line label="Giá dịch vụ" value={formatPrice(quote.servicePrice)} />
       <Line
         label={
@@ -50,14 +50,14 @@ export function PriceBreakdown({
             <span>{forPro ? "Khách trả bạn" : "Bạn trả người làm"}</span>
             <span>{formatPrice(paid)}</span>
           </div>
-          <p className="text-xs text-ink-soft">
+          <p className="text-label text-ink-soft">
             {forPro
               ? `360dep cộng ${formatPrice(discount)} vào ví của bạn khi job hoàn thành, nên bạn vẫn nhận đủ giá.`
               : `360dep trả ${formatPrice(discount)} cho người làm thay bạn.`}
           </p>
         </>
       )}
-      <p className="flex items-center gap-1.5 text-xs text-ink-soft">
+      <p className="flex items-center gap-1.5 text-label text-ink-soft">
         <Icon className="size-3.5" />
         {PAYMENT_LABEL[paymentMethod]}
       </p>
@@ -69,7 +69,7 @@ export function PriceBreakdown({
             <span>Bạn thực nhận</span>
             <span>{formatPrice(quote.payout)}</span>
           </div>
-          <p className="text-xs text-muted">
+          <p className="text-label text-muted">
             {paymentMethod === "online"
               ? `Khách đã thanh toán online. 360dep chuyển ${formatPrice(quote.payout)} cho bạn trong kỳ đối soát sau khi hoàn thành.`
               : `Thu ${formatPrice(paid)} trực tiếp từ khách. Khi bấm hoàn thành, phí ${formatPrice(quote.commission)} được trừ vào ví; thanh toán phí trước khi nhận đơn tiếp theo.`}{" "}

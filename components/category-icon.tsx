@@ -3,6 +3,7 @@
 import * as React from "react"
 import { ChevronUp } from "lucide-react"
 import { CATEGORY_ICONS, ICON_SOFT_OPACITY, ICON_STROKE, type CategoryIconId } from "@/lib/design/category-icons"
+import { moveRadio } from "@/lib/radio-navigation"
 import { cn } from "@/lib/utils"
 
 /** One of the 360dep category icons (lib/design/category-icons.ts), in the current text colour. */
@@ -44,7 +45,7 @@ export function CategoryTiles({
   row = false,
   className,
 }: {
-  /** `soon`: nobody offers it in scope yet; shown muted with "Sắp có". */
+  /** `soon`: nobody offers it in scope yet; explain availability to assistive technology. */
   /** `className`: e.g. "hidden lg:flex" for a tile only wide screens have room for. */
   items: { id: CategoryIconId; label: string; soon?: boolean; className?: string }[]
   value: CategoryIconId
@@ -58,7 +59,7 @@ export function CategoryTiles({
       role="radiogroup"
       aria-label="Danh mục"
       className={cn(
-        "grid grid-cols-5 gap-x-1 gap-y-3 sm:grid-cols-7 sm:gap-x-2 lg:flex lg:flex-wrap lg:gap-x-3 lg:gap-y-4",
+        "grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-6 lg:flex lg:flex-wrap lg:gap-x-1.5 xl:gap-x-2 lg:gap-y-4",
         className,
       )}
     >
@@ -70,9 +71,11 @@ export function CategoryTiles({
             type="button"
             role="radio"
             aria-checked={active}
+            tabIndex={active || (!items.some((item) => item.id === value) && it.id === items[0]?.id) ? 0 : -1}
+            onKeyDown={(event) => moveRadio(event, () => onChange(it.id))}
             onClick={() => onChange(it.id)}
-            aria-label={it.soon ? `${it.label}, sắp có` : it.label}
-            className={cn("group relative flex min-w-0 flex-col items-center gap-1 text-center", !row && "lg:w-[80px]", it.className)}
+            aria-label={it.soon ? `${it.label}, chưa có người nhận lịch` : it.label}
+            className={cn("group relative flex min-w-0 flex-col items-center gap-2 text-center", !row && "lg:w-[68px] xl:w-[84px]", it.className)}
           >
             <span
               className={cn(
@@ -87,15 +90,10 @@ export function CategoryTiles({
             >
               <CategoryIcon id={it.id} className={cn(row ? "size-5" : "size-6 lg:size-7")} />
             </span>
-            {it.soon && (
-              <span className="absolute -top-1 right-0 rounded-full bg-surface px-1.5 py-px text-xs font-semibold leading-4 text-muted shadow-[var(--shadow-soft)]">
-                Sắp có
-              </span>
-            )}
             <span
               className={cn(
-                // One line, same height for every tile: long labels are shortened, not wrapped.
-                "w-full truncate text-[12px] leading-tight",
+                // Names wrap instead of shrinking or hiding the service behind an ellipsis.
+                "w-full min-h-10 text-label leading-5 [overflow-wrap:anywhere]",
                 active ? "font-semibold text-accent-dark" : "font-medium text-ink",
               )}
               title={it.label}
@@ -110,7 +108,7 @@ export function CategoryTiles({
           type="button"
           onClick={more.onToggle}
           aria-expanded={more.open}
-          className={cn("group flex min-w-0 flex-col items-center gap-1 text-center", !row && "lg:w-[80px]", more.className)}
+          className={cn("group flex min-w-0 flex-col items-center gap-2 text-center", !row && "lg:w-[68px] xl:w-[84px]", more.className)}
         >
           <span
             className={cn(
@@ -124,7 +122,7 @@ export function CategoryTiles({
               <CategoryIcon id="all" className={cn(row ? "size-5" : "size-6 lg:size-7")} />
             )}
           </span>
-          <span className="w-full truncate text-[12px] font-medium leading-tight text-ink">{more.open ? "Thu gọn" : "Xem thêm"}</span>
+          <span className="w-full min-h-10 text-label font-medium leading-5 text-ink">{more.open ? "Thu gọn" : "Xem thêm"}</span>
         </button>
       )}
     </div>

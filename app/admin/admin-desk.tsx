@@ -69,7 +69,7 @@ export function AdminDesk({
       />
 
       {error && (
-        <p role="alert" className="mt-4 rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+        <p role="alert" className="mt-4 rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
           {error}
         </p>
       )}
@@ -97,7 +97,7 @@ export function AdminDesk({
                     <Flag on={!pro.published} label="Chưa công khai" tone="muted" />
                     <Flag on={pro.suspended} label="Tạm khoá" tone="danger" />
                   </p>
-                  <p className="text-xs text-muted">
+                  <p className="text-label text-muted">
                     {pro.district}, {pro.city} · {pro.completedJobs} job · ★ {pro.rating.toFixed(2)} ({pro.ratingCount}) ·
                     ví <span className={pro.wallet < 0 ? "font-semibold text-danger" : undefined}>{formatPrice(pro.wallet)}</span>
                     {pro.payCode && <> · mã nạp {pro.payCode}</>}
@@ -139,13 +139,13 @@ export function AdminDesk({
         <ul className="mt-4 space-y-2">
           {bookings.map((b) => (
             <li key={b.id}>
-              <Card className="flex flex-wrap items-center gap-3 p-3.5 text-sm">
+              <Card className="flex flex-wrap items-center gap-3 p-3.5 text-body">
                 <StatusBadge status={b.status as BookingStatus} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">
                     {b.customerName} → {b.proName}
                   </span>
-                  <span className="block truncate text-xs text-muted">
+                  <span className="block truncate text-label text-muted">
                     {b.date} {b.time} · {b.serviceLabel}
                   </span>
                 </span>
@@ -202,17 +202,17 @@ function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
     <Card className="mt-4 space-y-4 p-4">
       <div>
         <p className="font-semibold">Ghi nhận nạp ví</p>
-        <p className="text-[13px] text-muted">
+        <p className="text-meta text-muted">
           Dùng khi thấy tiền chuyển vào tài khoản 360dep mà ví chưa tự cộng. Nhập mã giao dịch của ngân hàng để cùng một khoản không
           bị cộng hai lần.
         </p>
       </div>
 
       {current ? (
-        <div className="flex items-center justify-between gap-3 rounded-xl bg-canvas px-3 py-2.5 text-sm">
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-canvas px-3 py-2.5 text-body">
           <span className="min-w-0">
             <span className="block font-semibold">{current.name}</span>
-            <span className="block text-xs text-muted">
+            <span className="block text-label text-muted">
               {current.slug}
               {current.payCode ? ` · mã nạp ${current.payCode}` : ""} · ví {formatPrice(current.wallet)}
             </span>
@@ -224,7 +224,7 @@ function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
       ) : (
         <div>
           <input
-            className={cn(inputClass, "text-sm")}
+            className={cn(inputClass, "text-body")}
             placeholder="Mã nạp (VD: AB23CD), slug hoặc tên"
             aria-label="Tìm người làm"
             value={query}
@@ -232,7 +232,7 @@ function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
           />
           {q && (
             <ul className="mt-2 divide-y divide-line rounded-xl border border-line">
-              {matches.length === 0 && <li className="px-3 py-2.5 text-sm text-muted">Không tìm thấy ai.</li>}
+              {matches.length === 0 && <li className="px-3 py-2.5 text-body text-muted">Không tìm thấy ai.</li>}
               {matches.map((p) => (
                 <li key={p.id}>
                   <button
@@ -241,12 +241,12 @@ function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
                       setPicked(p)
                       setResult(null)
                     }}
-                    className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm hover:bg-subtle"
+                    className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-body hover:bg-subtle"
                   >
                     <span className="min-w-0 truncate">
                       <b>{p.name}</b> <span className="text-muted">· {p.slug}</span>
                     </span>
-                    <span className="shrink-0 text-xs text-muted">{p.payCode ?? "—"}</span>
+                    <span className="shrink-0 text-label text-muted">{p.payCode ?? "—"}</span>
                   </button>
                 </li>
               ))}
@@ -257,7 +257,7 @@ function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
 
       <div className="grid gap-3 sm:grid-cols-2">
         <input
-          className={cn(inputClass, "text-sm")}
+          className={cn(inputClass, "text-body")}
           inputMode="numeric"
           placeholder="Số tiền (đ)"
           aria-label="Số tiền"
@@ -265,7 +265,7 @@ function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
           onChange={(e) => setAmount(e.target.value)}
         />
         <input
-          className={cn(inputClass, "text-sm")}
+          className={cn(inputClass, "text-body")}
           placeholder="Mã giao dịch ngân hàng"
           aria-label="Mã giao dịch ngân hàng"
           value={reference}
@@ -293,7 +293,7 @@ function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
       {result && (
         <p
           role={result.ok ? "status" : "alert"}
-          className={cn("rounded-xl px-3.5 py-2.5 text-sm", result.ok ? "bg-success-soft text-success" : "bg-danger-soft text-danger")}
+          className={cn("rounded-xl px-3.5 py-2.5 text-body", result.ok ? "bg-success-soft text-success" : "bg-danger-soft text-danger")}
         >
           {result.text}
         </p>
@@ -370,7 +370,7 @@ function AiLog({
 
   return (
     <div className="mt-4 space-y-3">
-      <p className="text-[13px] text-muted">
+      <p className="text-meta text-muted">
         {log.last24h} quyết định trong 24 giờ qua. Hồ sơ đối tác mới do AI duyệt, bài đăng mới do AI kiểm tra; nhân viên xem lại ở đây và
         đảo quyết định khi cần. Đối tác được báo mỗi lần đảo.
       </p>
@@ -382,7 +382,7 @@ function AiLog({
             onClick={() => setFilter(f.value)}
             aria-pressed={filter === f.value}
             className={cn(
-              "shrink-0 rounded-full border px-3 py-1.5 text-[13px] font-semibold",
+              "shrink-0 rounded-full border px-3 py-1.5 text-meta font-semibold",
               filter === f.value ? "border-ink bg-ink text-canvas" : "border-line text-ink-soft hover:bg-subtle",
             )}
           >
@@ -415,25 +415,25 @@ function AiDecisionCard({
   return (
     <Card className="p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", DECISION_TONE[current] ?? "bg-canvas text-muted")}>
+        <span className={cn("rounded-full px-2 py-0.5 text-label font-semibold", DECISION_TONE[current] ?? "bg-canvas text-muted")}>
           {DECISION_LABEL[current] ?? current}
         </span>
-        <span className="text-xs font-semibold text-ink-soft">{SUBJECT_LABEL[item.subject] ?? item.subject}</span>
+        <span className="text-label font-semibold text-ink-soft">{SUBJECT_LABEL[item.subject] ?? item.subject}</span>
         {item.proSlug ? (
-          <Link href={`/pros/${item.proSlug}`} className="text-sm font-semibold hover:underline">
+          <Link href={`/pros/${item.proSlug}`} className="text-body font-semibold hover:underline">
             {item.proName}
           </Link>
         ) : (
-          <span className="text-sm font-semibold">{item.proName}</span>
+          <span className="text-body font-semibold">{item.proName}</span>
         )}
-        <span className="ml-auto text-xs text-muted" title={new Date(item.createdAt).toLocaleString("vi-VN")}>
+        <span className="ml-auto text-label text-muted" title={new Date(item.createdAt).toLocaleString("vi-VN")}>
           {timeAgo(item.createdAt)}
         </span>
       </div>
-      {item.workTitle && <p className="mt-1 text-[13px] text-ink-soft">Bài: {item.workTitle}</p>}
-      {item.summary && <p className="mt-2 text-sm">{item.summary}</p>}
+      {item.workTitle && <p className="mt-1 text-meta text-ink-soft">Bài: {item.workTitle}</p>}
+      {item.summary && <p className="mt-2 text-body">{item.summary}</p>}
       {item.reasons.length > 0 && (
-        <ul className="mt-2 list-disc space-y-0.5 pl-5 text-[13px] text-ink-soft">
+        <ul className="mt-2 list-disc space-y-0.5 pl-5 text-meta text-ink-soft">
           {item.reasons.map((reason) => (
             <li key={reason}>{reason}</li>
           ))}
@@ -448,7 +448,7 @@ function AiDecisionCard({
           ))}
         </div>
       )}
-      <p className="mt-2 text-xs text-muted">
+      <p className="mt-2 text-label text-muted">
         {item.model === "rules" ? "Theo quy tắc (không có AI)" : `Model: ${item.model}`}
         {item.overriddenAt && (
           <>
@@ -464,7 +464,7 @@ function AiDecisionCard({
         (open ? (
           <div className="mt-3 space-y-2">
             <input
-              className={cn(inputClass, "text-sm")}
+              className={cn(inputClass, "text-body")}
               placeholder="Ghi chú (gửi cho đối tác, không bắt buộc)"
               aria-label="Ghi chú khi đảo quyết định"
               value={note}
@@ -507,16 +507,16 @@ function CheckCard({ check, onDecide }: { check: PendingCheck; onDecide: (approv
           {check.proName}
         </Link>
       </p>
-      <p className="mt-0.5 text-xs text-muted">Gửi {timeAgo(check.createdAt)}</p>
+      <p className="mt-0.5 text-label text-muted">Gửi {timeAgo(check.createdAt)}</p>
 
       {/* What the model actually said, so the decision is made on evidence. */}
-      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-[13px] sm:grid-cols-4">
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-meta sm:grid-cols-4">
         <Fact label="Tên trên thẻ" value={check.nameOnCard || "—"} />
         <Fact label="Khớp tên hồ sơ" value={check.nameMatches === null ? "—" : check.nameMatches ? "Có" : "Không"} />
         <Fact label="Cùng một người" value={check.samePerson ?? "—"} />
         <Fact label="Độ chắc chắn" value={check.confidence === null ? "—" : `${Math.round(check.confidence * 100)}%`} />
       </dl>
-      {check.reason && <p className="mt-2 rounded-xl bg-canvas px-3 py-2 text-[13px] text-ink-soft">{check.reason}</p>}
+      {check.reason && <p className="mt-2 rounded-xl bg-canvas px-3 py-2 text-meta text-ink-soft">{check.reason}</p>}
       {check.photos.length > 0 && (
         <div className="mt-3 grid grid-cols-3 gap-2">
           {check.photos.map((p) => (
@@ -524,14 +524,14 @@ function CheckCard({ check, onDecide }: { check: PendingCheck; onDecide: (approv
               {/* Short-lived signed links from a private bucket: a plain img, not next/image. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.url} alt={p.label} className="aspect-[4/3] w-full rounded-lg bg-subtle object-cover" />
-              <span className="mt-1 block text-center text-[11px] text-muted">{p.label}</span>
+              <span className="mt-1 block text-center text-label text-muted">{p.label}</span>
             </a>
           ))}
         </div>
       )}
 
       <input
-        className={cn(inputClass, "mt-3 text-sm")}
+        className={cn(inputClass, "mt-3 text-body")}
         placeholder="Lý do (gửi cho chuyên viên nếu từ chối)"
         value={reason}
         onChange={(e) => setReason(e.target.value)}
@@ -544,7 +544,7 @@ function CheckCard({ check, onDecide }: { check: PendingCheck; onDecide: (approv
           Duyệt xác minh
         </Button>
       </div>
-      <p className="mt-2 text-xs text-muted">
+      <p className="mt-2 text-label text-muted">
         Ảnh chỉ lưu kín cho lần duyệt này (link hết hạn sau 15 phút, tải lại trang để xem tiếp) và bị xoá ngay khi bạn duyệt hoặc từ chối.
         Kiểm tra: ảnh thẻ thật, người trong ảnh chân dung đang cầm đúng thẻ đó, khuôn mặt khớp ảnh trên thẻ.
       </p>
@@ -555,7 +555,7 @@ function CheckCard({ check, onDecide }: { check: PendingCheck; onDecide: (approv
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-xs text-muted">{label}</dt>
+      <dt className="text-label text-muted">{label}</dt>
       <dd className="font-medium">{value}</dd>
     </div>
   )
@@ -568,7 +568,7 @@ function Flag({ on, label, tone = "success" }: { on: boolean; label: string; ton
     muted: "bg-canvas text-muted",
     danger: "bg-danger-soft text-danger",
   }
-  return <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", tones[tone])}>{label}</span>
+  return <span className={cn("rounded-full px-2 py-0.5 text-label font-semibold", tones[tone])}>{label}</span>
 }
 
 const REPORT_REASON: Record<string, string> = {
@@ -587,12 +587,12 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: (fn: () => P
   return (
     <Card className="p-3.5">
       <div className="flex flex-wrap items-center gap-2">
-        <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", REPORT_STATUS[r.status]?.tone ?? "bg-subtle")}>
+        <span className={cn("rounded-full px-2 py-0.5 text-label font-semibold", REPORT_STATUS[r.status]?.tone ?? "bg-subtle")}>
           {REPORT_STATUS[r.status]?.label ?? r.status}
         </span>
-        <p className="text-sm font-semibold">{REPORT_REASON[r.reason] ?? r.reason}</p>
+        <p className="text-body font-semibold">{REPORT_REASON[r.reason] ?? r.reason}</p>
       </div>
-      <p className="mt-0.5 text-xs text-muted">
+      <p className="mt-0.5 text-label text-muted">
         {r.reporter}
         {r.target && ` → ${r.target}`} · {timeAgo(r.createdAt)}
         {r.updatedAt !== r.createdAt && ` · cập nhật ${timeAgo(r.updatedAt)}`}
@@ -605,15 +605,15 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: (fn: () => P
           </>
         )}
       </p>
-      {r.detail && <p className="mt-2 whitespace-pre-wrap rounded-xl bg-canvas px-3 py-2 text-[13px]">{r.detail}</p>}
+      {r.detail && <p className="mt-2 whitespace-pre-wrap rounded-xl bg-canvas px-3 py-2 text-meta">{r.detail}</p>}
       {r.evidence.length > 0 && <EvidenceGrid items={r.evidence} />}
-      {r.staffQuestion && open && <p className="mt-2 text-xs text-warning">Đã hỏi người báo: {r.staffQuestion} (chờ trả lời)</p>}
-      {!open && r.resolution && <p className="mt-2 text-xs text-ink-soft">Kết quả: {r.resolution}</p>}
+      {r.staffQuestion && open && <p className="mt-2 text-label text-warning">Đã hỏi người báo: {r.staffQuestion} (chờ trả lời)</p>}
+      {!open && r.resolution && <p className="mt-2 text-label text-ink-soft">Kết quả: {r.resolution}</p>}
       <ReportChat reportId={r.id} />
       {open && (
         <div className="mt-3 space-y-2">
           <input
-            className={cn(inputClass, "h-10 text-sm")}
+            className={cn(inputClass, "h-10 text-body")}
             value={note}
             maxLength={500}
             onChange={(e) => setNote(e.target.value)}
@@ -692,22 +692,22 @@ function ReportChat({ reportId }: { reportId: string }) {
         <Button size="sm" variant="ghost" disabled={busy} onClick={load}>
           {busy ? "Đang tải…" : "Xem tin nhắn hai bên"}
         </Button>
-        <span className="ml-2 text-[11px] text-muted">Mỗi lần xem được ghi vào nhật ký quản trị.</span>
-        {error && <p className="mt-1 text-xs text-danger">{error}</p>}
+        <span className="ml-2 text-label text-muted">Mỗi lần xem được ghi vào nhật ký quản trị.</span>
+        {error && <p className="mt-1 text-label text-danger">{error}</p>}
       </div>
     )
   }
   return (
     <div className="mt-3 rounded-xl border border-line p-3">
-      <p className="mb-2 text-xs font-semibold text-ink-soft">Tin nhắn giữa khách và người làm ({messages.length})</p>
+      <p className="mb-2 text-label font-semibold text-ink-soft">Tin nhắn giữa khách và người làm ({messages.length})</p>
       {messages.length === 0 ? (
-        <p className="text-xs text-muted">Hai bên chưa nhắn tin trong ứng dụng.</p>
+        <p className="text-label text-muted">Hai bên chưa nhắn tin trong ứng dụng.</p>
       ) : (
         <ul className="max-h-96 space-y-2 overflow-y-auto">
           {messages.map((m) => (
             <li key={m.id} className={cn("flex", m.sender === "pro" ? "justify-end" : "justify-start")}>
-              <div className={cn("max-w-[80%] rounded-xl px-3 py-2 text-[13px]", m.sender === "pro" ? "bg-accent-soft" : "bg-canvas")}>
-                <span className="block text-[11px] font-semibold text-muted">
+              <div className={cn("max-w-[80%] rounded-xl px-3 py-2 text-meta", m.sender === "pro" ? "bg-accent-soft" : "bg-canvas")}>
+                <span className="block text-label font-semibold text-muted">
                   {m.sender === "pro" ? "Người làm" : "Khách"} · {new Date(m.sentAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
                 </span>
                 {m.body && <span className="whitespace-pre-wrap">{m.body}</span>}

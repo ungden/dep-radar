@@ -61,7 +61,7 @@ export function ServiceMenu({
           </li>
         ))}
       </ul>
-      <p className="mt-4 text-[13px] leading-relaxed text-muted">
+      <p className="mt-4 text-meta leading-relaxed text-muted">
         Tên dịch vụ, nội dung và mức giá do 360dep chuẩn hoá, nên bạn so sánh được giữa các hồ sơ. Phí di chuyển và phí đặt
         gấp (nếu có) hiện rõ trước khi bạn xác nhận.
       </p>
@@ -84,10 +84,10 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
 
   return (
     <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
-      <p className="text-[16px] font-bold leading-snug">{tpl.name}</p>
-      <p className="mt-1 text-[14px] leading-relaxed text-ink-soft">{tpl.description}</p>
+      <p className="text-body font-bold leading-snug">{tpl.name}</p>
+      <p className="mt-1 text-body leading-relaxed text-ink-soft">{tpl.description}</p>
 
-      <ul className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-ink-soft">
+      <ul className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-meta text-ink-soft">
         <li className="inline-flex items-center gap-1.5">
           <MapPin className="size-3.5 text-muted" />
           {placeLabel(tpl, pro)}
@@ -111,7 +111,7 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
               aria-checked={v.id === variant.id}
               onClick={() => setVariantId(v.id)}
               className={cn(
-                "relative h-9 shrink-0 rounded-full border px-4 text-[13px] font-semibold transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
+                "relative h-9 shrink-0 rounded-full border px-4 text-meta font-semibold transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
                 v.id === variant.id ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
               )}
             >
@@ -127,10 +127,10 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="text-[20px] font-bold tracking-tight">{formatPrice(price)}</span>
             {level !== null && (
-              <span className="rounded-full bg-subtle px-2 py-0.5 text-[12px] font-semibold text-ink-soft">Mức {levelName(level)}</span>
+              <span className="rounded-full bg-subtle px-2 py-0.5 text-label font-semibold text-ink-soft">Mức {levelName(level)}</span>
             )}
           </p>
-          <p className="mt-0.5 flex items-center gap-1 text-[13px] text-muted">
+          <p className="mt-0.5 flex items-center gap-1 text-meta text-muted">
             <Clock className="size-3.5" />
             {variants.length === 1 && !variant.label.startsWith(`${variant.durationMin} phút`) ? `${variant.label} · ` : ""}
             {formatDuration(variant.durationMin)}
@@ -144,8 +144,8 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
         )}
       </div>
 
-      <p className="mt-2 text-xs text-muted">{PRICE_LEVEL_NOTE}</p>
-      <p className="mt-2 text-sm text-ink-soft">{variant.deliverable ?? tpl.deliverable}{variant.revisions ? ` · ${variant.revisions} lượt sửa` : ""}{variant.sessions ? ` · ${variant.sessions} buổi` : ""}{variant.followupDays ? ` · gồm dặm trong ${variant.followupDays} ngày` : ""}</p>
+      <p className="mt-2 text-label text-muted">{PRICE_LEVEL_NOTE}</p>
+      <p className="mt-2 text-body text-ink-soft">{variant.deliverable ?? tpl.deliverable}{variant.revisions ? ` · ${variant.revisions} lượt sửa` : ""}{variant.sessions ? ` · ${variant.sessions} buổi` : ""}{variant.followupDays ? ` · gồm dặm trong ${variant.followupDays} ngày` : ""}</p>
       {tpl.includes.length > 0 && (
         <>
           <button
@@ -153,14 +153,14 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
             aria-expanded={open}
             aria-controls={includesId}
             onClick={() => setOpen((x) => !x)}
-            className="-mb-2 mt-1 inline-flex min-h-11 items-center gap-1 text-[13px] font-semibold text-ink-soft hover:text-ink"
+            className="-mb-2 mt-1 inline-flex min-h-11 items-center gap-1 text-meta font-semibold text-ink-soft hover:text-ink"
           >
             Bao gồm <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
           </button>
           {open && (
             <ul id={includesId} className="mt-2 space-y-1.5">
               {tpl.includes.map((x) => (
-                <li key={x} className="flex items-start gap-2 text-[14px] text-ink-soft">
+                <li key={x} className="flex items-start gap-2 text-body text-ink-soft">
                   {excludes(x) ? <X className="mt-0.5 size-4 shrink-0 text-muted" /> : <Check className="mt-0.5 size-4 shrink-0 text-success" />}
                   {x}
                 </li>

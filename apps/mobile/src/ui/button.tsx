@@ -1,5 +1,5 @@
 import { ActivityIndicator, View, type StyleProp, type ViewStyle } from "react-native"
-import { colors, radius } from "@/theme"
+import { colors, controlMetrics, radius } from "@/theme"
 import { Icon, type IconName } from "./icon"
 import { Press } from "./press"
 import { Txt } from "./text"
@@ -17,6 +17,7 @@ export function Button({
   disabled,
   style,
   full,
+  compact = false,
 }: {
   label: string
   onPress?: () => void
@@ -27,8 +28,9 @@ export function Button({
   disabled?: boolean
   style?: StyleProp<ViewStyle>
   full?: boolean
+  compact?: boolean
 }) {
-  const height = size === "sm" ? 36 : size === "lg" ? 54 : 46
+  const height = compact ? controlMetrics.minHeight : size === "sm" ? 44 : size === "lg" ? 56 : 48
   const bg = variant === "primary" ? colors.accent : variant === "ghost" ? "transparent" : colors.surface
   const fg = variant === "primary" ? colors.surface : variant === "danger" ? colors.danger : colors.ink
   return (
@@ -38,9 +40,10 @@ export function Button({
       accessibilityLabel={label}
       style={[
         {
-          height,
-          paddingHorizontal: size === "sm" ? 14 : 22,
-          borderRadius: radius.full,
+          minHeight: height,
+          paddingVertical: compact ? controlMetrics.paddingVertical : 12,
+          paddingHorizontal: compact ? 16 : size === "sm" ? 14 : 22,
+          borderRadius: compact ? radius.md : radius.full,
           backgroundColor: bg,
           borderWidth: variant === "secondary" || variant === "danger" ? 1 : 0,
           borderColor: colors.line,
@@ -51,9 +54,9 @@ export function Button({
         style,
       ]}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, maxWidth: "100%" }}>
         {busy ? <ActivityIndicator size="small" color={fg} /> : icon ? <Icon name={icon} size={size === "sm" ? 16 : 18} color={fg} /> : null}
-        <Txt v={size === "sm" ? "meta" : "body"} w={700} color={fg} numberOfLines={1}>
+        <Txt v={compact ? "control" : size === "sm" ? "meta" : "body"} w={compact ? 600 : 700} color={fg} style={{ flexShrink: 1 }} center>
           {label}
         </Txt>
       </View>

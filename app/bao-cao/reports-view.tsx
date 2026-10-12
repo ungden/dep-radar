@@ -43,7 +43,7 @@ export function ReportsView({ reports, error }: { reports: MyReport[]; error: st
 
   return (
     <div className="space-y-4">
-      <Card className="p-4 text-[13px] text-ink-soft">
+      <Card className="p-4 text-meta text-ink-soft">
         <p>
           Gặp vấn đề trong lúc dùng 360dep hoặc sau buổi làm? Gửi cho đội ngũ kèm ảnh, clip làm bằng chứng. Đội ngũ xem trong 24 giờ làm
           việc, có thể hỏi thêm thông tin, và báo kết quả cho bạn tại đây.
@@ -55,8 +55,8 @@ export function ReportsView({ reports, error }: { reports: MyReport[]; error: st
         <Card className="space-y-3 p-4">
           {recent.length > 0 && (
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-soft">Liên quan lịch hẹn nào? (không bắt buộc)</span>
-              <select className={cn(inputClass, "text-sm")} value={bookingId} onChange={(e) => setBookingId(e.target.value)}>
+              <span className="mb-1 block text-label font-semibold text-ink-soft">Liên quan lịch hẹn nào? (không bắt buộc)</span>
+              <select className={cn(inputClass, "text-body")} value={bookingId} onChange={(e) => setBookingId(e.target.value)}>
                 <option value="">Không liên quan lịch hẹn cụ thể</option>
                 {recent.map((b) => (
                   <option key={b.id} value={b.id}>
@@ -82,9 +82,9 @@ export function ReportsView({ reports, error }: { reports: MyReport[]; error: st
         </Button>
       )}
 
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p className="text-body text-danger">{error}</p>}
 
-      <h2 className="pt-2 text-sm font-semibold">Báo cáo của bạn</h2>
+      <h2 className="pt-2 text-body font-semibold">Báo cáo của bạn</h2>
       {reports.length === 0 ? (
         <EmptyState title="Bạn chưa gửi báo cáo nào" text="Khi gửi, báo cáo và kết quả xử lý hiện ở đây." />
       ) : (
@@ -107,10 +107,10 @@ function ReportItem({ report: r, onChanged }: { report: MyReport; onChanged: () 
   return (
     <Card className={cn("p-4", r.staffQuestion && open && "ring-2 ring-warning/40")}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", status.tone)}>{status.label}</span>
-        <span className="text-sm font-semibold">{r.reason}</span>
+        <span className={cn("rounded-full px-2 py-0.5 text-label font-semibold", status.tone)}>{status.label}</span>
+        <span className="text-body font-semibold">{r.reason}</span>
       </div>
-      <p className="mt-0.5 text-xs text-muted">
+      <p className="mt-0.5 text-label text-muted">
         Gửi {timeAgo(r.createdAt)}
         {r.bookingId && (
           <>
@@ -121,15 +121,15 @@ function ReportItem({ report: r, onChanged }: { report: MyReport; onChanged: () 
           </>
         )}
       </p>
-      {r.detail && <p className="mt-2 whitespace-pre-wrap text-[13px]">{r.detail}</p>}
+      {r.detail && <p className="mt-2 whitespace-pre-wrap text-meta">{r.detail}</p>}
       {r.evidence.length > 0 && <EvidenceGrid items={r.evidence} />}
       {r.staffQuestion && open && (
-        <p className="mt-3 rounded-xl bg-warning-soft px-3 py-2 text-[13px]">
+        <p className="mt-3 rounded-xl bg-warning-soft px-3 py-2 text-meta">
           <b>360dep cần thêm thông tin:</b> {r.staffQuestion}
         </p>
       )}
       {r.resolution && !open && (
-        <p className="mt-3 rounded-xl bg-canvas px-3 py-2 text-[13px]">
+        <p className="mt-3 rounded-xl bg-canvas px-3 py-2 text-meta">
           <b>Kết quả:</b> {r.resolution}
         </p>
       )}
@@ -163,7 +163,7 @@ function AddEvidence({ report, onDone, onCancel }: { report: MyReport; onDone: (
         aria-label="Thông tin bổ sung"
         rows={3}
         maxLength={1000}
-        className={cn(inputClass, "resize-none text-sm")}
+        className={cn(inputClass, "resize-none text-body")}
         value={note}
         onChange={(e) => setNote(e.target.value)}
         placeholder={report.staffQuestion ? "Trả lời câu hỏi của 360dep" : "Thêm chi tiết bạn nhớ ra, hoặc diễn biến mới"}
@@ -171,9 +171,9 @@ function AddEvidence({ report, onDone, onCancel }: { report: MyReport; onDone: (
       {room > 0 ? (
         <EvidencePicker max={room} onChange={setPaths} onBusyChange={setUploading} />
       ) : (
-        <p className="text-[11px] text-muted">Báo cáo đã đủ 8 ảnh, clip.</p>
+        <p className="text-label text-muted">Báo cáo đã đủ 8 ảnh, clip.</p>
       )}
-      {error && <p className="text-xs text-danger">{error}</p>}
+      {error && <p className="text-label text-danger">{error}</p>}
       <div className="flex gap-2">
         <Button
           size="sm"

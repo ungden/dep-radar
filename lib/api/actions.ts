@@ -87,10 +87,10 @@ export async function fetchSlots(input: {
   date: string
   atHome: boolean
   addressId?: string | null
-}): Promise<{ startsAt: string; time: string }[]> {
+}): Promise<ActionResult<{ startsAt: string; time: string }[]>> {
   const supabase = await supabaseServer()
   const pro = await proIdFor(input.proId)
-  if (!pro) return []
+  if (!pro) return { ok: false, error: "Không tải được giờ trống. Thử lại nhé." }
   const { lat, lng } = await slotOrigin(pro, input.atHome, input.addressId)
   const { data, error } = await supabase.rpc("free_slots", {
     p_pro: pro,
@@ -104,9 +104,9 @@ export async function fetchSlots(input: {
   })
   if (error) {
     console.error("free_slots failed:", error.message)
-    return []
+    return { ok: false, error: "Không tải được giờ trống. Kiểm tra kết nối và thử lại." }
   }
-  return ((data ?? []) as unknown as string[]).map((startsAt) => ({ startsAt, time: localTime(startsAt) }))
+  return { ok: true, data: ((data ?? []) as unknown as string[]).map((startsAt) => ({ startsAt, time: localTime(startsAt) })) }
 }
 
 /**

@@ -45,10 +45,10 @@ function OnboardingForm() {
   const valid = title.trim().length >= 3 && categories.length > 0
 
   return (
-    <div className="mx-auto max-w-md px-5 pb-24">
+    <div className="mx-auto max-w-lg pb-24">
       {session?.proId && <PartnerProgress />}
       <PageHeader title="Mở hồ sơ đối tác" back />
-      <p className="text-sm text-ink-soft">
+      <p className="text-body text-ink-soft">
         Chọn nghề và khu vực để tạo bản nháp. Sau đó chọn gói và mức giá, nơi phục vụ, xác nhận giờ làm và đăng tác phẩm trước khi gửi duyệt.
       </p>
 
@@ -68,12 +68,12 @@ function OnboardingForm() {
         }}
       >
         <div>
-          <p className="mb-2 text-[15px] font-semibold">Bạn nhận làm việc gì?</p>
-          <p className="-mt-1 mb-3 text-[13px] text-muted">Chọn một hoặc nhiều. Bạn chỉ đăng được dịch vụ thuộc những mục đã chọn.</p>
+          <p className="mb-2 text-body font-semibold">Bạn nhận làm việc gì?</p>
+          <p className="-mt-1 mb-3 text-meta text-muted">Chọn một hoặc nhiều. Bạn chỉ đăng được dịch vụ thuộc những mục đã chọn.</p>
           <div className="space-y-3">
             {VERTICALS.map((v) => (
               <div key={v.id}>
-                <p className="mb-1.5 text-[13px] text-muted">{v.label}</p>
+                <p className="mb-1.5 text-meta text-muted">{v.label}</p>
                 <div className="flex flex-wrap gap-2">
                   {CATEGORIES.filter((c) => c.vertical === v.id).map((c) => {
                     // Model services need a verified identity, which opens later (lib/launch.ts).
@@ -86,7 +86,7 @@ function OnboardingForm() {
                         aria-pressed={categories.includes(c.id)}
                         onClick={() => toggle(c.id)}
                         className={cn(
-                          "h-10 rounded-full border px-4 text-[14px] font-medium transition-colors disabled:opacity-50",
+                          "min-h-12 rounded-full border px-4 text-body font-medium transition-colors disabled:opacity-50",
                           categories.includes(c.id) ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
                         )}
                       >
@@ -100,7 +100,7 @@ function OnboardingForm() {
             ))}
           </div>
           {categories.some((c) => c.startsWith("model-")) && (
-            <p className="mt-2 rounded-[var(--radius-md)] bg-subtle px-3 py-2 text-[13px] text-ink-soft">
+            <p className="mt-2 rounded-[var(--radius-md)] bg-subtle px-3 py-2 text-meta text-ink-soft">
               Dịch vụ người mẫu chỉ mở sau khi bạn xác minh danh tính (CCCD + ảnh chân dung), để bên thuê và bạn đều an toàn.
             </p>
           )}
@@ -120,7 +120,7 @@ function OnboardingForm() {
           <div className="grid grid-cols-2 gap-2">
             <select
               aria-label="Tỉnh/thành"
-              className={cn(inputClass, "text-sm")}
+              className={cn(inputClass, "text-body")}
               value={city}
               onChange={(e) => {
                 setCity(e.target.value)
@@ -133,7 +133,7 @@ function OnboardingForm() {
             </select>
             <select
               aria-label="Quận/huyện"
-              className={cn(inputClass, "text-sm")}
+              className={cn(inputClass, "text-body")}
               value={district}
               onChange={(e) => setDistrict(e.target.value)}
             >
@@ -145,7 +145,7 @@ function OnboardingForm() {
         </Field>
 
         {error && (
-          <p role="alert" className="rounded-xl bg-danger/10 px-3.5 py-3 text-[13px] text-danger">
+          <p role="alert" className="rounded-xl bg-danger/10 px-3.5 py-3 text-meta text-danger">
             {error}
           </p>
         )}

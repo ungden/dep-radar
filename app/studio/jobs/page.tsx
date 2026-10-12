@@ -75,17 +75,17 @@ function JobBoard() {
 
   return (
     <>
-      <p className="mb-3 text-[13px] text-ink-soft">
+      <p className="mb-3 text-meta text-ink-soft">
         Khách đăng yêu cầu với giá cố định. Ai bấm Nhận việc trước sẽ có lịch hẹn đã xác nhận, và nhắn tin được với khách ngay.
       </p>
       <FeeDueCard className="mb-4" />
       {!state.acceptingJobs && (
-        <p className="mb-3 rounded-2xl bg-warning-soft px-4 py-3 text-[13px] text-warning">
+        <p className="mb-3 rounded-2xl bg-warning-soft px-4 py-3 text-meta text-warning">
           Bạn đang tạm nghỉ nhận khách. Bật lại ở trang Tổng quan để nhận việc.
         </p>
       )}
       {notice && (
-        <p role="status" className="mb-3 rounded-2xl bg-canvas px-4 py-3 text-[13px] text-ink-soft">
+        <p role="status" className="mb-3 rounded-2xl bg-canvas px-4 py-3 text-meta text-ink-soft">
           {notice}
         </p>
       )}
@@ -152,12 +152,12 @@ function TakeBox({ job, reason, verifiedPayout, onTaken }: { job: JobPost; reaso
   return (
     <div className="mt-3 border-t border-line pt-3">
       {payout !== null && (
-        <p className="text-[13px] text-ink-soft">
+        <p className="text-meta text-ink-soft">
           Bạn nhận <b className="text-success">{formatPrice(payout)}</b> sau phí 360dep {Math.round(POLICY.commissionRate * 100)}%, đã gồm phí di chuyển / đặt gấp khi đủ điều kiện.
         </p>
       )}
       <div className="mt-2 flex items-center justify-between gap-3">
-        <span className="text-xs text-muted">{reason ?? "Nhận trước, được việc."}</span>
+        <span className="text-label text-muted">{reason ?? "Nhận trước, được việc."}</span>
         {/* Owing a fee: the button is the payment, above. */}
         {reason === FEE_BLOCK_REASON ? (
           <a href={`#${FEE_ANCHOR}`} className={buttonClass("soft", "sm")}>
@@ -182,7 +182,7 @@ function TakeBox({ job, reason, verifiedPayout, onTaken }: { job: JobPost; reaso
         )}
       </div>
       {error && (
-        <p role="alert" className="mt-2 text-xs text-danger">
+        <p role="alert" className="mt-2 text-label text-danger">
           {error}
         </p>
       )}

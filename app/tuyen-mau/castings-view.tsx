@@ -25,7 +25,7 @@ export function CastingsView() {
   return (
     <div className="md:pt-6">
       <PageHeader title="Tuyển mẫu" />
-      <p className="max-w-2xl text-[15px] text-ink-soft">
+      <p className="max-w-2xl text-body text-ink-soft">
         Thợ làm đẹp và người chụp ảnh cần mẫu để luyện tay, chụp portfolio. Bạn được làm đẹp miễn phí, giảm giá hoặc có
         thù lao; họ có tác phẩm thật.
       </p>
@@ -65,11 +65,11 @@ export function CastingsView() {
           </div>
         ) : (
           <div className="rounded-[var(--radius-lg)] border border-dashed border-line px-6 py-10 text-center">
-            <p className="text-[17px] font-bold">Chưa có tin tuyển mẫu nào đang mở</p>
+            <p className="text-lead font-bold">Chưa có tin tuyển mẫu nào đang mở</p>
             {/* Posting a casting is partner work: only a partner is asked to. */}
             {state.session?.proId ? (
               <>
-                <p className="mx-auto mt-1.5 max-w-sm text-[15px] text-ink-soft">
+                <p className="mx-auto mt-1.5 max-w-sm text-body text-ink-soft">
                   Cần mẫu luyện tay hay chụp portfolio? Đăng tin, khách quanh bạn sẽ ứng tuyển.
                 </p>
                 <ButtonLink href="/studio/tuyen-mau" className="mt-5">
@@ -77,7 +77,7 @@ export function CastingsView() {
                 </ButtonLink>
               </>
             ) : (
-              <p className="mx-auto mt-1.5 max-w-sm text-[15px] text-ink-soft">Tin mới sẽ hiện ở đây. Quay lại sau nhé.</p>
+              <p className="mx-auto mt-1.5 max-w-sm text-body text-ink-soft">Tin mới sẽ hiện ở đây. Quay lại sau nhé.</p>
             )}
           </div>
         )}

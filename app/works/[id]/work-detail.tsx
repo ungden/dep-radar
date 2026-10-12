@@ -45,7 +45,7 @@ export function WorkDetail({ workId }: { workId: string }) {
   if (!work || !pro || !tpl) {
     return (
       <div className="py-24 text-center">
-        <p className="text-[17px] font-bold">Tác phẩm này không còn hiển thị</p>
+        <p className="text-lead font-bold">Tác phẩm này không còn hiển thị</p>
         <ButtonLink href="/" className="mt-5">
           Về trang khám phá
         </ButtonLink>
@@ -105,18 +105,18 @@ export function WorkDetail({ workId }: { workId: string }) {
           <CategoryTag category={work.category} href={`/search?category=${work.category}`} />
           <h1 className="mt-3 text-[26px] font-bold leading-tight tracking-tight md:text-[34px]">{work.title}</h1>
           <ProRow pro={pro} own={own} />
-          {work.description && <p className="mt-4 whitespace-pre-line text-[15px] leading-relaxed text-ink">{work.description}</p>}
+          {work.description && <p className="mt-4 whitespace-pre-line text-body leading-relaxed text-ink">{work.description}</p>}
         </header>
 
         {/* C: the service behind the post. After the booking card on the phone. */}
         <section className="order-1 mt-8 md:order-none md:col-start-1 md:row-start-3 md:mt-10">
           <h2 className="text-[20px] font-bold tracking-tight">Về dịch vụ</h2>
-          <p className="mt-1 text-[15px] text-ink-soft">{tpl.description}</p>
+          <p className="mt-1 text-body text-ink-soft">{tpl.description}</p>
           <ServiceFacts tpl={tpl} pro={pro} className="mt-4" />
           {tpl.includes.length > 0 && (
             <ul className="mt-4 space-y-2">
               {tpl.includes.map((x) => (
-                <li key={x} className="flex items-start gap-2.5 text-[15px] text-ink">
+                <li key={x} className="flex items-start gap-2.5 text-body text-ink">
                   {excludes(x) ? (
                     <X className="mt-0.5 size-[18px] shrink-0 text-muted" />
                   ) : (
@@ -134,8 +134,8 @@ export function WorkDetail({ workId }: { workId: string }) {
           <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-4 md:p-5">
             {own ? (
               <>
-                <p className="text-[17px] font-bold">Đây là tác phẩm của bạn</p>
-                <p className="mt-1 text-[15px] text-ink-soft">Khách thấy giá và nút đặt lịch ở đây.</p>
+                <p className="text-lead font-bold">Đây là tác phẩm của bạn</p>
+                <p className="mt-1 text-body text-ink-soft">Khách thấy giá và nút đặt lịch ở đây.</p>
                 <ButtonLink href="/studio/works" variant="outline" className="mt-4 w-full">
                   Quản lý tác phẩm
                 </ButtonLink>
@@ -143,10 +143,10 @@ export function WorkDetail({ workId }: { workId: string }) {
             ) : listing && variant ? (
               <>
                 <div className="flex items-baseline justify-between gap-3">
-                  <p className="text-[15px] font-bold">{tpl.name}</p>
+                  <p className="text-body font-bold">{tpl.name}</p>
                   {from !== null && (
-                    <p className="shrink-0 text-[14px] text-muted">
-                      Từ <span className="text-[17px] font-bold text-ink">{formatPrice(from)}</span>
+                    <p className="shrink-0 text-body text-muted">
+                      Từ <span className="text-lead font-bold text-ink">{formatPrice(from)}</span>
                     </p>
                   )}
                 </div>
@@ -166,14 +166,14 @@ export function WorkDetail({ workId }: { workId: string }) {
                         )}
                       >
                         <span className="min-w-0">
-                          <span className="block text-[15px] font-semibold leading-snug">{v.label}</span>
-                          <span className="mt-0.5 flex items-center gap-1 text-[13px] text-muted">
+                          <span className="block text-body font-semibold leading-snug">{v.label}</span>
+                          <span className="mt-0.5 flex items-center gap-1 text-meta text-muted">
                             <Clock className="size-3.5" />
                             {formatDuration(v.durationMin)}
                             {v.perPerson ? " · mỗi người" : ""}
                           </span>
                         </span>
-                        <span className="shrink-0 text-[15px] font-bold">{formatPrice(listing.prices[v.id])}</span>
+                        <span className="shrink-0 text-body font-bold">{formatPrice(listing.prices[v.id])}</span>
                       </button>
                     )
                   })}
@@ -181,15 +181,15 @@ export function WorkDetail({ workId }: { workId: string }) {
                 <ButtonLink href={bookHref} onClick={onBook} size="lg" className="mt-4 hidden w-full md:flex">
                   Đặt lịch · {formatPrice(listing.prices[variant.id])}
                 </ButtonLink>
-                <p className="mt-3 text-[13px] leading-relaxed text-muted">
+                <p className="mt-3 text-meta leading-relaxed text-muted">
                   Sau khi bạn đặt, {pro.name} nhận lịch trong app trong vòng {POLICY.confirmWithinHours} giờ; nhận rồi thì hai bên
                   nhắn tin với nhau. Phí di chuyển, nếu có, hiện rõ trước khi bạn xác nhận.
                 </p>
               </>
             ) : (
               <>
-                <p className="text-[17px] font-bold">{pro.name} tạm ngưng dịch vụ này</p>
-                <p className="mt-1 text-[15px] text-ink-soft">Xem các dịch vụ khác {pro.name} đang nhận để đặt lịch.</p>
+                <p className="text-lead font-bold">{pro.name} tạm ngưng dịch vụ này</p>
+                <p className="mt-1 text-body text-ink-soft">Xem các dịch vụ khác {pro.name} đang nhận để đặt lịch.</p>
                 <ButtonLink href={`/pros/${pro.id}?tab=services`} className="mt-4 w-full">
                   Xem bảng giá
                 </ButtonLink>
@@ -199,7 +199,7 @@ export function WorkDetail({ workId }: { workId: string }) {
           {!own && (
             <Link
               href={`/pros/${pro.id}?tab=services`}
-              className="mt-3 inline-flex min-h-11 items-center text-[14px] font-semibold underline-offset-4 hover:underline"
+              className="mt-3 inline-flex min-h-11 items-center text-body font-semibold underline-offset-4 hover:underline"
             >
               Bảng giá đầy đủ của {pro.name}
             </Link>
@@ -210,7 +210,7 @@ export function WorkDetail({ workId }: { workId: string }) {
       {similar.length > 0 && (
         <section className="mt-12 md:mt-16">
           <h2 className="text-[20px] font-bold tracking-tight md:text-[24px]">Mẫu tương tự từ người khác</h2>
-          <p className="mt-1 text-[15px] text-ink-soft">
+          <p className="mt-1 text-body text-ink-soft">
             {tpl.name}, do {personWord([work.category])} khác làm. So tay nghề và giá trước khi đặt.
           </p>
           <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 md:gap-x-5 xl:grid-cols-4">
@@ -225,7 +225,7 @@ export function WorkDetail({ workId }: { workId: string }) {
         <section className="mt-12 md:mt-16">
           <div className="flex items-baseline justify-between gap-4">
             <h2 className="text-[20px] font-bold tracking-tight md:text-[24px]">Tác phẩm khác của {pro.name}</h2>
-            <Link href={`/pros/${pro.id}`} className="shrink-0 text-[14px] font-semibold underline-offset-4 hover:underline">
+            <Link href={`/pros/${pro.id}`} className="shrink-0 text-body font-semibold underline-offset-4 hover:underline">
               Xem hồ sơ
             </Link>
           </div>
@@ -243,8 +243,8 @@ export function WorkDetail({ workId }: { workId: string }) {
           <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 backdrop-blur md:hidden">
             <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] text-muted">{tpl.name}</p>
-                <p className="truncate text-[15px] font-semibold leading-tight">{variant.label}</p>
+                <p className="truncate text-meta text-muted">{tpl.name}</p>
+                <p className="truncate text-body font-semibold leading-tight">{variant.label}</p>
               </div>
               <ButtonLink href={bookHref} onClick={onBook} size="lg" className="shrink-0 px-6">
                 {/* Until a package is picked, the cheapest one sets the price. */}
@@ -272,11 +272,11 @@ function ProRow({ pro, own }: { pro: Pro; own: boolean }) {
       <Link href={`/pros/${pro.id}`} className="flex min-w-0 flex-1 items-center gap-3">
         <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={48} />
         <span className="min-w-0">
-          <span className="flex items-center gap-1.5 text-[15px] font-bold">
+          <span className="flex items-center gap-1.5 text-body font-bold">
             <span className="truncate">{pro.name}</span>
             <VerifiedMark pro={pro} />
           </span>
-          <span className="block truncate text-[13px] text-ink-soft">
+          <span className="block truncate text-meta text-ink-soft">
             {showsAverage(pro.rating.count) ? (
               <>
                 <span className="font-semibold text-ink">★ {pro.rating.average.toFixed(1)}</span> ({pro.rating.count})
@@ -296,7 +296,7 @@ function ProRow({ pro, own }: { pro: Pro; own: boolean }) {
 
 function ServiceFacts({ tpl, pro, className }: { tpl: ServiceTemplate; pro: Pro; className?: string }) {
   return (
-    <ul className={cn("space-y-2 text-[15px] text-ink", className)}>
+    <ul className={cn("space-y-2 text-body text-ink", className)}>
       <li className="flex items-start gap-2.5">
         <MapPin className="mt-0.5 size-[18px] shrink-0 text-muted" />
         {placeLabel(tpl, pro)}

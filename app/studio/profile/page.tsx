@@ -52,7 +52,7 @@ function ProfileTrust() {
           <p className="flex items-center gap-1.5 font-semibold">
             {pro.name} <VerifiedMark pro={pro} />
           </p>
-          <p className="text-sm text-muted">
+          <p className="text-body text-muted">
             {pro.published
               ? "Đang hiển thị với khách · sửa hồ sơ"
               : pro.reviewStatus === "pending"
@@ -70,7 +70,7 @@ function ProfileTrust() {
       {IDENTITY_VERIFICATION_OPEN ? (
       <section>
         <h2 className="font-semibold">Xác minh danh tính</h2>
-        <p className="mt-1 text-sm text-ink-soft">
+        <p className="mt-1 text-body text-ink-soft">
           {pro.categories.some((c) => verticalOf(c) === "model")
             ? "Bắt buộc với dịch vụ người mẫu: chưa xác minh thì chưa đăng được dịch vụ đó."
             : "Không bắt buộc với nghề của bạn (chỉ bắt buộc khi nhận làm mẫu)."}{" "}
@@ -80,8 +80,8 @@ function ProfileTrust() {
           {BENEFITS.map(({ icon: Icon, title, text }) => (
             <li key={title} className="rounded-2xl bg-subtle px-3 py-3">
               <Icon className="size-4 text-accent" />
-              <p className="mt-1 text-sm font-semibold">{title}</p>
-              <p className="text-xs text-ink-soft">{text}</p>
+              <p className="mt-1 text-body font-semibold">{title}</p>
+              <p className="text-label text-ink-soft">{text}</p>
             </li>
           ))}
         </ul>
@@ -95,13 +95,13 @@ function ProfileTrust() {
             <IdCard className="size-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium">CCCD + ảnh selfie</p>
-            <p className="text-xs text-muted">{STATUS_TEXT[pro.identity]}</p>
+            <p className="text-body font-medium">CCCD + ảnh selfie</p>
+            <p className="text-label text-muted">{STATUS_TEXT[pro.identity]}</p>
           </div>
           {pro.identity === "verified" ? (
-            <span className="rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">Đã xác minh</span>
+            <span className="rounded-full bg-success-soft px-2.5 py-1 text-label font-semibold text-success">Đã xác minh</span>
           ) : pro.identity === "pending" ? (
-            <span className="rounded-full bg-warning-soft px-2.5 py-1 text-xs font-semibold text-warning">Đang kiểm tra</span>
+            <span className="rounded-full bg-warning-soft px-2.5 py-1 text-label font-semibold text-warning">Đang kiểm tra</span>
           ) : (
             <ButtonLink href="/studio/verify" size="sm">
               {pro.identity === "rejected" ? "Chụp lại" : "Xác minh ngay"}
@@ -112,7 +112,7 @@ function ProfileTrust() {
       ) : (
         <section>
           <h2 className="font-semibold">Xác minh danh tính</h2>
-          <p className="mt-1 text-sm text-ink-soft">
+          <p className="mt-1 text-body text-ink-soft">
             Sẽ mở sau. Bạn chưa cần làm gì: hồ sơ, dịch vụ và tác phẩm vẫn hiện với khách bình thường.
             {pro.categories.some((c) => verticalOf(c) === "model") && " Dịch vụ người mẫu mở cùng lúc với xác minh."}
           </p>
@@ -131,7 +131,7 @@ function ProfileTrust() {
             <ReviewItem key={r.id} review={r} onReply={(text) => act(() => actions.replyReview(r.id, text), "Đã gửi phản hồi")} />
           ))}
         </ul>
-        <p className="mt-2 text-xs text-muted">
+        <p className="mt-2 text-label text-muted">
           Đánh giá hiện khi bạn cũng đã đánh giá khách, hoặc sau 14 ngày. Bạn không thể xoá hay sửa đánh giá, chỉ trả lời công khai một lần.
           Đánh giá vi phạm có thể báo cáo cho 360dep.
         </p>

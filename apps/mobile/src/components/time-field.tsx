@@ -1,0 +1,43 @@
+import * as React from "react"
+import { ScrollView, View, useWindowDimensions } from "react-native"
+import { colors, controlMetrics, radius } from "@/theme"
+import { Button } from "@/ui/button"
+import { Icon } from "@/ui/icon"
+import { Press } from "@/ui/press"
+import { Sheet, useSheet } from "@/ui/sheet"
+import { Txt } from "@/ui/text"
+
+/** Pick an exact time without typing HH:mm; 24:00 remains a valid closing time. */
+export function TimeField({ label, value, onChange, allowEndOfDay = false, compact = false }: { label: string; value: string; onChange: (value: string) => void; allowEndOfDay?: boolean; compact?: boolean }) {
+  const sheet = useSheet()
+  const { fontScale } = useWindowDimensions()
+  const [opened, setOpened] = React.useState(false)
+  const [hour, setHour] = React.useState(0)
+  const [minute, setMinute] = React.useState(0)
+  const close = () => { sheet.close(); setOpened(false) }
+  React.useEffect(() => { if (opened) sheet.open() }, [opened, sheet.open])
+  const padded = (n: number) => String(n).padStart(2, "0")
+  const optionHeight = compact
+    ? Math.max(controlMetrics.minHeight, controlMetrics.lineHeight * Math.min(fontScale, controlMetrics.maxFontSizeMultiplier) + controlMetrics.paddingVertical * 2)
+    : Math.max(48, 26 * fontScale + 24)
+  return <View style={{ gap: 6 }}>
+    <Txt v={compact ? "controlMeta" : "meta"} w={600}>{label}</Txt>
+    <Press accessibilityLabel={`${label}, ${value}. Chọn giờ`} onPress={() => {
+      const [h, m] = value.split(":").map(Number)
+      setHour(Number.isFinite(h) ? Math.min(h, allowEndOfDay ? 24 : 23) : 9); setMinute(Number.isFinite(m) ? m : 0); setOpened(true)
+    }} style={{ minHeight: compact ? controlMetrics.minHeight : 48, paddingHorizontal: 12, paddingVertical: compact ? controlMetrics.paddingVertical : 12, borderRadius: radius.md, borderWidth: 1, borderColor: compact ? colors.lineStrong : colors.line, backgroundColor: colors.surface, ...(compact ? { flexDirection: "row", alignItems: "center", gap: 12 } : null) }}>
+      <Txt v={compact ? "control" : "body"} w={600} tabular style={compact ? { flex: 1 } : undefined}>{value}</Txt>
+      {compact && <Icon name="down" size={20} color={colors.inkSoft} />}
+    </Press>
+    <Sheet sheet={sheet} title={label} compact={compact} onDismiss={() => setOpened(false)} footer={<Button full compact={compact} label={`Chọn ${padded(hour)}:${padded(minute)}`} onPress={() => { onChange(`${padded(hour)}:${padded(minute)}`); close() }} />}>
+      {opened && <View style={{ flexDirection: "row", gap: 16 }}>
+        {[{ title: "Giờ", count: allowEndOfDay ? 25 : 24, selected: hour, choose: (n: number) => { setHour(n); if (n === 24) setMinute(0) } }, { title: "Phút", count: hour === 24 ? 1 : 60, selected: minute, choose: setMinute }].map((column) => <View key={column.title} style={{ flex: 1, gap: 8 }}>
+          <Txt v={compact ? "control" : "body"} w={compact ? 600 : 700} center>{column.title}</Txt>
+          <ScrollView nestedScrollEnabled style={{ height: 220 }} contentOffset={{ x: 0, y: column.selected * (optionHeight + 4) }} contentContainerStyle={{ gap: 4 }}>
+            {Array.from({ length: column.count }, (_, n) => <Press key={n} accessibilityRole="radio" accessibilityState={{ checked: n === column.selected }} accessibilityLabel={`${column.title} ${n}`} onPress={() => column.choose(n)} style={{ minHeight: compact ? controlMetrics.minHeight : 48, paddingHorizontal: 12, paddingVertical: compact ? controlMetrics.paddingVertical : 12, justifyContent: "center", borderRadius: radius.md, backgroundColor: n === column.selected ? colors.accentSoft : colors.surface }}><Txt v={compact ? "control" : "body"} center w={600} color={n === column.selected ? colors.accentDark : colors.ink}>{padded(n)}</Txt></Press>)}
+          </ScrollView>
+        </View>)}
+      </View>}
+    </Sheet>
+  </View>
+}

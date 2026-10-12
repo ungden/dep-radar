@@ -17,15 +17,15 @@ export function TopBar() {
   const needSignIn = (path: "/tin-nhan" | "/thong-bao") => router.push(uid ? path : "/login")
 
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: gutter - 4, height: 52 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: gutter - 4, minHeight: 52, paddingVertical: 4, gap: 8 }}>
       <View style={{ flex: 1, alignItems: "flex-start" }}>
         <Press
           onPress={sheet.open}
           accessibilityLabel={`Khu vực: ${city ?? "Cả nước"}. Đổi khu vực`}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 44, paddingHorizontal: 4 }}
+          style={{ flexDirection: "row", alignItems: "center", gap: 4, minHeight: 44, paddingVertical: 8, paddingHorizontal: 4, maxWidth: "100%" }}
         >
           <Icon name="pin" size={16} />
-          <Txt w={700} numberOfLines={1}>
+          <Txt v="meta" w={700} style={{ flexShrink: 1 }}>
             {city ?? "Cả nước"}
           </Txt>
           <Icon name="down" size={14} color={colors.muted} />

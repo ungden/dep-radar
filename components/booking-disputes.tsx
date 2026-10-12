@@ -31,7 +31,7 @@ export function PaymentReceipt({ booking, isPro }: { booking: Booking; isPro: bo
   if (!live) return null
   if (booking.paidAt) {
     return (
-      <p className="flex items-center gap-2 rounded-xl bg-success-soft px-3.5 py-2.5 text-[13px] text-success">
+      <p className="flex items-center gap-2 rounded-xl bg-success-soft px-3.5 py-2.5 text-meta text-success">
         <CheckCircle2 className="size-4 shrink-0" />
         {isPro ? "Bạn" : booking.proName} đã xác nhận nhận tiền lúc {at(booking.paidAt)}.
       </p>
@@ -40,14 +40,14 @@ export function PaymentReceipt({ booking, isPro }: { booking: Booking; isPro: bo
   if (now < startsAt.getTime() - 15 * 60_000) return null
   if (!isPro) {
     return (
-      <p className="text-[13px] text-muted">
+      <p className="text-meta text-muted">
         Trả tiền xong, nhờ người làm bấm “Đã nhận tiền” trong lịch hẹn để lưu xác nhận cho cả hai bên.
       </p>
     )
   }
   return (
     <Card className="flex flex-wrap items-center gap-3 p-3.5">
-      <p className="min-w-0 flex-1 text-[13px] text-ink-soft">Khách đã trả đủ {formatPrice(booking.quote.total - (booking.discount ?? 0))}? Bấm để lưu xác nhận; khách được báo.</p>
+      <p className="min-w-0 flex-1 text-meta text-ink-soft">Khách đã trả đủ {formatPrice(booking.quote.total - (booking.discount ?? 0))}? Bấm để lưu xác nhận; khách được báo.</p>
       <ShowPaymentQr proId={booking.proId} amount={booking.quote.total - (booking.discount ?? 0)} />
       <Button
         size="sm"
@@ -56,7 +56,7 @@ export function PaymentReceipt({ booking, isPro }: { booking: Booking; isPro: bo
       >
         Đã nhận tiền
       </Button>
-      {error && <p className="w-full text-[13px] text-danger">{error}</p>}
+      {error && <p className="w-full text-meta text-danger">{error}</p>}
     </Card>
   )
 }
@@ -71,12 +71,12 @@ export function ProNoShowDispute({ booking }: { booking: Booking }) {
   const [error, setError] = React.useState<string | null>(null)
   if (booking.status !== "cancelled" || booking.cancelReason !== "Người làm không đến" || !booking.cancelledAt) return null
   const until = Date.parse(booking.cancelledAt) + 24 * 3_600_000
-  if (sent) return <p className="text-center text-[13px] text-muted">Đã gửi khiếu nại. 360dep sẽ xem xét và báo kết quả cho bạn.</p>
+  if (sent) return <p className="text-center text-meta text-muted">Đã gửi khiếu nại. 360dep sẽ xem xét và báo kết quả cho bạn.</p>
   if (now > until) return null
   return (
     <Card className="space-y-2 p-4 ring-1 ring-warning/40">
-      <p className="text-sm font-semibold">Khách báo bạn không đến</p>
-      <p className="text-[13px] text-ink-soft">
+      <p className="text-body font-semibold">Khách báo bạn không đến</p>
+      <p className="text-meta text-ink-soft">
         Nếu bạn đã tới, khiếu nại trước {at(new Date(until).toISOString())} kèm mô tả: giờ tới, cuộc gọi, ảnh tại địa điểm (gửi ảnh qua “Báo cáo vấn đề” nếu cần).
       </p>
       {open ? (
@@ -84,12 +84,12 @@ export function ProNoShowDispute({ booking }: { booking: Booking }) {
           <textarea
             rows={3}
             maxLength={1000}
-            className={cn(inputClass, "resize-none text-sm")}
+            className={cn(inputClass, "resize-none text-body")}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Chuyện gì đã xảy ra (ít nhất 10 ký tự)"
           />
-          {error && <p className="text-[13px] text-danger">{error}</p>}
+          {error && <p className="text-meta text-danger">{error}</p>}
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
               Quay lại
@@ -148,15 +148,15 @@ export function AddOnServices({ booking }: { booking: Booking }) {
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-accent underline underline-offset-4">
+      <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 text-body font-semibold text-accent underline underline-offset-4">
         <Plus className="size-4" /> Đặt thêm dịch vụ ngay sau buổi này
       </button>
     )
   }
   return (
     <Card className="space-y-3 p-4">
-      <p className="text-sm font-semibold">Đặt thêm dịch vụ</p>
-      <p className="text-[13px] text-ink-soft">
+      <p className="text-body font-semibold">Đặt thêm dịch vụ</p>
+      <p className="text-meta text-ink-soft">
         Làm nối tiếp ngay sau lịch này, cùng địa điểm, theo giá {booking.proName} niêm yết; không tính phí di chuyển hay phí gấp. {booking.proName} bấm nhận thì mới thành
         lịch. Đừng thoả thuận làm thêm ngoài ứng dụng.
       </p>
@@ -172,12 +172,12 @@ export function AddOnServices({ booking }: { booking: Booking }) {
                   setPick({ templateId: o.templateId, variantId: o.variantId })
                   setQuantity(1)
                 }}
-                className={cn("w-full rounded-xl border px-3 py-2.5 text-left text-sm", on ? "border-accent bg-subtle" : "border-line bg-surface")}
+                className={cn("w-full rounded-xl border px-3 py-2.5 text-left text-body", on ? "border-accent bg-subtle" : "border-line bg-surface")}
               >
                 <span className="block font-medium">
                   {o.name} · {o.label}
                 </span>
-                <span className="block text-xs text-muted">
+                <span className="block text-label text-muted">
                   {formatPrice(o.price)} · {formatDuration(o.durationMin)}
                 </span>
               </button>
@@ -186,12 +186,12 @@ export function AddOnServices({ booking }: { booking: Booking }) {
         })}
       </ul>
       {maxQ > 1 && (
-        <label className="flex items-center gap-2 text-[13px]">
+        <label className="flex items-center gap-2 text-meta">
           Số người
-          <input type="number" min={1} max={maxQ} value={quantity} onChange={(e) => setQuantity(Math.min(maxQ, Math.max(1, Number(e.target.value) || 1)))} className={cn(inputClass, "h-9 w-20 text-sm")} />
+          <input type="number" min={1} max={maxQ} value={quantity} onChange={(e) => setQuantity(Math.min(maxQ, Math.max(1, Number(e.target.value) || 1)))} className={cn(inputClass, "min-h-[52px] w-20 text-body")} />
         </label>
       )}
-      {error && <p className="text-[13px] text-danger">{error}</p>}
+      {error && <p className="text-meta text-danger">{error}</p>}
       <div className="flex gap-2">
         <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
           Đóng
@@ -223,20 +223,20 @@ export function ProposeNewTime({ booking, label = "Đề nghị đổi giờ" }:
   const [error, setError] = React.useState<string | null>(null)
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="inline-flex min-h-11 items-center gap-1.5 text-[14px] font-semibold text-ink underline underline-offset-4">
+      <button type="button" onClick={() => setOpen(true)} className="inline-flex min-h-11 items-center gap-1.5 text-body font-semibold text-ink underline underline-offset-4">
         <CalendarClock className="size-4" /> {label}
       </button>
     )
   }
   return (
     <Card className="space-y-3 p-4">
-      <p className="text-sm font-semibold">Đề nghị giờ khác</p>
-      <p className="text-xs text-muted">Bên kia đồng ý thì lịch mới đổi; giá và phụ phí giữ nguyên. Giờ mới phải nằm trong giờ làm và còn trống.</p>
+      <p className="text-body font-semibold">Đề nghị giờ khác</p>
+      <p className="text-label text-muted">Bên kia đồng ý thì lịch mới đổi; giá và phụ phí giữ nguyên. Giờ mới phải nằm trong giờ làm và còn trống.</p>
       <div className="grid grid-cols-2 gap-2">
-        <input type="date" aria-label="Ngày mới" className={cn(inputClass, "text-sm")} value={date} min={todayISO()} onChange={(e) => setDate(e.target.value)} />
-        <input type="time" aria-label="Giờ mới" step={1800} className={cn(inputClass, "text-sm")} value={time} onChange={(e) => setTime(e.target.value)} />
+        <input type="date" aria-label="Ngày mới" className={cn(inputClass, "text-body")} value={date} min={todayISO()} onChange={(e) => setDate(e.target.value)} />
+        <input type="time" aria-label="Giờ mới" step={1800} className={cn(inputClass, "text-body")} value={time} onChange={(e) => setTime(e.target.value)} />
       </div>
-      {error && <p className="text-[13px] text-danger">{error}</p>}
+      {error && <p className="text-meta text-danger">{error}</p>}
       <div className="flex gap-2">
         <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
           Quay lại
@@ -278,7 +278,7 @@ export function ReferencePhotos({ booking, isPro }: { booking: Booking; isPro: b
   if (!paths.length) return null
   return (
     <Card className="p-4">
-      <p className="text-sm font-semibold">{isPro ? "Ảnh mẫu khách gửi" : "Ảnh mẫu bạn đã gửi"}</p>
+      <p className="text-body font-semibold">{isPro ? "Ảnh mẫu khách gửi" : "Ảnh mẫu bạn đã gửi"}</p>
       <div className="mt-2 grid grid-cols-3 gap-2">
         {urls.map((u) => (
           <a key={u} href={u} target="_blank" rel="noreferrer">
@@ -299,7 +299,7 @@ export function TravelStatus({ booking, isPro }: { booking: Booking; isPro: bool
   if (!booking.atHome || booking.status !== "confirmed") return null
   if (booking.departedAt) {
     return (
-      <p className="rounded-xl bg-subtle px-3.5 py-2.5 text-center text-[14px] font-semibold">
+      <p className="rounded-xl bg-subtle px-3.5 py-2.5 text-center text-body font-semibold">
         {isPro ? "Bạn đã báo đang di chuyển" : `${booking.proName} đang trên đường tới`} · từ {localTime(booking.departedAt)}
       </p>
     )
@@ -315,8 +315,8 @@ export function TravelStatus({ booking, isPro }: { booking: Booking; isPro: bool
       >
         Tôi đang đến
       </Button>
-      <p className="text-center text-[12px] text-muted">Khách nhận thông báo để chuẩn bị và giữ điện thoại.</p>
-      {error && <p className="text-center text-[13px] text-danger">{error}</p>}
+      <p className="text-center text-label text-muted">Khách nhận thông báo để chuẩn bị và giữ điện thoại.</p>
+      {error && <p className="text-center text-meta text-danger">{error}</p>}
     </div>
   )
 }

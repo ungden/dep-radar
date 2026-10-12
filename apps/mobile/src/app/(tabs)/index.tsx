@@ -1,4 +1,5 @@
 import * as React from "react"
+import { Image } from "expo-image"
 import { router } from "expo-router"
 import {
   ScrollView,
@@ -79,10 +80,10 @@ export default function Explore() {
     [app.data, browse, app.city, vertical],
   )
   // One row of the categories with the most on offer here; the rest (and the
-  // ones nobody offers yet, "Sắp có") behind "Xem thêm". Same as the web.
+  // ones nobody offers yet) behind "Xem thêm". Same as the web.
   const categories = CATEGORIES.filter((c) => vertical === "all" || c.vertical === vertical)
   const shownCategory = categories.some((c) => c.id === category) ? category : "all"
-  const tiles = categoryRow(categories, offers, shownCategory)
+  const tiles = categoryRow(categories, offers, shownCategory, 4)
   const shownCategoryInfo = CATEGORIES.find((c) => c.id === shownCategory)
   const shown = offers.filter((o) => shownCategory === "all" || o.template.category === shownCategory)
   const visible = expanded || shownCategory !== "all" ? shown : shown.slice(0, SERVICES_FIRST)
@@ -128,7 +129,7 @@ export default function Explore() {
 
   // Nothing yet, or the city just changed and its catalogue is on the way.
   const loadingFirst = (!app.data || app.stale) && !app.dataError && app.configured
-  const cardWidth = (width - gutter * 2 - COLUMN_GAP) / 2
+  const cardWidth = width - gutter * 2
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const past = e.nativeEvent.contentOffset.y > switchY.current
@@ -147,7 +148,7 @@ export default function Explore() {
       </Grid>
     )
   } else if (!app.configured) {
-    services = <EmptyState title="App chưa kết nối máy chủ" text="Thiếu EXPO_PUBLIC_SUPABASE_URL hoặc EXPO_PUBLIC_SUPABASE_ANON_KEY trong .env." />
+    services = <EmptyState title="App chưa kết nối máy chủ" text="Chưa tải được dịch vụ. Vui lòng thử lại sau." />
   } else if (app.dataError) {
     services = <ErrorNote text={app.dataError} onRetry={() => void app.refresh()} />
   } else if (!shown.length) {
@@ -184,13 +185,22 @@ export default function Explore() {
           refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}
         >
           <OfflineNote />
+          <View style={{ paddingHorizontal: gutter, gap: 12 }}>
+            <Txt v="h1">Đẹp hơn, theo cách của bạn.</Txt>
+            <Txt color={colors.inkSoft}>Tìm dịch vụ phù hợp, xem giá rõ ràng và chọn người làm bạn tin tưởng.</Txt>
+            <View style={{ borderRadius: radius.xl, overflow: "hidden", backgroundColor: colors.subtle }}>
+              <Image source={require("../../../assets/images/beauty-editorial.webp")} style={{ width: "100%", aspectRatio: 2 }} contentFit="cover" accessible={false} />
+            </View>
+            <Txt v="meta" color={colors.muted}>Ảnh minh họa · Xem giá trước khi đặt</Txt>
+          </View>
           {/* Search */}
           <View style={{ paddingHorizontal: gutter, paddingTop: 4 }}>
             <Press
               onPress={() => router.push({ pathname: "/tim", params: { focus: "1" } })}
               accessibilityLabel="Tìm dịch vụ"
               style={{
-                height: 50,
+                minHeight: 52,
+                paddingVertical: 12,
                 borderRadius: radius.full,
                 backgroundColor: colors.surface,
                 borderWidth: 1,
@@ -222,7 +232,7 @@ export default function Explore() {
               <CategoryTiles
                 items={(allCategories ? tiles.ordered : tiles.row).map((c) => ({
                   id: c.id,
-                  label: c.short ?? c.label,
+                  label: c.id === "photophone" || c.id === "skincare" ? c.label : c.short ?? c.label,
                   soon: !tiles.offered.has(c.id),
                 }))}
                 value={shownCategory}
@@ -246,7 +256,7 @@ export default function Explore() {
                 <Press
                   onPress={() => setCategory("all")}
                   accessibilityLabel="Xem tất cả dịch vụ"
-                  style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 34, paddingLeft: 12, paddingRight: 10, borderRadius: radius.full, backgroundColor: colors.subtle }}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4, minHeight: 44, paddingVertical: 10, paddingLeft: 12, paddingRight: 10, borderRadius: radius.full, backgroundColor: colors.subtle }}
                 >
                   <Txt v="meta" w={600}>
                     Tất cả
@@ -291,13 +301,14 @@ export default function Explore() {
           ) : null}
 
           {/* Anything else */}
-          <View style={{ marginHorizontal: gutter, marginTop: 8, backgroundColor: colors.subtle, borderRadius: radius.xl, padding: 20, gap: 8 }}>
+          {shown.length > 0 && <View style={{ marginHorizontal: gutter, marginTop: 8, backgroundColor: colors.subtle, borderRadius: radius.xl, padding: 20, gap: 8 }}>
             <Txt v="title" w={700}>
               Không thấy dịch vụ bạn cần?
             </Txt>
             <Txt color={colors.inkSoft}>Đăng yêu cầu với giá theo bảng giá 360dep, người làm gần bạn nhận việc. Không mất phí đăng.</Txt>
             <Button label="Đăng yêu cầu" onPress={openRequestForm} style={{ marginTop: 6 }} />
           </View>
+          }
           {/* Tuyển mẫu (working as a model) is partner work: reached from Tôi > Trở thành đối tác, not from here. */}
         </ScrollView>
         {stuck ? (
@@ -321,41 +332,41 @@ function Grid({ children, rowGap = 24 }: { children: React.ReactNode; rowGap?: n
  */
 const ServiceCard = React.memo(function ServiceCard({ offer, photo, width }: { offer: ServiceOffer; photo: string | undefined; width: number }) {
   const { template, pros, fromPrice } = offer
-  const shortest = Math.min(...template.variants.map((v) => v.durationMin))
   const who = pros.length === 1 ? pros[0].name : `${pros.length} người nhận`
   return (
     <Press
       onPress={() => router.push({ pathname: "/dich-vu/[id]", params: { id: template.id } })}
-      accessibilityLabel={`${template.name}, từ ${formatPrice(fromPrice)}, ${who}`}
+      accessibilityLabel={`${template.name}, từ ${formatPrice(fromPrice)}${offer.variant.perPerson ? " mỗi người" : ""}${offer.minimumQuantity > 1 ? `, tối thiểu ${offer.minimumQuantity} người` : ""}, ${who}`}
       style={{ width, ...card }}
     >
       <View style={{ borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, overflow: "hidden" }}>
         {photo ? (
-          <Photo uri={photo} ratio={4 / 5} rounded={0} recyclingKey={template.id} />
+          <Photo uri={photo} ratio={4 / 3} rounded={0} recyclingKey={template.id} />
         ) : (
-          <View style={{ aspectRatio: 4 / 5, backgroundColor: colors.subtle, alignItems: "center", justifyContent: "center" }}>
-            <CategoryIcon id={template.category} size={44} />
+          <View style={{ height: 56, backgroundColor: colors.subtle, alignItems: "center", justifyContent: "center" }}>
+            <CategoryIcon id={template.category} size={28} />
           </View>
         )}
       </View>
-      <View style={{ padding: 10, gap: 4 }}>
-      <Txt w={600} numberOfLines={2}>
+      <View style={{ padding: 16, gap: 8 }}>
+      <Txt v="lead" w={700}>
         {template.name}
       </Txt>
-      <Txt v="meta" color={colors.muted} numberOfLines={1} tabular>
+      <Txt v="lead" color={colors.ink} tabular>
         Từ{" "}
-        <Txt v="meta" w={700} color={colors.accentDark}>
-          {formatPrice(fromPrice)}
+        <Txt v="lead" w={700} color={colors.ink}>
+          {formatPrice(fromPrice)}{offer.variant.perPerson ? "/người" : ""}
         </Txt>{" "}
-        · {formatDuration(shortest)}
+        · {formatDuration(offer.durationMin)}
       </Txt>
+      {offer.minimumQuantity > 1 && <Txt v="meta" color={colors.inkSoft}>Tối thiểu {offer.minimumQuantity} người · từ {formatPrice(offer.minimumTotal)}/nhóm</Txt>}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 4 }}>
-        <Txt v="meta" color={colors.inkSoft} numberOfLines={1} style={{ flexShrink: 1 }}>
+        <Txt v="meta" color={colors.inkSoft} style={{ flexShrink: 1 }}>
           {who}
         </Txt>
-        <View style={{ height: 30, paddingHorizontal: 14, borderRadius: radius.full, backgroundColor: colors.accent, justifyContent: "center" }}>
+        <View style={{ minHeight: 44, paddingVertical: 10, paddingHorizontal: 18, borderRadius: radius.full, backgroundColor: colors.accent, justifyContent: "center" }}>
           <Txt v="meta" w={700} color={colors.surface}>
-            Đặt
+            Xem giá
           </Txt>
         </View>
       </View>
@@ -367,7 +378,7 @@ const ServiceCard = React.memo(function ServiceCard({ offer, photo, width }: { o
 function ServiceCardSkeleton({ width }: { width: number }) {
   return (
     <View style={{ width, gap: 8 }}>
-      <Skeleton style={{ aspectRatio: 4 / 5, borderRadius: radius.lg }} />
+      <Skeleton style={{ aspectRatio: 4 / 3, borderRadius: radius.lg }} />
       <Skeleton style={{ height: 16, width: "85%" }} />
       <Skeleton style={{ height: 14, width: "60%" }} />
       <Skeleton style={{ height: 14, width: "45%" }} />

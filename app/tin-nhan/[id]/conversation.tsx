@@ -114,11 +114,11 @@ export function Conversation({
         action={
           <div className="flex items-center gap-1">
             {header.bookingId ? (
-              <Link href={`/bookings/${header.bookingId}`} className="text-[13px] text-accent">
+              <Link href={`/bookings/${header.bookingId}`} className="text-meta text-accent">
                 Xem lịch hẹn
               </Link>
             ) : header.proSlug && !header.iAmPro ? (
-              <Link href={`/pros/${header.proSlug}`} className="text-[13px] text-accent">
+              <Link href={`/pros/${header.proSlug}`} className="text-meta text-accent">
                 Xem hồ sơ
               </Link>
             ) : null}
@@ -136,7 +136,7 @@ export function Conversation({
 
       <div className="flex-1 space-y-2 pb-4">
         {messages.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted">
+          <p className="py-10 text-center text-body text-muted">
             {chat.open
               ? "Trao đổi về giờ, địa chỉ, mẫu mong muốn cho lịch hẹn này. Đừng gửi thông tin thanh toán qua tin nhắn."
               : "Chưa có tin nhắn nào."}
@@ -146,7 +146,7 @@ export function Conversation({
           <div key={m.id} className={cn("flex", m.mine ? "justify-end" : "justify-start")}>
             <div
               className={cn(
-                "max-w-[78%] rounded-2xl px-3.5 py-2.5 text-sm",
+                "max-w-[78%] rounded-2xl px-3.5 py-2.5 text-body",
                 m.mine ? "bg-accent text-white" : "border border-line bg-surface text-ink",
               )}
             >
@@ -156,7 +156,7 @@ export function Conversation({
                 </span>
               ))}
               {m.body && <p className="whitespace-pre-wrap leading-relaxed">{m.body}</p>}
-              <span className={cn("mt-0.5 block text-xs", m.mine ? "text-white/70" : "text-muted")}>
+              <span className={cn("mt-0.5 block text-label", m.mine ? "text-white/70" : "text-muted")}>
                 {localTime(m.createdAt)}
               </span>
             </div>
@@ -166,7 +166,7 @@ export function Conversation({
       </div>
 
       {error && (
-        <p role="alert" className="mb-2 rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
+        <p role="alert" className="mb-2 rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
           {error}
         </p>
       )}
@@ -176,7 +176,7 @@ export function Conversation({
       ) : !chat.open ? (
         // The history stays readable; the box to write in goes.
         <div className="sticky bottom-0 space-y-3 border-t border-line bg-canvas/95 py-3 backdrop-blur">
-          <p className="text-[14px] text-ink-soft">{chat.note}</p>
+          <p className="text-body text-ink-soft">{chat.note}</p>
           {/* Waiting: the booking page is where it moves on. Closed: book again, or ask 360dep. */}
           {header.chatStatus === "waiting" ? (
             header.bookingId && (
@@ -240,7 +240,7 @@ export function Conversation({
                 }
               }}
               placeholder="Nhập tin nhắn…"
-              className={cn(inputClass, "max-h-32 min-h-11 flex-1 resize-none py-3 text-sm")}
+              className={cn(inputClass, "max-h-32 min-h-11 flex-1 resize-none py-3 text-body")}
             />
             <Button type="submit" size="lg" className="size-11 shrink-0 p-0" disabled={busy || !draft.trim() || !canSend} aria-label="Gửi">
               <Send className="size-4" />
@@ -260,11 +260,11 @@ function BlockedNote({ name, otherId }: { name: string; otherId: string }) {
   const [error, setError] = React.useState<string | null>(null)
   return (
     <div className="sticky bottom-0 space-y-2 border-t border-line bg-canvas/95 py-3 backdrop-blur">
-      <p className="text-[14px] text-ink-soft">Bạn đã chặn {name}. Hai bên không nhắn tin được cho nhau.</p>
+      <p className="text-body text-ink-soft">Bạn đã chặn {name}. Hai bên không nhắn tin được cho nhau.</p>
       <Button variant="outline" size="sm" onClick={() => void act(() => actions.unblockUser(otherId), `Đã bỏ chặn ${name}`).then(setError)}>
         Bỏ chặn
       </Button>
-      {error && <p className="text-[13px] text-danger">{error}</p>}
+      {error && <p className="text-meta text-danger">{error}</p>}
     </div>
   )
 }
@@ -305,7 +305,7 @@ function ChatMenu({
                     })
                   : setMode("block")
               }
-              className="flex min-h-12 w-full items-center gap-3 rounded-xl px-2 text-left text-[15px] font-medium hover:bg-subtle"
+              className="flex min-h-12 w-full items-center gap-3 rounded-xl px-2 text-left text-body font-medium hover:bg-subtle"
             >
               <Ban className="size-5" /> {blocked ? "Bỏ chặn" : "Chặn"}
             </button>
@@ -314,7 +314,7 @@ function ChatMenu({
             <button
               type="button"
               onClick={() => setMode("report")}
-              className="flex min-h-12 w-full items-center gap-3 rounded-xl px-2 text-left text-[15px] font-medium hover:bg-subtle"
+              className="flex min-h-12 w-full items-center gap-3 rounded-xl px-2 text-left text-body font-medium hover:bg-subtle"
             >
               <Flag className="size-5" /> Báo cáo
             </button>
@@ -324,7 +324,7 @@ function ChatMenu({
 
       {mode === "block" && (
         <div className="space-y-3">
-          <p className="text-[15px]">
+          <p className="text-body">
             Chặn {header.name}? Hai bên sẽ không nhắn tin được cho nhau, và cuộc trò chuyện này rời khỏi hộp tin của bạn. Lịch hẹn đã
             đặt vẫn giữ nguyên (huỷ trong chi tiết lịch hẹn nếu cần). Bỏ chặn được bất cứ lúc nào.
           </p>
@@ -356,7 +356,7 @@ function ChatMenu({
         />
       )}
 
-      {error && <p className="mt-2 text-[13px] text-danger">{error}</p>}
+      {error && <p className="mt-2 text-meta text-danger">{error}</p>}
     </Sheet>
   )
 }

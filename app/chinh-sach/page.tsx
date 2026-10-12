@@ -27,7 +27,7 @@ export default function PolicyPage() {
     <div className="mx-auto max-w-2xl md:pt-4">
       <PageHeader title="Chính sách phí & đặt lịch" back />
       {DEMO_DATA_LIVE && (
-        <div className="rounded-2xl bg-warning-soft px-4 py-3 text-[13px] text-warning">
+        <div className="rounded-2xl bg-warning-soft px-4 py-3 text-meta text-warning">
           <p className="font-semibold">Đây là bản demo</p>
           <p className="mt-1">
             Nhiều hồ sơ người làm và tác phẩm hiện là dữ liệu mẫu. Lịch hẹn, đánh giá và hồ sơ bạn tạo là dữ liệu thật, lưu trên máy chủ. Những mục ghi “sắp áp dụng” là quy
@@ -36,7 +36,7 @@ export default function PolicyPage() {
         </div>
       )}
 
-      <div className="mt-6 space-y-8 text-sm leading-relaxed text-ink-soft">
+      <div className="mt-6 space-y-8 text-body leading-relaxed text-ink-soft">
         <Section title="1. Khách hàng không trả phí nền tảng">
           <p>
             Khách chỉ trả giá dịch vụ người làm niêm yết, cộng phí di chuyển hoặc phí đặt gấp nếu có. 360dep không cộng thêm bất kỳ phí dịch vụ nào cho khách, và không cần đặt
@@ -298,7 +298,7 @@ export default function PolicyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2 text-[17px] font-bold tracking-tight text-ink">{title}</h2>
+      <h2 className="mb-2 text-lead font-bold tracking-tight text-ink">{title}</h2>
       {children}
     </section>
   )

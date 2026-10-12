@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ImagePlus, QrCode, X } from "lucide-react"
+import { ImagePlus, QrCode } from "lucide-react"
+import { Sheet } from "@/components/sheet"
 import { Button, Card, Field, inputClass } from "@/components/ui"
 import { supabaseBrowser } from "@/lib/supabase/client"
 import { uploadImage } from "@/lib/uploads"
@@ -90,11 +91,11 @@ export function PayoutForm({ proId }: { proId: string }) {
     setMessage(error ? { ok: false, text: "Chưa lưu được, kiểm tra lại số tài khoản (chỉ chữ số)." } : { ok: true, text: "Đã lưu thông tin nhận tiền." })
   }
 
-  if (!loaded) return <p className="text-sm text-muted">Đang tải…</p>
+  if (!loaded) return <p className="text-body text-muted">Đang tải…</p>
 
   return (
     <Card className="space-y-4 p-5">
-      <p className="text-[13px] text-ink-soft">
+      <p className="text-meta text-ink-soft">
         Khách trả tiền thẳng cho bạn sau buổi làm. Lưu tài khoản và mã QR ở đây để mở nhanh trên màn hình lịch hẹn cho khách quét. Chỉ bạn và
         đội ngũ 360dep xem được; 360dep không thu hộ tiền dịch vụ.
       </p>
@@ -108,7 +109,7 @@ export function PayoutForm({ proId }: { proId: string }) {
         <input className={inputClass} value={accountHolder} maxLength={80} onChange={(e) => setAccountHolder(e.target.value)} placeholder="NGUYEN THI HA" />
       </Field>
       <div>
-        <p className="mb-2 text-[13px] font-semibold">Mã QR nhận tiền (ảnh từ ứng dụng ngân hàng)</p>
+        <p className="mb-2 text-meta font-semibold">Mã QR nhận tiền (ảnh từ ứng dụng ngân hàng)</p>
         <div className="flex items-center gap-3">
           {qrUrl ? (
             // A private file shown through a short-lived link.
@@ -119,13 +120,13 @@ export function PayoutForm({ proId }: { proId: string }) {
               <QrCode className="size-8" />
             </span>
           )}
-          <label className={cn("inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[14px] font-semibold", busy && "opacity-50")}>
+          <label className={cn("inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-body font-semibold", busy && "opacity-50")}>
             <ImagePlus className="size-4" /> {qrUrl ? "Đổi ảnh QR" : "Tải ảnh QR"}
             <input type="file" accept="image/*" className="sr-only" disabled={busy} onChange={(e) => void pickQr(e.target.files?.[0])} />
           </label>
         </div>
       </div>
-      {message && <p className={cn("rounded-xl px-3.5 py-2.5 text-sm", message.ok ? "bg-success-soft text-success" : "bg-danger-soft text-danger")}>{message.text}</p>}
+      {message && <p className={cn("rounded-xl px-3.5 py-2.5 text-body", message.ok ? "bg-success-soft text-success" : "bg-danger-soft text-danger")}>{message.text}</p>}
       <Button size="lg" className="w-full" disabled={!valid || busy} onClick={() => void save()}>
         {busy ? "Đang lưu…" : "Lưu thông tin nhận tiền"}
       </Button>
@@ -146,17 +147,12 @@ export function ShowPaymentQr({ proId, amount }: { proId: string; amount: number
         <QrCode className="size-4" /> Hiện mã QR nhận tiền
       </Button>
       {open && (
-        <div role="dialog" aria-label="Mã QR nhận tiền" className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setOpen(false)}>
+        <Sheet open={open} title="Mã QR nhận tiền" onClose={() => setOpen(false)}>
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center text-ink" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-end">
-              <button type="button" aria-label="Đóng" onClick={() => setOpen(false)} className="inline-flex size-9 items-center justify-center rounded-full hover:bg-subtle">
-                <X className="size-5" />
-              </button>
-            </div>
             {data === null ? (
-              <p className="py-10 text-sm text-muted">Đang tải…</p>
+              <p className="py-10 text-body text-muted">Đang tải…</p>
             ) : !data.payout ? (
-              <p className="py-6 text-sm text-ink-soft">
+              <p className="py-6 text-body text-ink-soft">
                 Bạn chưa lưu tài khoản nhận tiền.{" "}
                 <Link href="/studio/thanh-toan" className="font-semibold text-accent underline underline-offset-2">
                   Thêm ngay
@@ -164,23 +160,23 @@ export function ShowPaymentQr({ proId, amount }: { proId: string; amount: number
               </p>
             ) : (
               <>
-                <p className="text-[13px] text-muted">Số tiền cần trả</p>
+                <p className="text-meta text-muted">Số tiền cần trả</p>
                 <p className="text-[28px] font-bold">{formatPrice(amount)}</p>
                 {data.qrUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={data.qrUrl} alt="Mã QR nhận tiền" className="mx-auto mt-3 aspect-square w-full max-w-[260px] object-contain" />
                 ) : (
-                  <p className="mt-3 text-[13px] text-muted">Chưa có ảnh mã QR: khách chuyển theo thông tin bên dưới.</p>
+                  <p className="mt-3 text-meta text-muted">Chưa có ảnh mã QR: khách chuyển theo thông tin bên dưới.</p>
                 )}
                 <p className="mt-3 font-semibold">{data.payout.accountHolder}</p>
-                <p className="text-[15px]">
+                <p className="text-body">
                   {data.payout.bankName} · <span className="font-mono">{data.payout.accountNumber}</span>
                 </p>
-                <p className="mt-3 text-[12px] text-muted">Nhận đủ tiền rồi bấm “Đã nhận tiền” trong lịch hẹn.</p>
+                <p className="mt-3 text-label text-muted">Nhận đủ tiền rồi bấm “Đã nhận tiền” trong lịch hẹn.</p>
               </>
             )}
           </div>
-        </div>
+        </Sheet>
       )}
     </>
   )

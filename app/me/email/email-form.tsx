@@ -28,7 +28,7 @@ export function EmailForm({ next, pending, embedded = false }: { next?: string; 
         <p role="status" className="mt-3 font-semibold">
           Đang chờ xác nhận {sentTo}
         </p>
-        <p className="mt-1.5 text-[14px] text-ink-soft">
+        <p className="mt-1.5 text-body text-ink-soft">
           360dep đã gửi link xác nhận tới email này. Email chỉ được dùng để lấy lại mật khẩu sau khi bạn bấm link đó. Thư có thể
           tới chậm vài phút; không thấy thì xem mục Spam.
         </p>
@@ -71,7 +71,7 @@ export function EmailForm({ next, pending, embedded = false }: { next?: string; 
         />
       </Field>
       {error && (
-        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-3 text-[14px] text-danger">
+        <p role="alert" className="rounded-xl bg-danger-soft px-3.5 py-3 text-body text-danger">
           {error}
         </p>
       )}

@@ -21,7 +21,13 @@ export default function Me() {
   const app = useApp()
   const insets = useSafeAreaInsets()
   const [deleting, setDeleting] = React.useState(false)
-  if (!app.uid) return <SignInGate title="Tôi" text="Đăng nhập để lưu mẫu yêu thích, đặt lịch và nhắn tin với người làm." />
+  if (!app.uid) return <SignInGate title="Tôi" text="Đăng nhập để lưu mẫu yêu thích, đặt lịch và nhắn tin với người làm." footer={
+    <Press onPress={() => router.push("/doi-tac")} accessibilityRole="link" style={{ padding: 20, backgroundColor: colors.surface, borderRadius: radius.lg, gap: 8 }}>
+      <Txt v="lead" w={700}>Bạn muốn nhận khách?</Txt>
+      <Txt color={colors.inkSoft}>Mở hồ sơ, niêm yết giá và nhận lịch trên 360đẹp.</Txt>
+      <Txt w={600} color={colors.accentDark}>Trở thành đối tác →</Txt>
+    </Press>
+  } />
   const uid = app.uid
 
   const account = app.me.account
@@ -171,7 +177,7 @@ function Section({ children }: { children: React.ReactNode }) {
 function Row({ icon, label, detail, onPress, danger }: { icon: IconName; label: string; detail?: string; onPress: () => void; danger?: boolean }) {
   const color = danger ? colors.danger : colors.ink
   return (
-    <Press onPress={onPress} accessibilityLabel={detail ? `${label}, ${detail}` : label} style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, height: 54 }}>
+    <Press onPress={onPress} accessibilityLabel={detail ? `${label}, ${detail}` : label} style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, minHeight: 56, paddingVertical: 14 }}>
       <Icon name={icon} size={20} color={color} />
       <Txt w={600} color={color} style={{ flex: 1 }}>
         {label}

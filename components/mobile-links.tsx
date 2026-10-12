@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
  */
 export function MobileLinks({ className }: { className?: string }) {
   return (
-    <nav aria-label="Thông tin" className={cn("flex flex-wrap justify-center gap-x-5 text-[13px] text-ink-soft md:hidden", className)}>
+    <nav aria-label="Thông tin" className={cn("flex flex-wrap justify-center gap-x-5 text-meta text-ink-soft md:hidden", className)}>
       <Link href="/chinh-sach" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
         Chính sách
       </Link>

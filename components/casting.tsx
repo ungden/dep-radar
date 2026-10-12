@@ -25,18 +25,18 @@ export function CastingCard({ casting, className }: { casting: Casting; classNam
       className={cn("block rounded-[var(--radius-lg)] border border-line bg-surface p-4 transition-colors hover:border-ink/25", className)}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="rounded-full bg-subtle px-2.5 py-1 text-xs font-semibold text-ink-soft">{categoryLabel(casting.category)}</span>
+        <span className="rounded-full bg-subtle px-2.5 py-1 text-label font-semibold text-ink-soft">{categoryLabel(casting.category)}</span>
         <span
           className={cn(
-            "rounded-full px-2.5 py-1 text-xs font-bold",
+            "rounded-full px-2.5 py-1 text-label font-bold",
             casting.compensation === "paid" ? "bg-success-soft text-success" : "bg-accent-soft text-accent-dark",
           )}
         >
           {compensationLabel(casting)}
         </span>
       </div>
-      <p className="mt-3 line-clamp-2 text-[16px] font-bold leading-snug">{casting.title}</p>
-      <div className="mt-2 space-y-1 text-[13px] text-ink-soft">
+      <p className="mt-3 line-clamp-2 text-body font-bold leading-snug">{casting.title}</p>
+      <div className="mt-2 space-y-1 text-meta text-ink-soft">
         <p className="flex items-center gap-1.5">
           <CalendarDays className="size-4 text-muted" />
           {formatDateLong(casting.date)} · {casting.time}
@@ -46,7 +46,7 @@ export function CastingCard({ casting, className }: { casting: Casting; classNam
           {casting.district}, {casting.city}
         </p>
       </div>
-      <div className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-[13px]">
+      <div className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-meta">
         {pro && <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={24} />}
         <span className="truncate font-semibold">{pro?.name ?? "Người làm"}</span>
         {pro && <VerifiedMark pro={pro} className="size-3.5" />}
@@ -68,9 +68,9 @@ export function CastingStrip({ className }: { className?: string }) {
       <div className="mb-4 flex items-baseline justify-between gap-4">
         <div>
           <h2 className="text-[20px] font-bold tracking-tight md:text-[24px]">Đang tuyển mẫu</h2>
-          <p className="mt-0.5 text-[14px] text-ink-soft">Làm mẫu cho thợ, được làm đẹp miễn phí hoặc giảm giá.</p>
+          <p className="mt-0.5 text-body text-ink-soft">Làm mẫu cho thợ, được làm đẹp miễn phí hoặc giảm giá.</p>
         </div>
-        <Link href="/tuyen-mau" className="shrink-0 text-[14px] font-semibold underline-offset-4 hover:underline">
+        <Link href="/tuyen-mau" className="shrink-0 text-body font-semibold underline-offset-4 hover:underline">
           Xem tất cả
         </Link>
       </div>
@@ -93,7 +93,7 @@ export function SafetyNote({ className }: { className?: string }) {
     <div className={className}>
       <div className="flex gap-3 rounded-[var(--radius-lg)] bg-subtle p-4">
         <ShieldCheck className="mt-0.5 size-5 shrink-0" />
-        <div className="text-[14px] text-ink-soft">
+        <div className="text-body text-ink-soft">
           <p className="font-bold text-ink">Làm mẫu an toàn</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-4">
             <li>Người tuyển không bao giờ được yêu cầu bạn chuyển tiền: không cọc, không phí hồ sơ.</li>

@@ -15,7 +15,7 @@ export default function RouteError({ error, reset }: { error: Error & { digest?:
         <TriangleAlert className="size-8" />
       </span>
       <h1 className="mt-4 text-xl font-semibold">Có lỗi xảy ra</h1>
-      <p className="mt-1 max-w-sm text-sm text-ink-soft">
+      <p className="mt-1 max-w-sm text-body text-ink-soft">
         Trang này gặp sự cố. Bạn thử tải lại xem sao. Nếu vẫn lỗi, quay về trang chủ rồi thao tác lại.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -26,7 +26,7 @@ export default function RouteError({ error, reset }: { error: Error & { digest?:
           Về trang chủ
         </ButtonLink>
       </div>
-      {error.digest && <p className="mt-6 text-xs text-muted">Mã lỗi: {error.digest}</p>}
+      {error.digest && <p className="mt-6 text-label text-muted">Mã lỗi: {error.digest}</p>}
     </div>
   )
 }
