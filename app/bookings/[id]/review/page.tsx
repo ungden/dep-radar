@@ -149,7 +149,7 @@ function ReviewForm() {
               type="button"
               aria-pressed={tags.includes(t)}
               onClick={() => setTags((x) => (x.includes(t) ? x.filter((y) => y !== t) : [...x, t]))}
-              className={cn("rounded-full border px-3 py-1.5 text-meta", tags.includes(t) ? "border-accent bg-subtle text-accent-dark" : "border-line bg-surface text-ink-soft")}
+              className={cn("rounded-full border px-3 py-1.5 text-meta", tags.includes(t) ? "border-ink bg-subtle text-accent-dark" : "border-line bg-surface text-ink-soft")}
             >
               {t}
             </button>
@@ -186,7 +186,7 @@ function ReviewForm() {
             </span>
           ))}
           {photos.length < 3 && (
-            <label className="flex size-20 cursor-pointer items-center justify-center rounded-xl border border-dashed border-line text-muted hover:border-accent hover:text-accent">
+            <label className="flex size-20 cursor-pointer items-center justify-center rounded-xl border border-dashed border-line text-muted hover:border-ink hover:text-accent">
               <ImagePlus className="size-5" />
               <input
                 type="file"

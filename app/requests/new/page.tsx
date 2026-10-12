@@ -131,7 +131,7 @@ function NewRequestForm() {
                 onClick={() => pickCategory(c.id)}
                 className={cn(
                   "flex flex-col items-center gap-1.5 rounded-2xl py-3 text-label transition-colors",
-                  active ? "bg-accent font-semibold text-white" : "bg-accent-soft text-ink hover:bg-subtle-strong",
+                  active ? "bg-ink font-semibold text-white" : "bg-subtle text-ink hover:bg-subtle-strong",
                 )}
               >
                 <Icon className={cn("size-7", active ? "text-white" : "text-accent")} />
@@ -174,7 +174,7 @@ function NewRequestForm() {
               onClick={() => pickVariant(v.id)}
               className={cn(
                 "rounded-xl border px-3 py-2.5 text-left text-body",
-                v.id === variant.id ? "border-accent bg-subtle text-accent-dark" : "border-line bg-surface text-ink-soft",
+                v.id === variant.id ? "border-ink bg-subtle text-accent-dark" : "border-line bg-surface text-ink-soft",
               )}
             >
               <span className="block font-medium">
@@ -232,7 +232,7 @@ function NewRequestForm() {
               onClick={() => setTier(t)}
               className={cn(
                 "rounded-xl border px-2 py-2.5 text-center transition-colors",
-                unit === t ? "border-accent bg-accent text-white" : "border-line bg-canvas hover:border-ink/30",
+                unit === t ? "border-ink bg-ink text-white" : "border-line bg-canvas hover:border-ink",
               )}
             >
               <span className={cn("block text-label", unit === t ? "text-white" : "text-muted")}>{labels[i]}</span>
@@ -285,7 +285,7 @@ function NewRequestForm() {
               onClick={() => setAtHome(o.v)}
               className={cn(
                 "h-11 rounded-xl border text-body disabled:opacity-40",
-                atHome === o.v ? "border-accent bg-subtle font-medium text-accent-dark" : "border-line bg-surface text-ink-soft",
+                atHome === o.v ? "border-ink bg-subtle font-medium text-accent-dark" : "border-line bg-surface text-ink-soft",
               )}
             >
               {o.l}
@@ -323,7 +323,7 @@ function NewRequestForm() {
               onClick={() => m === "cash" && setPaymentMethod(m)}
               className={cn(
                 "h-11 rounded-xl border text-body disabled:opacity-50",
-                paymentMethod === m ? "border-accent bg-subtle font-medium text-accent-dark" : "border-line bg-surface text-ink-soft",
+                paymentMethod === m ? "border-ink bg-subtle font-medium text-accent-dark" : "border-line bg-surface text-ink-soft",
               )}
             >
               {m === "online" ? "Thanh toán online (sắp có)" : PAYMENT_LABEL[m]}

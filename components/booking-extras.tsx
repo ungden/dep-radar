@@ -92,7 +92,7 @@ export function BookingTimeline({ booking }: { booking: Booking }) {
           <span
             className={cn(
               "relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full border-2",
-              s.bad ? "border-danger bg-danger text-white" : s.done ? "border-accent bg-accent text-white" : s.current ? "border-accent bg-surface" : "border-line bg-surface",
+              s.bad ? "border-danger bg-danger text-white" : s.done ? "border-ink bg-ink text-white" : s.current ? "border-ink bg-surface" : "border-line bg-surface",
             )}
           >
             {s.done && !s.bad && <Check className="size-3.5" />}

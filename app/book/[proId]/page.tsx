@@ -386,7 +386,7 @@ function BookingFlow({ proId }: { proId: string }) {
                   <div
                     className={cn(
                       "rounded-2xl border bg-surface p-3.5 transition-colors",
-                      selected ? "border-accent ring-1 ring-accent" : "border-line",
+                      selected ? "border-ink ring-1 ring-ink" : "border-line",
                     )}
                   >
                     <button
@@ -403,7 +403,7 @@ function BookingFlow({ proId }: { proId: string }) {
                         <span className="block truncate text-label text-muted">{t.description}</span>
                       </span>
                       <span className="text-body text-ink-soft">từ {formatPrice(Math.min(...Object.values(s.prices)))}</span>
-                      <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full border", selected ? "border-accent bg-accent text-white" : "border-line-strong")}>
+                      <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full border", selected ? "border-ink bg-ink text-white" : "border-line-strong")}>
                         {selected && <Check className="size-3.5" />}
                       </span>
                     </button>
@@ -444,7 +444,7 @@ function BookingFlow({ proId }: { proId: string }) {
                             }}
                             className={cn(
                               "rounded-xl border px-3 py-2 text-left text-meta",
-                              v.id === variantId ? "border-accent bg-subtle text-accent-dark" : "border-line-strong bg-surface text-ink-soft",
+                              v.id === variantId ? "border-ink bg-subtle text-accent-dark" : "border-line-strong bg-surface text-ink-soft",
                             )}
                           >
                             <span className="block font-medium">{v.label}</span>
@@ -470,7 +470,7 @@ function BookingFlow({ proId }: { proId: string }) {
               <ul className="mt-3 space-y-2">
                 {addonOptions.map((o) => (
                   <li key={o.key}>
-                    <label className={cn("flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 text-body", addons.includes(o.key) ? "border-accent bg-subtle" : "border-line bg-surface")}>
+                    <label className={cn("flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 text-body", addons.includes(o.key) ? "border-ink bg-subtle" : "border-line bg-surface")}>
                       <input
                         type="checkbox"
                         checked={addons.includes(o.key)}
@@ -584,7 +584,7 @@ function BookingFlow({ proId }: { proId: string }) {
                     }}
                     className={cn(
                       "flex w-12 shrink-0 flex-col items-center gap-1.5 rounded-xl border py-2.5 text-body transition-colors",
-                      active ? "border-accent bg-subtle text-accent-dark" : "border-line-strong bg-surface text-ink hover:border-accent",
+                      active ? "border-ink bg-subtle text-accent-dark" : "border-line-strong bg-surface text-ink hover:border-ink",
                     )}
                   >
                     <span className="text-label text-muted">{d === todayISO() ? "Nay" : weekdayShort(d)}</span>
@@ -628,8 +628,8 @@ function BookingFlow({ proId }: { proId: string }) {
                       className={cn(
                         "relative h-12 rounded-xl border text-body transition-colors",
                         active
-                          ? "border-accent bg-accent font-semibold text-white"
-                          : "border-line-strong bg-surface text-ink hover:border-accent",
+                          ? "border-ink bg-ink font-semibold text-white"
+                          : "border-line-strong bg-surface text-ink hover:border-ink",
                       )}
                     >
                       {slot.time}
@@ -796,7 +796,7 @@ function BookingFlow({ proId }: { proId: string }) {
                       onClick={() => setUsageScope(value)}
                       className={cn(
                         "rounded-[var(--radius-md)] border p-3 text-left transition-colors",
-                        usageScope === value ? "border-accent bg-subtle" : "border-line-strong bg-surface hover:border-accent",
+                        usageScope === value ? "border-ink bg-subtle" : "border-line-strong bg-surface hover:border-ink",
                       )}
                     >
                       <span className="block text-body font-semibold">{label}</span>
@@ -854,7 +854,7 @@ function BookingFlow({ proId }: { proId: string }) {
                   onClick={() => available && setPayment(value)}
                   className={cn(
                     "flex gap-2.5 rounded-xl border p-3 text-left disabled:opacity-50",
-                    payment === value ? "border-accent bg-subtle" : "border-line-strong bg-surface",
+                    payment === value ? "border-ink bg-subtle" : "border-line-strong bg-surface",
                   )}
                 >
                   <Icon className={cn("mt-0.5 size-4 shrink-0", payment === value ? "text-ink" : "text-muted")} />
@@ -1084,7 +1084,7 @@ function PlaceOption({
       onClick={onClick}
       className={cn(
         "flex h-11 items-center justify-center gap-2 rounded-full border text-body transition-colors disabled:opacity-40",
-        active ? "border-accent bg-accent font-semibold text-white" : "border-line text-ink hover:border-ink/30",
+        active ? "border-ink bg-ink font-semibold text-white" : "border-line text-ink hover:border-ink",
       )}
     >
       {icon}

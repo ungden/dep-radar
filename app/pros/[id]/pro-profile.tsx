@@ -396,7 +396,7 @@ function Portfolio({ works, initial }: { works: Work[]; initial: CategoryId | nu
               onClick={() => setChosen(a.category)}
               className={cn(
                 "relative inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-meta font-semibold transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
-                active ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
+                active ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink",
               )}
             >
               {categoryLabel(a.category)}

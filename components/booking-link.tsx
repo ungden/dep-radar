@@ -57,7 +57,7 @@ export function ShareLinkCard({
     let live = true
     void import("qrcode")
       .then((QR) =>
-        QR.toDataURL(url, { margin: 1, width: 480, errorCorrectionLevel: "M", color: { dark: "#3A2A2C", light: "#FFFFFF" } }),
+        QR.toDataURL(url, { margin: 1, width: 480, errorCorrectionLevel: "M", color: { dark: "#141213", light: "#FFFFFF" } }),
       )
       .then((data) => live && setQr(data))
       .catch(() => live && setQr(null))

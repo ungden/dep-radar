@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Be_Vietnam_Pro } from "next/font/google"
+import { Fraunces, Inter } from "next/font/google"
 import "./globals.css"
 
 import { AppShell } from "@/components/layout/app-shell"
@@ -10,12 +10,20 @@ import { StoreProvider } from "@/lib/store"
 import { emptySnapshot, loadSnapshot } from "@/lib/api/snapshot"
 import { backendEnabled } from "@/lib/supabase/env"
 
-const body = Be_Vietnam_Pro({
+// Inter reads crisply at 13-16px, where most of the app's text lives; its
+// Vietnamese marks (ặ, ễ, ở) are drawn, not stacked from fallbacks.
+const body = Inter({
   subsets: ["latin", "vietnamese"],
-  // One family for everything, the wordmark included (800). Be Vietnam Pro
-  // was drawn for Vietnamese: stacked marks (ặ, ễ, ở) stay clear and even.
-  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-body",
+  display: "swap",
+})
+
+// Editorial titles only (hero, collections): `font-display`.
+const serif = Fraunces({
+  subsets: ["latin", "vietnamese"],
+  weight: ["600", "700"],
+  variable: "--font-serif",
+  display: "swap",
 })
 
 
@@ -49,7 +57,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#FAF6F4",
+  themeColor: "#FAF8F5",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -59,7 +67,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // One server read per navigation feeds every screen; see lib/api/snapshot.ts.
   const snapshot = backendEnabled ? await loadSnapshot() : { ...emptySnapshot, catalogError: true, worksError: true }
   return (
-    <html lang="vi" className={body.variable}>
+    <html lang="vi" className={`${body.variable} ${serif.variable}`}>
       <body className="min-h-dvh">
         <a
           href="#main"

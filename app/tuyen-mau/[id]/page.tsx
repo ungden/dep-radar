@@ -88,7 +88,7 @@ export default function CastingPage() {
           {pro && (
             <section className="mt-8">
               <h2 className="mb-3 text-[20px] font-bold tracking-tight">Người tuyển</h2>
-              <Link href={`/pros/${pro.id}`} className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-line bg-surface p-4 hover:border-ink/30">
+              <Link href={`/pros/${pro.id}`} className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-line bg-surface p-4 hover:border-ink">
                 <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={52} />
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-1.5 text-body font-bold">

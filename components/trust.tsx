@@ -135,7 +135,7 @@ export function ReviewItem({ review, onReply }: { review: Review; onReply?: (tex
                 onChange={(e) => setText(e.target.value)}
                 aria-label="Trả lời đánh giá"
                 placeholder="Cảm ơn khách, giải thích nếu có vấn đề…"
-                className="h-11 min-w-0 flex-1 rounded-full border border-line bg-surface px-4 text-body focus:border-accent focus:outline-none"
+                className="h-11 min-w-0 flex-1 rounded-full border border-line bg-surface px-4 text-body focus:border-ink focus:outline-none"
               />
               <button type="submit" disabled={busy} className="h-11 rounded-full bg-accent px-5 text-body font-semibold text-white disabled:opacity-40">
                 Gửi

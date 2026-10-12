@@ -112,7 +112,7 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
               onClick={() => setVariantId(v.id)}
               className={cn(
                 "relative h-9 shrink-0 rounded-full border px-4 text-meta font-semibold transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
-                v.id === variant.id ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
+                v.id === variant.id ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink",
               )}
             >
               {v.label}

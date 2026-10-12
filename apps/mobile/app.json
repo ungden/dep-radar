@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "dep360",
     "userInterfaceStyle": "light",
-    "backgroundColor": "#FAF6F4",
+    "backgroundColor": "#FAF8F5",
     "ios": {
       "bundleIdentifier": "vn.dep360.app",
       "supportsTablet": false,
@@ -49,7 +49,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FAF6F4",
+          "backgroundColor": "#FAF8F5",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 96
         }
@@ -69,7 +69,7 @@
       [
         "expo-notifications",
         {
-          "color": "#A8535D"
+          "color": "#BB3460"
         }
       ],
       "expo-font",

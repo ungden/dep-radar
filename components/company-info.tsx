@@ -15,7 +15,7 @@ export function CompanyInfo({ className }: { className?: string }) {
   const contact = [p.supportZalo && `Zalo ${p.supportZalo}`, p.supportEmail].filter(Boolean).join(" · ")
   return (
     <div className={cn("space-y-0.5", className)}>
-      <p className="font-semibold text-ink-soft">{p.companyName}</p>
+      <p className="font-semibold text-current">{p.companyName}</p>
       {p.companyTaxId && <p>Mã số thuế / mã số doanh nghiệp: {p.companyTaxId}</p>}
       {p.companyAddress && <p>Trụ sở: {p.companyAddress}</p>}
       {contact && <p>Hỗ trợ: {contact}</p>}

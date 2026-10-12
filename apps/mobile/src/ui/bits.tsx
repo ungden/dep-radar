@@ -76,7 +76,7 @@ export function Avatar({ name, uri, tone = colors.subtle, size = 40 }: { name: s
   )
 }
 
-/** A chip. Selected is rose with white text, like every selected state. */
+/** A chip. Selected is ink with white text, like every selected state; rose is kept for actions. */
 export function Chip({ label, selected, onPress, icon }: { label: string; selected?: boolean; onPress?: () => void; icon?: React.ReactNode }) {
   return (
     <Press
@@ -89,7 +89,9 @@ export function Chip({ label, selected, onPress, icon }: { label: string; select
         maxWidth: "100%",
         paddingHorizontal: 14,
         borderRadius: radius.full,
-        backgroundColor: selected ? colors.accent : colors.subtle,
+        borderWidth: 1,
+        borderColor: selected ? colors.ink : colors.line,
+        backgroundColor: selected ? colors.ink : colors.surface,
         flexDirection: "row",
         alignItems: "center",
         gap: 6,

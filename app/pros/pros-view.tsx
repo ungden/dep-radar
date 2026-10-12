@@ -127,7 +127,7 @@ function ProsView() {
     <div className="pt-4 md:pt-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-[28px] font-bold leading-tight tracking-tight md:text-[36px]">{TITLE[vertical]}</h1>
+          <h1 className="text-[30px] font-extrabold leading-tight tracking-[-0.03em] md:text-[40px]">{TITLE[vertical]}</h1>
           {pros.length > 0 && (
             <p className="mt-1 text-body text-ink-soft">
               {pros.length.toLocaleString("vi-VN")} người
@@ -143,11 +143,13 @@ function ProsView() {
         <FocusSwitch value={focus} onChange={setFocus} />
       </div>
 
+      {/* Every filter in one card, so the people start right under it. */}
+      <div className="mt-3 space-y-4 rounded-[var(--radius-xl)] border border-line bg-surface p-4 md:p-5">
       {focus === "other" && (
         <>
-          <VerticalSwitch className="mt-2" value={vertical} onChange={setVertical} />
+          <VerticalSwitch value={vertical} onChange={setVertical} />
           <CategoryTiles
-            className="mt-4"
+            row
             items={[
               { id: "all", label: "Tất cả" },
               ...priorityFirst(categoriesInTrade(vertical))
@@ -160,7 +162,7 @@ function ProsView() {
         </>
       )}
 
-      <div className="mt-4 space-y-3">
+      <div className="space-y-3">
         {category && (
           <div>
             <FilterRow label="Mức giá">
@@ -199,9 +201,10 @@ function ProsView() {
           </div>
         )}
       </div>
+      </div>
 
       <div className="no-scrollbar -mx-4 mt-4 flex items-center gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
-        <label className="relative inline-flex min-h-12 focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-2 shrink-0 items-center gap-1 rounded-full border border-line bg-surface pl-4 pr-3 text-meta font-medium">
+        <label className="relative inline-flex min-h-12 focus-within:outline-2 focus-within:outline-ink focus-within:outline-offset-2 shrink-0 items-center gap-1 rounded-full border border-line bg-surface pl-4 pr-3 text-meta font-medium">
           <span className="sr-only">Sắp xếp</span>
           {SORT_LABEL[sort]}
           <ChevronDown className="size-4 text-muted" />
@@ -280,7 +283,7 @@ function FocusSwitch({ value, onChange }: { value: Focus; onChange: (f: Focus) =
             onClick={() => onChange(it.id)}
             className={cn(
               "inline-flex h-10 min-w-0 items-center justify-center whitespace-nowrap rounded-full px-1 text-[clamp(12px,3.5vw,14px)] font-semibold tracking-[-0.01em] transition-colors sm:px-3 sm:tracking-normal",
-              active ? "bg-accent text-white shadow-[var(--shadow-soft)]" : "text-ink hover:bg-subtle-strong",
+              active ? "bg-ink text-white shadow-[var(--shadow-soft)]" : "text-ink hover:bg-subtle-strong",
             )}
           >
             {it.label}
@@ -322,7 +325,7 @@ function Choice({ active, onClick, children }: { active: boolean; onClick: () =>
       onClick={onClick}
       className={cn(
         "relative inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full border px-3 text-meta font-medium transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
-        active ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-ink/30",
+        active ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink",
       )}
     >
       {children}
@@ -422,7 +425,7 @@ function WhereFrom({
 
 function CityPicker({ value }: { value: string | null }) {
   return (
-    <label className="relative inline-flex min-h-12 focus-within:rounded-lg focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-2 items-center gap-1.5 rounded-full border border-line bg-surface pl-4 pr-3 text-body font-semibold">
+    <label className="relative inline-flex min-h-12 focus-within:rounded-lg focus-within:outline-2 focus-within:outline-ink focus-within:outline-offset-2 items-center gap-1.5 rounded-full border border-line bg-surface pl-4 pr-3 text-body font-semibold">
       <MapPin className="size-4" />
       {value ?? "Toàn quốc"}
       <ChevronDown className="size-4 text-muted" />

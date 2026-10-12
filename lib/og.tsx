@@ -10,7 +10,7 @@ import { BRAND_DARK, BRAND_GOLD, LOGO_EYE_PATH, LOGO_EYE_STROKE, LOGO_RADIUS, WO
  */
 
 export const OG_SIZE = { width: 1200, height: 630 }
-export const OG = { ink: "#3A2A2C", soft: "#65575A", canvas: "#FAF6F4", rose: "#A8535D", subtle: "#F5ECE9" }
+export const OG = { ink: "#141213", soft: "#3D3739", canvas: "#FAF8F5", rose: "#BB3460", subtle: "#F2EFEA" }
 
 export async function ogFonts() {
   const dir = join(process.cwd(), "app/_og")

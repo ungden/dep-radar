@@ -172,7 +172,7 @@ export function AddOnServices({ booking }: { booking: Booking }) {
                   setPick({ templateId: o.templateId, variantId: o.variantId })
                   setQuantity(1)
                 }}
-                className={cn("w-full rounded-xl border px-3 py-2.5 text-left text-body", on ? "border-accent bg-subtle" : "border-line bg-surface")}
+                className={cn("w-full rounded-xl border px-3 py-2.5 text-left text-body", on ? "border-ink bg-subtle" : "border-line bg-surface")}
               >
                 <span className="block font-medium">
                   {o.name} · {o.label}

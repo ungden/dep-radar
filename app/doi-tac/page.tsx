@@ -1,7 +1,12 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import Link from "next/link"
-import { BadgeCheck, CalendarCheck, HandCoins, Megaphone, Wallet } from "lucide-react"
+import { ArrowRight, BadgeCheck, CalendarCheck, HandCoins, Megaphone, Wallet } from "lucide-react"
+import { CategoryIcon } from "@/components/category-icon"
 import { ButtonLink, PageHeader } from "@/components/ui"
+import { CATEGORY_TINTS } from "@/lib/design/category-icons"
+import { HERO_PHOTOS } from "@/lib/design/photos"
+import { cn } from "@/lib/utils"
 import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { CATEGORIES, VERTICALS, categoriesOf } from "@/lib/catalog"
 import { POLICY } from "@/lib/pricing"
@@ -54,71 +59,85 @@ export default function PartnerPage() {
   ]
 
   return (
-    <div className="mx-auto max-w-2xl pb-10 md:pt-4">
+    <div className="mx-auto max-w-5xl pb-10 md:pt-4">
       <PageHeader back="/" />
-      <p className="text-meta font-semibold uppercase tracking-wide text-accent">360dep Đối tác</p>
-      <h1 className="mt-2 text-[32px] font-bold leading-tight tracking-tight md:text-[40px]">Trở thành đối tác 360dep</h1>
-      <p className="mt-3 text-body text-ink-soft">
-        Dành cho người làm nghề tự do: thợ làm đẹp, người chụp ảnh, quay clip và người mẫu. Nhận khách quanh bạn, chọn mức giá có sẵn cho từng gói và tự chủ
-        giờ làm.
-      </p>
-      <ButtonLink href={JOIN} size="lg" className="mt-6 w-full md:w-auto">
-        Mở hồ sơ đối tác miễn phí
-      </ButtonLink>
+      <section className="relative -mx-4 overflow-hidden bg-ink text-white sm:mx-0 sm:rounded-[var(--radius-xl)]">
+        <Image src={HERO_PHOTOS.beauty} alt="" fill priority sizes="(min-width: 1024px) 1024px, 100vw" className="object-cover opacity-45" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/10" />
+        <div className="relative px-5 py-10 md:max-w-[62%] md:px-12 md:py-16">
+          <p className="eyebrow text-highlight">360đẹp Đối tác</p>
+          <h1 className="mt-3 text-[34px] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[52px]">Nhận khách quanh bạn, tự chủ giờ làm</h1>
+          <p className="mt-4 text-body text-white/85 md:text-lead">
+            Dành cho người làm nghề tự do: thợ làm đẹp, người chụp ảnh, quay clip và người mẫu. Chọn mức giá có sẵn cho từng gói, chỉ trả phí {pct} khi xong việc.
+          </p>
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            <ButtonLink href={JOIN} size="lg" variant="highlight">
+              Mở hồ sơ đối tác miễn phí <ArrowRight className="size-4" aria-hidden />
+            </ButtonLink>
+            <Link href="/chinh-sach" className="text-body font-semibold text-white underline underline-offset-4">Xem phí & chính sách</Link>
+          </div>
+        </div>
+        <span className="absolute bottom-3 right-3 rounded-full bg-black/40 px-2.5 py-1 text-[11px] font-medium text-white/90 backdrop-blur">Ảnh minh hoạ</span>
+      </section>
 
-      <section className="mt-10">
-        <h2 className="text-[20px] font-bold tracking-tight">Cách làm việc</h2>
-        <ol className="mt-4 space-y-3">
-          {steps.map((step) => {
+      <section className="mt-12">
+        <p className="eyebrow">Cách làm việc</p>
+        <h2 className="mt-1.5 text-[24px] font-extrabold tracking-tight md:text-[30px]">Rõ việc, rõ phí từ ngày đầu</h2>
+        <ol className="mt-5 grid gap-4 md:grid-cols-3">
+          {steps.map((step, i) => {
             const Icon = step.icon
             return (
-              <li key={step.title} className="flex gap-3.5 rounded-[var(--radius-lg)] border border-line bg-surface p-4">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+              <li key={step.title} className={cn("rounded-[var(--radius-lg)] border border-line bg-surface p-5", i >= 3 && "md:col-span-1")}>
+                <span className="flex size-11 items-center justify-center rounded-full bg-highlight-soft text-ink">
                   <Icon className="size-5" />
                 </span>
-                <span className="min-w-0">
-                  <span className="block text-body font-bold">{step.title}</span>
-                  <span className="mt-0.5 block text-body leading-relaxed text-ink-soft">{step.text}</span>
-                </span>
+                <span className="mt-4 block text-lead font-bold tracking-tight">{step.title}</span>
+                <span className="mt-1.5 block text-body leading-relaxed text-ink-soft">{step.text}</span>
               </li>
             )
           })}
         </ol>
       </section>
 
-      <section className="mt-10">
-        <h2 className="text-[20px] font-bold tracking-tight">Nhận những việc gì</h2>
-        <ul className="mt-4 space-y-3">
+      <section className="mt-12">
+        <p className="eyebrow">Nhận những việc gì</p>
+        <h2 className="mt-1.5 text-[24px] font-extrabold tracking-tight md:text-[30px]">{CATEGORIES.length} danh mục, 3 ngành</h2>
+        <div className="mt-5 grid gap-4 md:grid-cols-3">
           {VERTICALS.map((vertical) => (
-            <li key={vertical.id}>
-              <p className="text-body font-semibold">{vertical.label}</p>
-              <p className="text-body text-ink-soft">
-                {categoriesOf(vertical.id)
-                  .map((c) => c.label)
-                  .join(", ")}
-              </p>
-            </li>
+            <div key={vertical.id} className="rounded-[var(--radius-lg)] border border-line bg-surface p-5">
+              <p className="text-lead font-bold">{vertical.label}</p>
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {categoriesOf(vertical.id).map((c) => (
+                  <li key={c.id} className="inline-flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-3 text-label font-bold" style={{ background: CATEGORY_TINTS[c.id].bg, color: CATEGORY_TINTS[c.id].fg }}>
+                    <CategoryIcon id={c.id} className="size-4" />
+                    {c.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
-        <p className="mt-3 text-meta text-muted">{CATEGORIES.length} danh mục. Mỗi gói có đúng 3 mức giá có sẵn, bạn chọn mức hợp với tay nghề.</p>
+        </div>
+        <p className="mt-3 text-meta text-muted">Mỗi gói có đúng 3 mức giá có sẵn, bạn chọn mức hợp với tay nghề.</p>
       </section>
 
-      <section className="mt-10 rounded-[var(--radius-lg)] bg-subtle p-5">
-        <h2 className="text-[18px] font-bold tracking-tight">Bắt đầu</h2>
-        <p className="mt-1.5 text-body text-ink-soft">
-          Đăng nhập hoặc tạo tài khoản, rồi lưu đủ sáu bước: nghề, dịch vụ và giá, nơi phục vụ, giờ làm, tác phẩm và xác nhận chính sách.
-          Gửi hồ sơ để duyệt; khi được duyệt, bật nhận khách mới lúc bạn sẵn sàng.
-        </p>
-        <ButtonLink href={JOIN} className="mt-4">
+      <section className="mt-12 rounded-[var(--radius-xl)] bg-highlight-soft p-6 md:flex md:items-center md:justify-between md:gap-8 md:p-10">
+        <div className="max-w-xl">
+          <h2 className="font-display text-[26px] font-semibold leading-tight tracking-tight md:text-[32px]">Bắt đầu trong sáu bước</h2>
+          <p className="mt-2 text-body text-ink-soft">
+            Đăng nhập hoặc tạo tài khoản, rồi lưu đủ sáu bước: nghề, dịch vụ và giá, nơi phục vụ, giờ làm, tác phẩm và xác nhận chính sách.
+            Gửi hồ sơ để duyệt; khi được duyệt, bật nhận khách mới lúc bạn sẵn sàng.
+          </p>
+          <p className="mt-3 text-meta text-muted">
+            Chi tiết phí và ví trong{" "}
+            <Link href="/chinh-sach" className="underline underline-offset-2">
+              chính sách
+            </Link>
+            .
+          </p>
+        </div>
+        <ButtonLink href={JOIN} size="lg" variant="dark" className="mt-5 shrink-0 md:mt-0">
           Mở hồ sơ đối tác
         </ButtonLink>
-        <p className="mt-4 text-meta text-muted">
-          Chi tiết phí và ví trong{" "}
-          <Link href="/chinh-sach" className="underline underline-offset-2">
-            chính sách
-          </Link>
-          .
-        </p>
       </section>
     </div>
   )

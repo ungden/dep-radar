@@ -20,6 +20,28 @@ export const ICON_SOFT_OPACITY = 0.2
 
 export type CategoryIconId = CategoryId | "all"
 
+/**
+ * Each category's own colour: a pastel disc (`bg`) behind the icon drawn in
+ * `fg`. Colour helps the eye find "nail" or "máy ảnh" in a grid of twelve;
+ * the page around them stays paper and ink. Every `fg` reaches 3:1 on its
+ * `bg` (WCAG 1.4.11 for graphics).
+ */
+export const CATEGORY_TINTS: Record<CategoryIconId, { bg: string; fg: string }> = {
+  nail: { bg: "#FFE4EC", fg: "#C93466" },
+  makeup: { bg: "#FFE9DD", fg: "#C9541E" },
+  skincare: { bg: "#DDF4E7", fg: "#13774F" },
+  hair: { bg: "#FFF0C7", fg: "#946400" },
+  "lash-brow": { bg: "#EEE6FF", fg: "#6C44C9" },
+  massage: { bg: "#DAF2F0", fg: "#0D7A7A" },
+  photophone: { bg: "#E4ECFF", fg: "#345FC0" },
+  camera: { bg: "#E8EAF4", fg: "#3F4D70" },
+  "short-video": { bg: "#FFE5E0", fg: "#C23B22" },
+  "product-photo": { bg: "#F4EBDC", fg: "#7D5810" },
+  "model-photo": { bg: "#F6E4FA", fg: "#9437AE" },
+  "model-video": { bg: "#E1F0FF", fg: "#1A6FAD" },
+  all: { bg: "#EDEAE5", fg: "#141213" },
+}
+
 export const CATEGORY_ICONS: Record<CategoryIconId, IconShape[]> = {
   // A bottle of nail polish.
   nail: [
