@@ -14,7 +14,7 @@ import { TimeField } from "@/components/time-field"
 import { BookingBar } from "@/components/booking-bar"
 import { useApp, usePro } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, controlMetrics, fonts, gutter, radius } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
 import { Card, Chip, EmptyState, ErrorNote, Line } from "@/ui/bits"
 import { haptic } from "@/ui/haptics"
@@ -230,7 +230,8 @@ function BookingFlow() {
   const action =
     step < 3 ? "Tiếp tục" : !app.uid ? "Đăng nhập để đặt" : atHome && !address ? "Thêm địa chỉ" : !app.me.account?.phone ? "Thêm số điện thoại" : "Gửi lịch hẹn"
   const days = Array.from({ length: 14 }, (_, i) => addDays(todayISO(), i))
-  const slotColumns = Math.max(1, Math.min(4, Math.floor((width - gutter * 2 + SLOT_GAP) / (Math.max(76, 62 * fontScale) + SLOT_GAP))))
+  const controlScale = Math.min(fontScale, controlMetrics.maxFontSizeMultiplier)
+  const slotColumns = Math.max(1, Math.min(4, Math.floor((width - gutter * 2 + SLOT_GAP) / (Math.max(76, 72 * controlScale) + SLOT_GAP))))
   const slotWidth = Math.floor((width - gutter * 2 - SLOT_GAP * (slotColumns - 1)) / slotColumns)
   const slotGroups = [
     { label: "Buổi sáng", from: 0, to: 12 },
@@ -252,12 +253,12 @@ function BookingFlow() {
           headerRight: () => <IconButton name="close" label="Đóng" onPress={() => router.back()} />,
         }}
       />
-      <ScrollView ref={content} style={{ flex: 1 }} contentContainerStyle={{ padding: gutter, gap: 24, paddingBottom: 32 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
-        <View style={{ gap: 10 }} accessibilityLabel={`Bước ${step} trên 3`} accessible>
-          <View style={{ flexDirection: "row", gap: 6 }}>
+      <ScrollView ref={content} style={{ flex: 1 }} contentContainerStyle={{ padding: gutter, gap: 16, paddingBottom: 24 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }} accessibilityLabel={`Bước ${step} trên 3`} accessible>
+          <View style={{ flex: 1, flexDirection: "row", gap: 6 }}>
             {[1, 2, 3].map(number => <View key={number} style={{ flex: 1, height: 3, borderRadius: 2, backgroundColor: number <= step ? colors.accent : colors.subtleStrong }} />)}
           </View>
-          <Txt v="meta" color={colors.inkSoft}>Bước {step} trên 3</Txt>
+          <Txt v="controlMeta" color={colors.inkSoft}>{step}/3</Txt>
         </View>
 
         {step === 1 ? (
@@ -282,7 +283,7 @@ function BookingFlow() {
               })}
             </View>
             <View style={{ gap: 8 }}>
-              <Txt v="lead" w={700}>
+              <Txt v="controlMeta" w={600}>
                 Gói
               </Txt>
               {offered.map((v) => (
@@ -301,19 +302,19 @@ function BookingFlow() {
             </View>
             {variant.perPerson ? (
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                <Txt w={600}>Số người</Txt>
+                <Txt v="control" w={600}>Số người</Txt>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-                  <Button label="−" variant="secondary" size="sm" disabled={heads <= (variant.minQuantity ?? 1)} onPress={() => setQuantity(heads - 1)} />
-                  <Txt v="lead" w={700} tabular accessibilityLabel={`${heads} người`}>
+                  <Button compact label="−" variant="secondary" size="sm" disabled={heads <= (variant.minQuantity ?? 1)} onPress={() => setQuantity(heads - 1)} />
+                  <Txt v="control" w={600} tabular accessibilityLabel={`${heads} người`}>
                     {heads}
                   </Txt>
-                  <Button label="+" variant="secondary" size="sm" disabled={heads >= (variant.maxQuantity ?? 1)} onPress={() => setQuantity(heads + 1)} />
+                  <Button compact label="+" variant="secondary" size="sm" disabled={heads >= (variant.maxQuantity ?? 1)} onPress={() => setQuantity(heads + 1)} />
                 </View>
               </View>
             ) : null}
             {canHome && canStudio ? (
               <View style={{ gap: 8 }}>
-                <Txt v="lead" w={700}>
+                <Txt v="controlMeta" w={600}>
                   Làm ở đâu
                 </Txt>
                 <Option selected={atHome} title={template.onLocation ? "Tại địa điểm bạn chọn" : "Tại nhà bạn"} onPress={() => setAtHomePref(true)} />
@@ -329,10 +330,10 @@ function BookingFlow() {
 
         {step === 2 ? (
           <>
-            {largeText ? <DateField label="Ngày hẹn" hideLabel value={date} onChange={chooseDate} maxDate={days[days.length - 1]} /> : <View style={{ gap: 12 }}>
+            {largeText ? <DateField compact label="Ngày hẹn" hideLabel value={date} onChange={chooseDate} maxDate={days[days.length - 1]} /> : <View style={{ gap: 12 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Icon name="calendar" size={20} color={colors.accentDark} />
-                <Txt w={600}>{formatDateLong(date)} · {date.slice(0, 4)}</Txt>
+                <Txt v="control" w={600}>{formatDateLong(date)} · {date.slice(0, 4)}</Txt>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: gutter }} style={{ marginHorizontal: -gutter }}>
                 {days.map((d) => {
@@ -344,12 +345,12 @@ function BookingFlow() {
                       onPress={() => chooseDate(d)}
                       accessibilityState={{ selected }}
                       accessibilityLabel={d === todayISO() ? `Hôm nay, ${formatDateLong(d)}` : formatDateLong(d)}
-                      style={{ width: Math.max(58, 44 * fontScale), paddingVertical: 10, gap: 2, borderRadius: radius.md, borderWidth: 1, borderColor: selected ? colors.accentDark : colors.line, alignItems: "center", backgroundColor: selected ? colors.accent : colors.surface }}
+                      style={{ width: Math.max(56, 44 * controlScale), minHeight: controlMetrics.minHeight, paddingVertical: 8, gap: 2, borderRadius: radius.md, borderWidth: 1, borderColor: selected ? colors.accentDark : colors.line, alignItems: "center", backgroundColor: selected ? colors.accent : colors.surface }}
                     >
-                      <Txt v="meta" color={selected ? colors.surface : colors.muted}>
+                      <Txt v="controlMeta" color={selected ? colors.surface : colors.muted}>
                         {d === todayISO() ? "Nay" : weekdayShort(d)}
                       </Txt>
-                      <Txt v="lead" w={700} color={selected ? colors.surface : colors.ink}>
+                      <Txt v="control" w={600} color={selected ? colors.surface : colors.ink}>
                         {Number(d.slice(8))}
                       </Txt>
                     </Press>
@@ -362,9 +363,9 @@ function BookingFlow() {
             ) : !daySlots ? (
               <ActivityIndicator color={colors.accent} />
             ) : daySlots.length ? (
-              <View style={{ gap: 24 }}>
-                {slotGroups.map(group => <View key={group.label} style={{ gap: 10 }}>
-                  <Txt v="meta" w={600} color={colors.inkSoft}>{group.label}</Txt>
+              <View style={{ gap: 16 }}>
+                {slotGroups.map(group => <View key={group.label} style={{ gap: 8 }}>
+                  <Txt v="controlMeta" w={500} color={colors.inkSoft}>{group.label}</Txt>
                   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: SLOT_GAP }}>
                     {group.slots.map((s) => {
                       const selected = picked?.startsAt === s.startsAt
@@ -375,10 +376,9 @@ function BookingFlow() {
                           onPress={() => setTime(s)}
                           accessibilityState={{ selected }}
                           accessibilityLabel={`${s.time}, ${formatDateLong(date)}`}
-                          style={{ width: slotWidth, minHeight: 52, paddingVertical: 12, borderRadius: radius.md, borderWidth: 1, borderColor: selected ? colors.accentDark : colors.lineStrong, alignItems: "center", justifyContent: "center", backgroundColor: selected ? colors.accentSoft : colors.surface }}
+                          style={{ width: slotWidth, minHeight: controlMetrics.minHeight, paddingVertical: controlMetrics.paddingVertical, borderRadius: radius.sm, borderWidth: selected ? 2 : 1, borderColor: selected ? colors.accentDark : colors.lineStrong, alignItems: "center", justifyContent: "center", backgroundColor: selected ? colors.accentSoft : colors.surface }}
                         >
-                          {selected ? <View accessible={false} style={{ position: "absolute", top: 3, right: 3 }}><Icon name="check" size={14} color={colors.accentDark} /></View> : null}
-                          <Txt w={selected ? 700 : 500} tabular color={selected ? colors.accentDark : colors.ink}>
+                          <Txt v="control" w={selected ? 600 : 500} tabular color={selected ? colors.accentDark : colors.ink}>
                             {s.time}
                           </Txt>
                         </Press>
@@ -448,7 +448,7 @@ function BookingFlow() {
               </View>
             ) : (
               <Card>
-                <Txt w={700}>Tại studio</Txt>
+                <Txt v="controlMeta" w={600}>Tại studio</Txt>
                 <Txt color={colors.inkSoft}>{pro.studioAddress}</Txt>
               </Card>
             )}
@@ -459,7 +459,7 @@ function BookingFlow() {
               </View>
             ) : null}
             {needsQuote && !confirmedQuote && (verified?.key === quoteKey && verified.error ? <ErrorNote text={verified.error} onRetry={retryQuote} /> : <Txt v="meta" color={colors.inkSoft}>Đang xác nhận tổng tiền…</Txt>)}
-            {(variant.sessions ?? 1) > 1 && <View style={{ gap: 8 }}><Txt w={700}>Buổi thứ hai (đã gồm trong giá)</Txt><DateField label="Ngày buổi thứ hai" value={secondDate} onChange={setSecondDate} minDate={date} /><TimeField label="Giờ buổi thứ hai" value={secondTime} onChange={setSecondTime} /><Txt v="meta">Hệ thống giữ cả hai buổi cùng lúc và kiểm tra giờ trống khi gửi.</Txt></View>}
+            {(variant.sessions ?? 1) > 1 && <View style={{ gap: 8 }}><Txt v="control" w={600}>Buổi thứ hai (đã gồm trong giá)</Txt><DateField compact label="Ngày buổi thứ hai" value={secondDate} onChange={setSecondDate} minDate={date} /><TimeField compact label="Giờ buổi thứ hai" value={secondTime} onChange={setSecondTime} /><Txt v="meta">Hệ thống giữ cả hai buổi cùng lúc và kiểm tra giờ trống khi gửi.</Txt></View>}
             {quote && picked ? (
               <Card>
                 <Txt w={700}>
@@ -479,7 +479,7 @@ function BookingFlow() {
               </Card>
             ) : null}
             {noteOpen ? <View style={{ gap: 8 }}>
-              <Txt v="lead" w={700}>
+              <Txt v="control" w={600}>
                 Ghi chú (không bắt buộc)
               </Txt>
               <TextInput
@@ -492,23 +492,19 @@ function BookingFlow() {
                 accessibilityLabel={`Ghi chú cho ${pro.name}`}
                 style={{ minHeight: 88, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
               />
-            </View> : <Button label="Thêm ghi chú" icon="plus" variant="secondary" full onPress={() => setNoteOpen(true)} />}
+            </View> : <Button compact label="Thêm ghi chú" icon="plus" variant="secondary" full onPress={() => setNoteOpen(true)} />}
             {error ? <ErrorNote text={error} /> : null}
           </>
         ) : null}
-        {largeText && step < 3 ? <View style={{ gap: 4, borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 20 }}>
-          <Txt v="meta" color={colors.inkSoft}>{priceLabel}</Txt>
-          <Txt v="lead" w={700} tabular>{displayedPrice}</Txt>
-          <Txt v="meta" color={colors.inkSoft}>{template.name} · {variant.label}{heads > 1 ? ` × ${heads}` : ""}</Txt>
-        </View> : null}
       </ScrollView>
 
       <BookingBar
+        compact
         inline
         keyboard={keyboard}
         title={displayedPrice}
         summaryLabel={priceLabel}
-        actionOnly={largeText}
+        actionOnly={largeText && step === 3}
         action={action}
         disabled={!canNext || (step === 3 && needsQuote && !confirmedQuote)}
         busy={busy}
@@ -529,8 +525,8 @@ function Option({ selected, title, subtitle, right, onPress }: { selected: boole
       style={{
         flexDirection: stacked ? "column" : "row",
         alignItems: stacked ? "stretch" : "center",
-        gap: 12,
-        padding: 14,
+        gap: 8,
+        padding: 12,
         borderRadius: radius.md,
         backgroundColor: selected ? colors.accentSoft : colors.surface,
         borderWidth: 2,
@@ -538,15 +534,15 @@ function Option({ selected, title, subtitle, right, onPress }: { selected: boole
       }}
     >
       <View style={{ flex: stacked ? undefined : 1, gap: 2 }}>
-        <Txt w={selected ? 700 : 600}>{title}</Txt>
+        <Txt v="control" w={600}>{title}</Txt>
         {subtitle ? (
-          <Txt v="meta" color={colors.inkSoft}>
+          <Txt v="controlMeta" color={colors.inkSoft}>
             {subtitle}
           </Txt>
         ) : null}
       </View>
       {right ? (
-        <Txt w={700} tabular>
+        <Txt v="control" w={600} tabular>
           {right}
         </Txt>
       ) : null}

@@ -18,6 +18,17 @@ export type Weight = keyof typeof fonts
 /** Side gutter of every screen. */
 export const gutter = space[4]
 
+/** Dense selection controls have their own type scale; reading text keeps full Dynamic Type. */
+export const controlMetrics = {
+  fontSize: 16,
+  lineHeight: 22,
+  metaFontSize: 14,
+  metaLineHeight: 20,
+  maxFontSizeMultiplier: 1.35,
+  minHeight: 48,
+  paddingVertical: 8,
+} as const
+
 /**
  * A white card lifted just off the warm page, the web's --shadow-soft. Cards
  * group a photo with what it costs and who does it.

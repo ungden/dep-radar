@@ -41,3 +41,7 @@ Saved images:
 The Mac locked during the final simulator pass. A saved normal-text screenshot, readback of the corrected confirmation price rows, and the new optional-note interaction remain pending until the machine is unlocked. Do not treat the export or typecheck as proof of those visual states. Physical-device, Android and authenticated booking submission were not verified in this change.
 
 Local changes only; no push, deployment or store update.
+
+## Follow-up, 12 October
+
+The user rejected the remaining oversized controls. [The compact booking follow-up](../2026-10-12-compact-booking/README.md) supersedes the control sizing above and includes normal and accessibility-large screenshots. It also completes the previously blocked confirmation-price readback and optional-note interaction checks.

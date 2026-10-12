@@ -1,6 +1,6 @@
 import { View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { colors, gutter, radius } from "@/theme"
+import { colors, controlMetrics, gutter, radius } from "@/theme"
 import { Button } from "@/ui/button"
 import { Txt } from "@/ui/text"
 
@@ -16,6 +16,7 @@ export function BookingBar({
   inline,
   keyboard,
   actionOnly = false,
+  compact = false,
 }: {
   /** Already formatted, e.g. "Từ 250.000đ" or "Tổng 330.000đ". */
   title: string | null
@@ -32,10 +33,11 @@ export function BookingBar({
   keyboard?: boolean
   /** Keep only the action here when the summary belongs in the scrollable content. */
   actionOnly?: boolean
+  compact?: boolean
 }) {
   const insets = useSafeAreaInsets()
   const { width, fontScale } = useWindowDimensions()
-  const stacked = actionOnly || fontScale > 1.2 || width < 360
+  const stacked = actionOnly || width < 360 || (!compact && fontScale > 1.2)
   return (
     <View
       style={{
@@ -44,27 +46,27 @@ export function BookingBar({
         borderTopWidth: 1,
         borderTopColor: colors.line,
         paddingHorizontal: gutter,
-        paddingTop: 12,
+        paddingTop: compact ? 8 : 12,
         paddingBottom: keyboard ? 12 : Math.max(insets.bottom, 12),
         flexDirection: stacked ? "column" : "row",
         alignItems: stacked ? "stretch" : "center",
-        gap: 12,
+        gap: compact ? 8 : 12,
       }}
     >
       {!actionOnly && (summaryLabel || title || note) ? (
         <View style={{ flex: stacked ? undefined : 1, minWidth: 0, gap: 2 }}>
           {summaryLabel ? (
-            <Txt v="meta" color={colors.inkSoft}>
+            <Txt v={compact ? "controlMeta" : "meta"} color={colors.inkSoft}>
               {summaryLabel}
             </Txt>
           ) : null}
           {title ? (
-            <Txt v="lead" w={700} tabular>
+            <Txt v={compact ? "control" : "lead"} w={compact ? 600 : 700} tabular>
               {title}
             </Txt>
           ) : null}
           {note ? (
-            <Txt v="meta" color={colors.inkSoft}>
+            <Txt v={compact ? "controlMeta" : "meta"} color={colors.inkSoft}>
               {note}
             </Txt>
           ) : null}
@@ -76,12 +78,13 @@ export function BookingBar({
         disabled={disabled}
         busy={busy}
         size="lg"
+        compact={compact}
         full={stacked}
         style={{
-          minHeight: 56,
+          minHeight: compact ? controlMetrics.minHeight : 56,
           borderRadius: radius.md,
           paddingHorizontal: 16,
-          paddingVertical: 12,
+          paddingVertical: compact ? controlMetrics.paddingVertical : 12,
           ...(stacked ? null : { maxWidth: "52%" }),
         }}
       />
