@@ -8,6 +8,7 @@ import { DataUnavailable } from "@/components/data-unavailable"
 import { PartnerProgress } from "@/components/partner-progress"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, Button, Card, Field, PageHeader, Toggle, inputClass } from "@/components/ui"
+import { PARTNER_PLEDGE } from "@/lib/conduct"
 import { saveProProfile, saveWorkingHours, submitPartnerProfile, fetchPartnerSetup } from "@/lib/api/actions"
 import { addDayOff, listDaysOff, removeDayOff, type DayOff } from "@/lib/api/me"
 import { verticalOf } from "@/lib/catalog"
@@ -453,7 +454,7 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
           {error}
         </p>
       )}
-      {!pro.published && !pending && <label className="mt-3 flex gap-2 text-body"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} /> <span>Tôi đồng ý <Link href="/chinh-sach" className="underline">chính sách phí, nhận việc và hủy lịch</Link>.</span></label>}
+      {!pro.published && !pending && <label className="mt-3 flex gap-2 text-body"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} /> <span>Tôi đồng ý <Link href="/chinh-sach" className="underline">chính sách phí, nhận việc và hủy lịch</Link> và <Link href="/quy-che#bi-cam" className="underline">Quy chế</Link>. {PARTNER_PLEDGE}</span></label>}
       {!pending && (
         <Button
           className="mt-3"

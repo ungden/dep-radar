@@ -23,6 +23,7 @@ import {
 import { formatDay, localDate, localTime } from "@/data/format"
 import { webLink } from "@/data/links"
 import { reencodePhoto } from "@/data/works"
+import { ChatNotice, OffAppHint } from "@/components/conduct"
 import { useSafetyMenu } from "@/components/safety"
 import { useApp } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
@@ -191,6 +192,7 @@ export default function Conversation() {
   } else {
     footer = (
       <View style={{ backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line }}>
+        <OffAppHint text={text} />
         {photos.length ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: gutter, paddingTop: 10 }}>
             {photos.map((p, i) => (
@@ -270,6 +272,8 @@ export default function Conversation() {
         keyExtractor={(m) => m.id}
         keyboardDismissMode="interactive"
         contentContainerStyle={{ padding: gutter }}
+        // Open until the first message; one tap away after that.
+        ListHeaderComponent={blocked || !loaded ? null : <ChatNotice defaultOpen={messages.length === 0} />}
         renderItem={({ item, index }) => {
           const day = localDate(item.createdAt)
           const newDay = index === 0 || localDate(messages[index - 1].createdAt) !== day

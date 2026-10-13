@@ -14,6 +14,7 @@ import { TimeField } from "@/components/time-field"
 import { BookingBar } from "@/components/booking-bar"
 import { useApp, usePro } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
+import { ConductNote } from "@/components/conduct"
 import { colors, controlMetrics, fonts, gutter, radius } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
 import { Card, Chip, EmptyState, ErrorNote, Line } from "@/ui/bits"
@@ -493,6 +494,7 @@ function BookingFlow() {
                 style={{ minHeight: 88, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
               />
             </View> : <Button compact label="Thêm ghi chú" icon="plus" variant="secondary" full onPress={() => setNoteOpen(true)} />}
+            <ConductNote />
             {error ? <ErrorNote text={error} /> : null}
           </>
         ) : null}

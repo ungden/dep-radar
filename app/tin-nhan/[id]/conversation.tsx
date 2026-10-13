@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Ban, Flag, ImagePlus, MoreHorizontal, Send } from "lucide-react"
+import { ChatNotice, OffAppHint } from "@/components/conduct"
 import { ReportButton } from "@/components/report-button"
 import { Sheet } from "@/components/sheet"
 import { SupportLink } from "@/components/support-link"
@@ -134,12 +135,13 @@ export function Conversation({
         }
       />
 
+      {/* Open by default until the first message; one tap away after that. */}
+      <ChatNotice defaultOpen={messages.length === 0} />
+
       <div className="flex-1 space-y-2 pb-4">
         {messages.length === 0 && (
           <p className="py-10 text-center text-body text-muted">
-            {chat.open
-              ? "Trao đổi về giờ, địa chỉ, mẫu mong muốn cho lịch hẹn này. Đừng gửi thông tin thanh toán qua tin nhắn."
-              : "Chưa có tin nhắn nào."}
+            {chat.open ? "Trao đổi về giờ, địa chỉ, mẫu mong muốn cho lịch hẹn này." : "Chưa có tin nhắn nào."}
           </p>
         )}
         {messages.map((m) => (
@@ -193,6 +195,7 @@ export function Conversation({
         </div>
       ) : (
         <div className="sticky bottom-0 border-t border-line bg-canvas/95 py-3 backdrop-blur">
+          <OffAppHint text={draft} />
           <form
             className="flex items-end gap-2"
             onSubmit={(e) => {

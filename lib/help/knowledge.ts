@@ -242,6 +242,22 @@ const ENTRIES: HelpEntry[] = [
     keywords: ["thanh toan", "tra tien", "online", "chuyen khoan", "tien mat"],
   },
   {
+    id: "c-dich-vu-lanh-manh",
+    audience: "chung",
+    topic: "an-toan",
+    q: "360đẹp có nhận dịch vụ ngoài lề không? Gặp đề nghị không lành mạnh thì làm sao?",
+    a: `Không. 360đẹp chỉ kết nối dịch vụ làm đẹp, chụp ảnh và người mẫu lành mạnh, tuân thủ pháp luật Việt Nam. Dịch vụ ngoài lề, gợi dục hay trá hình dưới tên massage, chăm sóc da, chụp ảnh, người mẫu đều bị cấm (Quy chế, mục IX). Gặp đề nghị như vậy, từ chối ngay, ${REPORT_HOW} hoặc trong cuộc trò chuyện. Tài khoản vi phạm bị khoá và 360đẹp cung cấp thông tin cho cơ quan chức năng khi pháp luật yêu cầu.`,
+    keywords: ["ngoai le", "lanh manh", "phap luat", "massage", "goi duc", "nhay cam", "bao cao", "vi pham"],
+  },
+  {
+    id: "c-trao-doi-trong-app",
+    audience: "chung",
+    topic: "tin-nhan",
+    q: "Vì sao nên trao đổi trong tin nhắn 360đẹp thay vì Zalo hay điện thoại?",
+    a: "Tin nhắn trong 360đẹp được lưu cùng lịch hẹn, nên khi có tranh chấp (giờ, giá, dịch vụ, thái độ) chúng tôi có căn cứ để xem xét và hỗ trợ. Thoả thuận qua Zalo, Facebook, điện thoại hay ngoài ứng dụng không được ghi nhận, nên 360đẹp không thể hỗ trợ. Người làm vẫn có thể gọi để xác nhận lịch, nhưng hãy chốt lại giờ, địa chỉ, dịch vụ và giá trong tin nhắn.",
+    keywords: ["zalo", "facebook", "ngoai app", "tin nhan", "trao doi", "dien thoai", "ho tro"],
+  },
+  {
     id: "k-dat-coc",
     audience: "khach",
     topic: "thanh-toan",
