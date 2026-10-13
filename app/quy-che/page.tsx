@@ -240,7 +240,7 @@ export default function OperatingRulesPage() {
           </ul>
         </Section>
 
-        <Section title="IX. Nội dung và dịch vụ bị cấm">
+        <Section title="IX. Nội dung và dịch vụ bị cấm" id="bi-cam">
           <ul className="list-disc space-y-1 pl-5">
             <li>Dịch vụ, tuyển mẫu hay nội dung khiêu dâm, khoả thân, gợi dục; ảnh “nhạy cảm”; dịch vụ cho người dưới 18 tuổi trái quy định.</li>
             <li>Yêu cầu đặt cọc trước, “phí hồ sơ”, chuyển khoản trước cho người mẫu hay đối tác ngoài lịch hẹn.</li>

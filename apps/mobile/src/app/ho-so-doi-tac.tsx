@@ -3,7 +3,7 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { webLink } from "@/data/links"
 import { ActivityIndicator, ScrollView, TextInput, View } from "react-native"
-import { CATEGORIES, CITIES, districtsOf, getTemplate, templatesByCategory, tierLabels, PRICE_LEVEL_NOTE, PARTNER_STEPS, partnerProgress, DEFAULT_WORKING_WINDOWS, IDENTITY_VERIFICATION_OPEN, type PartnerSetup, type CategoryId } from "@/shared"
+import { CATEGORIES, CITIES, districtsOf, getTemplate, templatesByCategory, tierLabels, PRICE_LEVEL_NOTE, PARTNER_STEPS, partnerProgress, DEFAULT_WORKING_WINDOWS, IDENTITY_VERIFICATION_OPEN, PARTNER_PLEDGE, type PartnerSetup, type CategoryId } from "@/shared"
 import { rpc, supabase } from "@/data/supabase"
 import { useApp } from "@/state/app"
 import { colors, gutter, radius, fonts } from "@/theme"
@@ -123,7 +123,8 @@ export default function PartnerProfile() {
       />}
       <Button label="Nhận tiền & mã QR (mở trên web)" variant="ghost" onPress={() => void WebBrowser.openBrowserAsync(webLink("/studio/thanh-toan"))} />
       <Button label="Đọc chính sách phí, nhận việc & hủy lịch" variant="ghost" onPress={() => void WebBrowser.openBrowserAsync(webLink("/chinh-sach"))} />
-      <Choice label="Tôi đồng ý chính sách" active={agree} onPress={() => setAgree(!agree)} />
+      <Button label="Đọc Quy chế: dịch vụ bị cấm" variant="ghost" onPress={() => void WebBrowser.openBrowserAsync(webLink("/quy-che#bi-cam"))} />
+      <Choice label={`Tôi đồng ý chính sách và Quy chế. ${PARTNER_PLEDGE}`} active={agree} onPress={() => setAgree(!agree)} />
       <Button label="Gửi hồ sơ để duyệt" busy={busy} disabled={!agree || steps.slice(0, 5).some((s) => !s.done) || setup.profile?.review_status === "pending"} onPress={() => void mutate("submit_partner_profile", { p_agree: agree })} />
       {setup.profile?.published && <Button label="Tạm ẩn hồ sơ" variant="secondary" busy={busy} onPress={() => void hideProfile()} />}
       <Button label="Về quản lý đối tác" variant="secondary" onPress={() => router.replace("/studio")} />

@@ -6,6 +6,7 @@ import { formatDuration, formatKm, formatPrice } from "@/data/format"
 import { type AppPro, type AppWork } from "@/data/public"
 import { PostCard, ProCardSkeleton } from "@/components/cards"
 import { useApp } from "@/state/app"
+import { ConductNote } from "@/components/conduct"
 import { colors, gutter, radius } from "@/theme"
 import { Button } from "@/ui/button"
 import { Avatar, Card, Divider, EmptyState, ErrorNote, Photo, Rating, VerifiedMark } from "@/ui/bits"
@@ -88,6 +89,9 @@ export default function ServiceScreen() {
               <Fact key={line} icon="check" text={line} />
             ),
           )}
+        </View>
+        <View style={{ marginTop: 12 }}>
+          <ConductNote />
         </View>
       </View>
 
