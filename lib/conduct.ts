@@ -1,3 +1,5 @@
+import type { CategoryId } from "./types"
+
 /**
  * What 360đẹp is for, said the same way on the web and in the app (apps/mobile
  * reads this file through @shared). The binding text is the Quy chế, section IX
@@ -5,6 +7,14 @@
  * a service page, the booking and request forms, the chat, the partner's
  * agreement before their profile goes to review.
  */
+
+/**
+ * Where "chỉ dịch vụ lành mạnh" is worth saying: services that get disguised
+ * (massage) or asked to go too far (models). On makeup, nail or a photo shoot
+ * the warning would read as an accusation (owner, 13/10/2026).
+ */
+export const CONDUCT_CATEGORIES: readonly CategoryId[] = ["massage", "model-photo", "model-video"]
+export const needsConductNote = (category: CategoryId | null | undefined) => Boolean(category && CONDUCT_CATEGORIES.includes(category))
 
 export const CONDUCT = {
   title: "Chỉ dịch vụ lành mạnh, đúng pháp luật",
@@ -16,13 +26,14 @@ export const CONDUCT = {
     "Không dịch vụ pháp luật cấm hoặc cần giấy phép mà người làm không có.",
     "Vi phạm bị khoá tài khoản ngay; 360đẹp cung cấp thông tin cho cơ quan chức năng khi pháp luật yêu cầu.",
   ],
+  /** The footer, on every page: neutral, true for every trade. */
+  footer: "Mọi dịch vụ trên 360đẹp phải đúng mô tả và tuân thủ pháp luật Việt Nam.",
   /** For the customer when an offer crosses the line. */
   report: "Gặp đề nghị như vậy, hãy từ chối và bấm Báo cáo.",
 } as const
 
 /** For the partner, ticked before their profile is sent for review. */
-export const PARTNER_PLEDGE =
-  "Tôi cam kết chỉ cung cấp dịch vụ lành mạnh, đúng mô tả, tuân thủ pháp luật Việt Nam và không cung cấp dịch vụ ngoài lề."
+export const PARTNER_PLEDGE = "Tôi cam kết cung cấp dịch vụ đúng mô tả và tuân thủ pháp luật Việt Nam."
 
 export const CHAT_NOTICE = {
   title: "Trao đổi trong 360đẹp để được hỗ trợ",
@@ -31,7 +42,7 @@ export const CHAT_NOTICE = {
   points: [
     "Trả đúng tổng tiền ghi trong lịch hẹn, sau khi làm xong. Không chuyển tiền trước, không đặt cọc.",
     "Không gửi mật khẩu, mã OTP hay thông tin thẻ.",
-    "Chỉ dịch vụ lành mạnh, đúng pháp luật. Gặp đề nghị ngoài lề: từ chối và bấm Báo cáo.",
+    "Gặp đề nghị khiến bạn không thoải mái hay trái pháp luật: từ chối và bấm Báo cáo.",
   ],
 } as const
 

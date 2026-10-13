@@ -8,6 +8,7 @@ import { Info } from "lucide-react"
 import { CATEGORY_ICON } from "@/components/beauty"
 import { RequireSession } from "@/components/require-session"
 import { ConductNote } from "@/components/conduct"
+import { needsConductNote } from "@/lib/conduct"
 import { BottomBar, Button, Field, PageHeader, PageSkeleton, inputClass } from "@/components/ui"
 import { AddressPicker, defaultAddressId } from "@/components/address-picker"
 import { CATEGORIES, getTemplate, templatesByCategory, tierLabels, serviceQuantity, serviceDuration, PRICE_LEVEL_NOTE } from "@/lib/catalog"
@@ -336,7 +337,7 @@ function NewRequestForm() {
         </p>
       </fieldset>
 
-      <ConductNote />
+      {needsConductNote(category) && <ConductNote />}
 
       <p className="flex gap-2 text-label text-muted">
         <Info className="mt-0.5 size-3.5 shrink-0" />

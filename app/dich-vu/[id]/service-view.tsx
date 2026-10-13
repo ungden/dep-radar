@@ -13,6 +13,7 @@ import { VerifiedMark } from "@/components/trust"
 import { Avatar, ButtonLink, PageHeader } from "@/components/ui"
 import { CategoryIcon } from "@/components/category-icon"
 import { ConductNote } from "@/components/conduct"
+import { needsConductNote } from "@/lib/conduct"
 import { CATEGORY_TINTS } from "@/lib/design/category-icons"
 import { categoryPhoto } from "@/lib/design/photos"
 import { categoryLabel, getTemplate, serviceDuration, serviceQuantity } from "@/lib/catalog"
@@ -100,7 +101,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
               </li>
             ))}
           </ul>
-          <ConductNote className="mt-4" />
+          {needsConductNote(template.category) && <ConductNote className="mt-4" />}
         </div>
 
         <aside className="md:sticky md:top-24 md:col-start-2 md:row-span-2 md:row-start-1 md:self-start">

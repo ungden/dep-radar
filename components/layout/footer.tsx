@@ -129,7 +129,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 space-y-1 border-t border-white/10 pt-6 text-label text-white/55">
-          <p className="font-semibold text-white/80">{CONDUCT.short}</p>
+          <p className="font-semibold text-white/80">{CONDUCT.footer}</p>
           <CompanyInfo />
           {DEMO_DATA_LIVE && <p>Bản demo: nhiều hồ sơ người làm và tác phẩm là dữ liệu mẫu, thanh toán online chưa hoạt động.</p>}
         </div>

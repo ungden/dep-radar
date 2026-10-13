@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { offAppHint } from "@/lib/conduct"
+import { needsConductNote, offAppHint } from "@/lib/conduct"
 
 describe("offAppHint", () => {
   it("stays quiet for ordinary booking talk", () => {
@@ -14,5 +14,17 @@ describe("offAppHint", () => {
     expect(offAppHint("Chị chuyển khoản trước giúp em")).toMatch(/Không chuyển tiền trước/)
     expect(offAppHint("đặt cọc 100k qua zalo nhé")).toMatch(/Không chuyển tiền trước/)
     expect(offAppHint("gửi em stk")).toMatch(/Không chuyển tiền trước/)
+  })
+})
+
+describe("needsConductNote", () => {
+  it("shows the healthy-services rule only where it is at risk", () => {
+    expect(needsConductNote("massage")).toBe(true)
+    expect(needsConductNote("model-photo")).toBe(true)
+    expect(needsConductNote("model-video")).toBe(true)
+    expect(needsConductNote("makeup")).toBe(false)
+    expect(needsConductNote("nail")).toBe(false)
+    expect(needsConductNote("photophone")).toBe(false)
+    expect(needsConductNote(null)).toBe(false)
   })
 })
