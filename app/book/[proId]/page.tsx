@@ -7,6 +7,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { CalendarX2, Car, Check, CheckCircle2, Clock, CreditCard, HandCoins, Home, Info, Link2, MapPin, Phone, Store, Zap } from "lucide-react"
 import { AddressPicker, defaultAddressId } from "@/components/address-picker"
 import { ConductNote } from "@/components/conduct"
+import { needsConductNote } from "@/lib/conduct"
 import { PriceBreakdown } from "@/components/price-breakdown"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, Skeleton, inputClass, PageSkeleton } from "@/components/ui"
@@ -935,7 +936,7 @@ function BookingFlow({ proId }: { proId: string }) {
         </section>
       )}
 
-      {step === 3 && <ConductNote className="mt-6" />}
+      {step === 3 && needsConductNote(tpl.category) && <ConductNote className="mt-6" />}
 
       {/* The running total is always in view, on every step. */}
       <BottomBar className="md:sticky md:bottom-0 md:bg-canvas/95 md:py-3 md:backdrop-blur">

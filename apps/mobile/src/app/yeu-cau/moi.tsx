@@ -10,6 +10,7 @@ import { CategoryTiles } from "@/components/category-icon"
 import { useApp } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
 import { ConductNote } from "@/components/conduct"
+import { needsConductNote } from "@/shared"
 import { colors, fonts, gutter, radius } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
 import { Chip, EmptyState, ErrorNote } from "@/ui/bits"
@@ -323,7 +324,7 @@ export default function NewRequest() {
         </Txt>
         <Group title="Phí di chuyển tối đa đồng ý"><View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>{[0, 25000, 50000, 100000].map((n) => <Chip key={n} label={formatPrice(n)} selected={n === feeLimit} onPress={() => setFeeLimit(n)} />)}</View><Txt>Tổng tối đa {formatPrice(maxTotal)} (đã gồm phí gấp nếu có).</Txt></Group>
         {(variant.sessions ?? 1) > 1 && <ErrorNote text="Gói nhiều buổi: đặt trực tiếp từ hồ sơ đối tác để chọn đủ lịch." />}
-        <ConductNote />
+        {needsConductNote(category) ? <ConductNote /> : null}
         {error ? <ErrorNote text={error} /> : null}
       </ScrollView>
       <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: keyboard ? 12 : Math.max(insets.bottom, 12), backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line }}>

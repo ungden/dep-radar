@@ -7,6 +7,7 @@ import { type AppPro, type AppWork } from "@/data/public"
 import { PostCard, ProCardSkeleton } from "@/components/cards"
 import { useApp } from "@/state/app"
 import { ConductNote } from "@/components/conduct"
+import { needsConductNote } from "@/shared"
 import { colors, gutter, radius } from "@/theme"
 import { Button } from "@/ui/button"
 import { Avatar, Card, Divider, EmptyState, ErrorNote, Photo, Rating, VerifiedMark } from "@/ui/bits"
@@ -90,9 +91,11 @@ export default function ServiceScreen() {
             ),
           )}
         </View>
-        <View style={{ marginTop: 12 }}>
-          <ConductNote />
-        </View>
+        {needsConductNote(template.category) ? (
+          <View style={{ marginTop: 12 }}>
+            <ConductNote />
+          </View>
+        ) : null}
       </View>
 
       {/* Options, price first */}
