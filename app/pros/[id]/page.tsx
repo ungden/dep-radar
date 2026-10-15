@@ -75,7 +75,7 @@ export default async function ProPage({ params }: { params: Promise<{ id: string
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
       <Suspense fallback={<PageSkeleton />}>
-        <ProProfile proId={pro.slug} />
+        <ProProfile proId={pro.slug} name={pro.name} />
       </Suspense>
     </>
   )

@@ -54,12 +54,34 @@ function useHash() {
   )
 }
 
-export function ProProfile({ proId }: { proId: string }) {
+/**
+ * The page finds any profile row the viewer may read, but the app's data holds
+ * only published ones (and the viewer's own). An admin opening a partner still
+ * under review from the desk lands here with no profile in the store.
+ */
+export function ProProfile({ proId, name }: { proId: string; name: string }) {
+  const state = useApp()
+  const pro = proView(state, proId)
+  if (!pro)
+    return (
+      <EmptyState
+        title={`${name} chưa mở hồ sơ`}
+        text="Hồ sơ này chưa hiện với khách: đang chờ duyệt, đang ẩn hoặc chưa đủ dịch vụ."
+        action={
+          <ButtonLink href="/" variant="outline">
+            Về trang chủ
+          </ButtonLink>
+        }
+      />
+    )
+  return <ListedProfile pro={pro} />
+}
+
+function ListedProfile({ pro }: { pro: Pro }) {
   const router = useRouter()
   const params = useSearchParams()
   const state = useApp()
   const hash = useHash()
-  const pro = proView(state, proId)!
   const works = worksOf(state, pro.id)
   const services = servicesOf(state, pro.id)
   const reviews = reviewsOf(state, pro.id)
