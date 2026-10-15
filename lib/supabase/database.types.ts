@@ -2538,6 +2538,10 @@ export type Database = {
       start_booking: { Args: { p_booking: string }; Returns: undefined }
       set_start_point: { Args: { p_lat: number; p_lng: number; p_label?: string }; Returns: undefined }
       attach_addons: { Args: { p_parent: string; p_items: Json }; Returns: string[] }
+      set_job_references: {
+        Args: { p_job: string; p_paths: string[] }
+        Returns: undefined
+      }
       set_booking_references: { Args: { p_booking: string; p_paths: string[] }; Returns: undefined }
       mark_departed: { Args: { p_booking: string }; Returns: undefined }
       ask_report_info: { Args: { p_report: string; p_question: string }; Returns: undefined }

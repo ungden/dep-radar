@@ -7,6 +7,8 @@ import { takeLastSavedAddress } from "@/data/addresses"
 import { rpc } from "@/data/supabase"
 import { toTimestamptz } from "@/data/format"
 import { createBooking, fetchSlots } from "@/data/bookings"
+import { setBookingReferences, uploadReference } from "@/data/references"
+import { ReferencePicker, type PickedPhoto } from "@/components/reference-photos"
 import { addDays, formatDateLong, formatDuration, formatKm, formatPrice, todayISO, weekdayShort } from "@/data/format"
 import { askForPushPermission } from "@/data/push"
 import { WardPicker } from "@/components/ward-picker"
@@ -68,6 +70,7 @@ function BookingFlow() {
   const [estDistrict, setEstDistrict] = React.useState<string | null>(null)
   const [note, setNote] = React.useState("")
   const [noteOpen, setNoteOpen] = React.useState(false)
+  const [photos, setPhotos] = React.useState<PickedPhoto[]>([])
   const [slots, setSlots] = React.useState<{ key: string; list: { startsAt: string; time: string }[] } | null>(null)
   const [slotRetry, retrySlots] = React.useReducer((n: number) => n + 1, 0)
   const [slotError, setSlotError] = React.useState<string | null>(null)
@@ -139,7 +142,7 @@ function BookingFlow() {
 
 
   // Leaving with choices made asks first; a sent booking leaves freely.
-  const dirty = !doneId && (step > 1 || Boolean(time) || Boolean(note.trim()) || templateId !== null)
+  const dirty = !doneId && (step > 1 || Boolean(time) || Boolean(note.trim()) || photos.length > 0 || templateId !== null)
   React.useEffect(() => {
     if (!dirty) return
     return navigation.addListener("beforeRemove", (e) => {
@@ -213,10 +216,20 @@ function BookingFlow() {
       expectedTotal: confirmedQuote.total, expectedUnit: confirmedQuote.unitPrice,
       sessions: (variant.sessions ?? 1) > 1 ? [secondAt!] : [],
     })
-    setBusy(false)
     if (!res.ok) {
       haptic.error()
       return setError(res.error)
+    }
+    // The booking stands; its reference photos follow, and a failure only says so.
+    if (photos.length && app.uid) {
+      try {
+        const paths: string[] = []
+        for (const p of photos) paths.push(await uploadReference(app.uid, p))
+        const sent = await setBookingReferences(res.data, paths)
+        if (!sent.ok) throw new Error(sent.error)
+      } catch (e) {
+        Alert.alert("Đã gửi lịch hẹn", `Nhưng chưa gửi được ảnh mẫu: ${e instanceof Error ? e.message : "lỗi kết nối"}`)
+      }
     }
     haptic.success()
     setDoneId(res.data)
@@ -481,7 +494,7 @@ function BookingFlow() {
                 {quote.urgentFee ? <Line label="Phí gấp" value={formatPrice(quote.urgentFee)} /> : null}
                 <Line label={confirmedQuote ? "Tổng tiền" : "Tạm tính"} value={formatPrice(quote.total)} strong />
                 <Txt v="meta" color={colors.muted}>
-                  Thanh toán sau khi làm xong. {atHome ? "Khoảng cách ước tính theo quận. " : ""}Giá được xác nhận lại khi gửi lịch. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để người làm kịp sắp xếp.
+                  Thanh toán sau khi làm xong. {atHome ? "Khoảng cách ước tính theo phường/xã. " : ""}Giá được xác nhận lại khi gửi lịch. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để người làm kịp sắp xếp.
                 </Txt>
               </Card>
             ) : null}
@@ -499,7 +512,14 @@ function BookingFlow() {
                 accessibilityLabel={`Ghi chú cho ${pro.name}`}
                 style={{ minHeight: 88, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
               />
-            </View> : <Button compact label="Thêm ghi chú" icon="plus" variant="secondary" full onPress={() => setNoteOpen(true)} />}
+              <Txt v="control" w={600} style={{ marginTop: 6 }}>
+                Ảnh mẫu (không bắt buộc)
+              </Txt>
+              <Txt v="meta" color={colors.inkSoft}>
+                Tối đa 3 ảnh kiểu bạn muốn. {pro.name} xem trước khi nhận lịch.
+              </Txt>
+              <ReferencePicker value={photos} onChange={setPhotos} disabled={busy} />
+            </View> : <Button compact label="Thêm ghi chú, ảnh mẫu" icon="plus" variant="secondary" full onPress={() => setNoteOpen(true)} />}
             {template && needsConductNote(template.category) ? <ConductNote /> : null}
             {error ? <ErrorNote text={error} /> : null}
           </>

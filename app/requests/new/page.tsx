@@ -5,6 +5,7 @@ import { moveRadio } from "@/lib/radio-navigation"
 import { Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Info } from "lucide-react"
+import { ReferenceUpload, type RefUpload } from "@/components/reference-photos"
 import { CATEGORY_ICON } from "@/components/beauty"
 import { RequireSession } from "@/components/require-session"
 import { ConductNote } from "@/components/conduct"
@@ -54,6 +55,7 @@ function NewRequestForm() {
   const [feeLimit, setFeeLimit] = React.useState(0)
   const [tier, setTier] = React.useState<number | null>(null)
   const [description, setDescription] = React.useState("")
+  const [refs, setRefs] = React.useState<RefUpload[]>([])
   const [date, setDate] = React.useState(addDays(todayISO(), 2))
   const [time, setTime] = React.useState("16:00")
   const [pickedAddress, setAddressId] = React.useState<string | null>(null)
@@ -109,8 +111,16 @@ function NewRequestForm() {
           price: unit,
           maxTotal,
         })
+        if ("error" in result) {
+          setBusy(false)
+          return setError(result.error)
+        }
+        // The request is up; its photos follow, and a failure does not take it down.
+        if (refs.length) {
+          const sent = await actions.setJobReferences(result.id, refs.map((r) => r.path))
+          if (sent.error) window.alert(`Đã đăng yêu cầu, nhưng chưa gửi được ảnh mẫu: ${sent.error}`)
+        }
         setBusy(false)
-        if ("error" in result) return setError(result.error)
         router.replace(`/requests/${result.id}`)
       }}
     >
@@ -258,6 +268,12 @@ function NewRequestForm() {
           maxLength={300}
         />
       </Field>
+
+      <div>
+        <p className="mb-1.5 text-meta font-semibold text-ink">Ảnh mẫu (tuỳ chọn, tối đa 3)</p>
+        <p className="mb-2 text-label text-muted">Tone makeup, kiểu tóc, mẫu nail bạn muốn. Người làm xem trước khi nhận, để chỉ người làm được mới nhận.</p>
+        <ReferenceUpload value={refs} onChange={setRefs} onError={setError} />
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Ngày">

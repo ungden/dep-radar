@@ -51,6 +51,8 @@ export interface BookingItem {
   paidAt: string | null
   /** When the partner said they set off ("Thợ đang di chuyển"); 20261008100100. */
   departedAt: string | null
+  /** Paths in the private references bucket ("ảnh mẫu"), 0 to 3. */
+  referencePhotos: string[]
   /** A new time one side proposed and the other has not answered. */
   rescheduleTo: string | null
   rescheduleBy: "customer" | "pro" | null
@@ -82,6 +84,8 @@ const WITH_CONNECTION = `${WITH_DELIVERY.replace("reviews (booking_id)", "review
   voucher_id, discount, customer_reviews (booking_id, rating, body, published_at)`
 // 20261007100200: the name kept on the booking (the freelancer reads the account only once accepted) and "Đã nhận tiền".
 const COLUMN_SETS = [
+  // 20261008100100: the customer's reference photos.
+  `${WITH_CONNECTION}, service_contract, customer_name, paid_at, reschedule_to, reschedule_by, departed_at, reference_photos`,
   `${WITH_CONNECTION}, service_contract, customer_name, paid_at, reschedule_to, reschedule_by, departed_at`,
   `${WITH_CONNECTION}, service_contract`,
   WITH_CONNECTION,
@@ -156,6 +160,7 @@ function toBooking(row: Row): BookingItem {
       : null,
     paidAt: row.paid_at ?? null,
     departedAt: row.departed_at ?? null,
+    referencePhotos: Array.isArray(row.reference_photos) ? (row.reference_photos as string[]) : [],
     rescheduleTo: row.reschedule_to ?? null,
     rescheduleBy: row.reschedule_by === "customer" || row.reschedule_by === "pro" ? row.reschedule_by : null,
     customer: { id: row.customer_id, name: customer.full_name || row.customer_name || "Khách hàng", phone: CONTACT_VISIBLE.includes(status) ? customer.phone || null : null },

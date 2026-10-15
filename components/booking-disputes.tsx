@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { CalendarClock, CheckCircle2, Plus } from "lucide-react"
+import { ReferenceGallery } from "@/components/reference-photos"
 import { bookingTimes, useNow } from "@/components/booking-extras"
 import { ShowPaymentQr } from "@/components/payout"
 import { Button, Card, inputClass } from "@/components/ui"
@@ -260,33 +261,10 @@ export function ProposeNewTime({ booking, label = "Đề nghị đổi giờ" }:
 /** The 1–3 reference photos the customer sent; a private bucket, so short-lived links. */
 export function ReferencePhotos({ booking, isPro }: { booking: Booking; isPro: boolean }) {
   const paths = booking.referencePhotos ?? []
-  const [urls, setUrls] = React.useState<string[]>([])
-  React.useEffect(() => {
-    if (!paths.length) return
-    let live = true
-    void supabaseBrowser()
-      .storage.from("references")
-      .createSignedUrls(paths, 60 * 60)
-      .then(({ data }) => {
-        if (live) setUrls((data ?? []).flatMap((d) => (d.signedUrl ? [d.signedUrl] : [])))
-      })
-    return () => {
-      live = false
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paths.join("|")])
   if (!paths.length) return null
   return (
     <Card className="p-4">
-      <p className="text-body font-semibold">{isPro ? "Ảnh mẫu khách gửi" : "Ảnh mẫu bạn đã gửi"}</p>
-      <div className="mt-2 grid grid-cols-3 gap-2">
-        {urls.map((u) => (
-          <a key={u} href={u} target="_blank" rel="noreferrer">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={u} alt="Ảnh mẫu" className="aspect-square w-full rounded-lg bg-subtle object-cover" />
-          </a>
-        ))}
-      </div>
+      <ReferenceGallery paths={paths} title={isPro ? "Ảnh mẫu khách gửi" : "Ảnh mẫu bạn đã gửi"} />
     </Card>
   )
 }

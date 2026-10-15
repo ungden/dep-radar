@@ -3,6 +3,7 @@ import { Alert, ScrollView, View } from "react-native"
 import { CATALOG_VERSION, serviceDuration, getTemplate, getVariant } from "@/shared"
 import { formatDateLong, formatDuration, formatPrice } from "@/data/format"
 import { closeJob, getMyRequest, requestProgress } from "@/data/requests"
+import { ReferencePhotos } from "@/components/reference-photos"
 import { REQUEST_STATUS } from "@/components/request-status"
 import { useApp } from "@/state/app"
 import { useAsync } from "@/state/use-async"
@@ -81,6 +82,7 @@ export default function RequestDetail() {
           {r.district}, {r.city}
         </Txt>
         {r.description ? <Txt color={colors.inkSoft}>{r.description}</Txt> : null}
+        <ReferencePhotos paths={r.referencePhotos} title="Ảnh mẫu bạn gửi" />
       </Card>
 
       <Card>

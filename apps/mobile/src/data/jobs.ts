@@ -27,6 +27,8 @@ export interface JobItem {
   mine: boolean
   eligibility?: { reason: string | null; total: number | null; payout: number | null }
   createdAt: string
+  /** The look the customer wants (20261016100000_job_references.sql), paths in the references bucket. */
+  referencePhotos: string[]
 }
 
 const COLUMNS = `id, customer_id, template_id, variant_id, quantity, description, starts_at,
@@ -40,7 +42,7 @@ export async function listJobs(uid: string): Promise<JobItem[]> {
   const rows = await selectWithFallback(
     "jobs",
     (c) => supabase.from("jobs").select(c).eq("status", "open").order("starts_at", { ascending: true }).limit(200),
-    [`${COLUMNS}, price, service_contract, max_total`, `${COLUMNS}, price`, COLUMNS],
+    [`${COLUMNS}, price, service_contract, max_total, reference_photos`, `${COLUMNS}, price, service_contract, max_total`, `${COLUMNS}, price`, COLUMNS],
   )
   const eligible = await rpc<({ id: string; reason: string | null; total: number | null; payout: number | null })[]>("my_job_eligibility", { p_ids: rows.filter((r) => r.customer_id !== uid).map((r) => r.id) })
   if (!eligible.ok) throw new Error(eligible.error)
@@ -65,6 +67,7 @@ export async function listJobs(uid: string): Promise<JobItem[]> {
       price: Number(row.price ?? getVariant(row.template_id, row.variant_id)?.suggestedPrice ?? 0),
       mine: row.customer_id === uid,
       createdAt: row.created_at,
+      referencePhotos: Array.isArray(row.reference_photos) ? (row.reference_photos as string[]) : [],
     }))
 }
 

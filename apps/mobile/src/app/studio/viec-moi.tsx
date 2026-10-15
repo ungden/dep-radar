@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { getTemplate, getVariant, travelDistanceKm } from "@/shared"
 import { formatDateLong, formatKm, formatPrice } from "@/data/format"
 import { jobGone, listJobs, takeJob, type JobItem } from "@/data/jobs"
+import { ReferencePhotos } from "@/components/reference-photos"
 import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
 import { StudioHeader } from "@/components/studio-header"
 import { useApp } from "@/state/app"
@@ -107,6 +108,7 @@ export default function NewJobs() {
                 {km !== null ? ` · cách ${formatKm(km)}` : ""}
               </Txt>
               {j.description ? <Txt color={colors.inkSoft}>{j.description}</Txt> : null}
+              <ReferencePhotos paths={j.referencePhotos} title="Ảnh mẫu khách muốn" />
               <Txt v="meta" color={colors.muted}>
                 {j.customerName} · {j.atHome ? "làm tại nhà khách" : "làm tại studio"}
                 {j.quantity > 1 ? ` · ${formatPrice(j.price)}/người` : ""} · tổng và phụ phí được máy chủ kiểm tra

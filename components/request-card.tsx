@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { CATEGORY_ICON } from "@/components/beauty"
+import { ReferenceGallery } from "@/components/reference-photos"
 import { Card } from "@/components/ui"
 import { CATALOG_VERSION, serviceDuration, getTemplate, getVariant } from "@/lib/catalog"
 import type { JobPost } from "@/lib/types"
@@ -66,6 +67,8 @@ export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: 
           </div>
         </div>
       </Link>
+      {/* Outside the link: each photo opens on its own. */}
+      <ReferenceGallery paths={job.referencePhotos ?? []} title={job.mine ? "Ảnh mẫu bạn gửi" : "Ảnh mẫu khách muốn"} className="mt-3 pl-[52px]" />
       {footer}
     </Card>
   )
