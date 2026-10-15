@@ -13,6 +13,7 @@ import {
   rankScore,
   serviceOffers,
   listedOptions,
+  placeWords,
   verticalOf,
   type CategoryId,
   type ServiceOffer,
@@ -108,7 +109,7 @@ export default function Search() {
       if (filters.price !== "any" && !prices.some((price) => priceOk(filters.price, price))) return false
       if (!q.length) return true
       const haystack = fold(
-        [p.name, p.title, p.district, p.city, ...p.areas, ...p.categories.map((c) => CATEGORIES.find((x) => x.id === c)?.label ?? ""), ...templates.map((t) => t.name)].join(" "),
+        [p.name, p.title, placeWords(p.city, p.district), ...p.areas, ...p.categories.map((c) => CATEGORIES.find((x) => x.id === c)?.label ?? ""), ...templates.map((t) => t.name)].join(" "),
       )
       return q.every((word) => haystack.includes(word))
     })

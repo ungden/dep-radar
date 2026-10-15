@@ -307,7 +307,7 @@ function NewRequestForm() {
               value={addressId}
               onChange={setAddressId}
               city={state.addresses[0]?.city ?? "Hà Nội"}
-              district={state.addresses[0]?.district ?? "Đống Đa"}
+              district={state.addresses[0]?.district}
             />
           </div>
         )}

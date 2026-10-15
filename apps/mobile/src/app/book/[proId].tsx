@@ -9,6 +9,7 @@ import { toTimestamptz } from "@/data/format"
 import { createBooking, fetchSlots } from "@/data/bookings"
 import { addDays, formatDateLong, formatDuration, formatKm, formatPrice, todayISO, weekdayShort } from "@/data/format"
 import { askForPushPermission } from "@/data/push"
+import { WardPicker } from "@/components/ward-picker"
 import { DateField } from "@/components/date-field"
 import { TimeField } from "@/components/time-field"
 import { BookingBar } from "@/components/booking-bar"
@@ -98,7 +99,7 @@ function BookingFlow() {
   const chosenId = addressId && addresses.some((a) => a.id === addressId) ? addressId : ((addresses.find((a) => a.isDefault) ?? addresses[0])?.id ?? null)
   const address = addresses.find((a) => a.id === chosenId) ?? null
 
-  // Without a saved address: an estimate from a city and district the customer picks.
+  // Without a saved address: an estimate from a city and ward the customer picks.
   const city = estCity ?? (pro && CITIES.includes(pro.city) ? pro.city : (app.city ?? CITIES[0]))
   const district = estDistrict && districtsOf(city).includes(estDistrict) ? estDistrict : null
   const place = address ? { city: address.city, district: address.district } : district ? { city, district } : null
@@ -434,11 +435,15 @@ function BookingFlow() {
                         />
                       ))}
                     </View>
-                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                      {districtsOf(city).map((d) => (
-                        <Chip key={d} label={d} selected={d === district} onPress={() => setEstDistrict(d)} />
-                      ))}
-                    </View>
+                    <WardPicker
+                      city={city}
+                      value={district ?? ""}
+                      locate
+                      onChange={(choice) => {
+                        setEstCity(choice.city)
+                        setEstDistrict(choice.district)
+                      }}
+                    />
                   </Card>
                 ) : null}
                 {app.uid ? <Button label="Thêm địa chỉ mới" variant="secondary" size="sm" icon="plus" onPress={addAddress} /> : null}

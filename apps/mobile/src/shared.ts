@@ -26,5 +26,6 @@ export * from "@shared/trade"
 export * from "@shared/connection"
 export * from "@shared/auth/identifier"
 export * from "@shared/conduct"
+export * from "@shared/chat-location"
 
 export * from "../../../lib/appointments"

@@ -3,13 +3,14 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Ban, Flag, ImagePlus, MoreHorizontal, Send } from "lucide-react"
+import { Ban, Flag, ImagePlus, MapPin, MoreHorizontal, Navigation, Send } from "lucide-react"
 import { ChatNotice, OffAppHint } from "@/components/conduct"
 import { ReportButton } from "@/components/report-button"
 import { Sheet } from "@/components/sheet"
 import { SupportLink } from "@/components/support-link"
 import { Button, ButtonLink, PageHeader, inputClass } from "@/components/ui"
-import { listMessages, sendMessage, type ChatMessage, type ThreadHeader } from "@/lib/api/chat"
+import { listMessages, sendLocation, sendMessage, type ChatMessage, type ThreadHeader } from "@/lib/api/chat"
+import { LOCATION_DENIED, LOCATION_FAILED, directionsLink, locationConfirm, mapsLink } from "@/lib/chat-location"
 import { actions, useAct } from "@/lib/client-actions"
 import { chatState } from "@/lib/connection"
 import { useApp } from "@/lib/store"
@@ -43,6 +44,7 @@ export function Conversation({
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   const [menu, setMenu] = React.useState(false)
+  const [sharing, setSharing] = React.useState(false)
   const bottom = React.useRef<HTMLDivElement>(null)
 
   // The status is read with the page; a job that ends while this is open is
@@ -97,6 +99,28 @@ export function Conversation({
     if (!result.ok) return setError(result.error)
     setDraft("")
     await reload()
+  }
+
+  // The browser asks for permission the first time; nothing is read before the tap.
+  const shareLocation = () => {
+    if (!("geolocation" in navigator)) return setError(LOCATION_FAILED)
+    setBusy(true)
+    setError(null)
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const result = await sendLocation(threadId, position.coords.latitude, position.coords.longitude)
+        setBusy(false)
+        setSharing(false)
+        if (!result.ok) return setError(result.error)
+        await reload()
+      },
+      (failure) => {
+        setBusy(false)
+        setSharing(false)
+        setError(failure.code === failure.PERMISSION_DENIED ? LOCATION_DENIED : LOCATION_FAILED)
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
+    )
   }
 
   // Rebooking the same service is the way to talk again after a booking's chat ends.
@@ -157,7 +181,11 @@ export function Conversation({
                   <Image src={src} alt="" fill sizes="160px" className="object-cover" />
                 </span>
               ))}
-              {m.body && <p className="whitespace-pre-wrap leading-relaxed">{m.body}</p>}
+              {m.point ? (
+                <LocationCard point={m.point} mine={m.mine} />
+              ) : (
+                m.body && <p className="whitespace-pre-wrap leading-relaxed">{m.body}</p>
+              )}
               <span className={cn("mt-0.5 block text-label", m.mine ? "text-white/70" : "text-muted")}>
                 {localTime(m.createdAt)}
               </span>
@@ -230,6 +258,15 @@ export function Conversation({
                 }}
               />
             </label>
+            <button
+              type="button"
+              aria-label="Gửi vị trí"
+              disabled={!canSend || busy}
+              onClick={() => setSharing(true)}
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-subtle hover:text-accent disabled:opacity-40"
+            >
+              <MapPin className="size-5" />
+            </button>
             <textarea
               aria-label="Tin nhắn"
               rows={1}
@@ -252,7 +289,49 @@ export function Conversation({
         </div>
       )}
 
+      <Sheet open={sharing} onClose={() => !busy && setSharing(false)} title="Gửi vị trí hiện tại?">
+        <p className="text-body text-ink-soft">{locationConfirm(header.name)}</p>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <Button variant="ghost" disabled={busy} onClick={() => setSharing(false)}>
+            Huỷ
+          </Button>
+          <Button disabled={busy} onClick={shareLocation}>
+            {busy ? "Đang lấy vị trí…" : "Gửi vị trí"}
+          </Button>
+        </div>
+      </Sheet>
+
       <ChatMenu open={menu} onClose={() => setMenu(false)} header={header} blocked={blocked} />
+    </div>
+  )
+}
+
+/** A sent location: where it is, and a way there in Google Maps. */
+function LocationCard({ point, mine }: { point: { lat: number; lng: number }; mine: boolean }) {
+  return (
+    <div className="w-56 space-y-2">
+      <a href={mapsLink(point.lat, point.lng)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5">
+        <span className={cn("inline-flex size-10 shrink-0 items-center justify-center rounded-full", mine ? "bg-white/20" : "bg-accent-soft text-accent")}>
+          <MapPin className="size-5" />
+        </span>
+        <span className="min-w-0">
+          <span className="block font-semibold">{mine ? "Vị trí của bạn" : "Vị trí đã gửi"}</span>
+          <span className={cn("block text-label tabular-nums", mine ? "text-white/70" : "text-muted")}>
+            {point.lat.toFixed(5)}, {point.lng.toFixed(5)}
+          </span>
+        </span>
+      </a>
+      <a
+        href={directionsLink(point.lat, point.lng)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn(
+          "flex min-h-10 items-center justify-center gap-1.5 rounded-full text-meta font-semibold",
+          mine ? "bg-white text-accent" : "bg-ink text-white",
+        )}
+      >
+        <Navigation className="size-4" /> Chỉ đường trên Google Maps
+      </a>
     </div>
   )
 }

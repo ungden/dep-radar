@@ -3,6 +3,7 @@ import { Stack, router, useLocalSearchParams } from "expo-router"
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, Switch, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { CITIES, districtsOf } from "@/shared"
+import { WardPicker } from "@/components/ward-picker"
 import { deleteAddress, saveAddress } from "@/data/addresses"
 import { useApp } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
@@ -25,18 +26,25 @@ export default function EditAddress() {
   const [label, setLabel] = React.useState(existing?.label ?? "Nhà")
   const [city, setCity] = React.useState(firstCity)
   const [district, setDistrict] = React.useState(existing?.district ?? (districtsOf(firstCity).includes(params.district ?? "") ? params.district! : ""))
+  // The phone's own position when they used it: travel is measured from the door, not the ward's centre.
+  const [point, setPoint] = React.useState<{ lat: number; lng: number } | null>(null)
   const [detail, setDetail] = React.useState(existing?.detail ?? "")
   const [note, setNote] = React.useState(existing?.note ?? "")
   const [isDefault, setIsDefault] = React.useState(existing ? existing.isDefault : app.me.addresses.length === 0)
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
-  const valid = Boolean(city && district && detail.trim().length >= 3)
+  // A quận saved before the 2025 reform has to become a phường / xã before it is saved again.
+  const valid = Boolean(city && districtsOf(city).includes(district) && detail.trim().length >= 3)
+
+  // An address edited in the same ward keeps the point it had (a pin from before).
+  const keptPoint =
+    existing && existing.city === city && existing.district === district && existing.lat != null && existing.lng != null ? { lat: existing.lat, lng: existing.lng } : null
 
   const save = async () => {
     setBusy(true)
     setError(null)
-    const res = await saveAddress(app.uid, { id: existing?.id, label, city, district, detail, note, isDefault })
+    const res = await saveAddress(app.uid, { id: existing?.id, label, city, district, detail, note, isDefault, ...(point ?? keptPoint) })
     setBusy(false)
     if (!res.ok) {
       haptic.error()
@@ -92,17 +100,28 @@ export default function EditAddress() {
                 onPress={() => {
                   setCity(c)
                   if (!districtsOf(c).includes(district)) setDistrict("")
+                  setPoint(null)
                 }}
               />
             ))}
           </View>
         </Group>
-        <Group title="Quận / huyện">
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {districtsOf(city).map((d) => (
-              <Chip key={d} label={d} selected={district === d} onPress={() => setDistrict(d)} />
-            ))}
-          </View>
+        <Group title="Phường / xã">
+          <WardPicker
+            city={city}
+            value={district}
+            locate
+            onChange={(choice) => {
+              setCity(choice.city)
+              setDistrict(choice.district)
+              setPoint(choice.point ?? null)
+            }}
+          />
+          {point ? (
+            <Txt v="meta" color={colors.inkSoft}>
+              Đã ghim vị trí hiện tại của bạn: khoảng cách tính từ đúng chỗ này.
+            </Txt>
+          ) : null}
         </Group>
         <Group title="Số nhà, tên đường">
           <TextInput

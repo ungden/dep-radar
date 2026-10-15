@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
+import { LOCATION_PREVIEW, isLocationBody } from "@/lib/chat-location"
 import { bookingChatOpen, type ChatStatus } from "@/lib/connection"
 import type { ActionResult } from "./actions"
 import { GENERIC, messageFor, orLegacy } from "./errors"
@@ -38,6 +39,8 @@ export interface ChatMessage {
   mine: boolean
   body: string
   images: string[]
+  /** A location sent with send_location; null for words and photos. */
+  point: { lat: number; lng: number } | null
   createdAt: string
 }
 
@@ -89,7 +92,9 @@ export async function listThreads(): Promise<ThreadSummary[]> {
         proSlug: String(pro.slug ?? ""),
         bookingId: t.booking_id,
         lastMessage: last
-          ? String(last.body || "") || (Array.isArray(last.image_paths) && last.image_paths.length ? "Đã gửi ảnh" : "")
+          ? isLocationBody(String(last.body ?? ""))
+            ? LOCATION_PREVIEW
+            : String(last.body || "") || (Array.isArray(last.image_paths) && last.image_paths.length ? "Đã gửi ảnh" : "")
           : "",
         lastMessageAt: t.last_message_at,
         unread: messages.filter((m) => m.sender_id !== me && !m.read_at).length,
@@ -105,26 +110,31 @@ export async function listMessages(threadId: string): Promise<ChatMessage[]> {
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return []
-  const { data, error } = await supabase
-    .from("messages")
-    .select("id, sender_id, body, image_paths, created_at")
-    .eq("thread_id", threadId)
-    .order("created_at")
+  // lat/lng come with 20261015100000_chat_location.sql.
+  const { data: rows, error } = await orLegacy((legacy) =>
+    supabase
+      .from("messages")
+      .select(`id, sender_id, body, image_paths, created_at${legacy ? "" : ", lat, lng"}`)
+      .eq("thread_id", threadId)
+      .order("created_at"),
+  )
   if (error) {
     console.error("listMessages failed:", error.message)
     return []
   }
-  const paths = (data ?? []).flatMap((m) => (m.image_paths ?? []).filter((path) => !path.startsWith("http")))
+  const data = (rows ?? []) as unknown as Row[]
+  const paths = data.flatMap((m) => ((m.image_paths ?? []) as string[]).filter((path) => !path.startsWith("http")))
   const { data: signed } = paths.length
     ? await supabaseAdmin().storage.from("chat").createSignedUrls(paths, 5 * 60)
     : { data: [] }
   const urls = new Map((signed ?? []).map((item) => [item.path, item.signedUrl]))
 
-  return (data ?? []).map((m) => ({
+  return data.map((m) => ({
     id: m.id,
     mine: m.sender_id === auth.user.id,
     body: m.body ?? "",
-    images: (m.image_paths ?? []).map((path) => (path.startsWith("http") ? path : urls.get(path))).filter(Boolean) as string[],
+    images: ((m.image_paths ?? []) as string[]).map((path) => (path.startsWith("http") ? path : urls.get(path))).filter(Boolean) as string[],
+    point: typeof m.lat === "number" && typeof m.lng === "number" ? { lat: m.lat, lng: m.lng } : null,
     createdAt: m.created_at,
   }))
 }
@@ -230,6 +240,25 @@ export async function sendMessage(threadId: string, body: string, images: string
   if (error) {
     const message = messageFor(error)
     return { ok: false, error: message === GENERIC ? "Không gửi được tin nhắn." : message }
+  }
+  revalidatePath(`/tin-nhan/${threadId}`)
+  revalidatePath("/tin-nhan")
+  return { ok: true, data: undefined }
+}
+
+/**
+ * Sends where the caller is, read from their browser with their consent. The
+ * same rules as a message (send_location checks them); the database rounds it.
+ */
+export async function sendLocation(threadId: string, lat: number, lng: number): Promise<ActionResult> {
+  const supabase = await supabaseServer()
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return { ok: false, error: "Cần đăng nhập." }
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return { ok: false, error: "Vị trí không hợp lệ." }
+  const { error } = await supabase.rpc("send_location", { p_thread: threadId, p_lat: lat, p_lng: lng })
+  if (error) {
+    const message = messageFor(error)
+    return { ok: false, error: message === GENERIC ? "Không gửi được vị trí." : message }
   }
   revalidatePath(`/tin-nhan/${threadId}`)
   revalidatePath("/tin-nhan")

@@ -17,7 +17,7 @@ import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { CATEGORIES, categoryLabel, getTemplate, getVertical, isVertical, verticalOf } from "@/lib/catalog"
 import { priorityFirst } from "@/lib/discovery"
 import { interestsFrom, rankFeed, type VerticalFilter } from "@/lib/feed"
-import { CITIES } from "@/lib/geo"
+import { CITIES, placeWords } from "@/lib/geo"
 import { listedOptions, serviceOffers, sortServiceOffers } from "@/lib/offers"
 import { categoryTerms, matchesQuery } from "@/lib/search"
 import { distanceToCustomer, fromPrice, proView, servicesOf, useApp, type AppState } from "@/lib/store"
@@ -49,7 +49,7 @@ function proText(state: AppState, pro: Pro) {
   const services = servicesOf(state, pro.id)
     .map((s) => getTemplate(s.templateId)?.name ?? "")
     .join(" ")
-  return [pro.name, pro.title, pro.bio, pro.district, pro.city, pro.equipment ?? "", ...pro.categories.map(categoryTerms), services].join(" ")
+  return [pro.name, pro.title, pro.bio, placeWords(pro.city, pro.district), pro.equipment ?? "", ...pro.categories.map(categoryTerms), services].join(" ")
 }
 
 function SearchView() {

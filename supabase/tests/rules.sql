@@ -238,6 +238,27 @@ begin
    where thread_id = thread and sender_id <> linh and read_at is null;
   assert n = 1, 'an outsider cleared somebody else''s unread count';
 
+  raise notice 'a location is sent by a party of an open chat, rounded, with words for older apps';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  perform public.send_location(thread, 10.7757123456, 106.7004987654);
+  select count(*) into n from public.messages
+   where thread_id = thread and lat = 10.77571 and lng = 106.7005
+     and body = 'Vị trí: https://www.google.com/maps/search/?api=1&query=10.77571,106.7005';
+  assert n = 1, 'the location was not stored rounded with its link';
+  begin
+    perform public.send_location(thread, 123, 106.7);
+    assert false, 'a latitude past the pole was accepted';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', thu::text, true);
+  begin
+    perform public.send_location(thread, 10.77, 106.70);
+    assert false, 'somebody outside the thread sent a location into it';
+  exception when insufficient_privilege then null;
+  end;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  perform public.mark_thread_read(thread);
+
   raise notice 'the freelancer opens the chat about their own booking, too';
   -- They pass themselves as the thread's freelancer; that used to be refused as
   -- "messaging yourself" before the booking was looked at.
@@ -463,7 +484,7 @@ begin
       'create_booking', 'confirm_booking', 'decline_booking', 'start_booking', 'complete_booking',
       'mark_no_show', 'cancel_booking', 'request_reschedule', 'respond_reschedule', 'post_job',
       'send_offer', 'accept_offer', 'withdraw_offer', 'write_review', 'reply_review', 'open_thread',
-      'send_message', 'replace_working_hours', 'my_wallet_balance', 'mark_thread_read', 'delete_my_account',
+      'send_message', 'send_location', 'replace_working_hours', 'my_wallet_balance', 'mark_thread_read', 'delete_my_account',
       'set_my_phone', 'set_interests',
       -- photo & video, combos, casting calls, two-way reviews
       'set_booking_terms', 'deliver_booking', 'accept_delivery', 'link_bookings',

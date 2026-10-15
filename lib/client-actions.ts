@@ -53,7 +53,7 @@ export const actions = {
   },
 
   async saveAddress(
-    address: CustomerAddress & { id?: string; label?: string; note?: string; isDefault?: boolean },
+    address: CustomerAddress & { id?: string; label?: string; note?: string; isDefault?: boolean; lat?: number; lng?: number },
   ): Promise<{ id: string } | { error: string }> {
     const result = await api.saveAddress({
       id: address.id,
@@ -62,6 +62,8 @@ export const actions = {
       district: address.district,
       detail: address.detail,
       note: address.note,
+      lat: address.lat,
+      lng: address.lng,
       isDefault: address.isDefault ?? true,
     })
     return result.ok ? { id: result.data } : { error: result.error }
