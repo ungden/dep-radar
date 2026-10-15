@@ -128,6 +128,20 @@ export default function MePage() {
         </Link>
       )}
 
+      {/* Staff only: on a phone the top bar with the Admin link is hidden, so the way in is here. */}
+      {session.isAdmin && (
+        <Link href="/admin" className="mt-4 flex items-center gap-3 rounded-[var(--radius-lg)] bg-ink p-4 text-canvas">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface/15">
+            <ShieldCheck className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-body font-bold">Admin · Vận hành 360đẹp</span>
+            <span className="block text-meta opacity-80">Duyệt đối tác, báo cáo, lịch hẹn, tiền</span>
+          </span>
+          <ChevronRight className="size-4" />
+        </Link>
+      )}
+
       {isPro ? (
         <>
           <div className="mt-4 grid grid-cols-2 gap-3">

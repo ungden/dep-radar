@@ -1,6 +1,6 @@
 import * as React from "react"
 import { router } from "expo-router"
-import { TextInput, View } from "react-native"
+import { InputAccessoryView, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from "react-native"
 import { setMyPhone } from "@/data/actions"
 import { formatPhone, toE164 } from "@/data/format"
 import { useApp } from "@/state/app"
@@ -14,6 +14,9 @@ import { Txt } from "@/ui/text"
  * a booking can call each other while it is active. The database refuses a booking without one (require_phone), so it
  * is added or changed through set_my_phone() by its account owner.
  */
+/** iOS gives the phone pad no return key, so a bar above it carries one. */
+const KEYBOARD_BAR = "phone-done"
+
 export default function Phone() {
   const app = useApp()
   const currentPhone = app.me.account?.phone ?? ""
@@ -46,35 +49,56 @@ export default function Phone() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.canvas, padding: gutter, gap: 16 }}>
-      <Txt v="h2">{currentPhone ? "Đổi số điện thoại" : "Số điện thoại của bạn"}</Txt>
-      <Txt color={colors.inkSoft}>
-        Cần để đặt lịch. Người làm chỉ thấy số này khi đang có lịch hẹn với bạn (từ lúc họ nhận lịch tới khi xong), để liên lạc. Số không hiện công khai ở đâu cả.
-      </Txt>
-      <Txt color={colors.inkSoft}>
-        Nếu đặt mật khẩu (trong Tôi), bạn cũng đăng nhập được bằng số này. Mỗi số chỉ dùng cho một tài khoản. Bạn có thể tự đổi số trong Tôi.
-      </Txt>
-      {currentPhone ? <Txt color={colors.inkSoft}>Sau khi lưu, dùng số mới để đăng nhập bằng mật khẩu. Số cũ sẽ không còn đăng nhập tài khoản này.</Txt> : null}
-      <TextInput
-        value={phone}
-        onChangeText={(value) => {
-          setPhone(value)
-          setError(null)
-        }}
-        editable={!busy}
-        placeholder="0968 112 233"
-        placeholderTextColor={colors.muted}
-        keyboardType="phone-pad"
-        autoComplete="tel"
-        textContentType="telephoneNumber"
-        autoFocus
-        style={{ height: 54, backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: 16, fontFamily: fonts[600], fontSize: 20, color: colors.ink }}
-        accessibilityLabel="Số điện thoại"
-      />
-      {error ? <ErrorNote text={error} /> : null}
-      <Button label={currentPhone ? "Lưu số mới" : "Lưu và tiếp tục"} full size="lg" disabled={!valid} busy={busy} onPress={() => void save()} />
-      <Button label={currentPhone ? "Huỷ" : "Để sau"} variant="ghost" full disabled={busy} onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} />
-      <View />
-    </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: colors.canvas }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}
+    >
+      <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ padding: gutter, gap: 16 }}>
+        <Txt v="h2">{currentPhone ? "Đổi số điện thoại" : "Số điện thoại của bạn"}</Txt>
+        <Txt color={colors.inkSoft}>
+          Cần để đặt lịch. Người làm chỉ thấy số này khi đang có lịch hẹn với bạn (từ lúc họ nhận lịch tới khi xong), để liên lạc. Số không hiện công khai ở đâu cả.
+        </Txt>
+        <Txt color={colors.inkSoft}>Nếu đặt mật khẩu (trong Tôi), bạn cũng đăng nhập được bằng số này. Mỗi số chỉ dùng cho một tài khoản. Bạn có thể tự đổi số trong Tôi.</Txt>
+        {currentPhone ? <Txt color={colors.inkSoft}>Sau khi lưu, dùng số mới để đăng nhập bằng mật khẩu. Số cũ sẽ không còn đăng nhập tài khoản này.</Txt> : null}
+        <TextInput
+          value={phone}
+          onChangeText={(value) => {
+            setPhone(value)
+            setError(null)
+            // A full number needs nothing more typed: lower the pad so the save button shows.
+            if (toE164(value) && value.replace(/\D/g, "").length >= 10) Keyboard.dismiss()
+          }}
+          returnKeyType="done"
+          onSubmitEditing={() => Keyboard.dismiss()}
+          inputAccessoryViewID={Platform.OS === "ios" ? KEYBOARD_BAR : undefined}
+          editable={!busy}
+          placeholder="0968 112 233"
+          placeholderTextColor={colors.muted}
+          keyboardType="phone-pad"
+          autoComplete="tel"
+          textContentType="telephoneNumber"
+          autoFocus
+          style={{ height: 54, backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: 16, fontFamily: fonts[600], fontSize: 20, color: colors.ink }}
+          accessibilityLabel="Số điện thoại"
+        />
+        {error ? <ErrorNote text={error} /> : null}
+        <Button label={currentPhone ? "Lưu số mới" : "Lưu và tiếp tục"} full size="lg" disabled={!valid} busy={busy} onPress={() => void save()} />
+        <Button label={currentPhone ? "Huỷ" : "Để sau"} variant="ghost" full disabled={busy} onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} />
+      </ScrollView>
+      {Platform.OS === "ios" ? (
+        <InputAccessoryView nativeID={KEYBOARD_BAR}>
+          <View
+            style={{ flexDirection: "row", justifyContent: "flex-end", backgroundColor: colors.subtle, borderTopWidth: 1, borderTopColor: colors.line, paddingHorizontal: gutter }}
+          >
+            <Pressable onPress={() => Keyboard.dismiss()} accessibilityRole="button" accessibilityLabel="Xong" hitSlop={8} style={{ paddingVertical: 10, paddingHorizontal: 4 }}>
+              <Txt w={600} color={colors.accent}>
+                Xong
+              </Txt>
+            </Pressable>
+          </View>
+        </InputAccessoryView>
+      ) : null}
+    </KeyboardAvoidingView>
   )
 }

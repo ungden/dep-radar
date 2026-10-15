@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache"
 import { backendEnabled } from "@/lib/supabase/env"
 import { randomInt } from "node:crypto"
 import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
-import { localDate, localTime } from "@/lib/utils"
+import { getTemplate, getVariant } from "@/lib/catalog"
+import { localDate, localTime, todayISO } from "@/lib/utils"
 import type { ActionResult } from "./actions"
 import { messageFor, orLegacy } from "./errors"
 
@@ -53,9 +54,15 @@ export interface AdminBooking {
   date: string
   time: string
   proName: string
+  proSlug: string
   customerName: string
   total: number
   serviceLabel: string
+  createdAt: string
+  /** A pending booking the partner has to accept by then (expire_stale_bookings closes it after). */
+  confirmBy: string | null
+  atHome: boolean
+  district: string
 }
 
 export interface AdminReport {
@@ -169,14 +176,22 @@ export async function adminPros(): Promise<AdminPro[]> {
   }))
 }
 
-export async function adminBookings(limit = 40): Promise<AdminBooking[]> {
+/** "Gội đầu dưỡng sinh · 60 phút" from the catalogue, the raw ids when the catalogue no longer has them. */
+function serviceName(templateId: string, variantId: string) {
+  const template = getTemplate(templateId)
+  if (!template) return `${templateId} · ${variantId}`
+  const variant = getVariant(templateId, variantId)
+  return variant && template.variants.length > 1 ? `${template.name} · ${variant.label}` : template.name
+}
+
+export async function adminBookings(limit = 300): Promise<AdminBooking[]> {
   const supabase = await supabaseServer()
   const { data, error } = await supabase
     .from("bookings")
     .select(`
-      id, status, starts_at, total, template_id, variant_id,
+      id, status, starts_at, total, template_id, variant_id, created_at, confirm_by, at_home, district,
       customer:accounts!bookings_customer_id_fkey (full_name),
-      pro:pros!bookings_pro_id_fkey (display_name)
+      pro:pros!bookings_pro_id_fkey (slug, display_name)
     `)
     .order("created_at", { ascending: false })
     .limit(limit)
@@ -190,9 +205,14 @@ export async function adminBookings(limit = 40): Promise<AdminBooking[]> {
     date: localDate(b.starts_at),
     time: localTime(b.starts_at),
     proName: String(row(b.pro).display_name ?? "—"),
+    proSlug: String(row(b.pro).slug ?? ""),
     customerName: String(row(b.customer).full_name ?? "—"),
     total: b.total ?? 0,
-    serviceLabel: `${b.template_id} · ${b.variant_id}`,
+    serviceLabel: serviceName(b.template_id, b.variant_id),
+    createdAt: b.created_at,
+    confirmBy: b.confirm_by ?? null,
+    atHome: Boolean(b.at_home),
+    district: b.district ?? "",
   }))
 }
 
@@ -791,4 +811,269 @@ export async function catalogUsage(): Promise<ActionResult<Record<string, number
     counts[key] = (counts[key] ?? 0) + 1
   }
   return { ok: true, data: counts }
+}
+
+// The overview: what needs a person now, and how the week went --------------------------
+
+export interface AdminOverview {
+  bookingsToday: number
+  pendingConfirm: number
+  /** Still pending after confirm_by: the expiry job is late, or the partner is about to lose it. */
+  overdueConfirm: number
+  created7d: number
+  completed7d: number
+  cancelled7d: number
+  newAccounts7d: number
+  newPros7d: number
+  unpublishedPros: number
+  lowReviews7d: number
+  openJobs: number
+  openCastings: number
+  uncoveredHelp7d: number
+}
+
+const EMPTY_OVERVIEW: AdminOverview = {
+  bookingsToday: 0,
+  pendingConfirm: 0,
+  overdueConfirm: 0,
+  created7d: 0,
+  completed7d: 0,
+  cancelled7d: 0,
+  newAccounts7d: 0,
+  newPros7d: 0,
+  unpublishedPros: 0,
+  lowReviews7d: 0,
+  openJobs: 0,
+  openCastings: 0,
+  uncoveredHelp7d: 0,
+}
+
+/**
+ * Head counts only, so the desk opens fast. Requests and castings are read
+ * with the service role (their policies show them to the people involved, not
+ * to staff), which is why this checks is_admin first: every export of a
+ * "use server" file can be called from a browser.
+ */
+export async function adminOverview(): Promise<AdminOverview> {
+  if (!backendEnabled || !(await isAdmin())) return EMPTY_OVERVIEW
+  const supabase = await supabaseServer()
+  const service = supabaseAdmin()
+  const now = new Date()
+  const dayStart = new Date(`${todayISO()}T00:00:00+07:00`)
+  const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const count = async (query: PromiseLike<{ count: number | null; error: { message: string } | null }>) => {
+    const { count: n, error } = await query
+    if (error) console.error("adminOverview count failed:", error.message)
+    return n ?? 0
+  }
+  const head = { count: "exact" as const, head: true }
+  const [
+    bookingsToday,
+    pendingConfirm,
+    overdueConfirm,
+    created7d,
+    completed7d,
+    cancelled7d,
+    newAccounts7d,
+    newPros7d,
+    unpublishedPros,
+    lowReviews7d,
+    openJobs,
+    openCastings,
+    uncoveredHelp7d,
+  ] = await Promise.all([
+    count(
+      supabase
+        .from("bookings")
+        .select("id", head)
+        .gte("starts_at", dayStart.toISOString())
+        .lt("starts_at", dayEnd.toISOString())
+        .in("status", ["pending", "confirmed", "in_progress", "completed"]),
+    ),
+    count(supabase.from("bookings").select("id", head).eq("status", "pending")),
+    count(supabase.from("bookings").select("id", head).eq("status", "pending").lt("confirm_by", now.toISOString())),
+    count(supabase.from("bookings").select("id", head).gte("created_at", weekAgo)),
+    count(supabase.from("bookings").select("id", head).eq("status", "completed").gte("completed_at", weekAgo)),
+    count(supabase.from("bookings").select("id", head).eq("status", "cancelled").gte("cancelled_at", weekAgo)),
+    count(supabase.from("accounts").select("id", head).gte("created_at", weekAgo)),
+    count(supabase.from("pros").select("id", head).gte("created_at", weekAgo)),
+    count(supabase.from("pros").select("id", head).eq("published", false).is("suspended_at", null)),
+    count(supabase.from("reviews").select("booking_id", head).lte("rating", 2).is("hidden_at", null).gte("created_at", weekAgo)),
+    count(service.from("jobs").select("id", head).eq("status", "open")),
+    count(service.from("castings").select("id", head).eq("status", "open")),
+    count(supabase.from("help_questions").select("id", head).eq("covered", false).gte("created_at", weekAgo)),
+  ])
+  return {
+    bookingsToday,
+    pendingConfirm,
+    overdueConfirm,
+    created7d,
+    completed7d,
+    cancelled7d,
+    newAccounts7d,
+    newPros7d,
+    unpublishedPros,
+    lowReviews7d,
+    openJobs,
+    openCastings,
+    uncoveredHelp7d,
+  }
+}
+
+// Reviews: hide one that breaks the rules (set_review_hidden) --------------------------
+
+export interface AdminReview {
+  bookingId: string
+  createdAt: string
+  rating: number
+  body: string
+  tags: string[]
+  author: string
+  proName: string
+  proSlug: string
+  serviceLabel: string
+  hidden: boolean
+  reply: string | null
+  photos: number
+}
+
+/** Newest first; admins read hidden ones too (row level security). */
+export async function adminReviews(): Promise<ActionResult<AdminReview[]>> {
+  if (!backendEnabled) return { ok: true, data: [] }
+  const supabase = await supabaseServer()
+  const { data, error } = await supabase
+    .from("reviews")
+    .select(
+      "booking_id, created_at, rating, body, tags, author_name, hidden_at, reply, service_label, photo_paths, pro:pros!reviews_pro_id_fkey (slug, display_name)",
+    )
+    .order("created_at", { ascending: false })
+    .limit(200)
+  if (error) return { ok: false, error: messageFor(error) }
+  return {
+    ok: true,
+    data: (data ?? []).map((r) => ({
+      bookingId: r.booking_id,
+      createdAt: r.created_at,
+      rating: r.rating,
+      body: r.body ?? "",
+      tags: r.tags ?? [],
+      author: r.author_name || "Khách",
+      proName: String(row(r.pro).display_name ?? "Đối tác"),
+      proSlug: String(row(r.pro).slug ?? ""),
+      serviceLabel: r.service_label ?? "",
+      hidden: Boolean(r.hidden_at),
+      reply: r.reply,
+      photos: (r.photo_paths ?? []).length,
+    })),
+  }
+}
+
+// Requests and castings, read-only ---------------------------------------------------------
+
+export interface AdminJob {
+  id: string
+  createdAt: string
+  startsAt: string
+  status: string
+  service: string
+  description: string
+  place: string
+  atHome: boolean
+  customer: string
+  offers: number
+  bookingId: string | null
+}
+
+export interface AdminCasting {
+  id: string
+  createdAt: string
+  startsAt: string
+  status: string
+  title: string
+  compensation: string
+  place: string
+  proName: string
+  proSlug: string
+  slots: number
+  accepted: number
+  applications: number
+  pending: number
+}
+
+/**
+ * What customers asked for on the request board and what partners posted as
+ * castings, so staff can see demand nobody answered. Their policies show them
+ * to the people involved only, so the server reads them with the service role
+ * after checking is_admin.
+ */
+export async function adminRequests(): Promise<ActionResult<{ jobs: AdminJob[]; castings: AdminCasting[] }>> {
+  if (!backendEnabled) return { ok: true, data: { jobs: [], castings: [] } }
+  if (!(await isAdmin())) return { ok: false, error: "Không có quyền." }
+  const service = supabaseAdmin()
+  const [jobsRes, castingsRes] = await Promise.all([
+    service
+      .from("jobs")
+      .select("id, created_at, starts_at, status, template_id, variant_id, description, city, district, at_home, booking_id, customer:accounts!jobs_customer_id_fkey (full_name)")
+      .order("created_at", { ascending: false })
+      .limit(150),
+    service
+      .from("castings")
+      .select("id, created_at, starts_at, status, title, compensation, city, district, slots, accepted_count, pro:pros!castings_pro_id_fkey (slug, display_name)")
+      .order("created_at", { ascending: false })
+      .limit(100),
+  ])
+  if (jobsRes.error) return { ok: false, error: messageFor(jobsRes.error) }
+  if (castingsRes.error) return { ok: false, error: messageFor(castingsRes.error) }
+  const jobs = jobsRes.data ?? []
+  const castings = castingsRes.data ?? []
+  const [offersRes, appsRes] = await Promise.all([
+    jobs.length ? service.from("offers").select("job_id").in("job_id", jobs.map((j) => j.id)) : Promise.resolve({ data: [] as { job_id: string }[] }),
+    castings.length
+      ? service.from("casting_applications").select("casting_id, status").in("casting_id", castings.map((c) => c.id))
+      : Promise.resolve({ data: [] as { casting_id: string; status: string }[] }),
+  ])
+  const offers = new Map<string, number>()
+  for (const o of offersRes.data ?? []) offers.set(o.job_id, (offers.get(o.job_id) ?? 0) + 1)
+  const apps = new Map<string, { all: number; pending: number }>()
+  for (const a of appsRes.data ?? []) {
+    const n = apps.get(a.casting_id) ?? { all: 0, pending: 0 }
+    n.all += 1
+    if (a.status === "pending") n.pending += 1
+    apps.set(a.casting_id, n)
+  }
+  const place = (district: string | null, city: string | null) => [district, city].filter(Boolean).join(", ")
+  return {
+    ok: true,
+    data: {
+      jobs: jobs.map((j) => ({
+        id: j.id,
+        createdAt: j.created_at,
+        startsAt: j.starts_at,
+        status: j.status,
+        service: serviceName(j.template_id, j.variant_id),
+        description: j.description ?? "",
+        place: place(j.district, j.city),
+        atHome: Boolean(j.at_home),
+        customer: String(row(j.customer).full_name ?? "Khách"),
+        offers: offers.get(j.id) ?? 0,
+        bookingId: j.booking_id,
+      })),
+      castings: castings.map((c) => ({
+        id: c.id,
+        createdAt: c.created_at,
+        startsAt: c.starts_at,
+        status: c.status,
+        title: c.title,
+        compensation: c.compensation,
+        place: place(c.district, c.city),
+        proName: String(row(c.pro).display_name ?? "Đối tác"),
+        proSlug: String(row(c.pro).slug ?? ""),
+        slots: c.slots,
+        accepted: c.accepted_count,
+        applications: apps.get(c.id)?.all ?? 0,
+        pending: apps.get(c.id)?.pending ?? 0,
+      })),
+    },
+  }
 }

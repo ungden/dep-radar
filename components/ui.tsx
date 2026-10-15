@@ -6,7 +6,24 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, Star } from "lucide-react"
 import type { BookingStatus } from "@/lib/types"
-import { BRAND_DARK, BRAND_GOLD, LOGO_EYE_PATH, LOGO_EYE_STROKE, LOGO_EYE_STROKE_SMALL, LOGO_RADIUS, WORDMARK_BOX, WORDMARK_PATH } from "@/lib/design/brand"
+import {
+  BRAND_CREAM,
+  BRAND_GOLD,
+  BRAND_INK,
+  BRAND_ROSE,
+  BRAND_ROSE_LIGHT,
+  BRAND_SPARKLE,
+  LOGO_BOLD_BELOW,
+  LOGO_BOX,
+  LOGO_FACE_BOLD_PATH,
+  LOGO_FACE_PATH,
+  LOGO_RADIUS,
+  LOGO_SPARKLE_BOLD_PATH,
+  LOGO_SPARKLE_PATH,
+  WORDMARK_BOX,
+  WORDMARK_PATH,
+  logoTransform,
+} from "@/lib/design/brand"
 import { showsAverage } from "@/lib/connection"
 import { cn, initials } from "@/lib/utils"
 
@@ -55,27 +72,32 @@ export function ButtonLink({
   return <Link className={buttonClass(variant, size, className)} {...props} />
 }
 
-/** The mark: a white serif "đ" on rose (lib/design/brand.ts). Reads at 16px. */
+/** The mark: a woman in profile, in cream on a rose tile (lib/design/brand.ts). Bolder lines at small sizes. */
 export function LogoMark({ size = 32, className }: { size?: number; className?: string }) {
+  // useId has characters a url(#…) reference does not take.
+  const id = `logo${React.useId().replace(/[^a-zA-Z0-9]/g, "")}`
+  const bold = size <= LOGO_BOLD_BELOW
   return (
-    <svg aria-hidden width={size} height={size} viewBox="0 0 32 32" className={cn("shrink-0", className)}>
-      <rect width="32" height="32" rx={LOGO_RADIUS} fill={BRAND_DARK} />
-      <path
-        d={LOGO_EYE_PATH}
-        fill="none"
-        stroke={BRAND_GOLD}
-        strokeWidth={size < 24 ? LOGO_EYE_STROKE_SMALL : LOGO_EYE_STROKE}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg aria-hidden width={size} height={size} viewBox={`0 0 ${LOGO_BOX} ${LOGO_BOX}`} className={cn("shrink-0", className)}>
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor={BRAND_ROSE_LIGHT} />
+          <stop offset="1" stopColor={BRAND_ROSE} />
+        </linearGradient>
+      </defs>
+      <rect width={LOGO_BOX} height={LOGO_BOX} rx={LOGO_RADIUS} fill={`url(#${id})`} />
+      <g transform={logoTransform(bold ? 12 : undefined)}>
+        <path d={bold ? LOGO_FACE_BOLD_PATH : LOGO_FACE_PATH} fill={BRAND_CREAM} />
+        <path d={bold ? LOGO_SPARKLE_BOLD_PATH : LOGO_SPARKLE_PATH} fill={BRAND_SPARKLE} />
+      </g>
     </svg>
   )
 }
 
 /**
- * "360đẹp" in Noto Serif Display, drawn from outlines (lib/design/brand.ts) so
- * it never waits for a font. `size` is the cap height the eye reads at, like a
- * font size. Espresso on light pages, champagne (`tone="gold"`) on dark.
+ * "360đẹp" in Fraunces, drawn from outlines (lib/design/brand.ts) so it never
+ * waits for a font. `size` is about the cap height, like a font size. Ink on
+ * light pages, champagne (`tone="gold"`) on dark.
  */
 export function Wordmark({ className, size = 24, tone = "dark" }: { className?: string; size?: number; tone?: "dark" | "gold" }) {
   const height = size * 0.92
@@ -88,7 +110,7 @@ export function Wordmark({ className, size = 24, tone = "dark" }: { className?: 
       viewBox={`0 0 ${WORDMARK_BOX.width} ${WORDMARK_BOX.height}`}
       className={cn("shrink-0", className)}
     >
-      <path d={WORDMARK_PATH} fill={tone === "gold" ? BRAND_GOLD : BRAND_DARK} />
+      <path d={WORDMARK_PATH} fill={tone === "gold" ? BRAND_GOLD : BRAND_INK} />
     </svg>
   )
 }

@@ -28,8 +28,9 @@
     "android": {
       "package": "vn.dep360.app",
       "adaptiveIcon": {
-        "backgroundColor": "#2A1B1E",
-        "foregroundImage": "./assets/images/android-icon-foreground.png"
+        "backgroundColor": "#C9426F",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png"
       },
       "predictiveBackGestureEnabled": false,
       "blockedPermissions": [
@@ -52,7 +53,7 @@
         {
           "backgroundColor": "#FAF8F5",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 96
+          "imageWidth": 200
         }
       ],
       "expo-secure-store",

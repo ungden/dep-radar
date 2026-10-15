@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { ImageResponse } from "next/og"
-import { BRAND_DARK, BRAND_GOLD, LOGO_EYE_PATH, LOGO_EYE_STROKE, LOGO_RADIUS, WORDMARK_BOX, WORDMARK_PATH } from "@/lib/design/brand"
+import { BRAND_INK, WORDMARK_BOX, WORDMARK_PATH } from "@/lib/design/brand"
+import { OgMark } from "@/lib/og"
 
 export const alt = "360đẹp: đặt thợ làm đẹp, người chụp ảnh và người mẫu gần bạn"
 export const size = { width: 1200, height: 630 }
@@ -41,12 +42,9 @@ export default async function OpengraphImage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <svg width="84" height="84" viewBox="0 0 32 32">
-            <rect width="32" height="32" rx={LOGO_RADIUS} fill={BRAND_DARK} />
-            <path d={LOGO_EYE_PATH} fill="none" stroke={BRAND_GOLD} strokeWidth={LOGO_EYE_STROKE} strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <OgMark size={84} />
           <svg height="62" width={(62 * WORDMARK_BOX.width) / WORDMARK_BOX.height} viewBox={`0 0 ${WORDMARK_BOX.width} ${WORDMARK_BOX.height}`}>
-            <path d={WORDMARK_PATH} fill={BRAND_DARK} />
+            <path d={WORDMARK_PATH} fill={BRAND_INK} />
           </svg>
         </div>
 
