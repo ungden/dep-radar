@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Bell, BriefcaseBusiness, CalendarDays, Compass, House, ListChecks, MessageCircle, Plus, Search, User } from "lucide-react"
+import { Bell, BriefcaseBusiness, CalendarDays, Compass, House, ListChecks, MessageCircle, Plus, Search, ShieldCheck, User } from "lucide-react"
 import { Footer } from "@/components/layout/footer"
 import { LiveRegionProvider } from "@/components/live-region"
 import { Avatar, Logo } from "@/components/ui"
@@ -112,6 +112,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
           {session ? (
             <div className="flex items-center gap-1.5">
+              {/* Staff only. The middleware and is_admin() in the database still guard /admin itself. */}
+              {session.isAdmin && (
+                <Link
+                  href="/admin"
+                  aria-current={pathname.startsWith("/admin") ? "page" : undefined}
+                  className={cn(
+                    "mr-1 inline-flex h-10 items-center gap-1.5 rounded-full border px-3.5 text-meta font-semibold",
+                    pathname.startsWith("/admin") ? "border-ink bg-ink text-canvas" : "border-line bg-surface text-ink hover:border-ink",
+                  )}
+                >
+                  <ShieldCheck className="size-4" aria-hidden /> Admin
+                </Link>
+              )}
               <Link href="/tin-nhan" aria-label="Tin nhắn" className="inline-flex size-10 items-center justify-center rounded-full hover:bg-subtle">
                 <MessageCircle className="size-5" />
               </Link>
