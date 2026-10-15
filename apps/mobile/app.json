@@ -93,7 +93,7 @@
           "locationWhenInUsePermission": "360dep dùng vị trí khi bạn bấm Gửi vị trí trong tin nhắn, để người kia tìm đường tới bạn, và khi bạn ghim địa chỉ trên bản đồ.",
           "locationAlwaysAndWhenInUsePermission": false,
           "locationAlwaysPermission": false,
-          "motionUsagePermission": false,
+          "motionUsagePermission": "360dep không đọc dữ liệu chuyển động của bạn. Vị trí chỉ được dùng khi bạn bấm Gửi vị trí hoặc Dùng vị trí hiện tại.",
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false,
           "isAndroidForegroundServiceEnabled": false
