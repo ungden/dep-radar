@@ -3,15 +3,18 @@ import { FlashList, type FlashListRef } from "@shopify/flash-list"
 import { Stack, router, useFocusEffect, useLocalSearchParams } from "expo-router"
 import { Image } from "expo-image"
 import * as ImagePicker from "expo-image-picker"
+import * as Linking from "expo-linking"
+import * as Location from "expo-location"
 import * as WebBrowser from "expo-web-browser"
-import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native"
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { chatState, vnTime } from "@/shared"
+import { LOCATION_DENIED, LOCATION_FAILED, chatState, directionsLink, locationConfirm, roundPoint, vnTime } from "@/shared"
 import {
   CHAT_MAX_PHOTOS,
   listMessages,
   markThreadRead,
   messageFromRow,
+  sendLocation,
   sendMessage,
   setOpenThread,
   subscribeThread,
@@ -140,6 +143,40 @@ export default function Conversation() {
     }
   }
 
+  // Nothing is read before the tap and the yes; the system asks for permission the first time.
+  const shareLocation = () => {
+    if (!uid || sending || !header) return
+    Alert.alert("Gửi vị trí hiện tại?", locationConfirm(header.name), [
+      { text: "Huỷ", style: "cancel" },
+      {
+        text: "Gửi vị trí",
+        onPress: async () => {
+          setSending(true)
+          setError(null)
+          try {
+            const permission = await Location.requestForegroundPermissionsAsync()
+            if (!permission.granted) {
+              setError(LOCATION_DENIED)
+              return
+            }
+            const here = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
+            const res = await sendLocation(id, here.coords.latitude, here.coords.longitude)
+            if (!res.ok) {
+              setError(res.error)
+              void threadHeader(id, uid).then(setHeader)
+              return
+            }
+            void listMessages(id, uid).then(setMessages).catch(() => {})
+          } catch {
+            setError(LOCATION_FAILED)
+          } finally {
+            setSending(false)
+          }
+        },
+      },
+    ])
+  }
+
   const support = () => void WebBrowser.openBrowserAsync(webLink("/tro-giup"))
   const bookAgain = () => {
     if (!header) return
@@ -224,6 +261,14 @@ export default function Conversation() {
           >
             <Icon name="photos" size={22} color={photos.length >= CHAT_MAX_PHOTOS ? colors.subtleStrong : colors.inkSoft} />
           </Press>
+          <Press
+            onPress={shareLocation}
+            disabled={sending}
+            accessibilityLabel="Gửi vị trí"
+            style={{ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", marginLeft: -8 }}
+          >
+            <Icon name="pin" size={22} color={colors.inkSoft} />
+          </Press>
           <TextInput
             value={text}
             onChangeText={setText}
@@ -303,7 +348,11 @@ export default function Conversation() {
                       Không tải được ảnh.
                     </Txt>
                   ) : null}
-                  {item.body ? <Txt color={item.mine ? colors.surface : colors.ink}>{item.body}</Txt> : null}
+                  {item.point ? (
+                    <LocationCard point={item.point} mine={item.mine} />
+                  ) : item.body ? (
+                    <Txt color={item.mine ? colors.surface : colors.ink}>{item.body}</Txt>
+                  ) : null}
                   <Txt v="meta" color={item.mine ? colors.subtleStrong : colors.muted} style={{ alignSelf: "flex-end" }}>
                     {localTime(item.createdAt)}
                   </Txt>
@@ -325,5 +374,61 @@ export default function Conversation() {
       ) : null}
       {footer}
     </KeyboardAvoidingView>
+  )
+}
+
+/** Google Maps itself when the phone has it, else Google Maps in the browser. */
+async function openInGoogleMaps(lat: number, lng: number) {
+  const app = `comgooglemaps://?daddr=${roundPoint(lat)},${roundPoint(lng)}&directionsmode=driving`
+  if (Platform.OS === "ios" && (await Linking.canOpenURL(app).catch(() => false))) return Linking.openURL(app)
+  return Linking.openURL(directionsLink(lat, lng))
+}
+
+/** A sent location: where it is, and the way there in Google Maps. */
+function LocationCard({ point, mine }: { point: { lat: number; lng: number }; mine: boolean }) {
+  return (
+    <View style={{ width: 220, gap: 10 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: mine ? "rgba(255,255,255,0.2)" : colors.accentSoft,
+          }}
+        >
+          <Icon name="pin" size={20} color={mine ? colors.surface : colors.accent} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Txt w={600} color={mine ? colors.surface : colors.ink}>
+            {mine ? "Vị trí của bạn" : "Vị trí đã gửi"}
+          </Txt>
+          <Txt v="meta" color={mine ? colors.subtleStrong : colors.muted}>
+            {point.lat.toFixed(5)}, {point.lng.toFixed(5)}
+          </Txt>
+        </View>
+      </View>
+      <Press
+        onPress={() => void openInGoogleMaps(point.lat, point.lng)}
+        accessibilityRole="button"
+        accessibilityLabel="Chỉ đường trên Google Maps"
+        style={{
+          minHeight: 40,
+          borderRadius: 20,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+          backgroundColor: mine ? colors.surface : colors.ink,
+        }}
+      >
+        <Icon name="directions" size={16} color={mine ? colors.accent : colors.surface} />
+        <Txt v="meta" w={600} color={mine ? colors.accent : colors.surface}>
+          Chỉ đường trên Google Maps
+        </Txt>
+      </Press>
+    </View>
   )
 }

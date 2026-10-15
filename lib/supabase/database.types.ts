@@ -909,6 +909,8 @@ export type Database = {
           created_at: string
           id: string
           image_paths: string[]
+          lat: number | null
+          lng: number | null
           read_at: string | null
           sender_id: string
           thread_id: string
@@ -918,6 +920,8 @@ export type Database = {
           created_at?: string
           id?: string
           image_paths?: string[]
+          lat?: number | null
+          lng?: number | null
           read_at?: string | null
           sender_id: string
           thread_id: string
@@ -927,6 +931,8 @@ export type Database = {
           created_at?: string
           id?: string
           image_paths?: string[]
+          lat?: number | null
+          lng?: number | null
           read_at?: string | null
           sender_id?: string
           thread_id?: string
@@ -2492,6 +2498,10 @@ export type Database = {
       }
       take_job: { Args: { p_job: string }; Returns: string }
       send_booking_reminders: { Args: never; Returns: number }
+      send_location: {
+        Args: { p_lat: number; p_lng: number; p_thread: string }
+        Returns: string
+      }
       send_message: {
         Args: { p_body?: string; p_image_paths?: string[]; p_thread: string }
         Returns: boolean

@@ -1,5 +1,5 @@
 import * as Crypto from "expo-crypto"
-import type { ChatStatus } from "@/shared"
+import { LOCATION_PREVIEW, isLocationBody, type ChatStatus } from "@/shared"
 import { imageUrl } from "./links"
 import { one, rpc, supabase, type Row } from "./supabase"
 
@@ -27,6 +27,8 @@ export interface ChatMessage {
   /** Signed URLs; empty when the private image could not be signed. */
   images: string[]
   hasImages: boolean
+  /** A location sent with send_location; null for words and photos. */
+  point: { lat: number; lng: number } | null
   createdAt: string
 }
 
@@ -56,7 +58,11 @@ export async function listThreads(uid: string): Promise<ThreadSummary[]> {
         otherAvatar: iAmPro ? undefined : imageUrl(pro.avatar_path, "avatars"),
         proSlug: String(pro.slug ?? ""),
         bookingId: t.booking_id ?? null,
-        lastMessage: last ? String(last.body || "") || ((last.image_paths ?? []).length ? "Đã gửi ảnh" : "") : "",
+        lastMessage: last
+          ? isLocationBody(String(last.body ?? ""))
+            ? LOCATION_PREVIEW
+            : String(last.body || "") || ((last.image_paths ?? []).length ? "Đã gửi ảnh" : "")
+          : "",
         lastMessageAt: t.last_message_at,
         unread: messages.filter((m) => m.sender_id !== uid && !m.read_at).length,
         iAmPro,
@@ -125,11 +131,10 @@ async function sign(paths: string[]): Promise<Map<string, string>> {
 const privatePaths = (m: Row) => ((m.image_paths ?? []) as string[]).filter((p) => !p.startsWith("http"))
 
 export async function listMessages(threadId: string, uid: string): Promise<ChatMessage[]> {
-  const { data, error } = await supabase
-    .from("messages")
-    .select("id, sender_id, body, image_paths, created_at")
-    .eq("thread_id", threadId)
-    .order("created_at")
+  // lat/lng come with 20261015100000_chat_location.sql.
+  const read = (columns: string) => supabase.from("messages").select(columns).eq("thread_id", threadId).order("created_at")
+  let { data, error } = await read("id, sender_id, body, image_paths, created_at, lat, lng")
+  if (error) ({ data, error } = await read("id, sender_id, body, image_paths, created_at"))
   if (error) throw new Error("Không tải được tin nhắn.")
   const rows = (data ?? []) as Row[]
   const urls = await sign(rows.flatMap(privatePaths)).catch(() => new Map<string, string>())
@@ -150,6 +155,7 @@ export function toMessage(m: Row, uid: string, urls: Map<string, string> = new M
     body: m.body ?? "",
     images: paths.map((p) => (p.startsWith("http") ? p : urls.get(p))).filter((u): u is string => Boolean(u)),
     hasImages: paths.length > 0,
+    point: typeof m.lat === "number" && typeof m.lng === "number" ? { lat: m.lat, lng: m.lng } : null,
     createdAt: m.created_at,
   }
 }
@@ -182,6 +188,12 @@ export async function sendMessage(threadId: string, body: string, imagePaths: st
   if (!text && !imagePaths.length) return { ok: false, error: "Nhập tin nhắn." }
   const res = await rpc<boolean | null>("send_message", { p_thread: threadId, p_body: text, p_image_paths: imagePaths.slice(0, CHAT_MAX_PHOTOS) })
   return res.ok ? { ok: true } : { ok: false, error: res.error === "Có lỗi xảy ra, vui lòng thử lại." ? "Không gửi được tin nhắn." : res.error }
+}
+
+/** send_location: the same rules as a message; the database rounds the point. */
+export async function sendLocation(threadId: string, lat: number, lng: number): Promise<{ ok: true } | { ok: false; error: string }> {
+  const res = await rpc<string>("send_location", { p_thread: threadId, p_lat: lat, p_lng: lng })
+  return res.ok ? { ok: true } : { ok: false, error: res.error === "Có lỗi xảy ra, vui lòng thử lại." ? "Không gửi được vị trí." : res.error }
 }
 
 export const markThreadRead = (threadId: string) => rpc("mark_thread_read", { p_thread: threadId })
