@@ -3,22 +3,26 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Button, Card, EmptyState, PageHeader, StatusBadge, Tabs, inputClass } from "@/components/ui"
-import { askReportInfo, decideCheck, decideNoShowCompensation, overrideAiDecision, recordTopup, reportChat, resolveReport, setSuspended } from "@/lib/api/admin"
+import { Button, Card, EmptyState, PageHeader, inputClass } from "@/components/ui"
+import { askReportInfo, decideCheck, decideNoShowCompensation, overrideAiDecision, recordTopup, reportChat, resolveReport } from "@/lib/api/admin"
 import { EvidenceGrid } from "@/components/evidence-picker"
-import type { AdminAction, AdminBooking, AdminPro, AdminReport, AiDecisionItem, FeePolicyView, PendingCheck, PlatformSettings, ReportChatMessage } from "@/lib/api/admin"
+import type { AdminAction, AdminBooking, AdminOverview, AdminPro, AdminReport, AiDecisionItem, FeePolicyView, PendingCheck, PlatformSettings, ReportChatMessage } from "@/lib/api/admin"
 import { CatalogPanel, CustomersPanel, FinancePanel, HelpQuestionsPanel, SettingsPanel } from "./desk-panels"
+import { BookingsPanel, OverviewPanel, ProsPanel, RequestsPanel, ReviewsPanel } from "./desk-ops"
+import { ActButton, FilterChips } from "./desk-shared"
+import type { Go, Tab } from "./tabs"
 import { useRefresh } from "@/lib/store"
-import type { BookingStatus } from "@/lib/types"
 import { cn, formatPrice, timeAgo } from "@/lib/utils"
 
-type Tab = "checks" | "pros" | "customers" | "finance" | "topup" | "bookings" | "reports" | "ai" | "help" | "catalog" | "settings"
+type Result = { ok: true } | { ok: false; error: string }
 
 /**
- * The operations desk: the queue of verifications a vision model was unsure
- * about, the freelancer roster, customers, the money, recent bookings, the
- * report inbox, the log of what the AI reviewer decided, and the settings. Every button calls an RPC that checks
- * `is_admin()` again in the database.
+ * The operations desk: an overview of what needs a person, the verifications a
+ * vision model was unsure about, the partner roster and the AI reviewer's log,
+ * bookings, customers, requests and reviews, the report inbox, the money and
+ * the settings. Every button calls an RPC that checks `is_admin()` again in the
+ * database. The open panel is in the address (?tab=), so a reload or a shared
+ * link lands in the same place.
  */
 export function AdminDesk({
   checks,
@@ -27,6 +31,9 @@ export function AdminDesk({
   reports,
   aiLog,
   admin,
+  overview,
+  initialTab,
+  initialFilter,
 }: {
   checks: PendingCheck[]
   pros: AdminPro[]
@@ -34,139 +41,260 @@ export function AdminDesk({
   reports: AdminReport[]
   aiLog: { items: AiDecisionItem[]; last24h: number }
   admin: { settings: PlatformSettings; fees: FeePolicyView; log: AdminAction[] }
+  overview: AdminOverview
+  initialTab: Tab
+  initialFilter?: string
 }) {
-  const [tab, setTab] = React.useState<Tab>(checks.length ? "checks" : "pros")
+  const [view, setView] = React.useState<{ tab: Tab; filter?: string }>({ tab: initialTab, filter: initialFilter })
   const [error, setError] = React.useState<string | null>(null)
+  const [notice, setNotice] = React.useState<string | null>(null)
   const refresh = useRefresh()
+  const tab = view.tab
 
-  const run = async (fn: () => Promise<{ ok: true } | { ok: false; error: string }>) => {
+  React.useEffect(() => {
+    if (!notice) return
+    const t = setTimeout(() => setNotice(null), 4000)
+    return () => clearTimeout(t)
+  }, [notice])
+
+  const go: Go = (next, filter) => {
+    setView({ tab: next, filter })
+    setError(null)
+    const url = new URL(window.location.href)
+    url.searchParams.set("tab", next)
+    if (filter) url.searchParams.set("filter", filter)
+    else url.searchParams.delete("filter")
+    window.history.replaceState(null, "", url)
+    window.scrollTo({ top: 0 })
+  }
+
+  /** Runs one admin call, says how it went, and re-reads the desk. True when it worked. */
+  const run = async (fn: () => Promise<Result>, done = "Đã lưu.") => {
     const result = await fn()
     setError(result.ok ? null : result.error)
+    setNotice(result.ok ? done : null)
     refresh()
+    return result.ok
   }
 
   const openReports = reports.filter((r) => r.status === "open" || r.status === "reviewing")
+  const claims = openReports.filter((r) => r.claim).length
+
+  const groups: { title: string | null; items: { value: Tab; label: string; count?: number; alert?: boolean }[] }[] = [
+    { title: null, items: [{ value: "overview", label: "Tổng quan" }] },
+    {
+      title: "Đối tác",
+      items: [
+        { value: "checks", label: "Xác minh", count: checks.length, alert: checks.length > 0 },
+        { value: "pros", label: "Đối tác", count: pros.length },
+        { value: "ai", label: "Nhật ký AI", count: aiLog.last24h },
+      ],
+    },
+    {
+      title: "Khách & lịch",
+      items: [
+        { value: "bookings", label: "Lịch hẹn", count: overview.overdueConfirm || undefined, alert: overview.overdueConfirm > 0 },
+        { value: "customers", label: "Tài khoản" },
+        { value: "requests", label: "Yêu cầu & tuyển mẫu" },
+        { value: "reviews", label: "Đánh giá", count: overview.lowReviews7d || undefined, alert: overview.lowReviews7d > 0 },
+      ],
+    },
+    { title: "An toàn", items: [{ value: "reports", label: "Báo cáo", count: openReports.length, alert: openReports.length > 0 }] },
+    {
+      title: "Tiền",
+      items: [
+        { value: "finance", label: "Tài chính" },
+        { value: "topup", label: "Nạp ví" },
+      ],
+    },
+    {
+      title: "Hệ thống",
+      items: [
+        { value: "help", label: "Câu hỏi trợ giúp", count: overview.uncoveredHelp7d || undefined },
+        { value: "catalog", label: "Danh mục & giá" },
+        { value: "settings", label: "Cấu hình & nhật ký" },
+      ],
+    },
+  ]
+  const all = groups.flatMap((g) => g.items)
+  const current = all.find((i) => i.value === tab)
 
   return (
-    <div className="mx-auto max-w-4xl md:pt-4">
+    <div className="mx-auto max-w-6xl md:pt-4">
       <PageHeader title="Vận hành" />
-      <Tabs
-        value={tab}
-        onChange={setTab}
-        items={[
-          { value: "checks", label: `Xác minh (${checks.length})` },
-          { value: "pros", label: `Chuyên viên (${pros.length})` },
-          { value: "customers", label: "Khách hàng" },
-          { value: "finance", label: "Tài chính" },
-          { value: "topup", label: "Nạp ví" },
-          { value: "bookings", label: "Lịch hẹn" },
-          { value: "reports", label: `Báo cáo (${openReports.length})` },
-          { value: "ai", label: `Nhật ký AI (${aiLog.last24h})` },
-          { value: "help", label: "Câu hỏi trợ giúp" },
-          { value: "catalog", label: "Danh mục" },
-          { value: "settings", label: "Cấu hình" },
-        ]}
-      />
 
-      {error && (
-        <p role="alert" className="mt-4 rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
-          {error}
-        </p>
-      )}
+      {/* A phone gets one scrolling row; a desk gets the grouped list at the side. */}
+      <nav aria-label="Các mục quản trị" className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-3 md:hidden">
+        {all.map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            onClick={() => go(item.value)}
+            aria-current={tab === item.value ? "page" : undefined}
+            className={cn(
+              "min-h-10 shrink-0 rounded-full border px-3.5 text-meta font-semibold",
+              tab === item.value ? "border-ink bg-ink text-canvas" : "border-line bg-surface text-ink-soft",
+            )}
+          >
+            {item.label}
+            {item.count !== undefined && <Count n={item.count} alert={item.alert} on={tab === item.value} />}
+          </button>
+        ))}
+      </nav>
 
-      {tab === "checks" && (
-        <div className="mt-4 space-y-3">
-          {checks.length === 0 && <EmptyState title="Không có hồ sơ nào chờ duyệt" />}
-          {checks.map((check) => (
-            <CheckCard key={check.id} check={check} onDecide={(ok, reason) => run(() => decideCheck(check.id, ok, reason))} />
-          ))}
-        </div>
-      )}
+      <div className="md:grid md:grid-cols-[208px_minmax(0,1fr)] md:gap-8">
+        <nav aria-label="Các mục quản trị" className="hidden md:block">
+          <div className="sticky top-[92px] space-y-4">
+            {groups.map((g) => (
+              <div key={g.title ?? "top"}>
+                {g.title && <p className="mb-1 px-3 text-label font-semibold uppercase tracking-wide text-muted">{g.title}</p>}
+                <ul>
+                  {g.items.map((item) => (
+                    <li key={item.value}>
+                      <button
+                        type="button"
+                        onClick={() => go(item.value)}
+                        aria-current={tab === item.value ? "page" : undefined}
+                        className={cn(
+                          "flex min-h-10 w-full items-center gap-2 rounded-xl px-3 text-left text-[15px] font-semibold",
+                          tab === item.value ? "bg-ink text-canvas" : "text-ink-soft hover:bg-subtle hover:text-ink",
+                        )}
+                      >
+                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                        {item.count !== undefined && <Count n={item.count} alert={item.alert} on={tab === item.value} />}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </nav>
 
-      {tab === "pros" && (
-        <ul className="mt-4 space-y-2">
-          {pros.map((pro) => (
-            <li key={pro.id}>
-              <Card className="flex flex-wrap items-center gap-3 p-3.5">
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 font-semibold">
-                    <Link href={`/pros/${pro.slug}`} className="hover:underline">
-                      {pro.name}
-                    </Link>
-                    <Flag on={pro.identity === "verified"} label="Đã xác minh" />
-                    <Flag on={!pro.published} label="Chưa công khai" tone="muted" />
-                    <Flag on={pro.suspended} label="Tạm khoá" tone="danger" />
-                  </p>
-                  <p className="text-label text-muted">
-                    {pro.district}, {pro.city} · {pro.completedJobs} job · ★ {pro.rating.toFixed(2)} ({pro.ratingCount}) ·
-                    ví <span className={pro.wallet < 0 ? "font-semibold text-danger" : undefined}>{formatPrice(pro.wallet)}</span>
-                    {pro.payCode && <> · mã nạp {pro.payCode}</>}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant={pro.suspended ? "soft" : "ghost"}
-                  onClick={() => run(() => setSuspended(pro.id, !pro.suspended))}
-                >
-                  {pro.suspended ? "Mở khoá" : "Tạm khoá"}
-                </Button>
-              </Card>
-            </li>
-          ))}
-        </ul>
-      )}
+        <section aria-label={current?.label} className="min-w-0">
+          {tab !== "overview" && <h2 className="mb-3 hidden text-title font-bold md:block">{current?.label}</h2>}
 
-      {tab === "topup" && <TopupForm pros={pros} onDone={refresh} />}
+          {error && (
+            <p role="alert" className="mb-3 flex items-start gap-3 rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
+              <span className="min-w-0 flex-1">{error}</span>
+              <button type="button" className="text-meta font-semibold underline" onClick={() => setError(null)}>
+                Đóng
+              </button>
+            </p>
+          )}
+          {notice && (
+            <p role="status" className="mb-3 rounded-xl bg-success-soft px-3.5 py-2.5 text-body font-semibold text-success">
+              {notice}
+            </p>
+          )}
 
-      {tab === "customers" && <CustomersPanel />}
+          {tab === "overview" && (
+            <OverviewPanel
+              overview={overview}
+              checks={checks.length}
+              openReports={openReports.length}
+              claims={claims}
+              aiLast24h={aiLog.last24h}
+              pros={pros}
+              walletFloor={admin.fees.walletFloor}
+              go={go}
+            />
+          )}
 
-      {tab === "finance" && <FinancePanel pros={pros} />}
+          {tab === "checks" && (
+            <div className="space-y-3">
+              {checks.length === 0 && (
+                <EmptyState title="Không có hồ sơ nào chờ duyệt" text="AI tự duyệt hồ sơ chắc chắn; hồ sơ AI chưa chắc sẽ hiện ở đây." />
+              )}
+              {checks.map((check) => (
+                <CheckCard
+                  key={check.id}
+                  check={check}
+                  onDecide={(ok, reason) => run(() => decideCheck(check.id, ok, reason), ok ? `Đã duyệt xác minh của ${check.proName}.` : "Đã từ chối và báo cho đối tác.")}
+                />
+              ))}
+            </div>
+          )}
 
-      {tab === "help" && <HelpQuestionsPanel />}
+          {tab === "pros" && <ProsPanel key={view.filter} pros={pros} walletFloor={admin.fees.walletFloor} initialFilter={view.filter} run={run} />}
 
-      {tab === "catalog" && <CatalogPanel />}
+          {tab === "topup" && <TopupForm pros={pros} onDone={refresh} />}
 
-      {tab === "settings" && <SettingsPanel settings={admin.settings} fees={admin.fees} log={admin.log} />}
+          {tab === "customers" && <CustomersPanel />}
 
-      {tab === "ai" && (
-        <AiLog
-          log={aiLog}
-          onOverride={(id, decision, note) => run(() => overrideAiDecision(id, decision, note))}
-        />
-      )}
+          {tab === "finance" && <FinancePanel pros={pros} />}
 
-      {tab === "bookings" && (
-        <ul className="mt-4 space-y-2">
-          {bookings.map((b) => (
-            <li key={b.id}>
-              <Card className="flex flex-wrap items-center gap-3 p-3.5 text-body">
-                <StatusBadge status={b.status as BookingStatus} />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">
-                    {b.customerName} → {b.proName}
-                  </span>
-                  <span className="block truncate text-label text-muted">
-                    {b.date} {b.time} · {b.serviceLabel}
-                  </span>
-                </span>
-                <span className="font-semibold">{formatPrice(b.total)}</span>
-              </Card>
-            </li>
-          ))}
-        </ul>
-      )}
+          {tab === "help" && <HelpQuestionsPanel />}
 
-      {tab === "reports" && (
-        <div className="mt-4 space-y-2">
-          {reports.length === 0 && <EmptyState title="Chưa có báo cáo nào" />}
-          {reports.map((r) => (
-            <ReportCard key={r.id} report={r} run={run} />
-          ))}
-        </div>
-      )}
+          {tab === "catalog" && <CatalogPanel />}
+
+          {tab === "settings" && <SettingsPanel settings={admin.settings} fees={admin.fees} log={admin.log} />}
+
+          {tab === "ai" && (
+            <AiLog
+              log={aiLog}
+              onOverride={async (id, decision, note) => {
+                await run(() => overrideAiDecision(id, decision, note), "Đã đảo quyết định và báo cho đối tác.")
+              }}
+            />
+          )}
+
+          {tab === "bookings" && <BookingsPanel key={view.filter} bookings={bookings} initialFilter={view.filter} />}
+
+          {tab === "requests" && <RequestsPanel />}
+
+          {tab === "reviews" && <ReviewsPanel key={view.filter} initialFilter={view.filter} run={run} />}
+
+          {tab === "reports" && <ReportsPanel key={view.filter} reports={reports} initialFilter={view.filter} run={run} />}
+        </section>
+      </div>
     </div>
   )
 }
+
+function Count({ n, alert, on }: { n: number; alert?: boolean; on: boolean }) {
+  return (
+    <span
+      className={cn(
+        "ml-1.5 inline-flex min-w-6 justify-center rounded-full px-1.5 text-label font-bold tabular-nums",
+        on ? "bg-canvas/20 text-canvas" : alert ? "bg-accent text-white" : "bg-subtle text-ink-soft",
+      )}
+    >
+      {n}
+    </span>
+  )
+}
+
+type ReportFilter = "open" | "closed" | "all"
+
+/** The inbox, open cases first; closed ones are one tap away for a follow-up. */
+function ReportsPanel({ reports, initialFilter, run }: { reports: AdminReport[]; initialFilter?: string; run: Run }) {
+  const [filter, setFilter] = React.useState<ReportFilter>(initialFilter === "closed" || initialFilter === "all" ? initialFilter : "open")
+  const isOpen = (r: AdminReport) => r.status === "open" || r.status === "reviewing"
+  const test: Record<ReportFilter, (r: AdminReport) => boolean> = { open: isOpen, closed: (r) => !isOpen(r), all: () => true }
+  const shown = reports.filter(test[filter])
+  return (
+    <div className="space-y-3">
+      <FilterChips
+        label="Lọc báo cáo"
+        value={filter}
+        onChange={setFilter}
+        items={[
+          { value: "open", label: "Đang mở", count: reports.filter(test.open).length },
+          { value: "closed", label: "Đã đóng", count: reports.filter(test.closed).length },
+          { value: "all", label: "Tất cả", count: reports.length },
+        ]}
+      />
+      {shown.length === 0 && <EmptyState title={filter === "open" ? "Không có báo cáo nào đang mở" : "Chưa có báo cáo nào"} />}
+      {shown.map((r) => (
+        <ReportCard key={r.id} report={r} run={run} />
+      ))}
+      {reports.length >= 50 && <p className="text-label text-muted">Hiện 50 báo cáo mới nhất.</p>}
+    </div>
+  )
+}
+
+type Run = (fn: () => Promise<Result>, done?: string) => Promise<boolean>
 
 /**
  * Staff record a transfer they saw on the bank statement: find the freelancer
@@ -498,7 +626,7 @@ function AiDecisionCard({
   )
 }
 
-function CheckCard({ check, onDecide }: { check: PendingCheck; onDecide: (approve: boolean, reason: string) => void }) {
+function CheckCard({ check, onDecide }: { check: PendingCheck; onDecide: (approve: boolean, reason: string) => Promise<unknown> }) {
   const [reason, setReason] = React.useState("")
   return (
     <Card className="p-4">
@@ -537,12 +665,12 @@ function CheckCard({ check, onDecide }: { check: PendingCheck; onDecide: (approv
         onChange={(e) => setReason(e.target.value)}
       />
       <div className="mt-3 flex gap-2">
-        <Button variant="ghost" size="sm" onClick={() => onDecide(false, reason.trim())}>
+        <ActButton variant="ghost" size="sm" onClick={() => onDecide(false, reason.trim())}>
           Từ chối
-        </Button>
-        <Button size="sm" onClick={() => onDecide(true, reason.trim())}>
+        </ActButton>
+        <ActButton size="sm" onClick={() => onDecide(true, reason.trim())}>
           Duyệt xác minh
-        </Button>
+        </ActButton>
       </div>
       <p className="mt-2 text-label text-muted">
         Ảnh chỉ lưu kín cho lần duyệt này (link hết hạn sau 15 phút, tải lại trang để xem tiếp) và bị xoá ngay khi bạn duyệt hoặc từ chối.
@@ -561,16 +689,6 @@ function Fact({ label, value }: { label: string; value: string }) {
   )
 }
 
-function Flag({ on, label, tone = "success" }: { on: boolean; label: string; tone?: "success" | "muted" | "danger" }) {
-  if (!on) return null
-  const tones = {
-    success: "bg-success-soft text-success",
-    muted: "bg-canvas text-muted",
-    danger: "bg-danger-soft text-danger",
-  }
-  return <span className={cn("rounded-full px-2 py-0.5 text-label font-semibold", tones[tone])}>{label}</span>
-}
-
 const REPORT_REASON: Record<string, string> = {
   pro_no_show: "Khách báo người làm không đến",
   no_show_dispute: "Khách khiếu nại bị báo vắng mặt",
@@ -581,9 +699,10 @@ const REPORT_REASON: Record<string, string> = {
  * closed (resolve_report notifies them). A disputed no-show decides the held
  * travel-fee compensation instead; both sides are told.
  */
-function ReportCard({ report: r, run }: { report: AdminReport; run: (fn: () => Promise<{ ok: true } | { ok: false; error: string }>) => void }) {
+function ReportCard({ report: r, run }: { report: AdminReport; run: Run }) {
   const [note, setNote] = React.useState("")
   const open = r.status === "open" || r.status === "reviewing"
+  const claim = r.claim
   return (
     <Card className="p-3.5">
       <div className="flex flex-wrap items-center gap-2">
@@ -621,39 +740,38 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: (fn: () => P
           />
           <div className="flex flex-wrap gap-2">
             {r.status === "open" && (
-              <Button size="sm" variant="ghost" onClick={() => run(() => resolveReport(r.id, "reviewing"))}>
+              <ActButton size="sm" variant="ghost" onClick={() => run(() => resolveReport(r.id, "reviewing"), "Đã nhận xử lý báo cáo.")}>
                 Nhận xử lý
-              </Button>
+              </ActButton>
             )}
-            <Button
+            <ActButton
               size="sm"
               variant="ghost"
               disabled={note.trim().length < 5}
-              onClick={() => {
-                run(() => askReportInfo(r.id, note))
-                setNote("")
+              onClick={async () => {
+                if (await run(() => askReportInfo(r.id, note), "Đã gửi câu hỏi cho người báo.")) setNote("")
               }}
             >
               Hỏi thêm thông tin
-            </Button>
+            </ActButton>
           </div>
-          {r.claim ? (
+          {claim ? (
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="ghost" onClick={() => run(() => decideNoShowCompensation(r.claim!.id, false, note))}>
+              <ActButton size="sm" variant="ghost" onClick={() => run(() => decideNoShowCompensation(claim.id, false, note), "Đã quyết: không bù phí. Hai bên được báo.")}>
                 Khách đúng: không bù phí
-              </Button>
-              <Button size="sm" onClick={() => run(() => decideNoShowCompensation(r.claim!.id, true, note))}>
-                Giữ vắng mặt: bù {formatPrice(r.claim.amount)} cho người làm
-              </Button>
+              </ActButton>
+              <ActButton size="sm" onClick={() => run(() => decideNoShowCompensation(claim.id, true, note), "Đã bù phí cho người làm. Hai bên được báo.")}>
+                Giữ vắng mặt: bù {formatPrice(claim.amount)} cho người làm
+              </ActButton>
             </div>
           ) : (
             <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={() => run(() => resolveReport(r.id, "rejected", note))}>
+              <ActButton size="sm" variant="ghost" onClick={() => run(() => resolveReport(r.id, "rejected", note), "Đã đóng: không vi phạm. Người báo được báo kết quả.")}>
                 Không vi phạm
-              </Button>
-              <Button size="sm" onClick={() => run(() => resolveReport(r.id, "resolved", note))}>
+              </ActButton>
+              <ActButton size="sm" onClick={() => run(() => resolveReport(r.id, "resolved", note), "Đã đóng báo cáo. Người báo được báo kết quả.")}>
                 Đã xử lý
-              </Button>
+              </ActButton>
             </div>
           )}
         </div>

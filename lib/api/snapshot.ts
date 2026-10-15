@@ -566,6 +566,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
         name: account.full_name || "Bạn",
         phone: account.phone,
         proId: myPro?.id,
+        isAdmin: Boolean(account.is_admin) || undefined,
         login: {
           email: auth.user?.email ?? null,
           pendingEmail: auth.user?.new_email ?? null,

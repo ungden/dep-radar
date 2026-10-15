@@ -424,6 +424,8 @@ export interface Session {
   phone: string
   /** freelancer profile the pro-mode session manages */
   proId?: string
+  /** Staff of 360đẹp (accounts.is_admin): sees the way into /admin. The middleware and the database still decide. */
+  isAdmin?: boolean
   /** How this account signs in (web only; the app reads its own auth user). */
   login?: {
     /** The auth email. For an account made with a phone number, a stand-in (lib/auth/identifier.ts) until a real one is confirmed. */
