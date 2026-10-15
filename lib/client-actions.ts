@@ -198,6 +198,10 @@ export const actions = {
     return asResult(await api.attachAddons(parentId, items))
   },
 
+  async setJobReferences(jobId: string, paths: string[]): Promise<Result> {
+    return asResult(await api.setJobReferences(jobId, paths))
+  },
+
   async setBookingReferences(bookingId: string, paths: string[]): Promise<Result> {
     return asResult(await api.setBookingReferences(bookingId, paths))
   },

@@ -513,18 +513,19 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
           .order("starts_at", { ascending: false }),
       2,
     ),
-    // First fall back from frozen scope, then from the older match-then-chat columns.
+    // First fall back from reference photos (20261016100000), then frozen scope, then the older match-then-chat columns.
     orLegacy((legacy) =>
       supabase
         .from("jobs")
         .select(`
           id, customer_id, template_id, variant_id, quantity, description, starts_at,
           at_home, address_id, city, district, customer_name, payment_method, status, created_at
-          ${legacy >= 2 ? "" : ", price, booking_id, notified"}
-          ${legacy >= 1 ? "" : ", service_contract, max_total"}
+          ${legacy >= 3 ? "" : ", price, booking_id, notified"}
+          ${legacy >= 2 ? "" : ", service_contract, max_total"}
+          ${legacy >= 1 ? "" : ", reference_photos"}
         `)
         .order("created_at", { ascending: false }),
-      2,
+      3,
     ),
     supabase.from("addresses").select("*").eq("account_id", me).order("created_at"),
     supabase.from("saved_works").select("work_id").eq("account_id", me),
@@ -721,6 +722,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     notified: row.notified ?? null,
     mine: row.customer_id === me,
     createdAt: row.created_at,
+    referencePhotos: Array.isArray(row.reference_photos) ? row.reference_photos : [],
   }))
 
   const addresses: AddressItem[] = rowsOf("addresses", addressesRes).map((row: Row) => ({

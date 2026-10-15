@@ -61,6 +61,10 @@ export default function Explore() {
   const [allCategories, setAllCategories] = React.useState(false)
   const [stuck, setStuck] = React.useState(false)
   const switchY = React.useRef(Number.POSITIVE_INFINITY)
+  const scroller = React.useRef<ScrollView>(null)
+  const servicesY = React.useRef(0)
+  // Set when a category is tapped: once the list under it has laid out, scroll to it.
+  const scrollToServices = React.useRef(false)
 
   // One clock per data load, so the order does not reshuffle while scrolling.
   const loadedAt = app.data
@@ -86,6 +90,13 @@ export default function Explore() {
   const tiles = categoryRow(categories, offers, shownCategory, 4)
   const shownCategoryInfo = CATEGORIES.find((c) => c.id === shownCategory)
   const shown = offers.filter((o) => shownCategory === "all" || o.template.category === shownCategory)
+  // After the tap, once the list has laid out (its top moves when "Xem thêm" folds away).
+  React.useEffect(() => {
+    if (!scrollToServices.current) return
+    scrollToServices.current = false
+    const t = setTimeout(() => scroller.current?.scrollTo({ y: Math.max(0, servicesY.current - 56), animated: true }), 80)
+    return () => clearTimeout(t)
+  }, [shownCategory])
   const visible = expanded || shownCategory !== "all" ? shown : shown.slice(0, SERVICES_FIRST)
   // A service with no work of its own borrows one from its category. Never the
   // same picture on two cards (it reads as the same service): the service the
@@ -179,6 +190,7 @@ export default function Explore() {
       <TopBar />
       <View style={{ flex: 1 }}>
         <ScrollView
+          ref={scroller}
           onScroll={onScroll}
           scrollEventThrottle={32}
           contentContainerStyle={{ paddingBottom: 40, gap: 20 }}
@@ -238,8 +250,11 @@ export default function Explore() {
                 value={shownCategory}
                 // Tapping the chosen category again goes back to everything.
                 onChange={(id) => {
-                  setCategory(id === shownCategory ? "all" : (id as CategoryId))
+                  const next = id === shownCategory ? "all" : (id as CategoryId)
+                  setCategory(next)
                   setAllCategories(false)
+                  // Its services are below the fold on a phone: take the person there.
+                  scrollToServices.current = next !== "all"
                 }}
                 more={tiles.more ? { open: allCategories, onToggle: () => setAllCategories((v) => !v) } : undefined}
               />
@@ -247,7 +262,12 @@ export default function Explore() {
           ) : null}
 
           {/* Services */}
-          <View style={{ paddingHorizontal: gutter, gap: 14 }}>
+          <View
+            style={{ paddingHorizontal: gutter, gap: 14 }}
+            onLayout={(e) => {
+              servicesY.current = e.nativeEvent.layout.y
+            }}
+          >
             <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
               <Txt v="h2" style={{ flexShrink: 1 }}>
                 {title}

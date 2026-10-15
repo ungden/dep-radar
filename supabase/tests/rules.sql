@@ -484,7 +484,7 @@ begin
       'create_booking', 'confirm_booking', 'decline_booking', 'start_booking', 'complete_booking',
       'mark_no_show', 'cancel_booking', 'request_reschedule', 'respond_reschedule', 'post_job',
       'send_offer', 'accept_offer', 'withdraw_offer', 'write_review', 'reply_review', 'open_thread',
-      'send_message', 'send_location', 'replace_working_hours', 'my_wallet_balance', 'mark_thread_read', 'delete_my_account',
+      'send_message', 'send_location', 'set_job_references', 'replace_working_hours', 'my_wallet_balance', 'mark_thread_read', 'delete_my_account',
       'set_my_phone', 'set_interests',
       -- photo & video, combos, casting calls, two-way reviews
       'set_booking_terms', 'deliver_booking', 'accept_delivery', 'link_bookings',
@@ -1851,6 +1851,25 @@ begin
   assert (select price = suggested_price from public.jobs j join public.service_variants sv
           on sv.template_id = j.template_id and sv.id = j.variant_id where j.id = v), 'the request is not at the catalogue price';
   assert exists (select 1 from public.notifications where account_id = linh and kind = 'job_new'), 'linh was not told about the request';
+
+  raise notice 'a request carries reference photos from its owner''s folder, and they go with the booking';
+  perform public.set_job_references(v, array[friend::text || '/look-1.jpg', friend::text || '/look-2.jpg']);
+  begin
+    perform public.set_job_references(v, array[linh::text || '/not-mine.jpg']);
+    assert false, 'a reference photo from somebody else''s folder was accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    perform public.set_job_references(v, array[friend::text || '/1.jpg', friend::text || '/2.jpg', friend::text || '/3.jpg', friend::text || '/4.jpg']);
+    assert false, 'four reference photos were accepted';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  begin
+    perform public.set_job_references(v, '{}');
+    assert false, 'somebody else changed the request''s photos';
+  exception when no_data_found then null;
+  end;
   perform set_config('request.jwt.claim.sub', linh::text, true);
   begin
     perform public.send_offer(v, 300000, 'Chị nhận nhé em, 300k ạ');
@@ -1860,6 +1879,7 @@ begin
   b2 := public.take_job(v);
   assert (select status = 'confirmed' and source = 'job' from public.bookings where id = b2), 'taking a request did not make a confirmed booking';
   assert (select status = 'booked' and booking_id = b2 from public.jobs where id = v), 'the request is still open';
+  assert (select cardinality(reference_photos) = 2 from public.bookings where id = b2), 'the request''s photos did not go with the booking';
   perform set_config('request.jwt.claim.sub', thu::text, true);
   begin
     perform public.take_job(v);

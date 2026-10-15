@@ -5,7 +5,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { CATEGORIES, POLICY, templatesByCategory, tierLabels, serviceQuantity, isUrgent, PRICE_LEVEL_NOTE, type CategoryId } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
 import { addDays, formatDateLong, formatDuration, formatPrice, todayISO, weekdayShort } from "@/data/format"
+import { setJobReferences, uploadReference } from "@/data/references"
 import { postJob, requestPrice } from "@/data/requests"
+import { ReferencePicker, type PickedPhoto } from "@/components/reference-photos"
 import { CategoryTiles } from "@/components/category-icon"
 import { useApp } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
@@ -44,6 +46,7 @@ export default function NewRequest() {
   const [feeLimit, setFeeLimit] = React.useState(0)
   const [tier, setTier] = React.useState<number | null>(null)
   const [description, setDescription] = React.useState("")
+  const [photos, setPhotos] = React.useState<PickedPhoto[]>([])
   const [date, setDate] = React.useState(addDays(todayISO(), 2))
   const [time, setTime] = React.useState("16:00")
   const [addressId, setAddressId] = React.useState<string | null>(null)
@@ -58,7 +61,7 @@ export default function NewRequest() {
     }, []),
   )
 
-  const dirty = !sent && (Boolean(description.trim()) || category !== "nail")
+  const dirty = !sent && (Boolean(description.trim()) || photos.length > 0 || category !== "nail")
   const leaving = React.useRef(false)
   React.useEffect(() => {
     if (!dirty) return
@@ -129,11 +132,23 @@ export default function NewRequest() {
       price,
       maxTotal,
     })
-    setBusy(false)
     if (!res.ok) {
+      setBusy(false)
       haptic.error()
       return setError(res.error)
     }
+    // The request is up; its photos follow. If they fail, it still stands and says so.
+    if (photos.length && app.uid) {
+      try {
+        const paths: string[] = []
+        for (const p of photos) paths.push(await uploadReference(app.uid, p))
+        const sentPhotos = await setJobReferences(res.data, paths)
+        if (!sentPhotos.ok) throw new Error(sentPhotos.error)
+      } catch (e) {
+        Alert.alert("Đã đăng yêu cầu", `Nhưng chưa gửi được ảnh mẫu: ${e instanceof Error ? e.message : "lỗi kết nối"}`)
+      }
+    }
+    setBusy(false)
     haptic.success()
     setSent(true)
     leaving.current = true
@@ -219,6 +234,13 @@ export default function NewRequest() {
             accessibilityLabel="Mô tả thêm"
             style={{ minHeight: 88, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
           />
+        </Group>
+
+        <Group title="Ảnh mẫu (không bắt buộc)">
+          <Txt v="meta" color={colors.inkSoft}>
+            Tối đa 3 ảnh kiểu bạn muốn (tone makeup, kiểu tóc, mẫu nail). Người làm xem trước khi nhận, để chỉ người làm được mới nhận.
+          </Txt>
+          <ReferencePicker value={photos} onChange={setPhotos} disabled={busy} />
         </Group>
 
         <Group title="Ngày">

@@ -414,6 +414,8 @@ export interface JobPost {
   notified: number | null
   mine: boolean
   createdAt: string
+  /** The look the customer wants, 0 to 3 paths in the private references bucket. */
+  referencePhotos?: string[]
 }
 
 export type Role = "customer" | "pro"

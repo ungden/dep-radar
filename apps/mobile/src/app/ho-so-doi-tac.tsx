@@ -34,6 +34,8 @@ export default function PartnerProfile() {
   const [agree, setAgree] = React.useState(false)
   const [editing, setEditing] = React.useState<string | null>(null)
   const [prices, setPrices] = React.useState<Record<string, number>>({})
+  const scroller = React.useRef<ScrollView>(null)
+  const cardY = React.useRef<Record<string, number>>({})
   const load = React.useCallback(async (initial = false) => {
     const r = await rpc<PartnerSetup>("partner_setup", {})
     if (!r.ok) { setError(r.error); return }
@@ -47,14 +49,15 @@ export default function PartnerProfile() {
   }, [])
   React.useEffect(() => { if (app.uid) void load(true) }, [app.uid, load])
   useFocusEffect(React.useCallback(() => { if (app.uid) void load() }, [app.uid, load]))
-  const mutate = async (fn: string, args: Record<string, unknown>, next?: number) => {
+  const mutate = async (fn: string, args: Record<string, unknown>, next?: number): Promise<boolean> => {
     setBusy(true); setError(null)
     try {
       const r = await rpc(fn, args)
-      if (!r.ok) return setError(r.error)
+      if (!r.ok) { setError(r.error); return false }
       await load(); await app.refresh()
       if (next !== undefined) setStep(next)
-    } catch { setError("Không lưu được. Thông tin đang nhập vẫn giữ nguyên; thử lại khi có mạng.") }
+      return true
+    } catch { setError("Không lưu được. Thông tin đang nhập vẫn giữ nguyên; thử lại khi có mạng."); return false }
     finally { setBusy(false) }
   }
   const hideProfile = async () => {
@@ -72,8 +75,17 @@ export default function PartnerProfile() {
   const tpl = editing ? getTemplate(editing) : null
   const steps = partnerProgress(setup)
   const offered = categories.flatMap((c) => templatesByCategory(c))
-  const openService = (id: string) => { setEditing(id); setPrices({ ...(setup.services.find((s) => s.template_id === id)?.prices ?? {}) }) }
-  return <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" style={{ backgroundColor: colors.canvas }} contentContainerStyle={{ padding: gutter, paddingBottom: 80, gap: 18 }}>
+  // Opening a service starts at its top; saving it comes back to it in the list.
+  const openService = (id: string) => {
+    setEditing(id)
+    setPrices({ ...(setup.services.find((s) => s.template_id === id)?.prices ?? {}) })
+    scroller.current?.scrollTo({ y: 0, animated: false })
+  }
+  const backToList = (id: string | null) => {
+    setEditing(null)
+    setTimeout(() => scroller.current?.scrollTo({ y: Math.max(0, (id ? cardY.current[id] ?? 0 : 0) - 12), animated: true }), 60)
+  }
+  return <ScrollView ref={scroller} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" style={{ backgroundColor: colors.canvas }} contentContainerStyle={{ padding: gutter, paddingBottom: 80, gap: 18 }}>
     <Txt v="h2">Hồ sơ đối tác</Txt>
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{PARTNER_STEPS.map((label, i) => <Choice key={label} label={`${steps[i].done ? "✓" : i + 1} ${label}`} active={step === i} disabled={busy || (!setup.profile && i > 0)} onPress={() => { setStep(i); setEditing(null) }} />)}</View>
     {error && <Txt color={colors.danger}>{error}</Txt>}
@@ -87,11 +99,41 @@ export default function PartnerProfile() {
     </>}
     {step === 1 && <>
       <Txt color={colors.inkSoft}>{PRICE_LEVEL_NOTE} Chỉ bật những gói bạn thực hiện được.</Txt>
-      {!tpl ? offered.map((t) => <View key={t.id} style={{ padding: 14, gap: 8, backgroundColor: colors.surface, borderRadius: radius.md }}><Txt w={700}>{t.name}</Txt><Txt v="meta">{Object.keys(setup.services.find((s) => s.template_id === t.id)?.prices ?? {}).length} gói đã chọn</Txt><Button label="Chọn gói & giá" variant="secondary" onPress={() => openService(t.id)} />{setup.services.some((s) => s.template_id === t.id) && <Button label={setup.services.find((s) => s.template_id === t.id)?.active ? "Tạm ẩn dịch vụ" : "Bật dịch vụ"} variant="ghost" busy={busy} onPress={() => { const service = setup.services.find((s) => s.template_id === t.id)!; void mutate("save_pro_service", { p_template: t.id, p_prices: service.prices, p_active: !service.active }) }} />}</View>) : <>
+      {!tpl ? offered.map((t) => {
+        const service = setup.services.find((s) => s.template_id === t.id)
+        // What they offer, at what price, without opening each one.
+        const chosen = t.variants.filter((v) => service?.prices[v.id] !== undefined)
+        return (
+          <View key={t.id} onLayout={(e) => { cardY.current[t.id] = e.nativeEvent.layout.y }} style={{ padding: 14, gap: 8, backgroundColor: colors.surface, borderRadius: radius.md }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Txt w={700} style={{ flex: 1 }}>{t.name}</Txt>
+              {service && !service.active ? <Txt v="meta" color={colors.warning}>Đang ẩn</Txt> : null}
+            </View>
+            {chosen.length ? (
+              <View style={{ gap: 4 }}>
+                {chosen.map((v) => {
+                  const price = service!.prices[v.id]
+                  const level = tierLabels(v)[v.tiers.indexOf(price)]
+                  return (
+                    <View key={v.id} style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+                      <Txt v="meta" color={colors.inkSoft} style={{ flex: 1 }}>✓ {v.label}</Txt>
+                      <Txt v="meta" w={600}>{level ? `${level} · ` : ""}{formatPrice(price)}</Txt>
+                    </View>
+                  )
+                })}
+              </View>
+            ) : (
+              <Txt v="meta" color={colors.muted}>Chưa chọn gói nào</Txt>
+            )}
+            <Button label={chosen.length ? "Sửa gói & giá" : "Chọn gói & giá"} variant="secondary" onPress={() => openService(t.id)} />
+            {service && <Button label={service.active ? "Tạm ẩn dịch vụ" : "Bật dịch vụ"} variant="ghost" busy={busy} onPress={() => void mutate("save_pro_service", { p_template: t.id, p_prices: service.prices, p_active: !service.active })} />}
+          </View>
+        )
+      }) : <>
         <Txt v="h2">{tpl.name}</Txt><Txt>{tpl.description}</Txt><Txt>{tpl.includes.join(" · ")}</Txt>
         {tpl.variants.map((v) => <View key={v.id} style={{ gap: 10, padding: 14, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md }}><Choice label={`${prices[v.id] !== undefined ? "✓" : "+"} ${v.label}`} active={prices[v.id] !== undefined} onPress={() => setPrices((p) => { const next = { ...p }; if (next[v.id] !== undefined) delete next[v.id]; else next[v.id] = v.tiers[0]; return next })} /><Txt v="meta">{v.durationMin} phút{v.perPerson ? v.durationRule === "fixed" ? " / nhóm" : " / người" : ""}{v.sessions ? ` · ${v.sessions} buổi` : ""} {v.deliverable ?? tpl.deliverable}{v.revisions ? ` · ${v.revisions} lượt sửa` : ""}{v.followupDays ? ` · dặm trong ${v.followupDays} ngày` : ""}</Txt>{prices[v.id] !== undefined && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{v.tiers.map((n, i) => <Choice key={n} label={`${tierLabels(v)[i]} ${formatPrice(n)}`} active={prices[v.id] === n} onPress={() => setPrices((p) => ({ ...p, [v.id]: n }))} />)}</View>}</View>)}
-        <Button label="Lưu gói & giá" busy={busy} disabled={!Object.keys(prices).length} onPress={async () => { await mutate("save_pro_service", { p_template: tpl.id, p_prices: prices, p_active: true }); }} />
-        <Button label="Về danh mục" variant="ghost" onPress={() => setEditing(null)} />
+        <Button label="Lưu gói & giá" busy={busy} disabled={!Object.keys(prices).length} onPress={async () => { if (await mutate("save_pro_service", { p_template: tpl.id, p_prices: prices, p_active: true })) backToList(tpl.id) }} />
+        <Button label="Về danh sách dịch vụ" variant="ghost" onPress={() => backToList(tpl.id)} />
       </>}
       <Button label="Tiếp tục: nơi phục vụ" variant="secondary" onPress={() => { setEditing(null); setStep(2) }} />
     </>}

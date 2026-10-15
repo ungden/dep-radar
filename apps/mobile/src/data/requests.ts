@@ -30,6 +30,8 @@ export interface MyRequest {
   notified: number | null
   /** The booking it became once someone took it. */
   bookingId: string | null
+  /** The reference photos sent with it, paths in the references bucket. */
+  referencePhotos: string[]
 }
 
 /** The price a request is posted at: the chosen level, or the middle level until one is chosen. */
@@ -64,7 +66,7 @@ export async function postJob(input: {
 }
 
 const BASE = "id, template_id, variant_id, quantity, description, starts_at, at_home, city, district, status, created_at"
-const COLUMN_SETS = [`${BASE}, price, notified, booking_id, service_contract, max_total`, `${BASE}, price, notified, booking_id`, BASE]
+const COLUMN_SETS = [`${BASE}, price, notified, booking_id, service_contract, max_total, reference_photos`, `${BASE}, price, notified, booking_id, service_contract, max_total`, `${BASE}, price, notified, booking_id`, BASE]
 
 function toRequest(row: Row): MyRequest {
   return {
@@ -85,6 +87,7 @@ function toRequest(row: Row): MyRequest {
     price: Number(row.price ?? getVariant(row.template_id, row.variant_id)?.suggestedPrice ?? 0),
     notified: row.notified == null ? null : Number(row.notified),
     bookingId: row.booking_id ?? null,
+    referencePhotos: Array.isArray(row.reference_photos) ? (row.reference_photos as string[]) : [],
   }
 }
 

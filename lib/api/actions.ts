@@ -222,6 +222,11 @@ export async function attachAddons(parentId: string, items: { template: string; 
   return rpc<string[]>("attach_addons", { p_parent: parentId, p_items: items }, ["/bookings", "/studio/jobs"])
 }
 
+/** 1–3 reference photos on an open request (20261016100000_job_references.sql). */
+export async function setJobReferences(jobId: string, paths: string[]) {
+  return rpc<void>("set_job_references", { p_job: jobId, p_paths: paths }, ["/requests"])
+}
+
 /** 1–3 reference photos for the partner (paths in the private references bucket). */
 export async function setBookingReferences(bookingId: string, paths: string[]) {
   return rpc<void>("set_booking_references", { p_booking: bookingId, p_paths: paths }, ["/bookings"])

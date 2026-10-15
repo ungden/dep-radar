@@ -25,6 +25,7 @@ import { webLink } from "@/data/links"
 import { openThread } from "@/data/chat"
 import { formatCountdown, formatDateLong, formatDuration, formatPhone, formatPrice, localDate, localTime } from "@/data/format"
 import type { Result } from "@/data/supabase"
+import { ReferencePhotos } from "@/components/reference-photos"
 import { BookingContract } from "@/components/booking-contract"
 import { VoucherCard } from "@/components/booking-voucher"
 import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
@@ -249,6 +250,7 @@ export default function BookingDetail() {
             <Txt color={colors.inkSoft}>{b.note}</Txt>
           </>
         ) : null}
+        <ReferencePhotos paths={b.referencePhotos} title={iAmPro ? "Ảnh mẫu khách gửi" : "Ảnh mẫu bạn gửi"} />
       </Card>
 
       <BookingContract booking={b} />
