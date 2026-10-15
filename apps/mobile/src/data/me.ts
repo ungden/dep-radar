@@ -17,6 +17,8 @@ export interface Address {
   district: string
   detail: string
   note: string
+  lat: number | null
+  lng: number | null
   isDefault: boolean
 }
 
@@ -46,7 +48,7 @@ export const emptyMe: MeData = {
 export async function loadMe(uid: string, email: string): Promise<MeData> {
   const [account, addresses, saved, follows, notes, messages, booked] = await Promise.all([
     supabase.from("accounts").select("id, full_name, phone, active_role").eq("id", uid).maybeSingle(),
-    supabase.from("addresses").select("id, label, city, district, detail, note, is_default").eq("account_id", uid).order("created_at"),
+    supabase.from("addresses").select("id, label, city, district, detail, note, lat, lng, is_default").eq("account_id", uid).order("created_at"),
     supabase.from("saved_works").select("work_id").eq("account_id", uid),
     supabase.from("follows").select("pro_id").eq("account_id", uid),
     supabase.from("notifications").select("id", { count: "exact", head: true }).eq("account_id", uid).is("read_at", null),
@@ -73,6 +75,8 @@ export async function loadMe(uid: string, email: string): Promise<MeData> {
       district: r.district,
       detail: r.detail ?? "",
       note: r.note ?? "",
+      lat: typeof r.lat === "number" ? r.lat : null,
+      lng: typeof r.lng === "number" ? r.lng : null,
       isDefault: Boolean(r.is_default),
     })),
     savedWorkIds: ((saved.data ?? []) as Row[]).map((r) => r.work_id),

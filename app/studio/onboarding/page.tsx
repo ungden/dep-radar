@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { WardSelect } from "@/components/ward-select"
 import { Button, Field, PageHeader, inputClass } from "@/components/ui"
 import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { CATEGORIES, VERTICALS } from "@/lib/catalog"
@@ -27,7 +28,7 @@ function OnboardingForm() {
   const { session } = useApp()
   const [title, setTitle] = React.useState("")
   const [city, setCity] = React.useState(CITIES[0])
-  const [district, setDistrict] = React.useState(districtsOf(CITIES[0])[0])
+  const [district, setDistrict] = React.useState("")
   const [categories, setCategories] = React.useState<CategoryId[]>([])
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
@@ -42,7 +43,7 @@ function OnboardingForm() {
   const toggle = (id: CategoryId) =>
     setCategories((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]))
 
-  const valid = title.trim().length >= 3 && categories.length > 0
+  const valid = title.trim().length >= 3 && categories.length > 0 && districtsOf(city).includes(district)
 
   return (
     <div className="mx-auto max-w-lg pb-24">
@@ -116,33 +117,32 @@ function OnboardingForm() {
           />
         </Field>
 
-        <Field label="Bạn nhận khách ở đâu?" hint="Dùng để tính khoảng cách và phí di chuyển.">
-          <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Field label="Bạn nhận khách ở đâu?" hint="Dùng để tính khoảng cách và phí di chuyển.">
             <select
               aria-label="Tỉnh/thành"
               className={cn(inputClass, "text-body")}
               value={city}
               onChange={(e) => {
                 setCity(e.target.value)
-                setDistrict(districtsOf(e.target.value)[0])
+                if (!districtsOf(e.target.value).includes(district)) setDistrict("")
               }}
             >
               {CITIES.map((c) => (
                 <option key={c}>{c}</option>
               ))}
             </select>
-            <select
-              aria-label="Quận/huyện"
-              className={cn(inputClass, "text-body")}
-              value={district}
-              onChange={(e) => setDistrict(e.target.value)}
-            >
-              {districtsOf(city).map((d) => (
-                <option key={d}>{d}</option>
-              ))}
-            </select>
-          </div>
-        </Field>
+          </Field>
+          <WardSelect
+            className="mt-2"
+            city={city}
+            value={district}
+            onChange={(choice) => {
+              setCity(choice.city)
+              setDistrict(choice.district)
+            }}
+          />
+        </div>
 
         {error && (
           <p role="alert" className="rounded-xl bg-danger/10 px-3.5 py-3 text-meta text-danger">

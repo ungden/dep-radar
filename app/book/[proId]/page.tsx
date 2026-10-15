@@ -5,6 +5,7 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { CalendarX2, Car, Check, CheckCircle2, Clock, CreditCard, HandCoins, Home, Info, Link2, MapPin, Phone, Store, Zap } from "lucide-react"
+import { WardSelect } from "@/components/ward-select"
 import { AddressPicker, defaultAddressId } from "@/components/address-picker"
 import { ConductNote } from "@/components/conduct"
 import { needsConductNote } from "@/lib/conduct"
@@ -997,19 +998,13 @@ function AreaPicker({
             ))}
           </select>
         </label>
-        <label className="block">
-          <span className="mb-1 block text-meta font-semibold">Quận/huyện</span>
-          <select
-            className={cn(inputClass, "text-body")}
-            value={value.district}
-            onChange={(e) => onChange({ city: value.city, district: e.target.value })}
-          >
-            <option value="">Chọn quận</option>
-            {districtsOf(value.city).map((d) => (
-              <option key={d}>{d}</option>
-            ))}
-          </select>
-        </label>
+        <WardSelect
+          label="Phường/xã"
+          city={value.city}
+          value={value.district}
+          locate
+          onChange={(choice) => onChange({ city: choice.city, district: choice.district })}
+        />
       </div>
       <p className="mt-1.5 text-label text-muted">Để tính phí di chuyển. Số nhà, đường bạn điền sau khi đăng nhập.</p>
     </div>

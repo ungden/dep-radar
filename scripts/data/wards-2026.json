@@ -1,0 +1,5437 @@
+{
+ "asOf": "2026-10-15",
+ "sources": [
+  {
+   "title": "Vietnam Provinces online API v2 (provinces.open-api.vn) — 34 tỉnh/3.321 xã, mã ĐVHC, tra cứu đơn vị cũ (to-legacies)",
+   "url": "https://provinces.open-api.vn/api/v2/"
+  },
+  {
+   "title": "Nghị quyết 1656/NQ-UBTVQH15 ngày 16/6/2025 sắp xếp ĐVHC cấp xã của thành phố Hà Nội (văn bản, bản chép tại dvhcvn/20250701)",
+   "url": "https://github.com/dvhcvn/20250701/blob/main/input/docs/1656_NQ-UBTVQH15.md"
+  },
+  {
+   "title": "Nghị quyết 1685/NQ-UBTVQH15 ngày 16/6/2025 sắp xếp ĐVHC cấp xã của Thành phố Hồ Chí Minh",
+   "url": "https://github.com/dvhcvn/20250701/blob/main/input/docs/1685_NQ-UBTVQH15.md"
+  },
+  {
+   "title": "Nghị quyết 1659/NQ-UBTVQH15 ngày 16/6/2025 sắp xếp ĐVHC cấp xã của thành phố Đà Nẵng",
+   "url": "https://github.com/dvhcvn/20250701/blob/main/input/docs/1659_NQ-UBTVQH15.md"
+  },
+  {
+   "title": "Danh sách 3.321 đơn vị hành chính cấp xã tại 34 tỉnh, thành (Cổng TTĐT Chính phủ)",
+   "url": "https://xaydungchinhsach.chinhphu.vn/danh-sach-3321-don-vi-hanh-chinh-cap-xa-tai-34-tinh-thanh-sau-sap-xep-sap-nhap-119250710102358656.htm"
+  },
+  {
+   "title": "Công văn 1027/CTK-CSCL ngày 25/6/2025 của Cục Thống kê — danh mục và mã số ĐVHC cấp xã (bản chép tại dvhcvn/20250701)",
+   "url": "https://github.com/dvhcvn/20250701/blob/main/input/docs/1027_CTK-CSCL.md"
+  },
+  {
+   "title": "Ranh giới ĐVHC cấp xã từ sapnhap.bando.com.vn (Bộ Nội vụ/NXB Tài nguyên Môi trường và Bản đồ), bản GeoJSON lấy ngày 13/3/2026 trong thanglequoc/vietnamese-provinces-database (MIT) — dùng để tính toạ độ",
+   "url": "https://github.com/thanglequoc/vietnamese-provinces-database/tree/master/json/geojson"
+  },
+  {
+   "title": "OpenStreetMap ward boundaries (admin_level=6) via Overpass/Nominatim — cross-check of names and centroids",
+   "url": "https://www.openstreetmap.org/"
+  },
+  {
+   "title": "Nominatim (OpenStreetMap) — cross-check of ward points",
+   "url": "https://nominatim.openstreetmap.org/"
+  },
+  {
+   "title": "open-admin-data/vietnam-administrative-divisions — cross-check of codes/names/points",
+   "url": "https://github.com/open-admin-data/vietnam-administrative-divisions"
+  },
+  {
+   "title": "tinhthanhvn — cross-check of codes/names",
+   "url": "https://github.com/nguyencongcuong/tinhthanhvn"
+  },
+  {
+   "title": "HĐND TP.HCM tán thành đề án thành lập 29 phường từ xã (27/8/2026) — chưa có nghị quyết UBTVQH",
+   "url": "https://tuoitre.vn/hdnd-tphcm-chinh-thuc-tan-thanh-thanh-lap-them-29-phuong-10026082712000196.htm"
+  },
+  {
+   "title": "Đà Nẵng hoàn thiện đề án lập 10 phường từ xã (3/10/2026) — chưa có quyết định",
+   "url": "https://dantri.com.vn/noi-vu/tiep-tuc-hoan-thien-de-an-lap-10-phuong-o-thanh-pho-lon-thu-2-ca-nuoc-20261003165407610.htm"
+  }
+ ],
+ "provinces": {
+  "Hà Nội": [
+   {
+    "code": "00004",
+    "name": "Phường Ba Đình",
+    "type": "phường",
+    "lat": 21.0385,
+    "lng": 105.8381,
+    "formerly": "Trúc Bạch, Quán Thánh, một phần Ngọc Hà, một phần Điện Biên, một phần Đội Cấn, một phần Kim Mã (Ba Đình); một phần Thụy Khuê (Tây Hồ); một phần Đồng Xuân, một phần Cửa Đông, một phần Cửa Nam (Hoàn Kiếm)",
+    "formerDistricts": [
+     "Ba Đình",
+     "Tây Hồ",
+     "Hoàn Kiếm"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00008",
+    "name": "Phường Ngọc Hà",
+    "type": "phường",
+    "lat": 21.0381,
+    "lng": 105.8163,
+    "formerly": "Vĩnh Phúc, Liễu Giai, một phần Cống Vị, một phần Ngọc Hà, một phần Đội Cấn, một phần Ngọc Khánh, một phần Kim Mã (Ba Đình); một phần Nghĩa Đô (Cầu Giấy)",
+    "formerDistricts": [
+     "Ba Đình",
+     "Cầu Giấy"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00025",
+    "name": "Phường Giảng Võ",
+    "type": "phường",
+    "lat": 21.0276,
+    "lng": 105.8143,
+    "formerly": "Giảng Võ, một phần Cống Vị, một phần Ngọc Khánh, một phần Kim Mã, một phần Thành Công (Ba Đình); một phần Cát Linh, một phần Láng Hạ (Đống Đa)",
+    "formerDistricts": [
+     "Ba Đình",
+     "Đống Đa"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00070",
+    "name": "Phường Hoàn Kiếm",
+    "type": "phường",
+    "lat": 21.032,
+    "lng": 105.8504,
+    "formerly": "Hàng Mã, Hàng Buồm, Hàng Đào, Hàng Bồ, Lý Thái Tổ, Hàng Bạc, Hàng Gai, một phần Đồng Xuân, một phần Cửa Đông, một phần Hàng Trống, một phần Cửa Nam, một phần Hàng Bông, một phần Tràng Tiền (Hoàn Kiếm); một phần Điện Biên (Ba Đình)",
+    "formerDistricts": [
+     "Hoàn Kiếm",
+     "Ba Đình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00082",
+    "name": "Phường Cửa Nam",
+    "type": "phường",
+    "lat": 21.0226,
+    "lng": 105.8507,
+    "formerly": "Trần Hưng Đạo, Phan Chu Trinh, Hàng Bài, một phần Hàng Trống, một phần Cửa Nam, một phần Hàng Bông, một phần Tràng Tiền (Hoàn Kiếm); một phần Nguyễn Du, một phần Phạm Đình Hổ (Hai Bà Trưng)",
+    "formerDistricts": [
+     "Hoàn Kiếm",
+     "Hai Bà Trưng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00091",
+    "name": "Phường Phú Thượng",
+    "type": "phường",
+    "lat": 21.086,
+    "lng": 105.8019,
+    "formerly": "một phần Phú Thượng, một phần Xuân La (Tây Hồ); một phần Đông Ngạc, một phần Xuân Đỉnh, một phần Xuân Tảo (Bắc Từ Liêm)",
+    "formerDistricts": [
+     "Tây Hồ",
+     "Bắc Từ Liêm"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00097",
+    "name": "Phường Hồng Hà",
+    "type": "phường",
+    "lat": 21.0565,
+    "lng": 105.8456,
+    "formerly": "Phúc Tân, Chương Dương (Hoàn Kiếm); Phúc Xá (Ba Đình); một phần Phú Thượng, một phần Nhật Tân, một phần Tứ Liên, một phần Quảng An, một phần Yên Phụ (Tây Hồ); một phần Thanh Lương, một phần Bạch Đằng (Hai Bà Trưng); một phần Ngọc Thụy, một phần Bồ Đề (Long Biên)",
+    "formerDistricts": [
+     "Hoàn Kiếm",
+     "Ba Đình",
+     "Tây Hồ",
+     "Hai Bà Trưng",
+     "Long Biên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00103",
+    "name": "Phường Tây Hồ",
+    "type": "phường",
+    "lat": 21.058,
+    "lng": 105.8202,
+    "formerly": "Bưởi, một phần Phú Thượng, một phần Nhật Tân, một phần Tứ Liên, một phần Quảng An, một phần Xuân La, một phần Yên Phụ, một phần Thụy Khuê (Tây Hồ); một phần Nghĩa Đô (Cầu Giấy)",
+    "formerDistricts": [
+     "Tây Hồ",
+     "Cầu Giấy"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00118",
+    "name": "Phường Bồ Đề",
+    "type": "phường",
+    "lat": 21.0514,
+    "lng": 105.8705,
+    "formerly": "Ngọc Lâm, một phần Thượng Thanh, một phần Ngọc Thụy, một phần Đức Giang, một phần Gia Thụy, một phần Bồ Đề, một phần Long Biên, một phần Phúc Đồng (Long Biên)",
+    "formerDistricts": [
+     "Long Biên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00127",
+    "name": "Phường Việt Hưng",
+    "type": "phường",
+    "lat": 21.0648,
+    "lng": 105.9039,
+    "formerly": "một phần Thượng Thanh, một phần Giang Biên, một phần Đức Giang, một phần Việt Hưng, một phần Gia Thụy, một phần Phúc Lợi, một phần Phúc Đồng (Long Biên)",
+    "formerDistricts": [
+     "Long Biên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00136",
+    "name": "Phường Phúc Lợi",
+    "type": "phường",
+    "lat": 21.0423,
+    "lng": 105.9186,
+    "formerly": "một phần Giang Biên, một phần Việt Hưng, một phần Phúc Lợi, một phần Thạch Bàn, một phần Phúc Đồng (Long Biên); một phần Cổ Bi (Gia Lâm)",
+    "formerDistricts": [
+     "Long Biên",
+     "Gia Lâm"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00145",
+    "name": "Phường Long Biên",
+    "type": "phường",
+    "lat": 21.0198,
+    "lng": 105.8962,
+    "formerly": "một phần Gia Thụy, một phần Bồ Đề, một phần Long Biên, một phần Thạch Bàn, một phần Phúc Đồng, một phần Cự Khối (Long Biên); một phần Bát Tràng (Gia Lâm)",
+    "formerDistricts": [
+     "Long Biên",
+     "Gia Lâm"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00160",
+    "name": "Phường Nghĩa Đô",
+    "type": "phường",
+    "lat": 21.0451,
+    "lng": 105.7944,
+    "formerly": "Nghĩa Tân, một phần Nghĩa Đô, một phần Mai Dịch, một phần Dịch Vọng, một phần Dịch Vọng Hậu, một phần Quan Hoa (Cầu Giấy); một phần Xuân Tảo, một phần Cổ Nhuế 1 (Bắc Từ Liêm); một phần Xuân La (Tây Hồ)",
+    "formerDistricts": [
+     "Cầu Giấy",
+     "Bắc Từ Liêm",
+     "Tây Hồ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00166",
+    "name": "Phường Cầu Giấy",
+    "type": "phường",
+    "lat": 21.0309,
+    "lng": 105.7881,
+    "formerly": "một phần Dịch Vọng, một phần Dịch Vọng Hậu, một phần Quan Hoa, một phần Yên Hòa (Cầu Giấy); một phần Mỹ Đình 1, một phần Mỹ Đình 2 (Nam Từ Liêm)",
+    "formerDistricts": [
+     "Cầu Giấy",
+     "Nam Từ Liêm"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00175",
+    "name": "Phường Yên Hòa",
+    "type": "phường",
+    "lat": 21.0139,
+    "lng": 105.7962,
+    "formerly": "một phần Yên Hòa, một phần Trung Hòa (Cầu Giấy); một phần Nhân Chính (Thanh Xuân); một phần Mễ Trì (Nam Từ Liêm)",
+    "formerDistricts": [
+     "Cầu Giấy",
+     "Thanh Xuân",
+     "Nam Từ Liêm"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00190",
+    "name": "Phường Ô Chợ Dừa",
+    "type": "phường",
+    "lat": 21.0233,
+    "lng": 105.8258,
+    "formerly": "một phần Cát Linh, một phần Văn Miếu - Quốc Tử Giám, một phần Ô Chợ Dừa, một phần Hàng Bột, một phần Trung Liệt (Đống Đa); một phần Điện Biên, một phần Thành Công (Ba Đình)",
+    "formerDistricts": [
+     "Đống Đa",
+     "Ba Đình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00199",
+    "name": "Phường Láng",
+    "type": "phường",
+    "lat": 21.0211,
+    "lng": 105.806,
+    "formerly": "Láng Thượng, một phần Láng Hạ (Đống Đa); một phần Ngọc Khánh (Ba Đình)",
+    "formerDistricts": [
+     "Đống Đa",
+     "Ba Đình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00226",
+    "name": "Phường Văn Miếu - Quốc Tử Giám",
+    "type": "phường",
+    "lat": 21.0199,
+    "lng": 105.8371,
+    "formerly": "Văn Chương, Khâm Thiên, Thổ Quan, một phần Văn Miếu - Quốc Tử Giám, một phần Hàng Bột, một phần Nam Đồng, một phần Phương Liên - Trung Tự (Đống Đa); một phần Điện Biên (Ba Đình); một phần Cửa Nam (Hoàn Kiếm); một phần Nguyễn Du, một phần Lê Đại Hành (Hai Bà Trưng)",
+    "formerDistricts": [
+     "Đống Đa",
+     "Ba Đình",
+     "Hoàn Kiếm",
+     "Hai Bà Trưng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00229",
+    "name": "Phường Kim Liên",
+    "type": "phường",
+    "lat": 21.0057,
+    "lng": 105.8324,
+    "formerly": "Kim Liên, Khương Thượng, một phần Nam Đồng, một phần Quang Trung, một phần Trung Liệt, một phần Phương Liên - Trung Tự, một phần Phương Mai (Đống Đa)",
+    "formerDistricts": [
+     "Đống Đa"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00235",
+    "name": "Phường Đống Đa",
+    "type": "phường",
+    "lat": 21.0119,
+    "lng": 105.8218,
+    "formerly": "Thịnh Quang, một phần Ô Chợ Dừa, một phần Láng Hạ, một phần Nam Đồng, một phần Quang Trung, một phần Trung Liệt (Đống Đa)",
+    "formerDistricts": [
+     "Đống Đa"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00256",
+    "name": "Phường Hai Bà Trưng",
+    "type": "phường",
+    "lat": 21.0136,
+    "lng": 105.8519,
+    "formerly": "Đồng Nhân, Phố Huế, một phần Nguyễn Du, một phần Bạch Đằng, một phần Phạm Đình Hổ, một phần Lê Đại Hành, một phần Thanh Nhàn (Hai Bà Trưng)",
+    "formerDistricts": [
+     "Hai Bà Trưng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00283",
+    "name": "Phường Vĩnh Tuy",
+    "type": "phường",
+    "lat": 20.9981,
+    "lng": 105.8673,
+    "formerly": "một phần Thanh Lương, một phần Vĩnh Tuy (Hai Bà Trưng); một phần Vĩnh Hưng, một phần Mai Động (Hoàng Mai)",
+    "formerDistricts": [
+     "Hai Bà Trưng",
+     "Hoàng Mai"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00292",
+    "name": "Phường Bạch Mai",
+    "type": "phường",
+    "lat": 21.0022,
+    "lng": 105.852,
+    "formerly": "Bách Khoa, Quỳnh Mai, Bạch Mai, một phần Lê Đại Hành, một phần Thanh Nhàn, một phần Đồng Tâm, một phần Minh Khai, một phần Trương Định (Hai Bà Trưng); một phần Phương Mai (Đống Đa)",
+    "formerDistricts": [
+     "Hai Bà Trưng",
+     "Đống Đa"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00301",
+    "name": "Phường Vĩnh Hưng",
+    "type": "phường",
+    "lat": 20.9906,
+    "lng": 105.8827,
+    "formerly": "một phần Thanh Trì, một phần Vĩnh Hưng, một phần Lĩnh Nam (Hoàng Mai); một phần Vĩnh Tuy (Hai Bà Trưng)",
+    "formerDistricts": [
+     "Hoàng Mai",
+     "Hai Bà Trưng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00316",
+    "name": "Phường Định Công",
+    "type": "phường",
+    "lat": 20.9769,
+    "lng": 105.8249,
+    "formerly": "một phần Định Công, một phần Đại Kim, một phần Giáp Bát, một phần Thịnh Liệt, một phần Hoàng Liệt (Hoàng Mai); một phần Tân Triều, một phần Thanh Liệt (Thanh Trì)",
+    "formerDistricts": [
+     "Hoàng Mai",
+     "Thanh Trì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00322",
+    "name": "Phường Tương Mai",
+    "type": "phường",
+    "lat": 20.9894,
+    "lng": 105.8537,
+    "formerly": "một phần Vĩnh Hưng, một phần Mai Động, một phần Tương Mai, một phần Tân Mai, một phần Hoàng Văn Thụ, một phần Giáp Bát (Hoàng Mai); một phần Đồng Tâm, một phần Minh Khai, một phần Trương Định (Hai Bà Trưng); một phần Phương Liệt (Thanh Xuân)",
+    "formerDistricts": [
+     "Hoàng Mai",
+     "Hai Bà Trưng",
+     "Thanh Xuân"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00328",
+    "name": "Phường Lĩnh Nam",
+    "type": "phường",
+    "lat": 20.9725,
+    "lng": 105.8911,
+    "formerly": "một phần Thanh Trì, một phần Lĩnh Nam, một phần Trần Phú, một phần Yên Sở (Hoàng Mai); một phần Thanh Lương (Hai Bà Trưng)",
+    "formerDistricts": [
+     "Hoàng Mai",
+     "Hai Bà Trưng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00331",
+    "name": "Phường Hoàng Mai",
+    "type": "phường",
+    "lat": 20.9746,
+    "lng": 105.8618,
+    "formerly": "một phần Vĩnh Hưng, một phần Tương Mai, một phần Tân Mai, một phần Hoàng Văn Thụ, một phần Giáp Bát, một phần Lĩnh Nam, một phần Thịnh Liệt, một phần Trần Phú, một phần Hoàng Liệt, một phần Yên Sở (Hoàng Mai)",
+    "formerDistricts": [
+     "Hoàng Mai"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00337",
+    "name": "Phường Hoàng Liệt",
+    "type": "phường",
+    "lat": 20.9615,
+    "lng": 105.8317,
+    "formerly": "một phần Đại Kim, một phần Hoàng Liệt (Hoàng Mai); một phần TT Văn Điển, một phần Thanh Liệt, một phần Tam Hiệp (Thanh Trì)",
+    "formerDistricts": [
+     "Hoàng Mai",
+     "Thanh Trì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00340",
+    "name": "Phường Yên Sở",
+    "type": "phường",
+    "lat": 20.9568,
+    "lng": 105.8572,
+    "formerly": "một phần Thịnh Liệt, một phần Trần Phú, một phần Hoàng Liệt, một phần Yên Sở (Hoàng Mai); một phần Tứ Hiệp (Thanh Trì)",
+    "formerDistricts": [
+     "Hoàng Mai",
+     "Thanh Trì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00352",
+    "name": "Phường Phương Liệt",
+    "type": "phường",
+    "lat": 20.9926,
+    "lng": 105.8318,
+    "formerly": "Khương Mai, một phần Khương Trung, một phần Phương Liệt, một phần Khương Đình (Thanh Xuân); một phần Định Công, một phần Thịnh Liệt (Hoàng Mai)",
+    "formerDistricts": [
+     "Thanh Xuân",
+     "Hoàng Mai"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00364",
+    "name": "Phường Khương Đình",
+    "type": "phường",
+    "lat": 20.991,
+    "lng": 105.8149,
+    "formerly": "một phần Thượng Đình, một phần Khương Trung, một phần Thanh Xuân Trung, một phần Khương Đình, một phần Hạ Đình (Thanh Xuân); một phần Đại Kim (Hoàng Mai); một phần Tân Triều (Thanh Trì)",
+    "formerDistricts": [
+     "Thanh Xuân",
+     "Hoàng Mai",
+     "Thanh Trì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00367",
+    "name": "Phường Thanh Xuân",
+    "type": "phường",
+    "lat": 20.9995,
+    "lng": 105.8046,
+    "formerly": "một phần Nhân Chính, một phần Thượng Đình, một phần Thanh Xuân Trung, một phần Thanh Xuân Bắc (Thanh Xuân); một phần Trung Văn (Nam Từ Liêm); một phần Trung Hòa (Cầu Giấy)",
+    "formerDistricts": [
+     "Thanh Xuân",
+     "Nam Từ Liêm",
+     "Cầu Giấy"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00376",
+    "name": "Xã Sóc Sơn",
+    "type": "xã",
+    "lat": 21.2463,
+    "lng": 105.8494,
+    "formerly": "TT Sóc Sơn, Phù Linh, Tân Minh, Tiên Dược, Đông Xuân, Phù Lỗ, một phần Quang Tiến, một phần Mai Đình, một phần Phú Minh (Sóc Sơn)",
+    "formerDistricts": [
+     "Sóc Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00382",
+    "name": "Xã Kim Anh",
+    "type": "xã",
+    "lat": 21.2835,
+    "lng": 105.7662,
+    "formerly": "Minh Trí, Minh Phú, Tân Dân (Sóc Sơn)",
+    "formerDistricts": [
+     "Sóc Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00385",
+    "name": "Xã Trung Giã",
+    "type": "xã",
+    "lat": 21.3317,
+    "lng": 105.8308,
+    "formerly": "Bắc Sơn, Hồng Kỳ, Nam Sơn, Trung Giã (Sóc Sơn)",
+    "formerDistricts": [
+     "Sóc Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00430",
+    "name": "Xã Đa Phúc",
+    "type": "xã",
+    "lat": 21.2505,
+    "lng": 105.9006,
+    "formerly": "Tân Hưng, Bắc Phú, Việt Long, Xuân Giang, Đức Hòa, Kim Lũ, Xuân Thu (Sóc Sơn)",
+    "formerDistricts": [
+     "Sóc Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00433",
+    "name": "Xã Nội Bài",
+    "type": "xã",
+    "lat": 21.2308,
+    "lng": 105.7947,
+    "formerly": "Hiền Ninh, Thanh Xuân, Phú Cường, một phần Quang Tiến, một phần Mai Đình, một phần Phú Minh (Sóc Sơn)",
+    "formerDistricts": [
+     "Sóc Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00454",
+    "name": "Xã Đông Anh",
+    "type": "xã",
+    "lat": 21.1101,
+    "lng": 105.8716,
+    "formerly": "Cổ Loa, Mai Lâm, Đông Hội, một phần TT Đông Anh, một phần Tiên Dương, một phần Uy Nỗ, một phần Liên Hà, một phần Việt Hùng, một phần Dục Tú, một phần Vĩnh Ngọc, một phần Xuân Canh, một phần Tàm Xá (Đông Anh)",
+    "formerDistricts": [
+     "Đông Anh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00466",
+    "name": "Xã Phúc Thịnh",
+    "type": "xã",
+    "lat": 21.1623,
+    "lng": 105.8154,
+    "formerly": "Bắc Hồng, Nam Hồng, Vân Nội, một phần TT Đông Anh, một phần Xuân Nộn, một phần Nguyên Khê, một phần Tiên Dương, một phần Vĩnh Ngọc (Đông Anh)",
+    "formerDistricts": [
+     "Đông Anh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00475",
+    "name": "Xã Thư Lâm",
+    "type": "xã",
+    "lat": 21.1648,
+    "lng": 105.8879,
+    "formerly": "Thụy Lâm, Vân Hà, một phần TT Đông Anh, một phần Xuân Nộn, một phần Nguyên Khê, một phần Uy Nỗ, một phần Liên Hà, một phần Việt Hùng, một phần Dục Tú (Đông Anh)",
+    "formerDistricts": [
+     "Đông Anh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00493",
+    "name": "Xã Thiên Lộc",
+    "type": "xã",
+    "lat": 21.1241,
+    "lng": 105.7715,
+    "formerly": "Võng La, một phần Kim Nỗ, một phần Kim Chung, một phần Đại Mạch, một phần Hải Bối (Đông Anh); một phần Tiền Phong (Mê Linh)",
+    "formerDistricts": [
+     "Đông Anh",
+     "Mê Linh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00508",
+    "name": "Xã Vĩnh Thanh",
+    "type": "xã",
+    "lat": 21.1077,
+    "lng": 105.8178,
+    "formerly": "một phần Kim Nỗ, một phần Kim Chung, một phần Vĩnh Ngọc, một phần Hải Bối, một phần Xuân Canh, một phần Tàm Xá (Đông Anh)",
+    "formerDistricts": [
+     "Đông Anh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00541",
+    "name": "Xã Phù Đổng",
+    "type": "xã",
+    "lat": 21.0741,
+    "lng": 105.9451,
+    "formerly": "TT Yên Viên, Yên Thường, Yên Viên, Ninh Hiệp, Thiên Đức, Phù Đổng, Đặng Xá, một phần Cổ Bi (Gia Lâm)",
+    "formerDistricts": [
+     "Gia Lâm"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00562",
+    "name": "Xã Thuận An",
+    "type": "xã",
+    "lat": 21.0299,
+    "lng": 105.9865,
+    "formerly": "Dương Quang, Lệ Chi, một phần Đặng Xá, một phần Phú Sơn (Gia Lâm)",
+    "formerDistricts": [
+     "Gia Lâm"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00565",
+    "name": "Xã Gia Lâm",
+    "type": "xã",
+    "lat": 21.0028,
+    "lng": 105.9487,
+    "formerly": "Dương Xá, Kiêu Kỵ, một phần Cổ Bi, một phần Phú Sơn, một phần TT Trâu Quỳ, một phần Đa Tốn, một phần Bát Tràng (Gia Lâm); một phần Thạch Bàn (Long Biên)",
+    "formerDistricts": [
+     "Gia Lâm",
+     "Long Biên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00577",
+    "name": "Xã Bát Tràng",
+    "type": "xã",
+    "lat": 20.9691,
+    "lng": 105.9119,
+    "formerly": "Kim Đức, một phần TT Trâu Quỳ, một phần Đa Tốn, một phần Bát Tràng (Gia Lâm); một phần Thạch Bàn, một phần Cự Khối (Long Biên)",
+    "formerDistricts": [
+     "Gia Lâm",
+     "Long Biên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00592",
+    "name": "Phường Từ Liêm",
+    "type": "phường",
+    "lat": 21.0203,
+    "lng": 105.7707,
+    "formerly": "Cầu Diễn, một phần Mỹ Đình 1, một phần Mỹ Đình 2, một phần Mễ Trì, một phần Phú Đô (Nam Từ Liêm); một phần Mai Dịch (Cầu Giấy)",
+    "formerDistricts": [
+     "Nam Từ Liêm",
+     "Cầu Giấy"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00598",
+    "name": "Phường Thượng Cát",
+    "type": "phường",
+    "lat": 21.0866,
+    "lng": 105.7497,
+    "formerly": "Thượng Cát, Liên Mạc, một phần Thụy Phương, một phần Tây Tựu, một phần Minh Khai, một phần Cổ Nhuế 2 (Bắc Từ Liêm)",
+    "formerDistricts": [
+     "Bắc Từ Liêm"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00602",
+    "name": "Phường Đông Ngạc",
+    "type": "phường",
+    "lat": 21.0751,
+    "lng": 105.7759,
+    "formerly": "Đức Thắng, một phần Đông Ngạc, một phần Thụy Phương, một phần Xuân Đỉnh, một phần Minh Khai, một phần Cổ Nhuế 2 (Bắc Từ Liêm)",
+    "formerDistricts": [
+     "Bắc Từ Liêm"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00611",
+    "name": "Phường Xuân Đỉnh",
+    "type": "phường",
+    "lat": 21.0644,
+    "lng": 105.7951,
+    "formerly": "một phần Xuân Đỉnh, một phần Xuân Tảo, một phần Cổ Nhuế 1 (Bắc Từ Liêm); một phần Xuân La (Tây Hồ)",
+    "formerDistricts": [
+     "Bắc Từ Liêm",
+     "Tây Hồ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00613",
+    "name": "Phường Tây Tựu",
+    "type": "phường",
+    "lat": 21.0641,
+    "lng": 105.7389,
+    "formerly": "một phần Tây Tựu, một phần Minh Khai (Bắc Từ Liêm); một phần Kim Chung (Hoài Đức)",
+    "formerDistricts": [
+     "Bắc Từ Liêm",
+     "Hoài Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00619",
+    "name": "Phường Phú Diễn",
+    "type": "phường",
+    "lat": 21.0489,
+    "lng": 105.7658,
+    "formerly": "Phú Diễn, một phần Cổ Nhuế 1, một phần Phúc Diễn (Bắc Từ Liêm); một phần Mai Dịch (Cầu Giấy)",
+    "formerDistricts": [
+     "Bắc Từ Liêm",
+     "Cầu Giấy"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00622",
+    "name": "Phường Xuân Phương",
+    "type": "phường",
+    "lat": 21.0296,
+    "lng": 105.7451,
+    "formerly": "Xuân Phương, Phương Canh, một phần Tây Mỗ, một phần Đại Mỗ (Nam Từ Liêm); một phần Minh Khai, một phần Phúc Diễn (Bắc Từ Liêm); một phần Vân Canh (Hoài Đức)",
+    "formerDistricts": [
+     "Nam Từ Liêm",
+     "Bắc Từ Liêm",
+     "Hoài Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00634",
+    "name": "Phường Tây Mỗ",
+    "type": "phường",
+    "lat": 21.0009,
+    "lng": 105.7472,
+    "formerly": "một phần Tây Mỗ, một phần Đại Mỗ (Nam Từ Liêm); một phần Dương Nội (Hà Đông); một phần An Khánh (Hoài Đức)",
+    "formerDistricts": [
+     "Nam Từ Liêm",
+     "Hà Đông",
+     "Hoài Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00637",
+    "name": "Phường Đại Mỗ",
+    "type": "phường",
+    "lat": 20.9936,
+    "lng": 105.7754,
+    "formerly": "một phần Mễ Trì, một phần Phú Đô, một phần Đại Mỗ, một phần Trung Văn (Nam Từ Liêm); một phần Mộ Lao, một phần Dương Nội (Hà Đông); một phần Trung Hòa (Cầu Giấy); một phần Nhân Chính (Thanh Xuân)",
+    "formerDistricts": [
+     "Nam Từ Liêm",
+     "Hà Đông",
+     "Cầu Giấy",
+     "Thanh Xuân"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00640",
+    "name": "Xã Thanh Trì",
+    "type": "xã",
+    "lat": 20.9388,
+    "lng": 105.8594,
+    "formerly": "một phần TT Văn Điển, một phần Tứ Hiệp, một phần Yên Mỹ, một phần Vĩnh Quỳnh, một phần Ngũ Hiệp, một phần Duyên Hà (Thanh Trì); một phần Yên Sở (Hoàng Mai)",
+    "formerDistricts": [
+     "Thanh Trì",
+     "Hoàng Mai"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00643",
+    "name": "Phường Thanh Liệt",
+    "type": "phường",
+    "lat": 20.9702,
+    "lng": 105.8061,
+    "formerly": "một phần Tân Triều, một phần Thanh Liệt, một phần Tả Thanh Oai (Thanh Trì); một phần Đại Kim (Hoàng Mai); một phần Thanh Xuân Bắc, một phần Hạ Đình (Thanh Xuân); một phần Văn Quán (Hà Đông)",
+    "formerDistricts": [
+     "Thanh Trì",
+     "Hoàng Mai",
+     "Thanh Xuân",
+     "Hà Đông"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00664",
+    "name": "Xã Đại Thanh",
+    "type": "xã",
+    "lat": 20.9371,
+    "lng": 105.8144,
+    "formerly": "một phần TT Văn Điển, một phần Tả Thanh Oai, một phần Hữu Hòa, một phần Tam Hiệp, một phần Vĩnh Quỳnh (Thanh Trì); một phần Kiến Hưng (Hà Đông)",
+    "formerDistricts": [
+     "Thanh Trì",
+     "Hà Đông"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00679",
+    "name": "Xã Ngọc Hồi",
+    "type": "xã",
+    "lat": 20.9123,
+    "lng": 105.837,
+    "formerly": "Ngọc Hồi, một phần Đại Áng, một phần Liên Ninh (Thanh Trì); một phần Duyên Thái, một phần Khánh Hà (Thường Tín)",
+    "formerDistricts": [
+     "Thanh Trì",
+     "Thường Tín"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "00685",
+    "name": "Xã Nam Phù",
+    "type": "xã",
+    "lat": 20.9198,
+    "lng": 105.8838,
+    "formerly": "Vạn Phúc, một phần Yên Mỹ, một phần Ngũ Hiệp, một phần Duyên Hà, một phần Liên Ninh, một phần Đông Mỹ (Thanh Trì); một phần Ninh Sở, một phần Duyên Thái (Thường Tín)",
+    "formerDistricts": [
+     "Thanh Trì",
+     "Thường Tín"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "04930",
+    "name": "Xã Yên Xuân",
+    "type": "xã",
+    "lat": 20.978,
+    "lng": 105.4701,
+    "formerly": "Đông Xuân (Quốc Oai); Yên Trung, Yên Bình, một phần Tiến Xuân, một phần Thạch Hòa (Thạch Thất)",
+    "formerDistricts": [
+     "Quốc Oai",
+     "Thạch Thất"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "08974",
+    "name": "Xã Quang Minh",
+    "type": "xã",
+    "lat": 21.1926,
+    "lng": 105.7513,
+    "formerly": "TT Chi Đông, TT Quang Minh, một phần Đại Thịnh, một phần Kim Hoa, một phần Thanh Lâm, một phần Mê Linh, một phần Tiền Phong (Mê Linh)",
+    "formerDistricts": [
+     "Mê Linh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "08980",
+    "name": "Xã Yên Lãng",
+    "type": "xã",
+    "lat": 21.1722,
+    "lng": 105.6617,
+    "formerly": "Liên Mạc, Chu Phan, Hoàng Kim, một phần Thạch Đà, một phần Tiến Thịnh, một phần Văn Khê (Mê Linh); một phần Trung Châu, một phần Thọ An, một phần Thọ Xuân, một phần Hồng Hà (Đan Phượng)",
+    "formerDistricts": [
+     "Mê Linh",
+     "Đan Phượng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "08995",
+    "name": "Xã Tiến Thắng",
+    "type": "xã",
+    "lat": 21.2106,
+    "lng": 105.6904,
+    "formerly": "Tiến Thắng, Tự Lập, Tam Đồng, một phần Đại Thịnh, một phần Kim Hoa, một phần Thạch Đà, một phần Thanh Lâm, một phần Văn Khê (Mê Linh)",
+    "formerDistricts": [
+     "Mê Linh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09022",
+    "name": "Xã Mê Linh",
+    "type": "xã",
+    "lat": 21.1508,
+    "lng": 105.7329,
+    "formerly": "Tráng Việt, một phần Đại Thịnh, một phần Mê Linh, một phần Văn Khê, một phần Tiền Phong (Mê Linh); một phần Đại Mạch (Đông Anh); một phần Hồng Hà, một phần Liên Hồng, một phần Liên Hà, một phần Liên Trung (Đan Phượng)",
+    "formerDistricts": [
+     "Mê Linh",
+     "Đông Anh",
+     "Đan Phượng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09552",
+    "name": "Phường Kiến Hưng",
+    "type": "phường",
+    "lat": 20.9549,
+    "lng": 105.7796,
+    "formerly": "một phần Quang Trung, một phần Phú La, một phần Hà Cầu, một phần Kiến Hưng, một phần Phú Lương (Hà Đông)",
+    "formerDistricts": [
+     "Hà Đông"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09556",
+    "name": "Phường Hà Đông",
+    "type": "phường",
+    "lat": 20.9735,
+    "lng": 105.7782,
+    "formerly": "Vạn Phúc, Phúc La, một phần Quang Trung, một phần Mộ Lao, một phần Văn Quán, một phần La Khê, một phần Hà Cầu (Hà Đông); một phần Đại Mỗ (Nam Từ Liêm); một phần Tân Triều (Thanh Trì)",
+    "formerDistricts": [
+     "Hà Đông",
+     "Nam Từ Liêm",
+     "Thanh Trì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09562",
+    "name": "Phường Yên Nghĩa",
+    "type": "phường",
+    "lat": 20.9392,
+    "lng": 105.736,
+    "formerly": "một phần Yên Nghĩa, một phần Đồng Mai (Hà Đông)",
+    "formerDistricts": [
+     "Hà Đông"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09568",
+    "name": "Phường Phú Lương",
+    "type": "phường",
+    "lat": 20.9394,
+    "lng": 105.7665,
+    "formerly": "Phú Lãm, một phần Kiến Hưng, một phần Phú Lương (Hà Đông); một phần Cự Khê (Thanh Oai); một phần Hữu Hòa (Thanh Trì)",
+    "formerDistricts": [
+     "Hà Đông",
+     "Thanh Oai",
+     "Thanh Trì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09574",
+    "name": "Phường Sơn Tây",
+    "type": "phường",
+    "lat": 21.1442,
+    "lng": 105.4897,
+    "formerly": "Ngô Quyền, Phú Thịnh, Đường Lâm, Viên Sơn, một phần Sơn Lộc, một phần Trung Hưng, một phần Thanh Mỹ (Sơn Tây)",
+    "formerDistricts": [
+     "Sơn Tây"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09604",
+    "name": "Phường Tùng Thiện",
+    "type": "phường",
+    "lat": 21.1214,
+    "lng": 105.4578,
+    "formerly": "Xuân Khanh, Xuân Sơn, Trung Sơn Trầm, một phần Sơn Lộc, một phần Trung Hưng, một phần Thanh Mỹ (Sơn Tây)",
+    "formerDistricts": [
+     "Sơn Tây"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09616",
+    "name": "Xã Đoài Phương",
+    "type": "xã",
+    "lat": 21.0687,
+    "lng": 105.4861,
+    "formerly": "Kim Sơn, Sơn Đông, một phần Cổ Đông (Sơn Tây)",
+    "formerDistricts": [
+     "Sơn Tây"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09619",
+    "name": "Xã Quảng Oai",
+    "type": "xã",
+    "lat": 21.1746,
+    "lng": 105.4276,
+    "formerly": "Đông Quang, Tiên Phong, Cam Thượng, một phần TT Tây Đằng, một phần Chu Minh, một phần Thụy An (Ba Vì)",
+    "formerDistricts": [
+     "Ba Vì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09634",
+    "name": "Xã Cổ Đô",
+    "type": "xã",
+    "lat": 21.2688,
+    "lng": 105.3974,
+    "formerly": "Phú Cường, Cổ Đô, Vạn Thắng, Phong Vân, Phú Đông, Phú Hồng (Ba Vì)",
+    "formerDistricts": [
+     "Ba Vì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09661",
+    "name": "Xã Minh Châu",
+    "type": "xã",
+    "lat": 21.2123,
+    "lng": 105.4534,
+    "formerly": "Minh Châu, một phần TT Tây Đằng, một phần Chu Minh (Ba Vì)",
+    "formerDistricts": [
+     "Ba Vì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09664",
+    "name": "Xã Vật Lại",
+    "type": "xã",
+    "lat": 21.2171,
+    "lng": 105.3911,
+    "formerly": "Phú Châu, Thái Hòa, Đồng Thái, Phú Sơn, Vật Lại (Ba Vì)",
+    "formerDistricts": [
+     "Ba Vì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09676",
+    "name": "Xã Bất Bạt",
+    "type": "xã",
+    "lat": 21.1674,
+    "lng": 105.3323,
+    "formerly": "Tòng Bạt, Sơn Đà, Thuần Mỹ, một phần Cẩm Lĩnh, một phần Minh Quang (Ba Vì)",
+    "formerDistricts": [
+     "Ba Vì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09694",
+    "name": "Xã Suối Hai",
+    "type": "xã",
+    "lat": 21.124,
+    "lng": 105.3775,
+    "formerly": "Tản Lĩnh, Ba Trại, một phần Cẩm Lĩnh, một phần Thụy An (Ba Vì)",
+    "formerDistricts": [
+     "Ba Vì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09700",
+    "name": "Xã Ba Vì",
+    "type": "xã",
+    "lat": 21.0581,
+    "lng": 105.3415,
+    "formerly": "Ba Vì, Khánh Thượng, một phần Minh Quang (Ba Vì)",
+    "formerDistricts": [
+     "Ba Vì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09706",
+    "name": "Xã Yên Bài",
+    "type": "xã",
+    "lat": 21.0538,
+    "lng": 105.419,
+    "formerly": "Vân Hòa, Yên Bài (Ba Vì); một phần Thạch Hòa (Thạch Thất)",
+    "formerDistricts": [
+     "Ba Vì",
+     "Thạch Thất"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09715",
+    "name": "Xã Phúc Thọ",
+    "type": "xã",
+    "lat": 21.1103,
+    "lng": 105.5546,
+    "formerly": "TT Phúc Thọ, Tích Lộc, Long Thượng, Trạch Mỹ Lộc, Phúc Hòa, Phụng Thượng (Phúc Thọ)",
+    "formerDistricts": [
+     "Phúc Thọ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09739",
+    "name": "Xã Phúc Lộc",
+    "type": "xã",
+    "lat": 21.1468,
+    "lng": 105.5748,
+    "formerly": "Vân Phúc, Nam Hà, Xuân Đình, Sen Phương, Võng Xuyên (Phúc Thọ)",
+    "formerDistricts": [
+     "Phúc Thọ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09772",
+    "name": "Xã Hát Môn",
+    "type": "xã",
+    "lat": 21.0896,
+    "lng": 105.6228,
+    "formerly": "Hát Môn, Thanh Đa, Ngọc Tảo, Tam Thuấn, Tam Hiệp, Hiệp Thuận, Liên Hiệp (Phúc Thọ)",
+    "formerDistricts": [
+     "Phúc Thọ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09784",
+    "name": "Xã Đan Phượng",
+    "type": "xã",
+    "lat": 21.0912,
+    "lng": 105.666,
+    "formerly": "TT Phùng, Thượng Mỗ, Đan Phượng, Đồng Tháp, Song Phượng (Đan Phượng)",
+    "formerDistricts": [
+     "Đan Phượng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09787",
+    "name": "Xã Liên Minh",
+    "type": "xã",
+    "lat": 21.1279,
+    "lng": 105.6459,
+    "formerly": "Phương Đình, một phần Trung Châu, một phần Thọ An, một phần Thọ Xuân, một phần Hồng Hà (Đan Phượng); một phần Tiến Thịnh (Mê Linh)",
+    "formerDistricts": [
+     "Đan Phượng",
+     "Mê Linh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09817",
+    "name": "Xã Ô Diên",
+    "type": "xã",
+    "lat": 21.1094,
+    "lng": 105.7041,
+    "formerly": "Hạ Mỗ, Tân Hội, một phần Hồng Hà, một phần Liên Hồng, một phần Liên Hà, một phần Liên Trung, một phần Tân Lập (Đan Phượng); một phần Văn Khê (Mê Linh); một phần Tây Tựu (Bắc Từ Liêm)",
+    "formerDistricts": [
+     "Đan Phượng",
+     "Mê Linh",
+     "Bắc Từ Liêm"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09832",
+    "name": "Xã Hoài Đức",
+    "type": "xã",
+    "lat": 21.062,
+    "lng": 105.7049,
+    "formerly": "TT Trạm Trôi, Đức Thượng, Di Trạch, Đức Giang, một phần Kim Chung (Hoài Đức); một phần Tây Tựu (Bắc Từ Liêm); một phần Tân Lập (Đan Phượng)",
+    "formerDistricts": [
+     "Hoài Đức",
+     "Bắc Từ Liêm",
+     "Đan Phượng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09856",
+    "name": "Xã Dương Hòa",
+    "type": "xã",
+    "lat": 21.0489,
+    "lng": 105.6726,
+    "formerly": "Minh Khai, Dương Liễu, Cát Quế, Yên Sở, Đắc Sở (Hoài Đức)",
+    "formerDistricts": [
+     "Hoài Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09871",
+    "name": "Xã Sơn Đồng",
+    "type": "xã",
+    "lat": 21.0242,
+    "lng": 105.7047,
+    "formerly": "Sơn Đồng, Lại Yên, Tiền Yên, một phần Vân Canh, một phần Song Phương, một phần An Khánh, một phần An Thượng, một phần Vân Côn (Hoài Đức)",
+    "formerDistricts": [
+     "Hoài Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09877",
+    "name": "Xã An Khánh",
+    "type": "xã",
+    "lat": 20.9878,
+    "lng": 105.7079,
+    "formerly": "Đông La, một phần Song Phương, một phần An Khánh, một phần An Thượng, một phần Vân Côn, một phần La Phù (Hoài Đức); một phần Dương Nội (Hà Đông)",
+    "formerDistricts": [
+     "Hoài Đức",
+     "Hà Đông"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09886",
+    "name": "Phường Dương Nội",
+    "type": "phường",
+    "lat": 20.9752,
+    "lng": 105.7486,
+    "formerly": "một phần La Khê, một phần Phú La, một phần Yên Nghĩa, một phần Dương Nội (Hà Đông); một phần Đại Mỗ (Nam Từ Liêm); một phần La Phù (Hoài Đức)",
+    "formerDistricts": [
+     "Hà Đông",
+     "Nam Từ Liêm",
+     "Hoài Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09895",
+    "name": "Xã Quốc Oai",
+    "type": "xã",
+    "lat": 21.0116,
+    "lng": 105.6497,
+    "formerly": "Sài Sơn, Thạch Thán, một phần TT Quốc Oai, một phần Phượng Sơn, một phần Ngọc Mỹ (Quốc Oai)",
+    "formerDistricts": [
+     "Quốc Oai"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09910",
+    "name": "Xã Kiều Phú",
+    "type": "xã",
+    "lat": 20.9754,
+    "lng": 105.6071,
+    "formerly": "Cấn Hữu, Tuyết Nghĩa, Liệp Nghĩa, một phần Ngọc Liệp, một phần Ngọc Mỹ (Quốc Oai); một phần Quang Trung (Thạch Thất)",
+    "formerDistricts": [
+     "Quốc Oai",
+     "Thạch Thất"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09931",
+    "name": "Xã Hưng Đạo",
+    "type": "xã",
+    "lat": 20.9674,
+    "lng": 105.6703,
+    "formerly": "Đồng Quang, Cộng Hòa, Hưng Đạo (Quốc Oai)",
+    "formerDistricts": [
+     "Quốc Oai"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09952",
+    "name": "Xã Phú Cát",
+    "type": "xã",
+    "lat": 20.9461,
+    "lng": 105.5606,
+    "formerly": "Phú Mãn, Hòa Thạch, Đông Yên, một phần Phú Cát (Quốc Oai)",
+    "formerDistricts": [
+     "Quốc Oai"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09955",
+    "name": "Xã Thạch Thất",
+    "type": "xã",
+    "lat": 21.0692,
+    "lng": 105.5621,
+    "formerly": "TT Liên Quan, Đại Đồng, Cẩm Yên, Lại Thượng, Phú Kim, Kim Quan (Thạch Thất)",
+    "formerDistricts": [
+     "Thạch Thất"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09982",
+    "name": "Xã Hạ Bằng",
+    "type": "xã",
+    "lat": 21.0203,
+    "lng": 105.5611,
+    "formerly": "Cần Kiệm, Đồng Trúc, một phần Bình Yên, một phần Tân Xã, một phần Hạ Bằng (Thạch Thất); một phần Phú Cát (Quốc Oai)",
+    "formerDistricts": [
+     "Thạch Thất",
+     "Quốc Oai"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "09988",
+    "name": "Xã Hòa Lạc",
+    "type": "xã",
+    "lat": 21.0122,
+    "lng": 105.5131,
+    "formerly": "một phần Tiến Xuân, một phần Bình Yên, một phần Thạch Hòa, một phần Tân Xã, một phần Hạ Bằng (Thạch Thất); một phần Cổ Đông (Sơn Tây)",
+    "formerDistricts": [
+     "Thạch Thất",
+     "Sơn Tây"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10003",
+    "name": "Xã Tây Phương",
+    "type": "xã",
+    "lat": 21.0365,
+    "lng": 105.6115,
+    "formerly": "Hương Ngải, Lam Sơn, Phùng Xá, Thạch Xá, một phần Quang Trung (Thạch Thất); một phần TT Quốc Oai, một phần Phượng Sơn, một phần Ngọc Liệp (Quốc Oai)",
+    "formerDistricts": [
+     "Thạch Thất",
+     "Quốc Oai"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10015",
+    "name": "Phường Chương Mỹ",
+    "type": "phường",
+    "lat": 20.9249,
+    "lng": 105.6985,
+    "formerly": "TT Chúc Sơn, Phụng Châu, Tiên Phương, Ngọc Hòa, Đại Yên, Thụy Hương (Chương Mỹ); Biên Giang, một phần Đồng Mai (Hà Đông)",
+    "formerDistricts": [
+     "Chương Mỹ",
+     "Hà Đông"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10030",
+    "name": "Xã Phú Nghĩa",
+    "type": "xã",
+    "lat": 20.9182,
+    "lng": 105.6419,
+    "formerly": "Đông Sơn, Đông Phương Yên, Phú Nghĩa, Trường Yên, Thanh Bình, Trung Hòa (Chương Mỹ)",
+    "formerDistricts": [
+     "Chương Mỹ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10045",
+    "name": "Xã Xuân Mai",
+    "type": "xã",
+    "lat": 20.8728,
+    "lng": 105.5933,
+    "formerly": "TT Xuân Mai, Thủy Xuân Tiên, Nam Phương Tiến, một phần Tân Tiến (Chương Mỹ)",
+    "formerDistricts": [
+     "Chương Mỹ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10072",
+    "name": "Xã Quảng Bị",
+    "type": "xã",
+    "lat": 20.8731,
+    "lng": 105.7028,
+    "formerly": "Tốt Động, Hợp Đồng, Hoàng Diệu, Quảng Bị, một phần Lam Điền (Chương Mỹ)",
+    "formerDistricts": [
+     "Chương Mỹ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10081",
+    "name": "Xã Trần Phú",
+    "type": "xã",
+    "lat": 20.8424,
+    "lng": 105.6502,
+    "formerly": "Hoàng Văn Thụ, Hữu Văn, Mỹ Lương, Trần Phú, một phần Tân Tiến (Chương Mỹ); một phần Đồng Tâm (Mỹ Đức)",
+    "formerDistricts": [
+     "Chương Mỹ",
+     "Mỹ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10096",
+    "name": "Xã Hòa Phú",
+    "type": "xã",
+    "lat": 20.8286,
+    "lng": 105.7168,
+    "formerly": "Thượng Vực, Hồng Phú, Văn Võ, Đồng Lạc, Hòa Phú (Chương Mỹ); một phần Kim Thư (Thanh Oai)",
+    "formerDistricts": [
+     "Chương Mỹ",
+     "Thanh Oai"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10114",
+    "name": "Xã Thanh Oai",
+    "type": "xã",
+    "lat": 20.8467,
+    "lng": 105.7666,
+    "formerly": "TT Kim Bài, Thanh Mai, Đỗ Động, Kim An, Phương Trung, một phần Kim Thư (Thanh Oai)",
+    "formerDistricts": [
+     "Thanh Oai"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10126",
+    "name": "Xã Bình Minh",
+    "type": "xã",
+    "lat": 20.9042,
+    "lng": 105.7618,
+    "formerly": "Bích Hòa, Cao Viên, Bình Minh, Thanh Cao, một phần Cự Khê (Thanh Oai); một phần Phú Lương (Hà Đông); một phần Lam Điền (Chương Mỹ)",
+    "formerDistricts": [
+     "Thanh Oai",
+     "Hà Đông",
+     "Chương Mỹ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10144",
+    "name": "Xã Tam Hưng",
+    "type": "xã",
+    "lat": 20.8758,
+    "lng": 105.7985,
+    "formerly": "Mỹ Hưng, Tam Hưng, Thanh Thùy, Thanh Văn (Thanh Oai)",
+    "formerDistricts": [
+     "Thanh Oai"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10180",
+    "name": "Xã Dân Hòa",
+    "type": "xã",
+    "lat": 20.8096,
+    "lng": 105.7921,
+    "formerly": "Tân Ước, Dân Hòa, Liên Châu, Cao Xuân Dương, Hồng Dương (Thanh Oai)",
+    "formerDistricts": [
+     "Thanh Oai"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10183",
+    "name": "Xã Thường Tín",
+    "type": "xã",
+    "lat": 20.877,
+    "lng": 105.8413,
+    "formerly": "TT Thường Tín, Nhị Khê, Hòa Bình, Văn Bình, Hiền Giang, Văn Phú, Tiền Phong, một phần Khánh Hà (Thường Tín); một phần Đại Áng (Thanh Trì)",
+    "formerDistricts": [
+     "Thường Tín",
+     "Thanh Trì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10210",
+    "name": "Xã Hồng Vân",
+    "type": "xã",
+    "lat": 20.8798,
+    "lng": 105.8878,
+    "formerly": "Hồng Vân, Vân Tảo, Liên Phương, Hà Hồi, một phần Ninh Sở, một phần Duyên Thái (Thường Tín); một phần Đông Mỹ (Thanh Trì)",
+    "formerDistricts": [
+     "Thường Tín",
+     "Thanh Trì"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10231",
+    "name": "Xã Thượng Phúc",
+    "type": "xã",
+    "lat": 20.8299,
+    "lng": 105.8555,
+    "formerly": "Nguyễn Trãi, Quất Động, Tân Minh, Dũng Tiến, Nghiêm Xuyên (Thường Tín)",
+    "formerDistricts": [
+     "Thường Tín"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10237",
+    "name": "Xã Chương Dương",
+    "type": "xã",
+    "lat": 20.8354,
+    "lng": 105.9008,
+    "formerly": "Tự Nhiên, Chương Dương, Lê Lợi, Thắng Lợi, một phần Tô Hiệu, một phần Vạn Nhất (Thường Tín)",
+    "formerDistricts": [
+     "Thường Tín"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10273",
+    "name": "Xã Phú Xuyên",
+    "type": "xã",
+    "lat": 20.7642,
+    "lng": 105.9175,
+    "formerly": "TT Phú Minh, TT Phú Xuyên, Nam Tiến, Hồng Thái, Nam Phong, Quang Hà (Phú Xuyên); Văn Tự, Minh Cường, một phần Tô Hiệu, một phần Vạn Nhất (Thường Tín)",
+    "formerDistricts": [
+     "Phú Xuyên",
+     "Thường Tín"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10279",
+    "name": "Xã Phượng Dực",
+    "type": "xã",
+    "lat": 20.7721,
+    "lng": 105.8369,
+    "formerly": "Hồng Minh, Phượng Dực, Văn Hoàng, Phú Túc, Hoàng Long (Phú Xuyên)",
+    "formerDistricts": [
+     "Phú Xuyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10330",
+    "name": "Xã Chuyên Mỹ",
+    "type": "xã",
+    "lat": 20.7163,
+    "lng": 105.8837,
+    "formerly": "Tân Dân, Chuyên Mỹ, Vân Từ, Phú Yên, Châu Can (Phú Xuyên)",
+    "formerDistricts": [
+     "Phú Xuyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10342",
+    "name": "Xã Đại Xuyên",
+    "type": "xã",
+    "lat": 20.7006,
+    "lng": 105.9494,
+    "formerly": "Khai Thái, Phúc Tiến, Tri Thủy, Đại Xuyên, Bạch Hạ, Quang Lãng, Minh Tân (Phú Xuyên)",
+    "formerDistricts": [
+     "Phú Xuyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10354",
+    "name": "Xã Vân Đình",
+    "type": "xã",
+    "lat": 20.7351,
+    "lng": 105.7664,
+    "formerly": "TT Vân Đình, Cao Sơn Tiến, Phương Tú, Tảo Dương Văn (Ứng Hòa)",
+    "formerDistricts": [
+     "Ứng Hòa"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10369",
+    "name": "Xã Ứng Thiên",
+    "type": "xã",
+    "lat": 20.7741,
+    "lng": 105.7586,
+    "formerly": "Hoa Viên, Quảng Phú Cầu, Trường Thịnh, Liên Bạt (Ứng Hòa)",
+    "formerDistricts": [
+     "Ứng Hòa"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10402",
+    "name": "Xã Ứng Hòa",
+    "type": "xã",
+    "lat": 20.6888,
+    "lng": 105.8481,
+    "formerly": "Trung Tú, Đồng Tân, Minh Đức, Trầm Lộng, Kim Đường, Đại Hùng, Đông Lỗ, Đại Cường (Ứng Hòa)",
+    "formerDistricts": [
+     "Ứng Hòa"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10417",
+    "name": "Xã Hòa Xá",
+    "type": "xã",
+    "lat": 20.6674,
+    "lng": 105.7903,
+    "formerly": "Thái Hòa, Hòa Phú, Phù Lưu, Bình Lưu Quang (Ứng Hòa)",
+    "formerDistricts": [
+     "Ứng Hòa"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10441",
+    "name": "Xã Mỹ Đức",
+    "type": "xã",
+    "lat": 20.6556,
+    "lng": 105.6979,
+    "formerly": "TT Đại Nghĩa, Phù Lưu Tế, Đại Hưng, Hợp Thanh, An Phú (Mỹ Đức)",
+    "formerDistricts": [
+     "Mỹ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10459",
+    "name": "Xã Phúc Sơn",
+    "type": "xã",
+    "lat": 20.7811,
+    "lng": 105.6812,
+    "formerly": "Thượng Lâm, Tuy Lai, Phúc Lâm, Mỹ Xuyên, một phần Đồng Tâm (Mỹ Đức)",
+    "formerDistricts": [
+     "Mỹ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10465",
+    "name": "Xã Hồng Sơn",
+    "type": "xã",
+    "lat": 20.7159,
+    "lng": 105.7056,
+    "formerly": "An Mỹ, Hồng Sơn, Lê Thanh, Xuy Xá, Phùng Xá, Hợp Tiến (Mỹ Đức)",
+    "formerDistricts": [
+     "Mỹ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "10489",
+    "name": "Xã Hương Sơn",
+    "type": "xã",
+    "lat": 20.6192,
+    "lng": 105.7629,
+    "formerly": "Vạn Tín, Hương Sơn, Hùng Tiến, An Tiến (Mỹ Đức)",
+    "formerDistricts": [
+     "Mỹ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   }
+  ],
+  "TP.HCM": [
+   {
+    "code": "25747",
+    "name": "Phường Thủ Dầu Một",
+    "type": "phường",
+    "lat": 10.9702,
+    "lng": 106.6584,
+    "formerly": "Phú Cường, Phú Thọ, Chánh Nghĩa, một phần Hiệp Thành, một phần Chánh Mỹ (Thủ Dầu Một, Bình Dương)",
+    "formerDistricts": [
+     "Thủ Dầu Một"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25750",
+    "name": "Phường Phú Lợi",
+    "type": "phường",
+    "lat": 10.9893,
+    "lng": 106.6795,
+    "formerly": "Phú Lợi, Phú Hòa, một phần Hiệp Thành (Thủ Dầu Một, Bình Dương)",
+    "formerDistricts": [
+     "Thủ Dầu Một"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25760",
+    "name": "Phường Bình Dương",
+    "type": "phường",
+    "lat": 11.0528,
+    "lng": 106.6868,
+    "formerly": "Hòa Phú, Phú Mỹ, Phú Tân (Thủ Dầu Một, Bình Dương); Phú Chánh (Tân Uyên, Bình Dương)",
+    "formerDistricts": [
+     "Thủ Dầu Một",
+     "Tân Uyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25768",
+    "name": "Phường Phú An",
+    "type": "phường",
+    "lat": 11.0473,
+    "lng": 106.6,
+    "formerly": "Tân An, một phần Hiệp An (Thủ Dầu Một, Bình Dương); Phú An (Bến Cát, Bình Dương)",
+    "formerDistricts": [
+     "Thủ Dầu Một",
+     "Bến Cát"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25771",
+    "name": "Phường Chánh Hiệp",
+    "type": "phường",
+    "lat": 11.0147,
+    "lng": 106.6405,
+    "formerly": "Định Hòa, Tương Bình Hiệp, một phần Hiệp An, một phần Chánh Mỹ (Thủ Dầu Một, Bình Dương)",
+    "formerDistricts": [
+     "Thủ Dầu Một"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25777",
+    "name": "Xã Dầu Tiếng",
+    "type": "xã",
+    "lat": 11.3428,
+    "lng": 106.3933,
+    "formerly": "TT Dầu Tiếng, Định An, Định Thành, một phần Định Hiệp (Dầu Tiếng, Bình Dương)",
+    "formerDistricts": [
+     "Dầu Tiếng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25780",
+    "name": "Xã Minh Thạnh",
+    "type": "xã",
+    "lat": 11.448,
+    "lng": 106.4695,
+    "formerly": "Minh Hòa, một phần Minh Thạnh, một phần Minh Tân (Dầu Tiếng, Bình Dương)",
+    "formerDistricts": [
+     "Dầu Tiếng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25792",
+    "name": "Xã Long Hòa",
+    "type": "xã",
+    "lat": 11.3278,
+    "lng": 106.5075,
+    "formerly": "Long Hòa, Long Tân, một phần Minh Thạnh, một phần Minh Tân (Dầu Tiếng, Bình Dương)",
+    "formerDistricts": [
+     "Dầu Tiếng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25807",
+    "name": "Xã Thanh An",
+    "type": "xã",
+    "lat": 11.2428,
+    "lng": 106.4373,
+    "formerly": "Thanh An, một phần Định Hiệp, một phần An Lập, một phần Thanh Tuyền (Dầu Tiếng, Bình Dương)",
+    "formerDistricts": [
+     "Dầu Tiếng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25813",
+    "name": "Phường Bến Cát",
+    "type": "phường",
+    "lat": 11.2087,
+    "lng": 106.6282,
+    "formerly": "Tân Hưng, Lai Hưng (Bàu Bàng, Bình Dương); một phần Mỹ Phước (Bến Cát, Bình Dương)",
+    "formerDistricts": [
+     "Bàu Bàng",
+     "Bến Cát"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25819",
+    "name": "Xã Trừ Văn Thố",
+    "type": "xã",
+    "lat": 11.3453,
+    "lng": 106.5837,
+    "formerly": "Trừ Văn Thố, Cây Trường II, một phần TT Lai Uyên (Bàu Bàng, Bình Dương)",
+    "formerDistricts": [
+     "Bàu Bàng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25822",
+    "name": "Xã Bàu Bàng",
+    "type": "xã",
+    "lat": 11.2876,
+    "lng": 106.6226,
+    "formerly": "một phần TT Lai Uyên (Bàu Bàng, Bình Dương)",
+    "formerDistricts": [
+     "Bàu Bàng"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25837",
+    "name": "Phường Chánh Phú Hòa",
+    "type": "phường",
+    "lat": 11.1849,
+    "lng": 106.6705,
+    "formerly": "Hưng Hòa (Bàu Bàng, Bình Dương); Chánh Phú Hòa (Bến Cát, Bình Dương)",
+    "formerDistricts": [
+     "Bàu Bàng",
+     "Bến Cát"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25840",
+    "name": "Phường Long Nguyên",
+    "type": "phường",
+    "lat": 11.1863,
+    "lng": 106.5602,
+    "formerly": "Long Nguyên (Bàu Bàng, Bình Dương); An Điền, một phần Mỹ Phước (Bến Cát, Bình Dương)",
+    "formerDistricts": [
+     "Bàu Bàng",
+     "Bến Cát"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25843",
+    "name": "Phường Tây Nam",
+    "type": "phường",
+    "lat": 11.1457,
+    "lng": 106.5079,
+    "formerly": "một phần An Lập, một phần Thanh Tuyền (Dầu Tiếng, Bình Dương); An Tây (Bến Cát, Bình Dương)",
+    "formerDistricts": [
+     "Dầu Tiếng",
+     "Bến Cát"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25846",
+    "name": "Phường Thới Hòa",
+    "type": "phường",
+    "lat": 11.1042,
+    "lng": 106.6229,
+    "formerly": "Thới Hòa (Bến Cát, Bình Dương)",
+    "formerDistricts": [
+     "Bến Cát"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25849",
+    "name": "Phường Hòa Lợi",
+    "type": "phường",
+    "lat": 11.0823,
+    "lng": 106.6499,
+    "formerly": "Hòa Lợi, Tân Định (Bến Cát, Bình Dương)",
+    "formerDistricts": [
+     "Bến Cát"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25858",
+    "name": "Xã Phú Giáo",
+    "type": "xã",
+    "lat": 11.3085,
+    "lng": 106.8605,
+    "formerly": "TT Phước Vĩnh, An Bình, một phần Tam Lập (Phú Giáo, Bình Dương)",
+    "formerDistricts": [
+     "Phú Giáo"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25864",
+    "name": "Xã Phước Thành",
+    "type": "xã",
+    "lat": 11.392,
+    "lng": 106.7588,
+    "formerly": "Phước Sang, An Thái, Tân Hiệp (Phú Giáo, Bình Dương)",
+    "formerDistricts": [
+     "Phú Giáo"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25867",
+    "name": "Xã An Long",
+    "type": "xã",
+    "lat": 11.3269,
+    "lng": 106.6992,
+    "formerly": "An Linh, An Long, Tân Long (Phú Giáo, Bình Dương)",
+    "formerDistricts": [
+     "Phú Giáo"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25882",
+    "name": "Xã Phước Hòa",
+    "type": "xã",
+    "lat": 11.2411,
+    "lng": 106.773,
+    "formerly": "Vĩnh Hòa, Phước Hòa, một phần Tam Lập (Phú Giáo, Bình Dương)",
+    "formerDistricts": [
+     "Phú Giáo"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25888",
+    "name": "Phường Tân Uyên",
+    "type": "phường",
+    "lat": 11.0928,
+    "lng": 106.8076,
+    "formerly": "Uyên Hưng, Bạch Đằng (Tân Uyên, Bình Dương); Tân Lập, một phần Tân Mỹ (Bắc Tân Uyên, Bình Dương)",
+    "formerDistricts": [
+     "Tân Uyên",
+     "Bắc Tân Uyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25891",
+    "name": "Phường Tân Khánh",
+    "type": "phường",
+    "lat": 11.0024,
+    "lng": 106.7452,
+    "formerly": "Tân Phước Khánh, Tân Vĩnh Hiệp, Thạnh Phước, Thạnh Hội, một phần Thái Hòa (Tân Uyên, Bình Dương)",
+    "formerDistricts": [
+     "Tân Uyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25906",
+    "name": "Xã Bắc Tân Uyên",
+    "type": "xã",
+    "lat": 11.1707,
+    "lng": 106.8653,
+    "formerly": "Tân Định, TT Tân Thành, Đất Cuốc (Bắc Tân Uyên, Bình Dương)",
+    "formerDistricts": [
+     "Bắc Tân Uyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25909",
+    "name": "Xã Thường Tân",
+    "type": "xã",
+    "lat": 11.0962,
+    "lng": 106.9112,
+    "formerly": "Hiếu Liêm, Lạc An, Thường Tân, một phần Tân Mỹ (Bắc Tân Uyên, Bình Dương)",
+    "formerDistricts": [
+     "Bắc Tân Uyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25912",
+    "name": "Phường Vĩnh Tân",
+    "type": "phường",
+    "lat": 11.1467,
+    "lng": 106.698,
+    "formerly": "TT Tân Bình (Bắc Tân Uyên, Bình Dương); Vĩnh Tân (Tân Uyên, Bình Dương)",
+    "formerDistricts": [
+     "Bắc Tân Uyên",
+     "Tân Uyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25915",
+    "name": "Phường Bình Cơ",
+    "type": "phường",
+    "lat": 11.153,
+    "lng": 106.7649,
+    "formerly": "Bình Mỹ (Bắc Tân Uyên, Bình Dương); Hội Nghĩa (Tân Uyên, Bình Dương)",
+    "formerDistricts": [
+     "Bắc Tân Uyên",
+     "Tân Uyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25920",
+    "name": "Phường Tân Hiệp",
+    "type": "phường",
+    "lat": 11.0567,
+    "lng": 106.7473,
+    "formerly": "Tân Hiệp, Khánh Bình (Tân Uyên, Bình Dương)",
+    "formerDistricts": [
+     "Tân Uyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25942",
+    "name": "Phường Dĩ An",
+    "type": "phường",
+    "lat": 10.9019,
+    "lng": 106.7561,
+    "formerly": "Dĩ An, An Bình, một phần Tân Đông Hiệp (Dĩ An, Bình Dương)",
+    "formerDistricts": [
+     "Dĩ An"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25945",
+    "name": "Phường Tân Đông Hiệp",
+    "type": "phường",
+    "lat": 10.9426,
+    "lng": 106.7696,
+    "formerly": "một phần Thái Hòa (Tân Uyên, Bình Dương); Tân Bình, một phần Tân Đông Hiệp (Dĩ An, Bình Dương)",
+    "formerDistricts": [
+     "Tân Uyên",
+     "Dĩ An"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25951",
+    "name": "Phường Đông Hòa",
+    "type": "phường",
+    "lat": 10.8935,
+    "lng": 106.7993,
+    "formerly": "Bình An, Bình Thắng, Đông Hòa (Dĩ An, Bình Dương)",
+    "formerDistricts": [
+     "Dĩ An"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25966",
+    "name": "Phường Lái Thiêu",
+    "type": "phường",
+    "lat": 10.9108,
+    "lng": 106.6992,
+    "formerly": "Lái Thiêu, Bình Nhâm, một phần Vĩnh Phú (Thuận An, Bình Dương)",
+    "formerDistricts": [
+     "Thuận An"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25969",
+    "name": "Phường Thuận Giao",
+    "type": "phường",
+    "lat": 10.9634,
+    "lng": 106.7117,
+    "formerly": "Thuận Giao, một phần Bình Chuẩn (Thuận An, Bình Dương)",
+    "formerDistricts": [
+     "Thuận An"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25975",
+    "name": "Phường An Phú",
+    "type": "phường",
+    "lat": 10.9593,
+    "lng": 106.7355,
+    "formerly": "An Phú, một phần Bình Chuẩn (Thuận An, Bình Dương)",
+    "formerDistricts": [
+     "Thuận An"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25978",
+    "name": "Phường Thuận An",
+    "type": "phường",
+    "lat": 10.9418,
+    "lng": 106.6785,
+    "formerly": "An Thạnh, Hưng Định, An Sơn (Thuận An, Bình Dương)",
+    "formerDistricts": [
+     "Thuận An"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "25987",
+    "name": "Phường Bình Hòa",
+    "type": "phường",
+    "lat": 10.9021,
+    "lng": 106.7223,
+    "formerly": "Bình Hòa, một phần Vĩnh Phú (Thuận An, Bình Dương)",
+    "formerDistricts": [
+     "Thuận An"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26506",
+    "name": "Phường Vũng Tàu",
+    "type": "phường",
+    "lat": 10.3565,
+    "lng": 107.0756,
+    "formerly": "Thắng Tam, Thắng Nhì, Phường 1, Phường 2, Phường 3, Phường 4, Phường 5 (Vũng Tàu, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Vũng Tàu"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26526",
+    "name": "Phường Tam Thắng",
+    "type": "phường",
+    "lat": 10.3669,
+    "lng": 107.0961,
+    "formerly": "Nguyễn An Ninh, Phường 7, Phường 8, Phường 9 (Vũng Tàu, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Vũng Tàu"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26536",
+    "name": "Phường Rạch Dừa",
+    "type": "phường",
+    "lat": 10.3891,
+    "lng": 107.1085,
+    "formerly": "Thắng Nhất, Rạch Dừa, Phường 10 (Vũng Tàu, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Vũng Tàu"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26542",
+    "name": "Phường Phước Thắng",
+    "type": "phường",
+    "lat": 10.4234,
+    "lng": 107.1624,
+    "formerly": "Phường 11, Phường 12 (Vũng Tàu, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Vũng Tàu"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26545",
+    "name": "Xã Long Sơn",
+    "type": "xã",
+    "lat": 10.4519,
+    "lng": 107.1008,
+    "formerly": "Long Sơn (Vũng Tàu, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Vũng Tàu"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26560",
+    "name": "Phường Bà Rịa",
+    "type": "phường",
+    "lat": 10.4925,
+    "lng": 107.1816,
+    "formerly": "Phước Hưng, Phước Nguyên, Long Toàn, Phước Trung (Bà Rịa, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Bà Rịa"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26566",
+    "name": "Phường Long Hương",
+    "type": "phường",
+    "lat": 10.5,
+    "lng": 107.1498,
+    "formerly": "Long Hương, Kim Dinh, Tân Hưng (Bà Rịa, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Bà Rịa"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26572",
+    "name": "Phường Tam Long",
+    "type": "phường",
+    "lat": 10.5267,
+    "lng": 107.2142,
+    "formerly": "Long Tâm, Long Phước, Hòa Long (Bà Rịa, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Bà Rịa"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26575",
+    "name": "Xã Ngãi Giao",
+    "type": "xã",
+    "lat": 10.6208,
+    "lng": 107.2132,
+    "formerly": "TT Ngãi Giao, Bình Ba, Suối Nghệ (Châu Đức, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Châu Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26584",
+    "name": "Xã Xuân Sơn",
+    "type": "xã",
+    "lat": 10.6185,
+    "lng": 107.3315,
+    "formerly": "Xuân Sơn, Sơn Bình, Suối Rao (Châu Đức, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Châu Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26590",
+    "name": "Xã Bình Giã",
+    "type": "xã",
+    "lat": 10.6717,
+    "lng": 107.2822,
+    "formerly": "Bình Giã, Bình Trung, Quảng Thành (Châu Đức, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Châu Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26596",
+    "name": "Xã Châu Đức",
+    "type": "xã",
+    "lat": 10.7336,
+    "lng": 107.2078,
+    "formerly": "Xà Bang, Cù Bị (Châu Đức, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Châu Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26608",
+    "name": "Xã Kim Long",
+    "type": "xã",
+    "lat": 10.6804,
+    "lng": 107.2142,
+    "formerly": "Bàu Chinh, Láng Lớn, TT Kim Long (Châu Đức, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Châu Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26617",
+    "name": "Xã Nghĩa Thành",
+    "type": "xã",
+    "lat": 10.5786,
+    "lng": 107.2416,
+    "formerly": "Đá Bạc, Nghĩa Thành (Châu Đức, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Châu Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26620",
+    "name": "Xã Hồ Tràm",
+    "type": "xã",
+    "lat": 10.5221,
+    "lng": 107.3975,
+    "formerly": "TT Phước Bửu, Phước Thuận, Phước Tân (Xuyên Mộc, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Xuyên Mộc"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26632",
+    "name": "Xã Xuyên Mộc",
+    "type": "xã",
+    "lat": 10.549,
+    "lng": 107.466,
+    "formerly": "Xuyên Mộc, Bông Trang, Bưng Riềng (Xuyên Mộc, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Xuyên Mộc"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26638",
+    "name": "Xã Bàu Lâm",
+    "type": "xã",
+    "lat": 10.7308,
+    "lng": 107.4181,
+    "formerly": "Tân Lâm, Bàu Lâm (Xuyên Mộc, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Xuyên Mộc"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26641",
+    "name": "Xã Hòa Hội",
+    "type": "xã",
+    "lat": 10.63,
+    "lng": 107.4239,
+    "formerly": "Hòa Bình, Hòa Hưng, Hòa Hội (Xuyên Mộc, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Xuyên Mộc"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26647",
+    "name": "Xã Hòa Hiệp",
+    "type": "xã",
+    "lat": 10.6993,
+    "lng": 107.497,
+    "formerly": "Hòa Hiệp (Xuyên Mộc, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Xuyên Mộc"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26656",
+    "name": "Xã Bình Châu",
+    "type": "xã",
+    "lat": 10.5913,
+    "lng": 107.5323,
+    "formerly": "Bình Châu (Xuyên Mộc, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Xuyên Mộc"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26659",
+    "name": "Xã Long Điền",
+    "type": "xã",
+    "lat": 10.4676,
+    "lng": 107.2237,
+    "formerly": "TT Long Điền, Tam An (Long Đất, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Long Đất"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26662",
+    "name": "Xã Long Hải",
+    "type": "xã",
+    "lat": 10.4107,
+    "lng": 107.2225,
+    "formerly": "TT Long Hải, Phước Tỉnh, Phước Hưng (Long Đất, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Long Đất"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26680",
+    "name": "Xã Đất Đỏ",
+    "type": "xã",
+    "lat": 10.5203,
+    "lng": 107.3035,
+    "formerly": "TT Đất Đỏ, Phước Long Thọ, Long Tân, Láng Dài (Long Đất, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Long Đất"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26686",
+    "name": "Xã Phước Hải",
+    "type": "xã",
+    "lat": 10.4488,
+    "lng": 107.2983,
+    "formerly": "Phước Hội, TT Phước Hải (Long Đất, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Long Đất"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26704",
+    "name": "Phường Phú Mỹ",
+    "type": "phường",
+    "lat": 10.6111,
+    "lng": 107.0455,
+    "formerly": "Phú Mỹ, Mỹ Xuân (Phú Mỹ, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Phú Mỹ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26710",
+    "name": "Phường Tân Hải",
+    "type": "phường",
+    "lat": 10.5118,
+    "lng": 107.1033,
+    "formerly": "Tân Hòa, Tân Hải (Phú Mỹ, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Phú Mỹ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26713",
+    "name": "Phường Tân Phước",
+    "type": "phường",
+    "lat": 10.5326,
+    "lng": 107.0555,
+    "formerly": "Phước Hòa, Tân Phước (Phú Mỹ, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Phú Mỹ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26725",
+    "name": "Phường Tân Thành",
+    "type": "phường",
+    "lat": 10.6558,
+    "lng": 107.1332,
+    "formerly": "Sông Xoài, Hắc Dịch (Phú Mỹ, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Phú Mỹ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26728",
+    "name": "Xã Châu Pha",
+    "type": "xã",
+    "lat": 10.5864,
+    "lng": 107.1315,
+    "formerly": "Châu Pha, Tóc Tiên (Phú Mỹ, Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Phú Mỹ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26732",
+    "name": "Đặc khu Côn Đảo",
+    "type": "đặc khu",
+    "lat": 8.6924,
+    "lng": 106.613,
+    "formerly": "Toàn bộ huyện Côn Đảo (Bà Rịa - Vũng Tàu)",
+    "formerDistricts": [
+     "Côn Đảo"
+    ],
+    "approx": false,
+    "serviceable": false
+   },
+   {
+    "code": "26737",
+    "name": "Phường Tân Định",
+    "type": "phường",
+    "lat": 10.7912,
+    "lng": 106.6939,
+    "formerly": "Tân Định, một phần Đa Kao (Quận 1)",
+    "formerDistricts": [
+     "Quận 1"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26740",
+    "name": "Phường Sài Gòn",
+    "type": "phường",
+    "lat": 10.7809,
+    "lng": 106.7042,
+    "formerly": "Bến Nghé, một phần Đa Kao, một phần Nguyễn Thái Bình (Quận 1)",
+    "formerDistricts": [
+     "Quận 1"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26743",
+    "name": "Phường Bến Thành",
+    "type": "phường",
+    "lat": 10.7707,
+    "lng": 106.6945,
+    "formerly": "Bến Thành, Phạm Ngũ Lão, một phần Nguyễn Thái Bình, một phần Cầu Ông Lãnh (Quận 1)",
+    "formerDistricts": [
+     "Quận 1"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26758",
+    "name": "Phường Cầu Ông Lãnh",
+    "type": "phường",
+    "lat": 10.7619,
+    "lng": 106.6893,
+    "formerly": "Cô Giang, Nguyễn Cư Trinh, Cầu Kho, một phần Cầu Ông Lãnh (Quận 1)",
+    "formerDistricts": [
+     "Quận 1"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26767",
+    "name": "Phường An Phú Đông",
+    "type": "phường",
+    "lat": 10.8625,
+    "lng": 106.6931,
+    "formerly": "Thạnh Lộc, An Phú Đông (Quận 12)",
+    "formerDistricts": [
+     "Quận 12"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26773",
+    "name": "Phường Thới An",
+    "type": "phường",
+    "lat": 10.8791,
+    "lng": 106.6661,
+    "formerly": "Thạnh Xuân, Thới An (Quận 12)",
+    "formerDistricts": [
+     "Quận 12"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26782",
+    "name": "Phường Tân Thới Hiệp",
+    "type": "phường",
+    "lat": 10.8746,
+    "lng": 106.6397,
+    "formerly": "Hiệp Thành, Tân Thới Hiệp (Quận 12)",
+    "formerDistricts": [
+     "Quận 12"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26785",
+    "name": "Phường Trung Mỹ Tây",
+    "type": "phường",
+    "lat": 10.86,
+    "lng": 106.6225,
+    "formerly": "Tân Chánh Hiệp, Trung Mỹ Tây (Quận 12)",
+    "formerDistricts": [
+     "Quận 12"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26791",
+    "name": "Phường Đông Hưng Thuận",
+    "type": "phường",
+    "lat": 10.8356,
+    "lng": 106.622,
+    "formerly": "Tân Hưng Thuận, Đông Hưng Thuận, Tân Thới Nhất (Quận 12)",
+    "formerDistricts": [
+     "Quận 12"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26800",
+    "name": "Phường Linh Xuân",
+    "type": "phường",
+    "lat": 10.8685,
+    "lng": 106.775,
+    "formerly": "Linh Xuân, Linh Trung, một phần Linh Tây (Thủ Đức)",
+    "formerDistricts": [
+     "Thủ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26803",
+    "name": "Phường Tam Bình",
+    "type": "phường",
+    "lat": 10.8723,
+    "lng": 106.733,
+    "formerly": "Bình Chiểu, Tam Bình, Tam Phú (Thủ Đức)",
+    "formerDistricts": [
+     "Thủ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26809",
+    "name": "Phường Hiệp Bình",
+    "type": "phường",
+    "lat": 10.8441,
+    "lng": 106.7233,
+    "formerly": "Hiệp Bình Phước, Hiệp Bình Chánh, một phần Linh Đông (Thủ Đức)",
+    "formerDistricts": [
+     "Thủ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26824",
+    "name": "Phường Thủ Đức",
+    "type": "phường",
+    "lat": 10.8397,
+    "lng": 106.7576,
+    "formerly": "Linh Chiểu, Bình Thọ, Trường Thọ, một phần Linh Tây, một phần Linh Đông (Thủ Đức)",
+    "formerDistricts": [
+     "Thủ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26833",
+    "name": "Phường Long Bình",
+    "type": "phường",
+    "lat": 10.8618,
+    "lng": 106.8323,
+    "formerly": "Long Bình, một phần Long Thạnh Mỹ (Thủ Đức)",
+    "formerDistricts": [
+     "Thủ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26842",
+    "name": "Phường Tăng Nhơn Phú",
+    "type": "phường",
+    "lat": 10.8424,
+    "lng": 106.7968,
+    "formerly": "Tân Phú, Hiệp Phú, Tăng Nhơn Phú A, Tăng Nhơn Phú B, một phần Long Thạnh Mỹ (Thủ Đức)",
+    "formerDistricts": [
+     "Thủ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26848",
+    "name": "Phường Phước Long",
+    "type": "phường",
+    "lat": 10.8179,
+    "lng": 106.775,
+    "formerly": "Phước Long B, Phước Long A, Phước Bình (Thủ Đức)",
+    "formerDistricts": [
+     "Thủ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26857",
+    "name": "Phường Long Phước",
+    "type": "phường",
+    "lat": 10.8068,
+    "lng": 106.8501,
+    "formerly": "Trường Thạnh, Long Phước (Thủ Đức)",
+    "formerDistricts": [
+     "Thủ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26860",
+    "name": "Phường Long Trường",
+    "type": "phường",
+    "lat": 10.7934,
+    "lng": 106.8123,
+    "formerly": "Long Trường, Phú Hữu (Thủ Đức)",
+    "formerDistricts": [
+     "Thủ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26876",
+    "name": "Phường An Nhơn",
+    "type": "phường",
+    "lat": 10.8359,
+    "lng": 106.6875,
+    "formerly": "Phường 5, Phường 6 (Gò Vấp)",
+    "formerDistricts": [
+     "Gò Vấp"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26878",
+    "name": "Phường An Hội Đông",
+    "type": "phường",
+    "lat": 10.8501,
+    "lng": 106.6669,
+    "formerly": "Phường 15, Phường 16 (Gò Vấp)",
+    "formerDistricts": [
+     "Gò Vấp"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26882",
+    "name": "Phường An Hội Tây",
+    "type": "phường",
+    "lat": 10.8441,
+    "lng": 106.637,
+    "formerly": "Phường 12, Phường 14 (Gò Vấp)",
+    "formerDistricts": [
+     "Gò Vấp"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26884",
+    "name": "Phường Gò Vấp",
+    "type": "phường",
+    "lat": 10.8358,
+    "lng": 106.6733,
+    "formerly": "Phường 10, Phường 17 (Gò Vấp)",
+    "formerDistricts": [
+     "Gò Vấp"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26890",
+    "name": "Phường Hạnh Thông",
+    "type": "phường",
+    "lat": 10.8213,
+    "lng": 106.6828,
+    "formerly": "Phường 1, Phường 3 (Gò Vấp)",
+    "formerDistricts": [
+     "Gò Vấp"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26898",
+    "name": "Phường Thông Tây Hội",
+    "type": "phường",
+    "lat": 10.8417,
+    "lng": 106.6549,
+    "formerly": "Phường 8, Phường 11 (Gò Vấp)",
+    "formerDistricts": [
+     "Gò Vấp"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26905",
+    "name": "Phường Bình Lợi Trung",
+    "type": "phường",
+    "lat": 10.8225,
+    "lng": 106.7,
+    "formerly": "Phường 5, Phường 11, Phường 13 (Bình Thạnh)",
+    "formerDistricts": [
+     "Bình Thạnh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26911",
+    "name": "Phường Bình Quới",
+    "type": "phường",
+    "lat": 10.8212,
+    "lng": 106.7384,
+    "formerly": "Phường 27, Phường 28 (Bình Thạnh)",
+    "formerDistricts": [
+     "Bình Thạnh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26929",
+    "name": "Phường Bình Thạnh",
+    "type": "phường",
+    "lat": 10.8109,
+    "lng": 106.7049,
+    "formerly": "Phường 12, Phường 26 (Bình Thạnh)",
+    "formerDistricts": [
+     "Bình Thạnh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26944",
+    "name": "Phường Gia Định",
+    "type": "phường",
+    "lat": 10.8,
+    "lng": 106.6996,
+    "formerly": "Phường 1, Phường 2, Phường 7, Phường 17 (Bình Thạnh)",
+    "formerDistricts": [
+     "Bình Thạnh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26956",
+    "name": "Phường Thạnh Mỹ Tây",
+    "type": "phường",
+    "lat": 10.7981,
+    "lng": 106.7176,
+    "formerly": "Phường 22, Phường 25 (Bình Thạnh)",
+    "formerDistricts": [
+     "Bình Thạnh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26968",
+    "name": "Phường Tân Sơn Nhất",
+    "type": "phường",
+    "lat": 10.795,
+    "lng": 106.6584,
+    "formerly": "Phường 4, Phường 5, Phường 7 (Tân Bình)",
+    "formerDistricts": [
+     "Tân Bình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26977",
+    "name": "Phường Tân Sơn Hòa",
+    "type": "phường",
+    "lat": 10.806,
+    "lng": 106.6662,
+    "formerly": "Phường 1, Phường 2, Phường 3 (Tân Bình)",
+    "formerDistricts": [
+     "Tân Bình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26983",
+    "name": "Phường Bảy Hiền",
+    "type": "phường",
+    "lat": 10.7922,
+    "lng": 106.6486,
+    "formerly": "Phường 10, Phường 11, Phường 12 (Tân Bình)",
+    "formerDistricts": [
+     "Tân Bình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "26995",
+    "name": "Phường Tân Hòa",
+    "type": "phường",
+    "lat": 10.7809,
+    "lng": 106.6547,
+    "formerly": "Phường 6, Phường 8, Phường 9 (Tân Bình)",
+    "formerDistricts": [
+     "Tân Bình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27004",
+    "name": "Phường Tân Bình",
+    "type": "phường",
+    "lat": 10.8006,
+    "lng": 106.6422,
+    "formerly": "Phường 13, Phường 14, một phần Phường 15 (Tân Bình)",
+    "formerDistricts": [
+     "Tân Bình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27007",
+    "name": "Phường Tân Sơn",
+    "type": "phường",
+    "lat": 10.8208,
+    "lng": 106.6508,
+    "formerly": "một phần Phường 15 (Tân Bình)",
+    "formerDistricts": [
+     "Tân Bình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27013",
+    "name": "Phường Tây Thạnh",
+    "type": "phường",
+    "lat": 10.8127,
+    "lng": 106.6221,
+    "formerly": "Tây Thạnh, một phần Sơn Kỳ (Tân Phú)",
+    "formerDistricts": [
+     "Tân Phú"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27019",
+    "name": "Phường Tân Sơn Nhì",
+    "type": "phường",
+    "lat": 10.8009,
+    "lng": 106.624,
+    "formerly": "Tân Sơn Nhì, một phần Sơn Kỳ, một phần Tân Quý, một phần Tân Thành (Tân Phú)",
+    "formerDistricts": [
+     "Tân Phú"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27022",
+    "name": "Phường Phú Thọ Hòa",
+    "type": "phường",
+    "lat": 10.7892,
+    "lng": 106.627,
+    "formerly": "Phú Thọ Hòa, một phần Tân Quý, một phần Tân Thành (Tân Phú)",
+    "formerDistricts": [
+     "Tân Phú"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27028",
+    "name": "Phường Phú Thạnh",
+    "type": "phường",
+    "lat": 10.7728,
+    "lng": 106.6273,
+    "formerly": "Phú Thạnh, Hiệp Tân, một phần Tân Thới Hòa (Tân Phú)",
+    "formerDistricts": [
+     "Tân Phú"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27031",
+    "name": "Phường Tân Phú",
+    "type": "phường",
+    "lat": 10.7765,
+    "lng": 106.6381,
+    "formerly": "Phú Trung, Hòa Thạnh, một phần Tân Thành, một phần Tân Thới Hòa (Tân Phú)",
+    "formerDistricts": [
+     "Tân Phú"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27043",
+    "name": "Phường Đức Nhuận",
+    "type": "phường",
+    "lat": 10.8055,
+    "lng": 106.677,
+    "formerly": "Phường 4, Phường 5, Phường 9 (Phú Nhuận)",
+    "formerDistricts": [
+     "Phú Nhuận"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27058",
+    "name": "Phường Cầu Kiệu",
+    "type": "phường",
+    "lat": 10.7987,
+    "lng": 106.6854,
+    "formerly": "Phường 1, Phường 2, Phường 7 (Phú Nhuận)",
+    "formerDistricts": [
+     "Phú Nhuận"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27073",
+    "name": "Phường Phú Nhuận",
+    "type": "phường",
+    "lat": 10.7942,
+    "lng": 106.673,
+    "formerly": "Phường 8, Phường 10, Phường 11, Phường 13 (Phú Nhuận)",
+    "formerDistricts": [
+     "Phú Nhuận"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27094",
+    "name": "Phường An Khánh",
+    "type": "phường",
+    "lat": 10.7869,
+    "lng": 106.7302,
+    "formerly": "Thảo Điền, An Khánh, An Lợi Đông, Thủ Thiêm, một phần An Phú (Thủ Đức)",
+    "formerDistricts": [
+     "Thủ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27097",
+    "name": "Phường Bình Trưng",
+    "type": "phường",
+    "lat": 10.7932,
+    "lng": 106.7638,
+    "formerly": "Bình Trưng Đông, Bình Trưng Tây, một phần An Phú (Thủ Đức)",
+    "formerDistricts": [
+     "Thủ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27112",
+    "name": "Phường Cát Lái",
+    "type": "phường",
+    "lat": 10.7634,
+    "lng": 106.7726,
+    "formerly": "Cát Lái, Thạnh Mỹ Lợi (Thủ Đức)",
+    "formerDistricts": [
+     "Thủ Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27139",
+    "name": "Phường Xuân Hòa",
+    "type": "phường",
+    "lat": 10.7837,
+    "lng": 106.6881,
+    "formerly": "Võ Thị Sáu, một phần Phường 4 (Quận 3)",
+    "formerDistricts": [
+     "Quận 3"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27142",
+    "name": "Phường Nhiêu Lộc",
+    "type": "phường",
+    "lat": 10.7855,
+    "lng": 106.6761,
+    "formerly": "Phường 9, Phường 11, Phường 12, Phường 14 (Quận 3)",
+    "formerDistricts": [
+     "Quận 3"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27154",
+    "name": "Phường Bàn Cờ",
+    "type": "phường",
+    "lat": 10.7709,
+    "lng": 106.682,
+    "formerly": "Phường 1, Phường 2, Phường 3, Phường 5, một phần Phường 4 (Quận 3)",
+    "formerDistricts": [
+     "Quận 3"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27163",
+    "name": "Phường Hòa Hưng",
+    "type": "phường",
+    "lat": 10.7777,
+    "lng": 106.6696,
+    "formerly": "Phường 12, Phường 13, Phường 15, một phần Phường 14 (Quận 10)",
+    "formerDistricts": [
+     "Quận 10"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27169",
+    "name": "Phường Diên Hồng",
+    "type": "phường",
+    "lat": 10.7689,
+    "lng": 106.6624,
+    "formerly": "Phường 6, Phường 8, một phần Phường 14 (Quận 10)",
+    "formerDistricts": [
+     "Quận 10"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27190",
+    "name": "Phường Vườn Lài",
+    "type": "phường",
+    "lat": 10.7667,
+    "lng": 106.6738,
+    "formerly": "Phường 1, Phường 2, Phường 4, Phường 9, Phường 10 (Quận 10)",
+    "formerDistricts": [
+     "Quận 10"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27211",
+    "name": "Phường Hòa Bình",
+    "type": "phường",
+    "lat": 10.7702,
+    "lng": 106.6453,
+    "formerly": "Phường 5, Phường 14 (Quận 11)",
+    "formerDistricts": [
+     "Quận 11"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27226",
+    "name": "Phường Phú Thọ",
+    "type": "phường",
+    "lat": 10.7675,
+    "lng": 106.6544,
+    "formerly": "Phường 15, một phần Phường 8 (Quận 11)",
+    "formerDistricts": [
+     "Quận 11"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27232",
+    "name": "Phường Bình Thới",
+    "type": "phường",
+    "lat": 10.7626,
+    "lng": 106.6422,
+    "formerly": "Phường 3, một phần Phường 8 (Quận 11)",
+    "formerDistricts": [
+     "Quận 11"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27238",
+    "name": "Phường Minh Phụng",
+    "type": "phường",
+    "lat": 10.7576,
+    "lng": 106.649,
+    "formerly": "Phường 1, Phường 7, Phường 16 (Quận 11)",
+    "formerDistricts": [
+     "Quận 11"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27259",
+    "name": "Phường Xóm Chiếu",
+    "type": "phường",
+    "lat": 10.76,
+    "lng": 106.7119,
+    "formerly": "Phường 13, Phường 16, Phường 18, một phần Phường 15 (Quận 4)",
+    "formerDistricts": [
+     "Quận 4"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27265",
+    "name": "Phường Khánh Hội",
+    "type": "phường",
+    "lat": 10.7592,
+    "lng": 106.704,
+    "formerly": "Phường 8, Phường 9, một phần Phường 2, một phần Phường 4, một phần Phường 15 (Quận 4)",
+    "formerDistricts": [
+     "Quận 4"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27286",
+    "name": "Phường Vĩnh Hội",
+    "type": "phường",
+    "lat": 10.7553,
+    "lng": 106.6964,
+    "formerly": "Phường 1, Phường 3, một phần Phường 2, một phần Phường 4 (Quận 4)",
+    "formerDistricts": [
+     "Quận 4"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27301",
+    "name": "Phường Chợ Quán",
+    "type": "phường",
+    "lat": 10.7574,
+    "lng": 106.6807,
+    "formerly": "Phường 1, Phường 2, Phường 4 (Quận 5)",
+    "formerDistricts": [
+     "Quận 5"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27316",
+    "name": "Phường An Đông",
+    "type": "phường",
+    "lat": 10.7548,
+    "lng": 106.6716,
+    "formerly": "Phường 5, Phường 7, Phường 9 (Quận 5)",
+    "formerDistricts": [
+     "Quận 5"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27343",
+    "name": "Phường Chợ Lớn",
+    "type": "phường",
+    "lat": 10.7532,
+    "lng": 106.6591,
+    "formerly": "Phường 11, Phường 12, Phường 13, Phường 14 (Quận 5)",
+    "formerDistricts": [
+     "Quận 5"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27349",
+    "name": "Phường Phú Lâm",
+    "type": "phường",
+    "lat": 10.7529,
+    "lng": 106.6304,
+    "formerly": "Phường 12, Phường 13, Phường 14 (Quận 6)",
+    "formerDistricts": [
+     "Quận 6"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27364",
+    "name": "Phường Bình Phú",
+    "type": "phường",
+    "lat": 10.7388,
+    "lng": 106.6288,
+    "formerly": "Phường 10, Phường 11 (Quận 6); một phần Phường 16 (Quận 8)",
+    "formerDistricts": [
+     "Quận 6",
+     "Quận 8"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27367",
+    "name": "Phường Bình Tây",
+    "type": "phường",
+    "lat": 10.7507,
+    "lng": 106.6451,
+    "formerly": "Phường 9 (Quận 6)",
+    "formerDistricts": [
+     "Quận 6"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27373",
+    "name": "Phường Bình Tiên",
+    "type": "phường",
+    "lat": 10.7425,
+    "lng": 106.643,
+    "formerly": "Phường 7, Phường 8 (Quận 6)",
+    "formerDistricts": [
+     "Quận 6"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27418",
+    "name": "Phường Chánh Hưng",
+    "type": "phường",
+    "lat": 10.7434,
+    "lng": 106.677,
+    "formerly": "Rạch Ông, Hưng Phú, Phường 4, một phần Phường 5 (Quận 8)",
+    "formerDistricts": [
+     "Quận 8"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27424",
+    "name": "Phường Bình Đông",
+    "type": "phường",
+    "lat": 10.7131,
+    "lng": 106.6313,
+    "formerly": "Phường 6, một phần Phường 5, một phần Phường 7 (Quận 8); một phần An Phú Tây (Bình Chánh)",
+    "formerDistricts": [
+     "Quận 8",
+     "Bình Chánh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27427",
+    "name": "Phường Phú Định",
+    "type": "phường",
+    "lat": 10.7263,
+    "lng": 106.6324,
+    "formerly": "Xóm Củi, Phường 14, Phường 15, một phần Phường 16 (Quận 8)",
+    "formerDistricts": [
+     "Quận 8"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27439",
+    "name": "Phường Bình Hưng Hòa",
+    "type": "phường",
+    "lat": 10.7963,
+    "lng": 106.6055,
+    "formerly": "một phần Sơn Kỳ (Tân Phú); Bình Hưng Hòa, một phần Bình Hưng Hòa A (Bình Tân)",
+    "formerDistricts": [
+     "Tân Phú",
+     "Bình Tân"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27442",
+    "name": "Phường Bình Tân",
+    "type": "phường",
+    "lat": 10.7918,
+    "lng": 106.5888,
+    "formerly": "Bình Hưng Hòa B, một phần Bình Trị Đông A, một phần Tân Tạo (Bình Tân)",
+    "formerDistricts": [
+     "Bình Tân"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27448",
+    "name": "Phường Bình Trị Đông",
+    "type": "phường",
+    "lat": 10.7685,
+    "lng": 106.6089,
+    "formerly": "Bình Trị Đông, một phần Bình Hưng Hòa A, một phần Bình Trị Đông A (Bình Tân)",
+    "formerDistricts": [
+     "Bình Tân"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27457",
+    "name": "Phường Tân Tạo",
+    "type": "phường",
+    "lat": 10.7443,
+    "lng": 106.5842,
+    "formerly": "một phần Tân Tạo, một phần Tân Tạo A (Bình Tân); một phần Tân Kiên (Bình Chánh)",
+    "formerDistricts": [
+     "Bình Tân",
+     "Bình Chánh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27460",
+    "name": "Phường An Lạc",
+    "type": "phường",
+    "lat": 10.736,
+    "lng": 106.6118,
+    "formerly": "Bình Trị Đông B, An Lạc, An Lạc A (Bình Tân)",
+    "formerDistricts": [
+     "Bình Tân"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27475",
+    "name": "Phường Tân Hưng",
+    "type": "phường",
+    "lat": 10.7372,
+    "lng": 106.7047,
+    "formerly": "Tân Kiểng, Tân Hưng, Tân Quy, Tân Phong (Quận 7)",
+    "formerDistricts": [
+     "Quận 7"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27478",
+    "name": "Phường Tân Thuận",
+    "type": "phường",
+    "lat": 10.7553,
+    "lng": 106.7348,
+    "formerly": "Tân Thuận Đông, Tân Thuận Tây, Bình Thuận (Quận 7)",
+    "formerDistricts": [
+     "Quận 7"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27484",
+    "name": "Phường Phú Thuận",
+    "type": "phường",
+    "lat": 10.7272,
+    "lng": 106.7467,
+    "formerly": "Phú Thuận, một phần Phú Mỹ (Quận 7)",
+    "formerDistricts": [
+     "Quận 7"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27487",
+    "name": "Phường Tân Mỹ",
+    "type": "phường",
+    "lat": 10.7203,
+    "lng": 106.7275,
+    "formerly": "Tân Phú, một phần Phú Mỹ (Quận 7)",
+    "formerDistricts": [
+     "Quận 7"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27496",
+    "name": "Xã Tân An Hội",
+    "type": "xã",
+    "lat": 10.9715,
+    "lng": 106.4685,
+    "formerly": "TT Củ Chi, Phước Hiệp, Tân An Hội (Củ Chi)",
+    "formerDistricts": [
+     "Củ Chi"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27508",
+    "name": "Xã An Nhơn Tây",
+    "type": "xã",
+    "lat": 11.1015,
+    "lng": 106.4826,
+    "formerly": "Phú Mỹ Hưng, An Phú, An Nhơn Tây (Củ Chi)",
+    "formerDistricts": [
+     "Củ Chi"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27511",
+    "name": "Xã Nhuận Đức",
+    "type": "xã",
+    "lat": 11.0321,
+    "lng": 106.4986,
+    "formerly": "Nhuận Đức, Phạm Văn Cội, Trung Lập Hạ (Củ Chi)",
+    "formerDistricts": [
+     "Củ Chi"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27526",
+    "name": "Xã Thái Mỹ",
+    "type": "xã",
+    "lat": 11.022,
+    "lng": 106.4201,
+    "formerly": "Trung Lập Thượng, Phước Thạnh, Thái Mỹ (Củ Chi)",
+    "formerDistricts": [
+     "Củ Chi"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27541",
+    "name": "Xã Phú Hòa Đông",
+    "type": "xã",
+    "lat": 10.9848,
+    "lng": 106.5732,
+    "formerly": "Phú Hòa Đông, Tân Thạnh Tây, Tân Thạnh Đông (Củ Chi)",
+    "formerDistricts": [
+     "Củ Chi"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27544",
+    "name": "Xã Bình Mỹ",
+    "type": "xã",
+    "lat": 10.973,
+    "lng": 106.6142,
+    "formerly": "Trung An, Hòa Phú, Bình Mỹ (Củ Chi)",
+    "formerDistricts": [
+     "Củ Chi"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27553",
+    "name": "Xã Củ Chi",
+    "type": "xã",
+    "lat": 10.9517,
+    "lng": 106.533,
+    "formerly": "Phước Vĩnh An, Tân Phú Trung, Tân Thông Hội (Củ Chi)",
+    "formerDistricts": [
+     "Củ Chi"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27559",
+    "name": "Xã Hóc Môn",
+    "type": "xã",
+    "lat": 10.9016,
+    "lng": 106.5914,
+    "formerly": "TT Hóc Môn, Tân Hiệp, Tân Xuân (Hóc Môn)",
+    "formerDistricts": [
+     "Hóc Môn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27568",
+    "name": "Xã Đông Thạnh",
+    "type": "xã",
+    "lat": 10.9023,
+    "lng": 106.6415,
+    "formerly": "Nhị Bình, Đông Thạnh, Thới Tam Thôn (Hóc Môn)",
+    "formerDistricts": [
+     "Hóc Môn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27577",
+    "name": "Xã Xuân Thới Sơn",
+    "type": "xã",
+    "lat": 10.89,
+    "lng": 106.5567,
+    "formerly": "Tân Thới Nhì, Xuân Thới Sơn, Xuân Thới Đông (Hóc Môn)",
+    "formerDistricts": [
+     "Hóc Môn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27592",
+    "name": "Xã Bà Điểm",
+    "type": "xã",
+    "lat": 10.8523,
+    "lng": 106.5742,
+    "formerly": "Trung Chánh, Xuân Thới Thượng, Bà Điểm (Hóc Môn)",
+    "formerDistricts": [
+     "Hóc Môn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27595",
+    "name": "Xã Tân Nhựt",
+    "type": "xã",
+    "lat": 10.7071,
+    "lng": 106.565,
+    "formerly": "TT Tân Túc, Tân Nhựt, một phần Tân Kiên (Bình Chánh); một phần Phường 16 (Quận 8); một phần Tân Tạo A (Bình Tân)",
+    "formerDistricts": [
+     "Bình Chánh",
+     "Quận 8",
+     "Bình Tân"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27601",
+    "name": "Xã Vĩnh Lộc",
+    "type": "xã",
+    "lat": 10.8292,
+    "lng": 106.5505,
+    "formerly": "Vĩnh Lộc A, một phần Phạm Văn Hai (Bình Chánh)",
+    "formerDistricts": [
+     "Bình Chánh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27604",
+    "name": "Xã Tân Vĩnh Lộc",
+    "type": "xã",
+    "lat": 10.7944,
+    "lng": 106.5479,
+    "formerly": "Vĩnh Lộc B, một phần Phạm Văn Hai (Bình Chánh); một phần Tân Tạo (Bình Tân)",
+    "formerDistricts": [
+     "Bình Chánh",
+     "Bình Tân"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27610",
+    "name": "Xã Bình Lợi",
+    "type": "xã",
+    "lat": 10.754,
+    "lng": 106.5161,
+    "formerly": "Bình Lợi, Lê Minh Xuân (Bình Chánh)",
+    "formerDistricts": [
+     "Bình Chánh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27619",
+    "name": "Xã Bình Hưng",
+    "type": "xã",
+    "lat": 10.7067,
+    "lng": 106.6596,
+    "formerly": "Bình Hưng, Phong Phú (Bình Chánh); một phần Phường 7 (Quận 8)",
+    "formerDistricts": [
+     "Bình Chánh",
+     "Quận 8"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27628",
+    "name": "Xã Hưng Long",
+    "type": "xã",
+    "lat": 10.6594,
+    "lng": 106.6446,
+    "formerly": "Hưng Long, Đa Phước, Quy Đức (Bình Chánh)",
+    "formerDistricts": [
+     "Bình Chánh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27637",
+    "name": "Xã Bình Chánh",
+    "type": "xã",
+    "lat": 10.6702,
+    "lng": 106.5877,
+    "formerly": "Tân Quý Tây, Bình Chánh, một phần An Phú Tây (Bình Chánh)",
+    "formerDistricts": [
+     "Bình Chánh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27655",
+    "name": "Xã Nhà Bè",
+    "type": "xã",
+    "lat": 10.6941,
+    "lng": 106.7217,
+    "formerly": "TT Nhà Bè, Phước Kiển, Phước Lộc, Phú Xuân (Nhà Bè)",
+    "formerDistricts": [
+     "Nhà Bè"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27658",
+    "name": "Xã Hiệp Phước",
+    "type": "xã",
+    "lat": 10.6309,
+    "lng": 106.7356,
+    "formerly": "Nhơn Đức, Long Thới, Hiệp Phước (Nhà Bè)",
+    "formerDistricts": [
+     "Nhà Bè"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27664",
+    "name": "Xã Cần Giờ",
+    "type": "xã",
+    "lat": 10.4524,
+    "lng": 106.9075,
+    "formerly": "TT Cần Thạnh, Long Hòa (Cần Giờ)",
+    "formerDistricts": [
+     "Cần Giờ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27667",
+    "name": "Xã Bình Khánh",
+    "type": "xã",
+    "lat": 10.5964,
+    "lng": 106.8564,
+    "formerly": "Bình Khánh, Tam Thôn Hiệp, một phần An Thới Đông (Cần Giờ)",
+    "formerDistricts": [
+     "Cần Giờ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27673",
+    "name": "Xã An Thới Đông",
+    "type": "xã",
+    "lat": 10.5016,
+    "lng": 106.8073,
+    "formerly": "Lý Nhơn, một phần An Thới Đông (Cần Giờ)",
+    "formerDistricts": [
+     "Cần Giờ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "27676",
+    "name": "Xã Thạnh An",
+    "type": "xã",
+    "lat": 10.546,
+    "lng": 106.9748,
+    "formerly": "Thạnh An (Cần Giờ)",
+    "formerDistricts": [
+     "Cần Giờ"
+    ],
+    "approx": false,
+    "serviceable": true
+   }
+  ],
+  "Đà Nẵng": [
+   {
+    "code": "20194",
+    "name": "Phường Hải Vân",
+    "type": "phường",
+    "lat": 16.1312,
+    "lng": 107.9748,
+    "formerly": "Hòa Hiệp Bắc, Hòa Hiệp Nam (Liên Chiểu); Hòa Bắc, một phần Hòa Liên (Hòa Vang)",
+    "formerDistricts": [
+     "Liên Chiểu",
+     "Hòa Vang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20197",
+    "name": "Phường Liên Chiểu",
+    "type": "phường",
+    "lat": 16.0875,
+    "lng": 108.0942,
+    "formerly": "Hòa Khánh Bắc (Liên Chiểu); một phần Hòa Liên (Hòa Vang)",
+    "formerDistricts": [
+     "Liên Chiểu",
+     "Hòa Vang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20200",
+    "name": "Phường Hòa Khánh",
+    "type": "phường",
+    "lat": 16.0527,
+    "lng": 108.1295,
+    "formerly": "Hòa Khánh Nam, Hòa Minh (Liên Chiểu); Hòa Sơn (Hòa Vang)",
+    "formerDistricts": [
+     "Liên Chiểu",
+     "Hòa Vang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20209",
+    "name": "Phường Thanh Khê",
+    "type": "phường",
+    "lat": 16.0678,
+    "lng": 108.1944,
+    "formerly": "Thanh Khê Tây, Thanh Khê Đông, Xuân Hà, Chính Gián, Thạc Gián (Thanh Khê)",
+    "formerDistricts": [
+     "Thanh Khê"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20242",
+    "name": "Phường Hải Châu",
+    "type": "phường",
+    "lat": 16.0762,
+    "lng": 108.2182,
+    "formerly": "Thanh Bình, Thuận Phước, Thạch Thang, Hải Châu, Phước Ninh (Hải Châu)",
+    "formerDistricts": [
+     "Hải Châu"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20257",
+    "name": "Phường Hòa Cường",
+    "type": "phường",
+    "lat": 16.0422,
+    "lng": 108.2107,
+    "formerly": "Hòa Thuận Tây, Bình Thuận, Hòa Cường Bắc, Hòa Cường Nam (Hải Châu)",
+    "formerDistricts": [
+     "Hải Châu"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20260",
+    "name": "Phường Cẩm Lệ",
+    "type": "phường",
+    "lat": 16.0104,
+    "lng": 108.1881,
+    "formerly": "Khuê Trung, Hòa Thọ Tây, Hòa Thọ Đông (Cẩm Lệ)",
+    "formerDistricts": [
+     "Cẩm Lệ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20263",
+    "name": "Phường Sơn Trà",
+    "type": "phường",
+    "lat": 16.1191,
+    "lng": 108.2652,
+    "formerly": "Thọ Quang, Nại Hiên Đông, Mân Thái (Sơn Trà)",
+    "formerDistricts": [
+     "Sơn Trà"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20275",
+    "name": "Phường An Hải",
+    "type": "phường",
+    "lat": 16.0689,
+    "lng": 108.2367,
+    "formerly": "An Hải Bắc, Phước Mỹ, An Hải Nam (Sơn Trà)",
+    "formerDistricts": [
+     "Sơn Trà"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20285",
+    "name": "Phường Ngũ Hành Sơn",
+    "type": "phường",
+    "lat": 15.9972,
+    "lng": 108.2502,
+    "formerly": "Mỹ An, Khuê Mỹ, Hòa Quý, Hòa Hải (Ngũ Hành Sơn)",
+    "formerDistricts": [
+     "Ngũ Hành Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20305",
+    "name": "Phường An Khê",
+    "type": "phường",
+    "lat": 16.0367,
+    "lng": 108.1795,
+    "formerly": "An Khê (Thanh Khê); Hòa Phát, Hòa An (Cẩm Lệ)",
+    "formerDistricts": [
+     "Thanh Khê",
+     "Cẩm Lệ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20308",
+    "name": "Xã Bà Nà",
+    "type": "xã",
+    "lat": 16.0369,
+    "lng": 108.0464,
+    "formerly": "Hòa Ninh, Hòa Nhơn (Hòa Vang)",
+    "formerDistricts": [
+     "Hòa Vang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20314",
+    "name": "Phường Hòa Xuân",
+    "type": "phường",
+    "lat": 15.9865,
+    "lng": 108.2099,
+    "formerly": "Hòa Xuân (Cẩm Lệ); Hòa Châu, Hòa Phước (Hòa Vang)",
+    "formerDistricts": [
+     "Cẩm Lệ",
+     "Hòa Vang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20320",
+    "name": "Xã Hòa Vang",
+    "type": "xã",
+    "lat": 15.9728,
+    "lng": 108.0396,
+    "formerly": "Hòa Phú, Hòa Phong (Hòa Vang)",
+    "formerDistricts": [
+     "Hòa Vang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20332",
+    "name": "Xã Hòa Tiến",
+    "type": "xã",
+    "lat": 15.9544,
+    "lng": 108.1093,
+    "formerly": "Hòa Tiến, Hòa Khương (Hòa Vang)",
+    "formerDistricts": [
+     "Hòa Vang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20333",
+    "name": "Đặc khu Hoàng Sa",
+    "type": "đặc khu",
+    "lat": 16.3708,
+    "lng": 112.4983,
+    "formerly": "Toàn bộ huyện Hoàng Sa (Đà Nẵng)",
+    "formerDistricts": [
+     "Hoàng Sa"
+    ],
+    "approx": true,
+    "serviceable": false
+   },
+   {
+    "code": "20335",
+    "name": "Phường Bàn Thạch",
+    "type": "phường",
+    "lat": 15.6038,
+    "lng": 108.4688,
+    "formerly": "Tân Thạnh, Tam Thăng, Hòa Thuận (Tam Kỳ, Quảng Nam)",
+    "formerDistricts": [
+     "Tam Kỳ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20341",
+    "name": "Phường Tam Kỳ",
+    "type": "phường",
+    "lat": 15.5581,
+    "lng": 108.4787,
+    "formerly": "An Mỹ, An Xuân, Trường Xuân (Tam Kỳ, Quảng Nam)",
+    "formerDistricts": [
+     "Tam Kỳ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20350",
+    "name": "Phường Hương Trà",
+    "type": "phường",
+    "lat": 15.5443,
+    "lng": 108.4943,
+    "formerly": "Hòa Hương, An Sơn, Tam Ngọc (Tam Kỳ, Quảng Nam)",
+    "formerDistricts": [
+     "Tam Kỳ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20356",
+    "name": "Phường Quảng Phú",
+    "type": "phường",
+    "lat": 15.5957,
+    "lng": 108.5153,
+    "formerly": "An Phú, Tam Thanh, Tam Phú (Tam Kỳ, Quảng Nam)",
+    "formerDistricts": [
+     "Tam Kỳ"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20364",
+    "name": "Xã Chiên Đàn",
+    "type": "xã",
+    "lat": 15.555,
+    "lng": 108.4227,
+    "formerly": "TT Phú Thịnh, Tam Đàn, Tam Thái (Phú Ninh, Quảng Nam)",
+    "formerDistricts": [
+     "Phú Ninh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20380",
+    "name": "Xã Tây Hồ",
+    "type": "xã",
+    "lat": 15.5884,
+    "lng": 108.3834,
+    "formerly": "Tam Thành, Tam An, Tam Lộc, Tam Phước (Phú Ninh, Quảng Nam)",
+    "formerDistricts": [
+     "Phú Ninh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20392",
+    "name": "Xã Phú Ninh",
+    "type": "xã",
+    "lat": 15.47,
+    "lng": 108.4268,
+    "formerly": "Tam Đại, Tam Dân, Tam Lãnh (Phú Ninh, Quảng Nam)",
+    "formerDistricts": [
+     "Phú Ninh"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20401",
+    "name": "Phường Hội An Tây",
+    "type": "phường",
+    "lat": 15.8966,
+    "lng": 108.3195,
+    "formerly": "Tân An, Thanh Hà, Cẩm An, Cẩm Hà (Hội An, Quảng Nam)",
+    "formerDistricts": [
+     "Hội An"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20410",
+    "name": "Phường Hội An",
+    "type": "phường",
+    "lat": 15.8697,
+    "lng": 108.3301,
+    "formerly": "Minh An, Cẩm Phô, Sơn Phong, Cẩm Kim, Cẩm Nam (Hội An, Quảng Nam)",
+    "formerDistricts": [
+     "Hội An"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20413",
+    "name": "Phường Hội An Đông",
+    "type": "phường",
+    "lat": 15.8821,
+    "lng": 108.3614,
+    "formerly": "Cẩm Châu, Cửa Đại, Cẩm Thanh (Hội An, Quảng Nam)",
+    "formerDistricts": [
+     "Hội An"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20434",
+    "name": "Xã Tân Hiệp",
+    "type": "xã",
+    "lat": 15.9474,
+    "lng": 108.5173,
+    "formerly": "Tân Hiệp (Hội An, Quảng Nam)",
+    "formerDistricts": [
+     "Hội An"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20443",
+    "name": "Xã Hùng Sơn",
+    "type": "xã",
+    "lat": 15.8034,
+    "lng": 107.3133,
+    "formerly": "Ch'ơm, Ga Ri, A Xan, Tr'Hy (Tây Giang, Quảng Nam)",
+    "formerDistricts": [
+     "Tây Giang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20455",
+    "name": "Xã Tây Giang",
+    "type": "xã",
+    "lat": 15.8516,
+    "lng": 107.4836,
+    "formerly": "Lăng, A Nông, A Tiêng, Dang (Tây Giang, Quảng Nam)",
+    "formerDistricts": [
+     "Tây Giang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20458",
+    "name": "Xã Avương",
+    "type": "xã",
+    "lat": 15.9752,
+    "lng": 107.5633,
+    "formerly": "Bha Lê, A Vương (Tây Giang, Quảng Nam)",
+    "formerDistricts": [
+     "Tây Giang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20467",
+    "name": "Xã Đông Giang",
+    "type": "xã",
+    "lat": 15.9316,
+    "lng": 107.6599,
+    "formerly": "TT P Rao, Tà Lu, A Rooi, Za Hung (Đông Giang, Quảng Nam)",
+    "formerDistricts": [
+     "Đông Giang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20476",
+    "name": "Xã Sông Kôn",
+    "type": "xã",
+    "lat": 15.9751,
+    "lng": 107.7832,
+    "formerly": "Sông Kôn, Jơ Ngây, A Ting (Đông Giang, Quảng Nam)",
+    "formerDistricts": [
+     "Đông Giang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20485",
+    "name": "Xã Sông Vàng",
+    "type": "xã",
+    "lat": 15.9926,
+    "lng": 107.9078,
+    "formerly": "Tư, Ba (Đông Giang, Quảng Nam)",
+    "formerDistricts": [
+     "Đông Giang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20494",
+    "name": "Xã Bến Hiên",
+    "type": "xã",
+    "lat": 15.8408,
+    "lng": 107.7161,
+    "formerly": "Mà Cooi, Ka Dăng (Đông Giang, Quảng Nam)",
+    "formerDistricts": [
+     "Đông Giang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20500",
+    "name": "Xã Đại Lộc",
+    "type": "xã",
+    "lat": 15.899,
+    "lng": 108.1033,
+    "formerly": "TT Ái Nghĩa, Đại Nghĩa, Đại Hiệp, Đại An, Đại Hòa (Đại Lộc, Quảng Nam)",
+    "formerDistricts": [
+     "Đại Lộc"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20506",
+    "name": "Xã Thượng Đức",
+    "type": "xã",
+    "lat": 15.8463,
+    "lng": 107.8904,
+    "formerly": "Đại Sơn, Đại Lãnh, Đại Hưng (Đại Lộc, Quảng Nam)",
+    "formerDistricts": [
+     "Đại Lộc"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20515",
+    "name": "Xã Hà Nha",
+    "type": "xã",
+    "lat": 15.8633,
+    "lng": 107.9914,
+    "formerly": "Đại Hồng, Đại Đồng, Đại Quang (Đại Lộc, Quảng Nam)",
+    "formerDistricts": [
+     "Đại Lộc"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20539",
+    "name": "Xã Vu Gia",
+    "type": "xã",
+    "lat": 15.8522,
+    "lng": 108.069,
+    "formerly": "Đại Phong, Đại Minh, Đại Cường (Đại Lộc, Quảng Nam)",
+    "formerDistricts": [
+     "Đại Lộc"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20542",
+    "name": "Xã Phú Thuận",
+    "type": "xã",
+    "lat": 15.7841,
+    "lng": 108.0041,
+    "formerly": "Đại Thạnh, Đại Chánh, Đại Tân, Đại Thắng (Đại Lộc, Quảng Nam)",
+    "formerDistricts": [
+     "Đại Lộc"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20551",
+    "name": "Phường Điện Bàn",
+    "type": "phường",
+    "lat": 15.8792,
+    "lng": 108.2674,
+    "formerly": "Vĩnh Điện, Điện Minh, Điện Phương (Điện Bàn, Quảng Nam)",
+    "formerDistricts": [
+     "Điện Bàn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20557",
+    "name": "Phường Điện Bàn Bắc",
+    "type": "phường",
+    "lat": 15.9303,
+    "lng": 108.1829,
+    "formerly": "Điện Tiến, Điện Hòa, Điện Thắng Bắc (Điện Bàn, Quảng Nam)",
+    "formerDistricts": [
+     "Điện Bàn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20569",
+    "name": "Xã Điện Bàn Tây",
+    "type": "xã",
+    "lat": 15.8864,
+    "lng": 108.1774,
+    "formerly": "Điện Hồng, Điện Thọ, Điện Phước (Điện Bàn, Quảng Nam)",
+    "formerDistricts": [
+     "Điện Bàn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20575",
+    "name": "Phường An Thắng",
+    "type": "phường",
+    "lat": 15.9096,
+    "lng": 108.2256,
+    "formerly": "Điện Thắng Trung, Điện Thắng Nam, Điện An (Điện Bàn, Quảng Nam)",
+    "formerDistricts": [
+     "Điện Bàn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20579",
+    "name": "Phường Điện Bàn Đông",
+    "type": "phường",
+    "lat": 15.9303,
+    "lng": 108.2743,
+    "formerly": "Điện Ngọc, Điện Nam Bắc, Điện Nam Trung, Điện Nam Đông, Điện Dương (Điện Bàn, Quảng Nam)",
+    "formerDistricts": [
+     "Điện Bàn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20587",
+    "name": "Xã Gò Nổi",
+    "type": "xã",
+    "lat": 15.8533,
+    "lng": 108.2068,
+    "formerly": "Điện Quang, Điện Trung, Điện Phong (Điện Bàn, Quảng Nam)",
+    "formerDistricts": [
+     "Điện Bàn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20599",
+    "name": "Xã Nam Phước",
+    "type": "xã",
+    "lat": 15.845,
+    "lng": 108.2962,
+    "formerly": "TT Nam Phước, Duy Phước, Duy Vinh (Duy Xuyên, Quảng Nam)",
+    "formerDistricts": [
+     "Duy Xuyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20611",
+    "name": "Xã Thu Bồn",
+    "type": "xã",
+    "lat": 15.7926,
+    "lng": 108.1125,
+    "formerly": "Duy Phú, Duy Tân, Duy Hòa, Duy Châu (Duy Xuyên, Quảng Nam)",
+    "formerDistricts": [
+     "Duy Xuyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20623",
+    "name": "Xã Duy Xuyên",
+    "type": "xã",
+    "lat": 15.7819,
+    "lng": 108.2024,
+    "formerly": "Duy Trinh, Duy Sơn, Duy Trung (Duy Xuyên, Quảng Nam)",
+    "formerDistricts": [
+     "Duy Xuyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20635",
+    "name": "Xã Duy Nghĩa",
+    "type": "xã",
+    "lat": 15.8393,
+    "lng": 108.3672,
+    "formerly": "Duy Thành, Duy Nghĩa, Duy Hải (Duy Xuyên, Quảng Nam)",
+    "formerDistricts": [
+     "Duy Xuyên"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20641",
+    "name": "Xã Quế Sơn",
+    "type": "xã",
+    "lat": 15.6614,
+    "lng": 108.1895,
+    "formerly": "TT Đông Phú, Quế Long, Quế Phong, Quế An, Quế Minh (Quế Sơn, Quảng Nam)",
+    "formerDistricts": [
+     "Quế Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20650",
+    "name": "Xã Xuân Phú",
+    "type": "xã",
+    "lat": 15.7904,
+    "lng": 108.3022,
+    "formerly": "Quế Xuân 1, Quế Xuân 2, Quế Phú, TT Hương An (Quế Sơn, Quảng Nam)",
+    "formerDistricts": [
+     "Quế Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20656",
+    "name": "Xã Nông Sơn",
+    "type": "xã",
+    "lat": 15.7077,
+    "lng": 108.0922,
+    "formerly": "TT Trung Phước, Quế Lộc (Quế Sơn, Quảng Nam)",
+    "formerDistricts": [
+     "Quế Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20662",
+    "name": "Xã Quế Sơn Trung",
+    "type": "xã",
+    "lat": 15.721,
+    "lng": 108.2611,
+    "formerly": "Quế Hiệp, Quế Thuận, Quế Mỹ, Quế Châu (Quế Sơn, Quảng Nam)",
+    "formerDistricts": [
+     "Quế Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20669",
+    "name": "Xã Quế Phước",
+    "type": "xã",
+    "lat": 15.6484,
+    "lng": 107.9549,
+    "formerly": "Ninh Phước, Phước Ninh, Quế Lâm (Quế Sơn, Quảng Nam)",
+    "formerDistricts": [
+     "Quế Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20695",
+    "name": "Xã Thạnh Mỹ",
+    "type": "xã",
+    "lat": 15.7589,
+    "lng": 107.7834,
+    "formerly": "TT Thạnh Mỹ (Nam Giang, Quảng Nam)",
+    "formerDistricts": [
+     "Nam Giang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20698",
+    "name": "Xã La Êê",
+    "type": "xã",
+    "lat": 15.6682,
+    "lng": 107.3509,
+    "formerly": "Laêê, Chơ Chun (Nam Giang, Quảng Nam)",
+    "formerDistricts": [
+     "Nam Giang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20704",
+    "name": "Xã La Dêê",
+    "type": "xã",
+    "lat": 15.5543,
+    "lng": 107.4458,
+    "formerly": "La Dêê, Đắc Tôi (Nam Giang, Quảng Nam)",
+    "formerDistricts": [
+     "Nam Giang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20707",
+    "name": "Xã Nam Giang",
+    "type": "xã",
+    "lat": 15.6769,
+    "lng": 107.5033,
+    "formerly": "Zuôich, Chà Vàl (Nam Giang, Quảng Nam)",
+    "formerDistricts": [
+     "Nam Giang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20710",
+    "name": "Xã Bến Giằng",
+    "type": "xã",
+    "lat": 15.664,
+    "lng": 107.7098,
+    "formerly": "Tà Pơơ, Tà Bhinh, Cà Dy (Nam Giang, Quảng Nam)",
+    "formerDistricts": [
+     "Nam Giang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20716",
+    "name": "Xã Đắc Pring",
+    "type": "xã",
+    "lat": 15.5054,
+    "lng": 107.6018,
+    "formerly": "Đắc Pre, Đắc Pring (Nam Giang, Quảng Nam)",
+    "formerDistricts": [
+     "Nam Giang"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20722",
+    "name": "Xã Khâm Đức",
+    "type": "xã",
+    "lat": 15.5124,
+    "lng": 107.7766,
+    "formerly": "TT Khâm Đức, Phước Xuân (Phước Sơn, Quảng Nam)",
+    "formerDistricts": [
+     "Phước Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20728",
+    "name": "Xã Phước Hiệp",
+    "type": "xã",
+    "lat": 15.4671,
+    "lng": 107.9205,
+    "formerly": "Phước Hiệp, Phước Hòa (Phước Sơn, Quảng Nam)",
+    "formerDistricts": [
+     "Phước Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20734",
+    "name": "Xã Phước Năng",
+    "type": "xã",
+    "lat": 15.3793,
+    "lng": 107.7318,
+    "formerly": "Phước Đức, Phước Năng, Phước Mỹ (Phước Sơn, Quảng Nam)",
+    "formerDistricts": [
+     "Phước Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20740",
+    "name": "Xã Phước Chánh",
+    "type": "xã",
+    "lat": 15.3235,
+    "lng": 107.802,
+    "formerly": "Phước Chánh, Phước Công (Phước Sơn, Quảng Nam)",
+    "formerDistricts": [
+     "Phước Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20752",
+    "name": "Xã Phước Thành",
+    "type": "xã",
+    "lat": 15.302,
+    "lng": 107.8809,
+    "formerly": "Phước Kim, Phước Lộc, Phước Thành (Phước Sơn, Quảng Nam)",
+    "formerDistricts": [
+     "Phước Sơn"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20767",
+    "name": "Xã Việt An",
+    "type": "xã",
+    "lat": 15.5729,
+    "lng": 108.1724,
+    "formerly": "Quế Thọ, Bình Lâm, Thăng Phước, Bình Sơn (Hiệp Đức, Quảng Nam)",
+    "formerDistricts": [
+     "Hiệp Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20770",
+    "name": "Xã Phước Trà",
+    "type": "xã",
+    "lat": 15.4767,
+    "lng": 108.0586,
+    "formerly": "Sông Trà, Phước Trà, Phước Gia (Hiệp Đức, Quảng Nam)",
+    "formerDistricts": [
+     "Hiệp Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20779",
+    "name": "Xã Hiệp Đức",
+    "type": "xã",
+    "lat": 15.5712,
+    "lng": 108.0669,
+    "formerly": "Quế Tân, TT Tân Bình, Quế Lưu (Hiệp Đức, Quảng Nam)",
+    "formerDistricts": [
+     "Hiệp Đức"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20791",
+    "name": "Xã Thăng Bình",
+    "type": "xã",
+    "lat": 15.7226,
+    "lng": 108.3538,
+    "formerly": "TT Hà Lam, Bình Nguyên, Bình Phục, Bình Quý (Thăng Bình, Quảng Nam)",
+    "formerDistricts": [
+     "Thăng Bình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20794",
+    "name": "Xã Thăng An",
+    "type": "xã",
+    "lat": 15.779,
+    "lng": 108.395,
+    "formerly": "Bình Dương, Bình Giang, Bình Triều, Bình Đào, Bình Minh (Thăng Bình, Quảng Nam)",
+    "formerDistricts": [
+     "Thăng Bình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20818",
+    "name": "Xã Đồng Dương",
+    "type": "xã",
+    "lat": 15.6439,
+    "lng": 108.284,
+    "formerly": "Bình Lãnh, Bình Trị, Bình Định (Thăng Bình, Quảng Nam)",
+    "formerDistricts": [
+     "Thăng Bình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20827",
+    "name": "Xã Thăng Phú",
+    "type": "xã",
+    "lat": 15.6325,
+    "lng": 108.3481,
+    "formerly": "Bình Phú, Bình Quế (Thăng Bình, Quảng Nam)",
+    "formerDistricts": [
+     "Thăng Bình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20836",
+    "name": "Xã Thăng Trường",
+    "type": "xã",
+    "lat": 15.6811,
+    "lng": 108.4621,
+    "formerly": "Bình Sa, Bình Hải, Bình Nam (Thăng Bình, Quảng Nam)",
+    "formerDistricts": [
+     "Thăng Bình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20848",
+    "name": "Xã Thăng Điền",
+    "type": "xã",
+    "lat": 15.6675,
+    "lng": 108.4124,
+    "formerly": "Bình Tú, Bình An, Bình Trung (Thăng Bình, Quảng Nam)",
+    "formerDistricts": [
+     "Thăng Bình"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20854",
+    "name": "Xã Tiên Phước",
+    "type": "xã",
+    "lat": 15.5043,
+    "lng": 108.3447,
+    "formerly": "TT Tiên Kỳ, Tiên Mỹ, Tiên Phong, Tiên Thọ (Tiên Phước, Quảng Nam)",
+    "formerDistricts": [
+     "Tiên Phước"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20857",
+    "name": "Xã Sơn Cẩm Hà",
+    "type": "xã",
+    "lat": 15.5412,
+    "lng": 108.2639,
+    "formerly": "Tiên Sơn, Tiên Hà, Tiên Châu (Tiên Phước, Quảng Nam)",
+    "formerDistricts": [
+     "Tiên Phước"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20875",
+    "name": "Xã Lãnh Ngọc",
+    "type": "xã",
+    "lat": 15.4416,
+    "lng": 108.2034,
+    "formerly": "Tiên Lãnh, Tiên Ngọc, Tiên Hiệp (Tiên Phước, Quảng Nam)",
+    "formerDistricts": [
+     "Tiên Phước"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20878",
+    "name": "Xã Thạnh Bình",
+    "type": "xã",
+    "lat": 15.4388,
+    "lng": 108.323,
+    "formerly": "Tiên Cảnh, Tiên An, Tiên Lộc, Tiên Lập (Tiên Phước, Quảng Nam)",
+    "formerDistricts": [
+     "Tiên Phước"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20900",
+    "name": "Xã Trà My",
+    "type": "xã",
+    "lat": 15.3491,
+    "lng": 108.2346,
+    "formerly": "TT Trà My, Trà Sơn, Trà Dương, Trà Giang (Bắc Trà My, Quảng Nam)",
+    "formerDistricts": [
+     "Bắc Trà My"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20908",
+    "name": "Xã Trà Liên",
+    "type": "xã",
+    "lat": 15.3478,
+    "lng": 108.3699,
+    "formerly": "Trà Kót, Trà Nú, Trà Đông (Bắc Trà My, Quảng Nam)",
+    "formerDistricts": [
+     "Bắc Trà My"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20920",
+    "name": "Xã Trà Đốc",
+    "type": "xã",
+    "lat": 15.3532,
+    "lng": 108.0681,
+    "formerly": "Trà Bui, Trà Đốc (Bắc Trà My, Quảng Nam)",
+    "formerDistricts": [
+     "Bắc Trà My"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20923",
+    "name": "Xã Trà Tân",
+    "type": "xã",
+    "lat": 15.2636,
+    "lng": 108.1849,
+    "formerly": "Trà Tân, Trà Giác (Bắc Trà My, Quảng Nam)",
+    "formerDistricts": [
+     "Bắc Trà My"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20929",
+    "name": "Xã Trà Giáp",
+    "type": "xã",
+    "lat": 15.1966,
+    "lng": 108.2577,
+    "formerly": "Trà Giáp, Trà Ka (Bắc Trà My, Quảng Nam)",
+    "formerDistricts": [
+     "Bắc Trà My"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20938",
+    "name": "Xã Trà Leng",
+    "type": "xã",
+    "lat": 15.2399,
+    "lng": 108.0094,
+    "formerly": "Trà Leng, Trà Dơn (Nam Trà My, Quảng Nam)",
+    "formerDistricts": [
+     "Nam Trà My"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20941",
+    "name": "Xã Trà Tập",
+    "type": "xã",
+    "lat": 15.1313,
+    "lng": 108.0597,
+    "formerly": "Trà Tập, Trà Cang (Nam Trà My, Quảng Nam)",
+    "formerDistricts": [
+     "Nam Trà My"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20944",
+    "name": "Xã Nam Trà My",
+    "type": "xã",
+    "lat": 15.1277,
+    "lng": 108.1435,
+    "formerly": "Trà Mai, Trà Don (Nam Trà My, Quảng Nam)",
+    "formerDistricts": [
+     "Nam Trà My"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20950",
+    "name": "Xã Trà Linh",
+    "type": "xã",
+    "lat": 15.0158,
+    "lng": 108.0559,
+    "formerly": "Trà Linh, Trà Nam (Nam Trà My, Quảng Nam)",
+    "formerDistricts": [
+     "Nam Trà My"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20959",
+    "name": "Xã Trà Vân",
+    "type": "xã",
+    "lat": 15.0889,
+    "lng": 108.2098,
+    "formerly": "Trà Vân, Trà Vinh (Nam Trà My, Quảng Nam)",
+    "formerDistricts": [
+     "Nam Trà My"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20965",
+    "name": "Xã Núi Thành",
+    "type": "xã",
+    "lat": 15.4271,
+    "lng": 108.658,
+    "formerly": "TT Núi Thành, Tam Hiệp, Tam Giang, Tam Quang, Tam Nghĩa (Núi Thành, Quảng Nam)",
+    "formerDistricts": [
+     "Núi Thành"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20971",
+    "name": "Xã Tam Xuân",
+    "type": "xã",
+    "lat": 15.5348,
+    "lng": 108.538,
+    "formerly": "Tam Xuân I, Tam Xuân II, Tam Tiến (Núi Thành, Quảng Nam)",
+    "formerDistricts": [
+     "Núi Thành"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20977",
+    "name": "Xã Đức Phú",
+    "type": "xã",
+    "lat": 15.4397,
+    "lng": 108.5037,
+    "formerly": "Tam Sơn, Tam Thạnh (Núi Thành, Quảng Nam)",
+    "formerDistricts": [
+     "Núi Thành"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20984",
+    "name": "Xã Tam Anh",
+    "type": "xã",
+    "lat": 15.4907,
+    "lng": 108.5805,
+    "formerly": "Tam Anh Bắc, Tam Anh Nam, Tam Hòa (Núi Thành, Quảng Nam)",
+    "formerDistricts": [
+     "Núi Thành"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "20992",
+    "name": "Xã Tam Hải",
+    "type": "xã",
+    "lat": 15.4885,
+    "lng": 108.6572,
+    "formerly": "Tam Hải (Núi Thành, Quảng Nam)",
+    "formerDistricts": [
+     "Núi Thành"
+    ],
+    "approx": false,
+    "serviceable": true
+   },
+   {
+    "code": "21004",
+    "name": "Xã Tam Mỹ",
+    "type": "xã",
+    "lat": 15.3693,
+    "lng": 108.547,
+    "formerly": "Tam Mỹ Tây, Tam Mỹ Đông, Tam Trà (Núi Thành, Quảng Nam)",
+    "formerDistricts": [
+     "Núi Thành"
+    ],
+    "approx": false,
+    "serviceable": true
+   }
+  ]
+ },
+ "pendingChanges": [
+  {
+   "province": "TP.HCM",
+   "status": "HĐND TP.HCM tán thành ngày 27/8/2026; chờ Bộ Nội vụ thẩm định, Chính phủ trình, UBTVQH quyết định. Chưa có hiệu lực tại 2026-10-15.",
+   "effect": "Đổi loại xã -> phường, giữ nguyên địa giới, tên, mã (dự kiến 142 phường, 25 xã, 1 đặc khu).",
+   "units": [
+    {
+     "code": "27508",
+     "current": "Xã An Nhơn Tây",
+     "proposed": "Phường An Nhơn Tây"
+    },
+    {
+     "code": "27592",
+     "current": "Xã Bà Điểm",
+     "proposed": "Phường Bà Điểm"
+    },
+    {
+     "code": "27637",
+     "current": "Xã Bình Chánh",
+     "proposed": "Phường Bình Chánh"
+    },
+    {
+     "code": "27619",
+     "current": "Xã Bình Hưng",
+     "proposed": "Phường Bình Hưng"
+    },
+    {
+     "code": "27610",
+     "current": "Xã Bình Lợi",
+     "proposed": "Phường Bình Lợi"
+    },
+    {
+     "code": "27544",
+     "current": "Xã Bình Mỹ",
+     "proposed": "Phường Bình Mỹ"
+    },
+    {
+     "code": "27664",
+     "current": "Xã Cần Giờ",
+     "proposed": "Phường Cần Giờ"
+    },
+    {
+     "code": "27553",
+     "current": "Xã Củ Chi",
+     "proposed": "Phường Củ Chi"
+    },
+    {
+     "code": "27568",
+     "current": "Xã Đông Thạnh",
+     "proposed": "Phường Đông Thạnh"
+    },
+    {
+     "code": "27658",
+     "current": "Xã Hiệp Phước",
+     "proposed": "Phường Hiệp Phước"
+    },
+    {
+     "code": "27559",
+     "current": "Xã Hóc Môn",
+     "proposed": "Phường Hóc Môn"
+    },
+    {
+     "code": "27628",
+     "current": "Xã Hưng Long",
+     "proposed": "Phường Hưng Long"
+    },
+    {
+     "code": "27655",
+     "current": "Xã Nhà Bè",
+     "proposed": "Phường Nhà Bè"
+    },
+    {
+     "code": "27541",
+     "current": "Xã Phú Hòa Đông",
+     "proposed": "Phường Phú Hòa Đông"
+    },
+    {
+     "code": "27496",
+     "current": "Xã Tân An Hội",
+     "proposed": "Phường Tân An Hội"
+    },
+    {
+     "code": "27595",
+     "current": "Xã Tân Nhựt",
+     "proposed": "Phường Tân Nhựt"
+    },
+    {
+     "code": "27604",
+     "current": "Xã Tân Vĩnh Lộc",
+     "proposed": "Phường Tân Vĩnh Lộc"
+    },
+    {
+     "code": "27526",
+     "current": "Xã Thái Mỹ",
+     "proposed": "Phường Thái Mỹ"
+    },
+    {
+     "code": "27601",
+     "current": "Xã Vĩnh Lộc",
+     "proposed": "Phường Vĩnh Lộc"
+    },
+    {
+     "code": "27577",
+     "current": "Xã Xuân Thới Sơn",
+     "proposed": "Phường Xuân Thới Sơn"
+    },
+    {
+     "code": "25822",
+     "current": "Xã Bàu Bàng",
+     "proposed": "Phường Bàu Bàng"
+    },
+    {
+     "code": "25906",
+     "current": "Xã Bắc Tân Uyên",
+     "proposed": "Phường Bắc Tân Uyên"
+    },
+    {
+     "code": "26728",
+     "current": "Xã Châu Pha",
+     "proposed": "Phường Châu Pha"
+    },
+    {
+     "code": "26680",
+     "current": "Xã Đất Đỏ",
+     "proposed": "Phường Đất Đỏ"
+    },
+    {
+     "code": "26620",
+     "current": "Xã Hồ Tràm",
+     "proposed": "Phường Hồ Tràm"
+    },
+    {
+     "code": "26659",
+     "current": "Xã Long Điền",
+     "proposed": "Phường Long Điền"
+    },
+    {
+     "code": "26662",
+     "current": "Xã Long Hải",
+     "proposed": "Phường Long Hải"
+    },
+    {
+     "code": "26545",
+     "current": "Xã Long Sơn",
+     "proposed": "Phường Long Sơn"
+    },
+    {
+     "code": "26575",
+     "current": "Xã Ngãi Giao",
+     "proposed": "Phường Ngãi Giao"
+    }
+   ]
+  },
+  {
+   "province": "Đà Nẵng",
+   "status": "HĐND TP Đà Nẵng tán thành ngày 29/6/2026; Bộ Nội vụ yêu cầu hoàn thiện hồ sơ (3/10/2026). Chưa có hiệu lực tại 2026-10-15.",
+   "effect": "Đổi loại xã -> phường, giữ nguyên địa giới và tên.",
+   "units": [
+    {
+     "code": "20320",
+     "current": "Xã Hòa Vang",
+     "proposed": "Phường Hòa Vang"
+    },
+    {
+     "code": "20332",
+     "current": "Xã Hòa Tiến",
+     "proposed": "Phường Hòa Tiến"
+    },
+    {
+     "code": "20308",
+     "current": "Xã Bà Nà",
+     "proposed": "Phường Bà Nà"
+    },
+    {
+     "code": "20500",
+     "current": "Xã Đại Lộc",
+     "proposed": "Phường Đại Lộc"
+    },
+    {
+     "code": "20569",
+     "current": "Xã Điện Bàn Tây",
+     "proposed": "Phường Điện Bàn Tây"
+    },
+    {
+     "code": "20364",
+     "current": "Xã Chiên Đàn",
+     "proposed": "Phường Chiên Đàn"
+    },
+    {
+     "code": "20965",
+     "current": "Xã Núi Thành",
+     "proposed": "Phường Núi Thành"
+    },
+    {
+     "code": "20984",
+     "current": "Xã Tam Anh",
+     "proposed": "Phường Tam Anh"
+    },
+    {
+     "code": "20599",
+     "current": "Xã Nam Phước",
+     "proposed": "Phường Nam Phước"
+    },
+    {
+     "code": "20791",
+     "current": "Xã Thăng Bình",
+     "proposed": "Phường Thăng Bình"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  "Danh sách, tên và mã khớp hoàn toàn giữa: NQ 1656/1685/1659/NQ-UBTVQH15 (16/6/2025), Công văn 1027/CTK-CSCL (25/6/2025) của Cục Thống kê, provinces.open-api.vn v2, OpenStreetMap, open-admin-data, tinhthanhvn.",
+  "Không có nghị quyết nào sau 1/7/2025 thay đổi danh sách cấp xã của 3 thành phố này tính đến 2026-10-15; xem pendingChanges cho các đề án xã->phường đang chờ.",
+  "lat/lng = trọng tâm (area-weighted centroid) của ranh giới chính thức sapnhap.bando.com.vn (bản lấy 13/3/2026); nếu trọng tâm rơi ngoài ranh giới (ward lõm) thì dùng điểm bên trong ranh giới.",
+  "formerly: đơn vị cũ (trước 1/7/2025) theo quận/huyện cũ; 'một phần' = đơn vị cũ bị chia cho nhiều đơn vị mới. Lấy từ provinces.open-api.vn và đối chiếu với văn bản nghị quyết."
+ ]
+}

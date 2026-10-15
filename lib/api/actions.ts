@@ -16,6 +16,7 @@ import type {
   WorkEventKind,
   WorkKind,
 } from "@/lib/types"
+import { districtPoint, isLatLng } from "@/lib/geo"
 import type { PartnerSetup } from "@/lib/partner"
 import { localTime } from "@/lib/utils"
 import { GENERIC, messageFor } from "./errors"
@@ -427,18 +428,19 @@ export async function saveAddress(input: {
   }
 
   // Travel distance is computed from coordinates, so an address without them
-  // cannot be priced. Until there is a map to drop a pin on, fall back to the
-  // district centre -- which is why the UI calls the distance an estimate.
+  // cannot be priced. Without the browser's position the ward's centre stands
+  // in -- which is why the UI calls the distance an estimate.
   let { lat, lng } = input
-  if (lat == null || lng == null) {
+  if (lat == null || lng == null || !isLatLng([lat, lng])) {
     const { data: centre } = await supabase
       .from("districts")
       .select("lat, lng")
       .eq("city", input.city)
       .eq("district", input.district)
       .maybeSingle()
-    lat = centre?.lat ?? null
-    lng = centre?.lng ?? null
+    const fallback = districtPoint(input.city, input.district)
+    lat = centre?.lat ?? fallback?.[0] ?? null
+    lng = centre?.lng ?? fallback?.[1] ?? null
   }
 
   const row = {

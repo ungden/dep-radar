@@ -387,7 +387,7 @@ function WhereFrom({
     return (
       <div className="mt-1 text-label leading-snug text-muted">
         <p>
-          Tính từ địa chỉ đã lưu ({address.district}, {address.city}), theo quận.
+          Tính từ địa chỉ đã lưu ({address.district}, {address.city}), theo phường/xã.
         </p>
         <div className="flex flex-wrap items-center gap-x-4">{locate}</div>
         {problem && <p className="text-warning">{problem}</p>}

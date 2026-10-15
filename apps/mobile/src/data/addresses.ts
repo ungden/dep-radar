@@ -15,6 +15,9 @@ export interface AddressInput {
   detail: string
   note?: string
   isDefault?: boolean
+  /** The phone's position when the person used it; otherwise the ward's centre stands in. */
+  lat?: number
+  lng?: number
 }
 
 /** The id of the address saved last, so the booking flow can pick it when the editor closes. */
@@ -28,7 +31,7 @@ export const takeLastSavedAddress = () => {
 export async function saveAddress(uid: string | null, input: AddressInput): Promise<Result<string>> {
   if (!uid) return { ok: false, error: "Cần đăng nhập." }
   const detail = input.detail.trim()
-  if (!input.city || !input.district) return { ok: false, error: "Chọn thành phố và quận." }
+  if (!input.city || !input.district) return { ok: false, error: "Chọn thành phố và phường / xã." }
   if (detail.length < 3) return { ok: false, error: "Nhập số nhà, tên đường." }
 
   if (input.isDefault) {
@@ -36,12 +39,16 @@ export async function saveAddress(uid: string | null, input: AddressInput): Prom
     if (error) return { ok: false, error: messageFor(error, "Không lưu được địa chỉ.") }
   }
 
-  // Travel distance is priced from coordinates; without a map pin the district
-  // centre stands in, which is why the app calls the distance an estimate.
-  const { data: centre } = await supabase.from("districts").select("lat, lng").eq("city", input.city).eq("district", input.district).maybeSingle()
-  const fallback = DISTRICT_COORDS[input.city]?.[input.district]
-  const lat = (centre as { lat?: number } | null)?.lat ?? fallback?.[0] ?? null
-  const lng = (centre as { lng?: number } | null)?.lng ?? fallback?.[1] ?? null
+  // Travel distance is priced from coordinates; without the phone's position
+  // the ward's centre stands in, which is why the app calls the distance an estimate.
+  let lat: number | null = input.lat ?? null
+  let lng: number | null = input.lng ?? null
+  if (lat == null || lng == null) {
+    const { data: centre } = await supabase.from("districts").select("lat, lng").eq("city", input.city).eq("district", input.district).maybeSingle()
+    const fallback = DISTRICT_COORDS[input.city]?.[input.district]
+    lat = (centre as { lat?: number } | null)?.lat ?? fallback?.[0] ?? null
+    lng = (centre as { lng?: number } | null)?.lng ?? fallback?.[1] ?? null
+  }
 
   const row = {
     account_id: uid,

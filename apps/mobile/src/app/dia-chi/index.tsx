@@ -1,6 +1,7 @@
 import * as React from "react"
 import { router } from "expo-router"
 import { ActionSheetIOS, Alert, Platform, ScrollView, View } from "react-native"
+import { isLegacyDistrict } from "@/shared"
 import { deleteAddress, setDefaultAddress } from "@/data/addresses"
 import type { Address } from "@/data/me"
 import { SignInGate } from "@/components/sign-in-gate"
@@ -114,11 +115,16 @@ export default function Addresses() {
                   {a.note}
                 </Txt>
               ) : null}
+              {isLegacyDistrict(a.city, a.district) ? (
+                <Txt v="meta" color={colors.accent}>
+                  Ghi theo quận cũ. Chạm để chọn phường / xã mới (địa chỉ từ 1/7/2025).
+                </Txt>
+              ) : null}
             </Press>
           ))}
           <Button label="Thêm địa chỉ" icon="plus" full onPress={() => router.push("/dia-chi/sua")} />
           <Txt v="meta" color={colors.muted}>
-            Khoảng cách tới người làm được ước tính từ địa chỉ mặc định, theo quận.
+            Khoảng cách tới người làm tính từ địa chỉ mặc định: từ đúng chỗ bạn ghim, hoặc ước tính theo phường / xã.
           </Txt>
         </>
       ) : (

@@ -6,6 +6,7 @@ import { AddressPicker } from "@/components/address-picker"
 import { RequireSession } from "@/components/require-session"
 import { Card, EmptyState, PageHeader } from "@/components/ui"
 import { actions, useAct } from "@/lib/client-actions"
+import { isLegacyDistrict } from "@/lib/geo"
 import { useApp } from "@/lib/store"
 
 export default function AddressesPage() {
@@ -20,7 +21,7 @@ export default function AddressesPage() {
 }
 
 function Addresses() {
-  const { addresses } = useApp()
+  const { addresses, city } = useApp()
   const act = useAct()
   const [error, setError] = React.useState<string | null>(null)
 
@@ -51,6 +52,11 @@ function Addresses() {
               {[address.detail, address.district, address.city].filter(Boolean).join(", ")}
             </p>
             {address.note && <p className="mt-0.5 text-label text-muted">{address.note}</p>}
+            {isLegacyDistrict(address.city, address.district) && (
+              <p className="mt-1 text-label text-accent">
+                Ghi theo quận cũ. Từ 1/7/2025 địa chỉ ghi theo phường/xã: thêm lại địa chỉ này bên dưới để tính khoảng cách đúng hơn.
+              </p>
+            )}
           </div>
           <button
             type="button"
@@ -74,7 +80,7 @@ function Addresses() {
 
       <div>
         <h2 className="mb-2 font-semibold">Thêm địa chỉ</h2>
-        <AddressPicker value={null} onChange={() => {}} city="Hà Nội" district="Đống Đa" />
+        <AddressPicker value={null} onChange={() => {}} city={addresses[0]?.city ?? city ?? "Hà Nội"} />
       </div>
     </div>
   )

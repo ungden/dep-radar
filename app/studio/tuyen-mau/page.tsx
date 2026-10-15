@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { Check, MessageCircle, X } from "lucide-react"
+import { WardSelect } from "@/components/ward-select"
 import { compensationLabel } from "@/components/casting"
 import { RequireSession } from "@/components/require-session"
 import { Avatar, Button, Field, PageHeader, inputClass } from "@/components/ui"
@@ -74,7 +75,8 @@ function CastingForm({ onDone }: { onDone: () => void }) {
   const [description, setDescription] = React.useState("")
   const [date, setDate] = React.useState(addDays(todayISO(), 3))
   const [time, setTime] = React.useState("10:00")
-  const [district, setDistrict] = React.useState(pro.district)
+  // A quận saved before the 2025 reform is not offered; they pick today's ward.
+  const [district, setDistrict] = React.useState(districtsOf(pro.city).includes(pro.district) ? pro.district : "")
   const [slots, setSlots] = React.useState(1)
   const [compensation, setCompensation] = React.useState<CastingCompensation>("free")
   const [discount, setDiscount] = React.useState(50)
@@ -149,13 +151,7 @@ function CastingForm({ onDone }: { onDone: () => void }) {
         </Field>
       </div>
 
-      <Field label={`Khu vực (${pro.city})`}>
-        <select value={district} onChange={(e) => setDistrict(e.target.value)} className={inputClass}>
-          {districtsOf(pro.city).map((d) => (
-            <option key={d}>{d}</option>
-          ))}
-        </select>
-      </Field>
+      <WardSelect label={`Phường/xã buổi chụp (${pro.city})`} city={pro.city} value={district} onChange={(choice) => setDistrict(choice.district)} />
 
       <fieldset>
         <legend className="mb-2 text-meta font-semibold">Mẫu được gì</legend>
@@ -219,7 +215,7 @@ function CastingForm({ onDone }: { onDone: () => void }) {
         </p>
       )}
       <div className="flex gap-2">
-        <Button type="submit" disabled={busy || title.trim().length < 8}>
+        <Button type="submit" disabled={busy || title.trim().length < 8 || !district}>
           Đăng tin
         </Button>
         <Button type="button" variant="ghost" onClick={onDone}>

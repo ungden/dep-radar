@@ -4,6 +4,7 @@ import * as React from "react"
 import { MapPin, Plus } from "lucide-react"
 import { Button, Field, inputClass } from "@/components/ui"
 import { actions } from "@/lib/client-actions"
+import { WardSelect } from "@/components/ward-select"
 import { CITIES, districtsOf } from "@/lib/geo"
 import { useApp, useRefresh } from "@/lib/store"
 import type { AddressItem } from "@/lib/api/types"
@@ -28,7 +29,8 @@ export function AddressPicker({
   onChange: (id: string | null) => void
   /** Where the freelancer is based, used as the starting point of a new address. */
   city: string
-  district: string
+  /** A ward to start on; ignored unless it is one of today's (an old quận is not offered). */
+  district?: string
 }) {
   const { addresses } = useApp()
   const refresh = useRefresh()
@@ -96,20 +98,22 @@ function NewAddressForm({
   onCancel,
 }: {
   city: string
-  district: string
+  district?: string
   onSaved: (id: string) => void
   onCancel?: () => void
 }) {
   // Empty with "Nhà" as the hint: a prefilled value got typed onto ("NhàNhà riêng").
   const [label, setLabel] = React.useState("")
   const [city, setCity] = React.useState(initialCity)
-  const [district, setDistrict] = React.useState(initialDistrict)
+  const [district, setDistrict] = React.useState(initialDistrict && districtsOf(initialCity).includes(initialDistrict) ? initialDistrict : "")
+  // The browser's position when they used it: travel is measured from the door, not the ward's centre.
+  const [point, setPoint] = React.useState<{ lat: number; lng: number } | null>(null)
   const [detail, setDetail] = React.useState("")
   const [note, setNote] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
 
-  const valid = detail.trim().length >= 3
+  const valid = detail.trim().length >= 3 && districtsOf(city).includes(district)
 
   return (
     <div className="mt-2 rounded-xl border border-line bg-surface p-3">
@@ -123,7 +127,8 @@ function NewAddressForm({
             value={city}
             onChange={(e) => {
               setCity(e.target.value)
-              setDistrict(districtsOf(e.target.value)[0])
+              if (!districtsOf(e.target.value).includes(district)) setDistrict("")
+              setPoint(null)
             }}
           >
             {CITIES.map((c) => (
@@ -132,15 +137,18 @@ function NewAddressForm({
           </select>
         </Field>
       </div>
-      <div className="mt-2">
-        <Field label="Quận/huyện">
-          <select className={cn(inputClass, "text-body")} value={district} onChange={(e) => setDistrict(e.target.value)}>
-            {districtsOf(city).map((d) => (
-              <option key={d}>{d}</option>
-            ))}
-          </select>
-        </Field>
-      </div>
+      <WardSelect
+        className="mt-2"
+        city={city}
+        value={district}
+        locate
+        onChange={(choice) => {
+          setCity(choice.city)
+          setDistrict(choice.district)
+          setPoint(choice.point ?? null)
+        }}
+      />
+      {point && <p className="mt-1 text-label text-ink-soft">Đã ghim vị trí hiện tại của bạn: khoảng cách tính từ đúng chỗ này.</p>}
       <div className="mt-2">
         <Field label="Số nhà, đường">
           <input
@@ -174,6 +182,8 @@ function NewAddressForm({
               district,
               detail: detail.trim(),
               note: note.trim(),
+              lat: point?.lat,
+              lng: point?.lng,
               isDefault: true,
             })
             setBusy(false)

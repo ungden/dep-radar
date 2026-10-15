@@ -7,6 +7,7 @@ import { CATEGORIES, CITIES, districtsOf, getTemplate, templatesByCategory, tier
 import { rpc, supabase } from "@/data/supabase"
 import { useApp } from "@/state/app"
 import { colors, gutter, radius, fonts } from "@/theme"
+import { WardPicker } from "@/components/ward-picker"
 import { TimeField } from "@/components/time-field"
 import { Button } from "@/ui/button"
 import { Txt } from "@/ui/text"
@@ -24,7 +25,7 @@ export default function PartnerProfile() {
   const [bio, setBio] = React.useState("")
   const [categories, setCategories] = React.useState<CategoryId[]>([])
   const [city, setCity] = React.useState(CITIES[0])
-  const [district, setDistrict] = React.useState(districtsOf(CITIES[0])[0])
+  const [district, setDistrict] = React.useState("")
   const [home, setHome] = React.useState(false)
   const [studio, setStudio] = React.useState("")
   const [radiusKm, setRadiusKm] = React.useState("10")
@@ -80,9 +81,9 @@ export default function PartnerProfile() {
       <Txt color={colors.inkSoft}>Chọn đúng các nghề bạn cung cấp. Bỏ nghề sẽ tạm ẩn dịch vụ thuộc nghề đó.</Txt>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{CATEGORIES.map((c) => <Choice key={c.id} label={c.label + (c.vertical === "model" ? " · sắp mở" : "")} disabled={busy || c.vertical === "model"} active={categories.includes(c.id)} onPress={() => setCategories((s) => s.includes(c.id) ? s.filter((x) => x !== c.id) : [...s, c.id])} />)}</View>
       <Field label="Dòng giới thiệu" value={title} onChange={setTitle} />
-      <Txt w={700}>Thành phố</Txt><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{CITIES.map((c) => <Choice key={c} label={c} active={city === c} onPress={() => { setCity(c); setDistrict(districtsOf(c)[0]) }} />)}</View>
-      <Txt w={700}>Quận/huyện</Txt><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{districtsOf(city).map((d) => <Choice key={d} label={d} active={district === d} onPress={() => setDistrict(d)} />)}</View>
-      <Button label="Lưu & chọn dịch vụ" busy={busy} disabled={!categories.length || title.trim().length < 3} onPress={() => void mutate(setup.profile ? "save_partner_profile" : "create_partner", setup.profile ? { p_profile: { categories, city, district, title } } : { p_categories: categories, p_city: city, p_district: district, p_title: title }, 1)} />
+      <Txt w={700}>Thành phố</Txt><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{CITIES.map((c) => <Choice key={c} label={c} active={city === c} onPress={() => { setCity(c); if (!districtsOf(c).includes(district)) setDistrict("") }} />)}</View>
+      <Txt w={700}>Phường / xã nơi bạn làm</Txt><WardPicker city={city} value={district} onChange={(choice) => { setCity(choice.city); setDistrict(choice.district) }} />
+      <Button label="Lưu & chọn dịch vụ" busy={busy} disabled={!categories.length || title.trim().length < 3 || !districtsOf(city).includes(district)} onPress={() => void mutate(setup.profile ? "save_partner_profile" : "create_partner", setup.profile ? { p_profile: { categories, city, district, title } } : { p_categories: categories, p_city: city, p_district: district, p_title: title }, 1)} />
     </>}
     {step === 1 && <>
       <Txt color={colors.inkSoft}>{PRICE_LEVEL_NOTE} Chỉ bật những gói bạn thực hiện được.</Txt>

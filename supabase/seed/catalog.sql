@@ -37,31 +37,803 @@ insert into public.districts (city, district, lat, lng, sort_order) values ('Hà
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
 insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Hà Đông', 20.9714, 105.7788, 9)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
-insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Quận 1', 10.7757, 106.7004, 10)
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã An Khánh', 20.9878, 105.7079, 10)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
-insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Quận 3', 10.7843, 106.6844, 11)
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Ba Đình', 21.0385, 105.8381, 11)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
-insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Quận 7', 10.734, 106.7218, 12)
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Ba Vì', 21.0581, 105.3415, 12)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
-insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Bình Thạnh', 10.8106, 106.7091, 13)
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Bạch Mai', 21.0022, 105.852, 13)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
-insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phú Nhuận', 10.7992, 106.6803, 14)
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Bát Tràng', 20.9691, 105.9119, 14)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
-insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Tân Bình', 10.8015, 106.6525, 15)
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Bất Bạt', 21.1674, 105.3323, 15)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
-insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Gò Vấp', 10.8386, 106.6652, 16)
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Bình Minh', 20.9042, 105.7618, 16)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
-insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Thủ Đức', 10.8497, 106.7717, 17)
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Bồ Đề', 21.0514, 105.8705, 17)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
-insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Hải Châu', 16.0472, 108.2199, 18)
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Cầu Giấy', 21.0309, 105.7881, 18)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
-insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Thanh Khê', 16.0666, 108.1896, 19)
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Chuyên Mỹ', 20.7163, 105.8837, 19)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
-insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Sơn Trà', 16.0864, 108.2437, 20)
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Chương Dương', 20.8354, 105.9008, 20)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
-insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Ngũ Hành Sơn', 16.0006, 108.2533, 21)
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Chương Mỹ', 20.9249, 105.6985, 21)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
-insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Liên Chiểu', 16.0718, 108.15, 22)
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Cổ Đô', 21.2688, 105.3974, 22)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Cửa Nam', 21.0226, 105.8507, 23)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Dân Hòa', 20.8096, 105.7921, 24)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Dương Hòa', 21.0489, 105.6726, 25)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Dương Nội', 20.9752, 105.7486, 26)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Đa Phúc', 21.2505, 105.9006, 27)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Đại Mỗ', 20.9936, 105.7754, 28)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Đại Thanh', 20.9371, 105.8144, 29)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Đại Xuyên', 20.7006, 105.9494, 30)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Đan Phượng', 21.0912, 105.666, 31)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Định Công', 20.9769, 105.8249, 32)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Đoài Phương', 21.0687, 105.4861, 33)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Đông Anh', 21.1101, 105.8716, 34)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Đống Đa', 21.0119, 105.8218, 35)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Đông Ngạc', 21.0751, 105.7759, 36)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Gia Lâm', 21.0028, 105.9487, 37)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Giảng Võ', 21.0276, 105.8143, 38)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Hạ Bằng', 21.0203, 105.5611, 39)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Hà Đông', 20.9735, 105.7782, 40)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Hai Bà Trưng', 21.0136, 105.8519, 41)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Hát Môn', 21.0896, 105.6228, 42)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Hòa Lạc', 21.0122, 105.5131, 43)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Hòa Phú', 20.8286, 105.7168, 44)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Hòa Xá', 20.6674, 105.7903, 45)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Hoài Đức', 21.062, 105.7049, 46)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Hoàn Kiếm', 21.032, 105.8504, 47)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Hoàng Liệt', 20.9615, 105.8317, 48)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Hoàng Mai', 20.9746, 105.8618, 49)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Hồng Hà', 21.0565, 105.8456, 50)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Hồng Sơn', 20.7159, 105.7056, 51)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Hồng Vân', 20.8798, 105.8878, 52)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Hưng Đạo', 20.9674, 105.6703, 53)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Hương Sơn', 20.6192, 105.7629, 54)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Khương Đình', 20.991, 105.8149, 55)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Kiến Hưng', 20.9549, 105.7796, 56)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Kiều Phú', 20.9754, 105.6071, 57)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Kim Anh', 21.2835, 105.7662, 58)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Kim Liên', 21.0057, 105.8324, 59)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Láng', 21.0211, 105.806, 60)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Liên Minh', 21.1279, 105.6459, 61)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Lĩnh Nam', 20.9725, 105.8911, 62)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Long Biên', 21.0198, 105.8962, 63)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Mê Linh', 21.1508, 105.7329, 64)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Minh Châu', 21.2123, 105.4534, 65)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Mỹ Đức', 20.6556, 105.6979, 66)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Nam Phù', 20.9198, 105.8838, 67)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Nghĩa Đô', 21.0451, 105.7944, 68)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Ngọc Hà', 21.0381, 105.8163, 69)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Ngọc Hồi', 20.9123, 105.837, 70)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Nội Bài', 21.2308, 105.7947, 71)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Ô Chợ Dừa', 21.0233, 105.8258, 72)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Ô Diên', 21.1094, 105.7041, 73)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Phú Cát', 20.9461, 105.5606, 74)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Phú Diễn', 21.0489, 105.7658, 75)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Phù Đổng', 21.0741, 105.9451, 76)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Phú Lương', 20.9394, 105.7665, 77)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Phú Nghĩa', 20.9182, 105.6419, 78)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Phú Thượng', 21.086, 105.8019, 79)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Phú Xuyên', 20.7642, 105.9175, 80)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Phúc Lộc', 21.1468, 105.5748, 81)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Phúc Lợi', 21.0423, 105.9186, 82)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Phúc Sơn', 20.7811, 105.6812, 83)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Phúc Thịnh', 21.1623, 105.8154, 84)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Phúc Thọ', 21.1103, 105.5546, 85)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Phượng Dực', 20.7721, 105.8369, 86)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Phương Liệt', 20.9926, 105.8318, 87)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Quảng Bị', 20.8731, 105.7028, 88)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Quang Minh', 21.1926, 105.7513, 89)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Quảng Oai', 21.1746, 105.4276, 90)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Quốc Oai', 21.0116, 105.6497, 91)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Sóc Sơn', 21.2463, 105.8494, 92)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Sơn Đồng', 21.0242, 105.7047, 93)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Sơn Tây', 21.1442, 105.4897, 94)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Suối Hai', 21.124, 105.3775, 95)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Tam Hưng', 20.8758, 105.7985, 96)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Tây Hồ', 21.058, 105.8202, 97)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Tây Mỗ', 21.0009, 105.7472, 98)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Tây Phương', 21.0365, 105.6115, 99)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Tây Tựu', 21.0641, 105.7389, 100)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Thạch Thất', 21.0692, 105.5621, 101)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Thanh Liệt', 20.9702, 105.8061, 102)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Thanh Oai', 20.8467, 105.7666, 103)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Thanh Trì', 20.9388, 105.8594, 104)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Thanh Xuân', 20.9995, 105.8046, 105)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Thiên Lộc', 21.1241, 105.7715, 106)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Thuận An', 21.0299, 105.9865, 107)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Thư Lâm', 21.1648, 105.8879, 108)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Thượng Cát', 21.0866, 105.7497, 109)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Thượng Phúc', 20.8299, 105.8555, 110)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Thường Tín', 20.877, 105.8413, 111)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Tiến Thắng', 21.2106, 105.6904, 112)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Trần Phú', 20.8424, 105.6502, 113)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Trung Giã', 21.3317, 105.8308, 114)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Tùng Thiện', 21.1214, 105.4578, 115)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Từ Liêm', 21.0203, 105.7707, 116)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Tương Mai', 20.9894, 105.8537, 117)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Ứng Hòa', 20.6888, 105.8481, 118)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Ứng Thiên', 20.7741, 105.7586, 119)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Văn Miếu - Quốc Tử Giám', 21.0199, 105.8371, 120)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Vân Đình', 20.7351, 105.7664, 121)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Vật Lại', 21.2171, 105.3911, 122)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Việt Hưng', 21.0648, 105.9039, 123)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Vĩnh Hưng', 20.9906, 105.8827, 124)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Vĩnh Thanh', 21.1077, 105.8178, 125)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Vĩnh Tuy', 20.9981, 105.8673, 126)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Xuân Đỉnh', 21.0644, 105.7951, 127)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Xuân Mai', 20.8728, 105.5933, 128)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Xuân Phương', 21.0296, 105.7451, 129)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Yên Bài', 21.0538, 105.419, 130)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Yên Hòa', 21.0139, 105.7962, 131)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Yên Lãng', 21.1722, 105.6617, 132)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Yên Nghĩa', 20.9392, 105.736, 133)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Phường Yên Sở', 20.9568, 105.8572, 134)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Hà Nội', 'Xã Yên Xuân', 20.978, 105.4701, 135)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Quận 1', 10.7757, 106.7004, 136)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Quận 3', 10.7843, 106.6844, 137)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Quận 7', 10.734, 106.7218, 138)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Bình Thạnh', 10.8106, 106.7091, 139)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phú Nhuận', 10.7992, 106.6803, 140)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Tân Bình', 10.8015, 106.6525, 141)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Gò Vấp', 10.8386, 106.6652, 142)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Thủ Đức', 10.8497, 106.7717, 143)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường An Đông', 10.7548, 106.6716, 144)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường An Hội Đông', 10.8501, 106.6669, 145)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường An Hội Tây', 10.8441, 106.637, 146)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường An Khánh', 10.7869, 106.7302, 147)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường An Lạc', 10.736, 106.6118, 148)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã An Long', 11.3269, 106.6992, 149)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường An Nhơn', 10.8359, 106.6875, 150)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã An Nhơn Tây', 11.1015, 106.4826, 151)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường An Phú', 10.9593, 106.7355, 152)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường An Phú Đông', 10.8625, 106.6931, 153)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã An Thới Đông', 10.5016, 106.8073, 154)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Bà Điểm', 10.8523, 106.5742, 155)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bà Rịa', 10.4925, 107.1816, 156)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bàn Cờ', 10.7709, 106.682, 157)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Bàu Bàng', 11.2876, 106.6226, 158)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Bàu Lâm', 10.7308, 107.4181, 159)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bảy Hiền', 10.7922, 106.6486, 160)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Bắc Tân Uyên', 11.1707, 106.8653, 161)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bến Cát', 11.2087, 106.6282, 162)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bến Thành', 10.7707, 106.6945, 163)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Bình Chánh', 10.6702, 106.5877, 164)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Bình Châu', 10.5913, 107.5323, 165)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Cơ', 11.153, 106.7649, 166)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Dương', 11.0528, 106.6868, 167)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Đông', 10.7131, 106.6313, 168)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Bình Giã', 10.6717, 107.2822, 169)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Hòa', 10.9021, 106.7223, 170)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Bình Hưng', 10.7067, 106.6596, 171)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Hưng Hòa', 10.7963, 106.6055, 172)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Bình Khánh', 10.5964, 106.8564, 173)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Bình Lợi', 10.754, 106.5161, 174)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Lợi Trung', 10.8225, 106.7, 175)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Bình Mỹ', 10.973, 106.6142, 176)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Phú', 10.7388, 106.6288, 177)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Quới', 10.8212, 106.7384, 178)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Tân', 10.7918, 106.5888, 179)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Tây', 10.7507, 106.6451, 180)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Thạnh', 10.8109, 106.7049, 181)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Thới', 10.7626, 106.6422, 182)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Tiên', 10.7425, 106.643, 183)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Trị Đông', 10.7685, 106.6089, 184)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Bình Trưng', 10.7932, 106.7638, 185)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Cát Lái', 10.7634, 106.7726, 186)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Cần Giờ', 10.4524, 106.9075, 187)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Cầu Kiệu', 10.7987, 106.6854, 188)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Cầu Ông Lãnh', 10.7619, 106.6893, 189)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Chánh Hiệp', 11.0147, 106.6405, 190)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Chánh Hưng', 10.7434, 106.677, 191)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Chánh Phú Hòa', 11.1849, 106.6705, 192)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Châu Đức', 10.7336, 107.2078, 193)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Châu Pha', 10.5864, 107.1315, 194)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Chợ Lớn', 10.7532, 106.6591, 195)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Chợ Quán', 10.7574, 106.6807, 196)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Củ Chi', 10.9517, 106.533, 197)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Dầu Tiếng', 11.3428, 106.3933, 198)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Dĩ An', 10.9019, 106.7561, 199)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Diên Hồng', 10.7689, 106.6624, 200)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Đất Đỏ', 10.5203, 107.3035, 201)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Đông Hòa', 10.8935, 106.7993, 202)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Đông Hưng Thuận', 10.8356, 106.622, 203)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Đông Thạnh', 10.9023, 106.6415, 204)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Đức Nhuận', 10.8055, 106.677, 205)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Gia Định', 10.8, 106.6996, 206)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Gò Vấp', 10.8358, 106.6733, 207)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Hạnh Thông', 10.8213, 106.6828, 208)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Hiệp Bình', 10.8441, 106.7233, 209)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Hiệp Phước', 10.6309, 106.7356, 210)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Hòa Bình', 10.7702, 106.6453, 211)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Hòa Hiệp', 10.6993, 107.497, 212)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Hòa Hội', 10.63, 107.4239, 213)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Hòa Hưng', 10.7777, 106.6696, 214)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Hòa Lợi', 11.0823, 106.6499, 215)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Hóc Môn', 10.9016, 106.5914, 216)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Hồ Tràm', 10.5221, 107.3975, 217)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Hưng Long', 10.6594, 106.6446, 218)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Khánh Hội', 10.7592, 106.704, 219)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Kim Long', 10.6804, 107.2142, 220)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Lái Thiêu', 10.9108, 106.6992, 221)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Linh Xuân', 10.8685, 106.775, 222)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Long Bình', 10.8618, 106.8323, 223)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Long Điền', 10.4676, 107.2237, 224)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Long Hải', 10.4107, 107.2225, 225)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Long Hòa', 11.3278, 106.5075, 226)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Long Hương', 10.5, 107.1498, 227)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Long Nguyên', 11.1863, 106.5602, 228)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Long Phước', 10.8068, 106.8501, 229)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Long Sơn', 10.4519, 107.1008, 230)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Long Trường', 10.7934, 106.8123, 231)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Minh Phụng', 10.7576, 106.649, 232)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Minh Thạnh', 11.448, 106.4695, 233)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Ngãi Giao', 10.6208, 107.2132, 234)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Nghĩa Thành', 10.5786, 107.2416, 235)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Nhà Bè', 10.6941, 106.7217, 236)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Nhiêu Lộc', 10.7855, 106.6761, 237)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Nhuận Đức', 11.0321, 106.4986, 238)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Phú An', 11.0473, 106.6, 239)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Phú Định', 10.7263, 106.6324, 240)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Phú Giáo', 11.3085, 106.8605, 241)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Phú Hòa Đông', 10.9848, 106.5732, 242)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Phú Lâm', 10.7529, 106.6304, 243)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Phú Lợi', 10.9893, 106.6795, 244)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Phú Mỹ', 10.6111, 107.0455, 245)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Phú Nhuận', 10.7942, 106.673, 246)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Phú Thạnh', 10.7728, 106.6273, 247)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Phú Thọ', 10.7675, 106.6544, 248)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Phú Thọ Hòa', 10.7892, 106.627, 249)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Phú Thuận', 10.7272, 106.7467, 250)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Phước Hải', 10.4488, 107.2983, 251)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Phước Hòa', 11.2411, 106.773, 252)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Phước Long', 10.8179, 106.775, 253)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Phước Thành', 11.392, 106.7588, 254)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Phước Thắng', 10.4234, 107.1624, 255)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Rạch Dừa', 10.3891, 107.1085, 256)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Sài Gòn', 10.7809, 106.7042, 257)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tam Bình', 10.8723, 106.733, 258)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tam Long', 10.5267, 107.2142, 259)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tam Thắng', 10.3669, 107.0961, 260)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tăng Nhơn Phú', 10.8424, 106.7968, 261)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Tân An Hội', 10.9715, 106.4685, 262)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Bình', 10.8006, 106.6422, 263)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Định', 10.7912, 106.6939, 264)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Đông Hiệp', 10.9426, 106.7696, 265)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Hải', 10.5118, 107.1033, 266)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Hiệp', 11.0567, 106.7473, 267)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Hòa', 10.7809, 106.6547, 268)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Hưng', 10.7372, 106.7047, 269)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Khánh', 11.0024, 106.7452, 270)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Mỹ', 10.7203, 106.7275, 271)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Tân Nhựt', 10.7071, 106.565, 272)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Phú', 10.7765, 106.6381, 273)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Phước', 10.5326, 107.0555, 274)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Sơn', 10.8208, 106.6508, 275)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Sơn Hòa', 10.806, 106.6662, 276)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Sơn Nhất', 10.795, 106.6584, 277)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Sơn Nhì', 10.8009, 106.624, 278)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Tạo', 10.7443, 106.5842, 279)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Thành', 10.6558, 107.1332, 280)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Thới Hiệp', 10.8746, 106.6397, 281)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Thuận', 10.7553, 106.7348, 282)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tân Uyên', 11.0928, 106.8076, 283)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Tân Vĩnh Lộc', 10.7944, 106.5479, 284)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tây Nam', 11.1457, 106.5079, 285)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Tây Thạnh', 10.8127, 106.6221, 286)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Thái Mỹ', 11.022, 106.4201, 287)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Thanh An', 11.2428, 106.4373, 288)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Thạnh An', 10.546, 106.9748, 289)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Thạnh Mỹ Tây', 10.7981, 106.7176, 290)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Thông Tây Hội', 10.8417, 106.6549, 291)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Thới An', 10.8791, 106.6661, 292)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Thới Hòa', 11.1042, 106.6229, 293)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Thủ Dầu Một', 10.9702, 106.6584, 294)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Thủ Đức', 10.8397, 106.7576, 295)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Thuận An', 10.9418, 106.6785, 296)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Thuận Giao', 10.9634, 106.7117, 297)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Thường Tân', 11.0962, 106.9112, 298)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Trung Mỹ Tây', 10.86, 106.6225, 299)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Trừ Văn Thố', 11.3453, 106.5837, 300)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Vĩnh Hội', 10.7553, 106.6964, 301)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Vĩnh Lộc', 10.8292, 106.5505, 302)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Vĩnh Tân', 11.1467, 106.698, 303)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Vũng Tàu', 10.3565, 107.0756, 304)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Vườn Lài', 10.7667, 106.6738, 305)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Xóm Chiếu', 10.76, 106.7119, 306)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Phường Xuân Hòa', 10.7837, 106.6881, 307)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Xuân Sơn', 10.6185, 107.3315, 308)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Xuân Thới Sơn', 10.89, 106.5567, 309)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('TP.HCM', 'Xã Xuyên Mộc', 10.549, 107.466, 310)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Hải Châu', 16.0472, 108.2199, 311)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Thanh Khê', 16.0666, 108.1896, 312)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Sơn Trà', 16.0864, 108.2437, 313)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Ngũ Hành Sơn', 16.0006, 108.2533, 314)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Liên Chiểu', 16.0718, 108.15, 315)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường An Hải', 16.0689, 108.2367, 316)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường An Khê', 16.0367, 108.1795, 317)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường An Thắng', 15.9096, 108.2256, 318)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Avương', 15.9752, 107.5633, 319)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Bà Nà', 16.0369, 108.0464, 320)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Bàn Thạch', 15.6038, 108.4688, 321)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Bến Giằng', 15.664, 107.7098, 322)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Bến Hiên', 15.8408, 107.7161, 323)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Cẩm Lệ', 16.0104, 108.1881, 324)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Chiên Đàn', 15.555, 108.4227, 325)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Duy Nghĩa', 15.8393, 108.3672, 326)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Duy Xuyên', 15.7819, 108.2024, 327)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Đại Lộc', 15.899, 108.1033, 328)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Đắc Pring', 15.5054, 107.6018, 329)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Điện Bàn', 15.8792, 108.2674, 330)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Điện Bàn Bắc', 15.9303, 108.1829, 331)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Điện Bàn Đông', 15.9303, 108.2743, 332)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Điện Bàn Tây', 15.8864, 108.1774, 333)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Đồng Dương', 15.6439, 108.284, 334)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Đông Giang', 15.9316, 107.6599, 335)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Đức Phú', 15.4397, 108.5037, 336)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Gò Nổi', 15.8533, 108.2068, 337)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Hà Nha', 15.8633, 107.9914, 338)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Hải Châu', 16.0762, 108.2182, 339)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Hải Vân', 16.1312, 107.9748, 340)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Hiệp Đức', 15.5712, 108.0669, 341)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Hòa Cường', 16.0422, 108.2107, 342)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Hòa Khánh', 16.0527, 108.1295, 343)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Hòa Tiến', 15.9544, 108.1093, 344)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Hòa Vang', 15.9728, 108.0396, 345)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Hòa Xuân', 15.9865, 108.2099, 346)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Hội An', 15.8697, 108.3301, 347)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Hội An Đông', 15.8821, 108.3614, 348)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Hội An Tây', 15.8966, 108.3195, 349)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Hùng Sơn', 15.8034, 107.3133, 350)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Hương Trà', 15.5443, 108.4943, 351)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Khâm Đức', 15.5124, 107.7766, 352)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã La Dêê', 15.5543, 107.4458, 353)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã La Êê', 15.6682, 107.3509, 354)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Lãnh Ngọc', 15.4416, 108.2034, 355)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Liên Chiểu', 16.0875, 108.0942, 356)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Nam Giang', 15.6769, 107.5033, 357)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Nam Phước', 15.845, 108.2962, 358)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Nam Trà My', 15.1277, 108.1435, 359)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Ngũ Hành Sơn', 15.9972, 108.2502, 360)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Nông Sơn', 15.7077, 108.0922, 361)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Núi Thành', 15.4271, 108.658, 362)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Phú Ninh', 15.47, 108.4268, 363)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Phú Thuận', 15.7841, 108.0041, 364)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Phước Chánh', 15.3235, 107.802, 365)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Phước Hiệp', 15.4671, 107.9205, 366)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Phước Năng', 15.3793, 107.7318, 367)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Phước Thành', 15.302, 107.8809, 368)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Phước Trà', 15.4767, 108.0586, 369)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Quảng Phú', 15.5957, 108.5153, 370)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Quế Phước', 15.6484, 107.9549, 371)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Quế Sơn', 15.6614, 108.1895, 372)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Quế Sơn Trung', 15.721, 108.2611, 373)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Sông Kôn', 15.9751, 107.7832, 374)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Sông Vàng', 15.9926, 107.9078, 375)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Sơn Cẩm Hà', 15.5412, 108.2639, 376)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Sơn Trà', 16.1191, 108.2652, 377)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Tam Anh', 15.4907, 108.5805, 378)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Tam Hải', 15.4885, 108.6572, 379)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Tam Kỳ', 15.5581, 108.4787, 380)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Tam Mỹ', 15.3693, 108.547, 381)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Tam Xuân', 15.5348, 108.538, 382)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Tân Hiệp', 15.9474, 108.5173, 383)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Tây Giang', 15.8516, 107.4836, 384)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Tây Hồ', 15.5884, 108.3834, 385)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Thạnh Bình', 15.4388, 108.323, 386)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Phường Thanh Khê', 16.0678, 108.1944, 387)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Thạnh Mỹ', 15.7589, 107.7834, 388)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Thăng An', 15.779, 108.395, 389)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Thăng Bình', 15.7226, 108.3538, 390)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Thăng Điền', 15.6675, 108.4124, 391)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Thăng Phú', 15.6325, 108.3481, 392)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Thăng Trường', 15.6811, 108.4621, 393)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Thu Bồn', 15.7926, 108.1125, 394)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Thượng Đức', 15.8463, 107.8904, 395)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Tiên Phước', 15.5043, 108.3447, 396)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Trà Đốc', 15.3532, 108.0681, 397)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Trà Giáp', 15.1966, 108.2577, 398)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Trà Leng', 15.2399, 108.0094, 399)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Trà Liên', 15.3478, 108.3699, 400)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Trà Linh', 15.0158, 108.0559, 401)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Trà My', 15.3491, 108.2346, 402)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Trà Tân', 15.2636, 108.1849, 403)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Trà Tập', 15.1313, 108.0597, 404)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Trà Vân', 15.0889, 108.2098, 405)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Việt An', 15.5729, 108.1724, 406)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Vu Gia', 15.8522, 108.069, 407)
+  on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
+insert into public.districts (city, district, lat, lng, sort_order) values ('Đà Nẵng', 'Xã Xuân Phú', 15.7904, 108.3022, 408)
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
 
 -- Service catalogue ---------------------------------------------------------
