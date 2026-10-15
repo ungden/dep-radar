@@ -1,6 +1,20 @@
 import { readFile } from "node:fs/promises"
 import { join } from "node:path"
-import { BRAND_DARK, BRAND_GOLD, LOGO_EYE_PATH, LOGO_EYE_STROKE, LOGO_RADIUS, WORDMARK_BOX, WORDMARK_PATH } from "@/lib/design/brand"
+import {
+  BRAND_CREAM,
+  BRAND_GOLD,
+  BRAND_INK,
+  BRAND_ROSE,
+  BRAND_ROSE_LIGHT,
+  BRAND_SPARKLE,
+  LOGO_BOX,
+  LOGO_FACE_PATH,
+  LOGO_RADIUS,
+  LOGO_SPARKLE_PATH,
+  WORDMARK_BOX,
+  WORDMARK_PATH,
+  logoTransform,
+} from "@/lib/design/brand"
 
 /**
  * Shared pieces of the share images (app/**\/opengraph-image.tsx): what Zalo,
@@ -23,22 +37,33 @@ export async function ogFonts() {
   ]
 }
 
+/** The mark (lib/design/brand.ts), as an <svg> the image renderer draws. */
+export function OgMark({ size = 64 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${LOGO_BOX} ${LOGO_BOX}`}>
+      <defs>
+        <linearGradient id="og-tile" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor={BRAND_ROSE_LIGHT} />
+          <stop offset="1" stopColor={BRAND_ROSE} />
+        </linearGradient>
+      </defs>
+      <rect width={LOGO_BOX} height={LOGO_BOX} rx={LOGO_RADIUS} fill="url(#og-tile)" />
+      <g transform={logoTransform()}>
+        <path d={LOGO_FACE_PATH} fill={BRAND_CREAM} />
+        <path d={LOGO_SPARKLE_PATH} fill={BRAND_SPARKLE} />
+      </g>
+    </svg>
+  )
+}
+
 /** The mark and the name, side by side. */
 export function OgBrand({ size = 64, tone = "dark" }: { size?: number; tone?: "dark" | "gold" }) {
   const h = size * 0.74
   return (
     <div style={{ display: "flex", alignItems: "center", gap: size * 0.28 }}>
-      <svg width={size} height={size} viewBox="0 0 32 32">
-        {tone === "gold" ? (
-          // On the espresso ground the tile needs an edge to read as a tile.
-          <rect x="0.5" y="0.5" width="31" height="31" rx={LOGO_RADIUS - 0.5} fill={BRAND_DARK} stroke={BRAND_GOLD} strokeOpacity={0.4} strokeWidth={1} />
-        ) : (
-          <rect width="32" height="32" rx={LOGO_RADIUS} fill={BRAND_DARK} />
-        )}
-        <path d={LOGO_EYE_PATH} fill="none" stroke={BRAND_GOLD} strokeWidth={LOGO_EYE_STROKE} strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <OgMark size={size} />
       <svg height={h} width={(h * WORDMARK_BOX.width) / WORDMARK_BOX.height} viewBox={`0 0 ${WORDMARK_BOX.width} ${WORDMARK_BOX.height}`}>
-        <path d={WORDMARK_PATH} fill={tone === "gold" ? BRAND_GOLD : BRAND_DARK} />
+        <path d={WORDMARK_PATH} fill={tone === "gold" ? BRAND_GOLD : BRAND_INK} />
       </svg>
     </div>
   )

@@ -3,16 +3,24 @@ import { Image } from "expo-image"
 import { Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native"
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated"
 import { initials, formatRating } from "@/data/format"
-import Svg, { Path, Rect } from "react-native-svg"
+import Svg, { Defs, G, LinearGradient, Path, Rect, Stop } from "react-native-svg"
 import {
-  BRAND_DARK,
+  BRAND_CREAM,
   BRAND_GOLD,
-  LOGO_EYE_PATH,
-  LOGO_EYE_STROKE,
-  LOGO_EYE_STROKE_SMALL,
+  BRAND_INK,
+  BRAND_ROSE,
+  BRAND_ROSE_LIGHT,
+  BRAND_SPARKLE,
+  LOGO_BOLD_BELOW,
+  LOGO_BOX,
+  LOGO_FACE_BOLD_PATH,
+  LOGO_FACE_PATH,
   LOGO_RADIUS,
+  LOGO_SPARKLE_BOLD_PATH,
+  LOGO_SPARKLE_PATH,
   WORDMARK_BOX,
   WORDMARK_PATH,
+  logoTransform,
   showsAverage,
 } from "@/shared"
 import { aspect, colors, radius } from "@/theme"
@@ -184,30 +192,35 @@ export function Divider({ style }: { style?: StyleProp<ViewStyle> }) {
   return <View style={[{ height: 1, backgroundColor: colors.line }, style]} />
 }
 
-/** The 360đẹp mark: a champagne closed eye on espresso. Same outline as the web (lib/design/brand.ts). */
+/** The 360đẹp mark: a woman in profile, in cream on a rose tile. Same outline as the web (lib/design/brand.ts). */
 export function LogoMark({ size = 28 }: { size?: number }) {
+  // useId has characters a url(#…) reference does not take.
+  const id = `logo${React.useId().replace(/[^a-zA-Z0-9]/g, "")}`
+  const bold = size <= LOGO_BOLD_BELOW
   return (
-    <Svg width={size} height={size} viewBox="0 0 32 32">
-      <Rect width={32} height={32} rx={LOGO_RADIUS} fill={BRAND_DARK} />
-      <Path
-        d={LOGO_EYE_PATH}
-        fill="none"
-        stroke={BRAND_GOLD}
-        strokeWidth={size < 24 ? LOGO_EYE_STROKE_SMALL : LOGO_EYE_STROKE}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <Svg width={size} height={size} viewBox={`0 0 ${LOGO_BOX} ${LOGO_BOX}`}>
+      <Defs>
+        <LinearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor={BRAND_ROSE_LIGHT} />
+          <Stop offset="1" stopColor={BRAND_ROSE} />
+        </LinearGradient>
+      </Defs>
+      <Rect width={LOGO_BOX} height={LOGO_BOX} rx={LOGO_RADIUS} fill={`url(#${id})`} />
+      <G transform={logoTransform(bold ? 12 : undefined)}>
+        <Path d={bold ? LOGO_FACE_BOLD_PATH : LOGO_FACE_PATH} fill={BRAND_CREAM} />
+        <Path d={bold ? LOGO_SPARKLE_BOLD_PATH : LOGO_SPARKLE_PATH} fill={BRAND_SPARKLE} />
+      </G>
     </Svg>
   )
 }
 
-/** "360đẹp" in Noto Serif Display, from the same outline as the web header. */
+/** "360đẹp" in Fraunces, from the same outline as the web header. */
 export function Wordmark({ size = 24, tone = "dark" }: { size?: number; tone?: "dark" | "gold" }) {
   const height = size * 0.92
   return (
     <View accessible accessibilityRole="header" accessibilityLabel="360đẹp">
       <Svg height={height} width={(height * WORDMARK_BOX.width) / WORDMARK_BOX.height} viewBox={`0 0 ${WORDMARK_BOX.width} ${WORDMARK_BOX.height}`}>
-        <Path d={WORDMARK_PATH} fill={tone === "gold" ? BRAND_GOLD : BRAND_DARK} />
+        <Path d={WORDMARK_PATH} fill={tone === "gold" ? BRAND_GOLD : BRAND_INK} />
       </Svg>
     </View>
   )
