@@ -197,22 +197,22 @@ export function AdminDesk({
             {tab !== "overview" && <ChevronRight className="hidden size-3.5 text-muted sm:inline" aria-hidden />}
             <span className={cn("truncate font-medium text-ink", tab === "overview" && "sm:hidden")}>{current?.label}</span>
           </nav>
-          <Link href="/" className="hidden h-8 items-center gap-1.5 rounded-md px-2.5 text-meta text-ink-soft hover:bg-subtle hover:text-ink sm:inline-flex">
+          <ShopLink href="/" className="hidden h-8 items-center gap-1.5 rounded-md px-2.5 text-meta text-ink-soft hover:bg-subtle hover:text-ink sm:inline-flex">
             <ExternalLink className="size-4" aria-hidden /> Trang khách
-          </Link>
-          <Link href="/thong-bao" aria-label="Thông báo" className="relative inline-flex size-9 items-center justify-center rounded-md text-ink-soft hover:bg-subtle hover:text-ink">
+          </ShopLink>
+          <ShopLink href="/thong-bao" aria-label="Thông báo" className="relative inline-flex size-9 items-center justify-center rounded-md text-ink-soft hover:bg-subtle hover:text-ink">
             <Bell className="size-[18px]" />
             {app.unreadNotifications > 0 && (
               <span className="absolute right-1 top-1 min-w-4 rounded-full bg-danger px-1 text-center text-[10px] font-semibold leading-4 text-white">
                 {app.unreadNotifications > 9 ? "9+" : app.unreadNotifications}
               </span>
             )}
-          </Link>
+          </ShopLink>
           {app.session && (
-            <Link href="/me" aria-label="Tài khoản" className="ml-1 flex items-center gap-2 rounded-md py-1 pl-1 pr-2 hover:bg-subtle">
+            <ShopLink href="/me" aria-label="Tài khoản" className="ml-1 flex items-center gap-2 rounded-md py-1 pl-1 pr-2 hover:bg-subtle">
               <Avatar name={app.session.name} size={28} />
               <span className="hidden max-w-32 truncate text-meta font-medium lg:inline">{app.session.name}</span>
-            </Link>
+            </ShopLink>
           )}
         </header>
 
@@ -307,6 +307,15 @@ export function AdminDesk({
   )
 }
 
+/**
+ * A way out of the desk into the shop. A full page load, not a client
+ * navigation: the desk's layout carries only the desk snapshot
+ * (loadDeskSnapshot), and the shop needs the whole one.
+ */
+function ShopLink(props: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) {
+  return <a {...props} />
+}
+
 /** One line under each panel's title: what it is for. */
 const DESCRIPTION: Partial<Record<Tab, string>> = {
   overview: "Việc cần người xử lý và tình hình hôm nay.",
@@ -373,9 +382,9 @@ function Sidebar({ groups, tab, onPick, onClose }: { groups: NavGroup[]; tab: Ta
         ))}
       </nav>
       <div className="shrink-0 border-t border-line p-2.5">
-        <Link href="/" className="flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] text-ink-soft hover:bg-subtle hover:text-ink">
+        <ShopLink href="/" className="flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] text-ink-soft hover:bg-subtle hover:text-ink">
           <ArrowLeft className="size-4 text-muted" /> Về trang khách
-        </Link>
+        </ShopLink>
       </div>
     </div>
   )

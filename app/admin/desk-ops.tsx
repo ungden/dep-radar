@@ -2,13 +2,13 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { BadgeCheck, CalendarCheck, CalendarClock, ChevronRight, CircleAlert, CircleCheck, Download, Flag as FlagIcon, KeyRound, Lock, MessageCircleQuestion, Settings, Star, Unlock, UserCheck, UserPlus, Wallet } from "lucide-react"
+import { BadgeCheck, CalendarCheck, CalendarClock, Check, ChevronRight, CircleAlert, CircleCheck, Download, Flag as FlagIcon, KeyRound, MessageCircleQuestion, Settings, Star, UserCheck, UserPlus, Wallet } from "lucide-react"
 import { Badge, Button, Card, EmptyState, Panel, StatusBadge, Table, TableFoot, Td, Th, Tr, inputClass } from "./ui"
 import {
   adminRequests,
   adminReviews,
+  decideProfile,
   setReviewHidden,
-  setSuspended,
   type AdminBooking,
   type AdminCasting,
   type AdminJob,
@@ -19,6 +19,7 @@ import {
 import type { BookingStatus } from "@/lib/types"
 import { cn, formatPrice, localDate, localTime, timeAgo } from "@/lib/utils"
 import { ActButton, FilterChips, Flag, ListSkeleton, PanelError, SearchBox, fold, useShowMore } from "./desk-shared"
+import { ProDrawer, proStatus } from "./desk-pro"
 import type { Go, Tab } from "./tabs"
 
 type Run = (fn: () => Promise<{ ok: true } | { ok: false; error: string }>, done?: string) => Promise<boolean>
@@ -187,23 +188,35 @@ function Quick({ icon: Icon, label, onClick }: { icon: React.ComponentType<{ cla
 
 // Partners ----------------------------------------------------------------------------
 
-type ProFilter = "all" | "hidden" | "suspended" | "owing" | "blocked" | "verified" | "paused"
+type ProFilter = "all" | "live" | "hidden" | "pending" | "suspended" | "owing" | "blocked"
+const PRO_FILTERS: ProFilter[] = ["all", "live", "hidden", "pending", "suspended", "owing", "blocked"]
 
-/** The roster: find anyone, see who is hidden, locked or owes fees; lock with a reason. */
+/**
+ * The roster: one status word per partner, "Duyệt" right on the row for any
+ * profile not yet live, and the whole profile (with every action) a click away.
+ */
 export function ProsPanel({ pros, walletFloor, initialFilter, run }: { pros: AdminPro[]; walletFloor: number; initialFilter?: string; run: Run }) {
   const [filter, setFilter] = React.useState<ProFilter>(isProFilter(initialFilter) ? initialFilter : "all")
   const [query, setQuery] = React.useState("")
-  const [locking, setLocking] = React.useState<string | null>(null)
-  const [reason, setReason] = React.useState("")
+  const [open, setOpen] = React.useState<string | null>(null)
 
   const test: Record<ProFilter, (p: AdminPro) => boolean> = {
     all: () => true,
+    live: (p) => p.published && !p.suspended,
     hidden: (p) => !p.published && !p.suspended,
+    pending: (p) => !p.published && !p.suspended && p.reviewStatus === "pending",
     suspended: (p) => p.suspended,
     owing: (p) => p.wallet < 0,
     blocked: (p) => p.wallet < walletFloor,
-    verified: (p) => p.identity === "verified",
-    paused: (p) => !p.acceptingJobs,
+  }
+  const LABEL: Record<ProFilter, string> = {
+    all: "Tất cả",
+    live: "Đang hiện",
+    hidden: "Chưa hiện",
+    pending: "Chờ duyệt",
+    suspended: "Tạm khoá",
+    owing: "Nợ phí",
+    blocked: "Chặn vì nợ",
   }
   const q = fold(query.trim())
   const rows = pros
@@ -211,25 +224,18 @@ export function ProsPanel({ pros, walletFloor, initialFilter, run }: { pros: Adm
     .filter((p) => !q || fold(`${p.name} ${p.slug} ${p.payCode ?? ""} ${p.district} ${p.city}`).includes(q))
   const sorted = filter === "owing" || filter === "blocked" ? [...rows].sort((a, b) => a.wallet - b.wallet) : rows
   const { shown, more } = useShowMore(sorted)
-  const count = (f: ProFilter) => pros.filter(test[f]).length
 
   return (
     <div className="space-y-3">
-      <SearchBox value={query} onChange={setQuery} placeholder="Tìm theo tên, slug, mã nạp, quận" />
-      <FilterChips
-        label="Lọc đối tác"
-        value={filter}
-        onChange={setFilter}
-        items={[
-          { value: "all", label: "Tất cả", count: pros.length },
-          { value: "hidden", label: "Chưa công khai", count: count("hidden") },
-          { value: "owing", label: "Nợ phí", count: count("owing") },
-          { value: "blocked", label: "Bị chặn nhận việc", count: count("blocked") },
-          { value: "suspended", label: "Tạm khoá", count: count("suspended") },
-          { value: "paused", label: "Tạm nghỉ", count: count("paused") },
-          { value: "verified", label: "Đã xác minh", count: count("verified") },
-        ]}
-      />
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <SearchBox value={query} onChange={setQuery} placeholder="Tìm theo tên, slug, mã nạp, quận" />
+        <FilterChips
+          label="Lọc đối tác"
+          value={filter}
+          onChange={setFilter}
+          items={PRO_FILTERS.map((f) => ({ value: f, label: LABEL[f], count: pros.filter(test[f]).length }))}
+        />
+      </div>
       {sorted.length === 0 ? (
         <EmptyState title="Không có đối tác nào" text={query ? "Thử tìm bằng tên khác hoặc bỏ bộ lọc." : undefined} />
       ) : (
@@ -237,8 +243,8 @@ export function ProsPanel({ pros, walletFloor, initialFilter, run }: { pros: Adm
           <thead>
             <tr>
               <Th>Đối tác</Th>
-              <Th>Khu vực</Th>
               <Th>Trạng thái</Th>
+              <Th>Khu vực</Th>
               <Th className="text-right">Job</Th>
               <Th className="text-right">Đánh giá</Th>
               <Th className="text-right">Ví</Th>
@@ -248,105 +254,61 @@ export function ProsPanel({ pros, walletFloor, initialFilter, run }: { pros: Adm
             </tr>
           </thead>
           <tbody>
-            {shown.map((pro) => (
-              <React.Fragment key={pro.id}>
-                <Tr className={cn(pro.suspended && "bg-danger-soft/30")}>
+            {shown.map((pro) => {
+              const status = proStatus(pro)
+              return (
+                <Tr key={pro.id} className={cn("cursor-pointer", pro.suspended && "bg-danger-soft/30")} onClick={() => setOpen(pro.id)}>
                   <Td>
-                    <Link href={`/pros/${pro.slug}`} target="_blank" className="font-medium text-ink hover:underline">
+                    <button type="button" className="text-left font-medium text-ink hover:underline" onClick={() => setOpen(pro.id)}>
                       {pro.name}
-                    </Link>
+                    </button>
                     <span className="block text-label text-muted">
                       {pro.slug}
                       {pro.payCode ? ` · ${pro.payCode}` : ""}
                     </span>
                   </Td>
-                  <Td className="text-ink-soft">{[pro.district, pro.city].filter(Boolean).join(", ")}</Td>
                   <Td>
                     <span className="flex flex-wrap gap-1">
-                      {pro.suspended ? (
-                        <Badge tone="danger">Tạm khoá</Badge>
-                      ) : pro.published ? (
-                        <Badge tone="success">Công khai</Badge>
-                      ) : (
-                        <Badge>Chưa công khai</Badge>
-                      )}
-                      <Flag on={pro.identity === "verified"} label="Đã xác minh" />
-                      <Flag on={!pro.acceptingJobs} label="Tạm nghỉ" tone="muted" />
-                      <Flag on={pro.wallet < walletFloor} label="Chặn vì nợ phí" tone="warning" />
+                      <Badge tone={status.tone}>{status.label}</Badge>
+                      <Flag on={pro.published && !pro.acceptingJobs && !pro.suspended} label="Không nhận lịch" tone="muted" />
+                      <Flag on={pro.wallet < walletFloor} label="Chặn vì nợ" tone="warning" />
                     </span>
                   </Td>
+                  <Td className="text-ink-soft">{[pro.district, pro.city].filter(Boolean).join(", ")}</Td>
                   <Td className="text-right tabular-nums">{pro.completedJobs}</Td>
                   <Td className="whitespace-nowrap text-right tabular-nums text-ink-soft">
                     {pro.ratingCount ? `★ ${pro.rating.toFixed(1)} (${pro.ratingCount})` : "—"}
                   </Td>
                   <Td className={cn("text-right font-medium tabular-nums", pro.wallet < 0 && "text-danger")}>{formatPrice(pro.wallet)}</Td>
-                  <Td className="text-right">
-                    {pro.suspended ? (
-                      <ActButton size="sm" variant="outline" onClick={() => run(() => setSuspended(pro.id, false), `Đã mở khoá ${pro.name}.`)}>
-                        <Unlock /> Mở khoá
+                  <Td className="text-right" onClick={(e) => e.stopPropagation()}>
+                    {!pro.published && !pro.suspended ? (
+                      <ActButton size="sm" onClick={() => run(() => decideProfile(pro.id, "approved"), `Đã duyệt ${pro.name}: hồ sơ đang hiện và nhận lịch.`)}>
+                        <Check /> Duyệt
                       </ActButton>
                     ) : (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setLocking(locking === pro.id ? null : pro.id)
-                          setReason("")
-                        }}
-                      >
-                        <Lock /> Khoá
+                      <Button size="sm" variant="ghost" onClick={() => setOpen(pro.id)}>
+                        Chi tiết
                       </Button>
                     )}
                   </Td>
                 </Tr>
-                {locking === pro.id && (
-                  <tr>
-                    <td colSpan={7} className="border-b border-line bg-danger-soft/40 px-4 py-3">
-                      <p className="text-meta text-ink-soft">
-                        Tạm khoá thì hồ sơ bị ẩn và {pro.name} không nhận được lịch mới. Lịch đã nhận vẫn giữ. Lý do được ghi vào nhật ký.
-                      </p>
-                      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                        <input
-                          className={cn(inputClass, "sm:max-w-md")}
-                          placeholder="Lý do (VD: khách báo không đến nhiều lần)"
-                          aria-label="Lý do tạm khoá"
-                          value={reason}
-                          onChange={(e) => setReason(e.target.value)}
-                          autoFocus
-                        />
-                        <ActButton
-                          variant="danger"
-                          disabled={reason.trim().length < 5}
-                          onClick={async () => {
-                            if (await run(() => setSuspended(pro.id, true, reason.trim()), `Đã tạm khoá ${pro.name}.`)) setLocking(null)
-                          }}
-                        >
-                          Tạm khoá đối tác
-                        </ActButton>
-                        <Button variant="ghost" onClick={() => setLocking(null)}>
-                          Thôi
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            ))}
+              )
+            })}
           </tbody>
         </Table>
       )}
       <TableFoot>
         <span>
-          {sorted.length} / {pros.length} đối tác
+          {sorted.length} / {pros.length} đối tác · bấm một dòng để xem và xử lý hồ sơ
         </span>
       </TableFoot>
       {more}
+      {open && <ProDrawer key={open} proId={open} onClose={() => setOpen(null)} run={run} />}
     </div>
   )
 }
 
-const isProFilter = (v: unknown): v is ProFilter =>
-  typeof v === "string" && ["all", "hidden", "suspended", "owing", "blocked", "verified", "paused"].includes(v)
+const isProFilter = (v: unknown): v is ProFilter => typeof v === "string" && (PRO_FILTERS as string[]).includes(v)
 
 // Bookings ----------------------------------------------------------------------------
 

@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache"
 import { backendEnabled } from "@/lib/supabase/env"
 import { randomInt } from "node:crypto"
-import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
+import { cache } from "react"
+import { authUser, supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
 import { categoryLabel, getTemplate, getVariant } from "@/lib/catalog"
 import { hoursSummary } from "@/lib/ai/verdict"
 import type { CategoryId } from "@/lib/types"
@@ -48,6 +49,9 @@ export interface AdminPro {
   wallet: number
   /** The code on their fee transfers ("DEPAB23CD"); null before the match-then-chat migration. */
   payCode: string | null
+  reviewStatus: "draft" | "pending" | "approved" | "changes_requested" | "rejected"
+  reviewNote: string | null
+  createdAt: string
 }
 
 export interface AdminBooking {
@@ -88,14 +92,19 @@ export interface AdminReport {
 
 const row = (v: unknown) => (Array.isArray(v) ? ((v[0] ?? {}) as Record<string, unknown>) : ((v ?? {}) as Record<string, unknown>))
 
-export async function isAdmin(): Promise<boolean> {
+/** Asked once per request: the page and several reads below all check. */
+const adminCheck = cache(async (): Promise<boolean> => {
   // Nobody is an admin of a database that is not configured.
   if (!backendEnabled) return false
+  const user = await authUser()
+  if (!user) return false
   const supabase = await supabaseServer()
-  const { data: auth } = await supabase.auth.getUser()
-  if (!auth.user) return false
-  const { data } = await supabase.from("accounts").select("is_admin").eq("id", auth.user.id).maybeSingle()
+  const { data } = await supabase.from("accounts").select("is_admin").eq("id", user.id).maybeSingle()
   return Boolean(data?.is_admin)
+})
+
+export async function isAdmin(): Promise<boolean> {
+  return adminCheck()
 }
 
 export async function pendingChecks(): Promise<PendingCheck[]> {
@@ -142,20 +151,22 @@ export async function pendingChecks(): Promise<PendingCheck[]> {
 
 export async function adminPros(): Promise<AdminPro[]> {
   const supabase = await supabaseServer()
-  const { data: rows, error } = await orLegacy((legacy) =>
-    supabase
-      .from("pros")
-      .select(
-        `id, slug, display_name, city, district, identity_status, published, suspended_at, accepting_jobs, completed_jobs, rating_avg, rating_count${legacy ? "" : ", pay_code"}`,
-      )
-      .order("created_at", { ascending: false }),
-  )
+  const [{ data: rows, error }, { data: ledger }] = await Promise.all([
+    orLegacy((legacy) =>
+      supabase
+        .from("pros")
+        .select(
+          `id, slug, display_name, city, district, identity_status, published, suspended_at, accepting_jobs, completed_jobs, rating_avg, rating_count, review_status, review_note, created_at${legacy ? "" : ", pay_code"}`,
+        )
+        .order("created_at", { ascending: false }),
+    ),
+    supabase.from("wallet_entries").select("pro_id, amount"),
+  ])
   const data = rows as Record<string, any>[] | null
   if (error) {
     console.error("adminPros failed:", error.message)
     return []
   }
-  const { data: ledger } = await supabase.from("wallet_entries").select("pro_id, amount")
   const balances = new Map<string, number>()
   for (const entry of ledger ?? []) {
     balances.set(entry.pro_id, (balances.get(entry.pro_id) ?? 0) + entry.amount)
@@ -175,6 +186,9 @@ export async function adminPros(): Promise<AdminPro[]> {
     ratingCount: p.rating_count,
     wallet: balances.get(p.id) ?? 0,
     payCode: p.pay_code ?? null,
+    reviewStatus: p.review_status ?? "draft",
+    reviewNote: p.review_note ?? null,
+    createdAt: p.created_at,
   }))
 }
 
@@ -401,6 +415,179 @@ export async function overrideAiDecision(decisionId: string, decision: string, n
   return call("admin_override_ai_decision", { p_decision_id: decisionId, p_decision: decision, p_note: note })
 }
 
+// One partner, everything the staff need to handle the profile (20261019200000) ----------
+
+export interface AdminProDetail {
+  id: string
+  slug: string
+  name: string
+  title: string
+  bio: string
+  highlights: string[]
+  categories: string[]
+  area: string
+  homeService: boolean
+  studioAddress: string | null
+  yearsExp: number | null
+  avatar: string | null
+  phone: string | null
+  identity: string
+  published: boolean
+  acceptingJobs: boolean
+  suspended: boolean
+  reviewStatus: AdminPro["reviewStatus"]
+  reviewNote: string | null
+  requestedAt: string | null
+  reviewedAt: string | null
+  termsAcceptedAt: string | null
+  createdAt: string
+  rating: number
+  ratingCount: number
+  completedJobs: number
+  payCode: string | null
+  services: { name: string; price: number }[]
+  hours: string
+  works: { id: string; title: string; photo: string | null; video: boolean; hiddenReason: string | null; createdAt: string }[]
+  wallet: number
+  ledger: { amount: number; kind: string; note: string; createdAt: string }[]
+  bookings: { id: string; status: string; date: string; customer: string; service: string; total: number }[]
+  /** The AI's decisions and suggestions on this partner, and the staff's actions, newest first. */
+  history: { at: string; who: string; text: string }[]
+}
+
+const REVIEW_WORD: Record<string, string> = {
+  approved: "Duyệt",
+  changes_requested: "Cần sửa",
+  rejected: "Từ chối",
+  hidden: "Ẩn bài",
+  kept: "Giữ bài",
+  nudged: "Nhắc nhở",
+  skipped: "Chưa trả lời",
+}
+
+/** Read under the admin policies; null for anyone else or a profile that is gone. */
+export async function adminProDetail(proId: string): Promise<ActionResult<AdminProDetail>> {
+  if (!(await isAdmin())) return { ok: false, error: "Không có quyền." }
+  const supabase = await supabaseServer()
+  const [proRes, accountRes, listings, prices, hours, works, ledger, bookings, ai, actions] = await Promise.all([
+    supabase.from("pros").select("*").eq("id", proId).maybeSingle(),
+    supabase.from("accounts").select("phone").eq("id", proId).maybeSingle(),
+    supabase.from("pro_services").select("template_id").eq("pro_id", proId).eq("active", true),
+    supabase.from("pro_service_prices").select("template_id, variant_id, price").eq("pro_id", proId),
+    supabase.from("working_hours").select("weekday, start_min, end_min").eq("pro_id", proId),
+    supabase
+      .from("works")
+      .select("id, title, image_paths, video_path, hidden_at, hidden_reason, created_at")
+      .eq("pro_id", proId)
+      .order("created_at", { ascending: false })
+      .limit(24),
+    supabase.from("wallet_entries").select("amount, kind, note, created_at").eq("pro_id", proId).order("created_at", { ascending: false }),
+    supabase
+      .from("bookings")
+      .select("id, status, starts_at, total, template_id, variant_id, customer:accounts!bookings_customer_id_fkey (full_name)")
+      .eq("pro_id", proId)
+      .order("starts_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("ai_decisions")
+      .select("created_at, subject, decision, summary, override_decision, overridden_at, model")
+      .eq("pro_id", proId)
+      .neq("subject", "follow_up")
+      .order("created_at", { ascending: false })
+      .limit(15),
+    supabase
+      .from("admin_actions" as never)
+      .select("created_at, action, detail, actor:accounts!admin_actions_actor_id_fkey (full_name)")
+      .eq("target_id", proId)
+      .order("created_at", { ascending: false })
+      .limit(15),
+  ])
+  const p = proRes.data as Record<string, any> | null
+  if (proRes.error) return { ok: false, error: proRes.error.message }
+  if (!p) return { ok: false, error: "Không tìm thấy hồ sơ." }
+  const active = new Set((listings.data ?? []).map((l) => l.template_id))
+  const entries = (ledger.data ?? []) as { amount: number; kind: string; note: string | null; created_at: string }[]
+  const history = [
+    ...(ai.data ?? []).map((d) => ({
+      at: d.created_at,
+      who: d.model === "rules" ? "Quy tắc" : "AI",
+      text: `${d.subject === "work" ? "Bài đăng" : "Hồ sơ"}: ${REVIEW_WORD[d.decision] ?? d.decision}${d.summary ? `, ${d.summary}` : ""}`,
+    })),
+    ...((actions.data ?? []) as Record<string, any>[]).map((a) => {
+      const detail = (a.detail ?? {}) as Record<string, any>
+      const text =
+        a.action === "profile_review"
+          ? `${REVIEW_WORD[detail.decision] ?? detail.decision}${detail.note ? `: ${detail.note}` : ""}`
+          : a.action === "pro_accepting_jobs"
+            ? detail.on
+              ? "Bật nhận lịch mới"
+              : "Tắt nhận lịch mới"
+            : a.action
+      return { at: a.created_at as string, who: String(row(a.actor).full_name ?? "Nhân viên"), text }
+    }),
+  ].sort((a, b) => b.at.localeCompare(a.at))
+  return {
+    ok: true,
+    data: {
+      id: p.id,
+      slug: p.slug,
+      name: p.display_name,
+      title: p.title ?? "",
+      bio: p.bio ?? "",
+      highlights: p.highlights ?? [],
+      categories: (p.categories ?? []).map((c: string) => categoryLabel(c as CategoryId)),
+      area: [p.district, p.city].filter(Boolean).join(", "),
+      homeService: Boolean(p.home_service),
+      studioAddress: p.studio_address ?? null,
+      yearsExp: p.years_exp ?? null,
+      avatar: p.avatar_path ?? null,
+      phone: accountRes.data?.phone ?? null,
+      identity: p.identity_status,
+      published: p.published,
+      acceptingJobs: p.accepting_jobs,
+      suspended: Boolean(p.suspended_at),
+      reviewStatus: p.review_status ?? "draft",
+      reviewNote: p.review_note ?? null,
+      requestedAt: p.review_requested_at ?? null,
+      reviewedAt: p.reviewed_at ?? null,
+      termsAcceptedAt: p.terms_accepted_at ?? null,
+      createdAt: p.created_at,
+      rating: Number(p.rating_avg ?? 0),
+      ratingCount: p.rating_count ?? 0,
+      completedJobs: p.completed_jobs ?? 0,
+      payCode: p.pay_code ?? null,
+      services: (prices.data ?? [])
+        .filter((x) => active.has(x.template_id))
+        .map((x) => ({ name: serviceName(x.template_id, x.variant_id), price: x.price })),
+      hours: hoursSummary(hours.data ?? []),
+      works: (works.data ?? []).map((w) => ({
+        id: w.id,
+        title: w.title,
+        photo: (w.image_paths ?? [])[0] ?? null,
+        video: Boolean(w.video_path),
+        hiddenReason: w.hidden_at ? (w.hidden_reason ?? "Đã ẩn") : null,
+        createdAt: w.created_at,
+      })),
+      wallet: entries.reduce((n, e) => n + e.amount, 0),
+      ledger: entries.slice(0, 8).map((e) => ({ amount: e.amount, kind: e.kind, note: e.note ?? "", createdAt: e.created_at })),
+      bookings: (bookings.data ?? []).map((b) => ({
+        id: b.id,
+        status: b.status,
+        date: localDate(b.starts_at),
+        customer: String(row(b.customer).full_name ?? "—"),
+        service: serviceName(b.template_id, b.variant_id),
+        total: b.total ?? 0,
+      })),
+      history,
+    },
+  }
+}
+
+/** The staff's "nhận lịch mới" switch for a partner. */
+export async function setAcceptingJobs(proId: string, on: boolean) {
+  return call("admin_set_accepting_jobs", { p_pro: proId, p_on: on })
+}
+
 // Profiles waiting for a person (20261019100000) --------------------------------------
 
 export interface ProfileQueueItem {
@@ -487,7 +674,10 @@ export async function profileQueue(): Promise<ProfileQueueItem[]> {
   })
 }
 
-/** The staff's decision on a waiting profile; admin_decide_profile checks is_admin(), logs it and tells the partner. */
+/**
+ * The staff's decision on a profile, from any state (20261019200000): approving puts it live and
+ * taking jobs at once. admin_decide_profile checks is_admin(), logs it and tells the partner.
+ */
 export async function decideProfile(proId: string, decision: "approved" | "changes_requested" | "rejected", note = "") {
   return call("admin_decide_profile", { p_pro: proId, p_decision: decision, p_note: note })
 }

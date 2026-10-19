@@ -113,9 +113,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
           {session ? (
             <div className="flex items-center gap-1.5">
-              {/* Staff only. The middleware and is_admin() in the database still guard /admin itself. */}
+              {/* Staff only. The middleware and is_admin() in the database still guard /admin itself.
+                  A full page load: the desk loads a smaller snapshot than the shop (app/layout.tsx). */}
               {session.isAdmin && (
-                <Link
+                // eslint-disable-next-line @next/next/no-html-link-for-pages
+                <a
                   href="/admin"
                   aria-current={pathname.startsWith("/admin") ? "page" : undefined}
                   className={cn(
@@ -124,7 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   )}
                 >
                   <ShieldCheck className="size-4" aria-hidden /> Admin
-                </Link>
+                </a>
               )}
               <Link href="/tin-nhan" aria-label="Tin nhắn" className="inline-flex size-10 items-center justify-center rounded-full hover:bg-subtle">
                 <MessageCircle className="size-5" />

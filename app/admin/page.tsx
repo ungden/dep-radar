@@ -15,9 +15,10 @@ export const dynamic = "force-dynamic"
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string; filter?: string }> }) {
   // The middleware already turned away non-admins; this is the second lock, and
   // 404 rather than 403 so the page does not advertise that it exists.
-  if (!(await isAdmin())) notFound()
-
-  const [{ tab, filter }, queue, checks, pros, bookings, reports, aiLog, admin, overview] = await Promise.all([
+  // Checked alongside the reads rather than before them: every read is under row
+  // level security or checks is_admin() itself, so nothing leaks while it runs.
+  const [allowed, { tab, filter }, queue, checks, pros, bookings, reports, aiLog, admin, overview] = await Promise.all([
+    isAdmin(),
     searchParams,
     profileQueue(),
     pendingChecks(),
@@ -28,6 +29,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     adminSettings(),
     adminOverview(),
   ])
+  if (!allowed) notFound()
 
   return (
     <AdminDesk

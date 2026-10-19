@@ -498,7 +498,7 @@ begin
       'apply_voucher', 'remove_voucher', 'chat_status', 'take_job', 'record_topup',
       -- admin decisions, which check is_admin() themselves
       'decide_identity_check', 'decide_no_show_compensation', 'set_pro_suspended', 'set_review_hidden', 'resolve_report',
-      'admin_override_ai_decision', 'admin_decide_profile',
+      'admin_override_ai_decision', 'admin_decide_profile', 'admin_set_accepting_jobs',
       -- the operations desk (20261004100000), every one behind require_admin()
       'admin_customers', 'admin_set_account_suspended', 'admin_finance_summary', 'admin_finance_by_pro',
       'admin_finance_bookings', 'admin_wallet_entries', 'admin_adjust_wallet',
@@ -2064,8 +2064,8 @@ begin
   assert exists (select 1 from public.admin_actions where action = 'profile_review' and target_id = newbie and actor_id = admin_id),
     'the decision is not in the admin log';
   begin
-    perform public.admin_decide_profile(newbie, 'approved', '');
-    assert false, 'a profile no longer waiting was decided';
+    perform public.admin_decide_profile(newbie, 'changes_requested', E'Ảnh tác phẩm là ảnh chụp màn hình, hãy đăng ảnh thật\nGhi rõ khu vực');
+    assert false, 'the same decision was applied twice';
   exception when check_violation then null;
   end;
   perform set_config('request.jwt.claim.sub', '', true);
@@ -2758,4 +2758,106 @@ begin
   perform set_config('request.jwt.claim.sub', '', true);
   delete from public.reports where id = rep;
   raise notice 'REPORT EVIDENCE RULES PASS';
+end $$;
+
+-- The staff handle profiles from the desk (20261019200000): approve from any
+-- state (live at once, taking jobs), take a live profile down with a reason,
+-- switch "nhận khách mới".
+do $$
+declare
+  linh uuid; partner uuid; admin_id uuid; tpl text; cats public.category_id[]; denied boolean;
+begin
+  select id into linh from public.pros where slug = 'linh-pham';
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          (gen_random_uuid()::text||'-desk-partner@example.invalid'), jsonb_build_object('full_name', 'Đối Tác Nháp', 'phone', '0900 000 777'), now(), now())
+  returning id into partner;
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          (gen_random_uuid()::text||'-desk-admin@example.invalid'), jsonb_build_object('full_name', 'Quản trị Hồ sơ'), now(), now())
+  returning id into admin_id;
+  update public.accounts set is_admin = true where id = admin_id;
+
+  select s.template_id, p.categories into tpl, cats
+  from public.pro_services s join public.pros p on p.id = s.pro_id
+  join public.service_templates t on t.id = s.template_id
+  where s.pro_id = linh and s.active and not t.studio_only and not t.requires_verification
+  limit 1;
+  perform set_config('request.jwt.claim.sub', partner::text, true);
+  insert into public.pros (id, slug, city, district, categories) values (partner, 'doi-tac-nhap-'||partner::text, 'Hà Nội', 'Đống Đa', cats);
+
+  ---------------------------------------------------------------------------
+  raise notice 'a draft that never asked for review: approval names what is missing';
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  denied := false;
+  begin
+    perform public.admin_decide_profile(partner, 'approved', '');
+  exception when check_violation then denied := true;
+  end;
+  assert denied, 'an empty profile was approved';
+
+  perform set_config('request.jwt.claim.sub', partner::text, true);
+  insert into public.pro_services (pro_id, template_id, active) values (partner, tpl, true);
+  insert into public.working_hours (pro_id, weekday, start_min, end_min) values (partner, 2, 540, 1080);
+  insert into public.works (pro_id, template_id, title, image_paths, slug)
+  values (partner, tpl, 'Mẫu nháp', array['https://example.invalid/storage/v1/object/public/works/n.jpg'], 'mau-nhap-'||partner::text);
+  update public.pros set accepting_jobs = false where id = partner;
+  assert (select review_status = 'draft' and not published from public.pros where id = partner), 'not a draft';
+
+  raise notice 'the staff approve a draft: live at once, taking jobs, told';
+  begin
+    perform public.admin_decide_profile(partner, 'approved', '');
+    assert false, 'a partner approved themselves';
+  exception when insufficient_privilege then null;
+  end;
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.admin_decide_profile(partner, 'approved', '');
+  assert (select published and accepting_jobs and review_status = 'approved' from public.pros where id = partner),
+    'a direct approval did not put the profile live';
+  assert exists (select 1 from public.notifications where account_id = partner and kind = 'profile_approved'), 'the partner was not told';
+  assert exists (select 1 from public.admin_actions where action = 'profile_review' and target_id = partner and detail ->> 'from' = 'draft'),
+    'the approval is not in the admin log';
+  denied := false;
+  begin
+    perform public.admin_decide_profile(partner, 'approved', '');
+  exception when check_violation then denied := true;
+  end;
+  assert denied, 'a live profile was approved twice';
+
+  raise notice 'the staff turn new jobs off and on';
+  perform public.admin_set_accepting_jobs(partner, false);
+  assert (select not accepting_jobs from public.pros where id = partner), 'jobs were not switched off';
+  perform public.admin_set_accepting_jobs(partner, true);
+  assert (select accepting_jobs from public.pros where id = partner), 'jobs were not switched on';
+  perform set_config('request.jwt.claim.sub', partner::text, true);
+  begin
+    perform public.admin_set_accepting_jobs(partner, false);
+    assert false, 'a partner used the staff switch';
+  exception when insufficient_privilege then null;
+  end;
+
+  raise notice 'a live profile taken down needs a reason, and the partner reads it';
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  denied := false;
+  begin
+    perform public.admin_decide_profile(partner, 'changes_requested', '');
+  exception when check_violation then denied := true;
+  end;
+  assert denied, 'taken down without a reason';
+  perform public.admin_decide_profile(partner, 'changes_requested', 'Ảnh bìa bị mờ');
+  assert (select not published and review_status = 'changes_requested' and review_note = 'Ảnh bìa bị mờ' from public.pros where id = partner),
+    'the profile was not taken down';
+
+  raise notice 'a locked profile is unlocked before it is approved';
+  perform public.set_pro_suspended(partner, true, 'Kiểm tra');
+  denied := false;
+  begin
+    perform public.admin_decide_profile(partner, 'approved', '');
+  exception when check_violation then denied := true;
+  end;
+  assert denied, 'a locked profile was approved';
+
+  perform set_config('request.jwt.claim.sub', '', true);
+  raise notice 'ADMIN PROFILE TOOLS PASS';
 end $$;

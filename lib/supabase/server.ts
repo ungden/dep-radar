@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import type { Database } from "./database.types"
@@ -23,6 +24,16 @@ export async function supabaseServer() {
     },
   })
 }
+
+/**
+ * The signed-in auth user, asked of Supabase Auth once per request: the layout,
+ * the page and every admin read used to ask again, one network round trip each.
+ */
+export const authUser = cache(async () => {
+  const supabase = await supabaseServer()
+  const { data } = await supabase.auth.getUser()
+  return data.user
+})
 
 /**
  * Service-role client: bypasses RLS. Only for work the platform owns, such as

@@ -1,7 +1,7 @@
 import { catalogReadStatus } from "@/lib/catalog-read"
 import { cookies } from "next/headers"
 import { getTemplate, getVariant } from "@/lib/catalog"
-import { supabaseServer } from "@/lib/supabase/server"
+import { authUser, supabaseServer } from "@/lib/supabase/server"
 import type {
   ApplicationStatus,
   Booking,
@@ -252,7 +252,7 @@ function rowsOf<T>(label: string, result: { data: T[] | null; error: { message: 
 
 export async function loadSnapshot(): Promise<AppSnapshot> {
   const supabase = await supabaseServer()
-  const { data: auth } = await supabase.auth.getUser()
+  const auth = { user: await authUser() }
   const me = auth.user?.id ?? null
   const city = (await cookies()).get(CITY_COOKIE)?.value ?? null
 
@@ -781,5 +781,36 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       ownProRes.data && !walletRes.error
         ? { balance: Number(walletRes.data ?? 0), payCode: ((payCodeRes.data as Row | null)?.pay_code as string | undefined) ?? null }
         : null,
+  }
+}
+
+/**
+ * What the operations desk (/admin) needs from the shared snapshot: who is
+ * signed in and their unread count. Not the marketplace (every partner, post,
+ * review and booking), which the desk never shows and which made every desk
+ * load and every refresh after a decision wait for it. The desk's links back to
+ * the shop are full page loads, so the shop always starts from loadSnapshot().
+ */
+export async function loadDeskSnapshot(): Promise<AppSnapshot> {
+  const user = await authUser()
+  if (!user) return emptySnapshot
+  const supabase = await supabaseServer()
+  const [accountRes, proRes, unreadRes] = await Promise.all([
+    supabase.from("accounts").select("full_name, phone, active_role, is_admin").eq("id", user.id).maybeSingle(),
+    supabase.from("pros").select("slug").eq("id", user.id).maybeSingle(),
+    supabase.from("notifications").select("id", { count: "exact", head: true }).eq("account_id", user.id).is("read_at", null),
+  ])
+  const account = accountRes.data
+  if (!account) return emptySnapshot
+  return {
+    ...emptySnapshot,
+    session: {
+      role: account.active_role === "pro" && proRes.data ? "pro" : "customer",
+      name: account.full_name || "Bạn",
+      phone: account.phone ?? "",
+      proId: proRes.data?.slug,
+      isAdmin: Boolean(account.is_admin) || undefined,
+    },
+    unreadNotifications: unreadRes.count ?? 0,
   }
 }
