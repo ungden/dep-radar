@@ -2771,7 +2771,7 @@ begin
   perform set_config('request.jwt.claim.sub', '', true);
   insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
-          (gen_random_uuid()::text||'-desk-partner@example.invalid'), jsonb_build_object('full_name', 'Đối Tác Nháp', 'phone', '0900 000 777'), now(), now())
+          (gen_random_uuid()::text||'-desk-partner@example.invalid'), jsonb_build_object('full_name', 'Đối Tác Nháp', 'phone', '0900 000 791'), now(), now())
   returning id into partner;
   insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
