@@ -22,13 +22,20 @@ export async function middleware(request: NextRequest) {
   // Without a backend the app is the labelled browser demo: nothing to guard.
   if (!backendEnabled) return NextResponse.next()
 
-  let response = NextResponse.next({ request })
+  const path = request.nextUrl.pathname
+  // The root layout reads it to load less for the desk (app/layout.tsx).
+  const forward = () => {
+    const headers = new Headers(request.headers)
+    headers.set("x-pathname", path)
+    return NextResponse.next({ request: { headers } })
+  }
+  let response = forward()
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (list) => {
         for (const { name, value } of list) request.cookies.set(name, value)
-        response = NextResponse.next({ request })
+        response = forward()
         for (const { name, value, options } of list) response.cookies.set(name, value, options)
       },
     },
@@ -36,7 +43,6 @@ export async function middleware(request: NextRequest) {
 
   // Also refreshes an expiring session, which is why it runs on every request.
   const { data } = await supabase.auth.getUser()
-  const path = request.nextUrl.pathname
 
   if (!data.user && PRIVATE.some((p) => (p.endsWith("/") ? path.startsWith(p) : path === p || path.startsWith(`${p}/`)))) {
     const login = request.nextUrl.clone()

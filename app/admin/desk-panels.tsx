@@ -589,6 +589,12 @@ function describe(a: AdminAction) {
       return "Xem tin nhắn hai bên của một báo cáo"
     case "wallet:adjust":
       return `Điều chỉnh ví ${formatPrice(Number(d.amount ?? 0))}: ${String(d.note ?? "")}`
+    case "profile_review": {
+      const word = { approved: "Duyệt hồ sơ", changes_requested: "Yêu cầu sửa hồ sơ", rejected: "Từ chối hồ sơ" }[String(d.decision)] ?? "Xử lý hồ sơ"
+      return `${word} ${String(d.name ?? "")}${d.note ? `: ${String(d.note)}` : ""}`
+    }
+    case "pro_accepting_jobs":
+      return `${d.on ? "Bật" : "Tắt"} nhận lịch mới cho ${String(d.name ?? "đối tác")}`
     default:
       if (a.action.startsWith("settings:")) return `Đổi cấu hình: ${Object.keys(d).join(", ")}`
       return a.action

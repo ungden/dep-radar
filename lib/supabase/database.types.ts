@@ -2161,6 +2161,10 @@ export type Database = {
         Args: { p_decision: string; p_note?: string; p_pro: string }
         Returns: undefined
       }
+      admin_set_accepting_jobs: {
+        Args: { p_on: boolean; p_pro: string }
+        Returns: undefined
+      }
       admin_override_ai_decision: {
         Args: { p_decision: string; p_decision_id: string; p_note?: string }
         Returns: undefined

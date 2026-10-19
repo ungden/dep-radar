@@ -7,7 +7,8 @@ import { SITE_URL } from "@/lib/env"
 import { UnregisterServiceWorker } from "@/components/register-sw"
 import { ReferralCapture } from "@/components/referral-capture"
 import { StoreProvider } from "@/lib/store"
-import { emptySnapshot, loadSnapshot } from "@/lib/api/snapshot"
+import { headers } from "next/headers"
+import { emptySnapshot, loadDeskSnapshot, loadSnapshot } from "@/lib/api/snapshot"
 import { backendEnabled } from "@/lib/supabase/env"
 
 // Inter reads crisply at 13-16px, where most of the app's text lives; its
@@ -65,7 +66,9 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // One server read per navigation feeds every screen; see lib/api/snapshot.ts.
-  const snapshot = backendEnabled ? await loadSnapshot() : { ...emptySnapshot, catalogError: true, worksError: true }
+  // The desk reads its own data; it only needs who is signed in (middleware sets x-pathname).
+  const desk = /^\/admin(\/|$)/.test((await headers()).get("x-pathname") ?? "")
+  const snapshot = backendEnabled ? await (desk ? loadDeskSnapshot() : loadSnapshot()) : { ...emptySnapshot, catalogError: true, worksError: true }
   return (
     <html lang="vi" className={`${body.variable} ${serif.variable}`}>
       <body className="min-h-dvh">

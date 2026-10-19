@@ -81,8 +81,8 @@ function ProfileCard({ item, run }: { item: ProfileQueueItem; run: Run }) {
         </span>
       </div>
 
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-4 p-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="min-w-0 space-y-4 p-4">
           {item.previousNote && (
             <p className="rounded-md border border-line bg-subtle/60 px-3 py-2 text-meta text-ink-soft">
               <span className="font-medium text-ink">Lần trước đã yêu cầu sửa:</span> {item.previousNote}
@@ -90,7 +90,7 @@ function ProfileCard({ item, run }: { item: ProfileQueueItem; run: Run }) {
           )}
 
           {(item.bio || item.highlights.length > 0) && (
-            <section>
+            <section className="min-w-0">
               <h4 className="mb-1 text-label font-medium uppercase tracking-wide text-muted">Giới thiệu</h4>
               {item.bio && <p className="whitespace-pre-line text-body">{item.bio}</p>}
               {item.highlights.length > 0 && (
@@ -103,7 +103,7 @@ function ProfileCard({ item, run }: { item: ProfileQueueItem; run: Run }) {
             </section>
           )}
 
-          <section>
+          <section className="min-w-0">
             <h4 className="mb-1.5 text-label font-medium uppercase tracking-wide text-muted">Tác phẩm ({photos.length})</h4>
             {photos.length > 0 ? (
               <div className="no-scrollbar flex gap-2 overflow-x-auto">
@@ -118,8 +118,8 @@ function ProfileCard({ item, run }: { item: ProfileQueueItem; run: Run }) {
             )}
           </section>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <section>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <section className="min-w-0">
               <h4 className="mb-1 text-label font-medium uppercase tracking-wide text-muted">Dịch vụ và giá</h4>
               {item.services.length === 0 ? (
                 <p className="text-meta text-muted">Chưa có</p>
@@ -134,7 +134,7 @@ function ProfileCard({ item, run }: { item: ProfileQueueItem; run: Run }) {
                 </ul>
               )}
             </section>
-            <section>
+            <section className="min-w-0">
               <h4 className="mb-1 text-label font-medium uppercase tracking-wide text-muted">Giờ làm</h4>
               <p className="whitespace-pre-line text-meta text-ink-soft">{item.hours ? item.hours.split("; ").join("\n") : "Chưa có"}</p>
             </section>
