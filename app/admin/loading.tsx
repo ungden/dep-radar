@@ -1,29 +1,26 @@
-import { Skeleton } from "@/components/ui"
+import { Skeleton } from "./ui"
 
-/** The desk reads a lot on the server before it shows; this holds its shape meanwhile. */
+/** The desk reads a lot on the server before it shows; this holds its frame meanwhile. */
 export default function AdminLoading() {
   return (
-    <div className="mx-auto max-w-6xl md:pt-12" aria-busy="true" aria-live="polite">
+    <div className="min-h-dvh" aria-busy="true" aria-live="polite">
       <span className="sr-only">Đang tải trang vận hành…</span>
-      <Skeleton className="mt-4 h-9 w-48" />
-      <div className="mt-6 md:grid md:grid-cols-[208px_minmax(0,1fr)] md:gap-8">
-        <div className="hidden space-y-2 md:block">
-          {Array.from({ length: 9 }, (_, i) => (
-            <Skeleton key={i} className="h-9" />
-          ))}
-        </div>
-        <div className="space-y-3">
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Skeleton className="h-[72px]" />
-            <Skeleton className="h-[72px]" />
-            <Skeleton className="h-[72px]" />
-            <Skeleton className="h-[72px]" />
-          </div>
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-            {Array.from({ length: 8 }, (_, i) => (
+      <div className="fixed inset-y-0 left-0 hidden w-60 space-y-2 border-r border-line bg-surface p-3 md:block">
+        <Skeleton className="mb-4 h-8 w-32" />
+        {Array.from({ length: 12 }, (_, i) => (
+          <Skeleton key={i} className="h-7" />
+        ))}
+      </div>
+      <div className="md:pl-60">
+        <div className="h-14 border-b border-line bg-surface" />
+        <div className="mx-auto max-w-[1280px] space-y-4 px-4 py-6 md:px-6">
+          <Skeleton className="h-7 w-48" />
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {Array.from({ length: 4 }, (_, i) => (
               <Skeleton key={i} className="h-24" />
             ))}
           </div>
+          <Skeleton className="h-64" />
         </div>
       </div>
     </div>

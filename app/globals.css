@@ -141,3 +141,32 @@ label:has(input[type="file"]:focus-visible) {
   outline: 2px solid var(--color-ink);
   outline-offset: 3px;
 }
+
+/*
+ * The operations desk (/admin) is a workspace, not the shop: cool greys instead
+ * of cream, denser type, tighter corners. Every utility inside reads these.
+ */
+.admin-theme {
+  --color-canvas: #F5F6F8;
+  --color-subtle: #F0F2F5;
+  --color-subtle-strong: #E3E6EB;
+  --color-line: #E4E7EC;
+  --color-line-strong: #C4C9D2;
+  --color-ink: #111827;
+  --color-ink-soft: #374151;
+  --color-muted: #667085;
+  --text-label: 0.75rem;
+  --text-label--line-height: 1.4;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.45;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.5;
+  --text-lead: 1rem;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-card: 10px;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}

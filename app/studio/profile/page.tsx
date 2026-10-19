@@ -56,7 +56,7 @@ function ProfileTrust() {
             {pro.published
               ? "Đang hiển thị với khách · sửa hồ sơ"
               : pro.reviewStatus === "pending"
-                ? "Đang chờ duyệt (thường vài phút)"
+                ? "Đang chờ duyệt (thường trong 24 giờ)"
                 : pro.reviewStatus === "changes_requested" || pro.reviewStatus === "rejected"
                   ? "Cần chỉnh trước khi hiện với khách · xem góp ý"
                   : "Chưa hiển thị với khách · hoàn thiện hồ sơ"}

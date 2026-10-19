@@ -498,7 +498,7 @@ begin
       'apply_voucher', 'remove_voucher', 'chat_status', 'take_job', 'record_topup',
       -- admin decisions, which check is_admin() themselves
       'decide_identity_check', 'decide_no_show_compensation', 'set_pro_suspended', 'set_review_hidden', 'resolve_report',
-      'admin_override_ai_decision',
+      'admin_override_ai_decision', 'admin_decide_profile',
       -- the operations desk (20261004100000), every one behind require_admin()
       'admin_customers', 'admin_set_account_suspended', 'admin_finance_summary', 'admin_finance_by_pro',
       'admin_finance_bookings', 'admin_wallet_entries', 'admin_adjust_wallet',
@@ -1945,9 +1945,9 @@ begin
   raise notice 'CONNECTION RULES PASS';
 end $$;
 
--- The AI reviewer (20260929100000): "Mở hồ sơ" asks for a review, the reviewer's
--- decisions are applied and logged, an admin can reverse them, and the log is
--- for admins only.
+-- The AI reviewer (20260929100000, 20261019100000): "Mở hồ sơ" asks for a
+-- review, the AI suggests and an admin decides; post decisions are applied and
+-- logged, an admin can reverse them, and the log is for admins only.
 do $$
 declare
   linh uuid; newbie uuid; admin_id uuid; w uuid; log_id uuid; n int; msg text;
@@ -2021,36 +2021,75 @@ begin
   assert (select hidden_at is null and ai_checked_at is null from public.works where id = w), 'a partner wrote the reviewer''s columns';
 
   ---------------------------------------------------------------------------
-  raise notice 'the reviewer asking for changes tells the partner what to fix';
+  raise notice 'the AI only suggests: the profile keeps waiting and the partner is not told';
   perform set_config('request.jwt.claim.sub', '', true);
   begin
     perform public.apply_ai_profile_decision(newbie, 'changes_requested', '{}', 'x', 'rules', '{}');
+    assert false, 'changes were suggested without a reason';
+  exception when check_violation then null;
+  end;
+  assert newbie in (select public.ai_profiles_to_review(50)), 'a waiting profile is not in the AI''s queue';
+  log_id := public.apply_ai_profile_decision(newbie, 'approved', '{}', 'Hồ sơ đạt', 'gemini-test',
+    jsonb_build_object('work_ids', jsonb_build_array(w::text, 'not-a-uuid')));
+  assert log_id is not null, 'the suggestion was not logged';
+  assert (select (input ->> 'suggestion')::boolean from public.ai_decisions where id = log_id), 'the row is not marked a suggestion';
+  assert (select not published and review_status = 'pending' from public.pros where id = newbie),
+    'an AI suggestion published the profile';
+  assert not exists (select 1 from public.notifications where account_id = newbie and kind in ('profile_approved', 'profile_review')),
+    'the partner was told about a suggestion';
+  assert newbie not in (select public.ai_profiles_to_review(50)), 'the AI is asked twice for the same request';
+  assert exists (select 1 from public.notifications where account_id = admin_id and kind = 'profile_pending'),
+    'the staff were not told a profile is waiting';
+
+  raise notice 'only an admin decides, with a reason when it is not an approval';
+  perform set_config('request.jwt.claim.sub', newbie::text, true);
+  begin
+    perform public.admin_decide_profile(newbie, 'approved', '');
+    assert false, 'a partner approved themselves';
+  exception when insufficient_privilege then null;
+  end;
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  begin
+    perform public.admin_decide_profile(newbie, 'changes_requested', '  ');
     assert false, 'changes were requested without a reason';
   exception when check_violation then null;
   end;
-  log_id := public.apply_ai_profile_decision(newbie, 'changes_requested',
-    array['Ảnh tác phẩm là ảnh chụp màn hình, hãy đăng ảnh thật'], 'Ảnh chưa đạt', 'gemini-test', '{}');
-  assert log_id is not null, 'the decision was not logged';
+  perform public.admin_decide_profile(newbie, 'changes_requested', E'Ảnh tác phẩm là ảnh chụp màn hình, hãy đăng ảnh thật\nGhi rõ khu vực');
   assert (select not published and review_status = 'changes_requested' and review_note like 'Ảnh tác phẩm%'
           from public.pros where id = newbie), 'the request for changes was not applied';
   assert exists (select 1 from public.notifications where account_id = newbie and kind = 'profile_review'
-                 and title like 'Hồ sơ cần chỉnh%'), 'the partner was not told what to fix';
+                 and title like 'Hồ sơ cần chỉnh: Ảnh tác phẩm%'), 'the partner was not told what to fix';
+  assert (select overridden_by = admin_id and override_decision = 'changes_requested' from public.ai_decisions where id = log_id),
+    'the decision was not written next to the suggestion';
+  assert exists (select 1 from public.admin_actions where action = 'profile_review' and target_id = newbie and actor_id = admin_id),
+    'the decision is not in the admin log';
+  begin
+    perform public.admin_decide_profile(newbie, 'approved', '');
+    assert false, 'a profile no longer waiting was decided';
+  exception when check_violation then null;
+  end;
+  perform set_config('request.jwt.claim.sub', '', true);
   assert public.apply_ai_profile_decision(newbie, 'approved', '{}', 'late', 'gemini-test', '{}') is null,
-    'a decision on a profile no longer waiting was applied';
+    'a suggestion on a profile no longer waiting was logged';
 
-  raise notice 'sending it again, then an approval publishes it and is logged';
+  raise notice 'sending it again, then the staff approve it: published, logged, the partner told';
+  -- One transaction has one now(): the earlier answer has to look earlier than the new request.
+  update public.ai_decisions set created_at = created_at - interval '1 minute' where pro_id = newbie;
   perform set_config('request.jwt.claim.sub', newbie::text, true);
   perform public.confirm_partner_hours('[{"weekday":1,"startMin":540,"endMin":1080}]');
   perform public.submit_partner_profile(true);
   assert (select review_status from public.pros where id = newbie) = 'pending', 'resubmitting did not ask for a review';
   perform set_config('request.jwt.claim.sub', '', true);
+  assert newbie in (select public.ai_profiles_to_review(50)), 'a new request did not go back to the AI';
   log_id := public.apply_ai_profile_decision(newbie, 'approved', '{}', 'Hồ sơ đạt', 'gemini-test',
     jsonb_build_object('work_ids', jsonb_build_array(w::text, 'not-a-uuid')));
-  assert (select published and review_status = 'approved' and reviewed_at is not null from public.pros where id = newbie),
-    'an approval did not publish';
-  assert (select ai_checked_at is not null from public.works where id = w), 'the post the reviewer saw is still queued';
-  assert exists (select 1 from public.ai_decisions where id = log_id and subject = 'pro_profile' and decision = 'approved'
-                 and model = 'gemini-test'), 'the approval was not logged';
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.admin_decide_profile(newbie, 'approved', '');
+  assert (select published and review_status = 'approved' and reviewed_at is not null and review_note is null
+          from public.pros where id = newbie), 'an approval did not publish';
+  assert (select ai_checked_at is not null from public.works where id = w), 'the post the AI saw is still queued';
+  assert (select decision = 'approved' and override_decision = 'approved' from public.ai_decisions where id = log_id),
+    'the approval was not written next to the suggestion';
   assert exists (select 1 from public.notifications where account_id = newbie and kind = 'profile_approved'),
     'the partner was not told';
 
@@ -2100,8 +2139,9 @@ begin
   exception when check_violation then null;
   end;
 
+  -- A decided profile can still be reversed from the log.
   select id into log_id from public.ai_decisions
-  where pro_id = newbie and subject = 'pro_profile' and decision = 'approved' order by created_at desc limit 1;
+  where pro_id = newbie and subject = 'pro_profile' and override_decision = 'approved' order by created_at desc limit 1;
   perform public.admin_override_ai_decision(log_id, 'rejected', 'Ảnh lấy từ trang khác');
   assert (select not published and review_status = 'rejected' and review_note = 'Ảnh lấy từ trang khác'
           from public.pros where id = newbie), 'an admin rejection did not unpublish';

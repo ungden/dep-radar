@@ -2157,6 +2157,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_decide_profile: {
+        Args: { p_decision: string; p_note?: string; p_pro: string }
+        Returns: undefined
+      }
       admin_override_ai_decision: {
         Args: { p_decision: string; p_decision_id: string; p_note?: string }
         Returns: undefined
@@ -2175,6 +2179,10 @@ export type Database = {
           pro_id: string
           since: string
         }[]
+      }
+      ai_profiles_to_review: {
+        Args: { p_limit?: number }
+        Returns: string[]
       }
       apply_ai_profile_decision: {
         Args: {

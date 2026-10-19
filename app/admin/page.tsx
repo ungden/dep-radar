@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { adminBookings, adminOverview, adminPros, adminReports, adminSettings, aiDecisions, isAdmin, pendingChecks } from "@/lib/api/admin"
+import { adminBookings, adminOverview, adminPros, adminReports, adminSettings, aiDecisions, isAdmin, pendingChecks, profileQueue } from "@/lib/api/admin"
 import { AdminDesk } from "./admin-desk"
 import { isTab } from "./tabs"
 
@@ -17,8 +17,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   // 404 rather than 403 so the page does not advertise that it exists.
   if (!(await isAdmin())) notFound()
 
-  const [{ tab, filter }, checks, pros, bookings, reports, aiLog, admin, overview] = await Promise.all([
+  const [{ tab, filter }, queue, checks, pros, bookings, reports, aiLog, admin, overview] = await Promise.all([
     searchParams,
+    profileQueue(),
     pendingChecks(),
     adminPros(),
     adminBookings(),
@@ -30,6 +31,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   return (
     <AdminDesk
+      queue={queue}
       checks={checks}
       pros={pros}
       bookings={bookings}

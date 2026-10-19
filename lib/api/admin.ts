@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache"
 import { backendEnabled } from "@/lib/supabase/env"
 import { randomInt } from "node:crypto"
 import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server"
-import { getTemplate, getVariant } from "@/lib/catalog"
+import { categoryLabel, getTemplate, getVariant } from "@/lib/catalog"
+import { hoursSummary } from "@/lib/ai/verdict"
+import type { CategoryId } from "@/lib/types"
 import { localDate, localTime, todayISO } from "@/lib/utils"
 import type { ActionResult } from "./actions"
 import { messageFor, orLegacy } from "./errors"
@@ -341,6 +343,8 @@ export interface AiDecisionItem {
   overrideDecision: string | null
   overrideNote: string | null
   overriddenBy: string | null
+  /** A profile suggestion (20261019100000): nothing was applied until the staff decided. */
+  suggestion: boolean
 }
 
 /** Newest first, and how many decisions the last 24 hours had. Empty before the 20260929100000 migration. */
@@ -386,6 +390,7 @@ export async function aiDecisions(limit = 200): Promise<{ items: AiDecisionItem[
       overrideDecision: r.override_decision,
       overrideNote: r.override_note,
       overriddenBy: r.overrider ? String(row(r.overrider).full_name ?? "") || null : null,
+      suggestion: input.suggestion === true,
     }
   })
   return { items, last24h: count ?? 0 }
@@ -394,6 +399,97 @@ export async function aiDecisions(limit = 200): Promise<{ items: AiDecisionItem[
 /** Reverses a decision in the log; admin_override_ai_decision checks is_admin() and tells the partner. */
 export async function overrideAiDecision(decisionId: string, decision: string, note = "") {
   return call("admin_override_ai_decision", { p_decision_id: decisionId, p_decision: decision, p_note: note })
+}
+
+// Profiles waiting for a person (20261019100000) --------------------------------------
+
+export interface ProfileQueueItem {
+  id: string
+  slug: string
+  name: string
+  title: string
+  bio: string
+  highlights: string[]
+  categories: string[]
+  area: string
+  requestedAt: string | null
+  createdAt: string
+  /** What an earlier decision asked the partner to fix, when this is a second try. */
+  previousNote: string | null
+  services: { name: string; price: number }[]
+  hours: string
+  /** Visible posts' photos, newest first. */
+  photos: string[]
+  /** The AI's suggestion for this request; null until it has answered. */
+  ai: { decision: string; reasons: string[]; summary: string; model: string; createdAt: string } | null
+}
+
+/** Oldest request first. Read under the admin policies; empty for anyone else. */
+export async function profileQueue(): Promise<ProfileQueueItem[]> {
+  if (!backendEnabled) return []
+  const supabase = await supabaseServer()
+  const { data: pros, error } = await supabase
+    .from("pros")
+    .select("id, slug, display_name, title, bio, highlights, categories, city, district, created_at, review_requested_at, review_note")
+    .eq("review_status", "pending")
+    .is("suspended_at", null)
+    .order("review_requested_at", { ascending: true, nullsFirst: true })
+  if (error) {
+    console.error("profileQueue failed:", error.message)
+    return []
+  }
+  if (!pros?.length) return []
+  const ids = pros.map((p) => p.id)
+  const [prices, listings, hours, works, ai] = await Promise.all([
+    supabase.from("pro_service_prices").select("pro_id, template_id, variant_id, price").in("pro_id", ids),
+    supabase.from("pro_services").select("pro_id, template_id").in("pro_id", ids).eq("active", true),
+    supabase.from("working_hours").select("pro_id, weekday, start_min, end_min").in("pro_id", ids),
+    supabase
+      .from("works")
+      .select("pro_id, image_paths")
+      .in("pro_id", ids)
+      .is("hidden_at", null)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("ai_decisions")
+      .select("pro_id, decision, reasons, summary, model, created_at")
+      .in("pro_id", ids)
+      .eq("subject", "pro_profile")
+      .order("created_at", { ascending: false }),
+  ])
+  for (const r of [prices, listings, hours, works, ai]) if (r.error) console.error("profileQueue failed:", r.error.message)
+  const active = new Set((listings.data ?? []).map((l) => `${l.pro_id}/${l.template_id}`))
+  return pros.map((p) => {
+    const since = p.review_requested_at ?? ""
+    // The newest answer for this request; a 'skipped' row only says the AI could not answer yet.
+    const latest = (ai.data ?? []).find((d) => d.pro_id === p.id && d.decision !== "skipped" && d.created_at >= since)
+    return {
+      id: p.id,
+      slug: p.slug,
+      name: p.display_name,
+      title: p.title ?? "",
+      bio: p.bio ?? "",
+      highlights: p.highlights ?? [],
+      categories: (p.categories ?? []).map((c: string) => categoryLabel(c as CategoryId)),
+      area: [p.district, p.city].filter(Boolean).join(", "),
+      requestedAt: p.review_requested_at,
+      createdAt: p.created_at,
+      previousNote: p.review_note,
+      services: (prices.data ?? [])
+        .filter((x) => x.pro_id === p.id && active.has(`${x.pro_id}/${x.template_id}`))
+        .map((x) => ({ name: serviceName(x.template_id, x.variant_id), price: x.price })),
+      hours: hoursSummary((hours.data ?? []).filter((h) => h.pro_id === p.id)),
+      photos: (works.data ?? []).filter((w) => w.pro_id === p.id).flatMap((w) => (w.image_paths ?? []).slice(0, 1)).slice(0, 8),
+      ai: latest
+        ? { decision: latest.decision, reasons: latest.reasons ?? [], summary: latest.summary ?? "", model: latest.model, createdAt: latest.created_at }
+        : null,
+    }
+  })
+}
+
+/** The staff's decision on a waiting profile; admin_decide_profile checks is_admin(), logs it and tells the partner. */
+export async function decideProfile(proId: string, decision: "approved" | "changes_requested" | "rejected", note = "") {
+  return call("admin_decide_profile", { p_pro: proId, p_decision: decision, p_note: note })
 }
 
 // The desk's customers, money and settings (20261004100000) --------------------------

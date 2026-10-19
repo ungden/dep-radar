@@ -597,8 +597,8 @@ const ENTRIES: HelpEntry[] = [
     audience: "doi-tac",
     topic: "ho-so",
     q: "Hồ sơ được duyệt thế nào, bao lâu? Bị từ chối thì sao?",
-    a: `AI của 360đẹp duyệt ngay sau khi bạn gửi, thường trong vài phút (chậm nhất khi hệ thống quét lại sau mỗi 5 phút). Kết quả: được duyệt; cần chỉnh (kèm từng lý do); hoặc chưa được duyệt (chỉ khi có dấu hiệu lừa đảo, nội dung khiêu dâm hoặc toàn bộ ảnh là của người khác). Sửa theo góp ý rồi bấm "Gửi duyệt lại" là được xét lại. Mọi quyết định đều được nhân viên xem trong nhật ký và có thể đảo lại; nếu thấy AI sai, hãy liên hệ đội hỗ trợ.`,
-    keywords: ["duyet", "ai duyet", "bi tu choi", "can chinh", "gui duyet"],
+    a: `Nhân viên 360đẹp xem và duyệt từng hồ sơ, thường trong 24 giờ sau khi bạn gửi (AI xem trước để gợi ý, người quyết định là nhân viên). Kết quả: được duyệt; cần chỉnh (kèm từng lý do); hoặc chưa được duyệt (chỉ khi có dấu hiệu lừa đảo, nội dung khiêu dâm hoặc toàn bộ ảnh là của người khác). Sửa theo góp ý rồi bấm "Gửi duyệt lại" là được xét lại. Nếu thấy quyết định chưa đúng, hãy liên hệ đội hỗ trợ.`,
+    keywords: ["duyet", "ai duyet", "bao lau", "bi tu choi", "can chinh", "gui duyet"],
   },
   {
     id: "d-loi-thuong-gap-duyet",

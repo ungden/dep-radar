@@ -406,7 +406,7 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
   const heading = pro.published
     ? "Hồ sơ đang hiển thị với khách"
     : pending
-      ? "Đang chờ duyệt (thường vài phút)"
+      ? "Đang chờ duyệt (thường trong 24 giờ)"
       : status === "changes_requested"
         ? "Hồ sơ cần chỉnh trước khi hiện với khách"
         : status === "rejected"
@@ -473,7 +473,7 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
         </Button>
       )}
       {!pro.published && !pending && status !== "approved" && (
-        <p className="mt-2 text-label text-muted">Hồ sơ mới được 360dep duyệt trước khi hiện với khách, thường trong vài phút.</p>
+        <p className="mt-2 text-label text-muted">Nhân viên 360dep xem và duyệt từng hồ sơ mới trước khi hiện với khách, thường trong 24 giờ.</p>
       )}
     </Card>
   )

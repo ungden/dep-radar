@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { RotateCcw, TriangleAlert } from "lucide-react"
-import { Button, ButtonLink } from "@/components/ui"
+import { Button, ButtonLink } from "./ui"
 
 /**
  * Staff see what broke, not only "có lỗi": the message (client errors) or the
@@ -19,7 +19,7 @@ export default function AdminError({ error, reset }: { error: Error & { digest?:
       <span className="flex size-16 items-center justify-center rounded-full bg-danger-soft text-danger">
         <TriangleAlert className="size-8" />
       </span>
-      <h1 className="mt-4 text-title font-bold">Trang vận hành gặp lỗi</h1>
+      <h1 className="mt-4 text-lg font-semibold">Trang vận hành gặp lỗi</h1>
       <p className="mt-1 text-body text-ink-soft">Thử lại. Nếu vẫn lỗi, mở Tổng quan rồi vào lại mục vừa dùng, và gửi mã lỗi bên dưới cho đội kỹ thuật.</p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
         <Button onClick={reset}>
@@ -29,7 +29,7 @@ export default function AdminError({ error, reset }: { error: Error & { digest?:
           Về Tổng quan
         </ButtonLink>
       </div>
-      <p className="mt-6 break-all rounded-xl bg-subtle px-3 py-2 text-left font-mono text-label text-ink-soft">
+      <p className="mt-6 break-all rounded-lg bg-subtle px-3 py-2 text-left font-mono text-label text-ink-soft">
         {error.digest ? `Mã lỗi: ${error.digest}` : error.message || "Không rõ lỗi"}
       </p>
     </div>
