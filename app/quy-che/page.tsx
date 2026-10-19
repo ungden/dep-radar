@@ -56,7 +56,7 @@ export default function OperatingRulesPage() {
             <li>Người dùng đăng ký bằng Apple, Google, email hoặc số điện thoại. Tạo tài khoản không cần số điện thoại; cần thêm số trước khi đặt lịch, đăng yêu cầu, mở hồ sơ đối tác hay ứng tuyển làm mẫu, để hai bên liên lạc sau khi ghép lịch. Tài khoản chỉ có số điện thoại quên mật khẩu thì nhắn Zalo hỗ trợ để được cấp lại sau khi xác minh.</li>
             <li>
               Đối tác mở hồ sơ miễn phí, chọn dịch vụ từ danh mục và chọn một trong các mức giá có sẵn, thêm giờ làm việc và ảnh tác phẩm do chính mình
-              làm. Hồ sơ chỉ hiện với khách sau khi qua kiểm duyệt (bằng AI, có nhật ký để nhân viên 360đẹp xem lại và thay đổi quyết định).
+              làm. Hồ sơ chỉ hiện với khách sau khi nhân viên 360đẹp duyệt (AI xem trước và gợi ý, người quyết định là nhân viên).
             </li>
             <li>
               {IDENTITY_REQUIRED_FOR_PARTNERS
@@ -230,7 +230,7 @@ export default function OperatingRulesPage() {
             <li>
               <b className="text-ink">Bên xử lý dữ liệu:</b> dữ liệu lưu trên hạ tầng đám mây (Supabase, Vercel), có thể đặt ngoài Việt Nam; email gửi qua
               Resend; đối soát chuyển khoản qua SePay. Ảnh CCCD và chân dung khi xác minh được gửi tới dịch vụ AI của Google để đọc và so khớp; chỉ trường hợp cần
-              nhân viên duyệt mới được lưu kín trên máy chủ 360đẹp và bị xoá ngay khi duyệt xong; nội dung hồ sơ và ảnh tác phẩm được AI (OpenAI) kiểm duyệt.
+              nhân viên duyệt mới được lưu kín trên máy chủ 360đẹp và bị xoá ngay khi duyệt xong; nội dung hồ sơ và ảnh tác phẩm được AI (OpenAI) xem trước để gợi ý cho nhân viên duyệt hồ sơ và để kiểm duyệt bài đăng.
             </li>
             <li>
               <b className="text-ink">Quyền của bạn:</b> xem và sửa thông tin trong tài khoản, rút lại sự đồng ý, và xoá tài khoản ngay trong ứng

@@ -80,7 +80,7 @@ export function followUpMessage(f: FollowUpFacts): FollowUpMessage {
       if (steps.length === 0) {
         return {
           title: "Hồ sơ của bạn đã đủ, chỉ còn bấm “Mở hồ sơ”",
-          body: "Bấm “Mở hồ sơ cho khách” để gửi duyệt. 360dep duyệt trong vài phút, xong là khách đặt lịch được.",
+          body: "Bấm “Mở hồ sơ cho khách” để gửi duyệt. 360dep duyệt trong 24 giờ, xong là khách đặt lịch được.",
           link: "/studio/profile/edit#mo-ho-so",
           reasons: ["Chưa bấm “Mở hồ sơ”"],
           summary: `Nhắc mở hồ sơ ${nth}: đủ điều kiện nhưng chưa gửi duyệt.`,
@@ -89,7 +89,7 @@ export function followUpMessage(f: FollowUpFacts): FollowUpMessage {
       const list = steps.map((s) => s.text).join(", ")
       return {
         title: `Còn ${steps.length + 1} bước để khách thấy hồ sơ của bạn`,
-        body: `Còn thiếu: ${list}. Xong thì bấm “Mở hồ sơ cho khách”, 360dep duyệt trong vài phút.`,
+        body: `Còn thiếu: ${list}. Xong thì bấm “Mở hồ sơ cho khách”, 360dep duyệt trong 24 giờ.`,
         link: steps[0].link,
         reasons: [...steps.map((s) => `Chưa ${s.text}`), "Chưa bấm “Mở hồ sơ”"],
         summary: `Nhắc hoàn thiện hồ sơ ${nth}: thiếu ${list}.`,

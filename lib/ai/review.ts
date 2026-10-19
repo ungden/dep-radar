@@ -22,15 +22,18 @@ import {
  * The reviewer. Server only (service role, OPENAI_API_KEY).
  *
  * Three jobs, each bounded so one run fits in a Vercel function:
- *  1. profiles waiting for review (pros.review_status = 'pending');
- *  2. new posts by approved partners (works.ai_checked_at is null);
+ *  1. profiles waiting for review (pros.review_status = 'pending'): the AI
+ *     only suggests. Its answer is logged for the staff, who approve at
+ *     /admin → "Duyệt hồ sơ" (admin_decide_profile, owner 19/10/2026);
+ *  2. new posts by approved partners (works.ai_checked_at is null): decided
+ *     and applied by the AI;
  *  3. reminders (lib/ai/followups.ts).
- * Every outcome goes through a database function that applies it and writes
- * the log (ai_decisions), so what the staff read is what happened.
+ * Every outcome goes through a database function that writes the log
+ * (ai_decisions), so what the staff read is what happened.
  *
- * When the AI fails (outage, bad answer), nothing is guessed: the profile stays
- * pending, a 'skipped' row says why (at most once an hour per profile), and the
- * next run tries again. With no AI key at all, profiles are decided on
+ * When the AI fails (outage, bad answer), nothing is guessed: no suggestion is
+ * made, a 'skipped' row says why (at most once an hour per profile), and the
+ * next run tries again. With no AI key at all, profiles get a suggestion from
  * the rules alone and the log says so; posts are then kept unless a rule says
  * otherwise.
  */
@@ -142,7 +145,7 @@ async function logSkipped(admin: Admin, proId: string, error: string, input: Row
     p_pro: proId,
     p_decision: "skipped",
     p_reasons: [],
-    p_summary: `AI chưa trả lời được, hồ sơ vẫn chờ duyệt và sẽ thử lại: ${error}`.slice(0, 500),
+    p_summary: `AI chưa trả lời được, sẽ thử lại; nhân viên vẫn duyệt được không cần gợi ý: ${error}`.slice(0, 500),
     p_model: modelName(),
     p_input: input as Json,
   })
@@ -281,17 +284,12 @@ export async function reviewProfile(proId: string, admin: Admin = supabaseAdmin(
   return { status: "decided", decision: verdict.decision, model }
 }
 
+/** Pending profiles without a suggestion since the partner last asked: one suggestion per request. */
 async function reviewPendingProfiles(admin: Admin, deadline: number) {
-  const { data, error } = await admin
-    .from("pros")
-    .select("id")
-    .eq("review_status", "pending")
-    .is("suspended_at", null)
-    .order("review_requested_at")
-    .limit(LIMITS.profiles)
+  const { data, error } = await admin.rpc("ai_profiles_to_review", { p_limit: LIMITS.profiles })
   if (error) throw new Error(`pending profiles: ${error.message}`)
   const counts = { decided: 0, skipped: 0, failed: 0 }
-  for (const { id } of data ?? []) {
+  for (const id of (data ?? []) as string[]) {
     if (Date.now() > deadline) break
     try {
       const outcome = await reviewProfile(id, admin)

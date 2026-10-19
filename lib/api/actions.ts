@@ -640,9 +640,10 @@ export async function saveProProfile(input: {
 
 /**
  * "Mở hồ sơ" on a profile that was never approved asks for a review (the
- * database turns it into 'pending'). The reviewer then runs for this profile
- * right after the response is sent, so the answer usually comes within a
- * minute; if it cannot run here, the cron picks the profile up within five.
+ * database turns it into 'pending'). The AI then looks at it right after the
+ * response is sent, so its suggestion is waiting when the staff open the
+ * profile in /admin → "Duyệt hồ sơ"; if it cannot run here, the cron picks
+ * the profile up within five minutes.
  */
 function reviewSoon(proId: string) {
   after(async () => {

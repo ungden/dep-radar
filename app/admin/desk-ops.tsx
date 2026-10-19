@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ArrowRight, BadgeCheck, CalendarClock, CircleAlert, Flag as FlagIcon, Lock, MessageCircleQuestion, Star, Unlock, Wallet } from "lucide-react"
+import { ArrowRight, BadgeCheck, CalendarClock, CircleAlert, Flag as FlagIcon, Lock, MessageCircleQuestion, Star, Unlock, UserCheck, Wallet } from "lucide-react"
 import { Button, Card, EmptyState, StatusBadge, inputClass } from "@/components/ui"
 import {
   adminRequests,
@@ -31,6 +31,7 @@ type Run = (fn: () => Promise<{ ok: true } | { ok: false; error: string }>, done
  */
 export function OverviewPanel({
   overview: o,
+  approvals,
   checks,
   openReports,
   claims,
@@ -40,6 +41,7 @@ export function OverviewPanel({
   go,
 }: {
   overview: AdminOverview
+  approvals: number
   checks: number
   openReports: number
   claims: number
@@ -55,7 +57,8 @@ export function OverviewPanel({
     { n: openReports, label: "Báo cáo chưa xử lý", hint: "Khách và đối tác đang chờ phản hồi", tab: "reports", filter: "open", tone: "danger", icon: FlagIcon },
     { n: claims, label: "Bù phí vắng mặt chờ quyết", hint: "Tranh chấp khách vắng mặt", tab: "reports", filter: "open", tone: "danger", icon: CircleAlert },
     { n: o.overdueConfirm, label: "Lịch quá hạn nhận", hint: "Đối tác chưa bấm nhận, đã qua hạn", tab: "bookings", filter: "overdue", tone: "danger", icon: CalendarClock },
-    { n: checks, label: "Hồ sơ chờ xác minh", hint: "AI chưa chắc, cần người xem", tab: "checks", tone: "warning", icon: BadgeCheck },
+    { n: approvals, label: "Hồ sơ chờ duyệt", hint: "Chỉ hiện với khách khi bạn bấm Duyệt", tab: "approvals", tone: "danger", icon: UserCheck },
+    { n: checks, label: "Xác minh danh tính chờ", hint: "AI chưa chắc, cần người xem", tab: "checks", tone: "warning", icon: BadgeCheck },
     { n: blocked, label: "Đối tác bị chặn vì nợ phí", hint: `Ví dưới ${formatPrice(walletFloor)}`, tab: "pros", filter: "blocked", tone: "warning", icon: Wallet },
     { n: o.lowReviews7d, label: "Đánh giá 1–2 sao (7 ngày)", hint: "Xem có vi phạm hay cần hỗ trợ", tab: "reviews", filter: "low", tone: "warning", icon: Star },
     { n: o.uncoveredHelp7d, label: "Câu hỏi trợ lý chưa có trả lời", hint: "Bổ sung vào trang Trợ giúp", tab: "help", tone: "warning", icon: MessageCircleQuestion },

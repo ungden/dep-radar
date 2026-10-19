@@ -2,6 +2,7 @@
 /** Every panel of the desk; `?tab=` in the address. */
 export const TABS = [
   "overview",
+  "approvals",
   "checks",
   "pros",
   "ai",

@@ -6,7 +6,8 @@ import Link from "next/link"
 import { Button, Card, EmptyState, PageHeader, inputClass } from "@/components/ui"
 import { askReportInfo, decideCheck, decideNoShowCompensation, overrideAiDecision, recordTopup, reportChat, resolveReport } from "@/lib/api/admin"
 import { EvidenceGrid } from "@/components/evidence-picker"
-import type { AdminAction, AdminBooking, AdminOverview, AdminPro, AdminReport, AiDecisionItem, FeePolicyView, PendingCheck, PlatformSettings, ReportChatMessage } from "@/lib/api/admin"
+import type { AdminAction, AdminBooking, AdminOverview, AdminPro, AdminReport, AiDecisionItem, FeePolicyView, PendingCheck, PlatformSettings, ProfileQueueItem, ReportChatMessage } from "@/lib/api/admin"
+import { ApprovalsPanel } from "./desk-approvals"
 import { CatalogPanel, CustomersPanel, FinancePanel, HelpQuestionsPanel, SettingsPanel } from "./desk-panels"
 import { BookingsPanel, OverviewPanel, ProsPanel, RequestsPanel, ReviewsPanel } from "./desk-ops"
 import { ActButton, FilterChips } from "./desk-shared"
@@ -17,14 +18,15 @@ import { cn, formatPrice, timeAgo } from "@/lib/utils"
 type Result = { ok: true } | { ok: false; error: string }
 
 /**
- * The operations desk: an overview of what needs a person, the verifications a
- * vision model was unsure about, the partner roster and the AI reviewer's log,
+ * The operations desk: an overview of what needs a person, the partner profiles
+ * waiting for approval, the verifications a vision model was unsure about, the partner roster and the AI reviewer's log,
  * bookings, customers, requests and reviews, the report inbox, the money and
  * the settings. Every button calls an RPC that checks `is_admin()` again in the
  * database. The open panel is in the address (?tab=), so a reload or a shared
  * link lands in the same place.
  */
 export function AdminDesk({
+  queue,
   checks,
   pros,
   bookings,
@@ -35,6 +37,7 @@ export function AdminDesk({
   initialTab,
   initialFilter,
 }: {
+  queue: ProfileQueueItem[]
   checks: PendingCheck[]
   pros: AdminPro[]
   bookings: AdminBooking[]
@@ -85,6 +88,7 @@ export function AdminDesk({
     {
       title: "Đối tác",
       items: [
+        { value: "approvals", label: "Duyệt hồ sơ", count: queue.length, alert: queue.length > 0 },
         { value: "checks", label: "Xác minh", count: checks.length, alert: checks.length > 0 },
         { value: "pros", label: "Đối tác", count: pros.length },
         { value: "ai", label: "Nhật ký AI", count: aiLog.last24h },
@@ -191,6 +195,7 @@ export function AdminDesk({
           {tab === "overview" && (
             <OverviewPanel
               overview={overview}
+              approvals={queue.length}
               checks={checks.length}
               openReports={openReports.length}
               claims={claims}
@@ -201,10 +206,12 @@ export function AdminDesk({
             />
           )}
 
+          {tab === "approvals" && <ApprovalsPanel queue={queue} run={run} />}
+
           {tab === "checks" && (
             <div className="space-y-3">
               {checks.length === 0 && (
-                <EmptyState title="Không có hồ sơ nào chờ duyệt" text="AI tự duyệt hồ sơ chắc chắn; hồ sơ AI chưa chắc sẽ hiện ở đây." />
+                <EmptyState title="Không có xác minh danh tính nào chờ" text="Ca xác minh CCCD mà AI chưa chắc sẽ hiện ở đây. Duyệt hồ sơ đối tác ở mục Duyệt hồ sơ." />
               )}
               {checks.map((check) => (
                 <CheckCard
@@ -461,10 +468,14 @@ const AI_FILTERS: { value: AiFilter; label: string }[] = [
   { value: "overridden", label: "Đã đảo" },
 ]
 
-/** What reversing a decision means: a profile flips approve ↔ reject, a post hide ↔ show. Null for reminders. */
+/**
+ * What reversing a decision means: a profile flips approve ↔ reject, a post hide ↔ show. Null for reminders, and
+ * for a profile suggestion nobody has decided yet: that is decided in "Duyệt hồ sơ".
+ */
 function reversal(item: AiDecisionItem): { decision: string; label: string } | null {
   const current = item.overrideDecision ?? item.decision
   if (item.subject === "pro_profile") {
+    if (item.suggestion && !item.overriddenAt) return null
     return current === "approved" ? { decision: "rejected", label: "Từ chối hồ sơ" } : { decision: "approved", label: "Duyệt hồ sơ" }
   }
   if (item.subject === "work") {
@@ -499,8 +510,8 @@ function AiLog({
   return (
     <div className="mt-4 space-y-3">
       <p className="text-meta text-muted">
-        {log.last24h} quyết định trong 24 giờ qua. Hồ sơ đối tác mới do AI duyệt, bài đăng mới do AI kiểm tra; nhân viên xem lại ở đây và
-        đảo quyết định khi cần. Đối tác được báo mỗi lần đảo.
+        {log.last24h} quyết định trong 24 giờ qua. Với hồ sơ đối tác, AI chỉ gợi ý: nhân viên duyệt ở mục Duyệt hồ sơ. Bài đăng mới do AI
+        kiểm tra; nhân viên xem lại ở đây và đảo quyết định khi cần. Đối tác được báo mỗi lần đảo.
       </p>
       <div className="no-scrollbar flex gap-2 overflow-x-auto">
         {AI_FILTERS.map((f) => (
@@ -538,12 +549,15 @@ function AiDecisionCard({
   const [busy, setBusy] = React.useState(false)
   const flip = reversal(item)
   const current = item.overrideDecision ?? item.decision
+  // A profile suggestion (or an old one superseded by a new request) that nobody decided from this row.
+  const pendingSuggestion = item.suggestion && !item.overriddenAt && item.decision !== "skipped"
   const photos = item.photos.filter(storagePhoto).slice(0, 4)
 
   return (
     <Card className="p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className={cn("rounded-full px-2 py-0.5 text-label font-semibold", DECISION_TONE[current] ?? "bg-canvas text-muted")}>
+          {pendingSuggestion ? "AI gợi ý: " : ""}
           {DECISION_LABEL[current] ?? current}
         </span>
         <span className="text-label font-semibold text-ink-soft">{SUBJECT_LABEL[item.subject] ?? item.subject}</span>
@@ -581,7 +595,8 @@ function AiDecisionCard({
         {item.overriddenAt && (
           <>
             {" "}
-            · AI quyết “{DECISION_LABEL[item.decision] ?? item.decision}”, {item.overriddenBy ?? "nhân viên"} đổi thành “
+            · AI {item.suggestion ? "gợi ý" : "quyết"} “{DECISION_LABEL[item.decision] ?? item.decision}”, {item.overriddenBy ?? "nhân viên"}{" "}
+            {item.suggestion ? "quyết" : "đổi thành"} “
             {DECISION_LABEL[item.overrideDecision ?? ""] ?? item.overrideDecision}” {timeAgo(item.overriddenAt)}
             {item.overrideNote ? `: ${item.overrideNote}` : ""}
           </>

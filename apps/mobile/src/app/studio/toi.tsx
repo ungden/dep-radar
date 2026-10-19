@@ -85,7 +85,7 @@ export default function StudioMe() {
               {pro.published
                 ? "Hồ sơ đang hiện với khách"
                 : pending
-                  ? "Đang chờ duyệt (thường vài phút)"
+                  ? "Đang chờ duyệt (thường trong 24 giờ)"
                   : refused
                     ? "Hồ sơ cần chỉnh trước khi hiện với khách"
                     : "Hồ sơ chưa công khai"}{" "}
