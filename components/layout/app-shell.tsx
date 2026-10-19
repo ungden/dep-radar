@@ -57,7 +57,8 @@ const PRO_TOP: NavItem[] = [
   { href: "/studio/services", label: "Bảng giá", icon: Plus },
 ]
 
-const FULLSCREEN = [/^\/login/]
+// The operations desk draws its own frame: sidebar, top bar, no shop footer.
+const FULLSCREEN = [/^\/login/, /^\/admin(\/|$)/]
 // A profile has its own bottom bar ("Từ X · Đặt lịch"), like a work and a booking.
 const NO_TABBAR = [/^\/book\//, /^\/works\//, /^\/pros\/./, /^\/bookings\/./, /^\/requests\/./, /^\/studio\/verify/]
 

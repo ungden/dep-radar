@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ArrowRight, BadgeCheck, CalendarClock, CircleAlert, Flag as FlagIcon, Lock, MessageCircleQuestion, Star, Unlock, UserCheck, Wallet } from "lucide-react"
-import { Button, Card, EmptyState, StatusBadge, inputClass } from "@/components/ui"
+import { BadgeCheck, CalendarCheck, CalendarClock, ChevronRight, CircleAlert, CircleCheck, Download, Flag as FlagIcon, KeyRound, Lock, MessageCircleQuestion, Settings, Star, Unlock, UserCheck, UserPlus, Wallet } from "lucide-react"
+import { Badge, Button, Card, EmptyState, Panel, StatusBadge, Table, TableFoot, Td, Th, Tr, inputClass } from "./ui"
 import {
   adminRequests,
   adminReviews,
@@ -67,98 +67,120 @@ export function OverviewPanel({
 
   return (
     <div className="space-y-6">
-      <section aria-labelledby="todo-title">
-        <h2 id="todo-title" className="text-title font-bold">
-          Việc cần xử lý
+      <section aria-labelledby="kpi-title">
+        <h2 id="kpi-title" className="sr-only">
+          Số liệu
         </h2>
-        {todo.length === 0 ? (
-          <p className="mt-2 rounded-xl bg-success-soft px-3.5 py-3 text-body font-semibold text-success">Không có việc tồn đọng. Mọi hàng chờ đều trống.</p>
-        ) : (
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-            {todo.map((q) => {
-              const Icon = q.icon
-              return (
-                <li key={q.label}>
-                  <button
-                    type="button"
-                    onClick={() => go(q.tab, q.filter)}
-                    className="flex w-full items-center gap-3 rounded-[var(--radius-lg)] border border-line bg-surface p-3.5 text-left hover:border-ink"
-                  >
-                    <span
-                      className={cn(
-                        "flex size-10 shrink-0 items-center justify-center rounded-full",
-                        q.tone === "danger" ? "bg-danger-soft text-danger" : "bg-warning-soft text-warning",
-                      )}
-                    >
-                      <Icon className="size-5" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-body font-bold">{q.label}</span>
-                      <span className="block truncate text-label text-muted">{q.hint}</span>
-                    </span>
-                    <span className="text-[22px] font-extrabold tabular-nums">{q.n}</span>
-                    <ArrowRight className="size-4 shrink-0 text-muted" aria-hidden />
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
-
-      <section aria-labelledby="pulse-title">
-        <h2 id="pulse-title" className="text-title font-bold">
-          Hôm nay và 7 ngày qua
-        </h2>
-        <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
-          <Stat label="Lịch hẹn hôm nay" value={o.bookingsToday} onClick={() => go("bookings", "today")} />
-          <Stat label="Chờ đối tác nhận" value={o.pendingConfirm} onClick={() => go("bookings", "pending")} />
-          <Stat label="Lịch mới (7 ngày)" value={o.created7d} onClick={() => go("bookings")} />
-          <Stat label="Hoàn thành (7 ngày)" value={o.completed7d} hint={o.cancelled7d ? `${o.cancelled7d} bị huỷ` : undefined} onClick={() => go("bookings", "completed")} />
-          <Stat label="Tài khoản mới (7 ngày)" value={o.newAccounts7d} onClick={() => go("customers")} />
-          <Stat label="Đối tác mới (7 ngày)" value={o.newPros7d} hint={o.unpublishedPros ? `${o.unpublishedPros} chưa công khai` : undefined} onClick={() => go("pros", o.unpublishedPros ? "hidden" : undefined)} />
-          <Stat label="Yêu cầu đang mở" value={o.openJobs} hint={o.openCastings ? `${o.openCastings} tuyển mẫu đang mở` : undefined} onClick={() => go("requests")} />
-          <Stat label="Quyết định AI (24 giờ)" value={aiLast24h} onClick={() => go("ai")} />
-        </div>
-        {owing > 0 && (
-          <p className="mt-2 text-meta text-muted">
-            {owing} đối tác đang âm ví (nợ phí).{" "}
-            <button type="button" className="font-semibold text-ink underline underline-offset-2" onClick={() => go("pros", "owing")}>
-              Xem danh sách
-            </button>
-          </p>
-        )}
-      </section>
-
-      <section aria-labelledby="quick-title">
-        <h2 id="quick-title" className="text-title font-bold">
-          Thao tác nhanh
-        </h2>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={() => go("topup")}>
-            Ghi nhận nạp ví
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => go("finance")}>
-            Báo cáo tiền & xuất file kế toán
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => go("customers")}>
-            Tìm tài khoản, đặt lại mật khẩu
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => go("settings")}>
-            Cấu hình & nhật ký quản trị
-          </Button>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Stat icon={CalendarClock} label="Lịch hẹn hôm nay" value={o.bookingsToday} hint={`${o.pendingConfirm} chờ đối tác nhận`} onClick={() => go("bookings", "today")} />
+          <Stat icon={CalendarCheck} label="Hoàn thành (7 ngày)" value={o.completed7d} hint={`${o.created7d} lịch mới · ${o.cancelled7d} huỷ`} onClick={() => go("bookings", "completed")} />
+          <Stat icon={UserPlus} label="Tài khoản mới (7 ngày)" value={o.newAccounts7d} hint={`${o.newPros7d} đối tác mới`} onClick={() => go("customers")} />
+          <Stat icon={Wallet} label="Đối tác nợ phí" value={owing} hint={blocked ? `${blocked} bị chặn nhận việc` : "Không ai bị chặn"} tone={owing ? "warning" : undefined} onClick={() => go("pros", "owing")} />
         </div>
       </section>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <Panel
+          title="Việc cần xử lý"
+          description={todo.length ? `${todo.reduce((n, q) => n + q.n, 0)} việc đang chờ người xem` : undefined}
+          bodyClassName="p-0"
+        >
+          {todo.length === 0 ? (
+            <p className="flex items-center gap-2 px-4 py-6 text-body text-success">
+              <CircleCheck className="size-4" aria-hidden /> Không có việc tồn đọng. Mọi hàng chờ đều trống.
+            </p>
+          ) : (
+            <ul className="divide-y divide-line">
+              {todo.map((q) => {
+                const Icon = q.icon
+                return (
+                  <li key={q.label}>
+                    <button type="button" onClick={() => go(q.tab, q.filter)} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-subtle/60">
+                      <span
+                        className={cn(
+                          "flex size-8 shrink-0 items-center justify-center rounded-md",
+                          q.tone === "danger" ? "bg-danger-soft text-danger" : "bg-warning-soft text-warning",
+                        )}
+                      >
+                        <Icon className="size-4" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-body font-medium">{q.label}</span>
+                        <span className="block truncate text-label text-muted">{q.hint}</span>
+                      </span>
+                      <Badge tone={q.tone}>{q.n}</Badge>
+                      <ChevronRight className="size-4 shrink-0 text-muted" aria-hidden />
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </Panel>
+
+        <div className="space-y-4">
+          <Panel title="Đang mở" bodyClassName="p-0">
+            <ul className="divide-y divide-line text-body">
+              <Row label="Yêu cầu đang mở" value={o.openJobs} onClick={() => go("requests")} />
+              <Row label="Tuyển mẫu đang mở" value={o.openCastings} onClick={() => go("requests")} />
+              <Row label="Đối tác chưa công khai" value={o.unpublishedPros} onClick={() => go("pros", "hidden")} />
+              <Row label="Quyết định AI (24 giờ)" value={aiLast24h} onClick={() => go("ai")} />
+            </ul>
+          </Panel>
+          <Panel title="Thao tác nhanh" bodyClassName="grid gap-1 p-2">
+            <Quick icon={Wallet} label="Ghi nhận nạp ví" onClick={() => go("topup")} />
+            <Quick icon={Download} label="Báo cáo tiền & xuất file kế toán" onClick={() => go("finance")} />
+            <Quick icon={KeyRound} label="Tìm tài khoản, đặt lại mật khẩu" onClick={() => go("customers")} />
+            <Quick icon={Settings} label="Cấu hình & nhật ký quản trị" onClick={() => go("settings")} />
+          </Panel>
+        </div>
+      </div>
     </div>
   )
 }
 
-function Stat({ label, value, hint, onClick }: { label: string; value: number; hint?: string; onClick: () => void }) {
+function Stat({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  tone,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: number
+  hint?: string
+  tone?: "warning"
+  onClick: () => void
+}) {
   return (
-    <button type="button" onClick={onClick} className="rounded-[var(--radius-lg)] border border-line bg-surface p-3.5 text-left hover:border-ink">
-      <span className="block text-label text-muted">{label}</span>
-      <span className="mt-0.5 block text-[24px] font-extrabold tabular-nums">{value}</span>
-      {hint && <span className="block text-label text-ink-soft">{hint}</span>}
+    <button type="button" onClick={onClick} className="rounded-lg border border-line bg-surface p-4 text-left shadow-[0_1px_2px_rgb(16_24_40/0.04)] hover:border-line-strong">
+      <span className="flex items-center justify-between gap-2 text-meta text-muted">
+        {label}
+        <Icon className={cn("size-4", tone === "warning" ? "text-warning" : "text-muted")} />
+      </span>
+      <span className="mt-2 block text-[26px] font-semibold leading-none tracking-tight tabular-nums">{value}</span>
+      {hint && <span className="mt-1.5 block truncate text-label text-muted">{hint}</span>}
+    </button>
+  )
+}
+
+function Row({ label, value, onClick }: { label: string; value: number; onClick: () => void }) {
+  return (
+    <li>
+      <button type="button" onClick={onClick} className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-subtle/60">
+        <span className="text-ink-soft">{label}</span>
+        <span className="font-semibold tabular-nums">{value}</span>
+      </button>
+    </li>
+  )
+}
+
+function Quick({ icon: Icon, label, onClick }: { icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="flex h-9 items-center gap-2.5 rounded-md px-2.5 text-left text-body text-ink-soft hover:bg-subtle hover:text-ink">
+      <Icon className="size-4 text-muted" /> {label}
     </button>
   )
 }
@@ -211,80 +233,113 @@ export function ProsPanel({ pros, walletFloor, initialFilter, run }: { pros: Adm
       {sorted.length === 0 ? (
         <EmptyState title="Không có đối tác nào" text={query ? "Thử tìm bằng tên khác hoặc bỏ bộ lọc." : undefined} />
       ) : (
-        <ul className="space-y-2">
-          {shown.map((pro) => (
-            <li key={pro.id}>
-              <Card className={cn("p-3.5", pro.suspended && "ring-1 ring-danger/40")}>
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="flex flex-wrap items-center gap-2 font-semibold">
-                      <Link href={`/pros/${pro.slug}`} target="_blank" className="hover:underline">
-                        {pro.name}
-                      </Link>
+        <Table>
+          <thead>
+            <tr>
+              <Th>Đối tác</Th>
+              <Th>Khu vực</Th>
+              <Th>Trạng thái</Th>
+              <Th className="text-right">Job</Th>
+              <Th className="text-right">Đánh giá</Th>
+              <Th className="text-right">Ví</Th>
+              <Th className="text-right">
+                <span className="sr-only">Thao tác</span>
+              </Th>
+            </tr>
+          </thead>
+          <tbody>
+            {shown.map((pro) => (
+              <React.Fragment key={pro.id}>
+                <Tr className={cn(pro.suspended && "bg-danger-soft/30")}>
+                  <Td>
+                    <Link href={`/pros/${pro.slug}`} target="_blank" className="font-medium text-ink hover:underline">
+                      {pro.name}
+                    </Link>
+                    <span className="block text-label text-muted">
+                      {pro.slug}
+                      {pro.payCode ? ` · ${pro.payCode}` : ""}
+                    </span>
+                  </Td>
+                  <Td className="text-ink-soft">{[pro.district, pro.city].filter(Boolean).join(", ")}</Td>
+                  <Td>
+                    <span className="flex flex-wrap gap-1">
+                      {pro.suspended ? (
+                        <Badge tone="danger">Tạm khoá</Badge>
+                      ) : pro.published ? (
+                        <Badge tone="success">Công khai</Badge>
+                      ) : (
+                        <Badge>Chưa công khai</Badge>
+                      )}
                       <Flag on={pro.identity === "verified"} label="Đã xác minh" />
-                      <Flag on={!pro.published} label="Chưa công khai" tone="muted" />
                       <Flag on={!pro.acceptingJobs} label="Tạm nghỉ" tone="muted" />
-                      <Flag on={pro.wallet < walletFloor} label="Bị chặn vì nợ phí" tone="warning" />
-                      <Flag on={pro.suspended} label="Tạm khoá" tone="danger" />
-                    </p>
-                    <p className="text-label text-muted">
-                      {[pro.district, pro.city].filter(Boolean).join(", ")} · {pro.completedJobs} job · ★ {pro.rating.toFixed(2)} ({pro.ratingCount}) · ví{" "}
-                      <span className={pro.wallet < 0 ? "font-semibold text-danger" : undefined}>{formatPrice(pro.wallet)}</span>
-                      {pro.payCode && <> · mã nạp {pro.payCode}</>}
-                    </p>
-                  </div>
-                  {pro.suspended ? (
-                    <ActButton size="sm" variant="soft" onClick={() => run(() => setSuspended(pro.id, false), `Đã mở khoá ${pro.name}.`)}>
-                      <Unlock className="size-4" /> Mở khoá
-                    </ActButton>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setLocking(pro.id)
-                        setReason("")
-                      }}
-                    >
-                      <Lock className="size-4" /> Tạm khoá
-                    </Button>
-                  )}
-                </div>
-                {locking === pro.id && (
-                  <div className="mt-3 space-y-2 rounded-xl bg-danger-soft/60 p-3">
-                    <p className="text-meta text-ink-soft">
-                      Tạm khoá thì hồ sơ bị ẩn và {pro.name} không nhận được lịch mới. Lịch đã nhận vẫn giữ. Lý do được ghi vào nhật ký.
-                    </p>
-                    <input
-                      className={cn(inputClass, "text-body")}
-                      placeholder="Lý do (VD: khách báo không đến nhiều lần)"
-                      aria-label="Lý do tạm khoá"
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                      autoFocus
-                    />
-                    <div className="flex gap-2">
-                      <ActButton
+                      <Flag on={pro.wallet < walletFloor} label="Chặn vì nợ phí" tone="warning" />
+                    </span>
+                  </Td>
+                  <Td className="text-right tabular-nums">{pro.completedJobs}</Td>
+                  <Td className="whitespace-nowrap text-right tabular-nums text-ink-soft">
+                    {pro.ratingCount ? `★ ${pro.rating.toFixed(1)} (${pro.ratingCount})` : "—"}
+                  </Td>
+                  <Td className={cn("text-right font-medium tabular-nums", pro.wallet < 0 && "text-danger")}>{formatPrice(pro.wallet)}</Td>
+                  <Td className="text-right">
+                    {pro.suspended ? (
+                      <ActButton size="sm" variant="outline" onClick={() => run(() => setSuspended(pro.id, false), `Đã mở khoá ${pro.name}.`)}>
+                        <Unlock /> Mở khoá
+                      </ActButton>
+                    ) : (
+                      <Button
                         size="sm"
-                        variant="danger"
-                        disabled={reason.trim().length < 5}
-                        onClick={async () => {
-                          if (await run(() => setSuspended(pro.id, true, reason.trim()), `Đã tạm khoá ${pro.name}.`)) setLocking(null)
+                        variant="ghost"
+                        onClick={() => {
+                          setLocking(locking === pro.id ? null : pro.id)
+                          setReason("")
                         }}
                       >
-                        Tạm khoá đối tác
-                      </ActButton>
-                      <Button size="sm" variant="ghost" onClick={() => setLocking(null)}>
-                        Thôi
+                        <Lock /> Khoá
                       </Button>
-                    </div>
-                  </div>
+                    )}
+                  </Td>
+                </Tr>
+                {locking === pro.id && (
+                  <tr>
+                    <td colSpan={7} className="border-b border-line bg-danger-soft/40 px-4 py-3">
+                      <p className="text-meta text-ink-soft">
+                        Tạm khoá thì hồ sơ bị ẩn và {pro.name} không nhận được lịch mới. Lịch đã nhận vẫn giữ. Lý do được ghi vào nhật ký.
+                      </p>
+                      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                        <input
+                          className={cn(inputClass, "sm:max-w-md")}
+                          placeholder="Lý do (VD: khách báo không đến nhiều lần)"
+                          aria-label="Lý do tạm khoá"
+                          value={reason}
+                          onChange={(e) => setReason(e.target.value)}
+                          autoFocus
+                        />
+                        <ActButton
+                          variant="danger"
+                          disabled={reason.trim().length < 5}
+                          onClick={async () => {
+                            if (await run(() => setSuspended(pro.id, true, reason.trim()), `Đã tạm khoá ${pro.name}.`)) setLocking(null)
+                          }}
+                        >
+                          Tạm khoá đối tác
+                        </ActButton>
+                        <Button variant="ghost" onClick={() => setLocking(null)}>
+                          Thôi
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
                 )}
-              </Card>
-            </li>
-          ))}
-        </ul>
+              </React.Fragment>
+            ))}
+          </tbody>
+        </Table>
       )}
+      <TableFoot>
+        <span>
+          {sorted.length} / {pros.length} đối tác
+        </span>
+      </TableFoot>
       {more}
     </div>
   )
@@ -349,45 +404,59 @@ export function BookingsPanel({ bookings, initialFilter }: { bookings: AdminBook
         onChange={setFilter}
         items={BOOKING_FILTERS.map((f) => ({ value: f, label: LABEL[f], count: bookings.filter(test[f]).length }))}
       />
-      <p className="text-label text-muted">{bookings.length} lịch mới tạo gần nhất. Bấm một lịch để mở chi tiết (tab mới).</p>
       {rows.length === 0 ? (
         <EmptyState title="Không có lịch hẹn nào" text={filter === "overdue" ? "Không có lịch nào quá hạn nhận." : undefined} />
       ) : (
-        <ul className="space-y-2">
-          {shown.map((b) => (
-            <li key={b.id}>
-              <Link href={`/bookings/${b.id}`} target="_blank" className="block">
-                <Card className={cn("flex flex-wrap items-center gap-3 p-3.5 text-body hover:border-ink", overdue(b) && "ring-1 ring-danger/40")}>
-                  {KNOWN_STATUS.has(b.status) ? (
-                    <StatusBadge status={b.status as BookingStatus} />
-                  ) : (
-                    <span className="rounded-full bg-subtle px-2.5 py-1 text-label font-semibold">{b.status}</span>
+        <Table>
+          <thead>
+            <tr>
+              <Th>Trạng thái</Th>
+              <Th>Khách → Đối tác</Th>
+              <Th>Dịch vụ</Th>
+              <Th>Thời gian</Th>
+              <Th className="text-right">Tổng</Th>
+              <Th className="text-right">Tạo</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {shown.map((b) => (
+              <Tr key={b.id} className={cn("cursor-pointer", overdue(b) && "bg-danger-soft/30")} onClick={() => window.open(`/bookings/${b.id}`, "_blank")}>
+                <Td>
+                  {KNOWN_STATUS.has(b.status) ? <StatusBadge status={b.status as BookingStatus} /> : <Badge>{b.status}</Badge>}
+                  {b.status === "pending" && b.confirmBy && (
+                    <span className={cn("mt-1 block whitespace-nowrap text-label", overdue(b) ? "font-medium text-danger" : "text-warning")}>
+                      {overdue(b) ? "Quá hạn" : "Hạn"} {localTime(b.confirmBy)} {localDate(b.confirmBy)}
+                    </span>
                   )}
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold">
-                      {b.customerName} → {b.proName}
-                    </span>
-                    <span className="block truncate text-label text-muted">
-                      {b.date} {b.time} · {b.serviceLabel}
-                      {b.atHome ? " · tại nhà" : ""}
-                      {b.district ? ` · ${b.district}` : ""}
-                    </span>
-                    {b.status === "pending" && b.confirmBy && (
-                      <span className={cn("block text-label", overdue(b) ? "font-semibold text-danger" : "text-warning")}>
-                        {overdue(b) ? `Quá hạn nhận từ ${localTime(b.confirmBy)} ${localDate(b.confirmBy)}` : `Đối tác cần nhận trước ${localTime(b.confirmBy)} ${localDate(b.confirmBy)}`}
-                      </span>
-                    )}
+                </Td>
+                <Td>
+                  <Link href={`/bookings/${b.id}`} target="_blank" onClick={(e) => e.stopPropagation()} className="font-medium text-ink hover:underline">
+                    {b.customerName} → {b.proName}
+                  </Link>
+                  <span className="block text-label text-muted">#{b.id.slice(0, 8)}</span>
+                </Td>
+                <Td className="max-w-64">
+                  <span className="block truncate">{b.serviceLabel}</span>
+                  <span className="block text-label text-muted">
+                    {b.atHome ? "Tại nhà" : "Tại tiệm"}
+                    {b.district ? ` · ${b.district}` : ""}
                   </span>
-                  <span className="text-right">
-                    <span className="block font-semibold tabular-nums">{formatPrice(b.total)}</span>
-                    <span className="block text-label text-muted">tạo {timeAgo(b.createdAt)}</span>
-                  </span>
-                </Card>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                </Td>
+                <Td className="whitespace-nowrap tabular-nums">
+                  {b.date.split("-").reverse().join("/")} <span className="text-muted">{b.time}</span>
+                </Td>
+                <Td className="text-right font-medium tabular-nums">{formatPrice(b.total)}</Td>
+                <Td className="whitespace-nowrap text-right text-label text-muted">{timeAgo(b.createdAt)}</Td>
+              </Tr>
+            ))}
+          </tbody>
+        </Table>
       )}
+      <TableFoot>
+        <span>
+          {rows.length} / {bookings.length} lịch mới tạo gần nhất · bấm một dòng để mở chi tiết
+        </span>
+      </TableFoot>
       {more}
     </div>
   )
@@ -456,7 +525,7 @@ export function ReviewsPanel({ initialFilter, run }: { initialFilter?: string; r
                 <div className="flex flex-wrap items-center gap-2">
                   <span
                     className={cn(
-                      "rounded-full px-2 py-0.5 text-label font-bold tabular-nums",
+                      "rounded-md px-1.5 py-0.5 text-label font-semibold tabular-nums",
                       r.rating <= 2 ? "bg-danger-soft text-danger" : r.rating === 3 ? "bg-warning-soft text-warning" : "bg-success-soft text-success",
                     )}
                   >
@@ -478,7 +547,7 @@ export function ReviewsPanel({ initialFilter, run }: { initialFilter?: string; r
                     {r.photos > 0 ? `${r.tags.length ? " · " : ""}${r.photos} ảnh` : ""}
                   </p>
                 )}
-                {r.reply && <p className="mt-2 rounded-xl bg-canvas px-3 py-2 text-meta text-ink-soft">Đối tác trả lời: {r.reply}</p>}
+                {r.reply && <p className="mt-2 rounded-lg bg-canvas px-3 py-2 text-meta text-ink-soft">Đối tác trả lời: {r.reply}</p>}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <ActButton
                     size="sm"
@@ -582,7 +651,7 @@ export function RequestsPanel() {
                 <li key={j.id}>
                   <Card className={cn("p-3.5", j.status === "open" && j.offers === 0 && "ring-1 ring-warning/40")}>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={cn("rounded-full px-2 py-0.5 text-label font-semibold", JOB_STATUS[j.status]?.tone ?? "bg-subtle")}>
+                      <span className={cn("rounded-md px-1.5 py-0.5 text-label font-medium", JOB_STATUS[j.status]?.tone ?? "bg-subtle")}>
                         {JOB_STATUS[j.status]?.label ?? j.status}
                       </span>
                       <span className="text-body font-semibold">{j.service}</span>
@@ -618,7 +687,7 @@ export function RequestsPanel() {
             <li key={c.id}>
               <Card className="p-3.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={cn("rounded-full px-2 py-0.5 text-label font-semibold", c.status === "open" ? "bg-accent-soft text-accent-dark" : "bg-subtle text-muted")}>
+                  <span className={cn("rounded-md px-1.5 py-0.5 text-label font-medium", c.status === "open" ? "bg-accent-soft text-accent-dark" : "bg-subtle text-muted")}>
                     {c.status === "open" ? "Đang tuyển" : "Đã đóng"}
                   </span>
                   <Link href={`/tuyen-mau/${c.id}`} target="_blank" className="text-body font-semibold hover:underline">

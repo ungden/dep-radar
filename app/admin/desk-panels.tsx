@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { Download, KeyRound, Lock, Search, Unlock } from "lucide-react"
-import { Button, Card, EmptyState, Field, inputClass } from "@/components/ui"
+import { Badge, Button, Card, EmptyState, Field, Table, Td, Th, Tr, inputClass } from "./ui"
 import {
   adjustWallet,
   adminCustomers,
@@ -71,18 +71,18 @@ export function CustomersPanel() {
   }
 
   return (
-    <div className="mt-4 space-y-3">
-      <div className="relative">
+    <div className="space-y-3">
+      <div className="relative sm:max-w-sm">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
         <input
-          className={cn(inputClass, "pl-9 text-body")}
+          className={cn(inputClass, "pl-9")}
           placeholder="Tìm theo tên, số điện thoại hoặc email"
           aria-label="Tìm khách hàng"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
-      {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">{error}</p>}
+      {error && <p className="rounded-lg border border-danger/20 bg-danger-soft px-3.5 py-2.5 text-body text-danger">{error}</p>}
       {rows === null ? (
         <p className="text-body text-muted">Đang tải…</p>
       ) : rows.length === 0 ? (
@@ -93,90 +93,120 @@ export function CustomersPanel() {
             {rows.length} tài khoản{rows.length === 200 ? " (200 gần nhất, tìm để lọc thêm)" : ""}. Khoá một tài khoản thì người đó không đặt lịch, đăng
             yêu cầu hay nhắn tin được nữa; lịch đã đặt vẫn giữ.
           </p>
-          <ul className="space-y-2">
-            {rows.map((c) => (
-              <li key={c.id}>
-                <Card className={cn("p-3.5", c.suspendedAt && "ring-1 ring-danger/40")}>
-                  <div className="flex flex-wrap items-start gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="flex flex-wrap items-center gap-2 font-semibold">
+          <Table>
+            <thead>
+              <tr>
+                <Th>Tài khoản</Th>
+                <Th>Liên hệ</Th>
+                <Th className="text-right">Lịch</Th>
+                <Th className="text-right">Huỷ / vắng</Th>
+                <Th className="text-right">Đã chi</Th>
+                <Th>Tham gia</Th>
+                <Th className="text-right">
+                  <span className="sr-only">Thao tác</span>
+                </Th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((c) => (
+                <React.Fragment key={c.id}>
+                  <Tr className={cn(c.suspendedAt && "bg-danger-soft/30")}>
+                    <Td>
+                      <span className="flex flex-wrap items-center gap-1.5 font-medium">
                         {c.name}
-                        {c.isPro && <span className="rounded-full bg-subtle px-2 py-0.5 text-label font-semibold text-ink-soft">Đối tác</span>}
-                        {c.suspendedAt && <span className="rounded-full bg-danger-soft px-2 py-0.5 text-label font-semibold text-danger">Đã khoá</span>}
-                      </p>
-                      <p className="text-label text-muted">
-                        {c.phone || "chưa có SĐT"}
-                        {c.email ? ` · ${c.email}` : ""} · tham gia {localDate(c.createdAt)}
-                      </p>
-                      <p className="mt-1 text-label text-ink-soft">
-                        {c.bookings} lịch · {c.completed} xong · {c.cancelled} tự huỷ · {c.noShows} vắng mặt · đã chi {formatPrice(c.spent)}
-                        {c.lastBookingAt ? ` · lịch gần nhất ${localDate(c.lastBookingAt)}` : ""}
-                      </p>
-                      {c.suspendedAt && c.suspendReason && <p className="mt-1 text-label text-danger">Lý do khoá: {c.suspendReason}</p>}
-                    </div>
-                    <Button size="sm" variant="ghost" onClick={() => setResetting(c)}>
-                      <KeyRound className="size-4" /> Đặt lại mật khẩu
-                    </Button>
-                    {c.suspendedAt ? (
-                      <Button size="sm" variant="soft" onClick={() => void toggle(c, false)}>
-                        <Unlock className="size-4" /> Mở khoá
-                      </Button>
-                    ) : (
-                      <Button size="sm" variant="ghost" onClick={() => setLocking(c)}>
-                        <Lock className="size-4" /> Khoá
-                      </Button>
-                    )}
-                  </div>
-                  {resetting?.id === c.id && (
-                    <div className="mt-3 space-y-2 rounded-xl bg-warning-soft px-3.5 py-3 text-meta">
-                      <p>
-                        Chỉ đặt lại khi người nhắn Zalo dùng <b>đúng số {c.phone || "của tài khoản"}</b>. Mật khẩu cũ hết hiệu lực ngay, chủ tài khoản nhận thông báo.
-                      </p>
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={() => void reset(c)}>
-                          Xác nhận đặt lại
+                        {c.isPro && <Badge>Đối tác</Badge>}
+                        {c.suspendedAt && <Badge tone="danger">Đã khoá</Badge>}
+                      </span>
+                      {c.suspendedAt && c.suspendReason && <span className="block text-label text-danger">Lý do: {c.suspendReason}</span>}
+                    </Td>
+                    <Td className="text-ink-soft">
+                      <span className="block whitespace-nowrap">{c.phone || "chưa có SĐT"}</span>
+                      {c.email && <span className="block max-w-56 truncate text-label text-muted">{c.email}</span>}
+                    </Td>
+                    <Td className="text-right tabular-nums">
+                      {c.bookings}
+                      <span className="block text-label text-muted">{c.completed} xong</span>
+                    </Td>
+                    <Td className={cn("text-right tabular-nums", c.cancelled + c.noShows > 0 && "text-warning")}>
+                      {c.cancelled} / {c.noShows}
+                    </Td>
+                    <Td className="text-right font-medium tabular-nums">{formatPrice(c.spent)}</Td>
+                    <Td className="whitespace-nowrap text-ink-soft">
+                      {localDate(c.createdAt)}
+                      {c.lastBookingAt && <span className="block text-label text-muted">lịch cuối {localDate(c.lastBookingAt)}</span>}
+                    </Td>
+                    <Td className="text-right">
+                      <span className="inline-flex gap-1">
+                        <Button size="sm" variant="ghost" title="Đặt lại mật khẩu" onClick={() => setResetting(c)}>
+                          <KeyRound /> <span className="hidden xl:inline">Mật khẩu</span>
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setResetting(null)}>
-                          Thôi
-                        </Button>
-                      </div>
-                    </div>
+                        {c.suspendedAt ? (
+                          <Button size="sm" variant="outline" onClick={() => void toggle(c, false)}>
+                            <Unlock /> Mở khoá
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="ghost" onClick={() => setLocking(locking?.id === c.id ? null : c)}>
+                            <Lock /> Khoá
+                          </Button>
+                        )}
+                      </span>
+                    </Td>
+                  </Tr>
+                  {(resetting?.id === c.id || issued?.id === c.id || locking?.id === c.id) && (
+                    <tr>
+                      <td colSpan={7} className="border-b border-line bg-subtle/50 px-4 py-3">
+                        {resetting?.id === c.id && (
+                          <div className="space-y-2 text-meta">
+                            <p>
+                              Chỉ đặt lại khi người nhắn Zalo dùng <b>đúng số {c.phone || "của tài khoản"}</b>. Mật khẩu cũ hết hiệu lực ngay, chủ tài khoản
+                              nhận thông báo.
+                            </p>
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => void reset(c)}>
+                                Xác nhận đặt lại
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => setResetting(null)}>
+                                Thôi
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        {issued?.id === c.id && (
+                          <div className="space-y-1 text-meta">
+                            <p>
+                              Mật khẩu mới (chỉ hiện một lần): <b className="select-all font-mono text-body">{issued.password}</b>
+                            </p>
+                            <p className="text-ink-soft">Gửi qua Zalo cho đúng số {c.phone}. Nhắc khách đăng nhập rồi đổi mật khẩu trong Cài đặt tài khoản.</p>
+                            <Button size="sm" variant="ghost" onClick={() => setIssued(null)}>
+                              Đã gửi, ẩn đi
+                            </Button>
+                          </div>
+                        )}
+                        {locking?.id === c.id && (
+                          <div className="flex flex-col gap-2 sm:flex-row">
+                            <input
+                              className={cn(inputClass, "sm:max-w-md")}
+                              placeholder="Lý do (VD: bùng lịch nhiều lần, quấy rối người làm)"
+                              aria-label="Lý do khoá"
+                              value={reason}
+                              onChange={(e) => setReason(e.target.value)}
+                              autoFocus
+                            />
+                            <Button variant="danger" disabled={reason.trim().length < 5} onClick={() => void toggle(c, true, reason)}>
+                              Khoá tài khoản
+                            </Button>
+                            <Button variant="ghost" onClick={() => setLocking(null)}>
+                              Thôi
+                            </Button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
                   )}
-                  {issued?.id === c.id && (
-                    <div className="mt-3 space-y-1 rounded-xl bg-success-soft px-3.5 py-3 text-meta">
-                      <p>
-                        Mật khẩu mới (chỉ hiện một lần): <b className="select-all font-mono text-body">{issued.password}</b>
-                      </p>
-                      <p className="text-ink-soft">Gửi qua Zalo cho đúng số {c.phone}. Nhắc khách đăng nhập rồi đổi mật khẩu trong Cài đặt tài khoản.</p>
-                      <Button size="sm" variant="ghost" onClick={() => setIssued(null)}>
-                        Đã gửi, ẩn đi
-                      </Button>
-                    </div>
-                  )}
-                  {locking?.id === c.id && (
-                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                      <input
-                        className={cn(inputClass, "text-body")}
-                        placeholder="Lý do (VD: bùng lịch nhiều lần, quấy rối người làm)"
-                        aria-label="Lý do khoá"
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                        autoFocus
-                      />
-                      <div className="flex gap-2">
-                        <Button size="sm" disabled={reason.trim().length < 5} onClick={() => void toggle(c, true, reason)}>
-                          Khoá tài khoản
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setLocking(null)}>
-                          Thôi
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </Card>
-              </li>
-            ))}
-          </ul>
+                </React.Fragment>
+              ))}
+            </tbody>
+          </Table>
         </>
       )}
     </div>
@@ -227,7 +257,7 @@ export function FinancePanel({ pros }: { pros: AdminPro[] }) {
   })()
 
   return (
-    <div className="mt-4 space-y-4">
+    <div className="space-y-4">
       <Card className="flex flex-wrap items-end gap-3 p-4">
         <Field label="Từ ngày">
           <input type="date" className={cn(inputClass, "text-body")} value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
@@ -252,7 +282,7 @@ export function FinancePanel({ pros }: { pros: AdminPro[] }) {
         </div>
       </Card>
 
-      {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">{error}</p>}
+      {error && <p className="rounded-lg border border-danger/20 bg-danger-soft px-3.5 py-2.5 text-body text-danger">{error}</p>}
 
       {s && (
         <>
@@ -287,13 +317,13 @@ export function FinancePanel({ pros }: { pros: AdminPro[] }) {
               CCCD và doanh thu, dùng khi cung cấp thông tin người bán cho cơ quan thuế.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <a className="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-2 text-body font-semibold hover:bg-subtle" href={`/admin/export?kind=bookings&${range}`}>
+              <a className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-[13px] font-medium shadow-sm hover:bg-subtle" href={`/admin/export?kind=bookings&${range}`}>
                 <Download className="size-4" /> Lịch hẹn & hoa hồng
               </a>
-              <a className="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-2 text-body font-semibold hover:bg-subtle" href={`/admin/export?kind=pros&${range}`}>
+              <a className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-[13px] font-medium shadow-sm hover:bg-subtle" href={`/admin/export?kind=pros&${range}`}>
                 <Download className="size-4" /> Theo người làm
               </a>
-              <a className="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-2 text-body font-semibold hover:bg-subtle" href={`/admin/export?kind=wallet&${range}`}>
+              <a className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-[13px] font-medium shadow-sm hover:bg-subtle" href={`/admin/export?kind=wallet&${range}`}>
                 <Download className="size-4" /> Sổ ví (đối chiếu ngân hàng)
               </a>
             </div>
@@ -344,7 +374,7 @@ function Figure({ label, value, hint, strong, tone }: { label: string; value: st
   return (
     <Card className={cn("p-3.5", strong && "ring-1 ring-accent/30")}>
       <p className="text-label text-muted">{label}</p>
-      <p className={cn("mt-0.5 text-[20px] font-bold tabular-nums", tone === "danger" && "text-danger")}>{value}</p>
+      <p className={cn("mt-0.5 text-xl font-semibold tabular-nums", tone === "danger" && "text-danger")}>{value}</p>
       {hint && <p className="mt-0.5 text-label text-muted">{hint}</p>}
     </Card>
   )
@@ -449,7 +479,7 @@ export function SettingsPanel({ settings, fees, log }: { settings: PlatformSetti
   const pct = (n: number) => `${Math.round(n * 1000) / 10}%`
 
   return (
-    <div className="mt-4 space-y-4">
+    <div className="space-y-4">
       <Card className="space-y-4 p-4">
         <p className="font-semibold">Thông tin công ty</p>
         <p className="-mt-3 text-meta text-muted">Hiện ở chân trang, trang Quy chế hoạt động và khi khách/đối tác cần liên hệ.</p>
@@ -598,7 +628,7 @@ export function HelpQuestionsPanel() {
   }, [filter])
 
   return (
-    <div className="mt-4 space-y-3">
+    <div className="space-y-3">
       <p className="text-meta text-muted">
         Câu hỏi người dùng gửi trợ lý ở trang Trợ giúp (giữ 180 ngày, đã che số điện thoại và email). Câu chưa có câu trả lời là
         việc cần bổ sung vào FAQ.
@@ -618,7 +648,7 @@ export function HelpQuestionsPanel() {
           </Button>
         ))}
       </div>
-      {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">{error}</p>}
+      {error && <p className="rounded-lg border border-danger/20 bg-danger-soft px-3.5 py-2.5 text-body text-danger">{error}</p>}
       {rows === null ? (
         <p className="text-body text-muted">Đang tải…</p>
       ) : rows.length === 0 ? (
@@ -629,10 +659,10 @@ export function HelpQuestionsPanel() {
             <li key={q.id}>
               <Card className="space-y-1.5 p-3.5 text-body">
                 <div className="flex flex-wrap items-center gap-2 text-label text-muted">
-                  <span className="rounded-full bg-subtle px-2 py-0.5 font-semibold text-ink">{q.audience === "doi-tac" ? "Đối tác" : "Khách"}</span>
-                  {!q.covered && <span className="rounded-full bg-warning-soft px-2 py-0.5 font-semibold text-warning">Chưa có trong FAQ</span>}
-                  {q.helpful === false && <span className="rounded-full bg-danger-soft px-2 py-0.5 font-semibold text-danger">Không hữu ích</span>}
-                  {q.helpful === true && <span className="rounded-full bg-success-soft px-2 py-0.5 font-semibold text-success">Hữu ích</span>}
+                  <span className="rounded-md bg-subtle px-1.5 py-0.5 font-medium text-ink">{q.audience === "doi-tac" ? "Đối tác" : "Khách"}</span>
+                  {!q.covered && <span className="rounded-md bg-warning-soft px-1.5 py-0.5 font-medium text-warning">Chưa có trong FAQ</span>}
+                  {q.helpful === false && <span className="rounded-md bg-danger-soft px-1.5 py-0.5 font-medium text-danger">Không hữu ích</span>}
+                  {q.helpful === true && <span className="rounded-md bg-success-soft px-1.5 py-0.5 font-medium text-success">Hữu ích</span>}
                   <span>{timeAgo(q.createdAt)}</span>
                   <span>· {q.model}</span>
                 </div>
@@ -679,7 +709,7 @@ export function CatalogPanel() {
   const labels = tierLabels()
 
   return (
-    <div className="mt-4 space-y-3">
+    <div className="space-y-3">
       <Card className="p-4 text-body">
         <p className="font-semibold">Danh mục dịch vụ & bảng giá (phiên bản {CATALOG_VERSION})</p>
         <p className="mt-1 text-label text-muted">
@@ -695,7 +725,7 @@ export function CatalogPanel() {
             type="button"
             onClick={() => setCategory(c.id)}
             className={cn(
-              "rounded-full border px-3 py-1.5 text-label font-semibold",
+              "h-7 rounded-md border px-2.5 text-[13px] font-medium",
               c.id === category ? "border-ink bg-ink text-canvas" : "border-line hover:bg-subtle",
             )}
           >

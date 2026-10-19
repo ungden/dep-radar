@@ -3,7 +3,33 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Button, Card, EmptyState, PageHeader, inputClass } from "@/components/ui"
+import {
+  ArrowLeft,
+  BadgeCheck,
+  Bell,
+  CalendarDays,
+  ChevronRight,
+  CircleAlert,
+  CircleCheck,
+  ClipboardList,
+  ExternalLink,
+  Flag,
+  Landmark,
+  LayoutDashboard,
+  Menu,
+  MessageCircleQuestion,
+  Settings,
+  Sparkles,
+  Star,
+  Tags,
+  UserCheck,
+  UserRound,
+  Users,
+  Wallet,
+  X,
+} from "lucide-react"
+import { Avatar, LogoMark } from "@/components/ui"
+import { Button, Card, EmptyState, inputClass } from "./ui"
 import { askReportInfo, decideCheck, decideNoShowCompensation, overrideAiDecision, recordTopup, reportChat, resolveReport } from "@/lib/api/admin"
 import { EvidenceGrid } from "@/components/evidence-picker"
 import type { AdminAction, AdminBooking, AdminOverview, AdminPro, AdminReport, AiDecisionItem, FeePolicyView, PendingCheck, PlatformSettings, ProfileQueueItem, ReportChatMessage } from "@/lib/api/admin"
@@ -12,16 +38,17 @@ import { CatalogPanel, CustomersPanel, FinancePanel, HelpQuestionsPanel, Setting
 import { BookingsPanel, OverviewPanel, ProsPanel, RequestsPanel, ReviewsPanel } from "./desk-ops"
 import { ActButton, FilterChips } from "./desk-shared"
 import type { Go, Tab } from "./tabs"
-import { useRefresh } from "@/lib/store"
+import { useApp, useRefresh } from "@/lib/store"
 import { cn, formatPrice, timeAgo } from "@/lib/utils"
 
 type Result = { ok: true } | { ok: false; error: string }
 
 /**
  * The operations desk: an overview of what needs a person, the partner profiles
- * waiting for approval, the verifications a vision model was unsure about, the partner roster and the AI reviewer's log,
- * bookings, customers, requests and reviews, the report inbox, the money and
- * the settings. Every button calls an RPC that checks `is_admin()` again in the
+ * waiting for approval, the verifications a vision model was unsure about, the
+ * partner roster and the AI reviewer's log, bookings, customers, requests and
+ * reviews, the report inbox, the money and the settings. It has its own frame
+ * (sidebar, top bar) rather than the shop's header and footer. Every button calls an RPC that checks `is_admin()` again in the
  * database. The open panel is in the address (?tab=), so a reload or a shared
  * link lands in the same place.
  */
@@ -52,6 +79,7 @@ export function AdminDesk({
   const [error, setError] = React.useState<string | null>(null)
   const [notice, setNotice] = React.useState<string | null>(null)
   const refresh = useRefresh()
+  const app = useApp()
   const tab = view.tab
 
   React.useEffect(() => {
@@ -83,114 +111,133 @@ export function AdminDesk({
   const openReports = reports.filter((r) => r.status === "open" || r.status === "reviewing")
   const claims = openReports.filter((r) => r.claim).length
 
-  const groups: { title: string | null; items: { value: Tab; label: string; count?: number; alert?: boolean }[] }[] = [
-    { title: null, items: [{ value: "overview", label: "Tổng quan" }] },
+  const groups: NavGroup[] = [
+    { title: null, items: [{ value: "overview", label: "Tổng quan", icon: LayoutDashboard }] },
     {
       title: "Đối tác",
       items: [
-        { value: "approvals", label: "Duyệt hồ sơ", count: queue.length, alert: queue.length > 0 },
-        { value: "checks", label: "Xác minh", count: checks.length, alert: checks.length > 0 },
-        { value: "pros", label: "Đối tác", count: pros.length },
-        { value: "ai", label: "Nhật ký AI", count: aiLog.last24h },
+        { value: "approvals", label: "Duyệt hồ sơ", icon: UserCheck, count: queue.length, alert: queue.length > 0 },
+        { value: "checks", label: "Xác minh", icon: BadgeCheck, count: checks.length, alert: checks.length > 0 },
+        { value: "pros", label: "Đối tác", icon: Users, count: pros.length },
+        { value: "ai", label: "Nhật ký AI", icon: Sparkles, count: aiLog.last24h },
       ],
     },
     {
       title: "Khách & lịch",
       items: [
-        { value: "bookings", label: "Lịch hẹn", count: overview.overdueConfirm || undefined, alert: overview.overdueConfirm > 0 },
-        { value: "customers", label: "Tài khoản" },
-        { value: "requests", label: "Yêu cầu & tuyển mẫu" },
-        { value: "reviews", label: "Đánh giá", count: overview.lowReviews7d || undefined, alert: overview.lowReviews7d > 0 },
+        { value: "bookings", label: "Lịch hẹn", icon: CalendarDays, count: overview.overdueConfirm || undefined, alert: overview.overdueConfirm > 0 },
+        { value: "customers", label: "Tài khoản", icon: UserRound },
+        { value: "requests", label: "Yêu cầu & tuyển mẫu", icon: ClipboardList },
+        { value: "reviews", label: "Đánh giá", icon: Star, count: overview.lowReviews7d || undefined, alert: overview.lowReviews7d > 0 },
       ],
     },
-    { title: "An toàn", items: [{ value: "reports", label: "Báo cáo", count: openReports.length, alert: openReports.length > 0 }] },
+    { title: "An toàn", items: [{ value: "reports", label: "Báo cáo", icon: Flag, count: openReports.length, alert: openReports.length > 0 }] },
     {
       title: "Tiền",
       items: [
-        { value: "finance", label: "Tài chính" },
-        { value: "topup", label: "Nạp ví" },
+        { value: "finance", label: "Tài chính", icon: Landmark },
+        { value: "topup", label: "Nạp ví", icon: Wallet },
       ],
     },
     {
       title: "Hệ thống",
       items: [
-        { value: "help", label: "Câu hỏi trợ giúp", count: overview.uncoveredHelp7d || undefined },
-        { value: "catalog", label: "Danh mục & giá" },
-        { value: "settings", label: "Cấu hình & nhật ký" },
+        { value: "help", label: "Câu hỏi trợ giúp", icon: MessageCircleQuestion, count: overview.uncoveredHelp7d || undefined },
+        { value: "catalog", label: "Danh mục & giá", icon: Tags },
+        { value: "settings", label: "Cấu hình & nhật ký", icon: Settings },
       ],
     },
   ]
   const all = groups.flatMap((g) => g.items)
   const current = all.find((i) => i.value === tab)
+  const groupTitle = groups.find((g) => g.items.some((i) => i.value === tab))?.title
+  // "Đối tác › Đối tác" says nothing twice.
+  const group = groupTitle && groupTitle !== current?.label ? groupTitle : null
+  const [menu, setMenu] = React.useState(false)
+  const pick = (next: Tab) => {
+    setMenu(false)
+    go(next)
+  }
 
   return (
-    <div className="mx-auto max-w-6xl md:pt-4">
-      <PageHeader title="Vận hành" />
+    <div className="min-h-dvh">
+      {/* A desk gets the sidebar; a phone opens it as a drawer from the top bar. */}
+      <aside aria-label="Các mục quản trị" className="fixed inset-y-0 left-0 z-40 hidden w-60 border-r border-line bg-surface md:block">
+        <Sidebar groups={groups} tab={tab} onPick={pick} />
+      </aside>
+      {menu && (
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Các mục quản trị">
+          <button type="button" aria-label="Đóng menu" className="absolute inset-0 bg-ink/40" onClick={() => setMenu(false)} />
+          <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-surface shadow-xl">
+            <Sidebar groups={groups} tab={tab} onPick={pick} onClose={() => setMenu(false)} />
+          </aside>
+        </div>
+      )}
 
-      {/* A phone gets one scrolling row; a desk gets the grouped list at the side. */}
-      <nav aria-label="Các mục quản trị" className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-3 md:hidden">
-        {all.map((item) => (
+      <div className="flex min-h-dvh min-w-0 flex-col md:pl-60">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-line bg-surface/95 px-3 backdrop-blur md:px-6">
           <button
-            key={item.value}
             type="button"
-            onClick={() => go(item.value)}
-            aria-current={tab === item.value ? "page" : undefined}
-            className={cn(
-              "min-h-10 shrink-0 rounded-full border px-3.5 text-meta font-semibold",
-              tab === item.value ? "border-ink bg-ink text-canvas" : "border-line bg-surface text-ink-soft",
-            )}
+            aria-label="Mở menu"
+            onClick={() => setMenu(true)}
+            className="inline-flex size-9 items-center justify-center rounded-md text-ink-soft hover:bg-subtle md:hidden"
           >
-            {item.label}
-            {item.count !== undefined && <Count n={item.count} alert={item.alert} on={tab === item.value} />}
+            <Menu className="size-5" />
           </button>
-        ))}
-      </nav>
-
-      <div className="md:grid md:grid-cols-[208px_minmax(0,1fr)] md:gap-8">
-        <nav aria-label="Các mục quản trị" className="hidden md:block">
-          <div className="sticky top-[92px] space-y-4">
-            {groups.map((g) => (
-              <div key={g.title ?? "top"}>
-                {g.title && <p className="mb-1 px-3 text-label font-semibold uppercase tracking-wide text-muted">{g.title}</p>}
-                <ul>
-                  {g.items.map((item) => (
-                    <li key={item.value}>
-                      <button
-                        type="button"
-                        onClick={() => go(item.value)}
-                        aria-current={tab === item.value ? "page" : undefined}
-                        className={cn(
-                          "flex min-h-10 w-full items-center gap-2 rounded-xl px-3 text-left text-[15px] font-semibold",
-                          tab === item.value ? "bg-ink text-canvas" : "text-ink-soft hover:bg-subtle hover:text-ink",
-                        )}
-                      >
-                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                        {item.count !== undefined && <Count n={item.count} alert={item.alert} on={tab === item.value} />}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </nav>
-
-        <section aria-label={current?.label} className="min-w-0">
-          {tab !== "overview" && <h2 className="mb-3 hidden text-title font-bold md:block">{current?.label}</h2>}
-
-          {error && (
-            <p role="alert" className="mb-3 flex items-start gap-3 rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
-              <span className="min-w-0 flex-1">{error}</span>
-              <button type="button" className="text-meta font-semibold underline" onClick={() => setError(null)}>
-                Đóng
-              </button>
-            </p>
+          <nav aria-label="Vị trí" className="flex min-w-0 flex-1 items-center gap-1.5 text-meta">
+            <button type="button" onClick={() => go("overview")} className="hidden text-muted hover:text-ink sm:inline">
+              Vận hành
+            </button>
+            {group && (
+              <>
+                <ChevronRight className="hidden size-3.5 text-muted sm:inline" aria-hidden />
+                <span className="hidden text-muted sm:inline">{group}</span>
+              </>
+            )}
+            {tab !== "overview" && <ChevronRight className="hidden size-3.5 text-muted sm:inline" aria-hidden />}
+            <span className={cn("truncate font-medium text-ink", tab === "overview" && "sm:hidden")}>{current?.label}</span>
+          </nav>
+          <Link href="/" className="hidden h-8 items-center gap-1.5 rounded-md px-2.5 text-meta text-ink-soft hover:bg-subtle hover:text-ink sm:inline-flex">
+            <ExternalLink className="size-4" aria-hidden /> Trang khách
+          </Link>
+          <Link href="/thong-bao" aria-label="Thông báo" className="relative inline-flex size-9 items-center justify-center rounded-md text-ink-soft hover:bg-subtle hover:text-ink">
+            <Bell className="size-[18px]" />
+            {app.unreadNotifications > 0 && (
+              <span className="absolute right-1 top-1 min-w-4 rounded-full bg-danger px-1 text-center text-[10px] font-semibold leading-4 text-white">
+                {app.unreadNotifications > 9 ? "9+" : app.unreadNotifications}
+              </span>
+            )}
+          </Link>
+          {app.session && (
+            <Link href="/me" aria-label="Tài khoản" className="ml-1 flex items-center gap-2 rounded-md py-1 pl-1 pr-2 hover:bg-subtle">
+              <Avatar name={app.session.name} size={28} />
+              <span className="hidden max-w-32 truncate text-meta font-medium lg:inline">{app.session.name}</span>
+            </Link>
           )}
-          {notice && (
-            <p role="status" className="mb-3 rounded-xl bg-success-soft px-3.5 py-2.5 text-body font-semibold text-success">
-              {notice}
-            </p>
-          )}
+        </header>
+
+        <main id="main" className="flex-1 px-4 py-5 md:px-6 md:py-6">
+          <div className="mx-auto w-full max-w-[1280px]">
+            <div className="mb-5">
+              <h1 className="text-xl font-semibold tracking-tight text-ink">{tab === "overview" ? "Tổng quan" : current?.label}</h1>
+              {DESCRIPTION[tab] && <p className="mt-0.5 text-meta text-muted">{DESCRIPTION[tab]}</p>}
+            </div>
+
+            {error && (
+              <p role="alert" className="mb-4 flex items-start gap-3 rounded-lg border border-danger/20 bg-danger-soft px-3.5 py-2.5 text-body text-danger">
+                <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+                <span className="min-w-0 flex-1">{error}</span>
+                <button type="button" className="text-meta font-medium underline" onClick={() => setError(null)}>
+                  Đóng
+                </button>
+              </p>
+            )}
+            {notice && (
+              <p role="status" className="fixed bottom-4 right-4 z-50 flex max-w-sm items-center gap-2 rounded-lg bg-ink px-4 py-3 text-body text-white shadow-lg">
+                <CircleCheck className="size-4 shrink-0 text-[#6CE9A6]" aria-hidden />
+                {notice}
+              </p>
+            )}
 
           {tab === "overview" && (
             <OverviewPanel
@@ -253,18 +300,93 @@ export function AdminDesk({
           {tab === "reviews" && <ReviewsPanel key={view.filter} initialFilter={view.filter} run={run} />}
 
           {tab === "reports" && <ReportsPanel key={view.filter} reports={reports} initialFilter={view.filter} run={run} />}
-        </section>
+          </div>
+        </main>
       </div>
     </div>
   )
 }
 
-function Count({ n, alert, on }: { n: number; alert?: boolean; on: boolean }) {
+/** One line under each panel's title: what it is for. */
+const DESCRIPTION: Partial<Record<Tab, string>> = {
+  overview: "Việc cần người xử lý và tình hình hôm nay.",
+  approvals: "Hồ sơ đối tác chỉ hiện với khách sau khi được duyệt ở đây. AI xem trước và gợi ý, bạn quyết định.",
+  checks: "Ca xác minh CCCD mà AI chưa chắc chắn.",
+  pros: "Toàn bộ đối tác: trạng thái, ví phí, khoá và mở khoá.",
+  ai: "Quyết định và gợi ý của AI, kèm lý do.",
+  bookings: "Lịch hẹn mới tạo gần nhất.",
+  customers: "Tài khoản, lịch sử đặt lịch, khoá và đặt lại mật khẩu.",
+  requests: "Yêu cầu khách đăng và tin tuyển mẫu.",
+  reviews: "Đánh giá của khách; ẩn những đánh giá vi phạm.",
+  reports: "Báo cáo từ khách và đối tác.",
+  finance: "Doanh thu, phí và công nợ theo kỳ.",
+  topup: "Ghi nhận tiền đối tác chuyển vào ví.",
+  help: "Câu hỏi người dùng hỏi trợ lý.",
+  catalog: "Danh mục dịch vụ và các mức giá.",
+  settings: "Thông tin công ty, chính sách phí và nhật ký thao tác.",
+}
+
+type NavItem = { value: Tab; label: string; icon: React.ComponentType<{ className?: string }>; count?: number; alert?: boolean }
+type NavGroup = { title: string | null; items: NavItem[] }
+
+function Sidebar({ groups, tab, onPick, onClose }: { groups: NavGroup[]; tab: Tab; onPick: (t: Tab) => void; onClose?: () => void }) {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-4">
+        <LogoMark size={26} />
+        <span className="text-[15px] font-semibold tracking-tight">360đẹp</span>
+        <span className="rounded bg-ink px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">Admin</span>
+        {onClose && (
+          <button type="button" aria-label="Đóng menu" onClick={onClose} className="ml-auto inline-flex size-8 items-center justify-center rounded-md hover:bg-subtle">
+            <X className="size-4" />
+          </button>
+        )}
+      </div>
+      <nav className="flex-1 space-y-4 overflow-y-auto px-2.5 py-3">
+        {groups.map((g) => (
+          <div key={g.title ?? "top"}>
+            {g.title && <p className="mb-1 px-2.5 text-[11px] font-medium uppercase tracking-wider text-muted">{g.title}</p>}
+            <ul className="space-y-0.5">
+              {g.items.map((item) => {
+                const on = tab === item.value
+                const Icon = item.icon
+                return (
+                  <li key={item.value}>
+                    <button
+                      type="button"
+                      onClick={() => onPick(item.value)}
+                      aria-current={on ? "page" : undefined}
+                      className={cn(
+                        "flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-left text-[13px] font-medium transition-colors",
+                        on ? "bg-subtle text-ink" : "text-ink-soft hover:bg-subtle/70 hover:text-ink",
+                      )}
+                    >
+                      <Icon className={cn("size-4 shrink-0", on ? "text-ink" : "text-muted")} />
+                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      {item.count !== undefined && <Count n={item.count} alert={item.alert} />}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        ))}
+      </nav>
+      <div className="shrink-0 border-t border-line p-2.5">
+        <Link href="/" className="flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] text-ink-soft hover:bg-subtle hover:text-ink">
+          <ArrowLeft className="size-4 text-muted" /> Về trang khách
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+function Count({ n, alert }: { n: number; alert?: boolean }) {
   return (
     <span
       className={cn(
-        "ml-1.5 inline-flex min-w-6 justify-center rounded-full px-1.5 text-label font-bold tabular-nums",
-        on ? "bg-canvas/20 text-canvas" : alert ? "bg-accent text-white" : "bg-subtle text-ink-soft",
+        "inline-flex min-w-5 justify-center rounded-full px-1.5 text-[11px] font-semibold leading-5 tabular-nums",
+        alert && n > 0 ? "bg-danger text-white" : "bg-subtle-strong/70 text-ink-soft",
       )}
     >
       {n}
@@ -334,7 +456,7 @@ function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
   const current = picked ? (pros.find((p) => p.id === picked.id) ?? picked) : null
 
   return (
-    <Card className="mt-4 space-y-4 p-4">
+    <Card className="max-w-2xl space-y-4 p-5">
       <div>
         <p className="font-semibold">Ghi nhận nạp ví</p>
         <p className="text-meta text-muted">
@@ -344,7 +466,7 @@ function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
       </div>
 
       {current ? (
-        <div className="flex items-center justify-between gap-3 rounded-xl bg-canvas px-3 py-2.5 text-body">
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-canvas px-3 py-2.5 text-body">
           <span className="min-w-0">
             <span className="block font-semibold">{current.name}</span>
             <span className="block text-label text-muted">
@@ -366,7 +488,7 @@ function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
             onChange={(e) => setQuery(e.target.value)}
           />
           {q && (
-            <ul className="mt-2 divide-y divide-line rounded-xl border border-line">
+            <ul className="mt-2 divide-y divide-line rounded-lg border border-line">
               {matches.length === 0 && <li className="px-3 py-2.5 text-body text-muted">Không tìm thấy ai.</li>}
               {matches.map((p) => (
                 <li key={p.id}>
@@ -428,7 +550,7 @@ function TopupForm({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
       {result && (
         <p
           role={result.ok ? "status" : "alert"}
-          className={cn("rounded-xl px-3.5 py-2.5 text-body", result.ok ? "bg-success-soft text-success" : "bg-danger-soft text-danger")}
+          className={cn("rounded-lg px-3.5 py-2.5 text-body", result.ok ? "bg-success-soft text-success" : "bg-danger-soft text-danger")}
         >
           {result.text}
         </p>
@@ -508,7 +630,7 @@ function AiLog({
   })
 
   return (
-    <div className="mt-4 space-y-3">
+    <div className="space-y-3">
       <p className="text-meta text-muted">
         {log.last24h} quyết định trong 24 giờ qua. Với hồ sơ đối tác, AI chỉ gợi ý: nhân viên duyệt ở mục Duyệt hồ sơ. Bài đăng mới do AI
         kiểm tra; nhân viên xem lại ở đây và đảo quyết định khi cần. Đối tác được báo mỗi lần đảo.
@@ -521,7 +643,7 @@ function AiLog({
             onClick={() => setFilter(f.value)}
             aria-pressed={filter === f.value}
             className={cn(
-              "shrink-0 rounded-full border px-3 py-1.5 text-meta font-semibold",
+              "h-7 shrink-0 rounded-md border px-2.5 text-[13px] font-medium",
               filter === f.value ? "border-ink bg-ink text-canvas" : "border-line text-ink-soft hover:bg-subtle",
             )}
           >
@@ -556,7 +678,7 @@ function AiDecisionCard({
   return (
     <Card className="p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className={cn("rounded-full px-2 py-0.5 text-label font-semibold", DECISION_TONE[current] ?? "bg-canvas text-muted")}>
+        <span className={cn("rounded-md px-1.5 py-0.5 text-label font-medium", DECISION_TONE[current] ?? "bg-canvas text-muted")}>
           {pendingSuggestion ? "AI gợi ý: " : ""}
           {DECISION_LABEL[current] ?? current}
         </span>
@@ -659,7 +781,7 @@ function CheckCard({ check, onDecide }: { check: PendingCheck; onDecide: (approv
         <Fact label="Cùng một người" value={check.samePerson ?? "—"} />
         <Fact label="Độ chắc chắn" value={check.confidence === null ? "—" : `${Math.round(check.confidence * 100)}%`} />
       </dl>
-      {check.reason && <p className="mt-2 rounded-xl bg-canvas px-3 py-2 text-meta text-ink-soft">{check.reason}</p>}
+      {check.reason && <p className="mt-2 rounded-lg bg-canvas px-3 py-2 text-meta text-ink-soft">{check.reason}</p>}
       {check.photos.length > 0 && (
         <div className="mt-3 grid grid-cols-3 gap-2">
           {check.photos.map((p) => (
@@ -721,7 +843,7 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: Run }) {
   return (
     <Card className="p-3.5">
       <div className="flex flex-wrap items-center gap-2">
-        <span className={cn("rounded-full px-2 py-0.5 text-label font-semibold", REPORT_STATUS[r.status]?.tone ?? "bg-subtle")}>
+        <span className={cn("rounded-md px-1.5 py-0.5 text-label font-medium", REPORT_STATUS[r.status]?.tone ?? "bg-subtle")}>
           {REPORT_STATUS[r.status]?.label ?? r.status}
         </span>
         <p className="text-body font-semibold">{REPORT_REASON[r.reason] ?? r.reason}</p>
@@ -739,7 +861,7 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: Run }) {
           </>
         )}
       </p>
-      {r.detail && <p className="mt-2 whitespace-pre-wrap rounded-xl bg-canvas px-3 py-2 text-meta">{r.detail}</p>}
+      {r.detail && <p className="mt-2 whitespace-pre-wrap rounded-lg bg-canvas px-3 py-2 text-meta">{r.detail}</p>}
       {r.evidence.length > 0 && <EvidenceGrid items={r.evidence} />}
       {r.staffQuestion && open && <p className="mt-2 text-label text-warning">Đã hỏi người báo: {r.staffQuestion} (chờ trả lời)</p>}
       {!open && r.resolution && <p className="mt-2 text-label text-ink-soft">Kết quả: {r.resolution}</p>}
@@ -831,7 +953,7 @@ function ReportChat({ reportId }: { reportId: string }) {
     )
   }
   return (
-    <div className="mt-3 rounded-xl border border-line p-3">
+    <div className="mt-3 rounded-lg border border-line p-3">
       <p className="mb-2 text-label font-semibold text-ink-soft">Tin nhắn giữa khách và người làm ({messages.length})</p>
       {messages.length === 0 ? (
         <p className="text-label text-muted">Hai bên chưa nhắn tin trong ứng dụng.</p>
@@ -839,7 +961,7 @@ function ReportChat({ reportId }: { reportId: string }) {
         <ul className="max-h-96 space-y-2 overflow-y-auto">
           {messages.map((m) => (
             <li key={m.id} className={cn("flex", m.sender === "pro" ? "justify-end" : "justify-start")}>
-              <div className={cn("max-w-[80%] rounded-xl px-3 py-2 text-meta", m.sender === "pro" ? "bg-accent-soft" : "bg-canvas")}>
+              <div className={cn("max-w-[80%] rounded-lg px-3 py-2 text-meta", m.sender === "pro" ? "bg-accent-soft" : "bg-canvas")}>
                 <span className="block text-label font-semibold text-muted">
                   {m.sender === "pro" ? "Người làm" : "Khách"} · {new Date(m.sentAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
                 </span>

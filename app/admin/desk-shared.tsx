@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Search } from "lucide-react"
-import { Button, Skeleton, inputClass } from "@/components/ui"
+import { Badge, Button, Skeleton, inputClass } from "./ui"
 import { cn } from "@/lib/utils"
 
 /** A button whose action is a server call: disabled while it runs, so one tap does one thing. */
@@ -33,7 +33,7 @@ export function ActButton({
   )
 }
 
-/** One row of filters, with how many each would show. Ink when chosen, like the tabs. */
+/** One row of filters, with how many each would show: a segmented bar that scrolls on a phone. */
 export function FilterChips<T extends string>({
   value,
   onChange,
@@ -46,33 +46,37 @@ export function FilterChips<T extends string>({
   label: string
 }) {
   return (
-    <div role="group" aria-label={label} className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0">
-      {items.map((f) => (
-        <button
-          key={f.value}
-          type="button"
-          onClick={() => onChange(f.value)}
-          aria-pressed={value === f.value}
-          className={cn(
-            "min-h-9 shrink-0 rounded-full border px-3 py-1.5 text-meta font-semibold",
-            value === f.value ? "border-ink bg-ink text-canvas" : "border-line bg-surface text-ink-soft hover:border-ink",
-          )}
-        >
-          {f.label}
-          {f.count !== undefined && <span className={cn("ml-1 tabular-nums", value === f.value ? "opacity-80" : "text-muted")}>{f.count}</span>}
-        </button>
-      ))}
+    <div role="group" aria-label={label} className="no-scrollbar -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
+      <div className="inline-flex gap-0.5 rounded-lg border border-line bg-subtle p-0.5">
+        {items.map((f) => (
+          <button
+            key={f.value}
+            type="button"
+            onClick={() => onChange(f.value)}
+            aria-pressed={value === f.value}
+            className={cn(
+              "inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-[13px] font-medium transition-colors",
+              value === f.value ? "bg-surface text-ink shadow-sm ring-1 ring-line" : "text-muted hover:text-ink",
+            )}
+          >
+            {f.label}
+            {f.count !== undefined && (
+              <span className={cn("tabular-nums text-[11px]", value === f.value ? "text-ink-soft" : "text-muted")}>{f.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
 
 export function SearchBox({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
   return (
-    <div className="relative">
-      <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
+    <div className="relative w-full sm:max-w-sm">
+      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
       <input
         type="search"
-        className={cn(inputClass, "pl-10 text-body")}
+        className={cn(inputClass, "pl-9")}
         placeholder={placeholder}
         aria-label={placeholder}
         value={value}
@@ -88,7 +92,7 @@ export function ListSkeleton({ rows = 4 }: { rows?: number }) {
     <div className="space-y-2" aria-busy="true">
       <span className="sr-only">Đang tải…</span>
       {Array.from({ length: rows }, (_, i) => (
-        <Skeleton key={i} className="h-20" />
+        <Skeleton key={i} className="h-12" />
       ))}
     </div>
   )
@@ -96,7 +100,7 @@ export function ListSkeleton({ rows = 4 }: { rows?: number }) {
 
 export function PanelError({ text, onRetry }: { text: string; onRetry?: () => void }) {
   return (
-    <div role="alert" className="flex flex-wrap items-center gap-3 rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">
+    <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-danger/20 bg-danger-soft px-3.5 py-2.5 text-body text-danger">
       <span className="min-w-0 flex-1">{text}</span>
       {onRetry && (
         <Button size="sm" variant="danger" onClick={onRetry}>
@@ -109,13 +113,7 @@ export function PanelError({ text, onRetry }: { text: string; onRetry?: () => vo
 
 export function Flag({ on, label, tone = "success" }: { on: boolean; label: string; tone?: "success" | "muted" | "danger" | "warning" }) {
   if (!on) return null
-  const tones = {
-    success: "bg-success-soft text-success",
-    muted: "bg-subtle text-ink-soft",
-    danger: "bg-danger-soft text-danger",
-    warning: "bg-warning-soft text-warning",
-  }
-  return <span className={cn("rounded-full px-2 py-0.5 text-label font-semibold", tones[tone])}>{label}</span>
+  return <Badge tone={tone === "muted" ? "neutral" : tone}>{label}</Badge>
 }
 
 /** Folds Vietnamese marks so "hoa" finds "Hoà" and "duong" finds "Dương". */
@@ -134,7 +132,7 @@ export function useShowMore<T>(rows: T[], step = 60) {
   const shown = rows.slice(0, limit)
   const more =
     rows.length > limit ? (
-      <Button variant="outline" size="sm" className="w-full" onClick={() => setLimit((n) => n + step)}>
+      <Button variant="outline" size="sm" className="mx-auto mt-1 flex" onClick={() => setLimit((n) => n + step)}>
         Xem thêm ({rows.length - limit})
       </Button>
     ) : null
