@@ -9,7 +9,7 @@ import { PartnerProgress } from "@/components/partner-progress"
 import { RequireSession } from "@/components/require-session"
 import { Button, ButtonLink, Card, PageHeader, Toggle } from "@/components/ui"
 import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
-import { categoryLabel, getTemplate, isPriceAllowed, partnerTemplatesByCategory, perUnitSuffix, PRICE_LEVEL_NOTE, tierLabels } from "@/lib/catalog"
+import { allowsPackageNote, categoryLabel, getTemplate, isPriceAllowed, PACKAGE_NOTE_MAX, partnerTemplatesByCategory, perUnitSuffix, PRICE_LEVEL_NOTE, tierLabels } from "@/lib/catalog"
 import { POLICY, payoutFor } from "@/lib/pricing"
 import { actions, useAct } from "@/lib/client-actions"
 import { proView, servicesOf, useApp } from "@/lib/store"
@@ -101,6 +101,7 @@ function ServicesManager() {
                         <span className="block text-label text-muted">
                           {tierLabels(v)[v.tiers.indexOf(l.prices[v.id])]} · {formatDuration(v.durationMin)} · bạn nhận {formatPrice(payoutFor(l.prices[v.id], rate))}
                         </span>
+                        {l.notes?.[v.id] && <span className="mt-1 block max-w-xs truncate text-label text-ink-soft">Ghi chú: {l.notes[v.id]}</span>}
                       </li>
                     ))}
                 </ul>
@@ -180,6 +181,9 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
       }),
     ),
   )
+  // The partner's own words on each package (makeup); empty means the catalogue's "Bao gồm".
+  const withNotes = allowsPackageNote(tpl)
+  const [notes, setNotes] = React.useState<Record<string, string>>(() => ({ ...(existing?.notes ?? {}) }))
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
 
@@ -189,7 +193,8 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
     const bad = tpl.variants.find((v) => chosen[v.id] !== undefined && !isPriceAllowed(v, chosen[v.id]))
     if (bad) return setError(`Chọn một mức giá có sẵn cho gói ${bad.label}.`)
     setBusy(true)
-    const problem = await act(() => actions.saveProService(templateId, chosen, existing?.active ?? true), "Đã lưu bảng giá")
+    const chosenNotes = withNotes ? Object.fromEntries(Object.keys(chosen).map((id) => [id, (notes[id] ?? "").trim()])) : undefined
+    const problem = await act(() => actions.saveProService(templateId, chosen, existing?.active ?? true, chosenNotes), "Đã lưu bảng giá")
     setBusy(false)
     if (problem) setError(problem)
     else onClose()
@@ -248,6 +253,22 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
                     Bạn nhận {formatPrice(payoutFor(price, rate))}
                     {v.perPerson ? ` mỗi ${v.unit ?? "người"}` : ""} sau hoa hồng {Math.round(rate * 100)}%
                   </p>
+                  {withNotes && (
+                    <label className="mt-3 block">
+                      <span className="text-label font-semibold text-ink-soft">Gói của bạn có gì (không bắt buộc)</span>
+                      <textarea
+                        value={notes[v.id] ?? ""}
+                        onChange={(e) => setNotes((x) => ({ ...x, [v.id]: e.target.value }))}
+                        maxLength={PACKAGE_NOTE_MAX}
+                        rows={2}
+                        placeholder={`Để trống thì khách thấy: ${tpl.includes.join(", ")}`}
+                        className="mt-1 w-full rounded-xl border border-line bg-canvas px-3 py-2 text-body placeholder:text-muted focus:border-ink focus:outline-none"
+                      />
+                      <span className="block text-label text-muted">
+                        Vd: loại mi, dặm lại trong tiệc, phụ kiện tóc. Không ghi số điện thoại hay link. {(notes[v.id] ?? "").length}/{PACKAGE_NOTE_MAX}
+                      </span>
+                    </label>
+                  )}
                 </>
               )}
             </li>

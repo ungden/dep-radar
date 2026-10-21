@@ -3,7 +3,7 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { webLink } from "@/data/links"
 import { ActivityIndicator, ScrollView, TextInput, View } from "react-native"
-import { CATEGORIES, CITIES, districtsOf, getTemplate, partnerTemplatesByCategory, perUnitSuffix, tierLabels, PRICE_LEVEL_NOTE, PARTNER_STEPS, partnerProgress, DEFAULT_WORKING_WINDOWS, IDENTITY_VERIFICATION_OPEN, PARTNER_PLEDGE, type PartnerSetup, type CategoryId } from "@/shared"
+import { allowsPackageNote, CATEGORIES, CITIES, districtsOf, getTemplate, PACKAGE_NOTE_MAX, partnerTemplatesByCategory, perUnitSuffix, tierLabels, PRICE_LEVEL_NOTE, PARTNER_STEPS, partnerProgress, DEFAULT_WORKING_WINDOWS, IDENTITY_VERIFICATION_OPEN, PARTNER_PLEDGE, type PartnerSetup, type CategoryId } from "@/shared"
 import { rpc, supabase } from "@/data/supabase"
 import { useApp } from "@/state/app"
 import { colors, gutter, radius, fonts } from "@/theme"
@@ -34,6 +34,8 @@ export default function PartnerProfile() {
   const [agree, setAgree] = React.useState(false)
   const [editing, setEditing] = React.useState<string | null>(null)
   const [prices, setPrices] = React.useState<Record<string, number>>({})
+  // The partner's own words on each package (makeup); empty means the catalogue's "Bao gồm".
+  const [notes, setNotes] = React.useState<Record<string, string>>({})
   const scroller = React.useRef<ScrollView>(null)
   const cardY = React.useRef<Record<string, number>>({})
   const load = React.useCallback(async (initial = false) => {
@@ -79,6 +81,7 @@ export default function PartnerProfile() {
   const openService = (id: string) => {
     setEditing(id)
     setPrices({ ...(setup.services.find((s) => s.template_id === id)?.prices ?? {}) })
+    setNotes({ ...(setup.services.find((s) => s.template_id === id)?.notes ?? {}) })
     scroller.current?.scrollTo({ y: 0, animated: false })
   }
   const backToList = (id: string | null) => {
@@ -132,8 +135,8 @@ export default function PartnerProfile() {
         )
       }) : <>
         <Txt v="h2">{tpl.name}</Txt><Txt>{tpl.description}</Txt><Txt>{tpl.includes.join(" · ")}</Txt>{tpl.addon && <Txt v="meta" color={colors.inkSoft}>Khách chọn thêm khi đặt dịch vụ chính, không đặt riêng.</Txt>}
-        {tpl.variants.map((v) => <View key={v.id} style={{ gap: 10, padding: 14, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md }}><Choice label={`${prices[v.id] !== undefined ? "✓" : "+"} ${v.label}`} active={prices[v.id] !== undefined} onPress={() => setPrices((p) => { const next = { ...p }; if (next[v.id] !== undefined) delete next[v.id]; else next[v.id] = v.tiers[0]; return next })} /><Txt v="meta">{v.durationMin} phút{v.unit ? ` · giá mỗi ${v.unit}` : v.perPerson ? v.durationRule === "fixed" ? " / nhóm" : " / người" : ""}{v.sessions ? ` · ${v.sessions} buổi` : ""} {v.deliverable ?? tpl.deliverable}{v.revisions ? ` · ${v.revisions} lượt sửa` : ""}{v.followupDays ? ` · dặm trong ${v.followupDays} ngày` : ""}</Txt>{prices[v.id] !== undefined && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{v.tiers.map((n, i) => <Choice key={n} label={`${tierLabels(v)[i]} ${formatPrice(n)}${perUnitSuffix(v)}`} active={prices[v.id] === n} onPress={() => setPrices((p) => ({ ...p, [v.id]: n }))} />)}</View>}</View>)}
-        <Button label="Lưu gói & giá" busy={busy} disabled={!Object.keys(prices).length} onPress={async () => { if (await mutate("save_pro_service", { p_template: tpl.id, p_prices: prices, p_active: true })) backToList(tpl.id) }} />
+        {tpl.variants.map((v) => <View key={v.id} style={{ gap: 10, padding: 14, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md }}><Choice label={`${prices[v.id] !== undefined ? "✓" : "+"} ${v.label}`} active={prices[v.id] !== undefined} onPress={() => setPrices((p) => { const next = { ...p }; if (next[v.id] !== undefined) delete next[v.id]; else next[v.id] = v.tiers[0]; return next })} /><Txt v="meta">{v.durationMin} phút{v.unit ? ` · giá mỗi ${v.unit}` : v.perPerson ? v.durationRule === "fixed" ? " / nhóm" : " / người" : ""}{v.sessions ? ` · ${v.sessions} buổi` : ""} {v.deliverable ?? tpl.deliverable}{v.revisions ? ` · ${v.revisions} lượt sửa` : ""}{v.followupDays ? ` · dặm trong ${v.followupDays} ngày` : ""}</Txt>{prices[v.id] !== undefined && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{v.tiers.map((n, i) => <Choice key={n} label={`${tierLabels(v)[i]} ${formatPrice(n)}${perUnitSuffix(v)}`} active={prices[v.id] === n} onPress={() => setPrices((p) => ({ ...p, [v.id]: n }))} />)}</View>}{prices[v.id] !== undefined && allowsPackageNote(tpl) ? <PackageNote value={notes[v.id] ?? ""} onChange={(text) => setNotes((m) => ({ ...m, [v.id]: text }))} fallback={tpl.includes.join(", ")} /> : null}</View>)}
+        <Button label="Lưu gói & giá" busy={busy} disabled={!Object.keys(prices).length} onPress={async () => { if (await mutate("save_pro_service", { p_template: tpl.id, p_prices: prices, p_active: true, ...(allowsPackageNote(tpl) ? { p_notes: Object.fromEntries(Object.keys(prices).map((id) => [id, (notes[id] ?? "").trim()])) } : {}) })) backToList(tpl.id) }} />
         <Button label="Về danh sách dịch vụ" variant="ghost" onPress={() => backToList(tpl.id)} />
       </>}
       <Button label="Tiếp tục: nơi phục vụ" variant="secondary" onPress={() => { setEditing(null); setStep(2) }} />
@@ -177,5 +180,24 @@ export default function PartnerProfile() {
 }
 function timeLabel(m: number) { return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}` }
 function minutes(s: string) { const [h, m] = s.split(":").map(Number); return h >= 0 && h <= 24 && m >= 0 && m < 60 && (h < 24 || m === 0) ? h * 60 + m : NaN }
+function PackageNote({ value, onChange, fallback }: { value: string; onChange: (s: string) => void; fallback: string }) {
+  return (
+    <View style={{ gap: 6 }}>
+      <Txt v="meta" w={600}>Gói của bạn có gì (không bắt buộc)</Txt>
+      <TextInput
+        accessibilityLabel="Gói của bạn có gì"
+        value={value}
+        onChangeText={onChange}
+        maxLength={PACKAGE_NOTE_MAX}
+        multiline
+        placeholder={`Để trống thì khách thấy: ${fallback}`}
+        placeholderTextColor={colors.muted}
+        style={{ fontSize: 15, minHeight: 64, padding: 12, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, color: colors.ink, fontFamily: fonts[400], backgroundColor: colors.surface, textAlignVertical: "top" }}
+      />
+      <Txt v="meta" color={colors.muted}>Vd: loại mi, dặm lại trong tiệc, phụ kiện tóc. Không ghi số điện thoại hay link. {value.length}/{PACKAGE_NOTE_MAX}</Txt>
+    </View>
+  )
+}
+
 function Field({ label, value, onChange, numeric, multiline }: { label: string; value: string; onChange: (s: string) => void; numeric?: boolean; multiline?: boolean }) { return <View style={{ gap: 6 }}><Txt v="meta" w={600}>{label}</Txt><TextInput accessibilityLabel={label} value={value} onChangeText={onChange} keyboardType={numeric ? "numeric" : "default"} multiline={multiline} style={{ fontSize: 17, minHeight: 48, padding: 12, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, color: colors.ink, fontFamily: fonts[400], backgroundColor: colors.surface }} /></View> }
 function Choice({ label, active, disabled, onPress }: { label: string; active?: boolean; disabled?: boolean; onPress: () => void }) { return <Press accessibilityLabel={label} accessibilityRole="button" accessibilityState={{ selected: active, disabled }} disabled={disabled} onPress={onPress} style={{ minHeight: 44, justifyContent: "center", padding: 12, borderWidth: 1, borderColor: active ? colors.accent : colors.line, backgroundColor: active ? colors.accentSoft : colors.surface, borderRadius: radius.md }}><Txt v="meta" color={active ? colors.accent : colors.ink}>{label}</Txt></Press> }

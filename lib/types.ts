@@ -104,6 +104,8 @@ export interface ProService {
   templateId: string
   /** variantId -> price. Variants missing here are not offered. */
   prices: Record<string, number>
+  /** variantId -> the partner's own note on what that package includes (optional). */
+  notes?: Record<string, string>
   active: boolean
 }
 

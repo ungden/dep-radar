@@ -1218,18 +1218,21 @@ export type Database = {
       }
       pro_service_prices: {
         Row: {
+          note: string | null
           price: number
           pro_id: string
           template_id: string
           variant_id: string
         }
         Insert: {
+          note?: string | null
           price: number
           pro_id: string
           template_id: string
           variant_id: string
         }
         Update: {
+          note?: string | null
           price?: number
           pro_id?: string
           template_id?: string

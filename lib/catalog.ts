@@ -943,6 +943,14 @@ export function tierLabels(variant?: Pick<ServiceVariant, "tiers">): string[] {
   return variant?.tiers.length === 1 ? ["Giá chung"] : ["Cơ bản", "Chuyên nghiệp", "Master"]
 }
 
+/**
+ * Packages a partner may describe in their own words ("mi giả cao cấp, dặm 1
+ * lần trong tiệc"): makeup, where artists differ most within one package.
+ * Without a note the customer sees the catalogue's "Bao gồm".
+ */
+export const allowsPackageNote = (template: Pick<ServiceTemplate, "category">) => template.category === "makeup"
+export const PACKAGE_NOTE_MAX = 300
+
 /** "/người", "/ngón", "/viên" after a per-head price; empty otherwise. */
 export const perUnitSuffix = (variant: Pick<ServiceVariant, "perPerson" | "unit">) =>
   variant.perPerson ? `/${variant.unit ?? "người"}` : ""

@@ -298,7 +298,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
           .is("hidden_at", null)
           .order("created_at", { ascending: false }),
       ),
-      supabase.from("pro_service_prices").select("pro_id, template_id, variant_id, price"),
+      supabase.from("pro_service_prices").select("pro_id, template_id, variant_id, price, note"),
       supabase.from("pro_services").select("pro_id, template_id, active"),
       // Separate from the pros query: a failed embed would blank the whole feed.
       supabase
@@ -390,6 +390,11 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
         priceRows
           .filter((p) => p.pro_id === row.pro_id && p.template_id === row.template_id)
           .map((p) => [p.variant_id, p.price]),
+      ),
+      notes: Object.fromEntries(
+        priceRows
+          .filter((p) => p.pro_id === row.pro_id && p.template_id === row.template_id && p.note)
+          .map((p) => [p.variant_id, p.note as string]),
       ),
     }
   })

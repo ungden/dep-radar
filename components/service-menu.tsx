@@ -151,6 +151,13 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
       </div>
 
       <p className="mt-2 text-label text-muted">{PRICE_LEVEL_NOTE}</p>
+      {/* The partner's own words on this package; without them, the catalogue's "Bao gồm" below says it. */}
+      {service.notes?.[variant.id] && (
+        <div className="mt-3 rounded-xl bg-subtle px-3 py-2.5">
+          <p className="text-label font-semibold text-ink-soft">{pro?.name ?? "Người làm"} ghi rõ gói này</p>
+          <p className="mt-0.5 whitespace-pre-line text-body text-ink">{service.notes[variant.id]}</p>
+        </div>
+      )}
       <p className="mt-2 text-body text-ink-soft">{variant.deliverable ?? tpl.deliverable}{variant.revisions ? ` · ${variant.revisions} lượt sửa` : ""}{variant.sessions ? ` · ${variant.sessions} buổi` : ""}{variant.followupDays ? ` · gồm dặm trong ${variant.followupDays} ngày` : ""}</p>
       {tpl.includes.length > 0 && (
         <>

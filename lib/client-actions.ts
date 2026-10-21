@@ -265,8 +265,8 @@ export const actions = {
 
   // Freelancer profile & listings ---------------------------------------------
 
-  async saveProService(templateId: string, prices: Record<string, number>, active = true): Promise<Result> {
-    return asResult(await api.saveListing({ templateId, prices, active }))
+  async saveProService(templateId: string, prices: Record<string, number>, active = true, notes?: Record<string, string>): Promise<Result> {
+    return asResult(await api.saveListing({ templateId, prices, active, notes }))
   },
 
   async toggleProService(templateId: string, prices: Record<string, number>, active: boolean): Promise<Result> {
