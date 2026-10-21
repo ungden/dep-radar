@@ -597,7 +597,7 @@ describe.skipIf(!configured)("row level security over the API", () => {
     for (const [fn, args] of [
       ["partner_setup", {}], ["submit_partner_profile", { p_agree: true }],
       ["confirm_partner_hours", { p_windows: [] }],
-      ["save_pro_service", { p_template: "nail-extension", p_prices: { tips: 150000 }, p_active: true }],
+      ["save_pro_service", { p_template: "nail-extension", p_prices: { tips: 180000 }, p_active: true }],
       ["my_job_eligibility", { p_ids: [] }],
     ] as const) {
       const r = await anon.rpc(fn as never, args as never)

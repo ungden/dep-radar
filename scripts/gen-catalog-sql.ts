@@ -104,7 +104,7 @@ if (onlyCategories) {
 }
 
 if (process.argv.includes("--prices")) {
-  const rows = ["# Bảng giá 360đẹp (10/2026)", "", "Mỗi gói có 3 mức giá (vài gói một giá chung); đối tác tự chọn một mức cho từng gói. Dịch vụ “đặt kèm” chỉ được chọn thêm khi đặt một dịch vụ chính. Mức giá không phải chứng nhận tay nghề. Giá đã gồm vật tư trong phạm vi gói; phí di chuyển và đặt gấp được xác nhận riêng. Đơn vị: nghìn đồng (k).", "", "Sinh từ lib/catalog.ts. Đây là bảng giá nền tảng, chưa phải khảo sát thị trường đã kiểm chứng.", ""]
+  const rows = ["# Bảng giá 360đẹp (10/2026)", "", "Mỗi gói có 3 mức giá (vài gói một giá chung); đối tác tự chọn một mức cho từng gói. Dịch vụ “đặt kèm” chỉ được chọn thêm khi đặt một dịch vụ chính. Mức giá không phải chứng nhận tay nghề. Giá đã gồm vật tư trong phạm vi gói; phí di chuyển và đặt gấp được xác nhận riêng. Đơn vị: nghìn đồng (k).", "", "Sinh từ lib/catalog.ts. Makeup và Nail theo khảo sát giá Hà Nội, TP.HCM, Đà Nẵng, Nha Trang (docs/KHAO_SAT_GIA_MAKEUP_NAIL_2026-10.md); các ngành khác là bảng giá nền tảng, chưa khảo sát kiểm chứng.", ""]
   for (const vertical of VERTICALS) {
     rows.push(`## ${vertical.label}`, "")
     for (const category of CATEGORIES.filter((c) => c.vertical === vertical.id)) {

@@ -79,16 +79,20 @@ const byDuration = (bands: [number, [number, number, number]][]) => bands.map(([
  */
 export const CATALOG: ServiceTemplate[] = [
   // Nail -----------------------------------------------------------------
-  // Nail and makeup prices: the owner's market price list (21/10/2026), three
-  // levels Cơ bản / Chuyên nghiệp / Master. Nail art is priced per finger and
-  // booked on top of a base service (NAIL_AND_MAKEUP_ADDONS below).
+  // Nail and makeup: one national price list (21/10/2026) built from the
+  // owner's Nha Trang table and public price lists in Hà Nội, TP.HCM and Đà
+  // Nẵng (docs/KHAO_SAT_GIA_MAKEUP_NAIL_2026-10.md). Cơ bản ≈ mid-range in Nha
+  // Trang / Đà Nẵng and newcomers in the big cities, Chuyên nghiệp ≈ the common
+  // price in Hà Nội / TP.HCM, Master ≈ well-known artists and mid-upper studios
+  // there. Nail art is priced per finger and booked on top of a base service
+  // (ADDONS below).
   {
     id: "nail-gel",
     category: "nail",
     name: "Sơn gel trơn",
     description: "Cắt da, tạo form và sơn gel một màu.",
     includes: ["Cắt da, tạo form móng", "Sơn gel 1 màu", "Dưỡng viền móng"],
-    variants: [v("hand", "Tay", 45, [85, 100, 120]), v("hand-foot", "Tay + chân", 90, [170, 200, 240])],
+    variants: [v("hand", "Tay", 45, [90, 130, 180]), v("hand-foot", "Tay + chân", 90, [170, 240, 340])],
   },
   {
     id: "nail-extension",
@@ -97,18 +101,22 @@ export const CATALOG: ServiceTemplate[] = [
     description: "Up móng giả bằng keo hoặc gel, hoặc đắp dual form gel gôm, kèm sơn gel một màu.",
     includes: ["Tạo form móng thật", "Up hoặc đắp móng", "Sơn gel 1 màu"],
     variants: [
-      v("tips", "Up móng bằng keo + sơn trơn 1 màu", 75, [140, 150, 160]),
-      v("gelx", "Up móng gel + sơn trơn 1 màu", 90, [165, 180, 210]),
-      v("builder", "Dual form + gel gôm", 120, [220, 250, 280]),
+      v("tips", "Up móng bằng keo + sơn trơn 1 màu", 75, [140, 180, 240]),
+      v("gelx", "Up móng gel + sơn trơn 1 màu", 90, [170, 220, 290]),
+      v("builder", "Dual form + gel gôm", 120, [220, 260, 320]),
     ],
   },
   {
     id: "nail-removal",
     category: "nail",
     name: "Phá gel & dưỡng móng",
-    description: "Phá gel/bột an toàn, không làm mỏng móng.",
-    includes: ["Phá gel bằng dung dịch chuyên dụng", "Dũa lại form", "Dưỡng móng"],
-    variants: [v("remove", "Phá gel", 20, [50]), v("remove-care", "Phá gel + dưỡng", 45, [100, 150, 200])],
+    description: "Phá gel, móng úp hoặc móng đắp an toàn, không làm mỏng móng.",
+    includes: ["Phá bằng dung dịch chuyên dụng", "Dũa lại form", "Dưỡng móng"],
+    variants: [
+      v("remove", "Phá gel", 20, [40]),
+      v("remove-tips", "Phá móng úp / móng đắp", 30, [60]),
+      v("remove-care", "Phá gel + dưỡng móng", 45, [80, 100, 130]),
+    ],
   },
   {
     id: "nail-pedicure",
@@ -116,7 +124,7 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Chăm sóc bàn chân (pedicure)",
     description: "Ngâm chân, lấy da chết, cắt da và dưỡng gót.",
     includes: ["Ngâm chân thảo mộc", "Lấy da chết, cắt da", "Dưỡng gót & massage chân"],
-    variants: [v("basic", "Cơ bản", 45, [130, 180, 250]), v("deluxe", "Có đắp mặt nạ chân", 75, [220, 280, 350])],
+    variants: [v("basic", "Cơ bản", 45, [120, 150, 180]), v("deluxe", "Có đắp mặt nạ chân, chà gót", 75, [200, 250, 300])],
   },
   {
     id: "nail-manicure",
@@ -124,26 +132,26 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Cắt da, sửa form & sơn thường",
     description: "Chăm sóc móng cơ bản cho khách không dùng gel.",
     includes: ["Cắt da, sửa form móng", "Sơn thường 1 màu", "Dưỡng viền móng"],
-    variants: [v("hand", "Tay", 30, [80, 110, 150]), v("hand-foot", "Tay + chân", 60, [150, 200, 260])],
+    variants: [v("hand", "Tay", 30, [60, 80, 100]), v("hand-foot", "Tay + chân", 60, [110, 150, 190])],
   },
   {
     id: "nail-refill",
     category: "nail",
     name: "Dặm móng nối",
-    description: "Dặm phần móng mọc ra và sơn lại cho bộ móng đã nối.",
+    description: "Dặm phần móng mọc ra và sơn lại cho bộ móng đã up hoặc đắp.",
     includes: ["Dũa, làm sạch phần móng mọc", "Đắp bù gel", "Sơn lại 1 màu"],
-    variants: [v("refill", "Dặm móng", 75, [150, 200, 260])],
+    variants: [v("refill-tips", "Dặm móng úp", 60, [90, 110, 140]), v("refill", "Dặm móng đắp / dual form", 75, [130, 160, 200])],
   },
   // Makeup -----------------------------------------------------------------
-  // Most artists include a simple hairdo; an elaborate one is +150k (except
-  // brides, whose price already covers it): makeup-hair-updo below.
+  // Most artists include a simple hairdo; an elaborate one costs extra (except
+  // for brides, whose price already covers it): makeup-hair-updo below.
   {
     id: "makeup-daily",
     category: "makeup",
     name: "Makeup nhẹ / đi làm",
     description: "Lớp nền mỏng, tự nhiên, phù hợp đi làm, đi học, hẹn hò.",
     includes: ["Makeup tự nhiên", "Làm tóc đơn giản", "Mỹ phẩm của chuyên viên"],
-    variants: [v("single", "1 người", 45, [250, 300, 400])],
+    variants: [v("single", "1 người", 45, [250, 350, 600])],
   },
   {
     id: "makeup-party",
@@ -151,7 +159,7 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Makeup dự tiệc",
     description: "Makeup bền màu cho tiệc, kèm làm tóc đơn giản và mi giả.",
     includes: ["Makeup bền 8 tiếng", "Làm tóc đơn giản", "Mi giả"],
-    variants: [v("makeup", "1 người", 60, [300, 350, 450])],
+    variants: [v("makeup", "1 người", 60, [300, 450, 800])],
   },
   {
     id: "makeup-photo",
@@ -160,10 +168,10 @@ export const CATALOG: ServiceTemplate[] = [
     description: "Layout lên hình theo concept. Đi theo nhóm được giảm: 2 người 10%, 3 người 15%, từ 5 người 20%.",
     includes: ["Layout theo concept", "Làm tóc đơn giản", "Mi giả"],
     variants: [
-      v("single", "1 người", 60, [250, 300, 400]),
-      group(v("group2", "Nhóm 2 người, giảm 10% (giá mỗi người)", 45, [225, 270, 360]), 2, 2),
-      group(v("group3", "Nhóm 3–4 người, giảm 15% (giá mỗi người)", 45, [210, 255, 340]), 4, 3),
-      group(v("group5", "Nhóm từ 5 người, giảm 20% (giá mỗi người)", 45, [200, 240, 320]), 10, 5),
+      v("single", "1 người", 60, [250, 350, 550]),
+      group(v("group2", "Nhóm 2 người, giảm 10% (giá mỗi người)", 45, [225, 315, 495]), 2, 2),
+      group(v("group3", "Nhóm 3–4 người, giảm 15% (giá mỗi người)", 45, [210, 295, 465]), 4, 3),
+      group(v("group5", "Nhóm từ 5 người, giảm 20% (giá mỗi người)", 45, [200, 280, 440]), 10, 5),
     ],
   },
   {
@@ -173,11 +181,11 @@ export const CATALOG: ServiceTemplate[] = [
     description: "Makeup và làm tóc cô dâu cho từng lễ. Nên test makeup trước để xem layout đã chọn có hợp không.",
     includes: ["Makeup + làm tóc cô dâu", "Mi giả, phụ kiện tóc cơ bản", "Tư vấn layout theo váy, áo dài"],
     variants: [
-      v("trial", "Test makeup trước ngày cưới", 90, [800]),
-      v("engagement", "Dạm ngõ / đám hỏi", 120, [1200, 1500, 1800]),
-      v("wedding", "Gia tiên / tiệc cưới", 120, [1500, 1800, 2000]),
+      v("trial", "Test makeup trước ngày cưới", 90, [600, 900, 1500]),
+      v("engagement", "Dạm ngõ / đám hỏi", 120, [1000, 1600, 2800]),
+      v("wedding", "Gia tiên / tiệc cưới", 120, [1300, 2000, 3500]),
       // Both ceremonies with one artist: the two prices above added up, level by level.
-      { ...v("two", "Trọn gói 2 lễ: đám hỏi + tiệc cưới (2 buổi)", 120, [2700, 3300, 3800]), sessions: 2 },
+      { ...v("two", "Trọn gói 2 lễ: đám hỏi + tiệc cưới (2 buổi)", 120, [2300, 3600, 6300]), sessions: 2 },
     ],
   },
   {
@@ -186,7 +194,7 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Take care cô dâu (theo dâu)",
     description: "Đi theo cô dâu sau khi đã makeup xong, lo phần phụ: dặm lại phấn, cầm đồ, hỗ trợ tạo dáng. Chính thợ makeup theo dâu cũng tính giá này.",
     includes: ["Dặm lại phấn, son, chỉnh tóc", "Cầm đồ, chỉnh váy giúp cô dâu", "Hỗ trợ tạo dáng khi chụp"],
-    variants: [v("takecare", "Theo dâu 1 buổi", 240, [500])],
+    variants: [v("takecare", "Theo dâu 1 buổi (đến 4 tiếng)", 240, [300, 500, 800]), v("fullday", "Theo dâu cả ngày", 480, [1000, 1800, 3000])],
   },
   {
     id: "makeup-family",
@@ -194,7 +202,7 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Makeup mẹ cô dâu / họ hàng / phụ dâu",
     description: "Makeup và làm tóc cho người nhà trong ngày cưới.",
     includes: ["Makeup bền", "Làm tóc đơn giản", "Mi giả"],
-    variants: [v("mother", "Mẹ cô dâu / chú rể", 75, [400, 450, 500]), group(v("family", "Họ hàng / phụ dâu (giá mỗi người)", 60, [350, 400, 500]), 8)],
+    variants: [v("mother", "Mẹ cô dâu / chú rể", 75, [400, 600, 900]), group(v("family", "Họ hàng / phụ dâu (giá mỗi người)", 60, [300, 400, 500]), 8)],
   },
   {
     id: "makeup-event",
@@ -202,7 +210,7 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Makeup sự kiện / MC / biểu diễn",
     description: "Layout lên đèn sân khấu, lên hình livestream.",
     includes: ["Makeup lên đèn, lên hình", "Làm tóc đơn giản", "Mi giả"],
-    variants: [v("event", "Sự kiện", 90, [500, 650, 800])],
+    variants: [v("event", "Sự kiện", 90, [450, 700, 1200])],
   },
   {
     id: "makeup-prewedding",
@@ -210,7 +218,7 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Makeup chụp ảnh cưới",
     description: "Makeup cô dâu cho buổi chụp ảnh cưới trong studio hoặc ngoại cảnh.",
     includes: ["Makeup + tóc cô dâu", "Đổi layout theo trang phục", "Mi giả"],
-    variants: [v("studio", "Chụp trong studio", 120, [1000, 1200, 1500]), v("outdoor", "Ngoại cảnh, theo cả buổi", 300, [1200, 1500, 1800])],
+    variants: [v("studio", "Chụp trong studio", 120, [900, 1300, 2200]), v("outdoor", "Ngoại cảnh, theo cả buổi", 300, [1200, 1800, 3000])],
   },
   // Skincare ---------------------------------------------------------------
   {
@@ -901,12 +909,12 @@ export const ADDONS: ServiceTemplate[] = [
     includes: ["Thiết kế theo mẫu khách chọn", "Làm trên nền gel đã đặt"],
     addon: true,
     variants: [
-      perUnit(v("design", "Thiết kế (vẽ, sticker, phối màu)", 30, [5, 10, 20]), "ngón", 10),
-      perUnit(v("cat-eye", "Mắt mèo / tráng gương", 15, [5, 7, 10]), "ngón", 10),
-      perUnit(v("ombre", "Ombre", 20, [7, 10, 15]), "ngón", 10),
+      perUnit(v("design", "Thiết kế (vẽ, sticker, phối màu)", 30, [10, 20, 40]), "ngón", 10),
+      perUnit(v("cat-eye", "Mắt mèo / tráng gương", 15, [5, 10, 15]), "ngón", 10),
+      perUnit(v("ombre", "Ombre", 20, [10, 15, 20]), "ngón", 10),
       perUnit(v("french", "French", 20, [10]), "ngón", 10),
-      perUnit(v("stone", "Đính đá", 20, [3, 10, 20]), "viên", 20),
-      perUnit(v("3d", "Vẽ nổi", 45, [10, 20, 30]), "ngón", 10),
+      perUnit(v("stone", "Đính đá (theo cỡ đá)", 20, [3, 10, 20]), "viên", 20),
+      perUnit(v("3d", "Vẽ nổi", 45, [15, 30, 50]), "ngón", 10),
     ],
   },
   {
@@ -916,7 +924,7 @@ export const ADDONS: ServiceTemplate[] = [
     description: "Búi, tết, uốn tạo kiểu cầu kỳ thay cho tóc đơn giản đã gồm trong giá makeup. Makeup cô dâu đã gồm tóc, không tính thêm.",
     includes: ["Búi, tết hoặc uốn tạo kiểu", "Keo, kẹp tóc"],
     addon: true,
-    variants: [v("updo", "Tóc cầu kỳ", 30, [150])],
+    variants: [v("updo", "Tóc cầu kỳ", 30, [100, 150, 250])],
   },
 ]
 

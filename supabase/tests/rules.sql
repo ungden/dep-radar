@@ -72,7 +72,7 @@ begin
   exception when check_violation then null;
   end;
   begin
-    -- nail-extension/tips is 140 / 150 / 160: 155 sits between two levels.
+    -- nail-extension/tips is 140 / 180 / 240: 155 sits between two levels.
     insert into public.pro_service_prices (pro_id, template_id, variant_id, price)
     values (linh, 'nail-extension', 'tips', 155000);
     assert false, 'a price between two levels was accepted';

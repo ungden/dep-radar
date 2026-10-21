@@ -5,7 +5,7 @@ import { DISTRICT_COORDS, MIN_ROAD_KM, cityOfPoint, distanceFromPointKm, isLatLn
 import { fromPriceIn, levelName, levelOfPrice, mainCategory, proLevelIn } from "@/lib/levels"
 import type { ProService } from "@/lib/types"
 
-// nail-gel/hand levels: 85k, 100k, 120k; nail-extension/tips: see the catalogue.
+// nail-gel/hand levels: 90k, 130k, 180k; nail-extension/tips: see the catalogue.
 const tier = (templateId: string, variantId: string, level: 0 | 1 | 2) => getVariant(templateId, variantId)!.tiers[level]!
 
 const listing = (proId: string, templateId: string, prices: Record<string, number>, active = true): ProService => ({
@@ -75,11 +75,11 @@ describe("price levels", () => {
       // 5k a finger is not where this person's nail prices start.
       listing("a", "nail-design", { design: tier("nail-design", "design", 0), ombre: tier("nail-design", "ombre", 0) }),
       // Phá gel has one price for everyone: it says nothing about a level.
-      listing("a", "nail-removal", { remove: 50_000 }),
+      listing("a", "nail-removal", { remove: 40_000 }),
     ]
     expect(proLevelIn(listings, "a", "nail")).toBe(2)
-    expect(fromPriceIn(listings, "a", "nail")).toBe(50_000)
-    expect(levelOfPrice(getVariant("nail-removal", "remove")!, 50_000)).toBeNull()
+    expect(fromPriceIn(listings, "a", "nail")).toBe(40_000)
+    expect(levelOfPrice(getVariant("nail-removal", "remove")!, 40_000)).toBeNull()
   })
 
   it("finds the main category by listed packages, ties by the person's own order", () => {

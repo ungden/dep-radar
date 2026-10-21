@@ -3,7 +3,7 @@ do $$
 declare pro uuid; customer uuid; fresh uuid; addr uuid; bid uuid; job uuid; q jsonb; original jsonb; s text; at timestamptz;
   unit int; why text; before_price int; multi uuid; follow uuid; session_id uuid; count_before int; budget_job uuid;
 begin
-  assert (select count(*)=151 and bool_and(cardinality(price_tiers) in (1,3)) from public.service_variants), 'every variant has three prices or one shared price';
+  assert (select count(*)=154 and bool_and(cardinality(price_tiers) in (1,3)) from public.service_variants), 'every variant has three prices or one shared price';
   assert public.service_duration_min('photo-yearbook-group','half',5)=180, 'group photo blocks three hours total';
   assert public.service_duration_min('photo-yearbook-group','half',3) is null, 'minimum group size enforced';
   assert public.service_duration_min('makeup-photo','group3',3)=135, 'makeup remains sequential per person';
@@ -50,24 +50,24 @@ begin
   perform set_config('request.jwt.claim.sub',pro::text,true);
   select public.job_problem(pro,j) into why from public.jobs j where id=budget_job;
   assert why like 'Tổng tiền vượt%',format('fee above approved cap refused: %s',why);
-  perform public.save_pro_service('nail-extension',jsonb_build_object('tips',case when unit=160000 then 140000 else 160000 end),true);
+  perform public.save_pro_service('nail-extension',jsonb_build_object('tips',case when unit=240000 then 140000 else 240000 end),true);
   select public.job_problem(pro,j) into why from public.jobs j where id=job;
   assert why like 'Mức giá yêu cầu khác%', format('mismatched tier refused: %s',why);
   -- One package reserves both appointments atomically and retains travel buffers.
   perform set_config('app.system_write','on',true);
   update public.pros set categories=array['nail','makeup','lash-brow']::public.category_id[],studio_address='Studio test' where id=pro;
   perform set_config('app.system_write','off',true);
-  perform public.save_pro_service('makeup-bridal','{"two":2700000,"engagement":1200000}',true);
+  perform public.save_pro_service('makeup-bridal','{"two":2300000,"engagement":1000000}',true);
   perform public.save_pro_service('brow-tattoo','{"powder":1300000}',true);
   perform set_config('request.jwt.claim.sub',customer::text,true);
   q:=public.booking_quote(pro,'makeup-bridal','two',at+interval '7 days',false,null,1);
   select count(*) into count_before from public.bookings where pro_id=pro;
   begin
-    perform public.create_booking_checked(pro,'makeup-bridal','two',at+interval '7 days',false,null,1,'','cash',(q->>'total')::int,2700000,array[at+interval '7 days 1 hour']);
+    perform public.create_booking_checked(pro,'makeup-bridal','two',at+interval '7 days',false,null,1,'','cash',(q->>'total')::int,2300000,array[at+interval '7 days 1 hour']);
     assert false,'overlapping sessions accepted';
   exception when check_violation then null; end;
   assert (select count(*) from public.bookings where pro_id=pro)=count_before,'failed second session rolls back primary booking';
-  multi:=public.create_booking_checked(pro,'makeup-bridal','two',at+interval '7 days',false,null,1,'','cash',(q->>'total')::int,2700000,array[at+interval '8 days']);
+  multi:=public.create_booking_checked(pro,'makeup-bridal','two',at+interval '7 days',false,null,1,'','cash',(q->>'total')::int,2300000,array[at+interval '8 days']);
   assert (select count(*)=1 from public.booking_sessions where booking_id=multi and confirmed),'second session reserved';
   why:=public.availability_problem(pro,'makeup-bridal','engagement',1,at+interval '8 days',false);
   assert why like 'Khung giờ trùng một buổi%',format('other bookings respect secondary session: %s',why);

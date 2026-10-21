@@ -47,20 +47,20 @@ describe("catalogue integrity", () => {
   })
 
   it("moves an old price to the closest level", () => {
-    const v = getVariant("nail-gel", "hand")! // 85 / 100 / 120
-    expect(nearestTier(v, 10)).toBe(85_000)
-    expect(nearestTier(v, 95_000)).toBe(100_000)
-    expect(nearestTier(v, 99_000_000)).toBe(120_000)
+    const v = getVariant("nail-gel", "hand")! // 90 / 130 / 180
+    expect(nearestTier(v, 10)).toBe(90_000)
+    expect(nearestTier(v, 120_000)).toBe(130_000)
+    expect(nearestTier(v, 99_000_000)).toBe(180_000)
   })
 
   it("names a single price 'Giá chung' and the per-finger unit", () => {
-    const trial = getVariant("makeup-bridal", "trial")!
-    expect(trial.tiers).toEqual([800_000])
-    expect(trial.suggestedPrice).toBe(800_000)
+    const trial = getVariant("nail-removal", "remove")!
+    expect(trial.tiers).toEqual([40_000])
+    expect(trial.suggestedPrice).toBe(40_000)
     expect(tierLabels(trial)).toEqual(["Giá chung"])
-    expect(isPriceAllowed(trial, 800_000)).toBe(true)
+    expect(isPriceAllowed(trial, 40_000)).toBe(true)
     const ombre = getVariant("nail-design", "ombre")!
-    expect(ombre.tiers).toEqual([7_000, 10_000, 15_000])
+    expect(ombre.tiers).toEqual([10_000, 15_000, 20_000])
     expect(perUnitSuffix(ombre)).toBe("/ngón")
     expect(perUnitSuffix(getVariant("makeup-family", "family")!)).toBe("/người")
     expect(perUnitSuffix(trial)).toBe("")
@@ -73,29 +73,31 @@ describe("catalogue integrity", () => {
     for (const t of ADDONS) expect(t.addon, t.id).toBe(true)
   })
 
-  it("matches the owner's price list for makeup and nail", () => {
+  it("matches the national makeup and nail price list", () => {
     const table: [string, string, number[]][] = [
-      ["makeup-daily", "single", [250, 300, 400]],
-      ["makeup-party", "makeup", [300, 350, 450]],
-      ["makeup-photo", "single", [250, 300, 400]],
-      ["makeup-bridal", "engagement", [1200, 1500, 1800]],
-      ["makeup-bridal", "wedding", [1500, 1800, 2000]],
-      ["makeup-takecare", "takecare", [500]],
-      ["makeup-family", "mother", [400, 450, 500]],
-      ["makeup-family", "family", [350, 400, 500]],
-      ["makeup-prewedding", "studio", [1000, 1200, 1500]],
-      ["makeup-prewedding", "outdoor", [1200, 1500, 1800]],
-      ["makeup-event", "event", [500, 650, 800]],
-      ["makeup-hair-updo", "updo", [150]],
-      ["nail-gel", "hand", [85, 100, 120]],
-      ["nail-extension", "tips", [140, 150, 160]],
-      ["nail-extension", "gelx", [165, 180, 210]],
-      ["nail-extension", "builder", [220, 250, 280]],
-      ["nail-removal", "remove", [50]],
-      ["nail-design", "design", [5, 10, 20]],
+      ["makeup-daily", "single", [250, 350, 600]],
+      ["makeup-party", "makeup", [300, 450, 800]],
+      ["makeup-photo", "single", [250, 350, 550]],
+      ["makeup-bridal", "trial", [600, 900, 1500]],
+      ["makeup-bridal", "engagement", [1000, 1600, 2800]],
+      ["makeup-bridal", "wedding", [1300, 2000, 3500]],
+      ["makeup-bridal", "two", [2300, 3600, 6300]],
+      ["makeup-takecare", "takecare", [300, 500, 800]],
+      ["makeup-family", "mother", [400, 600, 900]],
+      ["makeup-family", "family", [300, 400, 500]],
+      ["makeup-prewedding", "studio", [900, 1300, 2200]],
+      ["makeup-prewedding", "outdoor", [1200, 1800, 3000]],
+      ["makeup-event", "event", [450, 700, 1200]],
+      ["makeup-hair-updo", "updo", [100, 150, 250]],
+      ["nail-gel", "hand", [90, 130, 180]],
+      ["nail-extension", "tips", [140, 180, 240]],
+      ["nail-extension", "gelx", [170, 220, 290]],
+      ["nail-extension", "builder", [220, 260, 320]],
+      ["nail-removal", "remove", [40]],
+      ["nail-design", "design", [10, 20, 40]],
       ["nail-design", "french", [10]],
       ["nail-design", "stone", [3, 10, 20]],
-      ["nail-design", "3d", [10, 20, 30]],
+      ["nail-design", "3d", [15, 30, 50]],
     ]
     for (const [t, v, prices] of table) expect(getVariant(t, v)?.tiers, `${t}/${v}`).toEqual(prices.map((p) => p * 1000))
     // Group yearbook makeup: 10% off for two, 15% for three, 20% from five, per person.

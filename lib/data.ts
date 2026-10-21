@@ -230,7 +230,7 @@ const ps = (proId: string, templateId: string, prices: Record<string, number>): 
 export const PRO_SERVICES: ProService[] = [
   ps("linh-pham", "nail-gel", { hand: 180, "hand-foot": 320 }),
   ps("linh-pham", "nail-design", { design: 10, stone: 10, "3d": 20 }),
-  ps("linh-pham", "nail-extension", { tips: 150, gelx: 180, builder: 280 }),
+  ps("linh-pham", "nail-extension", { tips: 180, gelx: 220, builder: 260 }),
   ps("linh-pham", "nail-removal", { remove: 80, "remove-care": 140 }),
 
   ps("thu-anh", "makeup-daily", { single: 350 }),
