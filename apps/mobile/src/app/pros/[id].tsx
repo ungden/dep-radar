@@ -221,9 +221,9 @@ export default function ProProfile() {
                       </View>
                     ))}
                   {t.addon ? (
-                    // The app has no add-on step yet; the web booking page has one.
+                    // Chosen on the booking screen, on top of a main service.
                     <Txt v="meta" color={colors.muted} style={{ paddingTop: 6 }}>
-                      Chọn thêm khi đặt dịch vụ chính trên 360dep.vn
+                      Chọn thêm khi đặt lịch dịch vụ chính
                     </Txt>
                   ) : !isMe && pro.acceptingJobs ? (
                     <Button
