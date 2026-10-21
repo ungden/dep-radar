@@ -2,7 +2,7 @@ import * as React from "react"
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet"
 import { Stack, router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router"
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View, useWindowDimensions } from "react-native"
-import { appointmentAt, CITIES, POLICY, buildQuote, districtsOf, getTemplate, isUrgent, travelDistanceKm, serviceQuantity, type PriceQuote } from "@/shared"
+import { appointmentAt, CITIES, POLICY, buildQuote, districtsOf, getTemplate, isUrgent, perUnitSuffix, serviceDuration, travelDistanceKm, serviceQuantity, type PriceQuote } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
 import { rpc } from "@/data/supabase"
 import { toTimestamptz } from "@/data/format"
@@ -53,10 +53,12 @@ function BookingFlow() {
   const content = React.useRef<ScrollView>(null)
   const largeText = fontScale >= 1.5
 
-  const listings = React.useMemo(
+  const listed = React.useMemo(
     () => (pro ? (app.data?.services ?? []).filter((s) => s.proId === pro.id && s.active && Object.keys(s.prices).length && getTemplate(s.templateId)) : []),
     [app.data, pro],
   )
+  // Add-ons (nail art per finger, an elaborate hairdo) are only chosen on top of a main service.
+  const listings = React.useMemo(() => listed.filter((s) => !getTemplate(s.templateId)!.addon), [listed])
   const [step, setStep] = React.useState(1)
   React.useEffect(() => { content.current?.scrollTo({ y: 0, animated: false }) }, [step])
   const [templateId, setTemplateId] = React.useState<string | null>(null)
@@ -68,6 +70,8 @@ function BookingFlow() {
   const [addressId, setAddressId] = React.useState<string | null>(null)
   const [estCity, setEstCity] = React.useState<string | null>(null)
   const [estDistrict, setEstDistrict] = React.useState<string | null>(null)
+  // Add-ons chosen with the booking: "template/variant" -> how many (fingers, stones; 1 otherwise).
+  const [addons, setAddons] = React.useState<Record<string, number>>({})
   const [note, setNote] = React.useState("")
   const [noteOpen, setNoteOpen] = React.useState(false)
   const [photos, setPhotos] = React.useState<PickedPhoto[]>([])
@@ -98,6 +102,29 @@ function BookingFlow() {
   const canStudio = Boolean(pro?.studioAddress)
   const canHome = Boolean(pro?.homeService) && !template?.studioOnly
   const atHome = canHome && (atHomePref || !canStudio)
+
+  // What can come with the main service: the partner's other single-session options, same place
+  // (attach_addons chains them right after it, no travel fee). Same rule as the web booking page.
+  const addonOptions = listed.flatMap((l) => {
+    const t = getTemplate(l.templateId)!
+    if (t.studioOnly && atHome) return []
+    return t.variants
+      .filter((v) => l.prices[v.id] != null && (v.sessions ?? 1) === 1 && serviceQuantity(v) === 1 && !(t.id === template?.id && v.id === variant?.id))
+      .map((v) => {
+        const key = `${t.id}/${v.id}`
+        const count = v.unit ? serviceQuantity(v, addons[key] ?? 10) : 1
+        return { key, templateId: t.id, variantId: v.id, name: t.name, variant: v, unitPrice: l.prices[v.id], count, price: l.prices[v.id] * count, minutes: serviceDuration(v, count) }
+      })
+  })
+  const chosenAddons = addonOptions.filter((o) => addons[o.key] !== undefined)
+  const addonsTotal = chosenAddons.reduce((sum, o) => sum + o.price, 0)
+  const toggleAddon = (key: string) =>
+    setAddons((m) => {
+      const next = { ...m }
+      if (next[key] !== undefined) delete next[key]
+      else if (chosenAddons.length < 3) next[key] = 10
+      return next
+    })
   const addresses = app.uid ? app.me.addresses : []
   const chosenId = addressId && addresses.some((a) => a.id === addressId) ? addressId : ((addresses.find((a) => a.isDefault) ?? addresses[0])?.id ?? null)
   const address = addresses.find((a) => a.id === chosenId) ?? null
@@ -220,6 +247,11 @@ function BookingFlow() {
       haptic.error()
       return setError(res.error)
     }
+    // The main booking stands; its add-ons are chained after it, and a failure only says so.
+    if (chosenAddons.length) {
+      const attached = await rpc<string[]>("attach_addons", { p_parent: res.data, p_items: chosenAddons.map((o) => ({ template: o.templateId, variant: o.variantId, quantity: o.count })) })
+      if (!attached.ok) Alert.alert("Đã gửi lịch hẹn", `Nhưng chưa thêm được dịch vụ đi kèm: ${attached.error}`)
+    }
     // The booking stands; its reference photos follow, and a failure only says so.
     if (photos.length && app.uid) {
       try {
@@ -256,7 +288,7 @@ function BookingFlow() {
   ].map(group => ({ ...group, slots: daySlots?.filter(slot => Number(slot.time.slice(0, 2)) >= group.from && Number(slot.time.slice(0, 2)) < group.to) ?? [] })).filter(group => group.slots.length)
   const chooseDate = (value: string) => { setDate(value); setTime(null) }
   const priceLabel = quote ? confirmedQuote ? "Tổng tiền" : "Tạm tính" : "Giá dịch vụ"
-  const displayedPrice = formatPrice(quote?.total ?? servicePrice)
+  const displayedPrice = formatPrice((quote?.total ?? servicePrice) + addonsTotal)
   const needsQuote = Boolean(app.uid && app.me.account?.phone && picked && (!atHome || address))
 
   return (
@@ -341,6 +373,42 @@ function BookingFlow() {
                 {atHome ? (template.onLocation ? "Làm tại địa điểm bạn chọn." : "Làm tại nhà bạn.") : `Làm tại studio: ${pro.studioAddress ?? ""}`}
               </Txt>
             )}
+            {addonOptions.length ? (
+              <View style={{ gap: 8 }}>
+                <Txt v="controlMeta" w={600}>
+                  Thêm dịch vụ đi kèm (tuỳ chọn)
+                </Txt>
+                <Txt v="meta" color={colors.inkSoft}>
+                  Làm nối tiếp ngay sau dịch vụ chính, theo giá {pro.name} niêm yết, không tính thêm phí di chuyển. Tối đa 3.
+                </Txt>
+                {addonOptions.map((o) => {
+                  const on = addons[o.key] !== undefined
+                  return (
+                    <View key={o.key} style={{ gap: 6 }}>
+                      <Option
+                        selected={on}
+                        title={`${o.name} · ${o.variant.label}`}
+                        subtitle={`${o.variant.unit ? `${formatPrice(o.unitPrice)}${perUnitSuffix(o.variant)} · ` : ""}${formatDuration(o.minutes)}`}
+                        right={formatPrice(o.price)}
+                        onPress={() => toggleAddon(o.key)}
+                      />
+                      {on && o.variant.unit ? (
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12 }}>
+                          <Txt v="control" w={600}>Số {o.variant.unit}</Txt>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+                            <Button compact label="−" variant="secondary" size="sm" disabled={o.count <= (o.variant.minQuantity ?? 1)} onPress={() => setAddons((m) => ({ ...m, [o.key]: o.count - 1 }))} />
+                            <Txt v="control" w={600} tabular accessibilityLabel={`${o.count} ${o.variant.unit}`}>
+                              {o.count}
+                            </Txt>
+                            <Button compact label="+" variant="secondary" size="sm" disabled={o.count >= (o.variant.maxQuantity ?? 1)} onPress={() => setAddons((m) => ({ ...m, [o.key]: o.count + 1 }))} />
+                          </View>
+                        </View>
+                      ) : null}
+                    </View>
+                  )
+                })}
+              </View>
+            ) : null}
           </>
         ) : null}
 
@@ -493,6 +561,10 @@ function BookingFlow() {
                 {quote.travelFee ? <Line label={`Phí di chuyển${quote.distanceKm !== null ? ` (~${formatKm(quote.distanceKm)})` : ""}`} value={formatPrice(quote.travelFee)} /> : null}
                 {quote.urgentFee ? <Line label="Phí gấp" value={formatPrice(quote.urgentFee)} /> : null}
                 <Line label={confirmedQuote ? "Tổng tiền" : "Tạm tính"} value={formatPrice(quote.total)} strong />
+                {chosenAddons.map((o) => (
+                  <Line key={o.key} label={`${o.name} · ${o.variant.label}${o.variant.unit ? ` × ${o.count} ${o.variant.unit}` : ""}`} value={formatPrice(o.price)} />
+                ))}
+                {chosenAddons.length ? <Line label="Tổng cả lịch (gồm dịch vụ đi kèm)" value={formatPrice(quote.total + addonsTotal)} strong /> : null}
                 <Txt v="meta" color={colors.muted}>
                   Thanh toán sau khi làm xong. {atHome ? "Khoảng cách ước tính theo phường/xã. " : ""}Giá được xác nhận lại khi gửi lịch. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để người làm kịp sắp xếp.
                 </Txt>

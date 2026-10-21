@@ -34,7 +34,7 @@ describe("bookable starting offers", () => {
   })
   it("ignores orphaned variants and non-finite prices", () => {
     const offers = serviceOffers(browse([pro("a")], [listing("a", "nail-gel", { old: 1, hand: Number.NaN, "hand-foot": 400000 })]))
-    expect(offers[0].variant).toBe(getTemplate("nail-gel")!.variants[2])
+    expect(offers[0].variant).toBe(getTemplate("nail-gel")!.variants[1])
     expect(offers[0].fromPrice).toBe(400000)
   })
 })

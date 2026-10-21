@@ -23,7 +23,7 @@ import {
   type HelpQuestionFilter,
   type PlatformSettings,
 } from "@/lib/api/admin"
-import { CATALOG, CATEGORIES, CATALOG_VERSION, PRICE_LEVEL_NOTE, tierLabels } from "@/lib/catalog"
+import { CATALOG, CATEGORIES, CATALOG_VERSION, PRICE_LEVEL_NOTE, partnerTemplatesByCategory, perUnitSuffix, tierLabels } from "@/lib/catalog"
 import { HELP_ENTRIES } from "@/lib/help/knowledge"
 import type { CategoryId } from "@/lib/types"
 import { useRefresh } from "@/lib/store"
@@ -711,7 +711,7 @@ export function CatalogPanel() {
     }
   }, [])
 
-  const templates = CATALOG.filter((t) => t.category === category)
+  const templates = partnerTemplatesByCategory(category)
   const labels = tierLabels()
 
   return (
@@ -719,7 +719,7 @@ export function CatalogPanel() {
       <Card className="p-4 text-body">
         <p className="font-semibold">Danh mục dịch vụ & bảng giá (phiên bản {CATALOG_VERSION})</p>
         <p className="mt-1 text-label text-muted">
-          {CATALOG.length} dịch vụ trong {CATEGORIES.length} ngành. Đối tác chỉ chọn dịch vụ và một trong 3 mức giá có sẵn, không tự nhập giá. {PRICE_LEVEL_NOTE}
+          {CATALOG.length} dịch vụ trong {CATEGORIES.length} ngành. Đối tác chỉ chọn dịch vụ và một trong 3 mức giá có sẵn (vài gói một giá chung), không tự nhập giá. {PRICE_LEVEL_NOTE}
         </p>
         <p className="mt-1 text-label text-muted">Chỉ xem. Muốn thêm hoặc đổi giá: báo đội kỹ thuật cập nhật danh mục.</p>
         {error && <p className="mt-2 text-label text-danger">Không tải được số đối tác đã chọn: {error}</p>}
@@ -735,7 +735,7 @@ export function CatalogPanel() {
               c.id === category ? "border-ink bg-ink text-canvas" : "border-line hover:bg-subtle",
             )}
           >
-            {c.label} ({CATALOG.filter((t) => t.category === c.id).length})
+            {c.label} ({partnerTemplatesByCategory(c.id).length})
           </button>
         ))}
       </div>
@@ -744,6 +744,7 @@ export function CatalogPanel() {
           <p className="font-semibold">{t.name}</p>
           <p className="text-label text-muted">
             {t.id}
+            {t.addon && " · chỉ đặt kèm dịch vụ chính"}
             {t.studioOnly && " · chỉ tại studio"}
             {t.onLocation && " · tại địa điểm khách chọn"}
             {t.requiresVerification && " · cần xác minh danh tính"}
@@ -768,7 +769,7 @@ export function CatalogPanel() {
                     <td className="py-1.5 pr-2">
                       {v.label}
                       <span className="block text-label text-muted">
-                        {v.durationMin} phút{v.perPerson ? " / người" : ""}
+                        {v.durationMin} phút{v.perPerson ? ` · giá${perUnitSuffix(v)}` : ""}
                         {v.sessions && v.sessions > 1 ? ` · ${v.sessions} buổi` : ""}
                       </span>
                     </td>
@@ -777,7 +778,10 @@ export function CatalogPanel() {
                       return (
                         <td key={price} className="py-1.5 pr-2">
                           {formatPrice(price)}
-                          <span className="block text-label text-muted">{n} đối tác</span>
+                          <span className="block text-label text-muted">
+                            {v.tiers.length === 1 ? "Giá chung · " : ""}
+                            {n} đối tác
+                          </span>
                         </td>
                       )
                     })}

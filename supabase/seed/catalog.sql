@@ -837,15 +837,16 @@ insert into public.districts (city, district, lat, lng, sort_order) values ('Đ�
   on conflict (city, district) do update set lat = excluded.lat, lng = excluded.lng, sort_order = excluded.sort_order;
 
 -- Service catalogue ---------------------------------------------------------
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'nail-gel', 'nail', 'Sơn gel trơn', 'Làm sạch, tạo form và sơn gel một màu.', array['Cắt da, tạo form móng', 'Sơn gel 1 màu', 'Dưỡng viền móng']::text[], false, false, null, null, false, true, 0, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'nail-gel', 'nail', 'Sơn gel trơn', 'Cắt da, tạo form và sơn gel một màu.', array['Cắt da, tạo form móng', 'Sơn gel 1 màu', 'Dưỡng viền móng']::text[], false, false, null, null, false, false, true, 0, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-gel', 'hand', 'Tay', 45, 120000, 220000, 160000, array[120000, 160000, 220000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'nail-gel', 'hand', 'Tay', 45, 90000, 180000, 130000, array[90000, 130000, 180000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -853,30 +854,23 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-gel', 'cat-eye', 'Tay · mắt mèo / tráng gương', 50, 140000, 240000, 180000, array[140000, 180000, 240000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
+  'nail-gel', 'hand-foot', 'Tay + chân', 90, 170000, 340000, 240000, array[170000, 240000, 340000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-gel', 'hand-foot', 'Tay + chân', 90, 220000, 400000, 300000, array[220000, 300000, 400000], false, 1, 2, 'fixed', 1, null, 0, 1, null)
-  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
-    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
-    price_tiers = excluded.price_tiers,
-    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
-    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
-    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'nail-design', 'nail', 'Nail thiết kế', 'Sơn gel kèm thiết kế theo mẫu khách chọn.', array['Cắt da, tạo form móng', 'Sơn gel nền', 'Thiết kế theo mẫu']::text[], false, false, null, null, false, true, 1, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'nail-extension', 'nail', 'Up móng / nối móng', 'Up móng giả bằng keo hoặc gel, hoặc đắp dual form gel gôm, kèm sơn gel một màu.', array['Tạo form móng thật', 'Up hoặc đắp móng', 'Sơn gel 1 màu']::text[], false, false, null, null, false, false, true, 1, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-design', 'simple', 'Ombre / French', 75, 200000, 350000, 260000, array[200000, 260000, 350000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'nail-extension', 'tips', 'Up móng bằng keo + sơn trơn 1 màu', 75, 140000, 240000, 180000, array[140000, 180000, 240000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -884,7 +878,7 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-design', 'stone', 'Đính đá / charm', 90, 250000, 450000, 330000, array[250000, 330000, 450000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
+  'nail-extension', 'gelx', 'Up móng gel + sơn trơn 1 màu', 90, 170000, 290000, 220000, array[170000, 220000, 290000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -892,22 +886,23 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-design', 'art', 'Vẽ nghệ thuật', 120, 350000, 650000, 480000, array[350000, 480000, 650000], false, 1, 2, 'fixed', 1, null, 0, 1, null)
+  'nail-extension', 'builder', 'Dual form + gel gôm', 120, 220000, 320000, 260000, array[220000, 260000, 320000], false, 1, 2, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'nail-extension', 'nail', 'Nối móng', 'Nối dài móng bằng móng úp hoặc đắp gel.', array['Tạo form móng thật', 'Nối móng', 'Sơn gel 1 màu']::text[], false, false, null, null, false, true, 2, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'nail-removal', 'nail', 'Phá gel & dưỡng móng', 'Phá gel, móng úp hoặc móng đắp an toàn, không làm mỏng móng.', array['Phá bằng dung dịch chuyên dụng', 'Dũa lại form', 'Dưỡng móng']::text[], false, false, null, null, false, false, true, 2, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-extension', 'tips', 'Úp móng', 90, 220000, 360000, 280000, array[220000, 280000, 360000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'nail-removal', 'remove', 'Phá gel', 20, 40000, 40000, 40000, array[40000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -915,7 +910,7 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-extension', 'builder', 'Đắp gel', 120, 300000, 500000, 380000, array[300000, 380000, 500000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
+  'nail-removal', 'remove-tips', 'Phá móng úp / móng đắp', 30, 60000, 60000, 60000, array[60000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -923,22 +918,23 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-extension', 'gelx', 'Móng úp mềm Gel-X', 100, 350000, 600000, 450000, array[350000, 450000, 600000], false, 1, 2, 'fixed', 1, null, 0, 1, null)
+  'nail-removal', 'remove-care', 'Phá gel + dưỡng móng', 45, 80000, 130000, 100000, array[80000, 100000, 130000], false, 1, 2, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'nail-removal', 'nail', 'Tháo gel & dưỡng móng', 'Tháo gel/bột an toàn, không làm mỏng móng.', array['Tháo gel bằng dung dịch chuyên dụng', 'Dũa lại form', 'Dưỡng móng']::text[], false, false, null, null, false, true, 3, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'nail-pedicure', 'nail', 'Chăm sóc bàn chân (pedicure)', 'Ngâm chân, lấy da chết, cắt da và dưỡng gót.', array['Ngâm chân thảo mộc', 'Lấy da chết, cắt da', 'Dưỡng gót & massage chân']::text[], false, false, null, null, false, false, true, 3, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-removal', 'remove', 'Tháo gel', 20, 50000, 100000, 80000, array[50000, 80000, 100000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'nail-pedicure', 'basic', 'Cơ bản', 45, 120000, 180000, 150000, array[120000, 150000, 180000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -946,22 +942,23 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-removal', 'remove-care', 'Tháo + dưỡng', 45, 100000, 200000, 150000, array[100000, 150000, 200000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
+  'nail-pedicure', 'deluxe', 'Có đắp mặt nạ chân, chà gót', 75, 200000, 300000, 250000, array[200000, 250000, 300000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'nail-pedicure', 'nail', 'Chăm sóc bàn chân (pedicure)', 'Ngâm chân, lấy da chết, cắt da và dưỡng gót.', array['Ngâm chân thảo mộc', 'Lấy da chết, cắt da', 'Dưỡng gót & massage chân']::text[], false, false, null, null, false, true, 4, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'nail-manicure', 'nail', 'Cắt da, sửa form & sơn thường', 'Chăm sóc móng cơ bản cho khách không dùng gel.', array['Cắt da, sửa form móng', 'Sơn thường 1 màu', 'Dưỡng viền móng']::text[], false, false, null, null, false, false, true, 4, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-pedicure', 'basic', 'Cơ bản', 45, 130000, 250000, 180000, array[130000, 180000, 250000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'nail-manicure', 'hand', 'Tay', 30, 60000, 100000, 80000, array[60000, 80000, 100000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -969,22 +966,23 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-pedicure', 'deluxe', 'Có đắp mặt nạ chân', 75, 220000, 350000, 280000, array[220000, 280000, 350000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
+  'nail-manicure', 'hand-foot', 'Tay + chân', 60, 110000, 190000, 150000, array[110000, 150000, 190000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'nail-manicure', 'nail', 'Cắt da, sửa form & sơn thường', 'Chăm sóc móng cơ bản cho khách không dùng gel.', array['Cắt da, sửa form móng', 'Sơn thường 1 màu', 'Dưỡng viền móng']::text[], false, false, null, null, false, true, 5, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'nail-refill', 'nail', 'Dặm móng nối', 'Dặm phần móng mọc ra và sơn lại cho bộ móng đã up hoặc đắp.', array['Dũa, làm sạch phần móng mọc', 'Đắp bù gel', 'Sơn lại 1 màu']::text[], false, false, null, null, false, false, true, 5, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-manicure', 'hand', 'Tay', 30, 80000, 150000, 110000, array[80000, 110000, 150000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'nail-refill', 'refill-tips', 'Dặm móng úp', 60, 90000, 140000, 110000, array[90000, 110000, 140000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -992,52 +990,55 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-manicure', 'hand-foot', 'Tay + chân', 60, 150000, 260000, 200000, array[150000, 200000, 260000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
+  'nail-refill', 'refill', 'Dặm móng đắp / dual form', 75, 130000, 200000, 160000, array[130000, 160000, 200000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'nail-refill', 'nail', 'Dặm móng nối', 'Dặm phần móng mọc ra và sơn lại cho bộ móng đã nối.', array['Dũa, làm sạch phần móng mọc', 'Đắp bù gel', 'Sơn lại 1 màu']::text[], false, false, null, null, false, true, 6, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'makeup-daily', 'makeup', 'Makeup nhẹ / đi làm', 'Lớp nền mỏng, tự nhiên, phù hợp đi làm, đi học, hẹn hò.', array['Makeup tự nhiên', 'Làm tóc đơn giản', 'Mỹ phẩm của chuyên viên']::text[], false, false, null, null, false, false, true, 6, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'nail-refill', 'refill', 'Dặm móng', 75, 150000, 260000, 200000, array[150000, 200000, 260000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'makeup-daily', 'single', '1 người', 45, 250000, 600000, 350000, array[250000, 350000, 600000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'makeup-daily', 'makeup', 'Makeup nhẹ / đi làm', 'Lớp nền mỏng, tự nhiên, phù hợp đi làm, đi học, hẹn hò.', array['Làm sạch & dưỡng nền', 'Makeup tự nhiên', 'Mỹ phẩm của chuyên viên']::text[], false, false, null, null, false, true, 7, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'makeup-party', 'makeup', 'Makeup dự tiệc', 'Makeup bền màu cho tiệc, kèm làm tóc đơn giản và mi giả.', array['Makeup bền 8 tiếng', 'Làm tóc đơn giản', 'Mi giả']::text[], false, false, null, null, false, false, true, 7, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-daily', 'single', '1 người', 45, 200000, 350000, 280000, array[200000, 280000, 350000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'makeup-party', 'makeup', '1 người', 60, 300000, 800000, 450000, array[300000, 450000, 800000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'makeup-party', 'makeup', 'Makeup dự tiệc', 'Makeup bền màu cho tiệc, sự kiện, kèm mi giả.', array['Makeup bền 8 tiếng', 'Mi giả', 'Tư vấn layout theo trang phục']::text[], false, false, null, null, false, true, 8, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'makeup-photo', 'makeup', 'Makeup kỷ yếu / chụp ảnh', 'Layout lên hình theo concept. Đi theo nhóm được giảm: 2 người 10%, 3 người 15%, từ 5 người 20%.', array['Layout theo concept', 'Làm tóc đơn giản', 'Mi giả']::text[], false, false, null, null, false, false, true, 8, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-party', 'makeup', 'Makeup', 60, 300000, 550000, 400000, array[300000, 400000, 550000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'makeup-photo', 'single', '1 người', 60, 250000, 550000, 350000, array[250000, 350000, 550000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -1045,22 +1046,39 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-party', 'makeup-hair', 'Makeup + làm tóc', 90, 400000, 750000, 550000, array[400000, 550000, 750000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
+  'makeup-photo', 'group2', 'Nhóm 2 người, giảm 10% (giá mỗi người)', 45, 225000, 495000, 315000, array[225000, 315000, 495000], true, 2, 1, 'per_person', 2, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'makeup-photo', 'makeup', 'Makeup chụp ảnh / kỷ yếu', 'Layout lên hình theo concept, ánh sáng.', array['Layout theo concept', 'Mi giả', 'Dặm lại 1 lần trong buổi chụp (nếu ở lại)']::text[], false, false, null, null, false, true, 9, 2)
+insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
+  'makeup-photo', 'group3', 'Nhóm 3–4 người, giảm 15% (giá mỗi người)', 45, 210000, 465000, 295000, array[210000, 295000, 465000], true, 4, 2, 'per_person', 3, null, 0, 1, null)
+  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
+    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
+    price_tiers = excluded.price_tiers,
+    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
+    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
+    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
+insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
+  'makeup-photo', 'group5', 'Nhóm từ 5 người, giảm 20% (giá mỗi người)', 45, 200000, 440000, 280000, array[200000, 280000, 440000], true, 10, 3, 'per_person', 5, null, 0, 1, null)
+  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
+    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
+    price_tiers = excluded.price_tiers,
+    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
+    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
+    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'makeup-bridal', 'makeup', 'Makeup cô dâu', 'Makeup và làm tóc cô dâu cho từng lễ. Nên test makeup trước để xem layout đã chọn có hợp không.', array['Makeup + làm tóc cô dâu', 'Mi giả, phụ kiện tóc cơ bản', 'Tư vấn layout theo váy, áo dài']::text[], false, false, null, null, false, false, true, 9, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-photo', 'single', '1 người', 60, 350000, 650000, 450000, array[350000, 450000, 650000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'makeup-bridal', 'trial', 'Test makeup trước ngày cưới', 90, 600000, 1500000, 900000, array[600000, 900000, 1500000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -1068,22 +1086,39 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-photo', 'group', 'Nhóm (giá mỗi người)', 45, 200000, 300000, 250000, array[200000, 250000, 300000], true, 8, 1, 'per_person', 1, null, 0, 1, null)
+  'makeup-bridal', 'engagement', 'Dạm ngõ / đám hỏi', 120, 1000000, 2800000, 1600000, array[1000000, 1600000, 2800000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'makeup-bridal', 'makeup', 'Makeup cô dâu', 'Makeup và làm tóc cô dâu, tư vấn layout trước ngày cưới.', array['Tư vấn layout trước ngày cưới', 'Makeup + làm tóc cô dâu', 'Mi giả, phụ kiện tóc cơ bản']::text[], false, false, null, null, false, true, 10, 2)
+insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
+  'makeup-bridal', 'wedding', 'Gia tiên / tiệc cưới', 120, 1300000, 3500000, 2000000, array[1300000, 2000000, 3500000], false, 1, 2, 'fixed', 1, null, 0, 1, null)
+  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
+    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
+    price_tiers = excluded.price_tiers,
+    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
+    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
+    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
+insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
+  'makeup-bridal', 'two', 'Trọn gói 2 lễ: đám hỏi + tiệc cưới (2 buổi)', 120, 2300000, 6300000, 3600000, array[2300000, 3600000, 6300000], false, 1, 3, 'fixed', 1, null, 0, 2, null)
+  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
+    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
+    price_tiers = excluded.price_tiers,
+    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
+    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
+    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'makeup-takecare', 'makeup', 'Take care cô dâu (theo dâu)', 'Đi theo cô dâu sau khi đã makeup xong, lo phần phụ: dặm lại phấn, cầm đồ, hỗ trợ tạo dáng. Chính thợ makeup theo dâu cũng tính giá này.', array['Dặm lại phấn, son, chỉnh tóc', 'Cầm đồ, chỉnh váy giúp cô dâu', 'Hỗ trợ tạo dáng khi chụp']::text[], false, false, null, null, false, false, true, 10, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-bridal', 'one', '1 lễ (ăn hỏi hoặc cưới)', 120, 1200000, 2800000, 1800000, array[1200000, 1800000, 2800000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'makeup-takecare', 'takecare', 'Theo dâu 1 buổi (đến 4 tiếng)', 240, 300000, 800000, 500000, array[300000, 500000, 800000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -1091,30 +1126,23 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-bridal', 'two', 'Trọn gói 2 lễ (2 buổi × 120 phút)', 120, 2200000, 4800000, 3200000, array[2200000, 3200000, 4800000], false, 1, 1, 'fixed', 1, null, 0, 2, null)
+  'makeup-takecare', 'fullday', 'Theo dâu cả ngày', 480, 1000000, 3000000, 1800000, array[1000000, 1800000, 3000000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-bridal', 'fullday', 'Theo cô dâu cả ngày (dặm, đổi layout)', 600, 3000000, 6500000, 4500000, array[3000000, 4500000, 6500000], false, 1, 2, 'fixed', 1, null, 0, 1, null)
-  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
-    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
-    price_tiers = excluded.price_tiers,
-    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
-    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
-    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'makeup-family', 'makeup', 'Makeup mẹ cô dâu / người nhà / phụ dâu', 'Makeup và làm tóc cho người nhà trong ngày cưới.', array['Makeup bền', 'Làm tóc đơn giản', 'Mi giả']::text[], false, false, null, null, false, true, 11, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'makeup-family', 'makeup', 'Makeup mẹ cô dâu / họ hàng / phụ dâu', 'Makeup và làm tóc cho người nhà trong ngày cưới.', array['Makeup bền', 'Làm tóc đơn giản', 'Mi giả']::text[], false, false, null, null, false, false, true, 11, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-family', 'mother', 'Mẹ cô dâu / chú rể', 75, 400000, 700000, 550000, array[400000, 550000, 700000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'makeup-family', 'mother', 'Mẹ cô dâu / chú rể', 75, 400000, 900000, 600000, array[400000, 600000, 900000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -1122,37 +1150,39 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-family', 'family', 'Người nhà / phụ dâu (giá mỗi người)', 60, 250000, 450000, 350000, array[250000, 350000, 450000], true, 8, 1, 'per_person', 1, null, 0, 1, null)
+  'makeup-family', 'family', 'Họ hàng / phụ dâu (giá mỗi người)', 60, 300000, 500000, 400000, array[300000, 400000, 500000], true, 8, 1, 'per_person', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'makeup-event', 'makeup', 'Makeup sự kiện / MC / biểu diễn', 'Layout lên đèn sân khấu, lên hình livestream.', array['Makeup lên đèn, lên hình', 'Làm tóc', 'Mi giả']::text[], false, false, null, null, false, true, 12, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'makeup-event', 'makeup', 'Makeup sự kiện / MC / biểu diễn', 'Layout lên đèn sân khấu, lên hình livestream.', array['Makeup lên đèn, lên hình', 'Làm tóc đơn giản', 'Mi giả']::text[], false, false, null, null, false, false, true, 12, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-event', 'event', 'Sự kiện', 90, 500000, 1000000, 700000, array[500000, 700000, 1000000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'makeup-event', 'event', 'Sự kiện', 90, 450000, 1200000, 700000, array[450000, 700000, 1200000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'makeup-prewedding', 'makeup', 'Makeup chụp ảnh cưới', 'Makeup cô dâu cho buổi chụp ảnh cưới trong studio hoặc ngoại cảnh.', array['Makeup + tóc cô dâu', 'Đổi layout theo trang phục', 'Mi giả']::text[], false, false, null, null, false, true, 13, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'makeup-prewedding', 'makeup', 'Makeup chụp ảnh cưới', 'Makeup cô dâu cho buổi chụp ảnh cưới trong studio hoặc ngoại cảnh.', array['Makeup + tóc cô dâu', 'Đổi layout theo trang phục', 'Mi giả']::text[], false, false, null, null, false, false, true, 13, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-prewedding', 'studio', 'Chụp trong studio', 120, 700000, 1500000, 1000000, array[700000, 1000000, 1500000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'makeup-prewedding', 'studio', 'Chụp trong studio', 120, 900000, 2200000, 1300000, array[900000, 1300000, 2200000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -1160,19 +1190,20 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-prewedding', 'outdoor', 'Ngoại cảnh, theo cả buổi', 300, 1000000, 2200000, 1500000, array[1000000, 1500000, 2200000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
+  'makeup-prewedding', 'outdoor', 'Ngoại cảnh, theo cả buổi', 300, 1200000, 3000000, 1800000, array[1200000, 1800000, 3000000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'skin-basic', 'skincare', 'Chăm sóc da cơ bản', 'Làm sạch, tẩy tế bào chết, massage và đắp mặt nạ.', array['Soi da', 'Làm sạch 2 bước, tẩy tế bào chết', 'Massage mặt', 'Mặt nạ theo loại da']::text[], false, false, null, null, false, true, 14, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'skin-basic', 'skincare', 'Chăm sóc da cơ bản', 'Làm sạch, tẩy tế bào chết, massage và đắp mặt nạ.', array['Soi da', 'Làm sạch 2 bước, tẩy tế bào chết', 'Massage mặt', 'Mặt nạ theo loại da']::text[], false, false, null, null, false, false, true, 14, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'skin-basic', '60m', '60 phút', 60, 200000, 380000, 280000, array[200000, 280000, 380000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1190,12 +1221,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'skin-acne', 'skincare', 'Lấy nhân mụn chuẩn y khoa', 'Lấy nhân mụn vô khuẩn, làm dịu và kháng viêm.', array['Soi da', 'Lấy nhân mụn bằng dụng cụ vô khuẩn', 'Mặt nạ làm dịu']::text[], false, false, null, null, false, true, 15, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'skin-acne', 'skincare', 'Lấy nhân mụn chuẩn y khoa', 'Lấy nhân mụn vô khuẩn, làm dịu và kháng viêm.', array['Soi da', 'Lấy nhân mụn bằng dụng cụ vô khuẩn', 'Mặt nạ làm dịu']::text[], false, false, null, null, false, false, true, 15, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'skin-acne', '60m', '60 phút', 60, 220000, 420000, 300000, array[220000, 300000, 420000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1213,12 +1245,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'skin-recovery', 'skincare', 'Phục hồi da nhạy cảm', 'Liệu trình dịu nhẹ cho da đỏ, kích ứng, sau treatment.', array['Soi da', 'Làm sạch dịu nhẹ', 'Serum & mặt nạ phục hồi']::text[], false, false, null, null, false, true, 16, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'skin-recovery', 'skincare', 'Phục hồi da nhạy cảm', 'Liệu trình dịu nhẹ cho da đỏ, kích ứng, sau treatment.', array['Soi da', 'Làm sạch dịu nhẹ', 'Serum & mặt nạ phục hồi']::text[], false, false, null, null, false, false, true, 16, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'skin-recovery', '75m', '75 phút', 75, 300000, 580000, 420000, array[300000, 420000, 580000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1228,12 +1261,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'skin-wax', 'skincare', 'Waxing', 'Wax lông bằng sáp nóng hoặc sáp hạt, kèm dịu da sau wax.', array['Làm sạch vùng wax', 'Wax', 'Dịu da sau wax']::text[], false, false, null, null, false, true, 17, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'skin-wax', 'skincare', 'Waxing', 'Wax lông bằng sáp nóng hoặc sáp hạt, kèm dịu da sau wax.', array['Làm sạch vùng wax', 'Wax', 'Dịu da sau wax']::text[], false, false, null, null, false, false, true, 17, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'skin-wax', 'underarm', 'Nách', 20, 70000, 150000, 100000, array[70000, 100000, 150000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1291,12 +1325,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'skin-hydration', 'skincare', 'Điện di cấp ẩm / vitamin C', 'Cấp ẩm và làm sáng da bằng điện di, không xâm lấn.', array['Làm sạch da', 'Điện di tinh chất', 'Mặt nạ khoá ẩm']::text[], false, false, null, null, false, true, 18, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'skin-hydration', 'skincare', 'Điện di cấp ẩm / vitamin C', 'Cấp ẩm và làm sáng da bằng điện di, không xâm lấn.', array['Làm sạch da', 'Điện di tinh chất', 'Mặt nạ khoá ẩm']::text[], false, false, null, null, false, false, true, 18, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'skin-hydration', '60m', '60 phút', 60, 220000, 400000, 300000, array[220000, 300000, 400000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1306,12 +1341,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'hair-cut', 'hair', 'Cắt tóc', 'Cắt theo dáng mặt, gội và sấy tạo kiểu.', array['Tư vấn dáng tóc', 'Cắt & tỉa', 'Gội, sấy tạo kiểu']::text[], false, false, null, null, false, true, 19, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'hair-cut', 'hair', 'Cắt tóc', 'Cắt theo dáng mặt, gội và sấy tạo kiểu.', array['Tư vấn dáng tóc', 'Cắt & tỉa', 'Gội, sấy tạo kiểu']::text[], false, false, null, null, false, false, true, 19, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'hair-cut', 'women', 'Nữ', 45, 120000, 250000, 180000, array[120000, 180000, 250000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1329,12 +1365,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'hair-color', 'hair', 'Nhuộm tóc', 'Nhuộm phủ bạc hoặc đổi màu, kèm dưỡng sau nhuộm.', array['Test da đầu', 'Nhuộm', 'Dưỡng phục hồi sau nhuộm']::text[], true, false, null, null, false, true, 20, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'hair-color', 'hair', 'Nhuộm tóc', 'Nhuộm phủ bạc hoặc đổi màu, kèm dưỡng sau nhuộm.', array['Test da đầu', 'Nhuộm', 'Dưỡng phục hồi sau nhuộm']::text[], true, false, null, null, false, false, true, 20, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'hair-color', 'roots', 'Phủ chân tóc / phủ bạc', 90, 200000, 450000, 300000, array[200000, 300000, 450000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1360,12 +1397,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'hair-perm', 'hair', 'Uốn tóc', 'Uốn lạnh hoặc uốn nóng, kèm dưỡng giữ nếp.', array['Tư vấn kiểu lọn', 'Uốn', 'Dưỡng giữ nếp']::text[], true, false, null, null, false, true, 21, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'hair-perm', 'hair', 'Uốn tóc', 'Uốn lạnh hoặc uốn nóng, kèm dưỡng giữ nếp.', array['Tư vấn kiểu lọn', 'Uốn', 'Dưỡng giữ nếp']::text[], true, false, null, null, false, false, true, 21, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'hair-perm', 'cold', 'Uốn lạnh', 150, 400000, 950000, 650000, array[400000, 650000, 950000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1383,12 +1421,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'hair-treatment', 'hair', 'Hấp dầu & phục hồi tóc', 'Phục hồi tóc khô xơ sau tẩy, nhuộm hoặc uốn.', array['Gội làm sạch', 'Ủ dưỡng chuyên sâu', 'Sấy tạo kiểu nhẹ']::text[], true, false, null, null, false, true, 22, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'hair-treatment', 'hair', 'Hấp dầu & phục hồi tóc', 'Phục hồi tóc khô xơ sau tẩy, nhuộm hoặc uốn.', array['Gội làm sạch', 'Ủ dưỡng chuyên sâu', 'Sấy tạo kiểu nhẹ']::text[], true, false, null, null, false, false, true, 22, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'hair-treatment', '45m', '45 phút', 45, 150000, 380000, 250000, array[150000, 250000, 380000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1406,12 +1445,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'hair-wash', 'hair', 'Gội đầu dưỡng sinh', 'Gội, massage da đầu và cổ vai, sấy khô.', array['Gội 2 lần', 'Massage da đầu, cổ vai', 'Sấy tạo phồng nhẹ']::text[], true, false, null, null, false, true, 23, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'hair-wash', 'hair', 'Gội đầu dưỡng sinh', 'Gội, massage da đầu và cổ vai, sấy khô.', array['Gội 2 lần', 'Massage da đầu, cổ vai', 'Sấy tạo phồng nhẹ']::text[], true, false, null, null, false, false, true, 23, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'hair-wash', '45m', '45 phút', 45, 130000, 250000, 180000, array[130000, 180000, 250000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1429,12 +1469,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'hair-styling', 'hair', 'Tạo kiểu tóc sự kiện', 'Uốn, búi, tết theo trang phục và dáng mặt.', array['Tư vấn kiểu tóc', 'Tạo kiểu', 'Keo/xịt giữ nếp']::text[], false, false, null, null, false, true, 24, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'hair-styling', 'hair', 'Tạo kiểu tóc sự kiện', 'Uốn, búi, tết theo trang phục và dáng mặt.', array['Tư vấn kiểu tóc', 'Tạo kiểu', 'Keo/xịt giữ nếp']::text[], false, false, null, null, false, false, true, 24, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'hair-styling', 'curl', 'Uốn / duỗi tạo kiểu', 45, 150000, 300000, 220000, array[150000, 220000, 300000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1452,12 +1493,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'hair-bridal', 'hair', 'Làm tóc cô dâu', 'Làm tóc cô dâu có buổi thử trước.', array['1 buổi thử tóc', 'Tạo kiểu & cài phụ kiện', 'Giữ nếp suốt lễ']::text[], false, false, null, null, false, true, 25, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'hair-bridal', 'hair', 'Làm tóc cô dâu', 'Làm tóc cô dâu có buổi thử trước.', array['1 buổi thử tóc', 'Tạo kiểu & cài phụ kiện', 'Giữ nếp suốt lễ']::text[], false, false, null, null, false, false, true, 25, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'hair-bridal', 'one', '1 lễ', 120, 800000, 1800000, 1200000, array[800000, 1200000, 1800000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1467,12 +1509,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'hair-straighten', 'hair', 'Duỗi / ép tóc', 'Duỗi thẳng tự nhiên hoặc duỗi phồng chân tóc, kèm dưỡng giữ nếp.', array['Tư vấn độ thẳng', 'Duỗi dập thuốc', 'Dưỡng giữ nếp']::text[], true, false, null, null, false, true, 26, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'hair-straighten', 'hair', 'Duỗi / ép tóc', 'Duỗi thẳng tự nhiên hoặc duỗi phồng chân tóc, kèm dưỡng giữ nếp.', array['Tư vấn độ thẳng', 'Duỗi dập thuốc', 'Dưỡng giữ nếp']::text[], true, false, null, null, false, false, true, 26, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'hair-straighten', 'bangs', 'Duỗi / uốn mái', 30, 100000, 200000, 150000, array[100000, 150000, 200000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1490,12 +1533,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'hair-scalp', 'hair', 'Chăm sóc da đầu (gàu, ngứa, rụng tóc)', 'Làm sạch sâu da đầu và ủ tinh chất theo tình trạng.', array['Soi da đầu', 'Tẩy tế bào chết da đầu', 'Ủ tinh chất & massage']::text[], true, false, null, null, false, true, 27, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'hair-scalp', 'hair', 'Chăm sóc da đầu (gàu, ngứa, rụng tóc)', 'Làm sạch sâu da đầu và ủ tinh chất theo tình trạng.', array['Soi da đầu', 'Tẩy tế bào chết da đầu', 'Ủ tinh chất & massage']::text[], true, false, null, null, false, false, true, 27, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'hair-scalp', '50m', '50 phút', 50, 150000, 300000, 220000, array[150000, 220000, 300000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1505,12 +1549,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'hair-home-cut', 'hair', 'Cắt tóc tại nhà cho bé & người lớn tuổi', 'Thợ đến nhà cắt gọn, hợp với người ngại ra tiệm.', array['Cắt, tỉa theo yêu cầu', 'Dọn tóc vụn']::text[], false, false, null, null, false, true, 28, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'hair-home-cut', 'hair', 'Cắt tóc tại nhà cho bé & người lớn tuổi', 'Thợ đến nhà cắt gọn, hợp với người ngại ra tiệm.', array['Cắt, tỉa theo yêu cầu', 'Dọn tóc vụn']::text[], false, false, null, null, false, false, true, 28, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'hair-home-cut', 'kid', 'Trẻ em', 20, 60000, 120000, 80000, array[60000, 80000, 120000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1528,12 +1573,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'lash-lift', 'lash-brow', 'Uốn mi (lash lift)', 'Uốn cong mi thật, không cần nối, giữ 4–6 tuần.', array['Test kích ứng', 'Uốn mi', 'Nhuộm mi (nếu chọn)']::text[], false, false, null, null, false, true, 29, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'lash-lift', 'lash-brow', 'Uốn mi (lash lift)', 'Uốn cong mi thật, không cần nối, giữ 4–6 tuần.', array['Test kích ứng', 'Uốn mi', 'Nhuộm mi (nếu chọn)']::text[], false, false, null, null, false, false, true, 29, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'lash-lift', 'lift', 'Uốn mi', 60, 180000, 350000, 250000, array[180000, 250000, 350000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1551,12 +1597,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'brow-tattoo', 'lash-brow', 'Phun xăm mày', 'Phun sợi hoặc phun bột, có buổi dặm lại sau 1 tháng.', array['Test màu & vẽ dáng', 'Phun mày', '1 buổi dặm lại trong 45 ngày']::text[], true, false, null, null, false, true, 30, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'brow-tattoo', 'lash-brow', 'Phun xăm mày', 'Phun sợi hoặc phun bột, có buổi dặm lại sau 1 tháng.', array['Test màu & vẽ dáng', 'Phun mày', '1 buổi dặm lại trong 45 ngày']::text[], true, false, null, null, false, false, true, 30, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'brow-tattoo', 'hairstroke', 'Phun sợi', 150, 1500000, 3500000, 2500000, array[1500000, 2500000, 3500000], false, 1, 0, 'fixed', 1, null, 0, 1, 45)
@@ -1574,12 +1621,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'brow-tint', 'lash-brow', 'Nhuộm mày', 'Nhuộm mày cho dáng rõ hơn mà chưa cần phun xăm.', array['Tỉa gọn', 'Nhuộm mày', 'Hướng dẫn giữ màu']::text[], false, false, null, null, false, true, 31, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'brow-tint', 'lash-brow', 'Nhuộm mày', 'Nhuộm mày cho dáng rõ hơn mà chưa cần phun xăm.', array['Tỉa gọn', 'Nhuộm mày', 'Hướng dẫn giữ màu']::text[], false, false, null, null, false, false, true, 31, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'brow-tint', 'tint', 'Nhuộm mày', 30, 120000, 250000, 180000, array[120000, 180000, 250000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1589,12 +1637,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'lash-classic', 'lash-brow', 'Nối mi classic', 'Nối mi 1:1 tự nhiên như mi thật.', array['Test kích ứng keo', 'Nối mi 1:1', 'Hướng dẫn chăm sóc mi']::text[], true, false, null, null, false, true, 32, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'lash-classic', 'lash-brow', 'Nối mi classic', 'Nối mi 1:1 tự nhiên như mi thật.', array['Test kích ứng keo', 'Nối mi 1:1', 'Hướng dẫn chăm sóc mi']::text[], true, false, null, null, false, false, true, 32, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'lash-classic', 'full', 'Full set', 90, 200000, 380000, 280000, array[200000, 280000, 380000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1604,12 +1653,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'lash-volume', 'lash-brow', 'Nối mi volume', 'Mi dày vừa, không nặng mắt.', array['Test kích ứng keo', 'Nối mi volume 2D–4D', 'Hướng dẫn chăm sóc mi']::text[], true, false, null, null, false, true, 33, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'lash-volume', 'lash-brow', 'Nối mi volume', 'Mi dày vừa, không nặng mắt.', array['Test kích ứng keo', 'Nối mi volume 2D–4D', 'Hướng dẫn chăm sóc mi']::text[], true, false, null, null, false, false, true, 33, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'lash-volume', 'full', 'Full set', 120, 300000, 550000, 400000, array[300000, 400000, 550000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1619,12 +1669,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'lash-refill', 'lash-brow', 'Dặm mi', 'Dặm lại mi đã nối trong vòng 3 tuần.', array['Làm sạch mi cũ', 'Dặm mi rụng']::text[], true, false, null, null, false, true, 34, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'lash-refill', 'lash-brow', 'Dặm mi', 'Dặm lại mi đã nối trong vòng 3 tuần.', array['Làm sạch mi cũ', 'Dặm mi rụng']::text[], true, false, null, null, false, false, true, 34, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'lash-refill', 'refill', 'Dặm mi', 60, 120000, 220000, 160000, array[120000, 160000, 220000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1634,12 +1685,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'brow-shaping', 'lash-brow', 'Tạo dáng & tỉa mày', 'Đo tỉ lệ và tạo dáng mày theo khuôn mặt.', array['Đo tỉ lệ khuôn mặt', 'Tỉa, wax lông mày', 'Kẻ dáng mày']::text[], false, false, null, null, false, true, 35, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'brow-shaping', 'lash-brow', 'Tạo dáng & tỉa mày', 'Đo tỉ lệ và tạo dáng mày theo khuôn mặt.', array['Đo tỉ lệ khuôn mặt', 'Tỉa, wax lông mày', 'Kẻ dáng mày']::text[], false, false, null, null, false, false, true, 35, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'brow-shaping', 'shape', 'Tạo dáng', 30, 80000, 180000, 120000, array[80000, 120000, 180000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1649,12 +1701,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'lash-design', 'lash-brow', 'Nối mi thiết kế (Katun, baby doll, mi thỏ, wispy)', 'Các kiểu mi thiết kế đang thịnh, dày hơn classic.', array['Test kích ứng keo', 'Nối mi theo mẫu', 'Hướng dẫn chăm sóc']::text[], true, false, null, null, false, true, 36, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'lash-design', 'lash-brow', 'Nối mi thiết kế (Katun, baby doll, mi thỏ, wispy)', 'Các kiểu mi thiết kế đang thịnh, dày hơn classic.', array['Test kích ứng keo', 'Nối mi theo mẫu', 'Hướng dẫn chăm sóc']::text[], true, false, null, null, false, false, true, 36, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'lash-design', 'full', 'Full set', 120, 300000, 500000, 380000, array[300000, 380000, 500000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1664,12 +1717,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'lash-removal', 'lash-brow', 'Tháo mi nối', 'Tháo mi cũ an toàn bằng dung dịch chuyên dụng.', array['Tháo bằng dung dịch chuyên dụng', 'Làm sạch mi thật']::text[], false, false, null, null, false, true, 37, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'lash-removal', 'lash-brow', 'Tháo mi nối', 'Tháo mi cũ an toàn bằng dung dịch chuyên dụng.', array['Tháo bằng dung dịch chuyên dụng', 'Làm sạch mi thật']::text[], false, false, null, null, false, false, true, 37, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'lash-removal', 'remove', 'Tháo mi', 20, 50000, 100000, 80000, array[50000, 80000, 100000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1679,12 +1733,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'brow-lamination', 'lash-brow', 'Định hình (uốn) chân mày', 'Dựng và định hình sợi mày, giữ 6–8 tuần, không dùng kim.', array['Tỉa gọn', 'Uốn định hình', 'Nhuộm mày nếu cần']::text[], false, false, null, null, false, true, 38, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'brow-lamination', 'lash-brow', 'Định hình (uốn) chân mày', 'Dựng và định hình sợi mày, giữ 6–8 tuần, không dùng kim.', array['Tỉa gọn', 'Uốn định hình', 'Nhuộm mày nếu cần']::text[], false, false, null, null, false, false, true, 38, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'brow-lamination', 'lamination', 'Định hình mày', 60, 300000, 600000, 450000, array[300000, 450000, 600000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1694,12 +1749,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'massage-foot', 'massage', 'Massage chân', 'Ngâm chân thảo mộc và bấm huyệt bàn chân, bắp chân.', array['Ngâm chân thảo mộc', 'Bấm huyệt bàn chân', 'Massage bắp chân']::text[], false, false, null, null, false, true, 39, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'massage-foot', 'massage', 'Massage chân', 'Ngâm chân thảo mộc và bấm huyệt bàn chân, bắp chân.', array['Ngâm chân thảo mộc', 'Bấm huyệt bàn chân', 'Massage bắp chân']::text[], false, false, null, null, false, false, true, 39, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'massage-foot', '60m', '60 phút', 60, 220000, 380000, 300000, array[220000, 300000, 380000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1725,12 +1781,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'massage-neck', 'massage', 'Massage cổ vai gáy', 'Giảm căng cứng cổ, vai, gáy cho dân văn phòng.', array['Chườm nóng', 'Massage cổ vai gáy', 'Bấm huyệt đầu']::text[], false, false, null, null, false, true, 40, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'massage-neck', 'massage', 'Massage cổ vai gáy', 'Giảm căng cứng cổ, vai, gáy cho dân văn phòng.', array['Chườm nóng', 'Massage cổ vai gáy', 'Bấm huyệt đầu']::text[], false, false, null, null, false, false, true, 40, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'massage-neck', '60m', '60 phút', 60, 250000, 420000, 330000, array[250000, 330000, 420000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1756,12 +1813,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'massage-oil-cupping', 'massage', 'Massage dầu + giác hơi', 'Massage body với tinh dầu, kết hợp giác hơi lưng.', array['Massage body tinh dầu', 'Giác hơi lưng', 'Khăn nóng']::text[], false, false, null, null, false, true, 41, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'massage-oil-cupping', 'massage', 'Massage dầu + giác hơi', 'Massage body với tinh dầu, kết hợp giác hơi lưng.', array['Massage body tinh dầu', 'Giác hơi lưng', 'Khăn nóng']::text[], false, false, null, null, false, false, true, 41, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'massage-oil-cupping', '60m', '60 phút', 60, 300000, 480000, 380000, array[300000, 380000, 480000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1787,12 +1845,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'massage-prenatal', 'massage', 'Massage bầu', 'Massage an toàn cho mẹ bầu từ tháng thứ 4.', array['Tư thế nằm nghiêng an toàn', 'Dầu massage lành tính', 'Giảm đau lưng, phù chân']::text[], false, false, null, null, false, true, 42, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'massage-prenatal', 'massage', 'Massage bầu', 'Massage an toàn cho mẹ bầu từ tháng thứ 4.', array['Tư thế nằm nghiêng an toàn', 'Dầu massage lành tính', 'Giảm đau lưng, phù chân']::text[], false, false, null, null, false, false, true, 42, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'massage-prenatal', '60m', '60 phút', 60, 350000, 550000, 450000, array[350000, 450000, 550000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1810,12 +1869,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'massage-dry', 'massage', 'Massage không dầu', 'Massage body ấn huyệt, không dùng dầu.', array['Ấn huyệt toàn thân', 'Kéo giãn nhẹ', 'Khăn nóng']::text[], false, false, null, null, false, true, 43, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'massage-dry', 'massage', 'Massage không dầu', 'Massage body ấn huyệt, không dùng dầu.', array['Ấn huyệt toàn thân', 'Kéo giãn nhẹ', 'Khăn nóng']::text[], false, false, null, null, false, false, true, 43, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'massage-dry', '60m', '60 phút', 60, 300000, 480000, 380000, array[300000, 380000, 480000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1841,12 +1901,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'massage-hot-stone', 'massage', 'Massage đá nóng', 'Massage body tinh dầu kết hợp đá bazan làm ấm, giãn cơ sâu.', array['Massage body tinh dầu', 'Đá nóng dọc lưng & chân', 'Khăn nóng']::text[], false, false, null, null, false, true, 44, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'massage-hot-stone', 'massage', 'Massage đá nóng', 'Massage body tinh dầu kết hợp đá bazan làm ấm, giãn cơ sâu.', array['Massage body tinh dầu', 'Đá nóng dọc lưng & chân', 'Khăn nóng']::text[], false, false, null, null, false, false, true, 44, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'massage-hot-stone', '60m', '60 phút', 60, 350000, 550000, 450000, array[350000, 450000, 550000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1864,12 +1925,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'massage-postnatal', 'massage', 'Massage sau sinh', 'Chăm sóc mẹ sau sinh tại nhà: chườm muối thảo dược, giảm đau lưng.', array['Chườm muối thảo dược vùng bụng', 'Massage lưng, vai, chân', 'Ngâm chân thảo mộc']::text[], false, false, null, null, false, true, 45, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'massage-postnatal', 'massage', 'Massage sau sinh', 'Chăm sóc mẹ sau sinh tại nhà: chườm muối thảo dược, giảm đau lưng.', array['Chườm muối thảo dược vùng bụng', 'Massage lưng, vai, chân', 'Ngâm chân thảo mộc']::text[], false, false, null, null, false, false, true, 45, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'massage-postnatal', '60m', '60 phút', 60, 300000, 500000, 400000, array[300000, 400000, 500000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -1887,12 +1949,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'photo-phone', 'photophone', 'Chụp ảnh bằng điện thoại', 'Chụp dạo, đi cafe, hẹn hò, sinh nhật bằng điện thoại đời mới. Có hướng dẫn tạo dáng.', array['Hướng dẫn tạo dáng', 'Toàn bộ ảnh gốc', 'Ảnh chỉnh màu theo gói']::text[], false, true, 'Toàn bộ ảnh gốc + ảnh chỉnh màu', 2, false, true, 46, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'photo-phone', 'photophone', 'Chụp ảnh bằng điện thoại', 'Chụp dạo, đi cafe, hẹn hò, sinh nhật bằng điện thoại đời mới. Có hướng dẫn tạo dáng.', array['Hướng dẫn tạo dáng', 'Toàn bộ ảnh gốc', 'Ảnh chỉnh màu theo gói']::text[], false, true, 'Toàn bộ ảnh gốc + ảnh chỉnh màu', 2, false, false, true, 46, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'photo-phone', '30m', '30 phút · 5 ảnh chỉnh', 30, 120000, 200000, 150000, array[120000, 150000, 200000], false, 1, 0, 'fixed', 1, 'Toàn bộ ảnh gốc + 5 ảnh chỉnh', 1, 1, null)
@@ -1926,12 +1989,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'photo-phone-group', 'photophone', 'Chụp đôi / nhóm bạn', 'Chụp cặp đôi, nhóm bạn, gia đình nhỏ bằng điện thoại.', array['Hướng dẫn tạo dáng theo nhóm', 'Toàn bộ ảnh gốc', 'Ảnh chỉnh màu theo gói']::text[], false, true, 'Toàn bộ ảnh gốc + ảnh chỉnh màu', 2, false, true, 47, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'photo-phone-group', 'photophone', 'Chụp đôi / nhóm bạn', 'Chụp cặp đôi, nhóm bạn, gia đình nhỏ bằng điện thoại.', array['Hướng dẫn tạo dáng theo nhóm', 'Toàn bộ ảnh gốc', 'Ảnh chỉnh màu theo gói']::text[], false, true, 'Toàn bộ ảnh gốc + ảnh chỉnh màu', 2, false, false, true, 47, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'photo-phone-group', 'pair-60', '2 người · 60 phút', 60, 300000, 550000, 400000, array[300000, 400000, 550000], false, 1, 0, 'fixed', 1, 'Toàn bộ ảnh gốc + 15 ảnh chỉnh', 1, 1, null)
@@ -1949,12 +2013,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'photo-tour', 'photophone', 'Photo tour du lịch', 'Đi cùng bạn một buổi ở điểm du lịch, chụp suốt hành trình.', array['Lên lịch trình điểm chụp', 'Toàn bộ ảnh gốc', 'Ảnh chỉnh màu']::text[], false, true, 'Toàn bộ ảnh gốc + 50–100 ảnh chỉnh', 4, false, true, 48, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'photo-tour', 'photophone', 'Photo tour du lịch', 'Đi cùng bạn một buổi ở điểm du lịch, chụp suốt hành trình.', array['Lên lịch trình điểm chụp', 'Toàn bộ ảnh gốc', 'Ảnh chỉnh màu']::text[], false, true, 'Toàn bộ ảnh gốc + 50–100 ảnh chỉnh', 4, false, false, true, 48, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'photo-tour', 'half', 'Nửa ngày', 240, 800000, 1800000, 1200000, array[800000, 1200000, 1800000], false, 1, 0, 'fixed', 1, 'Toàn bộ ảnh gốc + 50 ảnh chỉnh', 1, 1, null)
@@ -1972,12 +2037,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'photo-outfit', 'photophone', 'Chụp outfit / feedback quần áo', 'Chụp từng bộ đồ khách tự mặc hoặc của shop, ảnh dọc kiểu mạng xã hội.', array['Hướng dẫn tạo dáng theo từng bộ', 'Toàn bộ ảnh gốc', '2 ảnh chỉnh mỗi bộ']::text[], false, true, 'Ảnh gốc + 2 ảnh chỉnh mỗi bộ', 2, false, true, 49, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'photo-outfit', 'photophone', 'Chụp outfit / feedback quần áo', 'Chụp từng bộ đồ khách tự mặc hoặc của shop, ảnh dọc kiểu mạng xã hội.', array['Hướng dẫn tạo dáng theo từng bộ', 'Toàn bộ ảnh gốc', '2 ảnh chỉnh mỗi bộ']::text[], false, true, 'Ảnh gốc + 2 ảnh chỉnh mỗi bộ', 2, false, false, true, 49, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'photo-outfit', '5', '5 bộ · 60 phút', 60, 300000, 650000, 450000, array[300000, 450000, 650000], false, 1, 0, 'fixed', 1, 'Ảnh gốc + 10 ảnh chỉnh (2 ảnh/bộ)', 1, 1, null)
@@ -1995,12 +2061,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'photo-party', 'photophone', 'Chụp sinh nhật / tiệc nhỏ', 'Ghi lại buổi tiệc tại nhà, quán cà phê hoặc nhà hàng.', array['Chụp khoảnh khắc và ảnh nhóm', 'Toàn bộ ảnh gốc', 'Ảnh chỉnh màu chọn lọc']::text[], false, true, 'Ảnh gốc + ảnh chỉnh chọn lọc', 2, false, true, 50, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'photo-party', 'photophone', 'Chụp sinh nhật / tiệc nhỏ', 'Ghi lại buổi tiệc tại nhà, quán cà phê hoặc nhà hàng.', array['Chụp khoảnh khắc và ảnh nhóm', 'Toàn bộ ảnh gốc', 'Ảnh chỉnh màu chọn lọc']::text[], false, true, 'Ảnh gốc + ảnh chỉnh chọn lọc', 2, false, false, true, 50, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'photo-party', '60m', '60 phút', 60, 300000, 650000, 450000, array[300000, 450000, 650000], false, 1, 0, 'fixed', 1, 'Ảnh gốc + 30 ảnh chỉnh', 1, 1, null)
@@ -2018,12 +2085,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'photo-portrait', 'camera', 'Chụp chân dung máy ảnh', 'Chân dung, áo dài, kỷ yếu, concept cá nhân bằng máy ảnh.', array['Tư vấn concept & trang phục', 'Chụp máy ảnh', 'Ảnh chỉnh da, màu']::text[], false, true, 'Ảnh gốc chọn lọc + ảnh chỉnh', 5, false, true, 51, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'photo-portrait', 'camera', 'Chụp chân dung máy ảnh', 'Chân dung, áo dài, kỷ yếu, concept cá nhân bằng máy ảnh.', array['Tư vấn concept & trang phục', 'Chụp máy ảnh', 'Ảnh chỉnh da, màu']::text[], false, true, 'Ảnh gốc chọn lọc + ảnh chỉnh', 5, false, false, true, 51, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'photo-portrait', '60m', '60 phút · 15 ảnh chỉnh', 60, 500000, 1000000, 700000, array[500000, 700000, 1000000], false, 1, 0, 'fixed', 1, 'Ảnh gốc chọn lọc + 15 ảnh chỉnh', 1, 1, null)
@@ -2041,12 +2109,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'photo-profile', 'camera', 'Ảnh hồ sơ / CV', 'Ảnh chân dung gọn gàng cho CV, LinkedIn, hồ sơ công ty.', array['Hướng dẫn tư thế', 'Chụp nền trơn hoặc văn phòng', 'Chỉnh da nhẹ']::text[], false, true, '5–10 ảnh chỉnh', 3, false, true, 52, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'photo-profile', 'camera', 'Ảnh hồ sơ / CV', 'Ảnh chân dung gọn gàng cho CV, LinkedIn, hồ sơ công ty.', array['Hướng dẫn tư thế', 'Chụp nền trơn hoặc văn phòng', 'Chỉnh da nhẹ']::text[], false, true, '5–10 ảnh chỉnh', 3, false, false, true, 52, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'photo-profile', '30m', '30 phút · 5 ảnh chỉnh', 30, 250000, 500000, 350000, array[250000, 350000, 500000], false, 1, 0, 'fixed', 1, '5 ảnh chỉnh', 1, 1, null)
@@ -2064,12 +2133,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'photo-event', 'camera', 'Chụp sự kiện nhỏ', 'Sinh nhật, tiệc công ty nhỏ, khai trương, lễ tốt nghiệp.', array['Chụp toàn bộ sự kiện', 'Ảnh gốc chọn lọc', 'Chỉnh màu']::text[], false, true, 'Ảnh sự kiện đã chỉnh màu', 5, false, true, 53, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'photo-event', 'camera', 'Chụp sự kiện nhỏ', 'Sinh nhật, tiệc công ty nhỏ, khai trương, lễ tốt nghiệp.', array['Chụp toàn bộ sự kiện', 'Ảnh gốc chọn lọc', 'Chỉnh màu']::text[], false, true, 'Ảnh sự kiện đã chỉnh màu', 5, false, false, true, 53, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'photo-event', '120m', '2 giờ', 120, 800000, 1800000, 1200000, array[800000, 1200000, 1800000], false, 1, 0, 'fixed', 1, '60 ảnh sự kiện đã chỉnh màu', 1, 1, null)
@@ -2087,12 +2157,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'photo-family', 'camera', 'Chụp ảnh gia đình', 'Chụp gia đình ngoại cảnh hoặc tại nhà bằng máy ảnh.', array['Tư vấn trang phục & địa điểm', 'Ảnh gốc chọn lọc', 'Ảnh chỉnh da & màu']::text[], false, true, 'Ảnh gốc chọn lọc + ảnh chỉnh', 5, false, true, 54, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'photo-family', 'camera', 'Chụp ảnh gia đình', 'Chụp gia đình ngoại cảnh hoặc tại nhà bằng máy ảnh.', array['Tư vấn trang phục & địa điểm', 'Ảnh gốc chọn lọc', 'Ảnh chỉnh da & màu']::text[], false, true, 'Ảnh gốc chọn lọc + ảnh chỉnh', 5, false, false, true, 54, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'photo-family', '60m', '60 phút', 60, 700000, 1500000, 1000000, array[700000, 1000000, 1500000], false, 1, 0, 'fixed', 1, 'Ảnh gốc chọn lọc + 15 ảnh chỉnh', 1, 1, null)
@@ -2110,12 +2181,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'photo-couple', 'camera', 'Chụp cặp đôi / kỷ niệm', 'Chụp cặp đôi, kỷ niệm ngày yêu (không phải trọn gói ảnh cưới).', array['Tư vấn concept', 'Chụp bằng máy ảnh', '25 ảnh chỉnh']::text[], false, true, 'Ảnh gốc chọn lọc + 25 ảnh chỉnh', 5, false, true, 55, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'photo-couple', 'camera', 'Chụp cặp đôi / kỷ niệm', 'Chụp cặp đôi, kỷ niệm ngày yêu (không phải trọn gói ảnh cưới).', array['Tư vấn concept', 'Chụp bằng máy ảnh', '25 ảnh chỉnh']::text[], false, true, 'Ảnh gốc chọn lọc + 25 ảnh chỉnh', 5, false, false, true, 55, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'photo-couple', '120m', '2 giờ · 25 ảnh chỉnh', 120, 1000000, 2300000, 1500000, array[1000000, 1500000, 2300000], false, 1, 0, 'fixed', 1, 'Ảnh gốc chọn lọc + 25 ảnh chỉnh', 1, 1, null)
@@ -2125,12 +2197,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'photo-yearbook-group', 'camera', 'Kỷ yếu nhóm bạn / lớp nhỏ', 'Chụp kỷ yếu cho nhóm 5–15 người tại trường hoặc ngoại cảnh.', array['Lên concept nhóm', 'Ảnh nhóm và ảnh từng người', 'Ảnh chỉnh']::text[], false, true, 'Ảnh nhóm + ảnh từng người đã chỉnh', 7, false, true, 56, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'photo-yearbook-group', 'camera', 'Kỷ yếu nhóm bạn / lớp nhỏ', 'Chụp kỷ yếu cho nhóm 5–15 người tại trường hoặc ngoại cảnh.', array['Lên concept nhóm', 'Ảnh nhóm và ảnh từng người', 'Ảnh chỉnh']::text[], false, true, 'Ảnh nhóm + ảnh từng người đã chỉnh', 7, false, false, true, 56, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'photo-yearbook-group', 'half', 'Buổi 3 giờ (giá mỗi người)', 180, 150000, 400000, 250000, array[150000, 250000, 400000], true, 15, 0, 'fixed', 5, '20 ảnh nhóm + 3 ảnh chỉnh mỗi người', 1, 1, null)
@@ -2140,12 +2213,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'video-short', 'short-video', 'Quay & dựng clip ngắn', 'Clip 15–60 giây cho TikTok, Reels: quay, dựng, nhạc, phụ đề.', array['Gợi ý kịch bản ngắn', 'Quay bằng điện thoại/máy ảnh', 'Dựng, chèn nhạc, phụ đề']::text[], false, true, 'Clip dọc 9:16 đã dựng', 3, false, true, 57, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'video-short', 'short-video', 'Quay & dựng clip ngắn', 'Clip 15–60 giây cho TikTok, Reels: quay, dựng, nhạc, phụ đề.', array['Gợi ý kịch bản ngắn', 'Quay bằng điện thoại/máy ảnh', 'Dựng, chèn nhạc, phụ đề']::text[], false, true, 'Clip dọc 9:16 đã dựng', 3, false, false, true, 57, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'video-short', '1', '1 clip', 90, 400000, 1200000, 700000, array[400000, 700000, 1200000], false, 1, 0, 'fixed', 1, '1 clip dọc 9:16, 15–60 giây/clip, có nhạc và phụ đề; không gồm file dự án', 1, 1, null)
@@ -2171,12 +2245,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'video-event', 'short-video', 'Quay hậu trường / sự kiện', 'Quay lại buổi tiệc, buổi chụp, sự kiện nhỏ và dựng thành clip.', array['Quay toàn buổi', 'Dựng 1 clip tổng hợp', 'Nhạc & chuyển cảnh']::text[], false, true, '1 clip tổng hợp 1–3 phút', 5, false, true, 58, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'video-event', 'short-video', 'Quay hậu trường / sự kiện', 'Quay lại buổi tiệc, buổi chụp, sự kiện nhỏ và dựng thành clip.', array['Quay toàn buổi', 'Dựng 1 clip tổng hợp', 'Nhạc & chuyển cảnh']::text[], false, true, '1 clip tổng hợp 1–3 phút', 5, false, false, true, 58, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'video-event', '120m', '2 giờ', 120, 800000, 2000000, 1200000, array[800000, 1200000, 2000000], false, 1, 0, 'fixed', 1, '1 clip tổng hợp 1–3 phút', 1, 1, null)
@@ -2194,12 +2269,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'video-talking', 'short-video', 'Quay clip nói trước ống kính', 'Quay một buổi nhiều clip chia sẻ cho kênh cá nhân.', array['Gợi ý kịch bản & chủ đề', 'Quay một buổi nhiều clip', 'Dựng, phụ đề']::text[], false, true, 'Clip dọc 9:16 đã dựng, có phụ đề', 5, false, true, 59, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'video-talking', 'short-video', 'Quay clip nói trước ống kính', 'Quay một buổi nhiều clip chia sẻ cho kênh cá nhân.', array['Gợi ý kịch bản & chủ đề', 'Quay một buổi nhiều clip', 'Dựng, phụ đề']::text[], false, true, 'Clip dọc 9:16 đã dựng, có phụ đề', 5, false, false, true, 59, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'video-talking', '5', '5 clip · 3 giờ', 180, 1200000, 3200000, 2000000, array[1200000, 2000000, 3200000], false, 1, 0, 'fixed', 1, '5 clip dọc 9:16, 15–60 giây/clip, có nhạc và phụ đề; không gồm file dự án', 1, 1, null)
@@ -2217,12 +2293,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'product-basic', 'product-photo', 'Chụp sản phẩm nền trơn', 'Ảnh sản phẩm nền trắng/nền màu cho sàn thương mại điện tử.', array['Setup nền & ánh sáng', '3 góc mỗi sản phẩm', 'Tách nền, chỉnh màu']::text[], false, true, '3 ảnh mỗi sản phẩm', 3, false, true, 60, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'product-basic', 'product-photo', 'Chụp sản phẩm nền trơn', 'Ảnh sản phẩm nền trắng/nền màu cho sàn thương mại điện tử.', array['Setup nền & ánh sáng', '3 góc mỗi sản phẩm', 'Tách nền, chỉnh màu']::text[], false, true, '3 ảnh mỗi sản phẩm', 3, false, false, true, 60, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'product-basic', '10', '10 sản phẩm', 60, 400000, 1200000, 700000, array[400000, 700000, 1200000], false, 1, 0, 'fixed', 1, '30 ảnh chỉnh (3 ảnh/sản phẩm)', 1, 1, null)
@@ -2248,12 +2325,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'product-lifestyle', 'product-photo', 'Chụp sản phẩm bối cảnh', 'Sản phẩm đặt trong bối cảnh sử dụng thật, hợp quảng cáo và fanpage.', array['Lên concept bối cảnh', 'Đạo cụ cơ bản', 'Chỉnh màu']::text[], false, true, '2 ảnh bối cảnh mỗi sản phẩm', 4, false, true, 61, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'product-lifestyle', 'product-photo', 'Chụp sản phẩm bối cảnh', 'Sản phẩm đặt trong bối cảnh sử dụng thật, hợp quảng cáo và fanpage.', array['Lên concept bối cảnh', 'Đạo cụ cơ bản', 'Chỉnh màu']::text[], false, true, '2 ảnh bối cảnh mỗi sản phẩm', 4, false, false, true, 61, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'product-lifestyle', '10', '10 sản phẩm', 120, 900000, 2500000, 1500000, array[900000, 1500000, 2500000], false, 1, 0, 'fixed', 1, '20 ảnh chỉnh (2 ảnh/sản phẩm)', 1, 1, null)
@@ -2271,12 +2349,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'product-video', 'product-photo', 'Quay clip sản phẩm', 'Clip ngắn giới thiệu sản phẩm cho TikTok Shop, Shopee Video.', array['Kịch bản ngắn theo sản phẩm', 'Quay & dựng dọc 9:16', 'Nhạc, phụ đề']::text[], false, true, 'Clip dọc đã dựng', 4, false, true, 62, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'product-video', 'product-photo', 'Quay clip sản phẩm', 'Clip ngắn giới thiệu sản phẩm cho TikTok Shop, Shopee Video.', array['Kịch bản ngắn theo sản phẩm', 'Quay & dựng dọc 9:16', 'Nhạc, phụ đề']::text[], false, true, 'Clip dọc đã dựng', 4, false, false, true, 62, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'product-video', '3', '3 clip', 120, 900000, 2400000, 1500000, array[900000, 1500000, 2400000], false, 1, 0, 'fixed', 1, '3 clip dọc 9:16, 15–60 giây/clip, có nhạc và phụ đề; không gồm file dự án', 1, 1, null)
@@ -2294,12 +2373,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'product-flatlay', 'product-photo', 'Chụp quần áo trải sàn / ma-nơ-canh', 'Chụp flatlay hoặc ma-nơ-canh cho shop thời trang online.', array['Là phẳng & sắp đặt', '2 góc mỗi bộ', 'Tách nền, chỉnh màu']::text[], false, true, '2 ảnh mỗi bộ', 3, false, true, 63, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'product-flatlay', 'product-photo', 'Chụp quần áo trải sàn / ma-nơ-canh', 'Chụp flatlay hoặc ma-nơ-canh cho shop thời trang online.', array['Là phẳng & sắp đặt', '2 góc mỗi bộ', 'Tách nền, chỉnh màu']::text[], false, true, '2 ảnh mỗi bộ', 3, false, false, true, 63, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'product-flatlay', '10', '10 bộ', 90, 400000, 1000000, 650000, array[400000, 650000, 1000000], false, 1, 0, 'fixed', 1, '20 ảnh chỉnh (2 ảnh/bộ)', 1, 1, null)
@@ -2317,12 +2397,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'product-food', 'product-photo', 'Chụp món ăn cho menu / app giao đồ ăn', 'Chụp món tại quán cho menu, GrabFood, ShopeeFood.', array['Bày món cơ bản', 'Chụp tại quán', 'Chỉnh màu']::text[], false, true, '1 ảnh mỗi món', 3, false, true, 64, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'product-food', 'product-photo', 'Chụp món ăn cho menu / app giao đồ ăn', 'Chụp món tại quán cho menu, GrabFood, ShopeeFood.', array['Bày món cơ bản', 'Chụp tại quán', 'Chỉnh màu']::text[], false, true, '1 ảnh mỗi món', 3, false, false, true, 64, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'product-food', '10', '10 món', 120, 600000, 1600000, 1000000, array[600000, 1000000, 1600000], false, 1, 0, 'fixed', 1, '10 ảnh chỉnh (1 ảnh/món)', 1, 1, null)
@@ -2340,12 +2421,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'model-lookbook', 'model-photo', 'Mẫu chụp lookbook', 'Mặc và tạo dáng cho bộ sưu tập thời trang, ảnh shop online.', array['Tạo dáng theo concept', 'Thay trang phục của shop', 'Không bao gồm makeup & người chụp']::text[], false, true, null, null, true, true, 65, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'model-lookbook', 'model-photo', 'Mẫu chụp lookbook', 'Mặc và tạo dáng cho bộ sưu tập thời trang, ảnh shop online.', array['Tạo dáng theo concept', 'Thay trang phục của shop', 'Không bao gồm makeup & người chụp']::text[], false, true, null, null, true, false, true, 65, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'model-lookbook', '60m', '1 giờ', 60, 400000, 1000000, 600000, array[400000, 600000, 1000000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -2371,12 +2453,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'model-hand', 'model-photo', 'Mẫu tay / cầm sản phẩm', 'Mẫu tay cho nail, trang sức, mỹ phẩm, sản phẩm cầm tay.', array['Tay được chăm sóc sẵn', 'Tạo dáng tay theo góc máy']::text[], false, true, null, null, true, true, 66, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'model-hand', 'model-photo', 'Mẫu tay / cầm sản phẩm', 'Mẫu tay cho nail, trang sức, mỹ phẩm, sản phẩm cầm tay.', array['Tay được chăm sóc sẵn', 'Tạo dáng tay theo góc máy']::text[], false, true, null, null, true, false, true, 66, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'model-hand', '60m', '1 giờ', 60, 250000, 600000, 400000, array[250000, 400000, 600000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -2394,12 +2477,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'model-beauty', 'model-photo', 'Mẫu làm đẹp cho thương hiệu', 'Làm mẫu makeup, tóc, chăm sóc da cho thương hiệu hoặc lớp dạy nghề.', array['Làm mẫu theo yêu cầu', 'Tạo dáng khi chụp kết quả']::text[], false, true, null, null, true, true, 67, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'model-beauty', 'model-photo', 'Mẫu làm đẹp cho thương hiệu', 'Làm mẫu makeup, tóc, chăm sóc da cho thương hiệu hoặc lớp dạy nghề.', array['Làm mẫu theo yêu cầu', 'Tạo dáng khi chụp kết quả']::text[], false, true, null, null, true, false, true, 67, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'model-beauty', '60m', '1 giờ', 60, 150000, 500000, 300000, array[150000, 300000, 500000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -2417,12 +2501,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'model-outfit', 'model-photo', 'Mẫu mặc thử chụp ảnh (theo số bộ)', 'Mẫu mặc từng bộ của shop cho ảnh sàn thương mại điện tử.', array['Thay đồ, tạo dáng từng bộ', 'Tự chuẩn bị tóc, makeup đơn giản', 'Không gồm người chụp']::text[], false, true, null, null, true, true, 68, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'model-outfit', 'model-photo', 'Mẫu mặc thử chụp ảnh (theo số bộ)', 'Mẫu mặc từng bộ của shop cho ảnh sàn thương mại điện tử.', array['Thay đồ, tạo dáng từng bộ', 'Tự chuẩn bị tóc, makeup đơn giản', 'Không gồm người chụp']::text[], false, true, null, null, true, false, true, 68, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'model-outfit', '10', '10 bộ', 120, 600000, 1500000, 1000000, array[600000, 1000000, 1500000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -2440,12 +2525,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'model-clip', 'model-video', 'Diễn viên clip ngắn', 'Diễn clip TikTok, Reels, video giới thiệu sản phẩm theo kịch bản.', array['Diễn theo kịch bản', 'Nói/ lồng tiếng nếu cần']::text[], false, true, null, null, true, true, 69, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'model-clip', 'model-video', 'Diễn viên clip ngắn', 'Diễn clip TikTok, Reels, video giới thiệu sản phẩm theo kịch bản.', array['Diễn theo kịch bản', 'Nói/ lồng tiếng nếu cần']::text[], false, true, null, null, true, false, true, 69, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'model-clip', '60m', '1 giờ', 60, 300000, 800000, 500000, array[300000, 500000, 800000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -2463,12 +2549,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'model-live', 'model-video', 'Mẫu livestream / mặc thử', 'Mặc thử, giới thiệu sản phẩm trong phiên livestream bán hàng.', array['Mặc thử & giới thiệu', 'Tương tác người xem theo kịch bản']::text[], false, true, null, null, true, true, 70, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'model-live', 'model-video', 'Mẫu livestream / mặc thử', 'Mặc thử, giới thiệu sản phẩm trong phiên livestream bán hàng.', array['Mặc thử & giới thiệu', 'Tương tác người xem theo kịch bản']::text[], false, true, null, null, true, false, true, 70, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'model-live', '120m', '2 giờ', 120, 600000, 1600000, 1000000, array[600000, 1000000, 1600000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -2486,12 +2573,13 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
-insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, active, sort_order, catalog_version) values (
-  'model-tryon', 'model-video', 'Mẫu mặc thử quay clip (theo số bộ)', 'Mẫu mặc thử, xoay dáng và giới thiệu ngắn từng bộ trong clip.', array['Mặc thử, xoay dáng từng bộ', 'Nói ngắn giới thiệu sản phẩm', 'Không gồm người quay']::text[], false, true, null, null, true, true, 71, 2)
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'model-tryon', 'model-video', 'Mẫu mặc thử quay clip (theo số bộ)', 'Mẫu mặc thử, xoay dáng và giới thiệu ngắn từng bộ trong clip.', array['Mặc thử, xoay dáng từng bộ', 'Nói ngắn giới thiệu sản phẩm', 'Không gồm người quay']::text[], false, true, null, null, true, false, true, 71, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
     delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
   'model-tryon', '10', '10 bộ', 120, 700000, 1700000, 1100000, array[700000, 1100000, 1700000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
@@ -2501,6 +2589,78 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'nail-design', 'nail', 'Nail thiết kế (tính theo ngón)', 'Mỗi ngón một kiểu nên tính theo ngón, đặt kèm sơn gel hoặc up móng.', array['Thiết kế theo mẫu khách chọn', 'Làm trên nền gel đã đặt']::text[], false, false, null, null, false, true, true, 72, 2)
+  on conflict (id) do update set category = excluded.category, name = excluded.name,
+    description = excluded.description, includes = excluded.includes,
+    studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
+    delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
+    active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
+insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
+  'nail-design', 'design', 'Thiết kế (vẽ, sticker, phối màu)', 30, 10000, 40000, 20000, array[10000, 20000, 40000], true, 10, 0, 'fixed', 1, null, 0, 1, null)
+  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
+    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
+    price_tiers = excluded.price_tiers,
+    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
+    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
+    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
+insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
+  'nail-design', 'cat-eye', 'Mắt mèo / tráng gương', 15, 5000, 15000, 10000, array[5000, 10000, 15000], true, 10, 1, 'fixed', 1, null, 0, 1, null)
+  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
+    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
+    price_tiers = excluded.price_tiers,
+    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
+    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
+    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
+insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
+  'nail-design', 'ombre', 'Ombre', 20, 10000, 20000, 15000, array[10000, 15000, 20000], true, 10, 2, 'fixed', 1, null, 0, 1, null)
+  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
+    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
+    price_tiers = excluded.price_tiers,
+    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
+    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
+    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
+insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
+  'nail-design', 'french', 'French', 20, 10000, 10000, 10000, array[10000], true, 10, 3, 'fixed', 1, null, 0, 1, null)
+  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
+    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
+    price_tiers = excluded.price_tiers,
+    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
+    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
+    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
+insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
+  'nail-design', 'stone', 'Đính đá (theo cỡ đá)', 20, 3000, 20000, 10000, array[3000, 10000, 20000], true, 20, 4, 'fixed', 1, null, 0, 1, null)
+  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
+    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
+    price_tiers = excluded.price_tiers,
+    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
+    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
+    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
+insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
+  'nail-design', '3d', 'Vẽ nổi', 45, 15000, 50000, 30000, array[15000, 30000, 50000], true, 10, 5, 'fixed', 1, null, 0, 1, null)
+  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
+    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
+    price_tiers = excluded.price_tiers,
+    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
+    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
+    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
+insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
+  'makeup-hair-updo', 'makeup', 'Làm tóc cầu kỳ', 'Búi, tết, uốn tạo kiểu cầu kỳ thay cho tóc đơn giản đã gồm trong giá makeup. Makeup cô dâu đã gồm tóc, không tính thêm.', array['Búi, tết hoặc uốn tạo kiểu', 'Keo, kẹp tóc']::text[], false, false, null, null, false, true, true, 73, 2)
+  on conflict (id) do update set category = excluded.category, name = excluded.name,
+    description = excluded.description, includes = excluded.includes,
+    studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
+    delivery_days = excluded.delivery_days, requires_verification = excluded.requires_verification,
+    addon_only = excluded.addon_only,
+    active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
+insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
+  'makeup-hair-updo', 'updo', 'Tóc cầu kỳ', 30, 100000, 250000, 150000, array[100000, 150000, 250000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
+    min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
+    price_tiers = excluded.price_tiers,
+    per_person = excluded.per_person, max_quantity = excluded.max_quantity, sort_order = excluded.sort_order,
+    duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
+    revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 
 -- Retired services stay in the table: bookings still reference them.
-update public.service_templates set active = false where id <> all (array['nail-gel', 'nail-design', 'nail-extension', 'nail-removal', 'nail-pedicure', 'nail-manicure', 'nail-refill', 'makeup-daily', 'makeup-party', 'makeup-photo', 'makeup-bridal', 'makeup-family', 'makeup-event', 'makeup-prewedding', 'skin-basic', 'skin-acne', 'skin-recovery', 'skin-wax', 'skin-hydration', 'hair-cut', 'hair-color', 'hair-perm', 'hair-treatment', 'hair-wash', 'hair-styling', 'hair-bridal', 'hair-straighten', 'hair-scalp', 'hair-home-cut', 'lash-lift', 'brow-tattoo', 'brow-tint', 'lash-classic', 'lash-volume', 'lash-refill', 'brow-shaping', 'lash-design', 'lash-removal', 'brow-lamination', 'massage-foot', 'massage-neck', 'massage-oil-cupping', 'massage-prenatal', 'massage-dry', 'massage-hot-stone', 'massage-postnatal', 'photo-phone', 'photo-phone-group', 'photo-tour', 'photo-outfit', 'photo-party', 'photo-portrait', 'photo-profile', 'photo-event', 'photo-family', 'photo-couple', 'photo-yearbook-group', 'video-short', 'video-event', 'video-talking', 'product-basic', 'product-lifestyle', 'product-video', 'product-flatlay', 'product-food', 'model-lookbook', 'model-hand', 'model-beauty', 'model-outfit', 'model-clip', 'model-live', 'model-tryon']);
+update public.service_templates set active = false where id <> all (array['nail-gel', 'nail-extension', 'nail-removal', 'nail-pedicure', 'nail-manicure', 'nail-refill', 'makeup-daily', 'makeup-party', 'makeup-photo', 'makeup-bridal', 'makeup-takecare', 'makeup-family', 'makeup-event', 'makeup-prewedding', 'skin-basic', 'skin-acne', 'skin-recovery', 'skin-wax', 'skin-hydration', 'hair-cut', 'hair-color', 'hair-perm', 'hair-treatment', 'hair-wash', 'hair-styling', 'hair-bridal', 'hair-straighten', 'hair-scalp', 'hair-home-cut', 'lash-lift', 'brow-tattoo', 'brow-tint', 'lash-classic', 'lash-volume', 'lash-refill', 'brow-shaping', 'lash-design', 'lash-removal', 'brow-lamination', 'massage-foot', 'massage-neck', 'massage-oil-cupping', 'massage-prenatal', 'massage-dry', 'massage-hot-stone', 'massage-postnatal', 'photo-phone', 'photo-phone-group', 'photo-tour', 'photo-outfit', 'photo-party', 'photo-portrait', 'photo-profile', 'photo-event', 'photo-family', 'photo-couple', 'photo-yearbook-group', 'video-short', 'video-event', 'video-talking', 'product-basic', 'product-lifestyle', 'product-video', 'product-flatlay', 'product-food', 'model-lookbook', 'model-hand', 'model-beauty', 'model-outfit', 'model-clip', 'model-live', 'model-tryon', 'nail-design', 'makeup-hair-updo']);

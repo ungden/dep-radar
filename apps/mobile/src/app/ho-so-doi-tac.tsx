@@ -3,7 +3,7 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { webLink } from "@/data/links"
 import { ActivityIndicator, ScrollView, TextInput, View } from "react-native"
-import { CATEGORIES, CITIES, districtsOf, getTemplate, templatesByCategory, tierLabels, PRICE_LEVEL_NOTE, PARTNER_STEPS, partnerProgress, DEFAULT_WORKING_WINDOWS, IDENTITY_VERIFICATION_OPEN, PARTNER_PLEDGE, type PartnerSetup, type CategoryId } from "@/shared"
+import { CATEGORIES, CITIES, districtsOf, getTemplate, partnerTemplatesByCategory, perUnitSuffix, tierLabels, PRICE_LEVEL_NOTE, PARTNER_STEPS, partnerProgress, DEFAULT_WORKING_WINDOWS, IDENTITY_VERIFICATION_OPEN, PARTNER_PLEDGE, type PartnerSetup, type CategoryId } from "@/shared"
 import { rpc, supabase } from "@/data/supabase"
 import { useApp } from "@/state/app"
 import { colors, gutter, radius, fonts } from "@/theme"
@@ -74,7 +74,7 @@ export default function PartnerProfile() {
   if (!setup) return <View style={{ padding: gutter, gap: 12 }}>{error ? <><Txt color={colors.danger}>{error}</Txt><Button label="Thử lại" onPress={() => void load(true)} /></> : <ActivityIndicator />}</View>
   const tpl = editing ? getTemplate(editing) : null
   const steps = partnerProgress(setup)
-  const offered = categories.flatMap((c) => templatesByCategory(c))
+  const offered = categories.flatMap((c) => partnerTemplatesByCategory(c))
   // Opening a service starts at its top; saving it comes back to it in the list.
   const openService = (id: string) => {
     setEditing(id)
@@ -107,6 +107,7 @@ export default function PartnerProfile() {
           <View key={t.id} onLayout={(e) => { cardY.current[t.id] = e.nativeEvent.layout.y }} style={{ padding: 14, gap: 8, backgroundColor: colors.surface, borderRadius: radius.md }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               <Txt w={700} style={{ flex: 1 }}>{t.name}</Txt>
+              {t.addon ? <Txt v="meta" color={colors.muted}>Đặt kèm</Txt> : null}
               {service && !service.active ? <Txt v="meta" color={colors.warning}>Đang ẩn</Txt> : null}
             </View>
             {chosen.length ? (
@@ -117,7 +118,7 @@ export default function PartnerProfile() {
                   return (
                     <View key={v.id} style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
                       <Txt v="meta" color={colors.inkSoft} style={{ flex: 1 }}>✓ {v.label}</Txt>
-                      <Txt v="meta" w={600}>{level ? `${level} · ` : ""}{formatPrice(price)}</Txt>
+                      <Txt v="meta" w={600}>{level ? `${level} · ` : ""}{formatPrice(price)}{perUnitSuffix(v)}</Txt>
                     </View>
                   )
                 })}
@@ -130,8 +131,8 @@ export default function PartnerProfile() {
           </View>
         )
       }) : <>
-        <Txt v="h2">{tpl.name}</Txt><Txt>{tpl.description}</Txt><Txt>{tpl.includes.join(" · ")}</Txt>
-        {tpl.variants.map((v) => <View key={v.id} style={{ gap: 10, padding: 14, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md }}><Choice label={`${prices[v.id] !== undefined ? "✓" : "+"} ${v.label}`} active={prices[v.id] !== undefined} onPress={() => setPrices((p) => { const next = { ...p }; if (next[v.id] !== undefined) delete next[v.id]; else next[v.id] = v.tiers[0]; return next })} /><Txt v="meta">{v.durationMin} phút{v.perPerson ? v.durationRule === "fixed" ? " / nhóm" : " / người" : ""}{v.sessions ? ` · ${v.sessions} buổi` : ""} {v.deliverable ?? tpl.deliverable}{v.revisions ? ` · ${v.revisions} lượt sửa` : ""}{v.followupDays ? ` · dặm trong ${v.followupDays} ngày` : ""}</Txt>{prices[v.id] !== undefined && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{v.tiers.map((n, i) => <Choice key={n} label={`${tierLabels(v)[i]} ${formatPrice(n)}`} active={prices[v.id] === n} onPress={() => setPrices((p) => ({ ...p, [v.id]: n }))} />)}</View>}</View>)}
+        <Txt v="h2">{tpl.name}</Txt><Txt>{tpl.description}</Txt><Txt>{tpl.includes.join(" · ")}</Txt>{tpl.addon && <Txt v="meta" color={colors.inkSoft}>Khách chọn thêm khi đặt dịch vụ chính, không đặt riêng.</Txt>}
+        {tpl.variants.map((v) => <View key={v.id} style={{ gap: 10, padding: 14, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md }}><Choice label={`${prices[v.id] !== undefined ? "✓" : "+"} ${v.label}`} active={prices[v.id] !== undefined} onPress={() => setPrices((p) => { const next = { ...p }; if (next[v.id] !== undefined) delete next[v.id]; else next[v.id] = v.tiers[0]; return next })} /><Txt v="meta">{v.durationMin} phút{v.unit ? ` · giá mỗi ${v.unit}` : v.perPerson ? v.durationRule === "fixed" ? " / nhóm" : " / người" : ""}{v.sessions ? ` · ${v.sessions} buổi` : ""} {v.deliverable ?? tpl.deliverable}{v.revisions ? ` · ${v.revisions} lượt sửa` : ""}{v.followupDays ? ` · dặm trong ${v.followupDays} ngày` : ""}</Txt>{prices[v.id] !== undefined && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{v.tiers.map((n, i) => <Choice key={n} label={`${tierLabels(v)[i]} ${formatPrice(n)}${perUnitSuffix(v)}`} active={prices[v.id] === n} onPress={() => setPrices((p) => ({ ...p, [v.id]: n }))} />)}</View>}</View>)}
         <Button label="Lưu gói & giá" busy={busy} disabled={!Object.keys(prices).length} onPress={async () => { if (await mutate("save_pro_service", { p_template: tpl.id, p_prices: prices, p_active: true })) backToList(tpl.id) }} />
         <Button label="Về danh sách dịch vụ" variant="ghost" onPress={() => backToList(tpl.id)} />
       </>}

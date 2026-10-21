@@ -30,19 +30,19 @@ const r = (
 })
 
 export const REVIEWS: Review[] = [
-  r("r1", "linh-pham", "Ngọc Hân", 5, ["Tay nghề tốt", "Bền đẹp"], "Làm kỹ, form móng đẹp, đến đúng giờ. Giữ được hơn 3 tuần không bong.", "2026-09-02", "Nail thiết kế · Đính đá / charm", { photo: img("nail-milky-1"), reply: "Cảm ơn Hân nhiều, hẹn gặp lại lần sau nha!" }),
+  r("r1", "linh-pham", "Ngọc Hân", 5, ["Tay nghề tốt", "Bền đẹp"], "Làm kỹ, form móng đẹp, đến đúng giờ. Giữ được hơn 3 tuần không bong.", "2026-09-02", "Up móng / nối móng · Up móng gel + sơn trơn 1 màu", { photo: img("nail-milky-1"), reply: "Cảm ơn Hân nhiều, hẹn gặp lại lần sau nha!" }),
   r("r2", "linh-pham", "Thảo Vy", 5, ["Dụng cụ sạch sẽ", "Tư vấn kỹ"], "Tư vấn màu rất có tâm, dụng cụ hấp tiệt trùng trước mặt mình luôn.", "2026-08-21", "Sơn gel trơn · Tay"),
-  r("r3", "linh-pham", "Minh Châu", 4, ["Tay nghề tốt"], "Đẹp, nhưng đến trễ 15 phút vì kẹt xe, có nhắn báo trước.", "2026-08-10", "Nối móng · Đắp gel", { reply: "Xin lỗi Châu vì hôm đó mưa kẹt xe, lần sau mình sẽ đi sớm hơn ạ." }),
-  r("r4", "thu-anh", "Lan Phương", 5, ["Bền đẹp", "Nhẹ nhàng"], "Makeup trong veo, chụp ảnh lên rất xinh, bền cả tối.", "2026-09-05", "Makeup dự tiệc · Makeup", { photo: img("makeup-party-1") }),
-  r("r5", "thu-anh", "Bảo Ngọc", 5, ["Tư vấn kỹ"], "Chị rất nhẹ nhàng, hỏi kỹ về da trước khi làm.", "2026-08-28", "Makeup chụp ảnh / kỷ yếu · 1 người"),
-  r("r6", "thu-anh", "Hải Yến", 4, ["Tay nghề tốt"], "Layout đẹp, hơi lâu hơn dự kiến một chút.", "2026-08-12", "Makeup cô dâu · 1 lễ (ăn hỏi hoặc cưới)"),
+  r("r3", "linh-pham", "Minh Châu", 4, ["Tay nghề tốt"], "Đẹp, nhưng đến trễ 15 phút vì kẹt xe, có nhắn báo trước.", "2026-08-10", "Up móng / nối móng · Dual form + gel gôm", { reply: "Xin lỗi Châu vì hôm đó mưa kẹt xe, lần sau mình sẽ đi sớm hơn ạ." }),
+  r("r4", "thu-anh", "Lan Phương", 5, ["Bền đẹp", "Nhẹ nhàng"], "Makeup trong veo, chụp ảnh lên rất xinh, bền cả tối.", "2026-09-05", "Makeup dự tiệc · 1 người", { photo: img("makeup-party-1") }),
+  r("r5", "thu-anh", "Bảo Ngọc", 5, ["Tư vấn kỹ"], "Chị rất nhẹ nhàng, hỏi kỹ về da trước khi làm.", "2026-08-28", "Makeup kỷ yếu / chụp ảnh · 1 người"),
+  r("r6", "thu-anh", "Hải Yến", 4, ["Tay nghề tốt"], "Layout đẹp, hơi lâu hơn dự kiến một chút.", "2026-08-12", "Makeup cô dâu · Gia tiên / tiệc cưới"),
   r("r7", "mai-tran", "Khánh Linh", 5, ["Dụng cụ sạch sẽ", "Nhẹ nhàng"], "Da dịu hẳn sau 2 buổi, không bị đỏ như lúc đi spa.", "2026-09-01", "Phục hồi da nhạy cảm · 75 phút", { photo: img("skin-glow"), reply: "Nhớ bôi kem chống nắng đều nha Linh!" }),
   r("r8", "mai-tran", "Tuấn Anh", 5, ["Tay nghề tốt", "Đúng giờ"], "Lấy mụn nhẹ tay, không thâm, dụng cụ bóc tem trước mặt.", "2026-08-19", "Lấy nhân mụn chuẩn y khoa · 60 phút"),
   r("r9", "quynh-vu", "Hồng Nhung", 5, ["Bền đẹp"], "Tóc giữ nếp tới cuối tiệc cưới.", "2026-08-17", "Tạo kiểu tóc sự kiện · Búi / tết cầu kỳ", { photo: img("hair-bun-1") }),
   r("r10", "quynh-vu", "Mỹ Duyên", 4, ["Giá hợp lý"], "Uốn đẹp nhưng lọn hơi nhanh xẹp.", "2026-08-02", "Tạo kiểu tóc sự kiện · Uốn / duỗi tạo kiểu"),
   r("r11", "ha-my", "Phương Anh", 5, ["Nhẹ nhàng", "Bền đẹp"], "Mi tự nhiên, không cộm, không cay mắt.", "2026-09-08", "Nối mi classic · Full set", { photo: img("lash-1") }),
   r("r12", "ha-my", "Thu Hà", 5, ["Đúng giờ"], "Dáng mày hợp mặt, làm nhanh.", "2026-08-25", "Tạo dáng & tỉa mày · Tạo dáng"),
-  r("r13", "ngoc-bao", "Diệu Linh", 5, ["Giá hợp lý", "Nhẹ nhàng"], "Nhóm mình 3 người làm nhanh gọn, bạn rất dễ thương.", "2026-08-30", "Makeup dự tiệc · Makeup"),
+  r("r13", "ngoc-bao", "Diệu Linh", 5, ["Giá hợp lý", "Nhẹ nhàng"], "Nhóm mình 3 người làm nhanh gọn, bạn rất dễ thương.", "2026-08-30", "Makeup dự tiệc · 1 người"),
   r("r14", "dieu-huong", "Quốc Bảo", 5, ["Tay nghề tốt", "Đúng giờ"], "Bấm huyệt đúng chỗ đau, mang theo cả giường gấp, rất chuyên nghiệp.", "2026-09-06", "Massage cổ vai gáy · 90 phút"),
   r("r15", "dieu-huong", "Thanh Tâm", 5, ["Nhẹ nhàng", "Tư vấn kỹ"], "Massage bầu tháng thứ 7, chị rất cẩn thận, hỏi kỹ tình trạng trước.", "2026-08-22", "Massage bầu · 60 phút", { reply: "Chúc mẹ bầu mẹ tròn con vuông nha!" }),
 ]
@@ -229,14 +229,15 @@ const ps = (proId: string, templateId: string, prices: Record<string, number>): 
 
 export const PRO_SERVICES: ProService[] = [
   ps("linh-pham", "nail-gel", { hand: 180, "hand-foot": 320 }),
-  ps("linh-pham", "nail-design", { simple: 300, stone: 380, art: 520 }),
-  ps("linh-pham", "nail-extension", { tips: 320, builder: 450 }),
+  ps("linh-pham", "nail-design", { design: 10, stone: 10, "3d": 20 }),
+  ps("linh-pham", "nail-extension", { tips: 180, gelx: 220, builder: 260 }),
   ps("linh-pham", "nail-removal", { remove: 80, "remove-care": 140 }),
 
   ps("thu-anh", "makeup-daily", { single: 350 }),
-  ps("thu-anh", "makeup-party", { makeup: 600, "makeup-hair": 850 }),
-  ps("thu-anh", "makeup-photo", { single: 550, group: 380 }),
-  ps("thu-anh", "makeup-bridal", { one: 2200, two: 4000 }),
+  ps("thu-anh", "makeup-party", { makeup: 450 }),
+  ps("thu-anh", "makeup-photo", { single: 400, group3: 340, group5: 320 }),
+  ps("thu-anh", "makeup-bridal", { trial: 800, engagement: 1800, wedding: 2000 }),
+  ps("thu-anh", "makeup-hair-updo", { updo: 150 }),
 
   ps("mai-tran", "skin-basic", { "60m": 350, "90m": 480 }),
   ps("mai-tran", "skin-acne", { "60m": 420, "90m": 560 }),
@@ -251,7 +252,7 @@ export const PRO_SERVICES: ProService[] = [
   ps("ha-my", "brow-shaping", { shape: 120 }),
 
   ps("ngoc-bao", "nail-gel", { hand: 150, "hand-foot": 280 }),
-  ps("ngoc-bao", "nail-design", { simple: 250, stone: 320 }),
+  ps("ngoc-bao", "nail-design", { "cat-eye": 7, ombre: 10 }),
   ps("ngoc-bao", "makeup-daily", { single: 300 }),
   ps("ngoc-bao", "makeup-party", { makeup: 500 }),
 

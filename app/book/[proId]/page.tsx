@@ -12,14 +12,14 @@ import { needsConductNote } from "@/lib/conduct"
 import { PriceBreakdown } from "@/components/price-breakdown"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, Skeleton, inputClass, PageSkeleton } from "@/components/ui"
-import { getTemplate, getVertical, verticalOf, serviceQuantity, serviceDuration } from "@/lib/catalog"
+import { getTemplate, getVertical, perUnitSuffix, verticalOf, serviceQuantity, serviceDuration } from "@/lib/catalog"
 import { appointmentAt } from "@/lib/appointments"
 import { bookingQuote } from "@/lib/api/actions"
 import { actions } from "@/lib/client-actions"
 import { formatPhone } from "@/lib/auth/phone"
 import { CITIES, districtsOf, travelDistanceKm } from "@/lib/geo"
 import { POLICY, buildQuote, isUrgent } from "@/lib/pricing"
-import { getPro, homeAvailability, priceOf, proView, servicesOf, useApp } from "@/lib/store"
+import { bookableServicesOf, getPro, homeAvailability, priceOf, proView, servicesOf, useApp } from "@/lib/store"
 import { ComboSuggestions } from "@/components/combo"
 import type { CustomerAddress, PaymentMethod, PriceQuote, UsageScope } from "@/lib/types"
 import {
@@ -55,7 +55,7 @@ function BookGate() {
   const state = useApp()
   const pro = proView(state, proId)
 
-  if (!pro || !servicesOf(state, proId).length) {
+  if (!pro || !bookableServicesOf(state, proId).length) {
     return (
       <div className="mx-auto max-w-2xl">
         <PageHeader back title="Đặt lịch" />
@@ -86,7 +86,7 @@ function BookingFlow({ proId }: { proId: string }) {
   const state = useApp()
   const { session } = state
   const pro = proView(state, proId)!
-  const services = servicesOf(state, proId)
+  const services = bookableServicesOf(state, proId)
   const isOwnProfile = session?.proId === pro.id
   const paused = !pro.acceptingJobs
 
@@ -127,6 +127,8 @@ function BookingFlow({ proId }: { proId: string }) {
   const [note, setNote] = React.useState(params.get("note") ?? "")
   // Add-ons chosen with the booking ("template/variant" keys), chained after the main one (attach_addons).
   const [addons, setAddons] = React.useState<string[]>(() => (params.get("addons") ?? "").split(",").filter(Boolean).slice(0, 3))
+  // How many fingers / stones for an add-on priced per unit, by add-on key.
+  const [addonCounts, setAddonCounts] = React.useState<Record<string, number>>({})
   // Reference photos: paths in the private references bucket, with a local preview.
   const [refs, setRefs] = React.useState<{ path: string; preview: string }[]>([])
   const [refBusy, setRefBusy] = React.useState(false)
@@ -153,7 +155,12 @@ function BookingFlow({ proId }: { proId: string }) {
     if (!t || (t.studioOnly && atHome)) return []
     return t.variants
       .filter((v) => listing.prices[v.id] !== undefined && (v.sessions ?? 1) === 1 && serviceQuantity(v) === 1 && !(t.id === templateId && v.id === variantId))
-      .map((v) => ({ key: `${t.id}/${v.id}`, templateId: t.id, variantId: v.id, name: t.name, label: v.label, price: listing.prices[v.id], minutes: v.durationMin }))
+      .map((v) => {
+        const key = `${t.id}/${v.id}`
+        const count = v.unit ? serviceQuantity(v, addonCounts[key] ?? 10) : 1
+        const unitPrice = listing.prices[v.id]
+        return { key, templateId: t.id, variantId: v.id, name: t.name, label: v.label, unitPrice, variant: v, count, price: unitPrice * count, minutes: serviceDuration(v, count) }
+      })
   })
   const chosenAddons = addonOptions.filter((o) => addons.includes(o.key))
   const addonsTotal = chosenAddons.reduce((sum, o) => sum + o.price, 0)
@@ -285,7 +292,7 @@ function BookingFlow({ proId }: { proId: string }) {
     if (chosenAddons.length) {
       const attached = await actions.attachAddons(
         res.id,
-        chosenAddons.map((o) => ({ template: o.templateId, variant: o.variantId, quantity: 1 })),
+        chosenAddons.map((o) => ({ template: o.templateId, variant: o.variantId, quantity: o.count })),
       )
       if (attached.error) setLinkError(`Đã đặt lịch chính, nhưng chưa thêm được dịch vụ đi kèm: ${attached.error}`)
     }
@@ -485,10 +492,37 @@ function BookingFlow({ proId }: { proId: string }) {
                         <span className="block font-medium">
                           {o.name} · {o.label}
                         </span>
-                        <span className="block text-label text-muted">{formatDuration(o.minutes)}</span>
+                        <span className="block text-label text-muted">
+                          {o.variant.unit ? `${formatPrice(o.unitPrice)}${perUnitSuffix(o.variant)} · ` : ""}
+                          {formatDuration(o.minutes)}
+                        </span>
                       </span>
                       <span className="font-semibold tabular-nums">{formatPrice(o.price)}</span>
                     </label>
+                    {o.variant.unit && addons.includes(o.key) && (
+                      <div className="mt-1.5 flex items-center gap-2 rounded-xl bg-canvas px-3 py-2">
+                        <span className="flex-1 text-meta">Số {o.variant.unit}</span>
+                        <button
+                          type="button"
+                          aria-label={`Bớt 1 ${o.variant.unit}`}
+                          disabled={o.count <= (o.variant.minQuantity ?? 1)}
+                          onClick={() => setAddonCounts((c) => ({ ...c, [o.key]: o.count - 1 }))}
+                          className="inline-flex size-8 items-center justify-center rounded-full border border-line-strong disabled:opacity-40"
+                        >
+                          −
+                        </button>
+                        <span className="w-6 text-center font-semibold tabular-nums">{o.count}</span>
+                        <button
+                          type="button"
+                          aria-label={`Thêm 1 ${o.variant.unit}`}
+                          disabled={o.count >= (o.variant.maxQuantity ?? 1)}
+                          onClick={() => setAddonCounts((c) => ({ ...c, [o.key]: o.count + 1 }))}
+                          className="inline-flex size-8 items-center justify-center rounded-full border border-line-strong disabled:opacity-40"
+                        >
+                          +
+                        </button>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -882,6 +916,7 @@ function BookingFlow({ proId }: { proId: string }) {
                 <p key={o.key} className="flex justify-between gap-3">
                   <span className="text-ink-soft">
                     {o.name} · {o.label}
+                    {o.variant.unit ? ` × ${o.count} ${o.variant.unit}` : ""}
                   </span>
                   <span className="tabular-nums">{formatPrice(o.price)}</span>
                 </p>

@@ -46,15 +46,18 @@ export interface ServiceVariant {
   label: string
   durationMin: number
   /**
-   * Exactly three ascending prices. Each partner chooses one for this option.
+   * Three ascending prices a partner chooses one of, or a single price every
+   * partner charges ("Giá chung", e.g. test makeup cô dâu).
    */
-  tiers: [number, number, number]
-  /** Lowest and highest tier, and the "Tiêu chuẩn" one: derived from tiers. */
+  tiers: [number] | [number, number, number]
+  /** Lowest and highest tier, and the middle one: derived from tiers. */
   minPrice: number
   maxPrice: number
   suggestedPrice: number
   /** Price and duration are per head: the customer picks a head count. */
   perPerson?: boolean
+  /** What a per-head price counts when it is not people: "ngón", "viên". */
+  unit?: string
   /** Highest head count accepted (1 for everything but group services). */
   maxQuantity?: number
   minQuantity?: number
@@ -87,6 +90,11 @@ export interface ServiceTemplate {
   deliveryDays?: number
   /** Only an identity-verified freelancer may list it (models). */
   requiresVerification?: boolean
+  /**
+   * Only booked on top of a main service (nail art per finger, an elaborate
+   * hairdo with makeup): listed on the partner's profile, never booked alone.
+   */
+  addon?: boolean
 }
 
 /** A freelancer's listing of one catalogue service. */

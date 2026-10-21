@@ -9,7 +9,7 @@ import { PartnerProgress } from "@/components/partner-progress"
 import { RequireSession } from "@/components/require-session"
 import { Button, ButtonLink, Card, PageHeader, Toggle } from "@/components/ui"
 import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
-import { categoryLabel, getTemplate, isPriceAllowed, PRICE_LEVEL_NOTE, templatesByCategory, tierLabels } from "@/lib/catalog"
+import { categoryLabel, getTemplate, isPriceAllowed, partnerTemplatesByCategory, perUnitSuffix, PRICE_LEVEL_NOTE, tierLabels } from "@/lib/catalog"
 import { POLICY, payoutFor } from "@/lib/pricing"
 import { actions, useAct } from "@/lib/client-actions"
 import { proView, servicesOf, useApp } from "@/lib/store"
@@ -36,7 +36,7 @@ function ServicesManager() {
   const [adding, setAdding] = React.useState(false)
   const rate = POLICY.commissionRate
 
-  const available = pro.categories.flatMap((c) => templatesByCategory(c)).filter((t) => !listings.some((l) => l.templateId === t.id))
+  const available = pro.categories.flatMap((c) => partnerTemplatesByCategory(c)).filter((t) => !listings.some((l) => l.templateId === t.id))
 
   return (
     <>
@@ -51,7 +51,7 @@ function ServicesManager() {
       />
       <div className="mb-4 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-body text-ink-soft">
         <p>
-          Bạn chọn dịch vụ từ danh mục chuẩn của 360dep, mỗi gói chọn 1 trong đúng 3 mức giá có sẵn, để khách so sánh công bằng. Giá đã gồm vật tư, không thu
+          Bạn chọn dịch vụ từ danh mục chuẩn của 360dep, mỗi gói chọn 1 trong 3 mức giá có sẵn (vài gói có một giá chung), để khách so sánh công bằng. Giá đã gồm vật tư, không thu
           thêm phụ phí ngoài phí di chuyển / đặt gấp do hệ thống tính.
         </p>
         <p className="mt-1">
@@ -73,6 +73,7 @@ function ServicesManager() {
                     <p className="font-semibold">{tpl.name}</p>
                     <p className="text-label text-muted">
                       {categoryLabel(tpl.category)}
+                      {tpl.addon && " · đặt kèm dịch vụ chính"}
                       {tpl.studioOnly && " · chỉ tại studio"}
                       {tpl.deliveryDays ? ` · giao file trong ${tpl.deliveryDays} ngày` : ""}
                     </p>
@@ -96,7 +97,7 @@ function ServicesManager() {
                     .filter((v) => l.prices[v.id] !== undefined)
                     .map((v) => (
                       <li key={v.id} className="rounded-xl bg-canvas px-3 py-2 text-meta">
-                        <span className="text-ink-soft">{v.label}</span> · <b>{formatPrice(l.prices[v.id])}</b>
+                        <span className="text-ink-soft">{v.label}</span> · <b>{formatPrice(l.prices[v.id])}{perUnitSuffix(v)}</b>
                         <span className="block text-label text-muted">
                           {tierLabels(v)[v.tiers.indexOf(l.prices[v.id])]} · {formatDuration(v.durationMin)} · bạn nhận {formatPrice(payoutFor(l.prices[v.id], rate))}
                         </span>
@@ -131,6 +132,7 @@ function ServicesManager() {
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block font-medium">{t.name}</span>
+                      {t.addon && <span className="block text-label text-muted">Khách chọn thêm khi đặt dịch vụ chính</span>}
                       {locked && (
                         <span className="block text-meta font-medium text-warning">
                           {IDENTITY_VERIFICATION_OPEN ? "Cần xác minh danh tính trước" : "Sắp mở, cùng lúc với xác minh danh tính"}
@@ -138,6 +140,7 @@ function ServicesManager() {
                       )}
                       <span className="block text-label text-muted">
                         {t.variants.length} gói · giá từ {formatPrice(Math.min(...t.variants.map((v) => v.minPrice)))} – {formatPrice(Math.max(...t.variants.map((v) => v.maxPrice)))}
+                        {t.variants.some((v) => v.unit) ? " mỗi ngón" : ""}
                       </span>
                     </span>
                     {t.studioOnly ? <Store className="size-4 text-muted" /> : <Plus className="size-4 text-ink" />}
@@ -218,7 +221,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
               <p className="mt-2 text-label text-muted">{v.deliverable ?? tpl.deliverable}{v.revisions ? ` · ${v.revisions} lượt sửa` : ""}{v.sessions ? ` · ${v.sessions} buổi` : ""}{v.followupDays ? ` · dặm trong ${v.followupDays} ngày` : ""}</p>
               {on && (
                 <>
-                  <div role="radiogroup" aria-label={`Mức giá ${v.label}`} className={cn("mt-3 grid gap-2", v.tiers.length === 3 ? "grid-cols-1 min-[400px]:grid-cols-3" : "grid-cols-1 min-[400px]:grid-cols-2")}>
+                  <div role="radiogroup" aria-label={`Mức giá ${v.label}`} className={cn("mt-3 grid gap-2", v.tiers.length === 3 ? "grid-cols-1 min-[400px]:grid-cols-3" : "grid-cols-1 min-[400px]:max-w-[50%]")}>
                     {v.tiers.map((tier, i) => (
                       <button
                         key={tier}
@@ -234,13 +237,16 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
                         )}
                       >
                         <span className={cn("block text-label", price === tier ? "text-white" : "text-muted")}>{labels[i]}</span>
-                        <span className="block text-body font-semibold">{formatPrice(tier)}</span>
+                        <span className="block text-body font-semibold">
+                          {formatPrice(tier)}
+                          {perUnitSuffix(v)}
+                        </span>
                       </button>
                     ))}
                   </div>
                   <p className="mt-2 text-label text-ink-soft">
                     Bạn nhận {formatPrice(payoutFor(price, rate))}
-                    {v.perPerson ? " mỗi người" : ""} sau hoa hồng {Math.round(rate * 100)}%
+                    {v.perPerson ? ` mỗi ${v.unit ?? "người"}` : ""} sau hoa hồng {Math.round(rate * 100)}%
                   </p>
                 </>
               )}

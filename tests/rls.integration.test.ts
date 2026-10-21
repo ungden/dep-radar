@@ -205,7 +205,7 @@ describe.skipIf(!configured)("row level security over the API", () => {
   it("refuses a listing price that is not one of the catalogue levels", async () => {
     const { error } = await client(tokenFor(proId))
       .from("pro_service_prices")
-      .upsert({ pro_id: proId, template_id: "nail-design", variant_id: "simple", price: 5000 })
+      .upsert({ pro_id: proId, template_id: "nail-extension", variant_id: "tips", price: 5000 })
     expect(error?.message).toMatch(/mức giá có sẵn/)
   })
 
@@ -235,8 +235,8 @@ describe.skipIf(!configured)("row level security over the API", () => {
     expect(fee.data).toBe(30000)
     const slots = await anon.rpc("free_slots", {
       p_pro: proId,
-      p_template: "nail-design",
-      p_variant: "simple",
+      p_template: "nail-extension",
+      p_variant: "tips",
       p_quantity: 1,
       p_date: new Date(Date.now() + 7 * 86400_000).toISOString().slice(0, 10),
       p_at_home: true,
@@ -250,8 +250,8 @@ describe.skipIf(!configured)("row level security over the API", () => {
     const as = client(tokenFor(customerId))
     const { data } = await as.rpc("availability_problem", {
       p_pro: proId,
-      p_template: "nail-design",
-      p_variant: "simple",
+      p_template: "nail-extension",
+      p_variant: "tips",
       p_quantity: 1,
       p_starts_at: new Date(Date.now() + 10 * 60_000).toISOString(),
       p_at_home: true,
@@ -270,8 +270,8 @@ describe.skipIf(!configured)("row level security over the API", () => {
     const ask = (date: string) =>
       as.rpc("free_slots", {
         p_pro: proId,
-        p_template: "nail-design",
-        p_variant: "simple",
+        p_template: "nail-extension",
+        p_variant: "tips",
         p_quantity: 1,
         p_date: date,
         p_at_home: true,
@@ -289,8 +289,8 @@ describe.skipIf(!configured)("row level security over the API", () => {
 
     const args = {
       p_pro: proId,
-      p_template: "nail-design",
-      p_variant: "simple",
+      p_template: "nail-extension",
+      p_variant: "tips",
       p_starts_at: startsAt!,
       p_at_home: true,
       p_address_id: addresses![0].id,
@@ -533,8 +533,8 @@ describe.skipIf(!configured)("row level security over the API", () => {
   it("lists free days to anyone, like free slots", async () => {
     const { data, error } = await client().rpc("free_days" as never, {
       p_pro: proId,
-      p_template: "nail-design",
-      p_variant: "simple",
+      p_template: "nail-extension",
+      p_variant: "tips",
       p_quantity: 1,
       p_from: todayISO(),
       p_days: 14,
@@ -585,10 +585,10 @@ describe.skipIf(!configured)("row level security over the API", () => {
 
   it("refuses arbitrary service tiers atomically through the authenticated API", async () => {
     const pro = client(tokenFor(proId))
-    const before = await pro.from("pro_service_prices").select("price").eq("pro_id", proId).eq("template_id", "nail-design").eq("variant_id", "simple").single()
-    const bad = await pro.rpc("save_pro_service" as never, { p_template: "nail-design", p_prices: { simple: 265000 }, p_active: true } as never)
+    const before = await pro.from("pro_service_prices").select("price").eq("pro_id", proId).eq("template_id", "nail-extension").eq("variant_id", "tips").single()
+    const bad = await pro.rpc("save_pro_service" as never, { p_template: "nail-extension", p_prices: { tips: 155000 }, p_active: true } as never)
     expect(bad.error).toBeTruthy()
-    const after = await pro.from("pro_service_prices").select("price").eq("pro_id", proId).eq("template_id", "nail-design").eq("variant_id", "simple").single()
+    const after = await pro.from("pro_service_prices").select("price").eq("pro_id", proId).eq("template_id", "nail-extension").eq("variant_id", "tips").single()
     expect(after.data?.price).toBe(before.data?.price)
   })
 
@@ -597,7 +597,7 @@ describe.skipIf(!configured)("row level security over the API", () => {
     for (const [fn, args] of [
       ["partner_setup", {}], ["submit_partner_profile", { p_agree: true }],
       ["confirm_partner_hours", { p_windows: [] }],
-      ["save_pro_service", { p_template: "nail-design", p_prices: { simple: 260000 }, p_active: true }],
+      ["save_pro_service", { p_template: "nail-extension", p_prices: { tips: 180000 }, p_active: true }],
       ["my_job_eligibility", { p_ids: [] }],
     ] as const) {
       const r = await anon.rpc(fn as never, args as never)

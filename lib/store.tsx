@@ -62,13 +62,19 @@ export function servicesOf(s: AppState, proId: string, includeInactive = false):
   return list.filter((x) => includeInactive || x.active)
 }
 
+/** What can be booked on its own: everything listed but the add-ons (nail art per finger…). */
+export function bookableServicesOf(s: AppState, proId: string): ProService[] {
+  return servicesOf(s, proId).filter((x) => !getTemplate(x.templateId)?.addon)
+}
+
 export function priceOf(s: AppState, proId: string, templateId: string, variantId: string): number | null {
   const svc = servicesOf(s, proId).find((x) => x.templateId === templateId)
   return svc?.prices[variantId] ?? null
 }
 
 export function fromPrice(s: AppState, proId: string, templateId?: string): number | null {
-  const list = servicesOf(s, proId).filter((x) => !templateId || x.templateId === templateId)
+  // Add-ons (per finger…) are never the "from" price of a person.
+  const list = servicesOf(s, proId).filter((x) => (templateId ? x.templateId === templateId : !getTemplate(x.templateId)?.addon))
   const prices = list.flatMap((x) => Object.values(x.prices))
   return prices.length ? Math.min(...prices) : null
 }
