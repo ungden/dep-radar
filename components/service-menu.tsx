@@ -4,7 +4,7 @@ import * as React from "react"
 import { Check, ChevronDown, Clock, MapPin, PackageCheck, X } from "lucide-react"
 import { TradeDot } from "@/components/trade"
 import { ButtonLink, Chip, EmptyState } from "@/components/ui"
-import { categoryLabel, getTemplate, verticalOf, PRICE_LEVEL_NOTE } from "@/lib/catalog"
+import { categoryLabel, getTemplate, perUnitSuffix, verticalOf, PRICE_LEVEL_NOTE } from "@/lib/catalog"
 import { levelName, levelOfPrice } from "@/lib/levels"
 import { getPro, servicesOf, useApp } from "@/lib/store"
 import { excludes, personWord, placeLabel } from "@/lib/trade"
@@ -125,7 +125,10 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
         <div>
           {/* The price this person listed, and which of the option's three levels it is. */}
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-[20px] font-bold tracking-tight">{formatPrice(price)}</span>
+            <span className="text-[20px] font-bold tracking-tight">
+              {formatPrice(price)}
+              {variant.unit && <span className="text-body font-semibold text-ink-soft">{perUnitSuffix(variant)}</span>}
+            </span>
             {level !== null && (
               <span className="rounded-full bg-subtle px-2 py-0.5 text-label font-semibold text-ink-soft">Mức {levelName(level)}</span>
             )}
@@ -134,10 +137,13 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
             <Clock className="size-3.5" />
             {variants.length === 1 && !variant.label.startsWith(`${variant.durationMin} phút`) ? `${variant.label} · ` : ""}
             {formatDuration(variant.durationMin)}
-            {variant.perPerson ? variant.durationRule === "fixed" ? " · thời lượng cả nhóm, giá mỗi người" : " · mỗi người" : ""}
+            {variant.unit ? "" : variant.perPerson ? variant.durationRule === "fixed" ? " · thời lượng cả nhóm, giá mỗi người" : " · mỗi người" : ""}
           </p>
         </div>
-        {bookable && (
+        {/* An add-on is chosen on the booking page, on top of a main service. */}
+        {bookable && tpl.addon ? (
+          <span className="max-w-[9rem] text-right text-label text-muted">Chọn thêm khi đặt lịch dịch vụ chính</span>
+        ) : bookable && (
           <ButtonLink href={`/book/${proId}?service=${tpl.id}&variant=${variant.id}`} className="px-6">
             Đặt
           </ButtonLink>

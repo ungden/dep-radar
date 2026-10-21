@@ -51,7 +51,7 @@ begin
   assert q.distance_km is null and q.travel_fee = 0, 'no travel fee at the studio';
 
   raise notice 'group options multiply by head count';
-  assert public.service_duration_min('makeup-photo', 'group', 3) = 135, 'three heads take three slots';
+  assert public.service_duration_min('makeup-photo', 'group3', 3) = 135, 'three heads take three slots';
   assert public.service_duration_min('makeup-photo', 'single', 3) is null, 'single rejects an invalid quantity';
   q := public.build_quote(380000, 3, false, null, false);
   assert q.service_price = 1140000, format('group price %s', q.service_price);
@@ -67,14 +67,14 @@ begin
   raise notice 'a listing is one of the catalogue levels, nothing else';
   begin
     insert into public.pro_service_prices (pro_id, template_id, variant_id, price)
-    values (linh, 'nail-design', 'simple', 5000);
+    values (linh, 'nail-extension', 'tips', 5000);
     assert false, 'a price below the levels was accepted';
   exception when check_violation then null;
   end;
   begin
-    -- nail-design/simple is 200 / 260 / 350: 265 sits between two levels.
+    -- nail-extension/tips is 140 / 150 / 160: 155 sits between two levels.
     insert into public.pro_service_prices (pro_id, template_id, variant_id, price)
-    values (linh, 'nail-design', 'simple', 265000);
+    values (linh, 'nail-extension', 'tips', 155000);
     assert false, 'a price between two levels was accepted';
   exception when check_violation then null;
   end;
@@ -90,14 +90,14 @@ begin
   raise notice 'availability explains itself';
   slot := monday + time '10:00' at time zone public.app_timezone();
 
-  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, now() + interval '10 minutes', true,
+  msg := public.availability_problem(linh, 'nail-extension', 'tips', 1, now() + interval '10 minutes', true,
                                      21.0181, 105.829);
   assert msg like 'Cần đặt trước%', format('lead time: %s', msg);
 
-  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, slot, true, 21.0181, 105.829);
+  msg := public.availability_problem(linh, 'nail-extension', 'tips', 1, slot, true, 21.0181, 105.829);
   assert msg is null, format('a normal slot should be bookable: %s', msg);
 
-  msg := public.availability_problem(linh, 'nail-design', 'simple', 1,
+  msg := public.availability_problem(linh, 'nail-extension', 'tips', 1,
     monday + time '23:00' at time zone public.app_timezone(), true, 21.0181, 105.829);
   assert msg = 'Ngoài giờ làm việc của chuyên viên.', format('night slot: %s', msg);
 
@@ -105,23 +105,23 @@ begin
   assert msg = 'Chuyên viên không nhận dịch vụ/gói này.', format('unlisted service: %s', msg);
 
   -- Ha Giang, far outside any freelancer's radius.
-  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, slot, true, 22.8, 104.98);
+  msg := public.availability_problem(linh, 'nail-extension', 'tips', 1, slot, true, 22.8, 104.98);
   assert msg like 'Ngoài phạm vi%', format('out of range: %s', msg);
 
-  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, slot, true, null, null);
+  msg := public.availability_problem(linh, 'nail-extension', 'tips', 1, slot, true, null, null);
   assert msg like 'Cần địa chỉ%', format('no coordinates: %s', msg);
 
   raise notice 'slots are generated from the working hours, not a fixed list';
-  select count(*) into n from public.free_slots(linh, 'nail-design', 'simple', 1, monday, true, 21.0181, 105.829);
+  select count(*) into n from public.free_slots(linh, 'nail-extension', 'tips', 1, monday, true, 21.0181, 105.829);
   assert n > 0, 'a working day has slots';
-  select count(*) into n from public.free_slots(linh, 'nail-design', 'simple', 1, monday + 6, true, 21.0181, 105.829);
+  select count(*) into n from public.free_slots(linh, 'nail-extension', 'tips', 1, monday + 6, true, 21.0181, 105.829);
   assert n = 0, 'Sunday is closed';
 
   ---------------------------------------------------------------------------
   raise notice 'booking goes through the state machine';
   perform set_config('request.jwt.claim.sub', customer::text, true);
 
-  booking := public.create_booking(linh, 'nail-design', 'simple', slot, true, addr, 1, 'Ghi chú test');
+  booking := public.create_booking(linh, 'nail-extension', 'tips', slot, true, addr, 1, 'Ghi chú test');
   assert (select status from public.bookings where id = booking) = 'pending', 'a new booking waits for the call';
   assert (select travel_fee from public.bookings where id = booking) >= 0, 'travel fee snapshotted';
   -- The deadline depends on the hour the booking is made (20260924100600), and CI
@@ -134,14 +134,14 @@ begin
 
   raise notice 'the same slot cannot be sold twice';
   begin
-    perform public.create_booking(linh, 'nail-design', 'simple', slot, true, addr, 1, '');
+    perform public.create_booking(linh, 'nail-extension', 'tips', slot, true, addr, 1, '');
     assert false, 'the slot was sold twice';
   exception when check_violation then null;
   end;
 
   raise notice 'the travel buffer blocks the slot right after, too';
   begin
-    perform public.create_booking(linh, 'nail-design', 'simple', slot + interval '80 minutes', true, addr, 1, '');
+    perform public.create_booking(linh, 'nail-extension', 'tips', slot + interval '80 minutes', true, addr, 1, '');
     assert false, 'a booking inside the travel buffer was accepted';
   exception when check_violation then null;
   end;
@@ -281,7 +281,7 @@ begin
   raise notice 'nobody books themselves';
   perform set_config('request.jwt.claim.sub', linh::text, true);
   begin
-    perform public.create_booking(linh, 'nail-design', 'simple', slot + interval '1 day', true, addr, 1, '');
+    perform public.create_booking(linh, 'nail-extension', 'tips', slot + interval '1 day', true, addr, 1, '');
     assert false, 'a freelancer booked themselves';
   exception when check_violation or insufficient_privilege then null;
   end;
@@ -289,7 +289,7 @@ begin
   raise notice 'online payment is refused while it does not exist';
   perform set_config('request.jwt.claim.sub', customer::text, true);
   begin
-    perform public.create_booking(linh, 'nail-design', 'simple', slot + interval '2 days', true, addr, 1, '', 'online');
+    perform public.create_booking(linh, 'nail-extension', 'tips', slot + interval '2 days', true, addr, 1, '', 'online');
     assert false, 'online payment was accepted';
   exception when feature_not_supported then null;
   end;
@@ -383,10 +383,10 @@ begin
   insert into public.addresses (account_id, city, district, detail, lat, lng)
   select google_user, city, district, detail, lat, lng from public.addresses where id = addr
   returning id into google_addr;
-  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, slot + interval '3 days', true, 21.0181, 105.829);
+  msg := public.availability_problem(linh, 'nail-extension', 'tips', 1, slot + interval '3 days', true, 21.0181, 105.829);
   assert msg is null, format('the control slot is not bookable: %s', msg);
   begin
-    perform public.create_booking(linh, 'nail-design', 'simple', slot + interval '3 days', true, google_addr, 1, '');
+    perform public.create_booking(linh, 'nail-extension', 'tips', slot + interval '3 days', true, google_addr, 1, '');
     assert false, 'an account without a phone booked';
   exception when check_violation then
     get stacked diagnostics msg = message_text;
@@ -1211,8 +1211,8 @@ begin
   update public.accounts set is_admin = true where id = admin_id;
 
   perform set_config('request.jwt.claim.sub', customer::text, true);
-  b1 := public.create_booking(linh, 'nail-design', 'simple', ((monday + 2) + time '10:00') at time zone tz, true, addr, 1, '');
-  b2 := public.create_booking(linh, 'nail-design', 'simple', ((monday + 2) + time '14:00') at time zone tz, true, addr, 1, '');
+  b1 := public.create_booking(linh, 'nail-extension', 'tips', ((monday + 2) + time '10:00') at time zone tz, true, addr, 1, '');
+  b2 := public.create_booking(linh, 'nail-extension', 'tips', ((monday + 2) + time '14:00') at time zone tz, true, addr, 1, '');
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.confirm_booking(b1);
   perform public.confirm_booking(b2);
@@ -1339,7 +1339,7 @@ begin
   raise notice 'a time block is busy time: nothing is booked or offered inside it';
   at_ := ((monday + 1) + time '15:00') at time zone tz;
   perform set_config('request.jwt.claim.sub', customer::text, true);
-  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, at_, true, 21.0181, 105.829);
+  msg := public.availability_problem(linh, 'nail-extension', 'tips', 1, at_, true, 21.0181, 105.829);
   assert msg is null, format('the control slot is not bookable: %s', msg);
   begin
     perform public.add_time_block(at_, at_ + interval '1 hour', '');
@@ -1366,15 +1366,15 @@ begin
   blk := public.add_time_block(at_ - interval '30 minutes', at_ + interval '1 hour', 'Đi khám răng');
 
   perform set_config('request.jwt.claim.sub', customer::text, true);
-  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, at_, true, 21.0181, 105.829);
+  msg := public.availability_problem(linh, 'nail-extension', 'tips', 1, at_, true, 21.0181, 105.829);
   assert msg = 'Khung giờ này đã có lịch khác.', format('a slot inside a block: %s', msg);
   -- 75 minutes and the 30-minute travel buffer from 13:00 run into a block at 14:30.
-  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, at_ - interval '2 hours', true, 21.0181, 105.829);
+  msg := public.availability_problem(linh, 'nail-extension', 'tips', 1, at_ - interval '2 hours', true, 21.0181, 105.829);
   assert msg = 'Khung giờ này đã có lịch khác.', format('the travel buffer ran into a block: %s', msg);
-  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, at_ + interval '1 hour', true, 21.0181, 105.829);
+  msg := public.availability_problem(linh, 'nail-extension', 'tips', 1, at_ + interval '1 hour', true, 21.0181, 105.829);
   assert msg is null, format('the slot right after a block: %s', msg);
   select count(*) into n
-  from public.free_slots(linh, 'nail-design', 'simple', 1, monday + 1, true, 21.0181, 105.829) s
+  from public.free_slots(linh, 'nail-extension', 'tips', 1, monday + 1, true, 21.0181, 105.829) s
   where s >= at_ - interval '30 minutes' and s < at_ + interval '1 hour';
   assert n = 0, format('%s slots were offered inside a block', n);
 
@@ -1396,23 +1396,23 @@ begin
   assert n = 1, 'the freelancer cannot read their own time block';
   perform public.remove_time_block(blk);
   perform set_config('request.jwt.claim.sub', customer::text, true);
-  msg := public.availability_problem(linh, 'nail-design', 'simple', 1, at_, true, 21.0181, 105.829);
+  msg := public.availability_problem(linh, 'nail-extension', 'tips', 1, at_, true, 21.0181, 105.829);
   assert msg is null, format('a removed block still blocks: %s', msg);
 
   ---------------------------------------------------------------------------
   raise notice 'free days are the days free_slots fills, never a Sunday or the past';
-  select count(*) into n from public.free_days(linh, 'nail-design', 'simple', 1, monday, 7, true, 21.0181, 105.829);
+  select count(*) into n from public.free_days(linh, 'nail-extension', 'tips', 1, monday, 7, true, 21.0181, 105.829);
   assert n between 1 and 6, format('free days in a week: %s', n);
   assert not exists (
-    select 1 from public.free_days(linh, 'nail-design', 'simple', 1, monday, 7, true, 21.0181, 105.829) f
+    select 1 from public.free_days(linh, 'nail-extension', 'tips', 1, monday, 7, true, 21.0181, 105.829) f
     where extract(dow from f) = 0
   ), 'a Sunday was listed as free';
-  select count(*) into n from public.free_days(linh, 'nail-design', 'simple', 1, current_date, 60, true, 21.0181, 105.829);
+  select count(*) into n from public.free_days(linh, 'nail-extension', 'tips', 1, current_date, 60, true, 21.0181, 105.829);
   assert n <= 21, format('%s days came back; the cap is 21', n);
-  select count(*) into n from public.free_days(linh, 'nail-design', 'simple', 1, current_date - 10, 5, true, 21.0181, 105.829);
+  select count(*) into n from public.free_days(linh, 'nail-extension', 'tips', 1, current_date - 10, 5, true, 21.0181, 105.829);
   assert n = 0, 'days in the past were listed';
-  select f into d from public.free_days(linh, 'nail-design', 'simple', 1, monday, 7, true, 21.0181, 105.829) f limit 1;
-  assert exists (select 1 from public.free_slots(linh, 'nail-design', 'simple', 1, d, true, 21.0181, 105.829)),
+  select f into d from public.free_days(linh, 'nail-extension', 'tips', 1, monday, 7, true, 21.0181, 105.829) f limit 1;
+  assert exists (select 1 from public.free_slots(linh, 'nail-extension', 'tips', 1, d, true, 21.0181, 105.829)),
     'a day listed as free has no slot';
 
   ---------------------------------------------------------------------------
@@ -1445,7 +1445,7 @@ begin
   ---------------------------------------------------------------------------
   raise notice 'a block stops messages both ways, and only the blocker sees it';
   perform set_config('request.jwt.claim.sub', customer::text, true);
-  blk := public.create_booking(linh, 'nail-design', 'simple',
+  blk := public.create_booking(linh, 'nail-extension', 'tips',
     ((monday + 3) + time '09:00') at time zone tz, true, addr, 1, '');
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.confirm_booking(blk);
@@ -1638,7 +1638,7 @@ begin
 
   ---------------------------------------------------------------------------
   raise notice 'a booking''s chat opens when the freelancer accepts';
-  b := public.create_booking(linh, 'nail-design', 'simple',
+  b := public.create_booking(linh, 'nail-extension', 'tips',
     ((monday + 5) + time '09:00') at time zone tz, true, friend_addr, 1, '');
   begin
     perform public.open_thread(linh, b);
@@ -1751,7 +1751,7 @@ begin
   ---------------------------------------------------------------------------
   raise notice 'a voucher: used before the start, credited to the freelancer at the end, returned if cancelled';
   select id into v from public.vouchers where account_id = friend and booking_id is null order by created_at limit 1;
-  b2 := public.create_booking(linh, 'nail-design', 'simple',
+  b2 := public.create_booking(linh, 'nail-extension', 'tips',
     ((monday + 5) + time '11:00') at time zone tz, true, friend_addr, 1, '');
   perform public.apply_voucher(b2, v);
   assert (select discount from public.bookings where id = b2) = 50000, 'the discount was not applied';
@@ -1763,7 +1763,7 @@ begin
   perform public.cancel_booking(b2, 'Bận việc');
   assert (select booking_id is null from public.vouchers where id = v), 'a cancelled booking kept the voucher';
 
-  b3 := public.create_booking(linh, 'nail-design', 'simple',
+  b3 := public.create_booking(linh, 'nail-extension', 'tips',
     ((monday + 5) + time '13:00') at time zone tz, true, friend_addr, 1, '');
   perform public.apply_voucher(b3, v);
   perform set_config('request.jwt.claim.sub', linh::text, true);
@@ -1779,7 +1779,7 @@ begin
   ---------------------------------------------------------------------------
   raise notice 'a job nobody closes completes itself a day after its end';
   perform set_config('request.jwt.claim.sub', friend::text, true);
-  b2 := public.create_booking(linh, 'nail-design', 'simple',
+  b2 := public.create_booking(linh, 'nail-extension', 'tips',
     ((monday + 5) + time '15:00') at time zone tz, true, friend_addr, 1, '');
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.confirm_booking(b2);
@@ -1797,7 +1797,7 @@ begin
 
   raise notice 'the freelancer did not come: the customer reports it, no commission';
   perform set_config('request.jwt.claim.sub', friend::text, true);
-  b3 := public.create_booking(linh, 'nail-design', 'simple',
+  b3 := public.create_booking(linh, 'nail-extension', 'tips',
     ((monday + 5) + time '17:00') at time zone tz, true, friend_addr, 1, '');
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.confirm_booking(b3);
@@ -1838,16 +1838,16 @@ begin
   raise notice 'a request goes to everyone who can do it; the first to take it gets it';
   perform set_config('request.jwt.claim.sub', friend::text, true);
   begin
-    perform public.post_job('nail-design', 'simple', ((monday + 5) + time '11:00') at time zone tz, true, friend_addr, 1, '', 'cash', 1000);
+    perform public.post_job('nail-extension', 'tips', ((monday + 5) + time '11:00') at time zone tz, true, friend_addr, 1, '', 'cash', 1000);
     assert false, 'a request below the catalogue price';
   exception when check_violation then null;
   end;
   begin
-    perform public.post_job('nail-design', 'simple', ((monday + 5) + time '11:00') at time zone tz, true, friend_addr, 1, '', 'cash', 300000);
+    perform public.post_job('nail-extension', 'tips', ((monday + 5) + time '11:00') at time zone tz, true, friend_addr, 1, '', 'cash', 300000);
     assert false, 'a request between two price levels';
   exception when check_violation then null;
   end;
-  v := public.post_job('nail-design', 'simple', ((monday + 5) + time '11:00') at time zone tz, true, friend_addr, 1, 'Làm móng đi tiệc');
+  v := public.post_job('nail-extension', 'tips', ((monday + 5) + time '11:00') at time zone tz, true, friend_addr, 1, 'Làm móng đi tiệc');
   assert (select price = suggested_price from public.jobs j join public.service_variants sv
           on sv.template_id = j.template_id and sv.id = j.variant_id where j.id = v), 'the request is not at the catalogue price';
   assert exists (select 1 from public.notifications where account_id = linh and kind = 'job_new'), 'linh was not told about the request';
@@ -1900,14 +1900,14 @@ begin
   perform set_config('request.jwt.claim.sub', friend::text, true);
   -- A customer cannot book someone who owes; a booking made before, they cannot accept.
   begin
-    perform public.create_booking(linh, 'nail-design', 'simple', ((monday + 5) + time '13:00') at time zone tz, true, friend_addr, 1, '');
+    perform public.create_booking(linh, 'nail-extension', 'tips', ((monday + 5) + time '13:00') at time zone tz, true, friend_addr, 1, '');
     assert false, 'a freelancer who owes the fee was booked';
   exception when check_violation then null;
   end;
   perform set_config('request.jwt.claim.sub', '', true);
   update public.wallet_entries set amount = 0 where pro_id = linh and note = 'Kiểm tra phí';
   perform set_config('request.jwt.claim.sub', friend::text, true);
-  b3 := public.create_booking(linh, 'nail-design', 'simple', ((monday + 5) + time '13:00') at time zone tz, true, friend_addr, 1, '');
+  b3 := public.create_booking(linh, 'nail-extension', 'tips', ((monday + 5) + time '13:00') at time zone tz, true, friend_addr, 1, '');
   perform set_config('request.jwt.claim.sub', '', true);
   update public.wallet_entries set amount = -10000000 where pro_id = linh and note = 'Kiểm tra phí';
   perform set_config('request.jwt.claim.sub', linh::text, true);
@@ -2375,7 +2375,7 @@ begin
   perform set_config('request.jwt.claim.sub', customer::text, true);
   perform public.block_user(linh);
   begin
-    perform public.create_booking(linh, 'nail-design', 'simple', ((monday + 1) + time '14:00') at time zone tz, true, addr, 1, '', 'cash');
+    perform public.create_booking(linh, 'nail-extension', 'tips', ((monday + 1) + time '14:00') at time zone tz, true, addr, 1, '', 'cash');
     assert false, 'a blocked pair could book';
   exception when check_violation then
     get stacked diagnostics msg = message_text;
@@ -2385,13 +2385,13 @@ begin
 
   raise notice 'a request cannot ask for online payment';
   begin
-    perform public.post_job('nail-design', 'simple', ((monday + 1) + time '15:00') at time zone tz, true, addr, 1, '', 'online');
+    perform public.post_job('nail-extension', 'tips', ((monday + 1) + time '15:00') at time zone tz, true, addr, 1, '', 'online');
     assert false, 'an online request was posted';
   exception when feature_not_supported then null;
   end;
 
   raise notice '"Bắt đầu" opens 15 minutes before the start';
-  b := public.create_booking(linh, 'nail-design', 'simple', ((monday + 1) + time '16:00') at time zone tz, true, addr, 1, '', 'cash');
+  b := public.create_booking(linh, 'nail-extension', 'tips', ((monday + 1) + time '16:00') at time zone tz, true, addr, 1, '', 'cash');
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.confirm_booking(b);
   perform set_config('request.jwt.claim.sub', '', true);
@@ -2421,7 +2421,7 @@ begin
 
   raise notice 'a request nobody took tells the customer';
   perform set_config('request.jwt.claim.sub', customer::text, true);
-  j := public.post_job('nail-design', 'simple', ((monday + 2) + time '15:00') at time zone tz, true, addr, 1, '', 'cash');
+  j := public.post_job('nail-extension', 'tips', ((monday + 2) + time '15:00') at time zone tz, true, addr, 1, '', 'cash');
   perform set_config('request.jwt.claim.sub', '', true);
   update public.jobs set starts_at = now() - interval '1 minute' where id = j;
   perform public.expire_stale_jobs();
@@ -2466,7 +2466,7 @@ begin
   select fresh, a.city, a.district, a.detail, a.lat, a.lng from public.addresses a where a.id = addr
   returning id into fresh_addr;
   perform set_config('request.jwt.claim.sub', fresh::text, true);
-  pending := public.create_booking(linh, 'nail-design', 'simple', ((monday + 10) + time '15:00') at time zone tz, true, fresh_addr, 1, '', 'cash');
+  pending := public.create_booking(linh, 'nail-extension', 'tips', ((monday + 10) + time '15:00') at time zone tz, true, fresh_addr, 1, '', 'cash');
   assert (select customer_name from public.bookings where id = pending) = 'Khách Mới Tools', 'the name was not kept on the booking';
   perform set_config('request.jwt.claim.sub', linh::text, true);
   set local role authenticated;
@@ -2497,7 +2497,7 @@ begin
 
   raise notice 'add a service during the appointment, right after it, no travel or urgent fee';
   perform set_config('request.jwt.claim.sub', fresh::text, true);
-  extra := public.add_on_booking(pending, 'nail-design', 'simple', 1, 'Làm thêm');
+  extra := public.add_on_booking(pending, 'nail-extension', 'tips', 1, 'Làm thêm');
   assert (select status = 'pending' and travel_fee = 0 and urgent_fee = 0 and parent_booking_id = pending
             and starts_at >= (select ends_at from public.bookings where id = pending)
           from public.bookings where id = extra), 'the add-on is not what was promised';
@@ -2507,7 +2507,7 @@ begin
 
   raise notice 'a freelancer reported as not coming can dispute it once, within 24 hours';
   perform set_config('request.jwt.claim.sub', customer::text, true);
-  b := public.create_booking(linh, 'nail-design', 'simple', ((monday + 11) + time '15:00') at time zone tz, true, addr, 1, '', 'cash');
+  b := public.create_booking(linh, 'nail-extension', 'tips', ((monday + 11) + time '15:00') at time zone tz, true, addr, 1, '', 'cash');
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.confirm_booking(b);
   perform set_config('request.jwt.claim.sub', '', true);
@@ -2606,7 +2606,7 @@ begin
 
   raise notice 'add-ons come with the main booking: accepted together, gone together';
   perform set_config('request.jwt.claim.sub', customer::text, true);
-  b := public.create_booking(linh, 'nail-design', 'simple', ((monday + 12) + time '10:00') at time zone tz, true, addr, 1, '', 'cash');
+  b := public.create_booking(linh, 'nail-extension', 'tips', ((monday + 12) + time '10:00') at time zone tz, true, addr, 1, '', 'cash');
   ids := public.attach_addons(b, '[{"template":"nail-removal","variant":"remove"}]'::jsonb);
   assert cardinality(ids) = 1, 'no add-on';
   assert (select travel_fee = 0 and urgent_fee = 0 and parent_booking_id = b and starts_at = (select ends_at from public.bookings where id = b)

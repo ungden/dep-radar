@@ -37,24 +37,35 @@ export const isVertical = (value: unknown): value is VerticalId => VERTICALS.som
 const k = (n: number) => n * 1000
 
 /**
- * Variant helper. `tiers` are exactly three prices (thousand VND, ascending) a
- * partner chooses between; the band and the "Tiêu chuẩn" price follow from them.
+ * Variant helper. `tiers` are three prices (thousand VND, ascending) a partner
+ * chooses between, or one price everyone charges; the band and the middle
+ * price follow from them.
  */
-const v = (id: string, label: string, durationMin: number, tiers: [number, number, number]): ServiceVariant => ({
+const v = (id: string, label: string, durationMin: number, tiers: [number] | [number, number, number]): ServiceVariant => ({
   id,
   label,
   durationMin,
-  tiers: tiers.map(k) as [number, number, number],
+  tiers: tiers.map(k) as ServiceVariant["tiers"],
   minPrice: k(tiers[0]),
-  maxPrice: k(tiers[tiers.length - 1]),
-  suggestedPrice: k(tiers[1]),
+  maxPrice: k(tiers[tiers.length - 1]!),
+  suggestedPrice: k(tiers[tiers.length === 3 ? 1 : 0]!),
 })
 
 /** A per-head option: price and duration are multiplied by the head count. */
-const group = (variant: ServiceVariant, maxQuantity: number): ServiceVariant => ({
+const group = (variant: ServiceVariant, maxQuantity: number, minQuantity = 1): ServiceVariant => ({
   ...variant,
   perPerson: true,
   durationRule: "per_person",
+  maxQuantity,
+  ...(minQuantity > 1 ? { minQuantity } : {}),
+})
+
+/** Priced per finger or per stone: the price is multiplied, the time is one block. */
+const perUnit = (variant: ServiceVariant, unit: string, maxQuantity: number): ServiceVariant => ({
+  ...variant,
+  perPerson: true,
+  unit,
+  durationRule: "fixed",
   maxQuantity,
 })
 
@@ -68,41 +79,36 @@ const byDuration = (bands: [number, [number, number, number]][]) => bands.map(([
  */
 export const CATALOG: ServiceTemplate[] = [
   // Nail -----------------------------------------------------------------
+  // Nail and makeup prices: the owner's market price list (21/10/2026), three
+  // levels Cơ bản / Chuyên nghiệp / Master. Nail art is priced per finger and
+  // booked on top of a base service (NAIL_AND_MAKEUP_ADDONS below).
   {
     id: "nail-gel",
     category: "nail",
     name: "Sơn gel trơn",
-    description: "Làm sạch, tạo form và sơn gel một màu.",
+    description: "Cắt da, tạo form và sơn gel một màu.",
     includes: ["Cắt da, tạo form móng", "Sơn gel 1 màu", "Dưỡng viền móng"],
-    variants: [v("hand", "Tay", 45, [120, 160, 220]), v("cat-eye", "Tay · mắt mèo / tráng gương", 50, [140, 180, 240]), v("hand-foot", "Tay + chân", 90, [220, 300, 400])],
-  },
-  {
-    id: "nail-design",
-    category: "nail",
-    name: "Nail thiết kế",
-    description: "Sơn gel kèm thiết kế theo mẫu khách chọn.",
-    includes: ["Cắt da, tạo form móng", "Sơn gel nền", "Thiết kế theo mẫu"],
-    variants: [
-      v("simple", "Ombre / French", 75, [200, 260, 350]),
-      v("stone", "Đính đá / charm", 90, [250, 330, 450]),
-      v("art", "Vẽ nghệ thuật", 120, [350, 480, 650]),
-    ],
+    variants: [v("hand", "Tay", 45, [85, 100, 120]), v("hand-foot", "Tay + chân", 90, [170, 200, 240])],
   },
   {
     id: "nail-extension",
     category: "nail",
-    name: "Nối móng",
-    description: "Nối dài móng bằng móng úp hoặc đắp gel.",
-    includes: ["Tạo form móng thật", "Nối móng", "Sơn gel 1 màu"],
-    variants: [v("tips", "Úp móng", 90, [220, 280, 360]), v("builder", "Đắp gel", 120, [300, 380, 500]), v("gelx", "Móng úp mềm Gel-X", 100, [350, 450, 600])],
+    name: "Up móng / nối móng",
+    description: "Up móng giả bằng keo hoặc gel, hoặc đắp dual form gel gôm, kèm sơn gel một màu.",
+    includes: ["Tạo form móng thật", "Up hoặc đắp móng", "Sơn gel 1 màu"],
+    variants: [
+      v("tips", "Up móng bằng keo + sơn trơn 1 màu", 75, [140, 150, 160]),
+      v("gelx", "Up móng gel + sơn trơn 1 màu", 90, [165, 180, 210]),
+      v("builder", "Dual form + gel gôm", 120, [220, 250, 280]),
+    ],
   },
   {
     id: "nail-removal",
     category: "nail",
-    name: "Tháo gel & dưỡng móng",
-    description: "Tháo gel/bột an toàn, không làm mỏng móng.",
-    includes: ["Tháo gel bằng dung dịch chuyên dụng", "Dũa lại form", "Dưỡng móng"],
-    variants: [v("remove", "Tháo gel", 20, [50, 80, 100]), v("remove-care", "Tháo + dưỡng", 45, [100, 150, 200])],
+    name: "Phá gel & dưỡng móng",
+    description: "Phá gel/bột an toàn, không làm mỏng móng.",
+    includes: ["Phá gel bằng dung dịch chuyên dụng", "Dũa lại form", "Dưỡng móng"],
+    variants: [v("remove", "Phá gel", 20, [50]), v("remove-care", "Phá gel + dưỡng", 45, [100, 150, 200])],
   },
   {
     id: "nail-pedicure",
@@ -129,54 +135,74 @@ export const CATALOG: ServiceTemplate[] = [
     variants: [v("refill", "Dặm móng", 75, [150, 200, 260])],
   },
   // Makeup -----------------------------------------------------------------
+  // Most artists include a simple hairdo; an elaborate one is +150k (except
+  // brides, whose price already covers it): makeup-hair-updo below.
   {
     id: "makeup-daily",
     category: "makeup",
     name: "Makeup nhẹ / đi làm",
     description: "Lớp nền mỏng, tự nhiên, phù hợp đi làm, đi học, hẹn hò.",
-    includes: ["Làm sạch & dưỡng nền", "Makeup tự nhiên", "Mỹ phẩm của chuyên viên"],
-    variants: [v("single", "1 người", 45, [200, 280, 350])],
+    includes: ["Makeup tự nhiên", "Làm tóc đơn giản", "Mỹ phẩm của chuyên viên"],
+    variants: [v("single", "1 người", 45, [250, 300, 400])],
   },
   {
     id: "makeup-party",
     category: "makeup",
     name: "Makeup dự tiệc",
-    description: "Makeup bền màu cho tiệc, sự kiện, kèm mi giả.",
-    includes: ["Makeup bền 8 tiếng", "Mi giả", "Tư vấn layout theo trang phục"],
-    variants: [v("makeup", "Makeup", 60, [300, 400, 550]), v("makeup-hair", "Makeup + làm tóc", 90, [400, 550, 750])],
+    description: "Makeup bền màu cho tiệc, kèm làm tóc đơn giản và mi giả.",
+    includes: ["Makeup bền 8 tiếng", "Làm tóc đơn giản", "Mi giả"],
+    variants: [v("makeup", "1 người", 60, [300, 350, 450])],
   },
   {
     id: "makeup-photo",
     category: "makeup",
-    name: "Makeup chụp ảnh / kỷ yếu",
-    description: "Layout lên hình theo concept, ánh sáng.",
-    includes: ["Layout theo concept", "Mi giả", "Dặm lại 1 lần trong buổi chụp (nếu ở lại)"],
-    variants: [v("single", "1 người", 60, [350, 450, 650]), group(v("group", "Nhóm (giá mỗi người)", 45, [200, 250, 300]), 8)],
+    name: "Makeup kỷ yếu / chụp ảnh",
+    description: "Layout lên hình theo concept. Đi theo nhóm được giảm: 2 người 10%, 3 người 15%, từ 5 người 20%.",
+    includes: ["Layout theo concept", "Làm tóc đơn giản", "Mi giả"],
+    variants: [
+      v("single", "1 người", 60, [250, 300, 400]),
+      group(v("group2", "Nhóm 2 người, giảm 10% (giá mỗi người)", 45, [225, 270, 360]), 2, 2),
+      group(v("group3", "Nhóm 3–4 người, giảm 15% (giá mỗi người)", 45, [210, 255, 340]), 4, 3),
+      group(v("group5", "Nhóm từ 5 người, giảm 20% (giá mỗi người)", 45, [200, 240, 320]), 10, 5),
+    ],
   },
   {
     id: "makeup-bridal",
     category: "makeup",
     name: "Makeup cô dâu",
-    description: "Makeup và làm tóc cô dâu, tư vấn layout trước ngày cưới.",
-    includes: ["Tư vấn layout trước ngày cưới", "Makeup + làm tóc cô dâu", "Mi giả, phụ kiện tóc cơ bản"],
-    variants: [v("one", "1 lễ (ăn hỏi hoặc cưới)", 120, [1200, 1800, 2800]), { ...v("two", "Trọn gói 2 lễ (2 buổi × 120 phút)", 120, [2200, 3200, 4800]), sessions: 2 },
-      v("fullday", "Theo cô dâu cả ngày (dặm, đổi layout)", 600, [3000, 4500, 6500]),],
+    description: "Makeup và làm tóc cô dâu cho từng lễ. Nên test makeup trước để xem layout đã chọn có hợp không.",
+    includes: ["Makeup + làm tóc cô dâu", "Mi giả, phụ kiện tóc cơ bản", "Tư vấn layout theo váy, áo dài"],
+    variants: [
+      v("trial", "Test makeup trước ngày cưới", 90, [800]),
+      v("engagement", "Dạm ngõ / đám hỏi", 120, [1200, 1500, 1800]),
+      v("wedding", "Gia tiên / tiệc cưới", 120, [1500, 1800, 2000]),
+      // Both ceremonies with one artist: the two prices above added up, level by level.
+      { ...v("two", "Trọn gói 2 lễ: đám hỏi + tiệc cưới (2 buổi)", 120, [2700, 3300, 3800]), sessions: 2 },
+    ],
+  },
+  {
+    id: "makeup-takecare",
+    category: "makeup",
+    name: "Take care cô dâu (theo dâu)",
+    description: "Đi theo cô dâu sau khi đã makeup xong, lo phần phụ: dặm lại phấn, cầm đồ, hỗ trợ tạo dáng. Chính thợ makeup theo dâu cũng tính giá này.",
+    includes: ["Dặm lại phấn, son, chỉnh tóc", "Cầm đồ, chỉnh váy giúp cô dâu", "Hỗ trợ tạo dáng khi chụp"],
+    variants: [v("takecare", "Theo dâu 1 buổi", 240, [500])],
   },
   {
     id: "makeup-family",
     category: "makeup",
-    name: "Makeup mẹ cô dâu / người nhà / phụ dâu",
+    name: "Makeup mẹ cô dâu / họ hàng / phụ dâu",
     description: "Makeup và làm tóc cho người nhà trong ngày cưới.",
     includes: ["Makeup bền", "Làm tóc đơn giản", "Mi giả"],
-    variants: [v("mother", "Mẹ cô dâu / chú rể", 75, [400, 550, 700]), group(v("family", "Người nhà / phụ dâu (giá mỗi người)", 60, [250, 350, 450]), 8)],
+    variants: [v("mother", "Mẹ cô dâu / chú rể", 75, [400, 450, 500]), group(v("family", "Họ hàng / phụ dâu (giá mỗi người)", 60, [350, 400, 500]), 8)],
   },
   {
     id: "makeup-event",
     category: "makeup",
     name: "Makeup sự kiện / MC / biểu diễn",
     description: "Layout lên đèn sân khấu, lên hình livestream.",
-    includes: ["Makeup lên đèn, lên hình", "Làm tóc", "Mi giả"],
-    variants: [v("event", "Sự kiện", 90, [500, 700, 1000])],
+    includes: ["Makeup lên đèn, lên hình", "Làm tóc đơn giản", "Mi giả"],
+    variants: [v("event", "Sự kiện", 90, [500, 650, 800])],
   },
   {
     id: "makeup-prewedding",
@@ -184,7 +210,7 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Makeup chụp ảnh cưới",
     description: "Makeup cô dâu cho buổi chụp ảnh cưới trong studio hoặc ngoại cảnh.",
     includes: ["Makeup + tóc cô dâu", "Đổi layout theo trang phục", "Mi giả"],
-    variants: [v("studio", "Chụp trong studio", 120, [700, 1000, 1500]), v("outdoor", "Ngoại cảnh, theo cả buổi", 300, [1000, 1500, 2200])],
+    variants: [v("studio", "Chụp trong studio", 120, [1000, 1200, 1500]), v("outdoor", "Ngoại cảnh, theo cả buổi", 300, [1200, 1500, 1800])],
   },
   // Skincare ---------------------------------------------------------------
   {
@@ -862,16 +888,56 @@ for (const template of CATALOG) {
   }
 }
 
-export const getTemplate = (id: string) => CATALOG.find((t) => t.id === id)
+/**
+ * Booked only on top of a main service of the same partner (attach_addons):
+ * never in the browse lists, never a "from" price, but listed on profiles.
+ */
+export const ADDONS: ServiceTemplate[] = [
+  {
+    id: "nail-design",
+    category: "nail",
+    name: "Nail thiết kế (tính theo ngón)",
+    description: "Mỗi ngón một kiểu nên tính theo ngón, đặt kèm sơn gel hoặc up móng.",
+    includes: ["Thiết kế theo mẫu khách chọn", "Làm trên nền gel đã đặt"],
+    addon: true,
+    variants: [
+      perUnit(v("design", "Thiết kế (vẽ, sticker, phối màu)", 30, [5, 10, 20]), "ngón", 10),
+      perUnit(v("cat-eye", "Mắt mèo / tráng gương", 15, [5, 7, 10]), "ngón", 10),
+      perUnit(v("ombre", "Ombre", 20, [7, 10, 15]), "ngón", 10),
+      perUnit(v("french", "French", 20, [10]), "ngón", 10),
+      perUnit(v("stone", "Đính đá", 20, [3, 10, 20]), "viên", 20),
+      perUnit(v("3d", "Vẽ nổi", 45, [10, 20, 30]), "ngón", 10),
+    ],
+  },
+  {
+    id: "makeup-hair-updo",
+    category: "makeup",
+    name: "Làm tóc cầu kỳ",
+    description: "Búi, tết, uốn tạo kiểu cầu kỳ thay cho tóc đơn giản đã gồm trong giá makeup. Makeup cô dâu đã gồm tóc, không tính thêm.",
+    includes: ["Búi, tết hoặc uốn tạo kiểu", "Keo, kẹp tóc"],
+    addon: true,
+    variants: [v("updo", "Tóc cầu kỳ", 30, [150])],
+  },
+]
+
+/** Everything a partner can list in a category: the catalogue and its add-ons. */
+export const partnerTemplatesByCategory = (category: CategoryId) =>
+  [...CATALOG, ...ADDONS].filter((t) => t.category === category)
+
+export const getTemplate = (id: string) => CATALOG.find((t) => t.id === id) ?? ADDONS.find((t) => t.id === id)
 export const getVariant = (templateId: string, variantId: string) =>
   getTemplate(templateId)?.variants.find((x) => x.id === variantId)
 export const templatesByCategory = (category: CategoryId) => CATALOG.filter((t) => t.category === category)
 export const templatesByVertical = (vertical: VerticalId) => CATALOG.filter((t) => verticalOf(t.category) === vertical)
 
 /** The names of a variant's price levels, lowest first. */
-export function tierLabels(_variant?: ServiceVariant): string[] {
-  return ["Cơ bản", "Chuyên nghiệp", "Master"]
+export function tierLabels(variant?: Pick<ServiceVariant, "tiers">): string[] {
+  return variant?.tiers.length === 1 ? ["Giá chung"] : ["Cơ bản", "Chuyên nghiệp", "Master"]
 }
+
+/** "/người", "/ngón", "/viên" after a per-head price; empty otherwise. */
+export const perUnitSuffix = (variant: Pick<ServiceVariant, "perPerson" | "unit">) =>
+  variant.perPerson ? `/${variant.unit ?? "người"}` : ""
 
 export const CATALOG_VERSION = 2
 export const PRICE_LEVEL_NOTE = "Mức giá do đối tác tự chọn cho từng gói; tay nghề được thể hiện qua tác phẩm và đánh giá khách."

@@ -54,7 +54,7 @@ function BookingFlow() {
   const largeText = fontScale >= 1.5
 
   const listings = React.useMemo(
-    () => (pro ? (app.data?.services ?? []).filter((s) => s.proId === pro.id && s.active && Object.keys(s.prices).length && getTemplate(s.templateId)) : []),
+    () => (pro ? (app.data?.services ?? []).filter((s) => s.proId === pro.id && s.active && Object.keys(s.prices).length && getTemplate(s.templateId) && !getTemplate(s.templateId)!.addon) : []),
     [app.data, pro],
   )
   const [step, setStep] = React.useState(1)

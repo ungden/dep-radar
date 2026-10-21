@@ -1,6 +1,6 @@
 # Bảng giá 360đẹp (10/2026)
 
-Mỗi gói có đúng 3 mức giá; đối tác tự chọn một mức cho từng gói. Mức giá không phải chứng nhận tay nghề. Giá đã gồm vật tư trong phạm vi gói; phí di chuyển và đặt gấp được xác nhận riêng. Đơn vị: nghìn đồng (k).
+Mỗi gói có 3 mức giá (vài gói một giá chung); đối tác tự chọn một mức cho từng gói. Dịch vụ “đặt kèm” chỉ được chọn thêm khi đặt một dịch vụ chính. Mức giá không phải chứng nhận tay nghề. Giá đã gồm vật tư trong phạm vi gói; phí di chuyển và đặt gấp được xác nhận riêng. Đơn vị: nghìn đồng (k).
 
 Sinh từ lib/catalog.ts. Đây là bảng giá nền tảng, chưa phải khảo sát thị trường đã kiểm chứng.
 
@@ -10,40 +10,46 @@ Sinh từ lib/catalog.ts. Đây là bảng giá nền tảng, chưa phải khả
 
 | Dịch vụ | Gói | Thời lượng mỗi buổi | Cơ bản | Chuyên nghiệp | Master | Đầu ra / điều kiện |
 | --- | --- | --- | --- | --- | --- | --- |
-| Sơn gel trơn | Tay | 45 phút | 120k | 160k | 220k | Cắt da, tạo form móng; Sơn gel 1 màu; Dưỡng viền móng |
-| Sơn gel trơn | Tay · mắt mèo / tráng gương | 50 phút | 140k | 180k | 240k | Cắt da, tạo form móng; Sơn gel 1 màu; Dưỡng viền móng |
-| Sơn gel trơn | Tay + chân | 90 phút | 220k | 300k | 400k | Cắt da, tạo form móng; Sơn gel 1 màu; Dưỡng viền móng |
-| Nail thiết kế | Ombre / French | 75 phút | 200k | 260k | 350k | Cắt da, tạo form móng; Sơn gel nền; Thiết kế theo mẫu |
-| Nail thiết kế | Đính đá / charm | 90 phút | 250k | 330k | 450k | Cắt da, tạo form móng; Sơn gel nền; Thiết kế theo mẫu |
-| Nail thiết kế | Vẽ nghệ thuật | 120 phút | 350k | 480k | 650k | Cắt da, tạo form móng; Sơn gel nền; Thiết kế theo mẫu |
-| Nối móng | Úp móng | 90 phút | 220k | 280k | 360k | Tạo form móng thật; Nối móng; Sơn gel 1 màu |
-| Nối móng | Đắp gel | 120 phút | 300k | 380k | 500k | Tạo form móng thật; Nối móng; Sơn gel 1 màu |
-| Nối móng | Móng úp mềm Gel-X | 100 phút | 350k | 450k | 600k | Tạo form móng thật; Nối móng; Sơn gel 1 màu |
-| Tháo gel & dưỡng móng | Tháo gel | 20 phút | 50k | 80k | 100k | Tháo gel bằng dung dịch chuyên dụng; Dũa lại form; Dưỡng móng |
-| Tháo gel & dưỡng móng | Tháo + dưỡng | 45 phút | 100k | 150k | 200k | Tháo gel bằng dung dịch chuyên dụng; Dũa lại form; Dưỡng móng |
+| Sơn gel trơn | Tay | 45 phút | 85k | 100k | 120k | Cắt da, tạo form móng; Sơn gel 1 màu; Dưỡng viền móng |
+| Sơn gel trơn | Tay + chân | 90 phút | 170k | 200k | 240k | Cắt da, tạo form móng; Sơn gel 1 màu; Dưỡng viền móng |
+| Up móng / nối móng | Up móng bằng keo + sơn trơn 1 màu | 75 phút | 140k | 150k | 160k | Tạo form móng thật; Up hoặc đắp móng; Sơn gel 1 màu |
+| Up móng / nối móng | Up móng gel + sơn trơn 1 màu | 90 phút | 165k | 180k | 210k | Tạo form móng thật; Up hoặc đắp móng; Sơn gel 1 màu |
+| Up móng / nối móng | Dual form + gel gôm | 120 phút | 220k | 250k | 280k | Tạo form móng thật; Up hoặc đắp móng; Sơn gel 1 màu |
+| Phá gel & dưỡng móng | Phá gel | 20 phút | giá chung 50k | — | — | Phá gel bằng dung dịch chuyên dụng; Dũa lại form; Dưỡng móng |
+| Phá gel & dưỡng móng | Phá gel + dưỡng | 45 phút | 100k | 150k | 200k | Phá gel bằng dung dịch chuyên dụng; Dũa lại form; Dưỡng móng |
 | Chăm sóc bàn chân (pedicure) | Cơ bản | 45 phút | 130k | 180k | 250k | Ngâm chân thảo mộc; Lấy da chết, cắt da; Dưỡng gót & massage chân |
 | Chăm sóc bàn chân (pedicure) | Có đắp mặt nạ chân | 75 phút | 220k | 280k | 350k | Ngâm chân thảo mộc; Lấy da chết, cắt da; Dưỡng gót & massage chân |
 | Cắt da, sửa form & sơn thường | Tay | 30 phút | 80k | 110k | 150k | Cắt da, sửa form móng; Sơn thường 1 màu; Dưỡng viền móng |
 | Cắt da, sửa form & sơn thường | Tay + chân | 60 phút | 150k | 200k | 260k | Cắt da, sửa form móng; Sơn thường 1 màu; Dưỡng viền móng |
 | Dặm móng nối | Dặm móng | 75 phút | 150k | 200k | 260k | Dũa, làm sạch phần móng mọc; Đắp bù gel; Sơn lại 1 màu |
+| Nail thiết kế (tính theo ngón) · đặt kèm | Thiết kế (vẽ, sticker, phối màu) | 30 phút | 5k/ngón | 10k/ngón | 20k/ngón | Thiết kế theo mẫu khách chọn; Làm trên nền gel đã đặt; 1–10 ngón |
+| Nail thiết kế (tính theo ngón) · đặt kèm | Mắt mèo / tráng gương | 15 phút | 5k/ngón | 7k/ngón | 10k/ngón | Thiết kế theo mẫu khách chọn; Làm trên nền gel đã đặt; 1–10 ngón |
+| Nail thiết kế (tính theo ngón) · đặt kèm | Ombre | 20 phút | 7k/ngón | 10k/ngón | 15k/ngón | Thiết kế theo mẫu khách chọn; Làm trên nền gel đã đặt; 1–10 ngón |
+| Nail thiết kế (tính theo ngón) · đặt kèm | French | 20 phút | giá chung 10k/ngón | — | — | Thiết kế theo mẫu khách chọn; Làm trên nền gel đã đặt; 1–10 ngón |
+| Nail thiết kế (tính theo ngón) · đặt kèm | Đính đá | 20 phút | 3k/viên | 10k/viên | 20k/viên | Thiết kế theo mẫu khách chọn; Làm trên nền gel đã đặt; 1–20 viên |
+| Nail thiết kế (tính theo ngón) · đặt kèm | Vẽ nổi | 45 phút | 10k/ngón | 20k/ngón | 30k/ngón | Thiết kế theo mẫu khách chọn; Làm trên nền gel đã đặt; 1–10 ngón |
 
 ### Makeup
 
 | Dịch vụ | Gói | Thời lượng mỗi buổi | Cơ bản | Chuyên nghiệp | Master | Đầu ra / điều kiện |
 | --- | --- | --- | --- | --- | --- | --- |
-| Makeup nhẹ / đi làm | 1 người | 45 phút | 200k | 280k | 350k | Làm sạch & dưỡng nền; Makeup tự nhiên; Mỹ phẩm của chuyên viên |
-| Makeup dự tiệc | Makeup | 60 phút | 300k | 400k | 550k | Makeup bền 8 tiếng; Mi giả; Tư vấn layout theo trang phục |
-| Makeup dự tiệc | Makeup + làm tóc | 90 phút | 400k | 550k | 750k | Makeup bền 8 tiếng; Mi giả; Tư vấn layout theo trang phục |
-| Makeup chụp ảnh / kỷ yếu | 1 người | 60 phút | 350k | 450k | 650k | Layout theo concept; Mi giả; Dặm lại 1 lần trong buổi chụp (nếu ở lại) |
-| Makeup chụp ảnh / kỷ yếu | Nhóm (giá mỗi người) | 45 phút / người | 200k | 250k | 300k | Layout theo concept; Mi giả; Dặm lại 1 lần trong buổi chụp (nếu ở lại); 1–8 người |
-| Makeup cô dâu | 1 lễ (ăn hỏi hoặc cưới) | 120 phút | 1200k | 1800k | 2800k | Tư vấn layout trước ngày cưới; Makeup + làm tóc cô dâu; Mi giả, phụ kiện tóc cơ bản |
-| Makeup cô dâu | Trọn gói 2 lễ (2 buổi × 120 phút) | 120 phút × 2 buổi | 2200k | 3200k | 4800k | Tư vấn layout trước ngày cưới; Makeup + làm tóc cô dâu; Mi giả, phụ kiện tóc cơ bản |
-| Makeup cô dâu | Theo cô dâu cả ngày (dặm, đổi layout) | 600 phút | 3000k | 4500k | 6500k | Tư vấn layout trước ngày cưới; Makeup + làm tóc cô dâu; Mi giả, phụ kiện tóc cơ bản |
-| Makeup mẹ cô dâu / người nhà / phụ dâu | Mẹ cô dâu / chú rể | 75 phút | 400k | 550k | 700k | Makeup bền; Làm tóc đơn giản; Mi giả |
-| Makeup mẹ cô dâu / người nhà / phụ dâu | Người nhà / phụ dâu (giá mỗi người) | 60 phút / người | 250k | 350k | 450k | Makeup bền; Làm tóc đơn giản; Mi giả; 1–8 người |
-| Makeup sự kiện / MC / biểu diễn | Sự kiện | 90 phút | 500k | 700k | 1000k | Makeup lên đèn, lên hình; Làm tóc; Mi giả |
-| Makeup chụp ảnh cưới | Chụp trong studio | 120 phút | 700k | 1000k | 1500k | Makeup + tóc cô dâu; Đổi layout theo trang phục; Mi giả |
-| Makeup chụp ảnh cưới | Ngoại cảnh, theo cả buổi | 300 phút | 1000k | 1500k | 2200k | Makeup + tóc cô dâu; Đổi layout theo trang phục; Mi giả |
+| Makeup nhẹ / đi làm | 1 người | 45 phút | 250k | 300k | 400k | Makeup tự nhiên; Làm tóc đơn giản; Mỹ phẩm của chuyên viên |
+| Makeup dự tiệc | 1 người | 60 phút | 300k | 350k | 450k | Makeup bền 8 tiếng; Làm tóc đơn giản; Mi giả |
+| Makeup kỷ yếu / chụp ảnh | 1 người | 60 phút | 250k | 300k | 400k | Layout theo concept; Làm tóc đơn giản; Mi giả |
+| Makeup kỷ yếu / chụp ảnh | Nhóm 2 người, giảm 10% (giá mỗi người) | 45 phút / người | 225k/người | 270k/người | 360k/người | Layout theo concept; Làm tóc đơn giản; Mi giả; 2–2 người |
+| Makeup kỷ yếu / chụp ảnh | Nhóm 3–4 người, giảm 15% (giá mỗi người) | 45 phút / người | 210k/người | 255k/người | 340k/người | Layout theo concept; Làm tóc đơn giản; Mi giả; 3–4 người |
+| Makeup kỷ yếu / chụp ảnh | Nhóm từ 5 người, giảm 20% (giá mỗi người) | 45 phút / người | 200k/người | 240k/người | 320k/người | Layout theo concept; Làm tóc đơn giản; Mi giả; 5–10 người |
+| Makeup cô dâu | Test makeup trước ngày cưới | 90 phút | giá chung 800k | — | — | Makeup + làm tóc cô dâu; Mi giả, phụ kiện tóc cơ bản; Tư vấn layout theo váy, áo dài |
+| Makeup cô dâu | Dạm ngõ / đám hỏi | 120 phút | 1200k | 1500k | 1800k | Makeup + làm tóc cô dâu; Mi giả, phụ kiện tóc cơ bản; Tư vấn layout theo váy, áo dài |
+| Makeup cô dâu | Gia tiên / tiệc cưới | 120 phút | 1500k | 1800k | 2000k | Makeup + làm tóc cô dâu; Mi giả, phụ kiện tóc cơ bản; Tư vấn layout theo váy, áo dài |
+| Makeup cô dâu | Trọn gói 2 lễ: đám hỏi + tiệc cưới (2 buổi) | 120 phút × 2 buổi | 2700k | 3300k | 3800k | Makeup + làm tóc cô dâu; Mi giả, phụ kiện tóc cơ bản; Tư vấn layout theo váy, áo dài |
+| Take care cô dâu (theo dâu) | Theo dâu 1 buổi | 240 phút | giá chung 500k | — | — | Dặm lại phấn, son, chỉnh tóc; Cầm đồ, chỉnh váy giúp cô dâu; Hỗ trợ tạo dáng khi chụp |
+| Makeup mẹ cô dâu / họ hàng / phụ dâu | Mẹ cô dâu / chú rể | 75 phút | 400k | 450k | 500k | Makeup bền; Làm tóc đơn giản; Mi giả |
+| Makeup mẹ cô dâu / họ hàng / phụ dâu | Họ hàng / phụ dâu (giá mỗi người) | 60 phút / người | 350k/người | 400k/người | 500k/người | Makeup bền; Làm tóc đơn giản; Mi giả; 1–8 người |
+| Makeup sự kiện / MC / biểu diễn | Sự kiện | 90 phút | 500k | 650k | 800k | Makeup lên đèn, lên hình; Làm tóc đơn giản; Mi giả |
+| Makeup chụp ảnh cưới | Chụp trong studio | 120 phút | 1000k | 1200k | 1500k | Makeup + tóc cô dâu; Đổi layout theo trang phục; Mi giả |
+| Makeup chụp ảnh cưới | Ngoại cảnh, theo cả buổi | 300 phút | 1200k | 1500k | 1800k | Makeup + tóc cô dâu; Đổi layout theo trang phục; Mi giả |
+| Làm tóc cầu kỳ · đặt kèm | Tóc cầu kỳ | 30 phút | giá chung 150k | — | — | Búi, tết hoặc uốn tạo kiểu; Keo, kẹp tóc |
 
 ### Chăm sóc da
 
@@ -159,7 +165,7 @@ Sinh từ lib/catalog.ts. Đây là bảng giá nền tảng, chưa phải khả
 | Chụp ảnh gia đình | 60 phút | 60 phút | 700k | 1000k | 1500k | Ảnh gốc chọn lọc + 15 ảnh chỉnh; 1 lần sửa; giao trong 5 ngày |
 | Chụp ảnh gia đình | 2 giờ | 120 phút | 1200k | 1700k | 2500k | Ảnh gốc chọn lọc + 30 ảnh chỉnh; 1 lần sửa; giao trong 5 ngày |
 | Chụp cặp đôi / kỷ niệm | 2 giờ · 25 ảnh chỉnh | 120 phút | 1000k | 1500k | 2300k | Ảnh gốc chọn lọc + 25 ảnh chỉnh; 1 lần sửa; giao trong 5 ngày |
-| Kỷ yếu nhóm bạn / lớp nhỏ | Buổi 3 giờ (giá mỗi người) | 180 phút / nhóm | 150k | 250k | 400k | 20 ảnh nhóm + 3 ảnh chỉnh mỗi người; 1 lần sửa; giao trong 7 ngày; 5–15 người |
+| Kỷ yếu nhóm bạn / lớp nhỏ | Buổi 3 giờ (giá mỗi người) | 180 phút / nhóm | 150k/người | 250k/người | 400k/người | 20 ảnh nhóm + 3 ảnh chỉnh mỗi người; 1 lần sửa; giao trong 7 ngày; 5–15 người |
 
 ### Quay clip ngắn
 

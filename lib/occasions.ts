@@ -39,7 +39,7 @@ export const OCCASIONS: Occasion[] = [
     id: "phu-nu",
     title: "20/10 & 8/3",
     subtitle: "Làm nail, makeup đi tiệc, chụp vài tấm",
-    templates: ["nail-design", "makeup-party", "photo-phone"],
+    templates: ["nail-gel", "makeup-party", "photo-phone"],
     months: [3, 10],
   },
   {

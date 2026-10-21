@@ -17,22 +17,24 @@ export const isLevel = (value: unknown): value is Level => value === 0 || value 
 
 /**
  * Which of an option's levels a listed price is. Null for a price that is not
- * one of them (set before levels existed): better no label than a wrong one.
+ * one of them (set before levels existed), and for a single price everyone
+ * charges: better no label than a wrong one.
  */
 export function levelOfPrice(variant: Pick<ServiceVariant, "tiers">, price: number): Level | null {
+  if (variant.tiers.length !== 3) return null
   const i = variant.tiers.indexOf(price)
   return isLevel(i) ? i : null
 }
 
 type Listing = Pick<ProService, "proId" | "templateId" | "prices" | "active">
 
-/** Every price a person lists in a category, with its catalogue option. */
+/** Every price a person lists in a category, with its catalogue option. Add-ons (per finger…) are not packages. */
 function packagesIn(listings: readonly Listing[], proId: string, category: CategoryId) {
   const out: { variant: ServiceVariant; price: number }[] = []
   for (const l of listings) {
     if (l.proId !== proId || !l.active) continue
     const tpl = getTemplate(l.templateId)
-    if (!tpl || tpl.category !== category) continue
+    if (!tpl || tpl.addon || tpl.category !== category) continue
     for (const [variantId, price] of Object.entries(l.prices)) {
       const variant = tpl.variants.find((v) => v.id === variantId)
       if (variant) out.push({ variant, price })

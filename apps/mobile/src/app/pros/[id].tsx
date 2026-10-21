@@ -2,7 +2,7 @@ import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import { ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { categoryLabel, getTemplate, showsAverage, verticalOf, type Pro, tierLabels } from "@/shared"
+import { categoryLabel, getTemplate, perUnitSuffix, showsAverage, verticalOf, type Pro, tierLabels } from "@/shared"
 import { formatDuration, formatKm, formatPrice, formatRating, formatResponseTime } from "@/data/format"
 import { loadProExtras } from "@/data/public"
 import { FollowButton } from "@/components/follow-button"
@@ -216,10 +216,16 @@ export default function ProProfile() {
                         </Txt>
                         <Txt w={700} tabular>
                           {formatPrice(s.prices[v.id])}
+                          {perUnitSuffix(v)}
                         </Txt>
                       </View>
                     ))}
-                  {!isMe && pro.acceptingJobs ? (
+                  {t.addon ? (
+                    // The app has no add-on step yet; the web booking page has one.
+                    <Txt v="meta" color={colors.muted} style={{ paddingTop: 6 }}>
+                      Chọn thêm khi đặt dịch vụ chính trên 360dep.vn
+                    </Txt>
+                  ) : !isMe && pro.acceptingJobs ? (
                     <Button
                       label="Đặt dịch vụ này"
                       size="sm"

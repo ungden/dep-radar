@@ -257,7 +257,7 @@ export function fromPrice(services: ProService[], proId: string, templateId?: st
   let min: number | null = null
   for (const s of services) {
     if (s.proId !== proId || !s.active) continue
-    if (templateId && s.templateId !== templateId) continue
+    if (templateId ? s.templateId !== templateId : getTemplate(s.templateId)?.addon) continue
     for (const price of Object.values(s.prices)) if (min === null || price < min) min = price
   }
   return min

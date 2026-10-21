@@ -5,8 +5,8 @@ import { DISTRICT_COORDS, MIN_ROAD_KM, cityOfPoint, distanceFromPointKm, isLatLn
 import { fromPriceIn, levelName, levelOfPrice, mainCategory, proLevelIn } from "@/lib/levels"
 import type { ProService } from "@/lib/types"
 
-// nail-gel/hand levels: 120k, 160k, 220k; nail-design/simple: see the catalogue.
-const tier = (templateId: string, variantId: string, level: 0 | 1 | 2) => getVariant(templateId, variantId)!.tiers[level]
+// nail-gel/hand levels: 85k, 100k, 120k; nail-extension/tips: see the catalogue.
+const tier = (templateId: string, variantId: string, level: 0 | 1 | 2) => getVariant(templateId, variantId)!.tiers[level]!
 
 const listing = (proId: string, templateId: string, prices: Record<string, number>, active = true): ProService => ({
   id: `${proId}:${templateId}`,
@@ -25,14 +25,14 @@ describe("price levels", () => {
   it("reads a listed price as its level, and a price off the levels as none", () => {
     const v = getVariant("nail-gel", "hand")!
     expect(levelOfPrice(v, v.tiers[0])).toBe(0)
-    expect(levelOfPrice(v, v.tiers[2])).toBe(2)
+    expect(levelOfPrice(v, v.tiers[2]!)).toBe(2)
     expect(levelOfPrice(v, v.tiers[0] + 5000)).toBeNull()
   })
 
   it("takes the level picked most often in the category", () => {
     const listings = [
       listing("a", "nail-gel", { hand: tier("nail-gel", "hand", 2), "hand-foot": tier("nail-gel", "hand-foot", 2) }),
-      listing("a", "nail-design", { simple: tier("nail-design", "simple", 0) }),
+      listing("a", "nail-extension", { tips: tier("nail-extension", "tips", 0) }),
       // Another category does not count towards Nail.
       listing("a", "makeup-daily", { single: tier("makeup-daily", "single", 0) }),
     ]
@@ -43,7 +43,7 @@ describe("price levels", () => {
   it("breaks a tie towards the higher level", () => {
     const listings = [
       listing("a", "nail-gel", { hand: tier("nail-gel", "hand", 0) }),
-      listing("a", "nail-design", { simple: tier("nail-design", "simple", 1) }),
+      listing("a", "nail-extension", { tips: tier("nail-extension", "tips", 1) }),
     ]
     expect(proLevelIn(listings, "a", "nail")).toBe(1)
   })
@@ -51,7 +51,7 @@ describe("price levels", () => {
   it("is null without packages there, and ignores other people, paused services and off-level prices", () => {
     const listings = [
       listing("a", "nail-gel", { hand: tier("nail-gel", "hand", 0) + 5000 }),
-      listing("a", "nail-design", { simple: tier("nail-design", "simple", 2) }, false),
+      listing("a", "nail-extension", { tips: tier("nail-extension", "tips", 2) }, false),
       listing("b", "nail-gel", { hand: tier("nail-gel", "hand", 2) }),
     ]
     expect(proLevelIn(listings, "a", "nail")).toBeNull()
@@ -67,6 +67,19 @@ describe("price levels", () => {
     expect(fromPriceIn(listings, "a", "nail")).toBe(160_000)
     expect(fromPriceIn(listings, "a", "makeup")).toBe(90_000)
     expect(fromPriceIn(listings, "a", "hair")).toBeNull()
+  })
+
+  it("leaves add-ons and single shared prices out of the level and the starting price", () => {
+    const listings = [
+      listing("a", "nail-gel", { hand: tier("nail-gel", "hand", 2) }),
+      // 5k a finger is not where this person's nail prices start.
+      listing("a", "nail-design", { design: tier("nail-design", "design", 0), ombre: tier("nail-design", "ombre", 0) }),
+      // Phá gel has one price for everyone: it says nothing about a level.
+      listing("a", "nail-removal", { remove: 50_000 }),
+    ]
+    expect(proLevelIn(listings, "a", "nail")).toBe(2)
+    expect(fromPriceIn(listings, "a", "nail")).toBe(50_000)
+    expect(levelOfPrice(getVariant("nail-removal", "remove")!, 50_000)).toBeNull()
   })
 
   it("finds the main category by listed packages, ties by the person's own order", () => {
