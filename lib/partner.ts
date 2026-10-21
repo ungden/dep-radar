@@ -11,7 +11,7 @@ export interface PartnerSetup {
     published: boolean; accepting_jobs: boolean; review_status: ReviewStatus;
     review_note: string | null; identity_status: string;
   } | null
-  services: { template_id: string; active: boolean; prices: Record<string, number> }[]
+  services: { template_id: string; active: boolean; prices: Record<string, number>; notes?: Record<string, string> }[]
   hours: { weekday: number; startMin: number; endMin: number }[]
   workCount: number
 }

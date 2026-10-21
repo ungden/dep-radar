@@ -395,8 +395,14 @@ export async function saveListing(input: {
   templateId: string
   prices: Record<string, number>
   active?: boolean
+  notes?: Record<string, string>
 }): Promise<ActionResult> {
-  return rpc<void>("save_pro_service", { p_template: input.templateId, p_prices: input.prices, p_active: input.active ?? true }, ["/studio/services", "/pros"])
+  // p_notes only when the editor sent them: a show/hide toggle keeps the saved notes.
+  return rpc<void>(
+    "save_pro_service",
+    { p_template: input.templateId, p_prices: input.prices, p_active: input.active ?? true, ...(input.notes ? { p_notes: input.notes } : {}) },
+    ["/studio/services", "/pros"],
+  )
 }
 
 export async function removeListing(templateId: string): Promise<ActionResult> {

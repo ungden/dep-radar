@@ -94,6 +94,8 @@ const REVIEW_COLUMNS_OLD = "booking_id, pro_id, author_name, service_label, rati
 // published_at (20260925100200): an author also reads their own blind review; it is not public yet.
 const REVIEW_COLUMNS = [`${REVIEW_COLUMNS_OLD}, published_at`, REVIEW_COLUMNS_OLD]
 const PRICE_COLUMNS = "pro_id, template_id, variant_id, price"
+/** With the partner's note on each package (since 22/10/2026); the plain columns are the fallback. */
+const PRICE_NOTE_COLUMNS = `${PRICE_COLUMNS}, note`
 const LISTING_COLUMNS = "pro_id, template_id, active"
 
 /** A PostgREST select builder, filtered further by forPros(). */
@@ -146,7 +148,7 @@ export async function loadPublic(ownId: string | null, city: string | null): Pro
   const [workRows, reviewRows, priceRows, listingRows, statRows] = await Promise.all([
     forPros("works", ids, (c) => supabase.from("works").select(c).order("sort_order"), [WORK_FULL, WORK_BASE]),
     forPros("reviews", ids, (c) => supabase.from("reviews").select(c).is("hidden_at", null).order("created_at", { ascending: false }), REVIEW_COLUMNS),
-    forPros("prices", ids, (c) => supabase.from("pro_service_prices").select(c), [PRICE_COLUMNS]),
+    forPros("prices", ids, (c) => supabase.from("pro_service_prices").select(c), [PRICE_NOTE_COLUMNS, PRICE_COLUMNS]),
     forPros("listings", ids, (c) => supabase.from("pro_services").select(c), [LISTING_COLUMNS]),
     loadStats(),
   ])
@@ -171,7 +173,7 @@ export async function loadOnePro(slugOrId: string): Promise<PublicData | null> {
   const [workRows, reviewRows, priceRows, listingRows] = await Promise.all([
     forPros("works", ids, (c) => supabase.from("works").select(c).order("sort_order"), [WORK_FULL, WORK_BASE]),
     forPros("reviews", ids, (c) => supabase.from("reviews").select(c).is("hidden_at", null).order("created_at", { ascending: false }), REVIEW_COLUMNS),
-    forPros("prices", ids, (c) => supabase.from("pro_service_prices").select(c), [PRICE_COLUMNS]),
+    forPros("prices", ids, (c) => supabase.from("pro_service_prices").select(c), [PRICE_NOTE_COLUMNS, PRICE_COLUMNS]),
     forPros("listings", ids, (c) => supabase.from("pro_services").select(c), [LISTING_COLUMNS]),
   ])
   return assemble([row], workRows, reviewRows, priceRows, listingRows, [])
@@ -233,6 +235,9 @@ function assemble(proRows: Row[], workRows: Row[], reviewRows: Row[], priceRows:
       active: Boolean(row.active),
       prices: Object.fromEntries(
         priceRows.filter((p) => p.pro_id === row.pro_id && p.template_id === row.template_id).map((p) => [p.variant_id, p.price]),
+      ),
+      notes: Object.fromEntries(
+        priceRows.filter((p) => p.pro_id === row.pro_id && p.template_id === row.template_id && p.note).map((p) => [p.variant_id, String(p.note)]),
       ),
     }
   })

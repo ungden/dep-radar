@@ -220,6 +220,17 @@ export default function ProProfile() {
                         </Txt>
                       </View>
                     ))}
+                  {/* The partner's own words on a package; without them the catalogue's description above stands. */}
+                  {t.variants
+                    .filter((v) => s.prices[v.id] != null && s.notes?.[v.id])
+                    .map((v) => (
+                      <View key={`note-${v.id}`} style={{ marginTop: 6, padding: 10, borderRadius: radius.sm, backgroundColor: colors.subtle, gap: 2 }}>
+                        <Txt v="meta" w={600} color={colors.inkSoft}>
+                          {pro.name} ghi rõ gói {v.label}
+                        </Txt>
+                        <Txt v="meta">{s.notes![v.id]}</Txt>
+                      </View>
+                    ))}
                   {t.addon ? (
                     // Chosen on the booking screen, on top of a main service.
                     <Txt v="meta" color={colors.muted} style={{ paddingTop: 6 }}>

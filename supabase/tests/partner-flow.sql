@@ -57,7 +57,26 @@ begin
   perform set_config('app.system_write','on',true);
   update public.pros set categories=array['nail','makeup','lash-brow']::public.category_id[],studio_address='Studio test' where id=pro;
   perform set_config('app.system_write','off',true);
+  perform public.save_pro_service('makeup-bridal','{"two":2300000,"engagement":1000000}',true,
+    '{"engagement":"  Mi giả cao cấp, dặm lại 1 lần trong lễ  ","two":""}');
+  assert (select note='Mi giả cao cấp, dặm lại 1 lần trong lễ' from public.pro_service_prices where pro_id=pro and template_id='makeup-bridal' and variant_id='engagement'), 'package note saved and trimmed';
+  assert (select note is null from public.pro_service_prices where pro_id=pro and template_id='makeup-bridal' and variant_id='two'), 'an empty package note means none';
+  -- An app without notes (p_notes left out) keeps the ones already saved.
   perform public.save_pro_service('makeup-bridal','{"two":2300000,"engagement":1000000}',true);
+  assert (select note is not null from public.pro_service_prices where pro_id=pro and template_id='makeup-bridal' and variant_id='engagement'), 'saving without notes keeps them';
+  begin
+    perform public.save_pro_service('makeup-bridal','{"engagement":1000000}',true,'{"engagement":"Gọi 0987 654 321 để tư vấn"}');
+    assert false, 'a phone number in a package note was accepted';
+  exception when check_violation then null; end;
+  begin
+    perform public.save_pro_service('makeup-bridal','{"engagement":1000000}',true,'{"engagement":"Xem mẫu tại fb.com/abc"}');
+    assert false, 'a link in a package note was accepted';
+  exception when check_violation then null; end;
+  begin
+    perform public.save_pro_service('makeup-bridal','{"engagement":1000000}',true,jsonb_build_object('engagement',repeat('a',301)));
+    assert false, 'a package note over 300 characters was accepted';
+  exception when check_violation then null; end;
+  assert (select partner_private.partner_setup()->'services' @> '[{"template_id":"makeup-bridal","notes":{"engagement":"Mi giả cao cấp, dặm lại 1 lần trong lễ"}}]'), 'partner setup carries the notes';
   perform public.save_pro_service('brow-tattoo','{"powder":1300000}',true);
   perform set_config('request.jwt.claim.sub',customer::text,true);
   q:=public.booking_quote(pro,'makeup-bridal','two',at+interval '7 days',false,null,1);
