@@ -52,14 +52,14 @@ function NewRequestForm() {
   const [variantId, setVariantId] = React.useState(start.variants[0].id)
   const [quantity, setQuantity] = React.useState(1)
   // One of the option's price levels, per person; null starts on "Tiêu chuẩn".
-  const [feeLimit, setFeeLimit] = React.useState(0)
+  const [feeLimit, setFeeLimit] = React.useState<number>(POLICY.nearTravelFee)
   const [tier, setTier] = React.useState<number | null>(null)
   const [description, setDescription] = React.useState("")
   const [refs, setRefs] = React.useState<RefUpload[]>([])
   const [date, setDate] = React.useState(addDays(todayISO(), 2))
   const [time, setTime] = React.useState("16:00")
   const [pickedAddress, setAddressId] = React.useState<string | null>(null)
-  const [atHomePref, setAtHome] = React.useState(true)
+  const atHomePref = true
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>("cash")
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
@@ -155,7 +155,7 @@ function NewRequestForm() {
       </fieldset>
 
       <p className="text-label text-muted">{PRICE_LEVEL_NOTE}</p>
-      <Field label="Phí di chuyển tối đa bạn đồng ý"><select className={inputClass} value={feeLimit} onChange={(e) => setFeeLimit(Number(e.target.value))}>{[0, 25000, 50000, 100000].map((n) => <option key={n} value={n}>{formatPrice(n)}</option>)}</select><p className="mt-2 text-body">Tổng tối đa: {formatPrice(maxTotal)} (đã tính phí đặt gấp nếu có). Chỉ người làm có cùng mức giá, đủ điều kiện và không vượt tổng này mới nhận được.</p></Field>
+      <Field label="Phí di chuyển tối đa bạn đồng ý"><select className={inputClass} value={feeLimit} onChange={(e) => setFeeLimit(Number(e.target.value))}>{[POLICY.nearTravelFee, POLICY.travelFeeCap].map((n) => <option key={n} value={n}>{formatPrice(n)}</option>)}</select><p className="mt-2 text-body">Tổng tối đa: {formatPrice(maxTotal)} (đã tính phí đặt gấp nếu có). Chỉ người làm có cùng mức giá, đủ điều kiện và không vượt tổng này mới nhận được.</p></Field>
       {(variant.sessions ?? 1) > 1 && <p role="alert" className="text-warning">Gói nhiều buổi: hãy đặt trực tiếp từ hồ sơ đối tác để chọn đủ lịch.</p>}
       <Field label="Dịch vụ">
         <select
@@ -290,33 +290,7 @@ function NewRequestForm() {
 
       <fieldset>
         <legend className="mb-2 text-meta font-medium text-ink-soft">Địa điểm</legend>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { v: true, l: "Làm tại nhà tôi" },
-            { v: false, l: "Tôi đến studio" },
-          ].map((o) => (
-            <button
-              key={o.l}
-              type="button"
-              disabled={o.v && tpl.studioOnly}
-              aria-pressed={atHome === o.v}
-              onClick={() => setAtHome(o.v)}
-              className={cn(
-                "h-11 rounded-xl border text-body disabled:opacity-40",
-                atHome === o.v ? "border-ink bg-subtle font-medium text-accent-dark" : "border-line bg-surface text-ink-soft",
-              )}
-            >
-              {o.l}
-            </button>
-          ))}
-        </div>
-        {tpl.studioOnly && <p className="mt-2 text-label text-warning">Dịch vụ này cần thiết bị tại studio.</p>}
-        {!atHome && (
-          <p className="mt-2 text-label text-warning">
-            Đăng yêu cầu hiện chỉ dành cho dịch vụ làm tại nhà. Với dịch vụ tại studio, hãy đặt lịch trực tiếp với
-            người làm.
-          </p>
-        )}
+        <p className="text-body">Freelancer đến nhà hoặc địa điểm bạn chọn.</p>
         {atHome && (
           <div className="mt-3">
             <AddressPicker
@@ -357,8 +331,8 @@ function NewRequestForm() {
 
       <p className="flex gap-2 text-label text-muted">
         <Info className="mt-0.5 size-3.5 shrink-0" />
-        Khách không mất phí đăng yêu cầu. Nếu nhà bạn cách người nhận việc xa hơn {POLICY.freeTravelKm} km hoặc giờ hẹn trong vòng{" "}
-        {POLICY.urgentWithinHours} giờ tới, lịch hẹn cộng thêm phí di chuyển / đặt gấp theo quy định, hiện rõ trong lịch hẹn.
+        Khách không mất phí đăng yêu cầu. Làm tại nhà có phí di chuyển theo khoảng cách; giờ hẹn trong vòng{" "}
+        {POLICY.urgentWithinHours} giờ tới có thêm phí đặt gấp. Các khoản phí hiện rõ trước khi xác nhận lịch.
       </p>
 
       {error && (

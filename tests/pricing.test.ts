@@ -5,22 +5,21 @@ import { addDays, formatResponseTime, localDate, localTime, toTimestamptz, today
 const NOW = new Date("2026-09-18T10:00:00+07:00") // 18/09/2026 10:00 in Vietnam
 
 describe("travelFeeFor", () => {
-  it("is free inside the free radius", () => {
-    expect(travelFeeFor(0)).toBe(0)
-    expect(travelFeeFor(POLICY.freeTravelKm)).toBe(0)
+  it("charges 50.000đ below 5 km, including the same area", () => {
+    expect(travelFeeFor(0)).toBe(50_000)
+    expect(travelFeeFor(2)).toBe(50_000)
+    expect(travelFeeFor(4.9)).toBe(50_000)
+    expect(travelFeeFor(4.999)).toBe(50_000)
   })
 
-  it("charges per km past the free radius, rounded up to 5.000đ", () => {
-    expect(travelFeeFor(6.1)).toBe(10_000) // 1.1 km × 5.000 = 5.500 → 10.000
-    expect(travelFeeFor(10.6)).toBe(30_000) // 5.6 km × 5.000 = 28.000 → 30.000
+  it("charges 100.000đ from exactly 5 km and caps longer trips", () => {
+    for (const km of [5, 6.1, 9, 10, 10.6, 500]) {
+      expect(travelFeeFor(km), `${km} km`).toBe(100_000)
+    }
   })
 
-  it("never exceeds the cap", () => {
-    expect(travelFeeFor(500)).toBe(POLICY.travelFeeCap)
-  })
-
-  it("treats an unknown distance as no fee", () => {
-    expect(travelFeeFor(null)).toBe(0)
+  it("does not invent a fee for unknown or invalid distances", () => {
+    for (const km of [null, -1, NaN, Infinity, -Infinity]) expect(travelFeeFor(km)).toBe(0)
   })
 })
 
@@ -42,12 +41,20 @@ describe("commission and payout", () => {
 describe("buildQuote", () => {
   it("adds travel and urgent fees to the customer total and to the payout", () => {
     const quote = buildQuote({ servicePrice: 300_000, atHome: true, distanceKm: 10.6, urgent: true })
-    expect(quote.travelFee).toBe(30_000)
+    expect(quote.travelFee).toBe(100_000)
     expect(quote.urgentFee).toBe(POLICY.urgentFee)
-    expect(quote.total).toBe(300_000 + 30_000 + POLICY.urgentFee)
+    expect(quote.total).toBe(300_000 + 100_000 + POLICY.urgentFee)
     // Fees belong to the freelancer: commission applies to the service price only.
     expect(quote.commission).toBe(commissionFor(300_000))
     expect(quote.payout).toBe(quote.total - quote.commission)
+  })
+
+  it("adds the near-distance fee without charging commission on it", () => {
+    const quote = buildQuote({ servicePrice: 300_000, atHome: true, distanceKm: 4.9, urgent: false })
+    expect(quote.total).toBe(350_000)
+    expect(quote.travelFee).toBe(50_000)
+    expect(quote.commission).toBe(45_000)
+    expect(quote.payout).toBe(305_000)
   })
 
   it("ignores travel distance for studio visits", () => {

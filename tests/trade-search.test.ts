@@ -13,7 +13,7 @@ describe("landing titles fit the trade", () => {
     expect(landingTitle(cat("model-photo"), "Hà Nội")).toBe("Thuê mẫu ảnh ở Hà Nội")
     for (const c of CATEGORIES.filter((c) => c.vertical !== "beauty")) {
       expect(landingTitle(c, "Đà Nẵng")).not.toContain("tại nhà")
-      expect(landingDescription(c, "Đà Nẵng", 5)).not.toContain("tại nhà")
+      expect(landingDescription(c, "Đà Nẵng")).not.toContain("tại nhà")
     }
   })
 })
@@ -28,7 +28,7 @@ describe("trade words", () => {
 
   it("describes where a service happens", () => {
     expect(placeLabel(getTemplate("photo-phone")!)).toBe("Tại địa điểm bạn chọn")
-    expect(placeLabel(getTemplate("hair-color")!)).toBe("Tại studio")
+    expect(placeLabel(getTemplate("hair-color")!)).toBe("Dịch vụ tại studio chưa mở")
     expect(placeLabel(getTemplate("nail-gel")!, { homeService: true })).toBe("Tại nhà bạn")
   })
 

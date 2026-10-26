@@ -12,8 +12,8 @@ export const POLICY = {
   confirmWithinHours: 2,
   /** Share of an online payment kept for the freelancer on late cancellation. */
   lateCancelRate: 0.3,
-  freeTravelKm: 5,
-  travelFeePerKm: 5000,
+  nearTravelKm: 5,
+  nearTravelFee: 50000,
   travelFeeCap: 100000,
   urgentWithinHours: 3,
   urgentFee: 50000,
@@ -21,8 +21,10 @@ export const POLICY = {
   freeCancelHours: 12,
 } as const
 
-const roundUp5k = (n: number) => Math.ceil(n / 5000) * 5000
 const round1k = (n: number) => Math.round(n / 1000) * 1000
+
+/** Shared copy for the fee bands; studio visits and unknown distances are handled separately. */
+export const TRAVEL_FEE_SUMMARY = `dưới ${POLICY.nearTravelKm} km: ${POLICY.nearTravelFee.toLocaleString("vi-VN")}đ; từ ${POLICY.nearTravelKm} km: ${POLICY.travelFeeCap.toLocaleString("vi-VN")}đ (tối đa)`
 
 /** Commission and payout come from one formula so every screen shows the same number. */
 export function commissionFor(servicePrice: number, rate: number = POLICY.commissionRate) {
@@ -34,10 +36,8 @@ export function payoutFor(servicePrice: number, rate: number = POLICY.commission
 }
 
 export function travelFeeFor(distanceKm: number | null) {
-  if (distanceKm === null) return 0
-  const extraKm = distanceKm - POLICY.freeTravelKm
-  if (extraKm <= 0) return 0
-  return Math.min(POLICY.travelFeeCap, roundUp5k(extraKm * POLICY.travelFeePerKm))
+  if (distanceKm === null || !Number.isFinite(distanceKm) || distanceKm < 0) return 0
+  return distanceKm < POLICY.nearTravelKm ? POLICY.nearTravelFee : POLICY.travelFeeCap
 }
 
 /** Hours between now and the booking start. */

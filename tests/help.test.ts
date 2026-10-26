@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { buildPrompt, cleanAnswer, fallbackAnswer } from "@/lib/help/assistant"
 import { HELP_ENTRIES, HELP_TOPICS, entriesFor, getEntry } from "@/lib/help/knowledge"
 import { fold, maskPersonal, searchHelp } from "@/lib/help/search"
-import { POLICY } from "@/lib/pricing"
+import { POLICY, TRAVEL_FEE_SUMMARY } from "@/lib/pricing"
 
 describe("help centre content", () => {
   it("has unique ids and known topics", () => {
@@ -34,7 +34,7 @@ describe("help centre content", () => {
   })
 
   it("takes its numbers from the policy, not from memory", () => {
-    expect(getEntry("k-phi-di-chuyen")!.a).toContain(`${POLICY.freeTravelKm} km`)
+    expect(getEntry("k-phi-di-chuyen")!.a).toContain(TRAVEL_FEE_SUMMARY)
     expect(getEntry("d-hoa-hong")!.a).toContain(`${Math.round(POLICY.commissionRate * 100)}%`)
     expect(getEntry("k-dat-truoc")!.a).toContain(`${POLICY.minLeadMinutes} phút`)
   })

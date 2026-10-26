@@ -1,4 +1,5 @@
-import { verticalOf } from "./catalog"
+import { providerLocationOpen, serviceLocationOpen } from "./launch"
+import { getTemplate, verticalOf } from "./catalog"
 import { bayesianRating } from "./trust"
 import type { CategoryId, Pro, VerticalId, Work, WorkStats } from "./types"
 
@@ -122,7 +123,7 @@ const newestFirst = (a: Work, b: Work) => Date.parse(b.createdAt) - Date.parse(a
 export function visibleWorks(works: readonly Work[], pros: ReadonlyMap<string, Pro>, vertical: VerticalFilter) {
   return works.filter((w) => {
     const pro = pros.get(w.proId)
-    if (!pro || !pro.published) return false
+    if (!pro || !pro.published || !providerLocationOpen(pro) || !serviceLocationOpen(getTemplate(w.templateId))) return false
     return vertical === "all" || verticalOf(w.category) === vertical
   })
 }

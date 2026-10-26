@@ -15,13 +15,15 @@ Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 | Phí khách hàng | 0đ phí nền tảng, không đặt cọc. Khách trả giá dịch vụ + phí di chuyển/đặt gấp nếu có; thanh toán online toàn bộ hoặc trả trực tiếp sau khi làm. | `lib/pricing.ts` |
 | Xác nhận lịch | Freelancer gọi điện cho khách xác nhận rồi mới nhận job, trong 2 giờ (đặt từ 21:00 đến 08:00 thì tới 10:00 sáng, nhưng không muộn hơn 1 giờ trước giờ hẹn); quá hạn tự huỷ. | `app/bookings/[id]` |
 | Hoa hồng | Một mức 15% trên giá dịch vụ, thu từ freelancer. Không tính trên phí di chuyển/gấp. Job online: trừ trước khi chuyển tiền; job tiền mặt: ghi công nợ, đối soát hằng tuần. | `lib/pricing.ts` |
-| Phí di chuyển | Miễn phí 5 km đầu, sau đó 5.000đ/km (tối đa 100.000đ); ngoài bán kính freelancer thì không nhận làm tại nhà. | `lib/pricing.ts`, `lib/geo.ts` |
+| Phí di chuyển | Dưới 5 km: 50.000đ; từ 5 km trở lên (kể cả trên 10 km): tối đa 100.000đ; ngoài bán kính freelancer thì không nhận làm tại nhà. | `lib/pricing.ts`, `lib/geo.ts` |
 | Phí đặt gấp | Bắt đầu trong vòng 3 giờ: +50.000đ. Không nhận lịch trong vòng 60 phút. | `lib/pricing.ts` |
 | Xác minh | Tự nguyện: chụp CCCD 2 mặt + selfie, AI (Gemini) đọc thẻ và so khuôn mặt. Đã xác minh có dấu tick, huy hiệu và được xếp trước. | `app/api/identity`, `app/studio/verify` |
 | Xếp hạng | Đã xác minh danh tính được xếp trước, sau đó theo điểm đánh giá (có trọng số) và số job. Không bán vị trí. | `lib/trust.ts` |
 | Đánh giá | Chỉ khách hoàn thành lịch hẹn; số sao + tag + nhận xét; freelancer chỉ phản hồi, không xoá. | `app/bookings/[id]/review` |
 
 ## Trạng thái hiện tại
+
+- Chỉ mở lịch freelancer di chuyển đến nhà hoặc địa điểm khách chọn. Lựa chọn đến studio và dịch vụ bắt buộc tại studio đang tạm đóng (`STUDIO_BOOKING_OPEN`); dữ liệu studio và lịch đã đặt được giữ lại.
 
 - Production (`www.360dep.vn`) đọc và ghi Supabase thật. Luật giá, phí, lịch trống và trạng thái lịch hẹn nằm trong database (RLS + RPC), trình duyệt chỉ hiển thị.
 - Chuyên viên và tác phẩm đang hiện là **dữ liệu mẫu** (sinh từ `lib/data.ts`), có nhãn trên trang.

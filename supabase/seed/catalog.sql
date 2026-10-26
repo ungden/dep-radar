@@ -6,8 +6,10 @@ update public.fee_policy set
   commission_rate = 0.15,
   confirm_within_hours = 2,
   late_cancel_rate = 0.3,
-  free_travel_km = 5,
-  travel_fee_per_km = 5000,
+  free_travel_km = 0,
+  travel_fee_per_km = 0,
+  near_travel_km = 5,
+  near_travel_fee = 50000,
   travel_fee_cap = 100000,
   urgent_within_hours = 3,
   urgent_fee = 50000,
@@ -1070,7 +1072,7 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
-  'makeup-bridal', 'makeup', 'Makeup cô dâu', 'Makeup và làm tóc cô dâu cho từng lễ. Nên test makeup trước để xem layout đã chọn có hợp không.', array['Makeup + làm tóc cô dâu', 'Mi giả, phụ kiện tóc cơ bản', 'Tư vấn layout theo váy, áo dài']::text[], false, false, null, null, false, false, true, 9, 2)
+  'makeup-bridal', 'makeup', 'Makeup cô dâu', 'Makeup và làm tóc cô dâu cho từng lễ, dự kiến 3 giờ mỗi buổi. Nên test makeup trước để xem layout đã chọn có hợp không.', array['Makeup + làm tóc cô dâu', 'Mi giả, phụ kiện tóc cơ bản', 'Tư vấn layout theo váy, áo dài']::text[], false, false, null, null, false, false, true, 9, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
@@ -1078,7 +1080,7 @@ insert into public.service_templates (id, category, name, description, includes,
     addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-bridal', 'trial', 'Test makeup trước ngày cưới', 90, 600000, 1500000, 900000, array[600000, 900000, 1500000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'makeup-bridal', 'trial', 'Test makeup trước ngày cưới', 180, 600000, 1500000, 900000, array[600000, 900000, 1500000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -1086,7 +1088,7 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-bridal', 'engagement', 'Dạm ngõ / đám hỏi', 120, 1000000, 2800000, 1600000, array[1000000, 1600000, 2800000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
+  'makeup-bridal', 'engagement', 'Dạm ngõ / đám hỏi', 180, 1000000, 2800000, 1600000, array[1000000, 1600000, 2800000], false, 1, 1, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -1094,7 +1096,7 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-bridal', 'wedding', 'Gia tiên / tiệc cưới', 120, 1300000, 3500000, 2000000, array[1300000, 2000000, 3500000], false, 1, 2, 'fixed', 1, null, 0, 1, null)
+  'makeup-bridal', 'wedding', 'Gia tiên / tiệc cưới', 180, 1300000, 3500000, 2000000, array[1300000, 2000000, 3500000], false, 1, 2, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -1102,7 +1104,7 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-bridal', 'two', 'Trọn gói 2 lễ: đám hỏi + tiệc cưới (2 buổi)', 120, 2300000, 6300000, 3600000, array[2300000, 3600000, 6300000], false, 1, 3, 'fixed', 1, null, 0, 2, null)
+  'makeup-bridal', 'two', 'Trọn gói 2 lễ: đám hỏi + tiệc cưới (2 buổi)', 180, 2300000, 6300000, 3600000, array[2300000, 3600000, 6300000], false, 1, 3, 'fixed', 1, null, 0, 2, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,
@@ -1174,7 +1176,7 @@ insert into public.service_variants (template_id, id, label, duration_min, min_p
     duration_rule = excluded.duration_rule, min_quantity = excluded.min_quantity, deliverable = excluded.deliverable,
     revisions = excluded.revisions, sessions = excluded.sessions, followup_days = excluded.followup_days;
 insert into public.service_templates (id, category, name, description, includes, studio_only, on_location, deliverable, delivery_days, requires_verification, addon_only, active, sort_order, catalog_version) values (
-  'makeup-prewedding', 'makeup', 'Makeup chụp ảnh cưới', 'Makeup cô dâu cho buổi chụp ảnh cưới trong studio hoặc ngoại cảnh.', array['Makeup + tóc cô dâu', 'Đổi layout theo trang phục', 'Mi giả']::text[], false, false, null, null, false, false, true, 13, 2)
+  'makeup-prewedding', 'makeup', 'Makeup chụp ảnh cưới', 'Makeup cô dâu cho buổi chụp ảnh cưới trong studio hoặc ngoại cảnh. Dự kiến ít nhất 3 giờ, đã gồm làm tóc.', array['Makeup + tóc cô dâu', 'Đổi layout theo trang phục', 'Mi giả']::text[], false, false, null, null, false, false, true, 13, 2)
   on conflict (id) do update set category = excluded.category, name = excluded.name,
     description = excluded.description, includes = excluded.includes,
     studio_only = excluded.studio_only, on_location = excluded.on_location, deliverable = excluded.deliverable,
@@ -1182,7 +1184,7 @@ insert into public.service_templates (id, category, name, description, includes,
     addon_only = excluded.addon_only,
     active = excluded.active, sort_order = excluded.sort_order, catalog_version = excluded.catalog_version;
 insert into public.service_variants (template_id, id, label, duration_min, min_price, max_price, suggested_price, price_tiers, per_person, max_quantity, sort_order, duration_rule, min_quantity, deliverable, revisions, sessions, followup_days) values (
-  'makeup-prewedding', 'studio', 'Chụp trong studio', 120, 900000, 2200000, 1300000, array[900000, 1300000, 2200000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
+  'makeup-prewedding', 'studio', 'Chụp trong studio', 180, 900000, 2200000, 1300000, array[900000, 1300000, 2200000], false, 1, 0, 'fixed', 1, null, 0, 1, null)
   on conflict (template_id, id) do update set label = excluded.label, duration_min = excluded.duration_min,
     min_price = excluded.min_price, max_price = excluded.max_price, suggested_price = excluded.suggested_price,
     price_tiers = excluded.price_tiers,

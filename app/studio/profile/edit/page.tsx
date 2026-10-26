@@ -1,5 +1,7 @@
 "use client"
 
+import { STUDIO_BOOKING_OPEN } from "@/lib/launch"
+
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -51,7 +53,7 @@ function ProfileEditor() {
   const [title, setTitle] = React.useState(pro.title)
   const [bio, setBio] = React.useState(pro.bio)
   const [studio, setStudio] = React.useState(pro.studioAddress ?? "")
-  const [homeService, setHomeService] = React.useState(pro.homeService)
+  const [homeService, setHomeService] = React.useState(!STUDIO_BOOKING_OPEN || pro.homeService)
   const [maxTravelKm, setMaxTravelKm] = React.useState(pro.maxTravelKm)
   const [avatar, setAvatar] = React.useState(pro.avatar ?? null)
   const [equipment, setEquipment] = React.useState(pro.equipment ?? "")
@@ -158,9 +160,9 @@ function ProfileEditor() {
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <p className="text-body font-semibold">Nhận làm tại nhà khách</p>
-            <p className="text-label text-muted">Tắt nếu bạn chỉ làm tại studio.</p>
+            <p className="text-label text-muted">Hiện chỉ nhận lịch freelancer đến nhà hoặc địa điểm khách chọn.</p>
           </div>
-          <Toggle label="Nhận làm tại nhà khách" checked={homeService} onChange={setHomeService} />
+          {STUDIO_BOOKING_OPEN && <Toggle label="Nhận làm tại nhà khách" checked={homeService} onChange={setHomeService} />}
         </div>
         <div>
           <p className="mb-2 text-meta font-semibold">Nhận đơn tại nhà trong bán kính</p>
@@ -181,12 +183,12 @@ function ProfileEditor() {
               </button>
             ))}
           </div>
-          <p className="mt-1.5 text-label text-muted">Phí di chuyển theo mức chung của 360dep: miễn phí 5 km đầu, sau đó 5.000đ/km, tối đa 100.000đ.</p>
+          <p className="mt-1.5 text-label text-muted">Phí di chuyển theo mức chung của 360dep: dưới 5 km là 50.000đ; từ 5 km trở lên là 100.000đ, kể cả trên 10 km.</p>
         </div>
         <StartPoint />
-        <Field label="Địa chỉ studio (nếu có)" hint="Có studio thì bạn nhận được cả dịch vụ chỉ làm tại chỗ.">
+        {STUDIO_BOOKING_OPEN && <Field label="Địa chỉ studio (nếu có)" hint="Có studio thì bạn nhận được cả dịch vụ chỉ làm tại chỗ.">
           <input className={inputClass} value={studio} onChange={(e) => setStudio(e.target.value)} />
-        </Field>
+        </Field>}
       </Card>
 
       {models && <ModelCardEditor />}
@@ -371,7 +373,7 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
 
   // Publishing requires hours explicitly confirmed in the database.
   const hoursReady = hours.saved
-  const locationReady = Boolean(pro.homeService || pro.studioAddress?.trim())
+  const locationReady = Boolean(pro.homeService || (STUDIO_BOOKING_OPEN && pro.studioAddress?.trim()))
   // Identity is asked before the profile is shown (lib/launch.ts); a pending case may be sent, it goes live once verified.
   const identityReady = !IDENTITY_REQUIRED_FOR_PARTNERS || pro.identity === "verified" || pro.identity === "pending"
   const ready = hasService && hasWork && hoursReady && locationReady && identityReady

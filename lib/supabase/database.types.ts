@@ -643,6 +643,8 @@ export type Database = {
           id: boolean
           late_cancel_rate: number
           min_lead_minutes: number
+          near_travel_km: number
+          near_travel_fee: number
           road_factor: number
           travel_fee_cap: number
           travel_fee_per_km: number
@@ -660,6 +662,8 @@ export type Database = {
           id?: boolean
           late_cancel_rate?: number
           min_lead_minutes?: number
+          near_travel_km?: number
+          near_travel_fee?: number
           road_factor?: number
           travel_fee_cap?: number
           travel_fee_per_km?: number
@@ -677,6 +681,8 @@ export type Database = {
           id?: boolean
           late_cancel_rate?: number
           min_lead_minutes?: number
+          near_travel_km?: number
+          near_travel_fee?: number
           road_factor?: number
           travel_fee_cap?: number
           travel_fee_per_km?: number

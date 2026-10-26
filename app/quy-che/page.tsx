@@ -4,7 +4,7 @@ import { CompanyInfo } from "@/components/company-info"
 import { PageHeader } from "@/components/ui"
 import { AUTO_COMPLETE_HOURS, MIN_REVIEWS_FOR_AVERAGE, NO_SHOW_AFTER_MIN, REVIEW_WINDOW_DAYS } from "@/lib/connection"
 import { IDENTITY_REQUIRED_FOR_PARTNERS, IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
-import { POLICY } from "@/lib/pricing"
+import { POLICY, TRAVEL_FEE_SUMMARY } from "@/lib/pricing"
 import { formatPrice } from "@/lib/utils"
 
 export const metadata: Metadata = {
@@ -79,7 +79,7 @@ export default function OperatingRulesPage() {
         <Section title="III. Quy trình giao dịch">
           <p className="font-semibold text-ink">Cách 1: khách đặt lịch với một đối tác</p>
           <ol className="mt-1 list-decimal space-y-1 pl-5">
-            <li>Khách chọn dịch vụ, gói, nơi làm (tại nhà hoặc studio) và giờ trống của đối tác; xem tổng tiền trước khi gửi.</li>
+            <li>Khách chọn dịch vụ, gói, địa chỉ nhà hoặc địa điểm khách chọn (freelancer di chuyển đến) và giờ trống của đối tác; xem tổng tiền trước khi gửi.</li>
             <li>
               Đối tác nhận hoặc từ chối trong {POLICY.confirmWithinHours} giờ, không quá giờ hẹn (lịch đặt từ 21:00 đến 08:00 có hạn tới 10:00 sáng hôm sau, không muộn hơn 1
               giờ trước giờ hẹn); không nhận kịp thì lịch tự hết hạn, khách không mất gì.
@@ -112,8 +112,7 @@ export default function OperatingRulesPage() {
         <Section title="IV. Giá, phí và thanh toán">
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              Khách trả giá dịch vụ đối tác niêm yết, cộng phí di chuyển (miễn phí {POLICY.freeTravelKm} km đầu, sau đó{" "}
-              {formatPrice(POLICY.travelFeePerKm)}/km, tối đa {formatPrice(POLICY.travelFeeCap)}) và phí đặt gấp {formatPrice(POLICY.urgentFee)}{" "}
+              Khách trả giá dịch vụ đối tác niêm yết, cộng phí di chuyển ({TRAVEL_FEE_SUMMARY}) và phí đặt gấp {formatPrice(POLICY.urgentFee)}{" "}
               nếu lịch bắt đầu trong {POLICY.urgentWithinHours} giờ. Khách <b className="text-ink">không trả phí nền tảng</b> và không phải đặt cọc.
             </li>
             <li>Khách thanh toán trực tiếp cho đối tác (tiền mặt hoặc chuyển khoản) sau buổi làm. Thanh toán online qua 360đẹp chưa áp dụng.</li>

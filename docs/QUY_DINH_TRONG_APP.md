@@ -13,8 +13,9 @@ Văn bản ràng buộc pháp lý là [Quy chế hoạt động](https://www.360
 | Phí nền tảng của khách | 0đ, không đặt cọc |
 | Hoa hồng (đối tác trả, tính trên giá dịch vụ) | 15% |
 | Người làm nhận hoặc từ chối lịch trong | 2 giờ |
-| Miễn phí di chuyển | 5 km đầu |
-| Phí di chuyển sau đó | 5.000đ/km, tối đa 100.000đ |
+| Di chuyển dưới 5 km | 50.000đ |
+| Di chuyển từ 5 km (kể cả trên 10 km) | 100.000đ tối đa |
+| Hình thức nhận lịch hiện tại | Freelancer đến nhà hoặc địa điểm khách chọn; chưa mở đến studio |
 | Phí đặt gấp (bắt đầu trong 3 giờ tới) | 50.000đ |
 | Đặt sớm nhất trước giờ hẹn | 60 phút |
 | Huỷ miễn phí trước giờ hẹn | 12 giờ |

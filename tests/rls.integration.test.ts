@@ -232,7 +232,7 @@ describe.skipIf(!configured)("row level security over the API", () => {
   it("lets anyone read a price and check availability before signing in", async () => {
     const anon = client()
     const fee = await anon.rpc("travel_fee", { distance_km: 10.6 })
-    expect(fee.data).toBe(30000)
+    expect(fee.data).toBe(100000)
     const slots = await anon.rpc("free_slots", {
       p_pro: proId,
       p_template: "nail-extension",

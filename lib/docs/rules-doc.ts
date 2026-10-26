@@ -49,8 +49,9 @@ Văn bản ràng buộc pháp lý là [Quy chế hoạt động](https://www.360
 | Phí nền tảng của khách | 0đ, không đặt cọc |
 | Hoa hồng (đối tác trả, tính trên giá dịch vụ) | ${pct(POLICY.commissionRate)} |
 | Người làm nhận hoặc từ chối lịch trong | ${POLICY.confirmWithinHours} giờ |
-| Miễn phí di chuyển | ${POLICY.freeTravelKm} km đầu |
-| Phí di chuyển sau đó | ${money(POLICY.travelFeePerKm)}/km, tối đa ${money(POLICY.travelFeeCap)} |
+| Di chuyển dưới ${POLICY.nearTravelKm} km | ${money(POLICY.nearTravelFee)} |
+| Di chuyển từ ${POLICY.nearTravelKm} km (kể cả trên 10 km) | ${money(POLICY.travelFeeCap)} tối đa |
+| Hình thức nhận lịch hiện tại | Freelancer đến nhà hoặc địa điểm khách chọn; chưa mở đến studio |
 | Phí đặt gấp (bắt đầu trong ${POLICY.urgentWithinHours} giờ tới) | ${money(POLICY.urgentFee)} |
 | Đặt sớm nhất trước giờ hẹn | ${POLICY.minLeadMinutes} phút |
 | Huỷ miễn phí trước giờ hẹn | ${POLICY.freeCancelHours} giờ |

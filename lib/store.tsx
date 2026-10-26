@@ -1,5 +1,7 @@
 "use client"
 
+import { providerLocationOpen, serviceLocationOpen } from "./launch"
+
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { getTemplate } from "./catalog"
@@ -59,7 +61,7 @@ export function servicesOf(s: AppState, proId: string, includeInactive = false):
   if (!pro) return []
   const mine = s.session?.proId === pro.id
   const list = mine ? s.myServices : s.proServices.filter((x) => x.proId === pro.id)
-  return list.filter((x) => includeInactive || x.active)
+  return list.filter((x) => includeInactive || (x.active && providerLocationOpen(pro) && serviceLocationOpen(getTemplate(x.templateId))))
 }
 
 /** What can be booked on its own: everything listed but the add-ons (nail art per finger…). */

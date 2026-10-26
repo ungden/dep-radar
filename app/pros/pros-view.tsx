@@ -1,5 +1,7 @@
 "use client"
 
+import { providerLocationOpen } from "@/lib/launch"
+
 import { moveRadio } from "@/lib/radio-navigation"
 import { DataUnavailable } from "@/components/data-unavailable"
 
@@ -106,7 +108,7 @@ function ProsView() {
 
   const filtered = state.pros.filter(
     (p) =>
-      p.published &&
+      providerLocationOpen(p) && p.published &&
       (!city || p.city === city) &&
       (vertical === "all" || p.categories.some((c) => verticalOf(c) === vertical)) &&
       (!category || p.categories.includes(category)) &&

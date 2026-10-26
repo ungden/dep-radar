@@ -6,6 +6,11 @@ import { bayesianRating, isVerified, rankScore } from "@/lib/trust"
 import type { Pro } from "@/lib/types"
 
 describe("catalogue integrity", () => {
+  it("keeps studio services for history but hides them from new customer and partner choices", () => {
+    expect(getTemplate("hair-color")?.studioOnly).toBe(true)
+    expect(templatesByCategory("hair").some((t) => t.studioOnly)).toBe(false)
+    expect(partnerTemplatesByCategory("hair").some((t) => t.studioOnly)).toBe(false)
+  })
   it("has unique ids and unique variant ids", () => {
     const ids = [...CATALOG, ...ADDONS].map((t) => t.id)
     expect(new Set(ids).size).toBe(ids.length)
@@ -214,10 +219,18 @@ describe("package scheduling", () => {
     expect(serviceDuration(group, 5)).toBe(180)
     expect(serviceDuration(group, 15)).toBe(180)
   })
+  it("reserves at least three hours for every bridal makeup option", () => {
+    for (const id of ["makeup-bridal", "makeup-prewedding"]) {
+      const template = getTemplate(id)!
+      for (const variant of template.variants) expect(serviceDuration(variant, 1), `${id}/${variant.id}`).toBeGreaterThanOrEqual(180)
+    }
+    expect(serviceDuration(getVariant("makeup-prewedding", "outdoor")!, 1)).toBe(300)
+  })
+
   it("reserves sequential makeup time for each person and separate bridal appointments", () => {
     expect(serviceDuration(getVariant("makeup-photo", "group3")!, 3)).toBe(135)
     const bridal = getVariant("makeup-bridal", "two")!
     expect(bridal.sessions).toBe(2)
-    expect(serviceDuration(bridal, 1)).toBe(120)
+    expect(serviceDuration(bridal, 1)).toBe(180)
   })
 })

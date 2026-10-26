@@ -1,5 +1,7 @@
 "use client"
 
+import { STUDIO_BOOKING_OPEN } from "@/lib/launch"
+
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -28,7 +30,7 @@ import { RatingSummaryBlock, ReviewItem, VerifiedBadge, VerifiedMark } from "@/c
 import { Avatar, BottomBar, ButtonLink, Chip, EmptyState, Tabs } from "@/components/ui"
 import { CATEGORIES, categoryLabel, verticalOf } from "@/lib/catalog"
 import { albumsOf } from "@/lib/discovery"
-import { POLICY, travelFeeFor } from "@/lib/pricing"
+import { TRAVEL_FEE_SUMMARY, travelFeeFor } from "@/lib/pricing"
 import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp, worksOf } from "@/lib/store"
 import { personWord, tradesOf } from "@/lib/trade"
 import type { CategoryId, ModelProfile, Pro, Work } from "@/lib/types"
@@ -484,10 +486,10 @@ function WhereFacts({ pro, className }: { pro: Pro; className?: string }) {
       ) : (
         <li className="flex items-start gap-2.5">
           <Store className="mt-0.5 size-4 shrink-0 text-muted" />
-          Chỉ làm tại studio
+          Hiện chưa nhận lịch làm tận nơi
         </li>
       )}
-      {pro.studioAddress && pro.homeService && (
+      {STUDIO_BOOKING_OPEN && pro.studioAddress && pro.homeService && (
         <li className="flex items-start gap-2.5">
           <Store className="mt-0.5 size-4 shrink-0 text-muted" />
           Có studio riêng
@@ -500,7 +502,7 @@ function WhereFacts({ pro, className }: { pro: Pro; className?: string }) {
             ? travelFeeFor(km) === 0
               ? "Miễn phí di chuyển tới địa chỉ của bạn"
               : `Phí di chuyển tới bạn: ${formatPrice(travelFeeFor(km))}`
-            : `Miễn phí di chuyển trong ${POLICY.freeTravelKm} km đầu`}
+            : `Phí di chuyển: ${TRAVEL_FEE_SUMMARY}`}
         </li>
       )}
     </ul>
@@ -533,7 +535,7 @@ function About({ pro }: { pro: Pro }) {
               Nhận lịch ở {pro.areas.join(", ")}
             </li>
           )}
-          {pro.studioAddress && (
+          {STUDIO_BOOKING_OPEN && pro.studioAddress && (
             <li className="flex items-start gap-2.5">
               <Store className="mt-0.5 size-4 shrink-0 text-muted" />
               Studio: {pro.studioAddress}

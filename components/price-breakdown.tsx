@@ -3,7 +3,6 @@
 import * as React from "react"
 import { CreditCard, HandCoins } from "lucide-react"
 import { Card } from "@/components/ui"
-import { POLICY } from "@/lib/pricing"
 import type { PaymentMethod, PriceQuote } from "@/lib/types"
 import { formatPrice } from "@/lib/utils"
 
@@ -32,7 +31,7 @@ export function PriceBreakdown({
       <Line
         label={
           quote.distanceKm !== null
-            ? `Phí di chuyển (~${quote.distanceKm.toLocaleString("vi-VN")} km, miễn phí ${POLICY.freeTravelKm} km đầu)`
+            ? `Phí di chuyển (~${quote.distanceKm.toLocaleString("vi-VN")} km)`
             : "Phí di chuyển"
         }
         value={quote.travelFee ? formatPrice(quote.travelFee) : "Miễn phí"}

@@ -1,3 +1,4 @@
+import { providerLocationOpen, serviceLocationOpen } from "./launch"
 import { CATALOG, serviceDuration, serviceQuantity, verticalOf } from "./catalog"
 import type { VerticalFilter } from "./feed"
 import type { Category, CategoryId, Pro, ProService, ServiceTemplate, ServiceVariant, Work } from "./types"
@@ -26,6 +27,7 @@ export interface ServiceOffer {
 }
 
 export function listedOptions(template: ServiceTemplate, prices: Readonly<Record<string, number>>) {
+  if (!serviceLocationOpen(template)) return []
   return template.variants.flatMap((variant) => {
     const unitPrice = prices[variant.id]
     if (!Number.isFinite(unitPrice) || unitPrice <= 0) return []
@@ -44,7 +46,7 @@ export function serviceOffers(input: {
   priceFilter?: (minimumTotal: number) => boolean
 }): ServiceOffer[] {
   const inScope = new Map(
-    input.pros.filter((p) => p.published && p.acceptingJobs && (!input.city || p.city === input.city) && (!input.proFilter || input.proFilter(p))).map((p) => [p.id, p]),
+    input.pros.filter((p) => providerLocationOpen(p) && p.published && p.acceptingJobs && (!input.city || p.city === input.city) && (!input.proFilter || input.proFilter(p))).map((p) => [p.id, p]),
   )
 
   const byTemplate = new Map<string, { pros: Pro[]; options: ReturnType<typeof listedOptions> }>()

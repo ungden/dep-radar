@@ -1,3 +1,5 @@
+import type { Pro, ServiceTemplate } from "./types"
+
 /**
  * Launch switch. While the seeded demo freelancers, customers, works and
  * reviews are live, the site says so (home banner, footer, /chinh-sach). On
@@ -32,3 +34,12 @@ export const SUPPORT_ZALO = "0987220101"
  * (a badge and the model services only).
  */
 export const IDENTITY_REQUIRED_FOR_PARTNERS = IDENTITY_VERIFICATION_OPEN && true
+
+/** Studio visits are held back while the marketplace focuses on travelling freelancers. */
+export const STUDIO_BOOKING_OPEN = false
+
+export const serviceLocationOpen = (template: Pick<ServiceTemplate, "studioOnly"> | undefined) =>
+  Boolean(template) && (STUDIO_BOOKING_OPEN || !template?.studioOnly)
+
+export const providerLocationOpen = (pro: Pick<Pro, "homeService">) =>
+  STUDIO_BOOKING_OPEN || pro.homeService
