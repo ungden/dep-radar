@@ -7,7 +7,7 @@ begin
   assert public.service_duration_min('photo-yearbook-group','half',5)=180, 'group photo blocks three hours total';
   assert public.service_duration_min('photo-yearbook-group','half',3) is null, 'minimum group size enforced';
   assert public.service_duration_min('makeup-photo','group3',3)=135, 'makeup remains sequential per person';
-  assert (select sessions=2 and duration_min=120 from public.service_variants where template_id='makeup-bridal' and id='two'), 'bridal has two appointments';
+  assert (select sessions=2 and duration_min=180 from public.service_variants where template_id='makeup-bridal' and id='two'), 'bridal has two appointments';
   assert (select bool_and(v.deliverable is not null and v.revisions=1) from public.service_variants v join public.service_templates t on t.id=v.template_id where t.category in('photophone','camera','product-photo','short-video')), 'photo output and revisions specified';
   select id into pro from public.pros where slug='linh-pham';
   select id into customer from public.accounts where full_name='Ngọc Hân';
@@ -79,16 +79,16 @@ begin
   assert (select partner_private.partner_setup()->'services' @> '[{"template_id":"makeup-bridal","notes":{"engagement":"Mi giả cao cấp, dặm lại 1 lần trong lễ"}}]'), 'partner setup carries the notes';
   perform public.save_pro_service('brow-tattoo','{"powder":1300000}',true);
   perform set_config('request.jwt.claim.sub',customer::text,true);
-  q:=public.booking_quote(pro,'makeup-bridal','two',at+interval '7 days',false,null,1);
+  q:=public.booking_quote(pro,'makeup-bridal','two',at+interval '7 days',true,addr,1);
   select count(*) into count_before from public.bookings where pro_id=pro;
   begin
-    perform public.create_booking_checked(pro,'makeup-bridal','two',at+interval '7 days',false,null,1,'','cash',(q->>'total')::int,2300000,array[at+interval '7 days 1 hour']);
+    perform public.create_booking_checked(pro,'makeup-bridal','two',at+interval '7 days',true,addr,1,'','cash',(q->>'total')::int,2300000,array[at+interval '7 days 1 hour']);
     assert false,'overlapping sessions accepted';
   exception when check_violation then null; end;
   assert (select count(*) from public.bookings where pro_id=pro)=count_before,'failed second session rolls back primary booking';
-  multi:=public.create_booking_checked(pro,'makeup-bridal','two',at+interval '7 days',false,null,1,'','cash',(q->>'total')::int,2300000,array[at+interval '8 days']);
+  multi:=public.create_booking_checked(pro,'makeup-bridal','two',at+interval '7 days',true,addr,1,'','cash',(q->>'total')::int,2300000,array[at+interval '8 days']);
   assert (select count(*)=1 from public.booking_sessions where booking_id=multi and confirmed),'second session reserved';
-  why:=public.availability_problem(pro,'makeup-bridal','engagement',1,at+interval '8 days',false);
+  why:=public.availability_problem(pro,'makeup-bridal','engagement',1,at+interval '8 days',true,(select lat from public.addresses where id=addr),(select lng from public.addresses where id=addr));
   assert why like 'Khung giờ trùng một buổi%',format('other bookings respect secondary session: %s',why);
   perform set_config('request.jwt.claim.sub',pro::text,true);
   perform public.confirm_booking(multi);
@@ -96,10 +96,24 @@ begin
     perform public.complete_booking(multi);
     assert false,'multi-session package finished before the second session';
   exception when check_violation then null; when raise_exception then null; end;
+  -- New standalone studio visits are closed, even when the client bypasses the UI.
+  perform set_config('request.jwt.claim.sub',customer::text,true);
+  q:=public.booking_quote(pro,'makeup-bridal','engagement',at+interval '10 days',false,null,1);
+  begin
+    perform public.create_booking_checked(pro,'makeup-bridal','engagement',at+interval '10 days',false,null,1,'','cash',(q->>'total')::int,1000000,'{}');
+    assert false,'new studio booking accepted';
+  exception when check_violation then
+    assert sqlerrm like '%studio chưa mở%',format('studio booking failed for another reason: %s',sqlerrm);
+  end;
+  -- A tattoo follow-up on a historical studio appointment remains supported.
+  -- Temporarily suspend only the launch gate while constructing this pre-launch
+  -- fixture; the caller rolls the entire test transaction back.
+  alter table public.bookings disable trigger aaa_travelling_freelancer_booking;
   -- A tattoo follow-up has no extra charge, requires the other party, and is once only.
   perform set_config('request.jwt.claim.sub',customer::text,true);
   q:=public.booking_quote(pro,'brow-tattoo','powder',at+interval '9 days',false,null,1);
   follow:=public.create_booking_checked(pro,'brow-tattoo','powder',at+interval '9 days',false,null,1,'','cash',(q->>'total')::int,1300000,'{}');
+  alter table public.bookings enable trigger aaa_travelling_freelancer_booking;
   perform set_config('app.system_write','on',true);
   update public.bookings set starts_at=at-interval '21 days',status='completed',completed_at=at-interval '21 days' where id=follow;
   perform set_config('app.system_write','off',true);
