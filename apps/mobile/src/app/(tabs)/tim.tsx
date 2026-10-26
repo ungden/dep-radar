@@ -4,7 +4,6 @@ import { router, useLocalSearchParams } from "expo-router"
 import { ScrollView, TextInput, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
-  STUDIO_BOOKING_OPEN,
   providerLocationOpen,
   CATEGORIES,
   VERTICALS,
@@ -72,6 +71,8 @@ const words = (q: string) => fold(q.trim()).split(/\s+/).filter(Boolean)
  * same filters apply to both; each one that is on shows as a chip with ✕.
  */
 export default function Search() {
+  const studioBookingOpen = useApp().studioBookingOpen
+
   const params = useLocalSearchParams<{ category?: string; vertical?: string; focus?: string }>()
   const app = useApp()
   const browse = useBrowse()
@@ -97,7 +98,7 @@ export default function Search() {
     const q = words(query)
     const services = browse.services
     const out = browse.pros.filter((p) => {
-      if (!providerLocationOpen(p)) return false
+      if (!providerLocationOpen(p, studioBookingOpen)) return false
       if (filters.vertical !== "all" && !p.categories.some((c) => verticalOf(c) === filters.vertical)) return false
       if (filters.category && !p.categories.includes(filters.category)) return false
       if (filters.verified && p.identity !== "verified") return false
@@ -108,7 +109,7 @@ export default function Search() {
       if (filters.place === "studio" && !p.studioAddress) return false
       if (filters.place === "location" && !templates.some((t) => t.onLocation)) return false
       const inCategory = filters.category ? listed.filter((s) => getTemplate(s.templateId)?.category === filters.category) : listed
-      const prices = inCategory.flatMap((s) => { const t = getTemplate(s.templateId); return t && (filters.vertical === "all" || verticalOf(t.category) === filters.vertical) && (filters.place !== "home" || !t.studioOnly) && (filters.place !== "location" || t.onLocation) ? listedOptions(t, s.prices).map((o) => o.minimumTotal) : [] })
+      const prices = inCategory.flatMap((s) => { const t = getTemplate(s.templateId); return t && (filters.vertical === "all" || verticalOf(t.category) === filters.vertical) && (filters.place !== "home" || !t.studioOnly) && (filters.place !== "location" || t.onLocation) ? listedOptions(t, s.prices, app.studioBookingOpen).map((o) => o.minimumTotal) : [] })
       if (filters.price !== "any" && !prices.some((price) => priceOk(filters.price, price))) return false
       if (!q.length) return true
       const haystack = fold(
@@ -124,12 +125,12 @@ export default function Search() {
         if (sort === "cheap") return price(a.pro) - price(b.pro)
         return rankScore(b.pro) - rankScore(a.pro)
       })
-  }, [browse, filters, query, sort, app])
+  }, [browse, filters, query, sort, app, studioBookingOpen])
 
   // The same cards as Khám phá: a service someone here offers, from its lowest real price.
   const services = React.useMemo(() => {
     const q = words(query)
-    const all = serviceOffers({ pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical: filters.vertical,
+    const all = serviceOffers({ studioBookingOpen, pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical: filters.vertical,
       proFilter: (p) => (!filters.verified || p.identity === "verified") && (filters.place !== "home" || p.homeService) && (filters.place !== "studio" || Boolean(p.studioAddress)),
       priceFilter: (total) => priceOk(filters.price, total),
     })
@@ -149,7 +150,7 @@ export default function Search() {
         if (sort === "near") { const da = nearest(a); const db = nearest(b); return da === db ? 0 : da - db }
         return 0
       })
-  }, [browse, filters, query, sort, app])
+  }, [browse, filters, query, sort, app, studioBookingOpen])
 
   const active: { key: string; label: string; clear: Partial<Filters> }[] = [
     ...(filters.vertical !== "all" ? [{ key: "vertical", label: getVertical(filters.vertical).label, clear: { vertical: "all" as const, category: null } }] : []),
@@ -352,7 +353,7 @@ export default function Search() {
           ))}
         </Group>
         <Group title="Làm ở đâu">
-          {(Object.keys(PLACE_LABEL) as Place[]).filter((p) => STUDIO_BOOKING_OPEN || p !== "studio").map((p) => (
+          {(Object.keys(PLACE_LABEL) as Place[]).filter((p) => studioBookingOpen || p !== "studio").map((p) => (
             <Chip key={p} label={PLACE_LABEL[p]} selected={draft.place === p} onPress={() => setDraft({ ...draft, place: p })} />
           ))}
         </Group>

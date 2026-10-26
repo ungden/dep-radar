@@ -22,6 +22,7 @@ import { rankFeed, type VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
 import { occasionTemplates, occasionsFor, suggestionsFor } from "@/lib/occasions"
 import { categoryRow, serviceOffers } from "@/lib/offers"
+import { serviceLocationOpen } from "@/lib/launch"
 import { POLICY, TRAVEL_FEE_SUMMARY } from "@/lib/pricing"
 import { distanceToCustomer, getPro, useApp } from "@/lib/store"
 import type { Booking, Category, CategoryId } from "@/lib/types"
@@ -61,13 +62,13 @@ function Explore() {
 
   // What is for sale here: services someone nearby offers, with real prices.
   const offers = React.useMemo(
-    () => serviceOffers({ pros: state.pros, proServices: state.proServices, works: state.works, city, vertical }),
-    [state.pros, state.proServices, state.works, city, vertical],
+    () => serviceOffers({ studioBookingOpen: state.platform?.studioBookingOpen, pros: state.pros, proServices: state.proServices, works: state.works, city, vertical }),
+    [state.pros, state.proServices, state.works, city, vertical, state.platform?.studioBookingOpen],
   )
   // How many services of this trade exist in other cities, for "Xem cả nước".
   const elsewhere = React.useMemo(
-    () => (city ? serviceOffers({ pros: state.pros, proServices: state.proServices, works: [], city: null, vertical }).length : 0),
-    [state.pros, state.proServices, city, vertical],
+    () => (city ? serviceOffers({ studioBookingOpen: state.platform?.studioBookingOpen, pros: state.pros, proServices: state.proServices, works: [], city: null, vertical }).length : 0),
+    [state.pros, state.proServices, city, vertical, state.platform?.studioBookingOpen],
   )
   const categories = CATEGORIES.filter((c) => vertical === "all" || c.vertical === vertical)
   const shownCategory = categories.some((c) => c.id === category) ? category : "all"
@@ -85,8 +86,8 @@ function Explore() {
   // empty box. The prices are the platform's, so they are true before anyone signs up.
   const catalog =
     shownCategory !== "all"
-      ? CATALOG.filter((t) => t.category === shownCategory).slice(0, 8)
-      : categories.flatMap((c) => CATALOG.filter((t) => t.category === c.id).slice(0, vertical === "all" ? 1 : 2)).slice(0, 8)
+      ? CATALOG.filter((t) => t.category === shownCategory && serviceLocationOpen(t, state.platform?.studioBookingOpen)).slice(0, 8)
+      : categories.flatMap((c) => CATALOG.filter((t) => t.category === c.id && serviceLocationOpen(t, state.platform?.studioBookingOpen)).slice(0, vertical === "all" ? 1 : 2)).slice(0, 8)
 
   // A short row of real work under the services, as proof, not as the page.
   const proof = React.useMemo(() => {
@@ -95,6 +96,7 @@ function Explore() {
       works,
       state.pros,
       {
+        studioBookingOpen: state.platform?.studioBookingOpen,
         vertical,
         interests: new Set(state.interests),
         followed: new Set(state.followedPros),

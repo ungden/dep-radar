@@ -1,6 +1,5 @@
 "use client"
 
-import { STUDIO_BOOKING_OPEN } from "@/lib/launch"
 
 import * as React from "react"
 import Image from "next/image"
@@ -463,6 +462,8 @@ function WorkGrid({ works }: { works: Work[] }) {
 
 /** Where and how they work, in the trade's own words. */
 function WhereFacts({ pro, className }: { pro: Pro; className?: string }) {
+  const studioBookingOpen = useApp().platform?.studioBookingOpen ?? false
+
   const state = useApp()
   const km = state.session?.role !== "pro" ? distanceToCustomer(state, pro.id) : null
   const beauty = pro.categories.some((c) => verticalOf(c) === "beauty")
@@ -486,10 +487,10 @@ function WhereFacts({ pro, className }: { pro: Pro; className?: string }) {
       ) : (
         <li className="flex items-start gap-2.5">
           <Store className="mt-0.5 size-4 shrink-0 text-muted" />
-          Hiện chưa nhận lịch làm tận nơi
+          {studioBookingOpen ? "Chỉ làm tại studio" : "Hiện chưa nhận lịch làm tận nơi"}
         </li>
       )}
-      {STUDIO_BOOKING_OPEN && pro.studioAddress && pro.homeService && (
+      {studioBookingOpen && pro.studioAddress && pro.homeService && (
         <li className="flex items-start gap-2.5">
           <Store className="mt-0.5 size-4 shrink-0 text-muted" />
           Có studio riêng
@@ -510,6 +511,8 @@ function WhereFacts({ pro, className }: { pro: Pro; className?: string }) {
 }
 
 function About({ pro }: { pro: Pro }) {
+  const studioBookingOpen = useApp().platform?.studioBookingOpen ?? false
+
   const joined = parseISODate(pro.joinedAt)
   return (
     <div className="mt-5 space-y-7">
@@ -535,7 +538,7 @@ function About({ pro }: { pro: Pro }) {
               Nhận lịch ở {pro.areas.join(", ")}
             </li>
           )}
-          {STUDIO_BOOKING_OPEN && pro.studioAddress && (
+          {studioBookingOpen && pro.studioAddress && (
             <li className="flex items-start gap-2.5">
               <Store className="mt-0.5 size-4 shrink-0 text-muted" />
               Studio: {pro.studioAddress}

@@ -876,6 +876,7 @@ export async function adjustWallet(proId: string, amount: number, note: string) 
 }
 
 export interface PlatformSettings {
+  studioBookingOpen: boolean
   companyName: string
   companyTaxId: string
   companyAddress: string
@@ -930,6 +931,7 @@ export async function adminSettings(): Promise<{ settings: PlatformSettings; fee
   const text = (v: unknown) => (v == null ? "" : String(v))
   return {
     settings: {
+      studioBookingOpen: r.studio_booking_open === true,
       companyName: text(r.company_name),
       companyTaxId: text(r.company_tax_id),
       companyAddress: text(r.company_address),
@@ -975,6 +977,7 @@ export async function updatePlatformSettings(s: PlatformSettings): Promise<Actio
   const { data, error } = await supabase
     .from("platform_settings")
     .update({
+      studio_booking_open: s.studioBookingOpen,
       company_name: blank(s.companyName),
       company_tax_id: blank(s.companyTaxId),
       company_address: blank(s.companyAddress),

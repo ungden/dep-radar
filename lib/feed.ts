@@ -17,6 +17,7 @@ export type FeedTab = "for-you" | "latest" | "following"
 export type VerticalFilter = VerticalId | "all"
 
 export interface FeedContext {
+  studioBookingOpen?: boolean
   vertical: VerticalFilter
   /** Categories the customer chose, booked, or saved. Empty for a visitor. */
   interests: ReadonlySet<CategoryId>
@@ -120,17 +121,17 @@ export function scoreWork(work: Work, pro: Pro, ctx: FeedContext): ScoreParts {
 
 const newestFirst = (a: Work, b: Work) => Date.parse(b.createdAt) - Date.parse(a.createdAt) || a.id.localeCompare(b.id)
 
-export function visibleWorks(works: readonly Work[], pros: ReadonlyMap<string, Pro>, vertical: VerticalFilter) {
+export function visibleWorks(works: readonly Work[], pros: ReadonlyMap<string, Pro>, vertical: VerticalFilter, studioBookingOpen = false) {
   return works.filter((w) => {
     const pro = pros.get(w.proId)
-    if (!pro || !pro.published || !providerLocationOpen(pro) || !serviceLocationOpen(getTemplate(w.templateId))) return false
+    if (!pro || !pro.published || !providerLocationOpen(pro, studioBookingOpen) || !serviceLocationOpen(getTemplate(w.templateId), studioBookingOpen)) return false
     return vertical === "all" || verticalOf(w.category) === vertical
   })
 }
 
 export function rankFeed(works: readonly Work[], prosList: readonly Pro[], ctx: FeedContext, tab: FeedTab): Work[] {
   const pros = new Map(prosList.map((p) => [p.id, p]))
-  const list = visibleWorks(works, pros, ctx.vertical)
+  const list = visibleWorks(works, pros, ctx.vertical, ctx.studioBookingOpen)
 
   if (tab === "latest") return [...list].sort(newestFirst)
   if (tab === "following") return list.filter((w) => ctx.followed.has(w.proId)).sort(newestFirst)

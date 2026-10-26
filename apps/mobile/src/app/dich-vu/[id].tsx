@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import { ScrollView, View, useWindowDimensions } from "react-native"
-import { categoryLabel, excludes, getTemplate, placeLabel, rankScore, listedOptions, serviceDuration, serviceQuantity } from "@/shared"
+import { providerLocationOpen, categoryLabel, excludes, getTemplate, placeLabel, rankScore, listedOptions, serviceDuration, serviceQuantity } from "@/shared"
 import { formatDuration, formatKm, formatPrice } from "@/data/format"
 import { type AppPro, type AppWork } from "@/data/public"
 import { PostCard, ProCardSkeleton } from "@/components/cards"
@@ -38,8 +38,8 @@ export default function ServiceScreen() {
   const { ranked, elsewhere, works } = React.useMemo(() => {
     if (!data || !template) return { ranked: [] as AppPro[], elsewhere: 0, works: [] as AppWork[] }
     const offers = (p: AppPro) =>
-      data.services.some((s) => s.proId === p.id && s.templateId === template.id && s.active && listedOptions(template, s.prices).some((o) => priceOk(o.minimumTotal)))
-    const all = data.pros.filter((p) => p.published && offers(p) && !app.blocked.has(p.uuid) && (params.verified !== "1" || p.identity === "verified") && (params.place !== "home" || (p.homeService && !template.studioOnly)) && (params.place !== "studio" || Boolean(p.studioAddress)) && (params.place !== "location" || template.onLocation))
+      data.services.some((s) => s.proId === p.id && s.templateId === template.id && s.active && listedOptions(template, s.prices, app.studioBookingOpen).some((o) => priceOk(o.minimumTotal)))
+    const all = data.pros.filter((p) => providerLocationOpen(p, app.studioBookingOpen) && p.published && offers(p) && !app.blocked.has(p.uuid) && (params.verified !== "1" || p.identity === "verified") && (params.place !== "home" || (p.homeService && !template.studioOnly)) && (params.place !== "studio" || Boolean(p.studioAddress)) && (params.place !== "location" || template.onLocation))
     const near = all.filter((p) => !city || p.city === city)
     const ranked = [...near].sort((a, b) => {
       if (a.acceptingJobs !== b.acceptingJobs) return a.acceptingJobs ? -1 : 1
@@ -59,7 +59,7 @@ export default function ServiceScreen() {
   const cardWidth = (width - gutter * 2 - COLUMN_GAP) / 2
   const where = city ? ` ở ${city}` : ""
   const availablePackages = template.variants.flatMap((variant) => {
-    const prices = ranked.filter((p) => p.acceptingJobs).flatMap((p) => (data?.services ?? []).filter((s) => s.proId === p.id && s.templateId === template.id && s.active).flatMap((s) => listedOptions(template, s.prices).filter((o) => o.variant.id === variant.id && priceOk(o.minimumTotal)).map((o) => o.unitPrice)))
+    const prices = ranked.filter((p) => p.acceptingJobs).flatMap((p) => (data?.services ?? []).filter((s) => s.proId === p.id && s.templateId === template.id && s.active).flatMap((s) => listedOptions(template, s.prices, app.studioBookingOpen).filter((o) => o.variant.id === variant.id && priceOk(o.minimumTotal)).map((o) => o.unitPrice)))
     return prices.length ? [{ variant, price: Math.min(...prices) }] : []
   })
 
@@ -79,7 +79,7 @@ export default function ServiceScreen() {
         <Txt v="h1">{template.name}</Txt>
         <Txt color={colors.inkSoft}>{template.description}</Txt>
         <View style={{ gap: 10, marginTop: 10 }}>
-          <Fact icon="pin" text={placeLabel(template)} />
+          <Fact icon="pin" text={placeLabel(template, undefined, app.studioBookingOpen)} />
           {template.deliverable ? (
             <Fact icon="box" text={`${template.deliverable}${template.deliveryDays ? `, giao trong ${template.deliveryDays} ngày` : ""}`} />
           ) : null}
@@ -197,7 +197,7 @@ function Fact({ icon, text, soft }: { icon?: "pin" | "box" | "check"; text: stri
 function ProOffer({ pro, templateId, minTotal, maxTotal }: { pro: AppPro; templateId: string; minTotal: number; maxTotal: number }) {
   const app = useApp()
   const listing = app.data?.services.find((s) => s.proId === pro.id && s.templateId === templateId && s.active)
-  const start = listedOptions(getTemplate(templateId)!, listing?.prices ?? {}).filter((o) => o.minimumTotal >= minTotal && (!maxTotal || o.minimumTotal <= maxTotal)).sort((a, b) => a.minimumTotal - b.minimumTotal)[0]
+  const start = listedOptions(getTemplate(templateId)!, listing?.prices ?? {}, app.studioBookingOpen).filter((o) => o.minimumTotal >= minTotal && (!maxTotal || o.minimumTotal <= maxTotal)).sort((a, b) => a.minimumTotal - b.minimumTotal)[0]
   const price = start?.unitPrice ?? null
   const km = app.distanceTo(pro)
   const photos = React.useMemo(

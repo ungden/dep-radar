@@ -1,4 +1,4 @@
-import { getTemplate, type CategoryId, type Pro, type ProService, type Review, type VerificationStatus, type Work, type WorkStats } from "@/shared"
+import { serviceLocationOpen, getTemplate, type CategoryId, type Pro, type ProService, type Review, type VerificationStatus, type Work, type WorkStats } from "@/shared"
 import { localDate } from "./format"
 import { imageUrl } from "./links"
 import { selectWithFallback, supabase, type Row } from "./supabase"
@@ -258,10 +258,10 @@ function assemble(proRows: Row[], workRows: Row[], reviewRows: Row[], priceRows:
 }
 
 /** Lowest price a freelancer lists for a service, or null when they don't offer it. */
-export function fromPrice(services: ProService[], proId: string, templateId?: string): number | null {
+export function fromPrice(services: ProService[], proId: string, templateId?: string, studioBookingOpen = false): number | null {
   let min: number | null = null
   for (const s of services) {
-    if (s.proId !== proId || !s.active) continue
+    if (s.proId !== proId || !s.active || !serviceLocationOpen(getTemplate(s.templateId), studioBookingOpen)) continue
     if (templateId ? s.templateId !== templateId : getTemplate(s.templateId)?.addon) continue
     for (const price of Object.values(s.prices)) if (min === null || price < min) min = price
   }

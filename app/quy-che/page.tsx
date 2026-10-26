@@ -79,7 +79,7 @@ export default function OperatingRulesPage() {
         <Section title="III. Quy trình giao dịch">
           <p className="font-semibold text-ink">Cách 1: khách đặt lịch với một đối tác</p>
           <ol className="mt-1 list-decimal space-y-1 pl-5">
-            <li>Khách chọn dịch vụ, gói, địa chỉ nhà hoặc địa điểm khách chọn (freelancer di chuyển đến) và giờ trống của đối tác; xem tổng tiền trước khi gửi.</li>
+            <li>Khách chọn dịch vụ, gói, nơi làm đang được mở (freelancer đến địa điểm khách chọn, hoặc khách đến studio khi hệ thống cho phép) và giờ trống của đối tác; xem tổng tiền trước khi gửi.</li>
             <li>
               Đối tác nhận hoặc từ chối trong {POLICY.confirmWithinHours} giờ, không quá giờ hẹn (lịch đặt từ 21:00 đến 08:00 có hạn tới 10:00 sáng hôm sau, không muộn hơn 1
               giờ trước giờ hẹn); không nhận kịp thì lịch tự hết hạn, khách không mất gì.

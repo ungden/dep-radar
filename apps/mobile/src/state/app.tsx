@@ -1,4 +1,6 @@
+import { watchStudioBookingSetting } from "@shared/booking-features"
 import * as React from "react"
+import { AppState as NativeAppState } from "react-native"
 import * as AppleAuthentication from "expo-apple-authentication"
 import * as Crypto from "expo-crypto"
 import * as SecureStore from "expo-secure-store"
@@ -24,6 +26,7 @@ const CITY_KEY = "dep360_city"
 type SignInResult = { ok: true; needsPhone: boolean } | { ok: false; error: string | null }
 
 interface AppState {
+  studioBookingOpen: boolean
   /** False until the stored session and city have been read. */
   ready: boolean
   configured: boolean
@@ -99,6 +102,22 @@ async function afterPassword(identifier: string, res: AuthResult): Promise<SignI
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  const [studioBookingOpen, setStudioBookingOpen] = React.useState(false)
+  React.useEffect(() => {
+    if (!backendConfigured) return
+    return watchStudioBookingSetting({
+      read: async () => {
+        const { data, error } = await supabase.from("platform_settings").select("studio_booking_open").eq("id", true).single()
+        return !error && data && typeof data.studio_booking_open === "boolean" ? data.studio_booking_open : null
+      },
+      onChange: setStudioBookingOpen,
+      isActive: () => NativeAppState.currentState === "active",
+      subscribeFocus: (sync) => {
+        const listener = NativeAppState.addEventListener("change", (state) => { if (state === "active") sync() })
+        return () => listener.remove()
+      },
+    })
+  }, [])
   const [sessionReady, setSessionReady] = React.useState(!backendConfigured)
   const [cityReady, setCityReady] = React.useState(false)
   const [session, setSession] = React.useState<Session | null>(null)
@@ -400,6 +419,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   )
 
   const value: AppState = {
+    studioBookingOpen,
     ready,
     configured: backendConfigured,
     session,

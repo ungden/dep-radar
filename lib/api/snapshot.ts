@@ -97,6 +97,7 @@ export interface AppSnapshot {
 }
 
 export const emptyPlatform: PlatformSettings = {
+  studioBookingOpen: false,
   topupBankBin: null,
   topupAccountNo: null,
   topupAccountName: null,
@@ -322,7 +323,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
           .from("platform_settings")
           .select(
             `topup_bank_bin, topup_account_no, topup_account_name, support_zalo, support_email, company_name, company_tax_id, company_address${
-              legacy ? "" : ", referral_enabled, referral_customer_amount, referral_pro_amount, referral_min_total, referral_monthly_cap, voucher_days"
+              legacy ? "" : ", studio_booking_open, referral_enabled, referral_customer_amount, referral_pro_amount, referral_min_total, referral_monthly_cap, voucher_days"
             }`,
           )
           .maybeSingle(),
@@ -448,6 +449,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
   const settings = platformRes.data as Row | null
   const platform: PlatformSettings = settings
     ? {
+        studioBookingOpen: settings.studio_booking_open === true,
         topupBankBin: settings.topup_bank_bin,
         topupAccountNo: settings.topup_account_no,
         topupAccountName: settings.topup_account_name,

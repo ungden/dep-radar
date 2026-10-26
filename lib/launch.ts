@@ -36,10 +36,10 @@ export const SUPPORT_ZALO = "0987220101"
 export const IDENTITY_REQUIRED_FOR_PARTNERS = IDENTITY_VERIFICATION_OPEN && true
 
 /** Studio visits are held back while the marketplace focuses on travelling freelancers. */
-export const STUDIO_BOOKING_OPEN = false
+export const DEFAULT_STUDIO_BOOKING_OPEN = false
 
-export const serviceLocationOpen = (template: Pick<ServiceTemplate, "studioOnly"> | undefined) =>
-  Boolean(template) && (STUDIO_BOOKING_OPEN || !template?.studioOnly)
+export const serviceLocationOpen = (template: Pick<ServiceTemplate, "studioOnly"> | undefined, studioBookingOpen = DEFAULT_STUDIO_BOOKING_OPEN) =>
+  Boolean(template) && (studioBookingOpen || !template?.studioOnly)
 
-export const providerLocationOpen = (pro: Pick<Pro, "homeService">) =>
-  STUDIO_BOOKING_OPEN || pro.homeService
+export const providerLocationOpen = (pro: Pick<Pro, "homeService">, studioBookingOpen = DEFAULT_STUDIO_BOOKING_OPEN) =>
+  studioBookingOpen || pro.homeService

@@ -1,13 +1,13 @@
 import * as React from "react"
-import { rankScore, verticalOf, type CategoryId, type VerticalFilter } from "@/shared"
+import { providerLocationOpen, rankScore, verticalOf, type CategoryId, type VerticalFilter } from "@/shared"
 import { fromPrice, type AppPro, type AppWork } from "@/data/public"
 import { useApp } from "./app"
 
 /** What the customer can browse right now: listed people in the chosen city. */
 export function useBrowse() {
-  const { data, city, me, distanceTo, blocked } = useApp()
+  const { data, city, me, distanceTo, blocked, studioBookingOpen } = useApp()
   return React.useMemo(() => {
-    const pros = (data?.pros ?? []).filter((p) => p.published && (!city || p.city === city) && !blocked.has(p.uuid))
+    const pros = (data?.pros ?? []).filter((p) => providerLocationOpen(p, studioBookingOpen) && p.published && (!city || p.city === city) && !blocked.has(p.uuid))
     const proIds = new Set(pros.map((p) => p.id))
     const works = (data?.works ?? []).filter((w) => proIds.has(w.proId))
     const proById = new Map((data?.pros ?? []).map((p) => [p.id, p]))
@@ -53,13 +53,13 @@ export function useBrowse() {
       inVertical,
       worksIn,
       peopleFor,
-      priceOf: (proId: string, templateId?: string) => fromPrice(services, proId, templateId),
+      priceOf: (proId: string, templateId?: string) => fromPrice(services, proId, templateId, studioBookingOpen),
       /** A real photo for a category, for bubbles and occasion cards. */
       photoFor: (category: CategoryId): string | undefined =>
         (works.find((w) => w.category === category && w.images[0]) ?? data?.works.find((w) => w.category === category && w.images[0]))
           ?.images[0],
     }
-  }, [data, city, me, distanceTo, blocked])
+  }, [data, city, me, distanceTo, blocked, studioBookingOpen])
 }
 
 export type Browse = ReturnType<typeof useBrowse>

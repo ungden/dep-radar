@@ -39,9 +39,9 @@ export function ServiceView({ templateId }: { templateId: string }) {
   const city = cityParam === "all" ? null : cityParam ?? state.city
   const maxPrice = Math.max(0, Number(params.get("price")) || 0)
   const comesToYou = params.get("home") === "1"
-  const optionsOf = (p: Pro) => listedOptions(template, servicesOf(state, p.id).find((s) => s.templateId === templateId)?.prices ?? {}).filter((o) => !maxPrice || o.minimumTotal <= maxPrice)
+  const optionsOf = (p: Pro) => listedOptions(template, servicesOf(state, p.id).find((s) => s.templateId === templateId)?.prices ?? {}, state.platform?.studioBookingOpen).filter((o) => !maxPrice || o.minimumTotal <= maxPrice)
   const proOk = (p: Pro) => (!comesToYou || (p.homeService && !template.studioOnly)) && (params.get("open") !== "1" || p.acceptingJobs) && (!IDENTITY_VERIFICATION_OPEN || params.get("verified") !== "1" || isVerified(p))
-  if (!serviceLocationOpen(template)) return <div className="mx-auto max-w-2xl py-12"><h1 className="text-heading font-bold">Dịch vụ này chưa mở</h1><p className="mt-3 text-body">Hiện chỉ nhận freelancer đến nhà hoặc địa điểm bạn chọn.</p><Link href="/search" className="mt-4 inline-block underline">Tìm dịch vụ làm tận nơi</Link></div>
+  if (!serviceLocationOpen(template, state.platform?.studioBookingOpen)) return <div className="mx-auto max-w-2xl py-12"><h1 className="text-heading font-bold">Dịch vụ này chưa mở</h1><p className="mt-3 text-body">Hiện chỉ nhận freelancer đến nhà hoặc địa điểm bạn chọn.</p><Link href="/search" className="mt-4 inline-block underline">Tìm dịch vụ làm tận nơi</Link></div>
   if (state.catalogError) return <div className="py-8"><DataUnavailable /></div>
 
   const offering = (p: Pro) => servicesOf(state, p.id).find((s) => s.templateId === templateId)
@@ -88,7 +88,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
           <ul className="mt-6 space-y-2.5 rounded-[var(--radius-lg)] border border-line bg-surface p-5 text-body">
             <li className="flex gap-2.5">
               <MapPin className="mt-0.5 size-4 shrink-0" />
-              {placeLabel(template)}
+              {placeLabel(template, undefined, state.platform?.studioBookingOpen)}
             </li>
             {template.deliverable && (
               <li className="flex gap-2.5">
@@ -189,7 +189,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
 function ProOffer({ pro, templateId, maxPrice }: { pro: Pro; templateId: string; maxPrice: number }) {
   const state = useApp()
   const listing = servicesOf(state, pro.id).find((s) => s.templateId === templateId)
-  const start = listedOptions(getTemplate(templateId)!, listing?.prices ?? {}).filter((o) => !maxPrice || o.minimumTotal <= maxPrice).sort((a, b) => a.minimumTotal - b.minimumTotal)[0]
+  const start = listedOptions(getTemplate(templateId)!, listing?.prices ?? {}, state.platform?.studioBookingOpen).filter((o) => !maxPrice || o.minimumTotal <= maxPrice).sort((a, b) => a.minimumTotal - b.minimumTotal)[0]
   const from = start?.unitPrice ?? null
   const photos = state.works
     .filter((w) => w.proId === pro.id)

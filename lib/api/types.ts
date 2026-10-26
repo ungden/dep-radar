@@ -191,6 +191,7 @@ export interface TimeBlock {
 
 /** The platform's own details (wallet top-up, support, company). Null means not set: show nothing. */
 export interface PlatformSettings {
+  studioBookingOpen: boolean
   topupBankBin: string | null
   topupAccountNo: string | null
   topupAccountName: string | null

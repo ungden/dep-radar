@@ -23,7 +23,7 @@ Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 
 ## Trạng thái hiện tại
 
-- Chỉ mở lịch freelancer di chuyển đến nhà hoặc địa điểm khách chọn. Lựa chọn đến studio và dịch vụ bắt buộc tại studio đang tạm đóng (`STUDIO_BOOKING_OPEN`); dữ liệu studio và lịch đã đặt được giữ lại.
+- Chỉ mở lịch freelancer di chuyển đến nhà hoặc địa điểm khách chọn. Lựa chọn đến studio và dịch vụ bắt buộc tại studio mặc định tắt. Bật lại tại Quản trị → Cấu hình → Đặt lịch tại studio (`platform_settings.studio_booking_open`); web và app mới tự đọc khi vào lại hoặc tối đa 60 giây khi đang dùng và có mạng, không cần sửa code/build lại. Dữ liệu studio và lịch đã đặt được giữ lại.
 
 - Production (`www.360dep.vn`) đọc và ghi Supabase thật. Luật giá, phí, lịch trống và trạng thái lịch hẹn nằm trong database (RLS + RPC), trình duyệt chỉ hiển thị.
 - Chuyên viên và tác phẩm đang hiện là **dữ liệu mẫu** (sinh từ `lib/data.ts`), có nhãn trên trang.

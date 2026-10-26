@@ -18,7 +18,7 @@ export function PartnerProgress() {
   }, [state.session?.proId, state.myServices, state.works])
   if (error) return <p role="alert" className="mb-4 text-body text-danger">{error}</p>
   if (!setup?.profile) return null
-  const steps = partnerProgress(setup)
+  const steps = partnerProgress(setup, state.platform?.studioBookingOpen)
   const next = steps.find((s) => !s.done)
   return (
     <Card className="mb-5 p-4">
