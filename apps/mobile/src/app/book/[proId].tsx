@@ -2,7 +2,7 @@ import * as React from "react"
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet"
 import { Stack, router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router"
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View, useWindowDimensions } from "react-native"
-import { appointmentAt, CITIES, POLICY, buildQuote, districtsOf, getTemplate, isUrgent, perUnitSuffix, serviceDuration, travelDistanceKm, serviceQuantity, type PriceQuote } from "@/shared"
+import { STUDIO_BOOKING_OPEN, providerLocationOpen, serviceLocationOpen, appointmentAt, CITIES, POLICY, buildQuote, districtsOf, getTemplate, isUrgent, perUnitSuffix, serviceDuration, travelDistanceKm, serviceQuantity, type PriceQuote } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
 import { rpc } from "@/data/supabase"
 import { toTimestamptz } from "@/data/format"
@@ -54,7 +54,7 @@ function BookingFlow() {
   const largeText = fontScale >= 1.5
 
   const listed = React.useMemo(
-    () => (pro ? (app.data?.services ?? []).filter((s) => s.proId === pro.id && s.active && Object.keys(s.prices).length && getTemplate(s.templateId)) : []),
+    () => (pro ? (app.data?.services ?? []).filter((s) => s.proId === pro.id && providerLocationOpen(pro) && s.active && Object.keys(s.prices).length && serviceLocationOpen(getTemplate(s.templateId))) : []),
     [app.data, pro],
   )
   // Add-ons (nail art per finger, an elaborate hairdo) are only chosen on top of a main service.
@@ -99,7 +99,7 @@ function BookingFlow() {
   const unit = variant && listing ? listing.prices[variant.id] : 0
   const servicePrice = unit * heads
 
-  const canStudio = Boolean(pro?.studioAddress)
+  const canStudio = STUDIO_BOOKING_OPEN && Boolean(pro?.studioAddress)
   const canHome = Boolean(pro?.homeService) && !template?.studioOnly
   const atHome = canHome && (atHomePref || !canStudio)
 

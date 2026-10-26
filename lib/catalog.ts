@@ -1,3 +1,4 @@
+import { serviceLocationOpen } from "./launch"
 import type { Category, CategoryId, ServiceTemplate, ServiceVariant, Vertical, VerticalId } from "./types"
 
 export const VERTICALS: Vertical[] = [
@@ -178,14 +179,14 @@ export const CATALOG: ServiceTemplate[] = [
     id: "makeup-bridal",
     category: "makeup",
     name: "Makeup cô dâu",
-    description: "Makeup và làm tóc cô dâu cho từng lễ. Nên test makeup trước để xem layout đã chọn có hợp không.",
+    description: "Makeup và làm tóc cô dâu cho từng lễ, dự kiến 3 giờ mỗi buổi. Nên test makeup trước để xem layout đã chọn có hợp không.",
     includes: ["Makeup + làm tóc cô dâu", "Mi giả, phụ kiện tóc cơ bản", "Tư vấn layout theo váy, áo dài"],
     variants: [
-      v("trial", "Test makeup trước ngày cưới", 90, [600, 900, 1500]),
-      v("engagement", "Dạm ngõ / đám hỏi", 120, [1000, 1600, 2800]),
-      v("wedding", "Gia tiên / tiệc cưới", 120, [1300, 2000, 3500]),
+      v("trial", "Test makeup trước ngày cưới", 180, [600, 900, 1500]),
+      v("engagement", "Dạm ngõ / đám hỏi", 180, [1000, 1600, 2800]),
+      v("wedding", "Gia tiên / tiệc cưới", 180, [1300, 2000, 3500]),
       // Both ceremonies with one artist: the two prices above added up, level by level.
-      { ...v("two", "Trọn gói 2 lễ: đám hỏi + tiệc cưới (2 buổi)", 120, [2300, 3600, 6300]), sessions: 2 },
+      { ...v("two", "Trọn gói 2 lễ: đám hỏi + tiệc cưới (2 buổi)", 180, [2300, 3600, 6300]), sessions: 2 },
     ],
   },
   {
@@ -216,9 +217,9 @@ export const CATALOG: ServiceTemplate[] = [
     id: "makeup-prewedding",
     category: "makeup",
     name: "Makeup chụp ảnh cưới",
-    description: "Makeup cô dâu cho buổi chụp ảnh cưới trong studio hoặc ngoại cảnh.",
+    description: "Makeup cô dâu cho buổi chụp ảnh cưới trong studio hoặc ngoại cảnh. Dự kiến ít nhất 3 giờ, đã gồm làm tóc.",
     includes: ["Makeup + tóc cô dâu", "Đổi layout theo trang phục", "Mi giả"],
-    variants: [v("studio", "Chụp trong studio", 120, [900, 1300, 2200]), v("outdoor", "Ngoại cảnh, theo cả buổi", 300, [1200, 1800, 3000])],
+    variants: [v("studio", "Chụp trong studio", 180, [900, 1300, 2200]), v("outdoor", "Ngoại cảnh, theo cả buổi", 300, [1200, 1800, 3000])],
   },
   // Skincare ---------------------------------------------------------------
   {
@@ -930,13 +931,13 @@ export const ADDONS: ServiceTemplate[] = [
 
 /** Everything a partner can list in a category: the catalogue and its add-ons. */
 export const partnerTemplatesByCategory = (category: CategoryId) =>
-  [...CATALOG, ...ADDONS].filter((t) => t.category === category)
+  [...CATALOG, ...ADDONS].filter((t) => t.category === category && serviceLocationOpen(t))
 
 export const getTemplate = (id: string) => CATALOG.find((t) => t.id === id) ?? ADDONS.find((t) => t.id === id)
 export const getVariant = (templateId: string, variantId: string) =>
   getTemplate(templateId)?.variants.find((x) => x.id === variantId)
-export const templatesByCategory = (category: CategoryId) => CATALOG.filter((t) => t.category === category)
-export const templatesByVertical = (vertical: VerticalId) => CATALOG.filter((t) => verticalOf(t.category) === vertical)
+export const templatesByCategory = (category: CategoryId) => CATALOG.filter((t) => t.category === category && serviceLocationOpen(t))
+export const templatesByVertical = (vertical: VerticalId) => CATALOG.filter((t) => verticalOf(t.category) === vertical && serviceLocationOpen(t))
 
 /** The names of a variant's price levels, lowest first. */
 export function tierLabels(variant?: Pick<ServiceVariant, "tiers">): string[] {

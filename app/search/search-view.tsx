@@ -1,5 +1,7 @@
 "use client"
 
+import { providerLocationOpen } from "@/lib/launch"
+
 import * as React from "react"
 import { Suspense } from "react"
 import Link from "next/link"
@@ -97,7 +99,7 @@ function SearchView() {
 
   const proOk = React.useCallback(
     (pro: Pro) =>
-      pro.published &&
+      providerLocationOpen(pro) && pro.published &&
       (!city || pro.city === city) &&
       (!verifiedOnly || isVerified(pro)) &&
       (!openOnly || pro.acceptingJobs) &&

@@ -46,19 +46,19 @@ export default function PolicyPage() {
 
         <Section title="2. Phí di chuyển">
           <ul className="list-disc space-y-1 pl-5">
-            <li>Miễn phí trong {POLICY.freeTravelKm} km đầu tính từ khu vực của người làm.</li>
+            <li>Dưới {POLICY.nearTravelKm} km: {formatPrice(POLICY.nearTravelFee)}.</li>
             <li>
-              Từ km thứ {POLICY.freeTravelKm + 1}: {formatPrice(POLICY.travelFeePerKm)}/km, làm tròn lên 5.000đ, tối đa {formatPrice(POLICY.travelFeeCap)}.
+              Từ {POLICY.nearTravelKm} km trở lên (kể cả trên 10 km): {formatPrice(POLICY.travelFeeCap)}, là mức tối đa.
             </li>
+            <li>Hệ thống tự ước tính khoảng cách từ điểm xuất phát của người làm, hiển thị phí trước khi xác nhận và chốt phí lúc đặt; không tính lại tại chỗ.</li>
             <li>Địa chỉ ngoài bán kính người làm đăng ký thì không chọn được làm tại nhà.</li>
-            <li>Khách đến studio không mất phí di chuyển.</li>
+            <li>Hiện chỉ nhận lịch freelancer đến nhà hoặc địa điểm khách chọn; chưa mở đặt lịch tại studio của người làm.</li>
           </ul>
         </Section>
 
         <Section title="3. Phí đặt gấp">
           <p>
-            Lịch bắt đầu trong vòng {POLICY.urgentWithinHours} giờ kể từ lúc đặt tính thêm {formatPrice(POLICY.urgentFee)} để bù việc người làm phải sắp xếp gấp, áp dụng cả
-            khi làm tại studio, và không tính lại nếu sau đó đổi giờ. Không nhận lịch bắt đầu trong vòng {POLICY.minLeadMinutes} phút.
+            Lịch bắt đầu trong vòng {POLICY.urgentWithinHours} giờ kể từ lúc đặt tính thêm {formatPrice(POLICY.urgentFee)} để bù việc người làm phải sắp xếp gấp, và không tính lại nếu sau đó đổi giờ. Không nhận lịch bắt đầu trong vòng {POLICY.minLeadMinutes} phút.
           </p>
         </Section>
 

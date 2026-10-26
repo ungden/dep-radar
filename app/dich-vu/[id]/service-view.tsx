@@ -1,5 +1,7 @@
 "use client"
 
+import { serviceLocationOpen } from "@/lib/launch"
+
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -39,6 +41,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
   const comesToYou = params.get("home") === "1"
   const optionsOf = (p: Pro) => listedOptions(template, servicesOf(state, p.id).find((s) => s.templateId === templateId)?.prices ?? {}).filter((o) => !maxPrice || o.minimumTotal <= maxPrice)
   const proOk = (p: Pro) => (!comesToYou || (p.homeService && !template.studioOnly)) && (params.get("open") !== "1" || p.acceptingJobs) && (!IDENTITY_VERIFICATION_OPEN || params.get("verified") !== "1" || isVerified(p))
+  if (!serviceLocationOpen(template)) return <div className="mx-auto max-w-2xl py-12"><h1 className="text-heading font-bold">Dịch vụ này chưa mở</h1><p className="mt-3 text-body">Hiện chỉ nhận freelancer đến nhà hoặc địa điểm bạn chọn.</p><Link href="/search" className="mt-4 inline-block underline">Tìm dịch vụ làm tận nơi</Link></div>
   if (state.catalogError) return <div className="py-8"><DataUnavailable /></div>
 
   const offering = (p: Pro) => servicesOf(state, p.id).find((s) => s.templateId === templateId)

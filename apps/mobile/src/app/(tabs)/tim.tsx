@@ -4,6 +4,8 @@ import { router, useLocalSearchParams } from "expo-router"
 import { ScrollView, TextInput, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
+  STUDIO_BOOKING_OPEN,
+  providerLocationOpen,
   CATEGORIES,
   VERTICALS,
   categoryLabel,
@@ -95,6 +97,7 @@ export default function Search() {
     const q = words(query)
     const services = browse.services
     const out = browse.pros.filter((p) => {
+      if (!providerLocationOpen(p)) return false
       if (filters.vertical !== "all" && !p.categories.some((c) => verticalOf(c) === filters.vertical)) return false
       if (filters.category && !p.categories.includes(filters.category)) return false
       if (filters.verified && p.identity !== "verified") return false
@@ -349,7 +352,7 @@ export default function Search() {
           ))}
         </Group>
         <Group title="Làm ở đâu">
-          {(Object.keys(PLACE_LABEL) as Place[]).map((p) => (
+          {(Object.keys(PLACE_LABEL) as Place[]).filter((p) => STUDIO_BOOKING_OPEN || p !== "studio").map((p) => (
             <Chip key={p} label={PLACE_LABEL[p]} selected={draft.place === p} onPress={() => setDraft({ ...draft, place: p })} />
           ))}
         </Group>

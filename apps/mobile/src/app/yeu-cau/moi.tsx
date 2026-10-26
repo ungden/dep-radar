@@ -31,7 +31,7 @@ const TIMES = Array.from({ length: 28 }, (_, i) => {
  * (a higher level is usually taken sooner). Every freelancer who can do
  * it is told and the first to take it gets it. The same post_job RPC as
  * app/requests/new on the web. Requests are for work at the customer's
- * place; studio work is booked directly.
+ * place; studio visits are currently closed.
  */
 export default function NewRequest() {
   const app = useApp()
@@ -43,7 +43,7 @@ export default function NewRequest() {
   const [variantId, setVariantId] = React.useState(templatesByCategory("nail")[0].variants[0].id)
   const [quantity, setQuantity] = React.useState(1)
   /** The chosen price level per person; null is "Tiêu chuẩn". */
-  const [feeLimit, setFeeLimit] = React.useState(0)
+  const [feeLimit, setFeeLimit] = React.useState<number>(POLICY.nearTravelFee)
   const [tier, setTier] = React.useState<number | null>(null)
   const [description, setDescription] = React.useState("")
   const [photos, setPhotos] = React.useState<PickedPhoto[]>([])
@@ -178,7 +178,7 @@ export default function NewRequest() {
           </View>
           {tpl.studioOnly ? (
             <Txt v="meta" color={colors.warning}>
-              Dịch vụ này cần thiết bị tại studio: hãy đặt lịch trực tiếp với người làm.
+              Dịch vụ cần thiết bị tại studio hiện chưa mở. Hãy chọn dịch vụ làm tận nơi.
             </Txt>
           ) : null}
         </Group>
@@ -342,9 +342,9 @@ export default function NewRequest() {
         </Group>
 
         <Txt v="meta" color={colors.muted}>
-          Trả tiền mặt hoặc chuyển khoản cho người làm sau khi xong, không cần cọc. Làm xa hơn {POLICY.freeTravelKm} km hoặc bắt đầu trong {POLICY.urgentWithinHours} giờ tới, cộng thêm phí di chuyển / phí gấp theo bảng giá 360dep.
+          Trả tiền mặt hoặc chuyển khoản cho người làm sau khi xong, không cần cọc. Làm tại nhà có phí di chuyển theo khoảng cách; bắt đầu trong {POLICY.urgentWithinHours} giờ tới có thêm phí đặt gấp. Các khoản phí hiện rõ trước khi xác nhận lịch.
         </Txt>
-        <Group title="Phí di chuyển tối đa đồng ý"><View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>{[0, 25000, 50000, 100000].map((n) => <Chip key={n} label={formatPrice(n)} selected={n === feeLimit} onPress={() => setFeeLimit(n)} />)}</View><Txt>Tổng tối đa {formatPrice(maxTotal)} (đã gồm phí gấp nếu có).</Txt></Group>
+        <Group title="Phí di chuyển tối đa đồng ý"><View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>{[POLICY.nearTravelFee, POLICY.travelFeeCap].map((n) => <Chip key={n} label={formatPrice(n)} selected={n === feeLimit} onPress={() => setFeeLimit(n)} />)}</View><Txt>Tổng tối đa {formatPrice(maxTotal)} (đã gồm phí gấp nếu có).</Txt></Group>
         {(variant.sessions ?? 1) > 1 && <ErrorNote text="Gói nhiều buổi: đặt trực tiếp từ hồ sơ đối tác để chọn đủ lịch." />}
         {needsConductNote(category) ? <ConductNote /> : null}
         {error ? <ErrorNote text={error} /> : null}

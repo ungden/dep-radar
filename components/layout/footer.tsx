@@ -3,7 +3,7 @@ import { LogoMark, Wordmark } from "@/components/ui"
 import { CATEGORIES, VERTICALS } from "@/lib/catalog"
 import { OCCASIONS } from "@/lib/occasions"
 import { CITIES } from "@/lib/geo"
-import { POLICY } from "@/lib/pricing"
+import { TRAVEL_FEE_SUMMARY } from "@/lib/pricing"
 import { DEMO_DATA_LIVE } from "@/lib/launch"
 import { CompanyInfo } from "@/components/company-info"
 import { CONDUCT } from "@/lib/conduct"
@@ -35,7 +35,7 @@ export function Footer() {
             </span>
             <p className="mt-4 max-w-xs text-meta leading-relaxed text-white/70">
               Đặt thợ làm đẹp, người chụp ảnh và người mẫu gần bạn. Giá theo khung chuẩn, khách không trả phí nền
-              tảng, miễn phí di chuyển trong {POLICY.freeTravelKm} km đầu.
+              tảng. Phí di chuyển tại nhà: {TRAVEL_FEE_SUMMARY}.
             </p>
           </div>
 

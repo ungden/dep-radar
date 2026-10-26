@@ -546,8 +546,8 @@ export function SettingsPanel({ settings, fees, log }: { settings: PlatformSetti
           <Line label="Ví âm tối đa trước khi bị chặn" value={formatPrice(fees.walletFloor)} />
           <Line label="Người làm phải nhận lịch trong" value={`${fees.confirmWithinHours} giờ`} />
           <Line label="Huỷ miễn phí trước giờ hẹn" value={`${fees.freeCancelHours} giờ`} />
-          <Line label="Di chuyển miễn phí" value={`${fees.freeTravelKm} km`} />
-          <Line label="Phí di chuyển" value={`${formatPrice(fees.travelFeePerKm)}/km, tối đa ${formatPrice(fees.travelFeeCap)}`} />
+          <Line label={`Di chuyển dưới ${fees.nearTravelKm} km`} value={formatPrice(fees.nearTravelFee)} />
+          <Line label={`Di chuyển từ ${fees.nearTravelKm} km`} value={`${formatPrice(fees.travelFeeCap)} (tối đa)`} />
           <Line label="Phí đặt gấp" value={`${formatPrice(fees.urgentFee)} (trong ${fees.urgentWithinHours} giờ)`} />
         </div>
       </Card>

@@ -898,8 +898,8 @@ export interface FeePolicyView {
   confirmWithinHours: number
   freeCancelHours: number
   lateCancelRate: number
-  freeTravelKm: number
-  travelFeePerKm: number
+  nearTravelKm: number
+  nearTravelFee: number
   travelFeeCap: number
   urgentWithinHours: number
   urgentFee: number
@@ -951,8 +951,8 @@ export async function adminSettings(): Promise<{ settings: PlatformSettings; fee
       confirmWithinHours: Number(p.confirm_within_hours ?? 0),
       freeCancelHours: Number(p.free_cancel_hours ?? 0),
       lateCancelRate: Number(p.late_cancel_rate ?? 0),
-      freeTravelKm: Number(p.free_travel_km ?? 0),
-      travelFeePerKm: Number(p.travel_fee_per_km ?? 0),
+      nearTravelKm: Number(p.near_travel_km ?? 0),
+      nearTravelFee: Number(p.near_travel_fee ?? 0),
       travelFeeCap: Number(p.travel_fee_cap ?? 0),
       urgentWithinHours: Number(p.urgent_within_hours ?? 0),
       urgentFee: Number(p.urgent_fee ?? 0),

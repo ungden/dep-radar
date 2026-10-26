@@ -24,9 +24,9 @@ beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
   window.scrollTo = vi.fn()
   const date = addDays(todayISO(), 1)
-  mocks.params = new URLSearchParams({ service: "makeup-bridal", variant: "two", date, time: "09:00", place: "studio", secondDate: addDays(date, 1), secondTime: "10:30" })
-  const pro = { id: "qa", uuid: "qa-uuid", name: "QA", city: "Hà Nội", district: "Cầu Giấy", published: true, acceptingJobs: true, homeService: true, studioAddress: "Studio", categories: ["makeup"], areas: [], highlights: [], bio: "", stats: { responseMinutes: 0, completedJobs: 0 }, rating: { average: 0, count: 0 }, identity: "none", maxTravelKm: 15 }
-  mocks.state = { session: { role: "customer", name: "QA", phone: "0900000000" }, pros: [pro], proServices: [{ id: "qa:makeup-bridal", proId: "qa", templateId: "makeup-bridal", active: true, prices: { two: 4800000 } }], myServices: [], addresses: [], bookings: [], works: [], reviews: [], vouchers: [], customerAddress: null, blockedAccounts: [] } as unknown as AppState
+  mocks.params = new URLSearchParams({ service: "makeup-bridal", variant: "two", date, time: "09:00", place: "studio", city: "Hà Nội", district: "Phường Cầu Giấy", secondDate: addDays(date, 1), secondTime: "10:30" })
+  const pro = { id: "qa", uuid: "qa-uuid", name: "QA", city: "Hà Nội", district: "Phường Cầu Giấy", published: true, acceptingJobs: true, homeService: true, studioAddress: "Studio", categories: ["makeup"], areas: [], highlights: [], bio: "", stats: { responseMinutes: 0, completedJobs: 0 }, rating: { average: 0, count: 0 }, identity: "none", maxTravelKm: 15 }
+  mocks.state = { session: { role: "customer", name: "QA", phone: "0900000000" }, pros: [pro], proServices: [{ id: "qa:makeup-bridal", proId: "qa", templateId: "makeup-bridal", active: true, prices: { two: 4800000 } }], myServices: [], addresses: [{ id: "qa-address", label: "Nhà", city: "Hà Nội", district: "Phường Cầu Giấy", detail: "12 Đường Test", isDefault: true }], bookings: [], works: [], reviews: [], vouchers: [], customerAddress: null, blockedAccounts: [] } as unknown as AppState
   mocks.slots.mockResolvedValue({ ok: true, data: [{ startsAt: toTimestamptz(date, "09:00"), time: "09:00" }] })
   mocks.quote.mockResolvedValue({ ok: true, data: quote })
   host = document.createElement("div"); document.body.append(host); root = createRoot(host)
@@ -35,6 +35,19 @@ afterEach(async () => { await act(async () => root.unmount()); host.remove() })
 const render = async () => { await act(async () => { root.render(createElement(BookPage)) }) }
 
 describe("booking recovery", () => {
+  it("ignores an old studio link and quotes a travelling freelancer at the saved address", async () => {
+    await render()
+    expect(host.textContent).not.toContain("Tại studio")
+    expect(mocks.quote).toHaveBeenCalledWith(expect.objectContaining({ atHome: true, addressId: "qa-address" }))
+    expect(mocks.slots).toHaveBeenCalledWith(expect.objectContaining({ atHome: true, addressId: "qa-address" }))
+  })
+  it("does not open booking for a studio-only provider", async () => {
+    mocks.state = { ...mocks.state, pros: mocks.state.pros.map((p) => ({ ...p, homeService: false })) }
+    await render()
+    expect(host.textContent).toContain("Người làm này chưa nhận đặt lịch")
+    expect(mocks.quote).not.toHaveBeenCalled()
+    expect(mocks.slots).not.toHaveBeenCalled()
+  })
   it("shows a quote failure and retries without sending an estimated-price booking", async () => {
     mocks.quote.mockResolvedValueOnce({ ok: false, error: "Không xác nhận được tổng tiền." })
     await render()
@@ -93,5 +106,6 @@ describe("booking recovery", () => {
     expect(resume.searchParams.get("secondDate")).toBe(mocks.params.get("secondDate"))
     expect(resume.searchParams.get("secondTime")).toBe("10:30")
     expect(resume.searchParams.get("time")).toBe("09:00")
+    expect(resume.searchParams.has("place")).toBe(false)
   })
 })

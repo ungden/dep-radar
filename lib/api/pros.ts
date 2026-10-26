@@ -1,3 +1,4 @@
+import { STUDIO_BOOKING_OPEN } from "@/lib/launch"
 import { cache } from "react"
 import { backendEnabled } from "@/lib/supabase/env"
 import { supabaseServer } from "@/lib/supabase/server"
@@ -30,6 +31,7 @@ export async function listPros(filter: { city?: string; category?: string } = {}
   if (!backendEnabled) return []
   const supabase = await supabaseServer()
   let query = supabase.from("pros").select(PRO_PUBLIC).eq("published", true).is("suspended_at", null)
+  if (!STUDIO_BOOKING_OPEN) query = query.eq("home_service", true)
   if (filter.city) query = query.eq("city", filter.city)
   if (filter.category) query = query.contains("categories", [filter.category])
   const { data, error } = await query

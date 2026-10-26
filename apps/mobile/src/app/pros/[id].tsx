@@ -2,7 +2,7 @@ import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import { ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { categoryLabel, getTemplate, perUnitSuffix, showsAverage, verticalOf, type Pro, tierLabels } from "@/shared"
+import { STUDIO_BOOKING_OPEN, serviceLocationOpen, providerLocationOpen, categoryLabel, getTemplate, perUnitSuffix, showsAverage, verticalOf, type Pro, tierLabels } from "@/shared"
 import { formatDuration, formatKm, formatPrice, formatRating, formatResponseTime } from "@/data/format"
 import { loadProExtras } from "@/data/public"
 import { FollowButton } from "@/components/follow-button"
@@ -71,7 +71,7 @@ export default function ProProfile() {
 
   const works = app.data?.works.filter((w) => w.proId === pro.id) ?? []
   const reviews = app.data?.reviews.filter((r) => r.proId === pro.id && !hiddenReviews.has(r.id)) ?? []
-  const listings = app.data?.services.filter((s) => s.proId === pro.id && s.active && Object.keys(s.prices).length) ?? []
+  const listings = app.data?.services.filter((s) => s.proId === pro.id && providerLocationOpen(pro) && serviceLocationOpen(getTemplate(s.templateId)) && s.active && Object.keys(s.prices).length) ?? []
   const km = app.distanceTo(pro)
   const response = formatResponseTime(pro.stats.responseMinutes)
   const isMe = app.uid === pro.uuid
@@ -308,8 +308,8 @@ export default function ProProfile() {
               </View>
             ) : null}
             <Card>
-              <Info label="Hình thức" value={[pro.homeService ? "Đến tận nơi" : null, pro.studioAddress ? "Tại studio" : null].filter(Boolean).join(" · ") || "Chưa ghi"} />
-              {pro.studioAddress ? <Info label="Studio" value={pro.studioAddress} /> : null}
+              <Info label="Hình thức" value={[pro.homeService ? "Đến tận nơi" : null, STUDIO_BOOKING_OPEN && pro.studioAddress ? "Tại studio" : null].filter(Boolean).join(" · ") || "Chưa ghi"} />
+              {STUDIO_BOOKING_OPEN && pro.studioAddress ? <Info label="Studio" value={pro.studioAddress} /> : null}
               {pro.homeService ? <Info label="Đi xa tối đa" value={`${pro.maxTravelKm} km`} /> : null}
               {pro.areas.length ? <Info label="Khu vực" value={pro.areas.join(", ")} /> : null}
               {pro.yearsExp > 0 ? <Info label="Kinh nghiệm" value={`${pro.yearsExp} năm`} /> : null}

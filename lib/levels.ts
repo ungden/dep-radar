@@ -1,3 +1,4 @@
+import { serviceLocationOpen } from "./launch"
 import { getTemplate, tierLabels } from "./catalog"
 import type { CategoryId, ProService, ServiceVariant } from "./types"
 
@@ -34,7 +35,7 @@ function packagesIn(listings: readonly Listing[], proId: string, category: Categ
   for (const l of listings) {
     if (l.proId !== proId || !l.active) continue
     const tpl = getTemplate(l.templateId)
-    if (!tpl || tpl.addon || tpl.category !== category) continue
+    if (!tpl || !serviceLocationOpen(tpl) || tpl.addon || tpl.category !== category) continue
     for (const [variantId, price] of Object.entries(l.prices)) {
       const variant = tpl.variants.find((v) => v.id === variantId)
       if (variant) out.push({ variant, price })

@@ -1,5 +1,7 @@
 "use client"
 
+import { serviceLocationOpen } from "@/lib/launch"
+
 import * as React from "react"
 import { moveRadio } from "@/lib/radio-navigation"
 import Link from "next/link"
@@ -31,7 +33,7 @@ function ServicesManager() {
   const act = useAct()
   const proId = state.session!.proId!
   const pro = proView(state, proId)!
-  const listings = servicesOf(state, proId, true)
+  const listings = servicesOf(state, proId, true).filter((s) => serviceLocationOpen(getTemplate(s.templateId)))
   const [editing, setEditing] = React.useState<string | null>(null)
   const [adding, setAdding] = React.useState(false)
   const rate = POLICY.commissionRate

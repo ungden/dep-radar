@@ -12,7 +12,7 @@ import { CATEGORIES, VERTICALS, templatesByCategory } from "@/lib/catalog"
 import { absoluteUrl } from "@/lib/env"
 import { serializeJsonLd } from "@/lib/json-ld"
 import { CITIES } from "@/lib/geo"
-import { POLICY } from "@/lib/pricing"
+import { TRAVEL_FEE_SUMMARY } from "@/lib/pricing"
 import { categoryPhrase, landingDescription, landingTitle, personWord, priceBand } from "@/lib/trade"
 import type { Category, CategoryId } from "@/lib/types"
 import { formatPrice } from "@/lib/utils"
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const category = categoryFromSlug(categorySlug)
   if (!city || !category) return {}
   const title = metaTitle(category, city)
-  const description = landingDescription(category, city, POLICY.freeTravelKm)
+  const description = landingDescription(category, city)
   return {
     title,
     description,
@@ -96,7 +96,7 @@ function intro(category: Category, city: string, count: number) {
   const label = category.label.toLowerCase()
   if (category.vertical === "beauty")
     return count
-      ? `${count} ${person} ${label} nhận làm tại nhà ở ${city}. Giá theo khung chuẩn của 360dep, khách không trả phí nền tảng, miễn phí di chuyển trong ${POLICY.freeTravelKm} km đầu.`
+      ? `${count} ${person} ${label} nhận làm tại nhà ở ${city}. Giá theo khung chuẩn của 360dep, khách không trả phí nền tảng. Phí di chuyển: ${TRAVEL_FEE_SUMMARY}.`
       : `360dep chưa có ${person} ${label} ở ${city}. Bạn có thể đăng yêu cầu để ${person} quanh khu vực nhận việc.`
   if (!count)
     return `360dep chưa có ${person} nào nhận việc này ở ${city}. Ngành này vừa mở; bạn có thể đăng yêu cầu để người phù hợp liên hệ.`

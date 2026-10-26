@@ -22,7 +22,7 @@ import { rankFeed, type VerticalFilter } from "@/lib/feed"
 import { CITIES } from "@/lib/geo"
 import { occasionTemplates, occasionsFor, suggestionsFor } from "@/lib/occasions"
 import { categoryRow, serviceOffers } from "@/lib/offers"
-import { POLICY } from "@/lib/pricing"
+import { POLICY, TRAVEL_FEE_SUMMARY } from "@/lib/pricing"
 import { distanceToCustomer, getPro, useApp } from "@/lib/store"
 import type { Booking, Category, CategoryId } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -251,7 +251,7 @@ function HeroCarousel({ now, onVertical }: { now: Date; onVertical: (v: Vertical
       key: "beauty",
       eyebrow: "Làm đẹp tại nhà",
       title: "Nail, makeup, gội dưỡng: người làm đến tận nơi",
-      text: "Giá niêm yết cho từng gói, miễn phí di chuyển 5 km đầu. Làm xong mới trả.",
+      text: `Giá niêm yết cho từng gói. Phí di chuyển: ${TRAVEL_FEE_SUMMARY}. Làm xong mới trả.`,
       cta: "Xem dịch vụ làm đẹp",
       photo: HERO_PHOTOS.beauty,
       onClick: () => onVertical("beauty"),
@@ -401,7 +401,7 @@ function HowItWorks() {
   const steps = [
     { n: "01", title: "Chọn gói, thấy giá trước", text: "Giá niêm yết cho từng gói, khách không trả phí nền tảng, không đặt cọc." },
     { n: "02", title: "Người làm gọi xác nhận", text: `Người làm gọi cho bạn chốt giờ và nơi làm rồi mới nhận lịch, thường trong ${POLICY.confirmWithinHours} giờ.` },
-    { n: "03", title: "Làm xong mới trả", text: `Trả trực tiếp sau khi xong. Miễn phí di chuyển ${POLICY.freeTravelKm} km đầu; chỉ khách đã làm mới được đánh giá.` },
+    { n: "03", title: "Làm xong mới trả", text: `Trả trực tiếp sau khi xong. Phí di chuyển hiện rõ khi đặt; chỉ khách đã làm mới được đánh giá.` },
   ]
   return (
     <section className="mt-14 md:mt-20">

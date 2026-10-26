@@ -1,3 +1,4 @@
+import { STUDIO_BOOKING_OPEN } from "@/shared"
 import * as React from "react"
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
@@ -26,7 +27,7 @@ export default function PartnerProfile() {
   const [categories, setCategories] = React.useState<CategoryId[]>([])
   const [city, setCity] = React.useState(CITIES[0])
   const [district, setDistrict] = React.useState("")
-  const [home, setHome] = React.useState(false)
+  const [home, setHome] = React.useState(!STUDIO_BOOKING_OPEN)
   const [studio, setStudio] = React.useState("")
   const [radiusKm, setRadiusKm] = React.useState("10")
   const [equipment, setEquipment] = React.useState("")
@@ -45,7 +46,7 @@ export default function PartnerProfile() {
     if (initial && r.data.profile) {
       const p = r.data.profile
       setTitle(p.title); setBio(p.bio); setCategories(p.categories); setCity(p.city); setDistrict(p.district)
-      setHome(p.home_service); setStudio(p.studio_address ?? ""); setRadiusKm(String(p.max_travel_km)); setEquipment(p.equipment ?? "")
+      setHome(!STUDIO_BOOKING_OPEN || p.home_service); setStudio(p.studio_address ?? ""); setRadiusKm(String(p.max_travel_km)); setEquipment(p.equipment ?? "")
       setHours(r.data.hours.map((h) => ({ weekday: h.weekday, start: timeLabel(h.startMin), end: timeLabel(h.endMin) })))
     }
   }, [])
@@ -142,9 +143,9 @@ export default function PartnerProfile() {
       <Button label="Tiếp tục: nơi phục vụ" variant="secondary" onPress={() => { setEditing(null); setStep(2) }} />
     </>}
     {step === 2 && <>
-      <Choice label={home ? "✓ Nhận tại nhà / địa điểm khách" : "Nhận tại nhà / địa điểm khách"} active={home} onPress={() => setHome(!home)} />
+      {STUDIO_BOOKING_OPEN ? <Choice label={home ? "✓ Nhận tại nhà / địa điểm khách" : "Nhận tại nhà / địa điểm khách"} active={home} onPress={() => setHome(!home)} /> : <Txt>Nhận lịch freelancer đến nhà hoặc địa điểm khách chọn.</Txt>}
       <Field label="Bán kính phục vụ (1–30 km)" value={radiusKm} onChange={setRadiusKm} numeric />
-      <Field label="Địa chỉ studio (nếu có)" value={studio} onChange={setStudio} />
+      {STUDIO_BOOKING_OPEN && <Field label="Địa chỉ studio (nếu có)" value={studio} onChange={setStudio} />}
       <Field label="Giới thiệu" value={bio} onChange={setBio} multiline />
       <Field label="Thiết bị / vật tư bạn sử dụng" value={equipment} onChange={setEquipment} />
       <Button label="Lưu & chọn giờ làm" busy={busy} disabled={(!home && !studio.trim()) || !Number.isFinite(Number(radiusKm)) || Number(radiusKm) < 1 || Number(radiusKm) > 30} onPress={() => void mutate("save_partner_profile", { p_profile: { homeService: home, studioAddress: studio, maxTravelKm: Number(radiusKm), bio, equipment } }, 3)} />

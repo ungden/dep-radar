@@ -26,12 +26,16 @@ begin
   ---------------------------------------------------------------------------
   raise notice 'travel fee bands';
   assert public.travel_fee(null) = 0, 'unknown distance is free';
-  assert public.travel_fee(0) = 0, 'zero km is free';
-  assert public.travel_fee(5) = 0, 'the free radius is free';
-  -- 1.1 km x 5.000 = 5.500, rounded up to 10.000.
-  assert public.travel_fee(6.1) = 10000, format('6.1km -> %s', public.travel_fee(6.1));
-  assert public.travel_fee(10.6) = 30000, format('10.6km -> %s', public.travel_fee(10.6));
+  assert public.travel_fee(0) = 50000, 'same area has the near fee';
+  assert public.travel_fee(4.9) = 50000, 'below 5 km';
+  assert public.travel_fee(4.999) = 50000, 'strictly below 5 km';
+  assert public.travel_fee(5) = 100000, 'exactly 5 km enters the second band';
+  assert public.travel_fee(6.1) = 100000, '5–10 km';
+  assert public.travel_fee(9) = 100000, '9 km uses the second band';
+  assert public.travel_fee(10) = 100000, 'exactly 10 km';
+  assert public.travel_fee(10.6) = 100000, 'over 10 km keeps the cap';
   assert public.travel_fee(500) = 100000, 'the cap holds';
+  assert public.travel_fee(-1) = 0 and public.travel_fee('NaN') = 0, 'invalid distances';
 
   raise notice 'commission rounds the same way as the UI';
   assert public.commission_for(350000, 0.15) = 53000, 'commission of 350.000';
@@ -41,14 +45,22 @@ begin
 
   raise notice 'fees belong to the freelancer, commission only to the service';
   q := public.build_quote(300000, 1, true, 10.6, true);
-  assert q.travel_fee = 30000 and q.urgent_fee = 50000, 'fees applied';
-  assert q.total = 380000, format('total %s', q.total);
+  assert q.travel_fee = 100000 and q.urgent_fee = 50000, 'fees applied';
+  assert q.total = 450000, format('total %s', q.total);
   assert q.commission = public.commission_for(300000, q.commission_rate), 'commission ignores fees';
   assert q.payout = q.total - q.commission, 'payout keeps the fees';
 
   raise notice 'a studio visit ignores distance';
   q := public.build_quote(200000, 1, false, 20, false);
   assert q.distance_km is null and q.travel_fee = 0, 'no travel fee at the studio';
+
+  raise notice 'bridal makeup reserves three hours per appointment';
+  assert public.service_duration_min('makeup-bridal', 'trial', 1) = 180, 'bridal trial';
+  assert public.service_duration_min('makeup-bridal', 'engagement', 1) = 180, 'engagement';
+  assert public.service_duration_min('makeup-bridal', 'wedding', 1) = 180, 'wedding';
+  assert public.service_duration_min('makeup-bridal', 'two', 1) = 180, 'each ceremony has its own three-hour slot';
+  assert public.service_duration_min('makeup-prewedding', 'studio', 1) = 180, 'studio prewedding';
+  assert public.service_duration_min('makeup-prewedding', 'outdoor', 1) = 300, 'outdoor stays longer';
 
   raise notice 'group options multiply by head count';
   assert public.service_duration_min('makeup-photo', 'group3', 3) = 135, 'three heads take three slots';
@@ -2861,3 +2873,24 @@ begin
   perform set_config('request.jwt.claim.sub', '', true);
   raise notice 'ADMIN PROFILE TOOLS PASS';
 end $$;
+
+-- Studio launch gate (20261026): inserts must still be blocked when the UI is bypassed.
+begin;
+create temporary table travelling_booking_probe (at_home boolean not null);
+create trigger travelling_booking_probe before insert on travelling_booking_probe
+  for each row execute function partner_private.guard_travelling_freelancer_booking();
+do $$
+begin
+  assert (select count(*) = 2 from pg_trigger
+    where tgname in ('aaa_travelling_freelancer_booking', 'aaa_travelling_freelancer_job')
+      and tgenabled = 'O'), 'booking and request inserts have the launch guard';
+  insert into travelling_booking_probe values (true);
+  begin
+    insert into travelling_booking_probe values (false);
+    assert false, 'a studio visit was accepted';
+  exception when check_violation then
+    assert sqlerrm = 'Hiện chỉ nhận lịch freelancer đến nhà hoặc địa điểm khách chọn. Đặt lịch tại studio chưa mở.', 'studio visit failed for another reason';
+  end;
+  assert (select count(*) = 1 from travelling_booking_probe), 'travelling bookings still work';
+end $$;
+rollback;

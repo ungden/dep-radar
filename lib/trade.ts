@@ -1,3 +1,5 @@
+import { STUDIO_BOOKING_OPEN } from "./launch"
+import { TRAVEL_FEE_SUMMARY } from "./pricing"
 import { CATEGORIES, getVertical, verticalOf } from "./catalog"
 import type { Category, CategoryId, ServiceTemplate, VerticalId } from "./types"
 
@@ -45,10 +47,10 @@ export function landingTitle(category: Category, city: string) {
   return category.vertical === "beauty" ? `${phrase} tại nhà ${city}` : `${phrase} ở ${city}`
 }
 
-export function landingDescription(category: Category, city: string, freeTravelKm: number) {
+export function landingDescription(category: Category, city: string) {
   const phrase = categoryPhrase(category).toLowerCase()
   if (category.vertical === "beauty")
-    return `Đặt ${phrase} tại nhà ở ${city}. Xem tác phẩm thật, giá niêm yết theo khung chuẩn, khách không trả phí nền tảng, miễn phí di chuyển trong ${freeTravelKm} km.`
+    return `Đặt ${phrase} tại nhà ở ${city}. Xem tác phẩm thật, giá niêm yết theo khung chuẩn, khách không trả phí nền tảng. Phí di chuyển: ${TRAVEL_FEE_SUMMARY}.`
   if (category.vertical === "photo")
     return `${categoryPhrase(category)} ở ${city}: xem ảnh thật, giá theo gói rõ ràng, chụp tại địa điểm bạn chọn. Khách không trả phí nền tảng.`
   return `${categoryPhrase(category)} ở ${city}: mẫu đã xác minh danh tính, giá theo giờ rõ ràng, làm việc tại địa điểm bạn chọn. Khách không trả phí nền tảng.`
@@ -65,6 +67,11 @@ export function priceBand(template: Pick<ServiceTemplate, "variants">): [number,
 
 /** Where a service happens, in the words a customer uses. */
 export function placeLabel(template: Pick<ServiceTemplate, "onLocation" | "studioOnly">, pro?: { homeService: boolean; studioAddress?: string }) {
+  if (!STUDIO_BOOKING_OPEN) {
+    if (template.studioOnly) return "Dịch vụ tại studio chưa mở"
+    if (pro && !pro.homeService) return "Hiện chưa nhận lịch làm tận nơi"
+    return template.onLocation ? "Tại địa điểm bạn chọn" : "Tại nhà bạn"
+  }
   if (template.onLocation) return "Tại địa điểm bạn chọn"
   if (template.studioOnly) return "Tại studio"
   if (!pro) return "Tại nhà bạn hoặc tại studio"

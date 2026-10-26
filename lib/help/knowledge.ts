@@ -1,7 +1,7 @@
 import { tierLabels } from "@/lib/catalog"
 import { AUTO_COMPLETE_HOURS, MIN_REVIEWS_FOR_AVERAGE, NO_SHOW_AFTER_MIN, REVIEW_WINDOW_DAYS } from "@/lib/connection"
 import { DEMO_DATA_LIVE, IDENTITY_REQUIRED_FOR_PARTNERS, IDENTITY_VERIFICATION_OPEN, SUPPORT_ZALO } from "@/lib/launch"
-import { POLICY } from "@/lib/pricing"
+import { POLICY, TRAVEL_FEE_SUMMARY } from "@/lib/pricing"
 import { VIDEO_MAX_MB, VIDEO_MAX_SECONDS } from "@/lib/video-meta"
 import type { HelpAudience, HelpEntry, HelpTopicId } from "./types"
 
@@ -129,7 +129,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "khach",
     topic: "dat-lich",
     q: "Làm tại nhà hay tại studio? Vì sao có dịch vụ không đặt tại nhà được?",
-    a: `Mỗi người làm cho biết họ nhận làm tại nhà khách, tại studio hay cả hai, và bán kính đi lại (tối đa 30 km). Một số dịch vụ chỉ làm tại studio vì cần máy móc, hoá chất hoặc vệ sinh đặc biệt (nhuộm, uốn, duỗi, hấp tóc, gội dưỡng sinh, chăm sóc da đầu, phun mày, nối mi). Làm tại nhà cần chọn một địa chỉ đã lưu để tính đường đi; địa chỉ ngoài bán kính của người làm sẽ không đặt được.`,
+    a: `Hiện 360đẹp chỉ nhận lịch freelancer đến nhà hoặc địa điểm khách chọn, trong bán kính phục vụ của người làm (tối đa 30 km). Chưa mở lựa chọn đến studio của người làm. Các dịch vụ bắt buộc có thiết bị tại studio tạm thời chưa nhận đặt. Bạn cần chọn một địa chỉ đã lưu để tính đường đi; địa chỉ ngoài bán kính của người làm sẽ không đặt được.`,
     keywords: ["tai nha", "studio", "ban kinh", "ngoai pham vi"],
   },
   {
@@ -212,7 +212,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "khach",
     topic: "gia-phi",
     q: "Phí di chuyển tính thế nào?",
-    a: `Chỉ áp dụng khi làm tại nhà: miễn phí ${POLICY.freeTravelKm} km đầu, sau đó ${vnd(POLICY.travelFeePerKm)}/km (làm tròn lên bội số ${vnd(5000)}), tối đa ${vnd(POLICY.travelFeeCap)}. Khoảng cách là ước tính từ khu vực (quận/huyện) của người làm tới địa chỉ bạn chọn, chốt lúc đặt và không tính lại tại chỗ. Phí di chuyển thuộc về người làm.`,
+    a: `Chỉ áp dụng khi làm tại nhà: ${TRAVEL_FEE_SUMMARY}. Khoảng cách là ước tính từ khu vực (quận/huyện) của người làm tới địa chỉ bạn chọn, chốt lúc đặt và không tính lại tại chỗ. Phí di chuyển thuộc về người làm.`,
     keywords: ["phi di chuyen", "phi xang", "km", "phi ship"],
   },
   {
@@ -220,7 +220,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "khach",
     topic: "gia-phi",
     q: "Phí đặt gấp là gì?",
-    a: `Lịch bắt đầu trong vòng ${POLICY.urgentWithinHours} giờ kể từ lúc đặt tính thêm ${vnd(POLICY.urgentFee)}, kể cả khi làm tại studio, để bù việc người làm phải sắp xếp gấp. Phí này thuộc về người làm và không tính lại nếu sau đó đổi giờ.`,
+    a: `Lịch bắt đầu trong vòng ${POLICY.urgentWithinHours} giờ kể từ lúc đặt tính thêm ${vnd(POLICY.urgentFee)}, để bù việc người làm phải sắp xếp gấp. Phí này thuộc về người làm và không tính lại nếu sau đó đổi giờ.`,
     keywords: ["phi gap", "dat gap"],
   },
   {
@@ -587,8 +587,8 @@ const ENTRIES: HelpEntry[] = [
     topic: "ho-so",
     q: "Đăng ký làm đối tác cần những gì? Có mất phí không?",
     a: IDENTITY_REQUIRED_FOR_PARTNERS
-      ? "Không có phí đăng ký hay phí duy trì. Cần tài khoản có số điện thoại, rồi làm các bước trong Studio: chọn nghề; chọn dịch vụ và mức giá từng gói; nơi phục vụ (tại nhà khách, studio hoặc cả hai, bán kính, điểm xuất phát); xác nhận giờ làm; đăng ít nhất một tác phẩm do chính bạn làm; xác minh danh tính (CCCD 2 mặt và ảnh chân dung cầm CCCD); đọc, xác nhận chính sách rồi gửi duyệt. Nên thêm tài khoản ngân hàng và mã QR để khách trả tiền nhanh."
-      : "Không có phí đăng ký hay phí duy trì. Cần tài khoản có số điện thoại, rồi làm 6 bước trong Studio: chọn nghề; chọn dịch vụ và mức giá từng gói; nơi phục vụ (tại nhà khách, studio hoặc cả hai, bán kính); xác nhận giờ làm; đăng ít nhất một tác phẩm do chính bạn làm; đọc, xác nhận chính sách rồi gửi duyệt.",
+      ? "Không có phí đăng ký hay phí duy trì. Cần tài khoản có số điện thoại, rồi làm các bước trong Studio: chọn nghề; chọn dịch vụ và mức giá từng gói; nơi phục vụ (đến nhà hoặc địa điểm khách chọn, bán kính, điểm xuất phát); xác nhận giờ làm; đăng ít nhất một tác phẩm do chính bạn làm; xác minh danh tính (CCCD 2 mặt và ảnh chân dung cầm CCCD); đọc, xác nhận chính sách rồi gửi duyệt. Nên thêm tài khoản ngân hàng và mã QR để khách trả tiền nhanh."
+      : "Không có phí đăng ký hay phí duy trì. Cần tài khoản có số điện thoại, rồi làm 6 bước trong Studio: chọn nghề; chọn dịch vụ và mức giá từng gói; nơi phục vụ (đến nhà hoặc địa điểm khách chọn, bán kính); xác nhận giờ làm; đăng ít nhất một tác phẩm do chính bạn làm; đọc, xác nhận chính sách rồi gửi duyệt.",
     keywords: ["dang ky", "doi tac", "mo ho so", "ctv", "lam doi tac"],
     links: [{ label: "Trang đối tác", href: "/doi-tac" }],
   },
@@ -629,7 +629,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "doi-tac",
     topic: "ho-so",
     q: "Tôi tự đặt giá được không? Muốn làm dịch vụ chưa có trong danh mục?",
-    a: `Không tự đặt giá. Mỗi gói có đúng 3 mức ${LEVELS}; bạn chọn một mức cho từng gói và đổi được bất cứ lúc nào. Lịch đã tạo giữ nguyên giá lúc đặt. Bạn chỉ chọn dịch vụ trong danh mục chuẩn và thuộc nghề đã khai; dịch vụ chỉ làm tại studio cần có địa chỉ studio. Muốn đề xuất thêm dịch vụ, liên hệ đội hỗ trợ: 360đẹp xem xét và thêm vào danh mục chung.`,
+    a: `Không tự đặt giá. Mỗi gói có đúng 3 mức ${LEVELS}; bạn chọn một mức cho từng gói và đổi được bất cứ lúc nào. Lịch đã tạo giữ nguyên giá lúc đặt. Bạn chỉ chọn dịch vụ trong danh mục chuẩn và thuộc nghề đã khai; các dịch vụ bắt buộc làm tại studio hiện chưa mở. Muốn đề xuất thêm dịch vụ, liên hệ đội hỗ trợ: 360đẹp xem xét và thêm vào danh mục chung.`,
     keywords: ["tu dat gia", "doi gia", "muc gia", "them dich vu", "dich vu moi"],
   },
   {
@@ -673,7 +673,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "doi-tac",
     topic: "lich-lam",
     q: "Bán kính phục vụ và phí di chuyển tính từ đâu?",
-    a: `Bạn chọn bán kính nhận đơn tại nhà: 3, 5, 10, 15, 20 hoặc 30 km. Khoảng cách tính từ điểm xuất phát: mặc định là tâm quận/huyện bạn khai; bấm "Dùng vị trí hiện tại" trong Hồ sơ → Nơi phục vụ để đặt điểm chính xác hơn (cách khu vực đã khai tối đa 15 km; khách không thấy vị trí chính xác của bạn). Khách ngoài bán kính không đặt tại nhà được. Phí di chuyển khách trả (miễn phí ${POLICY.freeTravelKm} km đầu, sau đó ${vnd(POLICY.travelFeePerKm)}/km, tối đa ${vnd(POLICY.travelFeeCap)}) thuộc về bạn 100% và không tính hoa hồng.`,
+    a: `Bạn chọn bán kính nhận đơn tại nhà: 3, 5, 10, 15, 20 hoặc 30 km. Khoảng cách tính từ điểm xuất phát: mặc định là tâm quận/huyện bạn khai; bấm "Dùng vị trí hiện tại" trong Hồ sơ → Nơi phục vụ để đặt điểm chính xác hơn (cách khu vực đã khai tối đa 15 km; khách không thấy vị trí chính xác của bạn). Khách ngoài bán kính không đặt tại nhà được. Phí di chuyển khách trả (${TRAVEL_FEE_SUMMARY}) thuộc về bạn 100% và không tính hoa hồng.`,
     keywords: ["ban kinh", "pham vi", "phi di chuyen", "xa"],
   },
   {
@@ -757,7 +757,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "doi-tac",
     topic: "vang-mat",
     q: "Tới nơi mà khách không có nhà, không nghe máy?",
-    a: `Chờ ít nhất ${NO_SHOW_AFTER_MIN} phút sau giờ hẹn, gọi và nhắn khách trong app, chụp ảnh tại địa điểm làm bằng chứng. Sau đó bấm "Khách vắng mặt" trong chi tiết lịch (web). Không tính hoa hồng. Nếu lịch có phí di chuyển, 360đẹp bù cho bạn đúng bằng khoản đó, cộng vào ví sau 24 giờ nếu khách không khiếu nại; lịch tại studio hoặc trong ${POLICY.freeTravelKm} km không có phí di chuyển nên không có khoản bù. Khách khiếu nại thì nhân viên xem xét và báo kết quả cho bạn.`,
+    a: `Chờ ít nhất ${NO_SHOW_AFTER_MIN} phút sau giờ hẹn, gọi và nhắn khách trong app, chụp ảnh tại địa điểm làm bằng chứng. Sau đó bấm "Khách vắng mặt" trong chi tiết lịch (web). Không tính hoa hồng. Nếu lịch có phí di chuyển, 360đẹp bù cho bạn đúng bằng khoản đó, cộng vào ví sau 24 giờ nếu khách không khiếu nại; lịch tại studio không có phí di chuyển nên không có khoản bù. Khách khiếu nại thì nhân viên xem xét và báo kết quả cho bạn.`,
     keywords: ["khach vang mat", "khach khong co nha", "bom hang", "khong nghe may"],
   },
   {
