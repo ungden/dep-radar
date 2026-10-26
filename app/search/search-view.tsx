@@ -99,19 +99,19 @@ function SearchView() {
 
   const proOk = React.useCallback(
     (pro: Pro) =>
-      providerLocationOpen(pro) && pro.published &&
+      providerLocationOpen(pro, state.platform?.studioBookingOpen) && pro.published &&
       (!city || pro.city === city) &&
       (!verifiedOnly || isVerified(pro)) &&
       (!openOnly || pro.acceptingJobs) &&
       (!comesToYou || pro.homeService),
-    [city, verifiedOnly, openOnly, comesToYou],
+    [city, verifiedOnly, openOnly, comesToYou, state.platform?.studioBookingOpen],
   )
 
   // What is for sale, as on the home page: a service somebody in scope lists,
   // matched on the service itself -- its name, description and category.
   const services = React.useMemo(() => {
     const pros = state.pros.filter(proOk)
-    const list = serviceOffers({ pros, proServices: state.proServices, works: state.works, city: city || null, vertical, priceFilter: maxPrice ? (total) => total <= maxPrice : undefined }).filter(
+    const list = serviceOffers({ studioBookingOpen: state.platform?.studioBookingOpen, pros, proServices: state.proServices, works: state.works, city: city || null, vertical, priceFilter: maxPrice ? (total) => total <= maxPrice : undefined }).filter(
       (o) =>
         (!category || o.template.category === category) &&
         (!comesToYou || !o.template.studioOnly) &&
@@ -128,7 +128,7 @@ function SearchView() {
       if (category && w.category !== category) return false
       const tpl = getTemplate(w.templateId)
       if (comesToYou && tpl?.studioOnly) return false
-      const options = tpl ? listedOptions(tpl, servicesOf(state, w.proId).find((s) => s.templateId === w.templateId)?.prices ?? {}) : []
+      const options = tpl ? listedOptions(tpl, servicesOf(state, w.proId).find((s) => s.templateId === w.templateId)?.prices ?? {}, state.platform?.studioBookingOpen) : []
       if (maxPrice && !options.some((o) => o.minimumTotal <= maxPrice)) return false
       // The work itself, not the person: "nail" should not return a makeup
       // photo because its author also does nails.
@@ -145,6 +145,7 @@ function SearchView() {
       list,
       state.pros,
       {
+        studioBookingOpen: state.platform?.studioBookingOpen,
         vertical,
         interests: interestsFrom({ chosen: state.interests, booked: [], saved: [] }),
         followed: new Set(state.followedPros),
@@ -161,7 +162,7 @@ function SearchView() {
     const priceOf = (proId: string) => {
       const prices = servicesOf(state, proId).flatMap((listing) => {
         const t = getTemplate(listing.templateId)
-        return !t || (category && t.category !== category) || (vertical !== "all" && verticalOf(t.category) !== vertical) || (comesToYou && t.studioOnly) ? [] : listedOptions(t, listing.prices).map((o) => o.minimumTotal)
+        return !t || (category && t.category !== category) || (vertical !== "all" && verticalOf(t.category) !== vertical) || (comesToYou && t.studioOnly) ? [] : listedOptions(t, listing.prices, state.platform?.studioBookingOpen).map((o) => o.minimumTotal)
       })
       return prices.length ? Math.min(...prices) : null
     }

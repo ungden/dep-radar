@@ -6,7 +6,7 @@ import { AUTO_COMPLETE_HOURS, MIN_REVIEWS_FOR_AVERAGE, NO_SHOW_AFTER_MIN, REVIEW
 import { POLICY } from "@/lib/pricing"
 import { DEMO_DATA_LIVE, IDENTITY_REQUIRED_FOR_PARTNERS, IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
 import { formatPrice } from "@/lib/utils"
-import { TopupPolicy } from "./fee-policy"
+import { StudioBookingPolicy, TopupPolicy } from "./fee-policy"
 import { ReferralPolicy } from "./referral-policy"
 
 export const metadata: Metadata = {
@@ -52,7 +52,7 @@ export default function PolicyPage() {
             </li>
             <li>Hệ thống tự ước tính khoảng cách từ điểm xuất phát của người làm, hiển thị phí trước khi xác nhận và chốt phí lúc đặt; không tính lại tại chỗ.</li>
             <li>Địa chỉ ngoài bán kính người làm đăng ký thì không chọn được làm tại nhà.</li>
-            <li>Hiện chỉ nhận lịch freelancer đến nhà hoặc địa điểm khách chọn; chưa mở đặt lịch tại studio của người làm.</li>
+            <StudioBookingPolicy />
           </ul>
         </Section>
 

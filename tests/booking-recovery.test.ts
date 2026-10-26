@@ -35,6 +35,12 @@ afterEach(async () => { await act(async () => root.unmount()); host.remove() })
 const render = async () => { await act(async () => { root.render(createElement(BookPage)) }) }
 
 describe("booking recovery", () => {
+  it("restores the studio choice when the admin enables it remotely", async () => {
+    mocks.state = { ...mocks.state, platform: { ...mocks.state.platform, studioBookingOpen: true } }
+    await render()
+    expect(host.textContent).toContain("Tại studio")
+    expect(mocks.quote).toHaveBeenCalledWith(expect.objectContaining({ atHome: false, addressId: null }))
+  })
   it("ignores an old studio link and quotes a travelling freelancer at the saved address", async () => {
     await render()
     expect(host.textContent).not.toContain("Tại studio")

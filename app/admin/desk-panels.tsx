@@ -481,6 +481,13 @@ export function SettingsPanel({ settings, fees, log }: { settings: PlatformSetti
   return (
     <div className="space-y-4">
       <Card className="space-y-4 p-4">
+        <p className="font-semibold">Đặt lịch tại studio</p>
+        <label className="flex items-center gap-3 text-body">
+          <input type="checkbox" checked={s.studioBookingOpen} onChange={(e) => set("studioBookingOpen", e.target.checked)} /> Cho phép khách đến studio của đối tác
+        </label>
+        <p className="text-meta text-muted">Tắt: chỉ nhận freelancer đến nhà hoặc địa điểm khách chọn. Bật: mở thêm studio và các dịch vụ cần thiết bị tại chỗ. Web và app mới tự đồng bộ khi mở lại hoặc trong tối đa 1 phút khi đang dùng và có mạng; không cần build app. Lịch đã đặt giữ nguyên.</p>
+      </Card>
+      <Card className="space-y-4 p-4">
         <p className="font-semibold">Thông tin công ty</p>
         <p className="-mt-3 text-meta text-muted">Hiện ở chân trang, trang Quy chế hoạt động và khi khách/đối tác cần liên hệ.</p>
         <div className="grid gap-3 md:grid-cols-2">
@@ -711,7 +718,7 @@ export function CatalogPanel() {
     }
   }, [])
 
-  const templates = partnerTemplatesByCategory(category)
+  const templates = partnerTemplatesByCategory(category, true)
   const labels = tierLabels()
 
   return (
@@ -735,7 +742,7 @@ export function CatalogPanel() {
               c.id === category ? "border-ink bg-ink text-canvas" : "border-line hover:bg-subtle",
             )}
           >
-            {c.label} ({partnerTemplatesByCategory(c.id).length})
+            {c.label} ({partnerTemplatesByCategory(c.id, true).length})
           </button>
         ))}
       </div>

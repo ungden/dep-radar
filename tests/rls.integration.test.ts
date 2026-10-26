@@ -224,6 +224,16 @@ describe.skipIf(!configured)("row level security over the API", () => {
     }
   })
 
+  it("exposes the studio setting publicly but does not let customers enable it", async () => {
+    const before = await client().from("platform_settings").select("studio_booking_open").eq("id", true).single()
+    expect(before.error).toBeNull()
+    expect(typeof before.data!.studio_booking_open).toBe("boolean")
+    const update = await client(tokenFor(customerId)).from("platform_settings").update({ studio_booking_open: !before.data!.studio_booking_open }).eq("id", true).select("id")
+    expect(update.data ?? []).toHaveLength(0)
+    const after = await client().from("platform_settings").select("studio_booking_open").eq("id", true).single()
+    expect(after.data).toEqual(before.data)
+  })
+
   it("keeps the state machine away from the anon key", async () => {
     const { error } = await client().rpc("confirm_booking", { p_booking: crypto.randomUUID() })
     expect(error).toBeTruthy()

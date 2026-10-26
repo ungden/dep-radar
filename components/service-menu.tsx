@@ -72,6 +72,7 @@ export function ServiceMenu({
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: string; service: ProService; bookable: boolean }) {
+  const state = useApp()
   const tpl = getTemplate(service.templateId)!
   const variants = tpl.variants.filter((v) => service.prices[v.id] !== undefined)
   const [variantId, setVariantId] = React.useState(variants[0]?.id)
@@ -90,7 +91,7 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
       <ul className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-meta text-ink-soft">
         <li className="inline-flex items-center gap-1.5">
           <MapPin className="size-3.5 text-muted" />
-          {placeLabel(tpl, pro)}
+          {placeLabel(tpl, pro, state.platform?.studioBookingOpen)}
         </li>
         {tpl.deliverable && (
           <li className="inline-flex items-center gap-1.5">

@@ -26,8 +26,8 @@ export interface ServiceOffer {
   photo?: string
 }
 
-export function listedOptions(template: ServiceTemplate, prices: Readonly<Record<string, number>>) {
-  if (!serviceLocationOpen(template)) return []
+export function listedOptions(template: ServiceTemplate, prices: Readonly<Record<string, number>>, studioBookingOpen = false) {
+  if (!serviceLocationOpen(template, studioBookingOpen)) return []
   return template.variants.flatMap((variant) => {
     const unitPrice = prices[variant.id]
     if (!Number.isFinite(unitPrice) || unitPrice <= 0) return []
@@ -37,6 +37,7 @@ export function listedOptions(template: ServiceTemplate, prices: Readonly<Record
 }
 
 export function serviceOffers(input: {
+  studioBookingOpen?: boolean
   pros: readonly Pro[]
   proServices: readonly ProService[]
   works: readonly Work[]
@@ -46,7 +47,7 @@ export function serviceOffers(input: {
   priceFilter?: (minimumTotal: number) => boolean
 }): ServiceOffer[] {
   const inScope = new Map(
-    input.pros.filter((p) => providerLocationOpen(p) && p.published && p.acceptingJobs && (!input.city || p.city === input.city) && (!input.proFilter || input.proFilter(p))).map((p) => [p.id, p]),
+    input.pros.filter((p) => providerLocationOpen(p, input.studioBookingOpen) && p.published && p.acceptingJobs && (!input.city || p.city === input.city) && (!input.proFilter || input.proFilter(p))).map((p) => [p.id, p]),
   )
 
   const byTemplate = new Map<string, { pros: Pro[]; options: ReturnType<typeof listedOptions> }>()
@@ -54,7 +55,7 @@ export function serviceOffers(input: {
     const pro = inScope.get(listing.proId)
     const template = CATALOG.find((t) => t.id === listing.templateId)
     if (!pro || !template || !listing.active) continue
-    const options = listedOptions(template, listing.prices).filter((option) => !input.priceFilter || input.priceFilter(option.minimumTotal))
+    const options = listedOptions(template, listing.prices, input.studioBookingOpen).filter((option) => !input.priceFilter || input.priceFilter(option.minimumTotal))
     if (!options.length) continue
     const entry = byTemplate.get(listing.templateId) ?? { pros: [], options: [] }
     if (!entry.pros.some((p) => p.id === pro.id)) entry.pros.push(pro)

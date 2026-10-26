@@ -1,3 +1,4 @@
+import { readStudioBookingOpen } from "@/lib/api/booking-features"
 import type { Metadata } from "next"
 import { cache } from "react"
 import { openGraph } from "@/lib/seo"
@@ -115,7 +116,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
     prosFor(city, category.id),
     noneIfUnknownCategory(listWorks({ category: category.id, limit: 24 })),
   ])
-  const templates = templatesByCategory(category.id as CategoryId)
+  const templates = templatesByCategory(category.id as CategoryId, await readStudioBookingOpen())
   const cityWorks = works.filter((w) => pros.some((p) => p.slug === w.proSlug))
   const title = landingTitle(category, city)
   const person = personWord([category.id])

@@ -1143,6 +1143,7 @@ export type Database = {
       }
       platform_settings: {
         Row: {
+          studio_booking_open: boolean
           company_address: string | null
           company_name: string | null
           company_tax_id: string | null
@@ -1160,6 +1161,7 @@ export type Database = {
           voucher_days: number
         }
         Insert: {
+          studio_booking_open?: boolean
           company_address?: string | null
           company_name?: string | null
           company_tax_id?: string | null
@@ -1177,6 +1179,7 @@ export type Database = {
           voucher_days?: number
         }
         Update: {
+          studio_booking_open?: boolean
           company_address?: string | null
           company_name?: string | null
           company_tax_id?: string | null

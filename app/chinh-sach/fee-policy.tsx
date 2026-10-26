@@ -18,3 +18,11 @@ export function TopupPolicy() {
     </li>
   )
 }
+
+/** The policy follows the same live admin setting as the booking form. */
+export function StudioBookingPolicy() {
+  const { platform } = useApp()
+  return <li>{platform.studioBookingOpen
+    ? "Có thể chọn đến studio khi đối tác có địa chỉ studio. Khách đến studio không mất phí di chuyển."
+    : "Hiện chỉ nhận lịch freelancer đến nhà hoặc địa điểm khách chọn; chưa mở đặt lịch tại studio của người làm."}</li>
+}

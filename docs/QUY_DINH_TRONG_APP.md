@@ -15,7 +15,7 @@ Văn bản ràng buộc pháp lý là [Quy chế hoạt động](https://www.360
 | Người làm nhận hoặc từ chối lịch trong | 2 giờ |
 | Di chuyển dưới 5 km | 50.000đ |
 | Di chuyển từ 5 km (kể cả trên 10 km) | 100.000đ tối đa |
-| Hình thức nhận lịch hiện tại | Freelancer đến nhà hoặc địa điểm khách chọn; chưa mở đến studio |
+| Hình thức nhận lịch hiện tại | Freelancer đến nhà hoặc địa điểm khách chọn; studio theo công tắc trong Quản trị → Cấu hình |
 | Phí đặt gấp (bắt đầu trong 3 giờ tới) | 50.000đ |
 | Đặt sớm nhất trước giờ hẹn | 60 phút |
 | Huỷ miễn phí trước giờ hẹn | 12 giờ |

@@ -33,12 +33,12 @@ function ServicesManager() {
   const act = useAct()
   const proId = state.session!.proId!
   const pro = proView(state, proId)!
-  const listings = servicesOf(state, proId, true).filter((s) => serviceLocationOpen(getTemplate(s.templateId)))
+  const listings = servicesOf(state, proId, true).filter((s) => serviceLocationOpen(getTemplate(s.templateId), state.platform?.studioBookingOpen))
   const [editing, setEditing] = React.useState<string | null>(null)
   const [adding, setAdding] = React.useState(false)
   const rate = POLICY.commissionRate
 
-  const available = pro.categories.flatMap((c) => partnerTemplatesByCategory(c)).filter((t) => !listings.some((l) => l.templateId === t.id))
+  const available = pro.categories.flatMap((c) => partnerTemplatesByCategory(c, state.platform?.studioBookingOpen)).filter((t) => !listings.some((l) => l.templateId === t.id))
 
   return (
     <>

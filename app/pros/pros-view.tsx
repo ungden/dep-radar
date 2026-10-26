@@ -108,7 +108,7 @@ function ProsView() {
 
   const filtered = state.pros.filter(
     (p) =>
-      providerLocationOpen(p) && p.published &&
+      providerLocationOpen(p, state.platform?.studioBookingOpen) && p.published &&
       (!city || p.city === city) &&
       (vertical === "all" || p.categories.some((c) => verticalOf(c) === vertical)) &&
       (!category || p.categories.includes(category)) &&

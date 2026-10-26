@@ -80,8 +80,8 @@ export default function Explore() {
 
   // browse.* leaves out people this person blocked.
   const offers = React.useMemo(
-    () => (app.data ? serviceOffers({ pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical }) : []),
-    [app.data, browse, app.city, vertical],
+    () => (app.data ? serviceOffers({ studioBookingOpen: app.studioBookingOpen, pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical }) : []),
+    [app.data, browse, app.city, vertical, app.studioBookingOpen],
   )
   // One row of the categories with the most on offer here; the rest (and the
   // ones nobody offers yet) behind "Xem thêm". Same as the web.
@@ -123,6 +123,7 @@ export default function Explore() {
         browse.works,
         browse.pros,
         {
+          studioBookingOpen: app.studioBookingOpen,
           vertical,
           interests: interestsFrom({ chosen: [], booked: app.me.bookedCategories, saved: browse.savedCategories }),
           followed: browse.followedSlugs,

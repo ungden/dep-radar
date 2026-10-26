@@ -295,11 +295,12 @@ function ProRow({ pro, own }: { pro: Pro; own: boolean }) {
 }
 
 function ServiceFacts({ tpl, pro, className }: { tpl: ServiceTemplate; pro: Pro; className?: string }) {
+  const state = useApp()
   return (
     <ul className={cn("space-y-2 text-body text-ink", className)}>
       <li className="flex items-start gap-2.5">
         <MapPin className="mt-0.5 size-[18px] shrink-0 text-muted" />
-        {placeLabel(tpl, pro)}
+        {placeLabel(tpl, pro, state.platform?.studioBookingOpen)}
       </li>
       {tpl.deliverable && (
         <li className="flex items-start gap-2.5">

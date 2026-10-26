@@ -10,7 +10,7 @@ import { CategoryTag, TradeDot } from "@/components/trade"
 import { ButtonLink } from "@/components/ui"
 import { getVertical, verticalOf } from "@/lib/catalog"
 import { getOccasion, OCCASIONS, occasionTemplates } from "@/lib/occasions"
-import { fromPrice, getPro, useApp, type AppState } from "@/lib/store"
+import { servicesOf, fromPrice, getPro, useApp, type AppState } from "@/lib/store"
 import { excludes, personWord, placeLabel, priceBand } from "@/lib/trade"
 import { rankScore } from "@/lib/trust"
 import type { Pro, ServiceTemplate } from "@/lib/types"
@@ -33,7 +33,7 @@ function providersOf(state: AppState, templateId: string) {
   for (const s of state.proServices) {
     if (s.templateId !== templateId || !s.active || seen.has(s.proId)) continue
     const pro = getPro(state, s.proId)
-    if (!pro?.published) continue
+    if (!pro?.published || !servicesOf(state, pro.id).some((x) => x.templateId === templateId)) continue
     seen.add(pro.id)
     list.push(pro)
   }
@@ -204,7 +204,7 @@ function Step({ index, template: t, state, city }: { index: number; template: Se
           <ul className="mt-3 space-y-1.5 text-body text-ink">
             <li className="flex items-start gap-2">
               <MapPin className="mt-0.5 size-4 shrink-0 text-muted" />
-              {placeLabel(t)}
+              {placeLabel(t, undefined, state.platform?.studioBookingOpen)}
             </li>
             {t.deliverable && (
               <li className="flex items-start gap-2">

@@ -1,4 +1,3 @@
-import { STUDIO_BOOKING_OPEN } from "./launch"
 import { TRAVEL_FEE_SUMMARY } from "./pricing"
 import { CATEGORIES, getVertical, verticalOf } from "./catalog"
 import type { Category, CategoryId, ServiceTemplate, VerticalId } from "./types"
@@ -66,8 +65,8 @@ export function priceBand(template: Pick<ServiceTemplate, "variants">): [number,
 }
 
 /** Where a service happens, in the words a customer uses. */
-export function placeLabel(template: Pick<ServiceTemplate, "onLocation" | "studioOnly">, pro?: { homeService: boolean; studioAddress?: string }) {
-  if (!STUDIO_BOOKING_OPEN) {
+export function placeLabel(template: Pick<ServiceTemplate, "onLocation" | "studioOnly">, pro?: { homeService: boolean; studioAddress?: string }, studioBookingOpen = false) {
+  if (!studioBookingOpen) {
     if (template.studioOnly) return "Dịch vụ tại studio chưa mở"
     if (pro && !pro.homeService) return "Hiện chưa nhận lịch làm tận nơi"
     return template.onLocation ? "Tại địa điểm bạn chọn" : "Tại nhà bạn"

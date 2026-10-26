@@ -129,7 +129,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "khach",
     topic: "dat-lich",
     q: "Làm tại nhà hay tại studio? Vì sao có dịch vụ không đặt tại nhà được?",
-    a: `Hiện 360đẹp chỉ nhận lịch freelancer đến nhà hoặc địa điểm khách chọn, trong bán kính phục vụ của người làm (tối đa 30 km). Chưa mở lựa chọn đến studio của người làm. Các dịch vụ bắt buộc có thiết bị tại studio tạm thời chưa nhận đặt. Bạn cần chọn một địa chỉ đã lưu để tính đường đi; địa chỉ ngoài bán kính của người làm sẽ không đặt được.`,
+    a: `Freelancer đến nhà hoặc địa điểm khách chọn, trong bán kính phục vụ của người làm (tối đa 30 km). Khi hệ thống mở studio, bạn có thể chọn đến studio nếu đối tác có địa chỉ; các dịch vụ cần thiết bị tại chỗ cũng hiện trở lại. Màn hình đặt lịch luôn thể hiện hình thức đang được mở. Làm tận nơi cần một địa chỉ đã lưu; địa chỉ ngoài bán kính của người làm sẽ không đặt được.`,
     keywords: ["tai nha", "studio", "ban kinh", "ngoai pham vi"],
   },
   {
@@ -629,7 +629,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "doi-tac",
     topic: "ho-so",
     q: "Tôi tự đặt giá được không? Muốn làm dịch vụ chưa có trong danh mục?",
-    a: `Không tự đặt giá. Mỗi gói có đúng 3 mức ${LEVELS}; bạn chọn một mức cho từng gói và đổi được bất cứ lúc nào. Lịch đã tạo giữ nguyên giá lúc đặt. Bạn chỉ chọn dịch vụ trong danh mục chuẩn và thuộc nghề đã khai; các dịch vụ bắt buộc làm tại studio hiện chưa mở. Muốn đề xuất thêm dịch vụ, liên hệ đội hỗ trợ: 360đẹp xem xét và thêm vào danh mục chung.`,
+    a: `Không tự đặt giá. Mỗi gói có đúng 3 mức ${LEVELS}; bạn chọn một mức cho từng gói và đổi được bất cứ lúc nào. Lịch đã tạo giữ nguyên giá lúc đặt. Bạn chỉ chọn dịch vụ trong danh mục chuẩn và thuộc nghề đã khai; dịch vụ bắt buộc làm tại studio chỉ hiện khi hệ thống mở lựa chọn studio. Muốn đề xuất thêm dịch vụ, liên hệ đội hỗ trợ: 360đẹp xem xét và thêm vào danh mục chung.`,
     keywords: ["tu dat gia", "doi gia", "muc gia", "them dich vu", "dich vu moi"],
   },
   {

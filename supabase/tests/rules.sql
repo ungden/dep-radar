@@ -2891,6 +2891,17 @@ begin
   exception when check_violation then
     assert sqlerrm = 'Hiện chỉ nhận lịch freelancer đến nhà hoặc địa điểm khách chọn. Đặt lịch tại studio chưa mở.', 'studio visit failed for another reason';
   end;
-  assert (select count(*) = 1 from travelling_booking_probe), 'travelling bookings still work';
+  -- Toggle through the same row the admin UI edits; both transitions are live.
+  update public.platform_settings set studio_booking_open = true where id;
+  insert into travelling_booking_probe values (false);
+  assert (select count(*) = 2 from travelling_booking_probe), 'studio accepted immediately when enabled';
+  update public.platform_settings set studio_booking_open = false where id;
+  begin
+    insert into travelling_booking_probe values (false);
+    assert false, 'studio stayed open after disabling';
+  exception when check_violation then
+    assert sqlerrm like '%studio chưa mở%', sqlerrm;
+  end;
+  assert (select count(*) = 2 from travelling_booking_probe), 'travelling bookings and the enabled studio visit still work';
 end $$;
 rollback;

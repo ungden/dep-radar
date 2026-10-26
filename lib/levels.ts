@@ -30,12 +30,12 @@ export function levelOfPrice(variant: Pick<ServiceVariant, "tiers">, price: numb
 type Listing = Pick<ProService, "proId" | "templateId" | "prices" | "active">
 
 /** Every price a person lists in a category, with its catalogue option. Add-ons (per finger…) are not packages. */
-function packagesIn(listings: readonly Listing[], proId: string, category: CategoryId) {
+function packagesIn(listings: readonly Listing[], proId: string, category: CategoryId, studioBookingOpen = false) {
   const out: { variant: ServiceVariant; price: number }[] = []
   for (const l of listings) {
     if (l.proId !== proId || !l.active) continue
     const tpl = getTemplate(l.templateId)
-    if (!tpl || !serviceLocationOpen(tpl) || tpl.addon || tpl.category !== category) continue
+    if (!tpl || !serviceLocationOpen(tpl, studioBookingOpen) || tpl.addon || tpl.category !== category) continue
     for (const [variantId, price] of Object.entries(l.prices)) {
       const variant = tpl.variants.find((v) => v.id === variantId)
       if (variant) out.push({ variant, price })
@@ -49,9 +49,9 @@ function packagesIn(listings: readonly Listing[], proId: string, category: Categ
  * packages they list there; a tie goes to the higher level. Null when they list
  * nothing there, or nothing at a catalogue level.
  */
-export function proLevelIn(listings: readonly Listing[], proId: string, category: CategoryId): Level | null {
+export function proLevelIn(listings: readonly Listing[], proId: string, category: CategoryId, studioBookingOpen = false): Level | null {
   const count = [0, 0, 0]
-  for (const { variant, price } of packagesIn(listings, proId, category)) {
+  for (const { variant, price } of packagesIn(listings, proId, category, studioBookingOpen)) {
     const level = levelOfPrice(variant, price)
     if (level !== null) count[level]++
   }
@@ -61,8 +61,8 @@ export function proLevelIn(listings: readonly Listing[], proId: string, category
 }
 
 /** The lowest price a person lists in a category ("Từ ..."), or null. */
-export function fromPriceIn(listings: readonly Listing[], proId: string, category: CategoryId): number | null {
-  const prices = packagesIn(listings, proId, category).map((p) => p.price)
+export function fromPriceIn(listings: readonly Listing[], proId: string, category: CategoryId, studioBookingOpen = false): number | null {
+  const prices = packagesIn(listings, proId, category, studioBookingOpen).map((p) => p.price)
   return prices.length ? Math.min(...prices) : null
 }
 
@@ -71,11 +71,11 @@ export function fromPriceIn(listings: readonly Listing[], proId: string, categor
  * packages, ties going to the order of their own categories. Null when they
  * list nothing.
  */
-export function mainCategory(listings: readonly Listing[], pro: { id: string; categories: readonly CategoryId[] }): CategoryId | null {
+export function mainCategory(listings: readonly Listing[], pro: { id: string; categories: readonly CategoryId[] }, studioBookingOpen = false): CategoryId | null {
   let best: CategoryId | null = null
   let bestCount = 0
   for (const c of pro.categories) {
-    const n = packagesIn(listings, pro.id, c).length
+    const n = packagesIn(listings, pro.id, c, studioBookingOpen).length
     if (n > bestCount) {
       best = c
       bestCount = n

@@ -930,14 +930,14 @@ export const ADDONS: ServiceTemplate[] = [
 ]
 
 /** Everything a partner can list in a category: the catalogue and its add-ons. */
-export const partnerTemplatesByCategory = (category: CategoryId) =>
-  [...CATALOG, ...ADDONS].filter((t) => t.category === category && serviceLocationOpen(t))
+export const partnerTemplatesByCategory = (category: CategoryId, studioBookingOpen = false) =>
+  [...CATALOG, ...ADDONS].filter((t) => t.category === category && serviceLocationOpen(t, studioBookingOpen))
 
 export const getTemplate = (id: string) => CATALOG.find((t) => t.id === id) ?? ADDONS.find((t) => t.id === id)
 export const getVariant = (templateId: string, variantId: string) =>
   getTemplate(templateId)?.variants.find((x) => x.id === variantId)
-export const templatesByCategory = (category: CategoryId) => CATALOG.filter((t) => t.category === category && serviceLocationOpen(t))
-export const templatesByVertical = (vertical: VerticalId) => CATALOG.filter((t) => verticalOf(t.category) === vertical && serviceLocationOpen(t))
+export const templatesByCategory = (category: CategoryId, studioBookingOpen = false) => CATALOG.filter((t) => t.category === category && serviceLocationOpen(t, studioBookingOpen))
+export const templatesByVertical = (vertical: VerticalId, studioBookingOpen = false) => CATALOG.filter((t) => verticalOf(t.category) === vertical && serviceLocationOpen(t, studioBookingOpen))
 
 /** The names of a variant's price levels, lowest first. */
 export function tierLabels(variant?: Pick<ServiceVariant, "tiers">): string[] {

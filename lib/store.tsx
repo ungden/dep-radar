@@ -1,5 +1,7 @@
 "use client"
 
+import { watchStudioBookingSetting } from "./booking-features"
+import { supabaseBrowser } from "./supabase/client"
 import { providerLocationOpen, serviceLocationOpen } from "./launch"
 
 import * as React from "react"
@@ -28,9 +30,25 @@ const RefreshContext = React.createContext<() => void>(() => {})
 export function StoreProvider({ snapshot, children }: { snapshot: AppSnapshot; children: React.ReactNode }) {
   const router = useRouter()
   const refresh = React.useCallback(() => router.refresh(), [router])
+  const [studioSetting, setStudioSetting] = React.useState<{ source: boolean; value: boolean } | null>(null)
+  const studioBookingOpen = studioSetting?.source === snapshot.platform.studioBookingOpen ? studioSetting.value : snapshot.platform.studioBookingOpen
+  React.useEffect(() => watchStudioBookingSetting({
+    read: async () => {
+      const { data, error } = await supabaseBrowser().from("platform_settings").select("studio_booking_open").eq("id", true).single()
+      return !error && data && typeof data.studio_booking_open === "boolean" ? data.studio_booking_open : null
+    },
+    onChange: (open) => setStudioSetting({ source: snapshot.platform.studioBookingOpen, value: open }),
+    isActive: () => document.visibilityState !== "hidden",
+    subscribeFocus: (sync) => {
+      window.addEventListener("focus", sync)
+      document.addEventListener("visibilitychange", sync)
+      return () => { window.removeEventListener("focus", sync); document.removeEventListener("visibilitychange", sync) }
+    },
+  }), [snapshot.platform.studioBookingOpen])
+  const value = React.useMemo(() => ({ ...snapshot, platform: { ...snapshot.platform, studioBookingOpen } }), [snapshot, studioBookingOpen])
 
   return (
-    <StoreContext.Provider value={snapshot}>
+    <StoreContext.Provider value={value}>
       <RefreshContext.Provider value={refresh}>{children}</RefreshContext.Provider>
     </StoreContext.Provider>
   )
@@ -61,7 +79,7 @@ export function servicesOf(s: AppState, proId: string, includeInactive = false):
   if (!pro) return []
   const mine = s.session?.proId === pro.id
   const list = mine ? s.myServices : s.proServices.filter((x) => x.proId === pro.id)
-  return list.filter((x) => includeInactive || (x.active && providerLocationOpen(pro) && serviceLocationOpen(getTemplate(x.templateId))))
+  return list.filter((x) => includeInactive || (x.active && providerLocationOpen(pro, s.platform?.studioBookingOpen) && serviceLocationOpen(getTemplate(x.templateId), s.platform?.studioBookingOpen)))
 }
 
 /** What can be booked on its own: everything listed but the add-ons (nail art per finger…). */
@@ -84,19 +102,19 @@ export function fromPrice(s: AppState, proId: string, templateId?: string): numb
 /** The lowest price a person lists in one category. */
 export function categoryFromPrice(s: AppState, proId: string, category: CategoryId): number | null {
   const pro = getPro(s, proId)
-  return pro ? fromPriceIn(servicesOf(s, pro.id), pro.id, category) : null
+  return pro ? fromPriceIn(servicesOf(s, pro.id), pro.id, category, s.platform?.studioBookingOpen) : null
 }
 
 /** The price level a person picked most often in a category (lib/levels.ts). */
 export function categoryLevel(s: AppState, proId: string, category: CategoryId): Level | null {
   const pro = getPro(s, proId)
-  return pro ? proLevelIn(servicesOf(s, pro.id), pro.id, category) : null
+  return pro ? proLevelIn(servicesOf(s, pro.id), pro.id, category, s.platform?.studioBookingOpen) : null
 }
 
 /** The category a person lists the most packages in. */
 export function mainCategoryOf(s: AppState, proId: string): CategoryId | null {
   const pro = getPro(s, proId)
-  return pro ? mainCategory(servicesOf(s, pro.id), pro) : null
+  return pro ? mainCategory(servicesOf(s, pro.id), pro, s.platform?.studioBookingOpen) : null
 }
 
 export const reviewsOf = (s: AppState, proId: string): Review[] => s.reviews.filter((r) => r.proId === proId)

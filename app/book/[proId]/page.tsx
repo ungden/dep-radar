@@ -1,6 +1,6 @@
 "use client"
 
-import { STUDIO_BOOKING_OPEN, serviceLocationOpen } from "@/lib/launch"
+import { serviceLocationOpen } from "@/lib/launch"
 
 import * as React from "react"
 import { Suspense } from "react"
@@ -53,13 +53,15 @@ export default function BookPage() {
 }
 
 function BookGate() {
+  const studioBookingOpen = useApp().platform?.studioBookingOpen ?? false
+
   const { proId } = useParams<{ proId: string }>()
   const state = useApp()
   const params = useSearchParams()
   const requested = getTemplate(params.get("service") ?? "")
   const pro = proView(state, proId)
 
-  if (!pro || !bookableServicesOf(state, proId).length || (requested && !serviceLocationOpen(requested))) {
+  if (!pro || !bookableServicesOf(state, proId).length || (requested && !serviceLocationOpen(requested, studioBookingOpen))) {
     return (
       <div className="mx-auto max-w-2xl">
         <PageHeader back title="Đặt lịch" />
@@ -85,6 +87,8 @@ function freeCancelUntil(date: string, time: string) {
 }
 
 function BookingFlow({ proId }: { proId: string }) {
+  const studioBookingOpen = useApp().platform?.studioBookingOpen ?? false
+
   const router = useRouter()
   const params = useSearchParams()
   const state = useApp()
@@ -140,7 +144,7 @@ function BookingFlow({ proId }: { proId: string }) {
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   const [doneId, setDoneId] = React.useState<string | null>(null)
-  const [atHomePref, setAtHome] = React.useState(!STUDIO_BOOKING_OPEN || params.get("place") !== "studio")
+  const [atHomePref, setAtHome] = React.useState(!studioBookingOpen || params.get("place") !== "studio")
 
   const tpl = getTemplate(templateId)!
   const variant = tpl.variants.find((v) => v.id === variantId)!
@@ -150,7 +154,7 @@ function BookingFlow({ proId }: { proId: string }) {
   const heads = serviceQuantity(variant, quantity)
   const price = unitPrice * heads
   const durationMin = serviceDuration(variant, heads)
-  const canStudio = STUDIO_BOOKING_OPEN && Boolean(pro.studioAddress)
+  const canStudio = studioBookingOpen && Boolean(pro.studioAddress)
   const atHome = !tpl.studioOnly && (atHomePref || !canStudio)
 
   // What can come with the main service: the partner's other single-session options, done at the same place.
@@ -543,7 +547,7 @@ function BookingFlow({ proId }: { proId: string }) {
               hours are free, so it comes before the time. */}
           <section className="mt-6 rounded-2xl bg-surface p-4 shadow-[var(--shadow-soft)]">
             <h2 className="mb-3 font-semibold">Làm ở đâu?</h2>
-            <div className={cn("grid gap-2", STUDIO_BOOKING_OPEN && "grid-cols-2")}>
+            <div className={cn("grid gap-2", studioBookingOpen && "grid-cols-2")}>
               <PlaceOption
                 active={atHome}
                 disabled={tpl.studioOnly || !pro.homeService}
@@ -555,7 +559,7 @@ function BookingFlow({ proId }: { proId: string }) {
               >
                 {placeLabelText}
               </PlaceOption>
-              {STUDIO_BOOKING_OPEN && <PlaceOption
+              {studioBookingOpen && <PlaceOption
                 active={!atHome && canStudio}
                 disabled={!canStudio}
                 onClick={() => {
