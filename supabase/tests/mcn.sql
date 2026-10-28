@@ -302,6 +302,12 @@ begin
   assert exists(select 1 from mcn_private.policies where id=target_policy and cancelled_at is not null),'cancellation preserves history';
   -- Make a scheduled policy effective only inside this rolled-back fixture.
   update mcn_private.policies set effective_at=now()-interval '1 minute',cancelled_at=null where id=target_policy;
+  update auth.users set banned_until=null where id=owner_a;
+  set local role authenticated;
+  retry_id:=pg_temp.command_id('payout',jsonb_build_object('expectedAmount',160000,'organizationId',org_a,'commissionIds',jsonb_build_array(commission_large),'bankReference','MCN-TEST-BANK-PAID-001'));
+  assert retry_id=payout_id,'historical payout retry remains idempotent after minimum increases';
+  perform pg_temp.reject_mcn('payout',jsonb_build_object('expectedAmount',160000,'organizationId',org_a,'commissionIds',jsonb_build_array(commission_large),'bankReference','NEW-BELOW-POLICY-MINIMUM'));
+  reset role;
   update public.mcn_organizations set status='approved' where id=org_b;
   recovery_booking:=pg_temp.mcn_booking(pro_a,customer,350000,22);
   assert (select mcn_share_rate=.25 and mcn_commission=17500 and mcn_hold_days=10 from public.bookings where id=recovery_booking),'new booking snapshots effective share and hold';

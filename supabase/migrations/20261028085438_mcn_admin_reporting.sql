@@ -91,7 +91,7 @@ begin
   perform public.log_admin_action('mcn:'||p_action,target,p_input);
   return to_jsonb(target);
  end if;
- if p_action='payout' and coalesce((p_input->>'expectedAmount')::bigint,0)<(mcn_private.policy()->>'minimumPayout')::int then raise exception 'Chưa đạt mức chi tối thiểu của chính sách hiện tại.' using errcode='check_violation'; end if;
+ if p_action='payout' and not exists(select 1 from public.mcn_payouts p where p.bank_reference=upper(btrim(p_input->>'bankReference')) and p.organization_id=(p_input->>'organizationId')::uuid) and coalesce((p_input->>'expectedAmount')::bigint,0)<(mcn_private.policy()->>'minimumPayout')::int then raise exception 'Chưa đạt mức chi tối thiểu của chính sách hiện tại.' using errcode='check_violation'; end if;
  return mcn_private.command_original(p_action,p_input);
 end $$;
 revoke all on function mcn_private.command(text,jsonb) from public,anon,authenticated;

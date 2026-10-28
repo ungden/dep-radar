@@ -5,6 +5,7 @@ export const eventNames: Record<string, string> = {
   "organization:rejected": "Từ chối hồ sơ",
   "organization:suspended": "Tạm dừng network",
   "membership:invite": "Gửi lời mời",
+  "membership:support": "Cập nhật hỗ trợ thành viên",
   "membership:accepted": "KTV chấp thuận gia nhập",
   "membership:declined": "KTV từ chối",
   "membership:left": "KTV rời network",
