@@ -88,21 +88,20 @@ export async function fetchSlots(input: {
   date: string
   atHome: boolean
   addressId?: string | null
+  items?: import("../service-cart").CartItem[]
 }): Promise<ActionResult<{ startsAt: string; time: string }[]>> {
   const supabase = await supabaseServer()
   const pro = await proIdFor(input.proId)
   if (!pro) return { ok: false, error: "Không tải được giờ trống. Thử lại nhé." }
   const { lat, lng } = await slotOrigin(pro, input.atHome, input.addressId)
-  const { data, error } = await supabase.rpc("free_slots", {
+  const { data, error } = await supabase.rpc((input.items ? "cart_slots" : "free_slots") as never, {
     p_pro: pro,
-    p_template: input.templateId,
-    p_variant: input.variantId,
-    p_quantity: input.quantity ?? 1,
+    ...(input.items ? { p_items: input.items } : { p_template: input.templateId, p_variant: input.variantId, p_quantity: input.quantity ?? 1 }),
     p_date: input.date,
     p_at_home: input.atHome,
     p_lat: lat ?? undefined,
     p_lng: lng ?? undefined,
-  })
+  } as never)
   if (error) {
     console.error("free_slots failed:", error.message)
     return { ok: false, error: "Không tải được giờ trống. Kiểm tra kết nối và thử lại." }
@@ -163,9 +162,15 @@ export async function createBooking(input: {
   expectedTotal: number
   expectedUnit: number
   sessions?: string[]
+  rights?: import("../commerce").RightsAgreement
+  quoteId?: string
+  references?: string[]
+  usageScope?: UsageScope
+  consentRepost?: boolean
 }) {
   const pro = await proIdFor(input.proId)
   if (!pro) return { ok: false as const, error: "Không tìm thấy chuyên viên." }
+  if (input.quoteId) return rpc<string>("create_cart_booking_with_rights", { p_quote: input.quoteId, p_note: input.note ?? "", p_payment: input.paymentMethod ?? "cash", p_sessions: input.sessions ?? [], p_usage: input.usageScope ?? "personal", p_repost: input.consentRepost ?? false, p_references: input.references ?? [], p_rights: input.rights ?? {} }, ["/bookings"])
   return rpc<string>(
     "create_booking_checked",
     {
@@ -268,8 +273,14 @@ export async function postJob(input: {
   paymentMethod?: PaymentMethod
   /** Per person, when the customer offers more than the catalogue price. */
   price?: number | null
+  rights?: import("../commerce").RightsAgreement
+  usageScope?: "personal"|"commercial"
+  consentRepost?: boolean
+  items?: import("../service-cart").PricedCartItem[]
+  references?: string[]
   maxTotal: number
 }) {
+  if (input.items) return rpc<string>("post_cart_job_with_rights", { p_items: input.items, p_starts_at: input.startsAt, p_address: input.addressId, p_description: input.description ?? "", p_max_total: input.maxTotal, p_references: input.references ?? [],p_usage:input.usageScope??"personal",p_repost:input.consentRepost??false,p_rights:input.rights??{} }, ["/requests"])
   return rpc<string>(
     "post_job_checked",
     {
@@ -395,8 +406,10 @@ export async function saveListing(input: {
   templateId: string
   prices: Record<string, number>
   active?: boolean
+  setup?: import("../service-cart").ServiceSetup
   notes?: Record<string, string>
 }): Promise<ActionResult> {
+  if (input.setup) return rpc<void>("save_pro_service_with_setup", {p_template:input.templateId,p_prices:input.prices,p_active:input.active??true,p_notes:input.notes??null,p_setup:input.setup},["/studio/services","/pros"])
   // p_notes only when the editor sent them: a show/hide toggle keeps the saved notes.
   return rpc<void>(
     "save_pro_service",
@@ -865,9 +878,11 @@ export async function jobEligibility(ids: string[]): Promise<JobEligibility[]> {
   return result.data
 }
 
-export async function bookingQuote(input: { proId: string; templateId: string; variantId: string; startsAt: string; atHome: boolean; addressId: string | null; quantity: number }): Promise<ActionResult<PriceQuote & { unitPrice: number; expiresAt: string }>> {
+export async function bookingQuote(input: { proId: string; templateId: string; variantId: string; startsAt: string; atHome: boolean; addressId: string | null; quantity: number; items?: import("../service-cart").CartItem[]; sessions?: string[]; visits?: {startsAt:string;addressId:string|null}[]; readyBy?: string | null }): Promise<ActionResult<PriceQuote & { unitPrice: number; expiresAt: string; quoteId?: string }>> {
   const pro = await proIdFor(input.proId)
   if (!pro) return { ok: false, error: "Không tìm thấy đối tác." }
+  if (input.items && input.visits) return rpc("cart_quote_with_visits",{p_pro:pro,p_items:input.items,p_starts_at:input.startsAt,p_at_home:input.atHome,p_address_id:input.addressId,p_visits:input.visits,p_ready_by:input.readyBy??null})
+  if (input.items) return rpc("cart_quote", { p_pro: pro, p_items: input.items, p_starts_at: input.startsAt, p_at_home: input.atHome, p_address_id: input.addressId, p_sessions: input.sessions ?? [], p_ready_by: input.readyBy ?? null })
   return rpc("booking_quote", { p_pro: pro, p_template: input.templateId, p_variant: input.variantId,
     p_starts_at: input.startsAt, p_at_home: input.atHome, p_address_id: input.addressId, p_quantity: input.quantity })
 }
@@ -892,3 +907,9 @@ export async function partnerAppointments() {
   type Appointment = { id: string; booking_id: string; sequence: number; starts_at: string; duration_min: number; confirmed: boolean; booking: { status: string; service_contract: { serviceName: string } } }
   return (data as unknown as Appointment[]).filter((s) => ["pending", "confirmed", "in_progress", "completed"].includes(s.booking.status)).map((s) => ({ ...s, serviceName: s.booking.service_contract.serviceName }))
 }
+
+export async function scopeWorkspace(id:string) {return rpc<import('../commerce').ScopeWorkspace>('booking_scope_workspace',{p_booking:id})}
+export async function proposeBookingScope(id:string,items:import('../service-cart').PricedCartItem[],startsAt:string,reason:string) {return rpc<string>('propose_booking_scope',{p_booking:id,p_items:items,p_starts_at:startsAt,p_reason:reason},['/bookings','/studio/jobs'])}
+export async function respondBookingScope(id:string,accept:boolean) {return rpc('respond_booking_scope',{p_proposal:id,p_accept:accept},['/bookings','/studio/jobs'])}
+export async function deliveryWorkspace(id:string) {return rpc<import('../commerce').DeliveryWorkspace>('delivery_workspace',{p_booking:id})}
+export async function requestDeliveryRevision(id:string,feedback:string,correction:boolean,line:number|null=null) {return rpc('request_delivery_line_revision',{p_booking:id,p_feedback:feedback,p_correction:correction,p_line:line},['/bookings'])}

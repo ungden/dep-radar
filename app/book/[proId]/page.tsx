@@ -2,6 +2,8 @@
 
 import { serviceLocationOpen } from "@/lib/launch"
 
+import { SiteFields } from "@/components/site-fields"
+import type { SiteFacilities } from "@/lib/service-cart"
 import * as React from "react"
 import { Suspense } from "react"
 import Link from "next/link"
@@ -41,6 +43,12 @@ import {
   weekdayShort,
 } from "@/lib/utils"
 import { uploadImage } from "@/lib/uploads"
+
+import { validateCart, cartItemTotal,cartHasMedia,cartMenuGroup, type CartItem } from "@/lib/service-cart"
+
+function restoredRecord<T>(raw: string | null, kind: "string" | "number" = "string"): Record<string, T> { try { const value = JSON.parse(raw || "{}"); return value && typeof value === 'object' && !Array.isArray(value) ? Object.fromEntries(Object.entries(value).filter(([,v]) => typeof v === kind)) as Record<string,T> : {} } catch { return {} } }
+import { EMPTY_RIGHTS } from "@/lib/commerce"
+import { RightsFields } from "@/components/rights-fields"
 
 const STEPS = ["Dịch vụ", "Nơi & giờ", "Xác nhận"]
 
@@ -122,9 +130,12 @@ function BookingFlow({ proId }: { proId: string }) {
 
   const [templateId, setTemplateId] = React.useState(initialService.templateId)
   const [variantId, setVariantId] = React.useState(initialVariant)
+  const [site,setSite]=React.useState<SiteFacilities>(()=>{try{return JSON.parse(params.get("site")??"{}") as SiteFacilities}catch{return {}}})
+  const [readyBy, setReadyBy] = React.useState(params.get("readyBy") ?? "")
   const [date, setDate] = React.useState(partner?.date ?? restoredDate ?? addDays(todayISO(), 1))
   const [pickedTime, setTime] = React.useState<string | null>(partner?.time ?? (restoredDate ? restoredTime : null))
   const [usageScope, setUsageScope] = React.useState<UsageScope>(params.get("usage") === "commercial" ? "commercial" : "personal")
+  const [rights,setRights]=React.useState(()=>{try{return {...EMPTY_RIGHTS,...JSON.parse(params.get("rights")??"{}")}}catch{return EMPTY_RIGHTS}})
   const [consentRepost, setConsentRepost] = React.useState(params.get("repost") === "1")
   const [linkError, setLinkError] = React.useState<string | null>(null)
   const [quantity, setQuantity] = React.useState(() => Math.max(1, Number(params.get("qty")) || 1))
@@ -134,9 +145,11 @@ function BookingFlow({ proId }: { proId: string }) {
   const [area, setArea] = React.useState<{ city: string; district: string }>(restoredArea ?? { city: pro.city, district: "" })
   const [note, setNote] = React.useState(params.get("note") ?? "")
   // Add-ons chosen with the booking ("template/variant" keys), chained after the main one (attach_addons).
-  const [addons, setAddons] = React.useState<string[]>(() => (params.get("addons") ?? "").split(",").filter(Boolean).slice(0, 3))
+  const [addons, setAddons] = React.useState<string[]>(() => (params.get("addons") ?? "").split(",").filter(Boolean).slice(0, 39))
   // How many fingers / stones for an add-on priced per unit, by add-on key.
-  const [addonCounts, setAddonCounts] = React.useState<Record<string, number>>({})
+  const [recipients, setRecipients] = React.useState<Record<string, string>>(() => restoredRecord(params.get("recipients")))
+  const [regions, setRegions] = React.useState<Record<string, "hand" | "foot" | "both">>(() => restoredRecord(params.get("regions")))
+  const [addonCounts, setAddonCounts] = React.useState<Record<string, number>>(() => restoredRecord(params.get("counts"), "number"))
   // Reference photos: paths in the private references bucket, with a local preview.
   const [refs, setRefs] = React.useState<{ path: string; preview: string }[]>([])
   const [refBusy, setRefBusy] = React.useState(false)
@@ -158,24 +171,44 @@ function BookingFlow({ proId }: { proId: string }) {
   const atHome = !tpl.studioOnly && (atHomePref || !canStudio)
 
   // What can come with the main service: the partner's other single-session options, done at the same place.
+  const [copies, setCopies] = React.useState<{ key: string; template: string; variant: string; quantity: number }[]>(() => { try { const value = JSON.parse(params.get("copies") || "[]"); return Array.isArray(value) ? value.slice(0, 39).filter(r => r && typeof r.key === "string" && typeof r.template === "string" && typeof r.variant === "string" && Number.isInteger(r.quantity)) : [] } catch { return [] } })
+  const copySequence = React.useRef(0)
+  const copyLine = (template: string, variant: string, quantity: number) => {
+    const key = `copy:${Date.now()}:${++copySequence.current}`
+    setCopies(rows => [...rows, { key, template, variant, quantity }])
+    setRecipients(rows => ({ ...rows, [key]: `Bạn ${copySequence.current + 1}` }))
+  }
   const addonOptions = servicesOf(state, proId).flatMap((listing) => {
     const t = getTemplate(listing.templateId)
     if (!t || (t.studioOnly && atHome)) return []
     return t.variants
-      .filter((v) => listing.prices[v.id] !== undefined && (v.sessions ?? 1) === 1 && serviceQuantity(v) === 1 && !(t.id === templateId && v.id === variantId))
+      .filter((v) => listing.prices[v.id] !== undefined && (v.sessions ?? 1) === 1 && serviceQuantity(v) === 1)
       .map((v) => {
         const key = `${t.id}/${v.id}`
-        const count = v.unit ? serviceQuantity(v, addonCounts[key] ?? 10) : 1
+        const count = v.unit ? serviceQuantity(v, addonCounts[key] ?? (v.unit === "viên" ? 1 : 10)) : 1
         const unitPrice = listing.prices[v.id]
-        return { key, templateId: t.id, variantId: v.id, name: t.name, label: v.label, unitPrice, variant: v, count, price: unitPrice * count, minutes: serviceDuration(v, count) }
+        return { key, templateId: t.id, variantId: v.id, name: t.name, label: v.label, unitPrice, variant: v, count, price: cartItemTotal({template:t.id,variant:v.id,quantity:count},unitPrice), minutes: serviceDuration(v, count) }
       })
   })
-  const chosenAddons = addonOptions.filter((o) => addons.includes(o.key))
+  const copyOptions = copies.flatMap(row => {
+    const t = getTemplate(row.template), v = t?.variants.find(v => v.id === row.variant)
+    const unitPrice = priceOf(state, proId, row.template, row.variant)
+    if (!t || !v || unitPrice == null) return []
+    const count = serviceQuantity(v, addonCounts[row.key] ?? row.quantity)
+    return [{ key: row.key, templateId: t.id, variantId: v.id, name: t.name, label: v.label, variant: v, unitPrice, count, price: cartItemTotal({template:t.id,variant:v.id,quantity:count},unitPrice), minutes: serviceDuration(v, count) }]
+  })
+  const menuOptions=[...addonOptions].sort((a,b)=>cartMenuGroup(a.templateId).rank-cartMenuGroup(b.templateId).rank)
+  const chosenAddons = [...addonOptions.filter((o) => addons.includes(o.key)), ...copyOptions]
   const addonsTotal = chosenAddons.reduce((sum, o) => sum + o.price, 0)
   const addonsMinutes = chosenAddons.reduce((sum, o) => sum + o.minutes, 0)
   const toggleAddon = (key: string) =>
-    setAddons((list) => (list.includes(key) ? list.filter((k) => k !== key) : list.length >= 3 ? list : [...list, key]))
+    setAddons((list) => (list.includes(key) ? list.filter((k) => k !== key) : list.length >= 39 ? list : [...list, key]))
 
+  const rawCartItems: CartItem[] = [{ template: templateId, variant: variantId, quantity: heads, recipient: recipients.main || "Mình", ...(tpl.category === "nail" ? { region: variantId === "hand-foot" ? "both" as const : regions.main ?? (templateId === "nail-pedicure" ? "foot" as const : "hand" as const) } : {}) }, ...chosenAddons.map(o => ({ template: o.templateId, variant: o.variantId, quantity: o.count, recipient: recipients[o.key] || "Mình", ...(getTemplate(o.templateId)?.category === "nail" ? { region: o.variantId === "hand-foot" ? "both" as const : regions[o.key] ?? (o.templateId === "nail-pedicure" ? "foot" as const : "hand" as const) } : {}) }))]
+  const cartItems=rawCartItems.map(item=>({...item,site}))
+  const cartKey = JSON.stringify(cartItems)
+  const cartError = validateCart(cartItems)
+  const totalDuration = durationMin + addonsMinutes
   // Start on the customer's default address without an effect writing it back.
   const addressId = session ? (pickedAddress ?? defaultAddressId(state.addresses)) : null
   const chosen = state.addresses.find((a) => a.id === addressId) ?? null
@@ -203,19 +236,19 @@ function BookingFlow({ proId }: { proId: string }) {
   // rather than having to be cleared from state first. Works signed out too:
   // without an address the server measures from the freelancer's own location.
   const [slotRetry, retrySlots] = React.useReducer((n: number) => n + 1, 0)
-  const slotKey = [proId, templateId, variantId, heads, date, atHome, addressId, slotRetry].join("|")
+  const slotKey = [proId, templateId, variantId, heads, date, atHome, addressId, slotRetry, cartKey].join("|")
   const [loaded, setLoaded] = React.useState<{ key: string; list?: { startsAt: string; time: string }[]; error?: string } | null>(null)
   React.useEffect(() => {
     let live = true
     void actions
-      .slotsFor({ proId, templateId, variantId, quantity: heads, date, atHome, addressId })
+      .slotsFor({ proId, templateId, variantId, quantity: heads, date, atHome, addressId, items: JSON.parse(cartKey) })
       .then((result) => { if (live) setLoaded({ key: slotKey, ...(result.ok ? { list: result.data } : { error: result.error }) }) })
       .catch(() => { if (live) setLoaded({ key: slotKey, error: "Không tải được giờ trống. Kiểm tra kết nối và thử lại." }) })
     return () => {
       live = false
     }
-  }, [slotKey, proId, templateId, variantId, heads, date, atHome, addressId, slotRetry])
-  const slots = loaded?.key === slotKey ? loaded.list ?? null : null
+  }, [slotKey, proId, templateId, variantId, heads, date, atHome, addressId, slotRetry, cartKey])
+  const slots = loaded?.key === slotKey ? loaded.list?.filter(s => !readyBy || Date.parse(s.startsAt) + (totalDuration + 30) * 60000 <= Date.parse(toTimestamptz(date, readyBy))) ?? null : null
   const slotError = loaded?.key === slotKey ? loaded.error : null
 
   // A time picked for another day, service or address may no longer be on offer.
@@ -224,35 +257,37 @@ function BookingFlow({ proId }: { proId: string }) {
 
   // The same arithmetic as the server (lib/pricing.ts), shown as it changes.
   const estimate: PriceQuote = buildQuote({
-    servicePrice: price,
+    servicePrice: price + addonsTotal,
     atHome,
     distanceKm: atHome && address ? travelDistanceKm(pro.city, pro.district, address.city, address.district) : null,
     urgent: time ? isUrgent(date, time) : false,
   })
   const [quoteRetry, retryQuote] = React.useReducer((n: number) => n + 1, 0)
-  const quoteKey = [slotKey, time, session?.phone, quoteRetry].join("|")
-  const [verified, setVerified] = React.useState<{ key: string; quote?: PriceQuote & { unitPrice: number; expiresAt: string }; error?: string } | null>(null)
+  const [secondAddressId,setSecondAddressId]=React.useState<string|null>(params.get("secondAddress"))
   const [secondDate, setSecondDate] = React.useState(() => /^\d{4}-\d{2}-\d{2}$/.test(params.get("secondDate") ?? "") ? params.get("secondDate")! : "")
   const [secondTime, setSecondTime] = React.useState(() => /^([01]\d|2[0-3]):[0-5]\d$/.test(params.get("secondTime") ?? "") ? params.get("secondTime")! : "09:00")
+  const quoteKey = [slotKey, time, session?.phone, quoteRetry, readyBy, secondDate, secondTime,secondAddressId].join("|")
+  const [verified, setVerified] = React.useState<{ key: string; quote?: PriceQuote & { unitPrice: number; expiresAt: string; quoteId?: string }; error?: string } | null>(null)
   React.useEffect(() => {
     if (!session || !time || !locationOk) return
     let live = true
-    void bookingQuote({ proId, templateId, variantId, startsAt: toTimestamptz(date, time), atHome, addressId: atHome ? addressId : null, quantity: heads })
+    void bookingQuote({ proId, templateId, variantId, startsAt: toTimestamptz(date, time), atHome, addressId: atHome ? addressId : null, quantity: heads, items: JSON.parse(cartKey), visits:(variant.sessions??1)>1&&secondDate?[{startsAt:toTimestamptz(secondDate,secondTime),addressId:secondAddressId??addressId}]:[], sessions: (variant.sessions ?? 1) > 1 && secondDate ? [toTimestamptz(secondDate, secondTime)] : [], readyBy: readyBy ? toTimestamptz(date, readyBy) : null })
       .then((result) => { if (live) setVerified({ key: quoteKey, ...(result.ok ? { quote: result.data } : { error: result.error }) }) })
       .catch(() => { if (live) setVerified({ key: quoteKey, error: "Không xác nhận được tổng tiền. Kiểm tra kết nối và thử lại." }) })
     return () => { live = false }
-  }, [quoteKey, proId, templateId, variantId, date, time, atHome, addressId, heads, locationOk, session, quoteRetry])
+  }, [quoteKey, proId, templateId, variantId, date, time, atHome, addressId, heads, locationOk, session, quoteRetry, cartKey, readyBy, secondDate, secondTime, variant.sessions,secondAddressId])
   const confirmedQuote = verified?.key === quoteKey ? verified.quote : null
   const quoteError = verified?.key === quoteKey ? verified.error : null
   const quote = confirmedQuote ?? estimate
   const multiple = (variant.sessions ?? 1) > 1
   const ready = Boolean(time) && locationOk
-  const canNext = step === 1 ? true : ready
+  const canNext = step === 1 ? !cartError : ready && !cartError
 
   // Everything chosen so far, so signing in does not start the booking over.
   const resumeUrl = () => {
     const q = new URLSearchParams({ service: templateId, variant: variantId, date })
     if (time) q.set("time", time)
+    if (readyBy) q.set("readyBy", readyBy)
     if (heads > 1) q.set("qty", String(heads))
     if (note.trim()) q.set("note", note.trim().slice(0, 500))
     if (!atHome) q.set("place", "studio")
@@ -261,6 +296,7 @@ function BookingFlow({ proId }: { proId: string }) {
       q.set("district", area.district)
     }
     if (addons.length) q.set("addons", addons.join(","))
+    q.set("recipients", JSON.stringify(recipients)); q.set("regions", JSON.stringify(regions)); q.set("counts", JSON.stringify(addonCounts)); q.set("copies", JSON.stringify(copies));q.set("site",JSON.stringify(site));q.set("rights",JSON.stringify(rights));if(secondAddressId)q.set("secondAddress",secondAddressId)
     if (usageScope === "commercial") q.set("usage", "commercial")
     if (consentRepost) q.set("repost", "1")
     if (multiple && secondDate) { q.set("secondDate", secondDate); q.set("secondTime", secondTime) }
@@ -273,11 +309,13 @@ function BookingFlow({ proId }: { proId: string }) {
       router.push(`/login?next=${encodeURIComponent(resumeUrl())}`)
       return
     }
-    if (!confirmedQuote) return setError(verified?.error ?? "Đang xác nhận tổng tiền. Thử lại sau.")
+    if (cartError) return setError(cartError)
+    if (!confirmedQuote?.quoteId) return setError(verified?.error ?? "Đang xác nhận tổng tiền. Thử lại sau.")
     if (multiple && (!appointmentAt(secondDate, secondTime) || Date.parse(appointmentAt(secondDate, secondTime)!) <= Date.parse(toTimestamptz(date, time!)))) return setError("Chọn ngày, giờ hợp lệ cho buổi thứ hai sau buổi đầu.")
     setBusy(true)
     const res = await actions.createBooking({
       proId,
+      quoteId: confirmedQuote.quoteId, rights, usageScope: cartHasMedia(cartItems)?usageScope:"personal", consentRepost, references: refs.map(r => r.path),
       templateId,
       variantId,
       date,
@@ -295,23 +333,6 @@ function BookingFlow({ proId }: { proId: string }) {
       setError(res.error)
       return
     }
-    // The booking exists either way; these only add to it, so a failure is
-    // reported on the confirmation screen rather than undoing the booking.
-    if (chosenAddons.length) {
-      const attached = await actions.attachAddons(
-        res.id,
-        chosenAddons.map((o) => ({ template: o.templateId, variant: o.variantId, quantity: o.count })),
-      )
-      if (attached.error) setLinkError(`Đã đặt lịch chính, nhưng chưa thêm được dịch vụ đi kèm: ${attached.error}`)
-    }
-    if (refs.length) {
-      const sent = await actions.setBookingReferences(res.id, refs.map((r) => r.path))
-      if (sent.error) setLinkError(`Đã đặt lịch, nhưng chưa gửi được ảnh mẫu: ${sent.error}`)
-    }
-    if (usageScope !== "personal" || consentRepost) {
-      const terms = await actions.setBookingTerms(res.id, usageScope, consentRepost)
-      if (terms.error) setLinkError(terms.error)
-    }
     if (partner) {
       const linked = await actions.linkBookings([partner.id, res.id])
       if ("error" in linked) setLinkError(`Đã đặt lịch, nhưng chưa ghép được vào buổi chung: ${linked.error}`)
@@ -320,11 +341,14 @@ function BookingFlow({ proId }: { proId: string }) {
     setDoneId(res.id)
   }
 
+  const hasMedia = cartItems.some(item => {const t=getTemplate(item.template);return t && verticalOf(t.category)!=="beauty"})
   const trade = verticalOf(tpl.category)
   const person = getVertical(trade).person
   const responseTime = formatResponseTime(pro.stats.responseMinutes)
   const placeLabelText = tpl.onLocation ? "Địa điểm bạn chọn" : "Làm tại nhà"
-  const variantText = heads > 1 ? `${variant.label} × ${heads} người` : variant.label
+  const variantText = cartItems.length>1?`${new Set(cartItems.map(i=>i.recipient)).size} người nhận · ${cartItems.length} món đã chọn`:`${recipients.main || "Mình"} · ${heads > 1 ? `${variant.label} × ${heads} người` : variant.label}`
+
+  const cartBreakdown=<Card className="space-y-3 p-4"><p className="font-semibold">Giỏ dịch vụ của bạn</p>{cartItems.map((item,i)=>{const t=getTemplate(item.template)!,v=t.variants.find(v=>v.id===item.variant)!,unit=priceOf(state,proId,item.template,item.variant)!;return <div key={i} className="flex justify-between gap-4 text-body"><div><p>{item.recipient} · {t.name}</p><p className="text-meta text-ink-soft">{v.id==='hand'&&item.region?'10 móng':v.label} · {item.region==='foot'?'Chân · ':item.region==='hand'?'Tay · ':''}{item.quantity} {v.unit??(v.perPerson?'người':'gói')}</p></div><span className="tabular-nums">{formatPrice(cartItemTotal(item,unit))}</span></div>})}</Card>
 
   if (doneId) {
     return (
@@ -478,27 +502,32 @@ function BookingFlow({ proId }: { proId: string }) {
               )
             })}
           </ul>
+          <Card className="mt-4 space-y-2 p-4"><label className="block text-body">Cần hoàn thiện trước (tuỳ chọn, gồm30 phút dự phòng)<input className={inputClass} type="time" value={readyBy} onChange={e => setReadyBy(e.target.value)} /></label><label className="block text-body">Người nhận dịch vụ chính<input className={inputClass} maxLength={60} value={recipients.main || "Mình"} onChange={e => setRecipients(m => ({ ...m, main: e.target.value }))} /></label>{tpl.category === "nail" && variantId !== "hand-foot" && <select className={inputClass} aria-label="Vùng móng dịch vụ chính" value={regions.main ?? (templateId === "nail-pedicure" ? "foot" : "hand")} onChange={e => setRegions(m => ({ ...m, main: e.target.value as "hand" | "foot" }))}><option value="hand">10 móng tay</option><option value="foot">10 móng chân</option></select>}{cartError && <p role="alert" className="text-danger">{cartError}</p>}</Card>
+          <SiteFields value={site} onChange={setSite} requirements={services.filter(s=>cartItems.some(i=>i.template===s.templateId)).map(s=>s.setup).filter(s=>!!s)}/>
+          <Button variant="outline" className="mt-3" disabled={cartItems.length >= 40} onClick={() => copyLine(templateId, variantId, heads)}>Thêm người hoặc vùng với dịch vụ này</Button>
+          {copyOptions.map(o => <Card key={o.key} className="mt-3 space-y-2 p-3"><p>{recipients[o.key] || "Mình"} · {o.name} · {o.label} · {formatPrice(o.price)}</p><input className={inputClass} aria-label="Người nhận dòng thêm" value={recipients[o.key] || "Mình"} maxLength={60} onChange={e => setRecipients(m => ({ ...m, [o.key]: e.target.value }))} />{getTemplate(o.templateId)?.category === "nail" && o.variantId !== "hand-foot" && <select className={inputClass} value={regions[o.key] ?? (o.templateId === "nail-pedicure" ? "foot" : "hand")} aria-label="Vùng móng dòng thêm" onChange={e => setRegions(m => ({ ...m, [o.key]: e.target.value as "hand" | "foot" }))}><option value="hand">Tay</option><option value="foot">Chân</option></select>}<Button variant="outline" onClick={() => setCopies(rows => rows.filter(row => row.key !== o.key))}>Xóa dòng</Button></Card>)}
           {addonOptions.length > 0 && (
             <div className="mt-6">
-              <h2 className="text-lead font-bold">Thêm dịch vụ đi kèm (tuỳ chọn)</h2>
+              <h2 className="text-lead font-bold">Menu · thêm vào buổi dịch vụ</h2>
               <p className="mt-0.5 text-meta text-ink-soft">
                 Làm nối tiếp ngay sau dịch vụ chính, cùng địa điểm, theo giá {pro.name} niêm yết; không tính thêm phí di chuyển. {pro.name} nhận lịch chính là nhận
-                luôn các dịch vụ này. Tối đa 3.
+                luôn các dịch vụ này. Các món được chốt chung trong một lịch.
               </p>
               <ul className="mt-3 space-y-2">
-                {addonOptions.map((o) => (
+                {menuOptions.map((o,index) => (
                   <li key={o.key}>
+                    {(index===0||cartMenuGroup(menuOptions[index-1].templateId).rank!==cartMenuGroup(o.templateId).rank)&&<h3 className="mb-2 mt-5 text-meta font-semibold text-accent-dark">{cartMenuGroup(o.templateId).label}</h3>}
                     <label className={cn("flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 text-body", addons.includes(o.key) ? "border-ink bg-subtle" : "border-line bg-surface")}>
                       <input
                         type="checkbox"
                         checked={addons.includes(o.key)}
-                        disabled={!addons.includes(o.key) && addons.length >= 3}
+                        disabled={!addons.includes(o.key) && addons.length >= 39}
                         onChange={() => toggleAddon(o.key)}
                         className="size-4 accent-[var(--color-accent)]"
                       />
                       <span className="min-w-0 flex-1">
                         <span className="block font-medium">
-                          {o.name} · {o.label}
+                          {recipients[o.key] || "Mình"} · {o.name} · {o.label}
                         </span>
                         <span className="block text-label text-muted">
                           {o.variant.unit ? `${formatPrice(o.unitPrice)}${perUnitSuffix(o.variant)} · ` : ""}
@@ -507,6 +536,8 @@ function BookingFlow({ proId }: { proId: string }) {
                       </span>
                       <span className="font-semibold tabular-nums">{formatPrice(o.price)}</span>
                     </label>
+                    {addons.includes(o.key) && <Button size="sm" variant="outline" onClick={() => copyLine(o.templateId, o.variantId, o.count)}>Thêm cho người/vùng khác</Button>}
+                    {addons.includes(o.key) && <div className="mt-2 space-y-2"><input className={inputClass} aria-label={`Người nhận ${o.name}`} placeholder="Mình / Mẹ / Bạn 1" maxLength={60} value={recipients[o.key] || "Mình"} onChange={e => setRecipients(m => ({ ...m, [o.key]: e.target.value }))} />{getTemplate(o.templateId)?.category === "nail" && o.variantId !== "hand-foot" && <select className={inputClass} aria-label={`Vùng móng ${o.name}`} value={regions[o.key] ?? (o.templateId === "nail-pedicure" ? "foot" : "hand")} onChange={e => setRegions(m => ({ ...m, [o.key]: e.target.value as "hand" | "foot" }))}><option value="hand">Tay</option><option value="foot">Chân</option></select>}</div>}
                     {o.variant.unit && addons.includes(o.key) && (
                       <div className="mt-1.5 flex items-center gap-2 rounded-xl bg-canvas px-3 py-2">
                         <span className="flex-1 text-meta">Số {o.variant.unit}</span>
@@ -541,7 +572,8 @@ function BookingFlow({ proId }: { proId: string }) {
 
       {step === 2 && (
         <>
-          <ServiceSummary name={tpl.name} variant={variantText} price={price} duration={durationMin} />
+          <ServiceSummary name={cartItems.length > 1 ? `Buổi dịch vụ · ${cartItems.length} hạng mục` : tpl.name} variant={variantText} price={price + addonsTotal} duration={totalDuration} />
+          {cartBreakdown}
 
           {/* The place is chosen here, once: it decides the travel fee and which
               hours are free, so it comes before the time. */}
@@ -724,13 +756,14 @@ function BookingFlow({ proId }: { proId: string }) {
 
       {step === 3 && ready && time && (
         <section className="space-y-4">
-          <ServiceSummary name={tpl.name} variant={variantText} price={price} duration={durationMin} />
+          <ServiceSummary name={cartItems.length > 1 ? `Buổi dịch vụ · ${cartItems.length} hạng mục` : tpl.name} variant={variantText} price={price + addonsTotal} duration={totalDuration} />
+          {cartBreakdown}
 
           <Card className="divide-y divide-line px-4">
             <SummaryRow label="Thời gian" onEdit={() => setStep(2)}>
               {formatDateLong(date, true)}
               <br />
-              {time} - {addMinutes(time, durationMin)}
+              {time} - {addMinutes(time, totalDuration)}
               {quote.urgentFee > 0 && (
                 <span className="ml-2 inline-flex items-center gap-0.5 rounded-full bg-warning-soft px-1.5 py-0.5 text-label font-semibold text-warning">
                   <Zap className="size-3" /> Đặt gấp
@@ -824,7 +857,7 @@ function BookingFlow({ proId }: { proId: string }) {
           </Card>
 
           <Card className="space-y-4 p-4">
-            {trade !== "beauty" && (
+            {hasMedia && (
               <div>
                 <p className="mb-2 text-meta font-semibold">Ảnh, clip dùng để làm gì?</p>
                 <div className="grid gap-2 sm:grid-cols-2">
@@ -858,6 +891,7 @@ function BookingFlow({ proId }: { proId: string }) {
                 )}
               </div>
             )}
+            {hasMedia && <RightsFields value={rights} onChange={setRights}/>}
             <label className="flex cursor-pointer gap-3">
               <input
                 type="checkbox"
@@ -872,6 +906,7 @@ function BookingFlow({ proId }: { proId: string }) {
             </label>
           </Card>
 
+          {multiple&&atHome&&<Card className="space-y-2 p-4"><p>Địa chỉ buổi thứ hai · phí chuyến được báo riêng trong tổng</p><AddressPicker value={secondAddressId??addressId} onChange={setSecondAddressId} city={pro.city} district={pro.district}/></Card>}
           {tpl.deliverable && (
             <p className="flex gap-2 rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-body">
               <Info className="mt-0.5 size-4 shrink-0" />
@@ -923,7 +958,7 @@ function BookingFlow({ proId }: { proId: string }) {
               {chosenAddons.map((o) => (
                 <p key={o.key} className="flex justify-between gap-3">
                   <span className="text-ink-soft">
-                    {o.name} · {o.label}
+                    {recipients[o.key] || "Mình"} · {o.name} · {o.label}
                     {o.variant.unit ? ` × ${o.count} ${o.variant.unit}` : ""}
                   </span>
                   <span className="tabular-nums">{formatPrice(o.price)}</span>
@@ -932,7 +967,7 @@ function BookingFlow({ proId }: { proId: string }) {
               <p className="text-label text-muted">Làm nối tiếp sau dịch vụ chính (thêm {formatDuration(addonsMinutes)}), không tính phí di chuyển.</p>
               <p className="flex justify-between gap-3 border-t border-line pt-2 font-bold">
                 <span>Tổng cả lịch</span>
-                <span className="tabular-nums">{formatPrice(quote.total + addonsTotal)}</span>
+                <span className="tabular-nums">{formatPrice(quote.total)}</span>
               </p>
             </Card>
           )}
@@ -987,7 +1022,7 @@ function BookingFlow({ proId }: { proId: string }) {
         <div className="flex items-center gap-3">
           <div className="min-w-0 shrink-0" aria-live="polite">
             <p className="text-label text-muted">{step === 1 ? "Giá dịch vụ" : ready ? "Tổng" : "Tạm tính"}</p>
-            <p className="text-lead font-bold tabular-nums">{formatPrice((step === 1 ? price : quote.total) + addonsTotal)}</p>
+            <p className="text-lead font-bold tabular-nums">{formatPrice((step === 1 ? price + addonsTotal : quote.total))}</p>
           </div>
           {step > 1 && (
             <Button variant="outline" size="lg" onClick={() => setStep((s) => s - 1)} className="hidden md:inline-flex md:w-40">

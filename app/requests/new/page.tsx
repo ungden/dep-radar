@@ -1,5 +1,9 @@
 "use client"
 
+import { EMPTY_RIGHTS } from "@/lib/commerce"
+import { RightsFields } from "@/components/rights-fields"
+import { SiteFields } from "@/components/site-fields"
+import type { SiteFacilities } from "@/lib/service-cart"
 import * as React from "react"
 import { moveRadio } from "@/lib/radio-navigation"
 import { Suspense } from "react"
@@ -19,6 +23,9 @@ import { useApp } from "@/lib/store"
 import { PAYMENT_LABEL } from "@/components/price-breakdown"
 import type { CategoryId, PaymentMethod } from "@/lib/types"
 import { addDays, cn, formatDuration, formatPrice, todayISO } from "@/lib/utils"
+
+import { requestedCart,cartHasMedia, type PricedCartItem } from "@/lib/service-cart"
+import { RequestCartEditor } from "@/components/request-cart-editor"
 
 export default function NewRequestPage() {
   return (
@@ -50,6 +57,12 @@ function NewRequestForm() {
   const [category, setCategory] = React.useState<CategoryId>(start.category)
   const [templateId, setTemplateId] = React.useState(start.id)
   const [variantId, setVariantId] = React.useState(start.variants[0].id)
+  const [site,setSite]=React.useState<SiteFacilities>({})
+  const [rights,setRights]=React.useState(EMPTY_RIGHTS)
+  const [usageScope,setUsageScope]=React.useState<"personal"|"commercial">("personal")
+  const [extras,setExtras]=React.useState<PricedCartItem[]>([])
+  const [recipient,setRecipient]=React.useState("Mình")
+  const [region,setRegion]=React.useState<"hand"|"foot">("hand")
   const [quantity, setQuantity] = React.useState(1)
   // One of the option's price levels, per person; null starts on "Tiêu chuẩn".
   const [feeLimit, setFeeLimit] = React.useState<number>(POLICY.nearTravelFee)
@@ -87,8 +100,11 @@ function NewRequestForm() {
     pickVariant(first.variants[0].id)
   }
 
-  const maxTotal = unit * heads + feeLimit + (isUrgent(date, time) ? POLICY.urgentFee : 0)
-  const valid = date >= todayISO() && atHome && Boolean(addressId) && (variant.sessions ?? 1) === 1
+  const rawItems: PricedCartItem[]=[{template:tpl.id,variant:variant.id,quantity:heads,unitPrice:unit,recipient,...(tpl.category==="nail"&&variant.id!=="hand-foot"?{region}:{})},...extras]
+  const items=rawItems.map(item=>({...item,site}))
+  const cart=requestedCart(items)
+  const maxTotal = cart.total + feeLimit + (isUrgent(date, time) ? POLICY.urgentFee : 0)
+  const valid = !cart.error && date >= todayISO() && atHome && Boolean(addressId) && (variant.sessions ?? 1) === 1
 
   return (
     <form
@@ -99,6 +115,7 @@ function NewRequestForm() {
         setBusy(true)
         setError(null)
         const result = await actions.createJob({
+          items,rights,usageScope:cartHasMedia(items)?usageScope:"personal", references: refs.map(r=>r.path),
           templateId: tpl.id,
           variantId: variant.id,
           description: description.trim(),
@@ -114,11 +131,6 @@ function NewRequestForm() {
         if ("error" in result) {
           setBusy(false)
           return setError(result.error)
-        }
-        // The request is up; its photos follow, and a failure does not take it down.
-        if (refs.length) {
-          const sent = await actions.setJobReferences(result.id, refs.map((r) => r.path))
-          if (sent.error) window.alert(`Đã đăng yêu cầu, nhưng chưa gửi được ảnh mẫu: ${sent.error}`)
         }
         setBusy(false)
         router.replace(`/requests/${result.id}`)
@@ -258,6 +270,9 @@ function NewRequestForm() {
         <p className="mt-2 text-label text-muted">{PRICE_LEVEL_NOTE}</p>
       </section>
 
+      <Field label="Người nhận dịch vụ chính"><input className={inputClass} value={recipient} maxLength={60} onChange={e=>setRecipient(e.target.value)}/></Field>
+      {tpl.category==="nail"&&variant.id!=="hand-foot"&&<select className={inputClass} aria-label="Vùng móng chính" value={region} onChange={e=>setRegion(e.target.value as "hand"|"foot")}><option value="hand">Tay</option><option value="foot">Chân</option></select>}
+      <SiteFields value={site} onChange={setSite}/><RequestCartEditor value={extras} onChange={setExtras}/><select className={inputClass} aria-label="Mục đích hình ảnh" value={usageScope} onChange={e=>setUsageScope(e.target.value as "personal"|"commercial")}><option value="personal">Cá nhân</option><option value="commercial">Thương mại</option></select>{cartHasMedia(items)&&<RightsFields value={rights} onChange={setRights}/>}<p>Tổng dịch vụ: {formatPrice(cart.total)} · {cart.durationMin} phút</p>{cart.error&&<p role="alert" className="text-danger">{cart.error}</p>}
       <Field label="Mô tả thêm (tuỳ chọn)" hint="Tình trạng da/móng/tóc, phong cách mong muốn, số người…">
         <textarea
           className={cn(inputClass, "resize-none")}

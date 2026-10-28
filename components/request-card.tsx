@@ -67,6 +67,7 @@ export function RequestCard({ job, href, footer, extra }: { job: JobPost; href: 
           </div>
         </div>
       </Link>
+      {job.contract?.lines?.map((line,i)=><p key={i} className="mt-2 text-body">{line.recipient} · {line.name} · {line.label} · {line.quantity} {line.unit} · {formatPrice(line.total)}</p>)}
       {/* Outside the link: each photo opens on its own. */}
       <ReferenceGallery paths={job.referencePhotos ?? []} title={job.mine ? "Ảnh mẫu bạn gửi" : "Ảnh mẫu khách muốn"} className="mt-3 pl-[52px]" />
       {footer}

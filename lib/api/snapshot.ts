@@ -300,7 +300,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
           .order("created_at", { ascending: false }),
       ),
       supabase.from("pro_service_prices").select("pro_id, template_id, variant_id, price, note"),
-      supabase.from("pro_services").select("pro_id, template_id, active"),
+      supabase.from("pro_services").select("pro_id, template_id, active, service_setup"),
       // Separate from the pros query: a failed embed would blank the whole feed.
       supabase
         .from("model_profiles")
@@ -386,7 +386,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       id: `${slug}:${row.template_id}`,
       proId: slug,
       templateId: row.template_id,
-      active: row.active,
+      active: row.active, setup: row.service_setup,
       prices: Object.fromEntries(
         priceRows
           .filter((p) => p.pro_id === row.pro_id && p.template_id === row.template_id)
@@ -723,8 +723,8 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     paymentMethod: row.payment_method as PaymentMethod,
     customerName: row.customer_name ?? "Khách hàng",
     status: row.status === "expired" ? "closed" : (row.status as JobPost["status"]),
-    quantity: row.quantity ?? 1,
-    price: row.price ?? null,
+    quantity: row.service_contract?.lines ? 1 : row.quantity ?? 1,
+    price: row.service_contract?.servicePrice ?? row.price ?? null,
     bookingId: row.booking_id ?? null,
     notified: row.notified ?? null,
     mine: row.customer_id === me,

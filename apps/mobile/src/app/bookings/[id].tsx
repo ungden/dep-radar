@@ -253,7 +253,7 @@ export default function BookingDetail() {
         <ReferencePhotos paths={b.referencePhotos} title={iAmPro ? "Ảnh mẫu khách gửi" : "Ảnh mẫu bạn gửi"} />
       </Card>
 
-      <BookingContract booking={b} />
+      <BookingContract booking={b} onChanged={booking.reload} />
       {b.status === "completed" && b.delivery && !b.delivery.acceptedAt && <Txt color={colors.warning}>{b.delivery.deliveredAt ? "Chờ khách xác nhận sản phẩm" : "Xong buổi làm · chờ giao sản phẩm"}</Txt>}
       <Card>
         <Line label="Dịch vụ" value={formatPrice(b.quote.servicePrice)} />

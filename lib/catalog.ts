@@ -76,7 +76,8 @@ const byDuration = (bands: [number, [number, number, number]][]) => bands.map(([
  * The 360đẹp service catalogue. Names, what is included, the options offered and
  * the three price levels of each option are set by 360đẹp so listings stay
  * comparable and fair. Partners choose which services/options they do and pick
- * one of the levels; they never type a price or invent a service.
+ * one of the levels. A separate scope proposal may quote custom work, applied
+ * only after the other party accepts its price and duration.
  */
 export const CATALOG: ServiceTemplate[] = [
   // Nail -----------------------------------------------------------------
@@ -143,6 +144,7 @@ export const CATALOG: ServiceTemplate[] = [
     includes: ["Dũa, làm sạch phần móng mọc", "Đắp bù gel", "Sơn lại 1 màu"],
     variants: [v("refill-tips", "Dặm móng úp", 60, [90, 110, 140]), v("refill", "Dặm móng đắp / dual form", 75, [130, 160, 200])],
   },
+  { id: "nail-pilot", category: "nail", name: "Nail · chăm da và màu", description: "Menu thử nghiệm: giá cho 10 móng tay hoặc 10 móng chân. Đối tác tự chọn niêm yết menu mới.", includes: ["Chăm da cơ bản", "Tạo form", "Base/top và dưỡng viền"], variants: [v("gel", "Da + gel", 60, [150]), v("jelly", "Da + thạch", 60, [170]), v("cat-eye", "Da + mắt mèo", 75, [190])] },
   // Makeup -----------------------------------------------------------------
   // Most artists include a simple hairdo; an elaborate one costs extra (except
   // for brides, whose price already covers it): makeup-hair-updo below.
@@ -159,20 +161,20 @@ export const CATALOG: ServiceTemplate[] = [
     category: "makeup",
     name: "Makeup dự tiệc",
     description: "Makeup bền màu cho tiệc, kèm làm tóc đơn giản và mi giả.",
-    includes: ["Makeup bền 8 tiếng", "Làm tóc đơn giản", "Mi giả"],
+    includes: ["Makeup phù hợp thời lượng và điều kiện sự kiện", "Làm tóc đơn giản", "Mi giả"],
     variants: [v("makeup", "1 người", 60, [300, 450, 800])],
   },
   {
     id: "makeup-photo",
     category: "makeup",
     name: "Makeup kỷ yếu / chụp ảnh",
-    description: "Layout lên hình theo concept. Đi theo nhóm được giảm: 2 người 10%, 3 người 15%, từ 5 người 20%.",
+    description: "Layout lên hình theo concept. Đi theo nhóm được giảm: 2 người 10%, 3–4 người có giá ưu đãi riêng, từ 5 người 20%.",
     includes: ["Layout theo concept", "Làm tóc đơn giản", "Mi giả"],
     variants: [
       v("single", "1 người", 60, [250, 350, 550]),
-      group(v("group2", "Nhóm 2 người, giảm 10% (giá mỗi người)", 45, [225, 315, 495]), 2, 2),
-      group(v("group3", "Nhóm 3–4 người, giảm 15% (giá mỗi người)", 45, [210, 295, 465]), 4, 3),
-      group(v("group5", "Nhóm từ 5 người, giảm 20% (giá mỗi người)", 45, [200, 280, 440]), 10, 5),
+      group(v("group2", "Nhóm 2 người, giảm 10% (giá mỗi người)", 60, [225, 315, 495]), 2, 2),
+      group(v("group3", "Nhóm 3–4 người, giá ưu đãi mỗi người", 60, [210, 295, 465]), 4, 3),
+      group(v("group5", "Nhóm từ 5 người, giảm 20% (giá mỗi người)", 60, [200, 280, 440]), 10, 5),
     ],
   },
   {
@@ -345,7 +347,7 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Làm tóc cô dâu",
     description: "Làm tóc cô dâu có buổi thử trước.",
     includes: ["1 buổi thử tóc", "Tạo kiểu & cài phụ kiện", "Giữ nếp suốt lễ"],
-    variants: [v("one", "1 lễ", 120, [800, 1200, 1800])],
+    variants: [{ ...v("one", "Thử tóc 60 phút + ngày lễ 120 phút", 60, [800, 1200, 1800]), sessions: 2 }],
   },
   {
     id: "hair-straighten",
@@ -902,6 +904,8 @@ for (const template of CATALOG) {
  * never in the browse lists, never a "from" price, but listed on profiles.
  */
 export const ADDONS: ServiceTemplate[] = [
+  { id: "nail-prep-pilot", category: "nail", name: "Tháo và nền móng", description: "Menu mới; màu và chăm da trong gói chính, không tính lại.", includes: ["Thực hiện phần nền đã chọn"], addon: true, variants: [v("remove", "Tháo gel", 20, [20]), v("remove-tips", "Tháo úp hoặc gel đắp", 30, [50]), v("tips", "Úp nền 10 móng", 45, [130]), v("biab", "Gia cố BIAB 10 móng", 45, [180]), v("builder", "Nối gel 10 móng", 75, [250]), perUnit(v("repair", "Úp/sửa lẻ", 15, [15]), "ngón", 10)] },
+  { id: "nail-art-pilot", category: "nail", name: "Trang trí theo menu", description: "Chọn số ngón hoặc số viên trên nền gel cùng người/vùng.", includes: ["Vật tư và công trang trí theo mẫu chuẩn"], addon: true, variants: [perUnit(v("cat-eye", "Mắt mèo điểm trên nền gel", 15, [10]), "ngón", 10), perUnit(v("french", "French đơn giản", 20, [10]), "ngón", 10), perUnit(v("mirror", "Tráng gương đơn giản", 20, [10]), "ngón", 10), perUnit(v("ombre", "Ombre đơn giản", 20, [10]), "ngón", 10), perUnit(v("simple", "Vẽ đơn giản", 15, [10]), "ngón", 10), perUnit(v("detail", "Vẽ chi tiết", 30, [25]), "ngón", 10), perUnit(v("3d", "Vẽ nổi 3D", 45, [40]), "ngón", 10), perUnit(v("stone", "Đá nhỏ", 15, [5]), "viên", 20), perUnit(v("charm", "Charm chuẩn", 20, [20]), "viên", 20)] },
   {
     id: "nail-design",
     category: "nail",

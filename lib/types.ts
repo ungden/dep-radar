@@ -99,6 +99,7 @@ export interface ServiceTemplate {
 
 /** A freelancer's listing of one catalogue service. */
 export interface ProService {
+  setup?: import("./service-cart").ServiceSetup | null
   id: string
   proId: string
   templateId: string
@@ -349,6 +350,11 @@ export interface Booking {
 }
 
 export interface ServiceContract {
+  visits?: {sequence:number;startsAt:string;durationMin:number;travelFee:number;urgentFee:number;serviceShare:number;addressSnapshot?:{detail?:string;district?:string;city?:string}}[]
+  rights?: Record<string,string|boolean>
+  servicePrice?: number
+  readyBy?: string | null
+  lines?: import("./service-cart").CartContractLine[]
   version: number
   serviceName: string
   variantLabel: string

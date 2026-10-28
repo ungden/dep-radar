@@ -64,7 +64,7 @@ begin
   assert public.service_duration_min('makeup-prewedding', 'outdoor', 1) = 300, 'outdoor stays longer';
 
   raise notice 'group options multiply by head count';
-  assert public.service_duration_min('makeup-photo', 'group3', 3) = 135, 'three heads take three slots';
+  assert public.service_duration_min('makeup-photo', 'group3', 3) = 180, 'three heads take three slots';
   assert public.service_duration_min('makeup-photo', 'single', 3) is null, 'single rejects an invalid quantity';
   q := public.build_quote(380000, 3, false, null, false);
   assert q.service_price = 1140000, format('group price %s', q.service_price);
@@ -470,7 +470,7 @@ begin
     and p.proname <> all (array[
       'app_timezone', 'travel_distance_km', 'travel_fee', 'commission_for', 'is_urgent', 'build_quote',
       'service_duration_min', 'listed_price', 'within_working_hours', 'availability_problem', 'free_slots',
-      'slugify', 'is_admin', 'is_pro', 'free_days', 'mcn_policy',
+      'slugify', 'is_admin', 'is_pro', 'free_days', 'cart_slots', 'mcn_policy',
       -- the feed: reporting and reading interest counts, and the content check
       'log_work_events', 'work_stats_30d', 'banned_content',
       -- called by a row level security policy
@@ -489,10 +489,10 @@ begin
       'app_timezone', 'travel_distance_km', 'travel_fee', 'commission_for', 'is_urgent', 'build_quote',
       'service_duration_min', 'listed_price', 'within_working_hours', 'availability_problem', 'free_slots',
       'slugify', 'is_admin', 'is_pro', 'log_work_events', 'work_stats_30d', 'banned_content', 'applied_to_casting',
-      'free_days',
+      'free_days', 'cart_slots',
       -- the state machine and the things a person does to their own account
       'create_partner', 'partner_setup', 'save_partner_profile', 'confirm_partner_hours', 'submit_partner_profile',
-      'save_pro_service', 'booking_quote', 'create_booking_checked', 'post_job_checked', 'my_job_eligibility',
+      'save_pro_service_with_setup','cart_quote_with_visits','request_delivery_line_revision','post_cart_job_with_rights','create_cart_booking_with_rights','request_delivery_revision','delivery_workspace','booking_scope_workspace','propose_booking_scope','respond_booking_scope','post_cart_job', 'cart_quote', 'create_cart_booking', 'save_pro_service', 'booking_quote', 'create_booking_checked', 'post_job_checked', 'my_job_eligibility',
       'propose_followup', 'confirm_followup',
       'create_booking', 'confirm_booking', 'decline_booking', 'start_booking', 'complete_booking',
       'mark_no_show', 'cancel_booking', 'request_reschedule', 'respond_reschedule', 'post_job',

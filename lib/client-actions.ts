@@ -75,6 +75,7 @@ export const actions = {
     templateId: string
     variantId: string
     quantity?: number
+    items?: import("./service-cart").CartItem[]
     date: string
     atHome: boolean
     addressId: string | null
@@ -119,6 +120,11 @@ export const actions = {
     expectedTotal: number
     expectedUnit: number
     sessions?: string[]
+    rights?: import("./commerce").RightsAgreement
+    quoteId?: string
+    references?: string[]
+    usageScope?: import("./types").UsageScope
+    consentRepost?: boolean
   }): Promise<{ id: string } | { error: string }> {
     const result = await api.createBooking({
       proId: input.proId,
@@ -133,6 +139,7 @@ export const actions = {
       expectedTotal: input.expectedTotal,
       expectedUnit: input.expectedUnit,
       sessions: input.sessions,
+      quoteId: input.quoteId, rights: input.rights, references: input.references, usageScope: input.usageScope, consentRepost: input.consentRepost,
     })
     return result.ok ? { id: result.data } : { error: result.error }
   },
@@ -236,9 +243,16 @@ export const actions = {
     paymentMethod: PaymentMethod
     /** Per person; omitted means the catalogue price. */
     price?: number | null
+    rights?: import("./commerce").RightsAgreement
+    usageScope?: "personal"|"commercial"
+    consentRepost?: boolean
+    items?: import("./service-cart").PricedCartItem[]
+    references?: string[]
     maxTotal: number
   }): Promise<{ id: string } | { error: string }> {
     const result = await api.postJob({
+      rights:input.rights,usageScope:input.usageScope,consentRepost:input.consentRepost,
+      items: input.items, references: input.references,
       price: input.price,
       maxTotal: input.maxTotal,
       templateId: input.templateId,
@@ -265,8 +279,8 @@ export const actions = {
 
   // Freelancer profile & listings ---------------------------------------------
 
-  async saveProService(templateId: string, prices: Record<string, number>, active = true, notes?: Record<string, string>): Promise<Result> {
-    return asResult(await api.saveListing({ templateId, prices, active, notes }))
+  async saveProService(templateId: string, prices: Record<string, number>, active = true, notes?: Record<string, string>, setup?: import("./service-cart").ServiceSetup): Promise<Result> {
+    return asResult(await api.saveListing({ templateId, prices, active, notes, setup }))
   },
 
   async toggleProService(templateId: string, prices: Record<string, number>, active: boolean): Promise<Result> {

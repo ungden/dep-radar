@@ -1,3 +1,5 @@
+import { SiteFields } from "@/components/site-fields"
+import type { ServiceSetup } from "@/shared"
 import * as React from "react"
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
@@ -37,6 +39,7 @@ export default function PartnerProfile() {
   const [editing, setEditing] = React.useState<string | null>(null)
   const [prices, setPrices] = React.useState<Record<string, number>>({})
   // The partner's own words on each package (makeup); empty means the catalogue's "Bao gồm".
+  const [serviceSetup,setServiceSetup]=React.useState<ServiceSetup>({equipmentConfirmed:false,needs:{},note:""})
   const [notes, setNotes] = React.useState<Record<string, string>>({})
   const scroller = React.useRef<ScrollView>(null)
   const cardY = React.useRef<Record<string, number>>({})
@@ -82,6 +85,7 @@ export default function PartnerProfile() {
   // Opening a service starts at its top; saving it comes back to it in the list.
   const openService = (id: string) => {
     setEditing(id)
+    setServiceSetup(setup.services.find(s=>s.template_id===id)?.service_setup??{equipmentConfirmed:false,needs:{},note:""})
     setPrices({ ...(setup.services.find((s) => s.template_id === id)?.prices ?? {}) })
     setNotes({ ...(setup.services.find((s) => s.template_id === id)?.notes ?? {}) })
     scroller.current?.scrollTo({ y: 0, animated: false })
@@ -138,7 +142,8 @@ export default function PartnerProfile() {
       }) : <>
         <Txt v="h2">{tpl.name}</Txt><Txt>{tpl.description}</Txt><Txt>{tpl.includes.join(" · ")}</Txt>{tpl.addon && <Txt v="meta" color={colors.inkSoft}>Khách chọn thêm khi đặt dịch vụ chính, không đặt riêng.</Txt>}
         {tpl.variants.map((v) => <View key={v.id} style={{ gap: 10, padding: 14, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md }}><Choice label={`${prices[v.id] !== undefined ? "✓" : "+"} ${v.label}`} active={prices[v.id] !== undefined} onPress={() => setPrices((p) => { const next = { ...p }; if (next[v.id] !== undefined) delete next[v.id]; else next[v.id] = v.tiers[0]; return next })} /><Txt v="meta">{v.durationMin} phút{v.unit ? ` · giá mỗi ${v.unit}` : v.perPerson ? v.durationRule === "fixed" ? " / nhóm" : " / người" : ""}{v.sessions ? ` · ${v.sessions} buổi` : ""} {v.deliverable ?? tpl.deliverable}{v.revisions ? ` · ${v.revisions} lượt sửa` : ""}{v.followupDays ? ` · dặm trong ${v.followupDays} ngày` : ""}</Txt>{prices[v.id] !== undefined && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{v.tiers.map((n, i) => <Choice key={n} label={`${tierLabels(v)[i]} ${formatPrice(n)}${perUnitSuffix(v)}`} active={prices[v.id] === n} onPress={() => setPrices((p) => ({ ...p, [v.id]: n }))} />)}</View>}{prices[v.id] !== undefined && allowsPackageNote(tpl) ? <PackageNote value={notes[v.id] ?? ""} onChange={(text) => setNotes((m) => ({ ...m, [v.id]: text }))} fallback={tpl.includes.join(", ")} /> : null}</View>)}
-        <Button label="Lưu gói & giá" busy={busy} disabled={!Object.keys(prices).length} onPress={async () => { if (await mutate("save_pro_service", { p_template: tpl.id, p_prices: prices, p_active: true, ...(allowsPackageNote(tpl) ? { p_notes: Object.fromEntries(Object.keys(prices).map((id) => [id, (notes[id] ?? "").trim()])) } : {}) })) backToList(tpl.id) }} />
+        <Choice label="Tôi có đủ dụng cụ cho các gói đã niêm yết" active={serviceSetup.equipmentConfirmed} onPress={()=>setServiceSetup(s=>({...s,equipmentConfirmed:!s.equipmentConfirmed}))}/><SiteFields title="Yêu cầu nơi làm của khách" value={serviceSetup.needs} onChange={needs=>setServiceSetup(s=>({...s,needs}))}/><TextInput accessibilityLabel="Hướng dẫn chuẩn bị" placeholder="Chỗ đặt đèn, dùng nước, dụng cụ thợ mang…" maxLength={500} value={serviceSetup.note} onChangeText={note=>setServiceSetup(s=>({...s,note}))}/>
+        <Button label="Lưu gói & giá" busy={busy} disabled={!Object.keys(prices).length||!serviceSetup.equipmentConfirmed} onPress={async () => { if (await mutate("save_pro_service_with_setup", { p_template: tpl.id, p_prices: prices, p_active: true, p_setup:serviceSetup,p_notes:allowsPackageNote(tpl)?Object.fromEntries(Object.keys(prices).map((id)=>[id,(notes[id]??"").trim()])):null })) backToList(tpl.id) }} />
         <Button label="Về danh sách dịch vụ" variant="ghost" onPress={() => backToList(tpl.id)} />
       </>}
       <Button label="Tiếp tục: nơi phục vụ" variant="secondary" onPress={() => { setEditing(null); setStep(2) }} />
