@@ -1,3 +1,4 @@
+import { McnOverview } from "./mcn/overview"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { adminBookings, adminOverview, adminPros, adminReports, adminSettings, aiDecisions, isAdmin, pendingChecks, profileQueue } from "@/lib/api/admin"
@@ -33,6 +34,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   return (
     <AdminDesk
+      mcnOverview={<McnOverview />}
       queue={queue}
       checks={checks}
       pros={pros}

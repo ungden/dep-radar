@@ -88,7 +88,7 @@ export function OverviewPanel({
         >
           {todo.length === 0 ? (
             <p className="flex items-center gap-2 px-4 py-6 text-body text-success">
-              <CircleCheck className="size-4" aria-hidden /> Không có việc tồn đọng. Mọi hàng chờ đều trống.
+              <CircleCheck className="size-4" aria-hidden /> Không có việc chờ trong các nhóm bên dưới. Hàng chờ MCN ở phần riêng phía trên.
             </p>
           ) : (
             <ul className="divide-y divide-line">

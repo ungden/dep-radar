@@ -1,9 +1,9 @@
+import { getMcnPolicy } from "@/lib/api/mcn"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowRight, Check, Handshake, ShieldCheck, Users, Wallet } from "lucide-react"
 import { ButtonLink, Card, PageHeader } from "@/components/ui"
 import { POLICY, commissionFor } from "@/lib/pricing"
-import { MCN_POLICY, splitMcnCommission } from "@/lib/mcn"
 import { formatPrice } from "@/lib/utils"
 
 export const metadata: Metadata = {
@@ -16,14 +16,17 @@ const steps = [
   ["01", "Đăng ký network", "Gửi thông tin tổ chức, người phụ trách và kế hoạch hỗ trợ KTV. 360đẹp xét duyệt trước khi network bắt đầu mời thành viên."],
   ["02", "KTV đồng ý gia nhập", "Mời bằng mã hồ sơ KTV. Mỗi người tự xem điều khoản và xác nhận trong tài khoản của mình; chỉ tham gia một network tại một thời điểm."],
   ["03", "Hỗ trợ để cùng phát triển", "Theo dõi thành viên, hướng dẫn hoàn thiện hồ sơ và lưu ghi chú chăm sóc. KTV trực tiếp quản lý lịch, giá, nhận việc và tiền của mình."],
-  ["04", "Đối soát phần được chia", "Hoa hồng tính theo từng lịch hẹn. Sau ít nhất 7 ngày từ khi hoàn thành, phí đã được thu và không còn tranh chấp mở, sàn đối soát và chuyển khoản cho network."],
+  ["04", "Đối soát phần được chia", "Hoa hồng tính theo từng lịch hẹn. Sau thời gian giữ của chính sách tại lúc đặt, tính từ khi hoàn thành, phí đã được thu và không còn tranh chấp mở, sàn đối soát và chuyển khoản cho network."],
 ] as const
 
-export default function McnPage() {
+export const dynamic = "force-dynamic"
+export default async function McnPage() {
+  const policy = await getMcnPolicy()
   const feePercent = Math.round(POLICY.commissionRate * 100)
-  const mcnPercent = feePercent * MCN_POLICY.feeShareRate
+  const mcnPercent = Math.round(feePercent * Math.round(policy.feeShareRate * 1000) / 10) / 100
   const exampleCommission = commissionFor(500000)
-  const exampleSplit = splitMcnCommission(exampleCommission)
+  const mcn = Math.round(exampleCommission * policy.feeShareRate)
+  const exampleSplit = {mcn, platform: exampleCommission - mcn}
   return (
     <div className="mx-auto max-w-5xl pb-12 md:pt-4">
       <PageHeader back="/doi-tac" />
@@ -48,7 +51,7 @@ export default function McnPage() {
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           {[
             { label: "KTV", pct: `${100 - feePercent}%`, desc: "Giá dịch vụ, cộng toàn bộ phí di chuyển và đặt gấp", icon: Users, color: "bg-highlight-soft" },
-            { label: "Network MCN", pct: `${mcnPercent}%`, desc: "Tương đương 20% khoản phí dịch vụ đã thu", icon: Handshake, color: "bg-accent-soft" },
+            { label: "Network MCN", pct: `${mcnPercent}%`, desc: `Tương đương ${Math.round(policy.feeShareRate * 1000) / 10}% khoản phí dịch vụ đã thu`, icon: Handshake, color: "bg-accent-soft" },
             { label: "360đẹp", pct: `${feePercent - mcnPercent}%`, desc: "Phần phí còn lại để vận hành và phát triển nền tảng", icon: ShieldCheck, color: "bg-subtle" },
           ].map(({ label, pct, desc, icon: Icon, color }) => (
             <Card key={label} className="p-5">
@@ -59,7 +62,7 @@ export default function McnPage() {
             </Card>
           ))}
         </div>
-        <p className="mt-3 text-label leading-relaxed text-muted">Tỷ lệ minh hoạ trên giá dịch vụ. Số tiền thực tế được tính từ phí của từng lịch hẹn sau làm tròn; network nhận 20% khoản phí đó. Điều khoản được lưu tại thời điểm tạo lịch, không áp dụng hồi tố.</p>
+        <p className="mt-3 text-label leading-relaxed text-muted">Tỷ lệ minh hoạ trên giá dịch vụ. Số tiền thực tế được tính từ phí của từng lịch hẹn sau làm tròn; network nhận {Math.round(policy.feeShareRate * 1000) / 10}% khoản phí đó. Điều khoản được lưu tại thời điểm tạo lịch, không áp dụng hồi tố.</p>
         <div className="mt-5 rounded-[var(--radius-lg)] border border-line bg-surface p-5">
           <p className="flex items-center gap-2 text-body font-bold"><Wallet className="size-5 text-accent" aria-hidden /> Một lịch dịch vụ 500.000đ + di chuyển 50.000đ</p>
           <dl className="mt-4 grid grid-cols-1 gap-3 text-body sm:grid-cols-3">
@@ -90,7 +93,7 @@ export default function McnPage() {
             "KTV có thể rời network; lịch tạo sau đó không chia hoa hồng cho network cũ.",
             "Network không được nhận lịch, sửa tài khoản ngân hàng hay thu tiền thay KTV.",
             "Không chia hoa hồng trên lịch huỷ, chưa hoàn thành hoặc phí chưa được thu.",
-            "Đối soát từ 100.000đ đủ điều kiện; có mã chuyển khoản và lịch sử ghi nhận.",
+            `Đối soát từ ${formatPrice(policy.minimumPayout)} đủ điều kiện; giữ ${policy.holdDays} ngày, có mã chuyển khoản và lịch sử ghi nhận.`,
           ].map((text) => <li key={text} className="flex gap-2.5"><Check className="mt-0.5 size-5 shrink-0 text-success" aria-hidden /><span>{text}</span></li>)}
         </ul>
       </section>

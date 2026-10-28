@@ -470,7 +470,7 @@ begin
     and p.proname <> all (array[
       'app_timezone', 'travel_distance_km', 'travel_fee', 'commission_for', 'is_urgent', 'build_quote',
       'service_duration_min', 'listed_price', 'within_working_hours', 'availability_problem', 'free_slots',
-      'slugify', 'is_admin', 'is_pro', 'free_days',
+      'slugify', 'is_admin', 'is_pro', 'free_days', 'mcn_policy',
       -- the feed: reporting and reading interest counts, and the content check
       'log_work_events', 'work_stats_30d', 'banned_content',
       -- called by a row level security policy
@@ -500,7 +500,7 @@ begin
       'send_message', 'send_location', 'set_job_references', 'replace_working_hours', 'my_wallet_balance', 'mark_thread_read', 'delete_my_account',
       'set_my_phone', 'set_interests',
       -- MCN entry points enforce organization ownership, KTV consent and admin-only settlement
-      'mcn_workspace', 'mcn_command',
+      'mcn_workspace', 'mcn_command', 'mcn_policy', 'mcn_admin_report',
       -- photo & video, combos, casting calls, two-way reviews
       'set_booking_terms', 'deliver_booking', 'accept_delivery', 'link_bookings',
       'create_casting', 'close_casting', 'apply_casting', 'withdraw_application', 'decide_application',

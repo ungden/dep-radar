@@ -69,6 +69,7 @@ export interface McnPayout {
   note: string
 }
 export interface McnWorkspace {
+  policy?: import("./mcn-admin-types").McnPolicy
   available: boolean
   error: string | null
   isAdmin: boolean

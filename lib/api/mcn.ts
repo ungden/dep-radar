@@ -35,3 +35,20 @@ export async function removeMcnPro(membershipId: string) { return command("remov
 export async function saveMcnSupport(membershipId: string, supportNote: string, nextFollowUp: string | null) { return command("support", { membershipId, supportNote, nextFollowUp }) }
 export async function recordMcnPayout(organizationId: string, commissionIds: string[], bankReference: string, note: string, expectedAmount: number) { return command("payout", { organizationId, commissionIds, bankReference, note, expectedAmount }) }
 export async function reverseMcnCommission(commissionId: string, reason: string) { return command("reverse", { commissionId, reason }) }
+
+export async function mcnAdminReport(from:string,to:string,organizationId:string|null=null,offset=0):Promise<ActionResult<import('@/lib/mcn-admin-types').McnAdminReport>> {
+ const supabase=await supabaseServer()
+ const {data,error}=await supabase.rpc('mcn_admin_report' as never,{p_from:from,p_to:to,p_org:organizationId,p_offset:offset} as never)
+ if(error) return {ok:false,error:messageFor(error)}
+ return {ok:true,data:data as unknown as import('@/lib/mcn-admin-types').McnAdminReport}
+}
+export async function getMcnPolicy():Promise<import('@/lib/mcn-admin-types').McnPolicy> {
+ const {MCN_POLICY}=await import('@/lib/mcn')
+ if(!backendEnabled) return MCN_POLICY
+ const supabase=await supabaseServer()
+ const {data,error}=await supabase.rpc('mcn_policy' as never,{} as never)
+ if(error||!data) throw new Error("Chưa tải được chính sách MCN hiện hành. Vui lòng tải lại.")
+ return data as unknown as import('@/lib/mcn-admin-types').McnPolicy
+}
+export async function scheduleMcnPolicy(input:{effectiveAt:string;feeShareRate:number;holdDays:number;minimumPayout:number;reason:string}) {return command('policy',input)}
+export async function cancelMcnPolicy(id:string,reason:string) {return command('cancel_policy',{id,reason})}
