@@ -58,7 +58,7 @@ begin
   minutes:=public.service_duration_min(t.id,v.id,qty);
   if jsonb_array_length(lines)>0 and v.sessions>1 then raise exception 'Chọn gói nhiều buổi làm dịch vụ chính.'; end if;
   lines:=lines||jsonb_build_array(jsonb_strip_nulls(jsonb_build_object('region',item->'region','site',item->'site'))||partner_private.service_contract(t.id,v.id,qty,unit,minutes)||jsonb_build_object(
-   'template',t.id,'variant',v.id,'recipient',recipient,'name',t.name,'label',case when t.category='nail' and v.id='hand' and item->>'region'='foot' then '10 móng chân' else v.label end,'unit',case when t.id in ('nail-design','nail-art-pilot') then case when v.id in ('stone','charm') then 'viên' else 'ngón' end when v.per_person then 'người' else 'gói' end,
+   'template',t.id,'variant',v.id,'recipient',recipient,'name',t.name,'label',case when t.category='nail' and v.id='hand' and item->>'region'='foot' then '10 móng chân' else v.label end,'unit',case when t.id in ('nail-design','nail-art-pilot') then case when v.id in ('stone','charm') then 'viên' else 'ngón' end when t.id='nail-prep-pilot' and v.id='repair' then 'ngón' when v.per_person then 'người' else 'gói' end,
    'quantity',qty,'unitPrice',unit,'total',unit*qty,'durationMin',minutes,'category',t.category));
  end loop;
  for item in select * from jsonb_array_elements(lines) where value->>'template' in ('nail-design','nail-art-pilot') loop

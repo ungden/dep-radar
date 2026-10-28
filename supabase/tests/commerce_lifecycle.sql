@@ -69,11 +69,14 @@ begin
  -- New menus are opt-in, including equipment and venue requirements.
  perform set_config('request.jwt.claim.sub',pro::text,true);
  perform public.save_pro_service_with_setup('nail-pilot','{"gel":150000}',true,'{}','{"equipmentConfirmed":true,"needs":{"electricity":true},"note":"Chuẩn bị bàn và ổ điện"}');
+ perform public.save_pro_service_with_setup('nail-prep-pilot','{"repair":15000}',true,'{}','{"equipmentConfirmed":true,"needs":{}}');
  perform public.save_pro_service_with_setup('nail-art-pilot','{"cat-eye":10000}',true,'{}','{"equipmentConfirmed":true,"needs":{}}');
  perform set_config('request.jwt.claim.sub',customer::text,true);
  begin perform public.cart_quote(pro,'[{"template":"nail-pilot","variant":"gel","quantity":1}]',at+interval '4 days',true,address);raise exception 'missing electricity accepted';exception when raise_exception then if sqlerrm='missing electricity accepted' then raise;end if;end;
  q:=public.cart_quote(pro,'[{"template":"nail-pilot","variant":"gel","quantity":1,"site":{"electricity":true}},{"template":"nail-art-pilot","variant":"cat-eye","quantity":8,"site":{"electricity":true}}]',at+interval '4 days',true,address);
  assert (q->>'servicePrice')::int=190000 and (q->'lines'->1->>'quantity')::int=8,'cat-eye cap preserves eight fingers';
+ q:=public.cart_quote(pro,'[{"template":"nail-pilot","variant":"gel","quantity":1,"site":{"electricity":true}},{"template":"nail-prep-pilot","variant":"repair","quantity":2}]',at+interval '4 days',true,address);
+ assert q->'lines'->1->>'unit'='ngón' and (q->>'servicePrice')::int=180000,'repair counted by fingers on the contract';
  -- Trial and ceremony may use different addresses; fees and snapshots survive.
  update public.pros set categories=array_append(categories,'hair'::public.category_id) where id=pro;
  perform set_config('request.jwt.claim.sub',pro::text,true);
