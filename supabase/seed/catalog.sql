@@ -3,7 +3,7 @@
 
 -- Fee policy ----------------------------------------------------------------
 update public.fee_policy set
-  commission_rate = 0.15,
+  commission_rate = 0.2,
   confirm_within_hours = 2,
   late_cancel_rate = 0.3,
   free_travel_km = 0,

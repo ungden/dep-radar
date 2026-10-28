@@ -14,7 +14,8 @@ Một tài khoản có thể chuyển qua lại giữa hai chế độ.
 | Danh mục dịch vụ | 360dep quy định tên, nội dung, gói (thời lượng/mức độ) và 2–3 mức giá mỗi gói (Phổ thông / Tiêu chuẩn / Cao cấp, khảo sát giá thị trường HN & HCM). Freelancer chỉ chọn dịch vụ trong danh mục và chọn một mức giá, không tự nhập giá. | `lib/catalog.ts` |
 | Phí khách hàng | 0đ phí nền tảng, không đặt cọc. Khách trả giá dịch vụ + phí di chuyển/đặt gấp nếu có; thanh toán online toàn bộ hoặc trả trực tiếp sau khi làm. | `lib/pricing.ts` |
 | Xác nhận lịch | Freelancer gọi điện cho khách xác nhận rồi mới nhận job, trong 2 giờ (đặt từ 21:00 đến 08:00 thì tới 10:00 sáng, nhưng không muộn hơn 1 giờ trước giờ hẹn); quá hạn tự huỷ. | `app/bookings/[id]` |
-| Hoa hồng | Một mức 15% trên giá dịch vụ, thu từ freelancer. Không tính trên phí di chuyển/gấp. Job online: trừ trước khi chuyển tiền; job tiền mặt: ghi công nợ, đối soát hằng tuần. | `lib/pricing.ts` |
+| Hoa hồng | 20% trên giá dịch vụ cho lịch tạo mới, thu từ freelancer. Lịch cũ giữ mức phí đã chốt; không tính trên di chuyển/gấp. Hoàn thành lịch thì trừ phí vào ví, ví âm cần nạp đủ trước đơn mới. | `lib/pricing.ts` |
+| MCN | KTV tự nguyện vào một network đã duyệt; chia 20% khoản phí thực tế cho MCN (danh nghĩa KTV 80% / MCN 4% / sàn 16%). Giữ 7 ngày, thu đủ phí, không tranh chấp/hoàn phí; đối soát thủ công từ 100.000đ. | `docs/MCN_2026-10-28.md` |
 | Phí di chuyển | Dưới 5 km: 50.000đ; từ 5 km trở lên (kể cả trên 10 km): tối đa 100.000đ; ngoài bán kính freelancer thì không nhận làm tại nhà. | `lib/pricing.ts`, `lib/geo.ts` |
 | Phí đặt gấp | Bắt đầu trong vòng 3 giờ: +50.000đ. Không nhận lịch trong vòng 60 phút. | `lib/pricing.ts` |
 | Xác minh | Tự nguyện: chụp CCCD 2 mặt + selfie, AI (Gemini) đọc thẻ và so khuôn mặt. Đã xác minh có dấu tick, huy hiệu và được xếp trước. | `app/api/identity`, `app/studio/verify` |

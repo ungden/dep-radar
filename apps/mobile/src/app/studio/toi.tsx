@@ -141,10 +141,12 @@ export default function StudioMe() {
           <Divider style={{ marginLeft: 52 }} />
           <Row icon="shop" label="Ví và hoa hồng" onPress={web("/studio/wallet")} />
           <Divider style={{ marginLeft: 52 }} />
+          <Row icon="briefcase" label="Network MCN của tôi" onPress={web("/studio/network")} />
+          <Divider style={{ marginLeft: 52 }} />
           <Row icon="verified" label="Xác minh danh tính" onPress={web("/studio/verify")} />
         </View>
         <Txt v="meta" color={colors.muted}>
-          Ví và xác minh danh tính mở trên web; bạn có thể cần đăng nhập lại.
+          Ví, network MCN và xác minh danh tính mở trên web; bạn có thể cần đăng nhập lại.
         </Txt>
 
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.md }}>

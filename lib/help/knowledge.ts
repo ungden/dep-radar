@@ -825,8 +825,8 @@ const ENTRIES: HelpEntry[] = [
     audience: "doi-tac",
     topic: "vi-phi",
     q: "360đẹp thu phí đối tác thế nào?",
-    a: `Một mức hoa hồng ${pct(POLICY.commissionRate)} trên giá dịch vụ (làm tròn tới 1.000đ), cho mọi lịch. Không tính trên phí di chuyển và phí đặt gấp; hai khoản này bạn giữ 100%. Phí chỉ trừ khi lịch hoàn thành; lịch bị huỷ, từ chối, hết hạn hay vắng mặt không bị trừ. Không có phí đăng ký, phí duy trì hay phí mua vị trí.`,
-    keywords: ["hoa hong", "phi", "chiet khau", "15%"],
+    a: `Hoa hồng ${pct(POLICY.commissionRate)} trên giá dịch vụ (làm tròn tới 1.000đ) cho lịch tạo mới; lịch cũ giữ mức phí đã chốt. Không tính trên phí di chuyển và phí đặt gấp; hai khoản này bạn giữ 100%. Phí chỉ trừ khi lịch hoàn thành; lịch bị huỷ, từ chối, hết hạn hay vắng mặt không bị trừ. Không có phí đăng ký, phí duy trì hay phí mua vị trí. Tham gia MCN không mất thêm phí; network nhận 20% khoản phí sàn thu, tương đương khoảng 4% giá dịch vụ.`,
+    keywords: ["hoa hong", "phi", "chiet khau", "20%", "mcn", "network"],
   },
   {
     id: "d-vi-am",

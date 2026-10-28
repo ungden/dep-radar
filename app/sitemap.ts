@@ -24,6 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/quy-che`, lastModified, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE_URL}/tro-giup`, lastModified, changeFrequency: "monthly", priority: 0.4 },
     { url: `${SITE_URL}/doi-tac`, lastModified, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${SITE_URL}/mcn`, lastModified, changeFrequency: "monthly", priority: 0.5 },
     // One page per service: what the home page sells.
     ...CATALOG.map((t) => ({
       url: `${SITE_URL}/dich-vu/${t.id}`,

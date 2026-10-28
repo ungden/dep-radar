@@ -6,8 +6,7 @@ import { localDate, localTime } from "@/lib/utils"
  * CSV files for the accountant: /admin/export?kind=bookings|pros|wallet&from=YYYY-MM-DD&to=YYYY-MM-DD.
  *
  *  * bookings: every booking completed (or created, if not completed) in the
- *    period, with the price breakdown and 360đẹp's commission, which is the
- *    company's revenue to invoice and declare.
+ *    period, with the price breakdown and gross fee before the MCN share.
  *  * pros: per freelancer, the revenue they took from customers and the fee,
  *    with the name on their ID card: what a platform reports to the tax office
  *    about its sellers.
@@ -42,7 +41,7 @@ export async function GET(req: Request) {
     if (error) return new Response(error.message, { status: 500 })
     body = csv(
       ["Mã lịch", "Tạo lúc", "Giờ hẹn", "Hoàn thành lúc", "Trạng thái", "Khách", "Người làm", "Dịch vụ", "Gói", "Số lượng",
-       "Giá dịch vụ", "Phí di chuyển", "Phí đặt gấp", "Voucher 360dep", "Tổng khách trả", "Tỷ lệ hoa hồng", "Hoa hồng 360dep", "Thanh toán"],
+       "Giá dịch vụ", "Phí di chuyển", "Phí đặt gấp", "Voucher 360dep", "Tổng khách trả", "Tỷ lệ phí", "Tổng phí trước chia MCN", "Thanh toán"],
       ((data ?? []) as Record<string, unknown>[]).map((r) => [
         r.booking_id, at(r.created_at), at(r.starts_at), at(r.completed_at), r.status, r.customer_name, r.pro_name,
         r.template_id, r.variant_id, r.quantity, r.service_price, r.travel_fee, r.urgent_fee, r.discount, r.total,
@@ -54,7 +53,7 @@ export async function GET(req: Request) {
     if (error) return new Response(error.message, { status: 500 })
     body = csv(
       ["Người làm", "Họ tên trên CCCD", "Xác minh", "Số điện thoại", "Quận/huyện", "Tỉnh/thành", "Số lịch hoàn thành",
-       "Doanh thu từ khách", "Hoa hồng 360dep", "Đã nạp ví", "Số dư ví hiện tại", "Hồ sơ"],
+       "Doanh thu từ khách", "Tổng phí trước chia MCN", "Đã nạp ví", "Số dư ví hiện tại", "Hồ sơ"],
       ((data ?? []) as Record<string, unknown>[]).map((r) => [
         r.display_name, r.name_on_card ?? "", r.identity === "verified" ? "Đã xác minh" : "Chưa", r.phone, r.district, r.city,
         r.completed, r.gmv, r.commission, r.topups, r.balance, `https://www.360dep.vn/pros/${r.slug}`,

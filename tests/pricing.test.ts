@@ -25,10 +25,21 @@ describe("travelFeeFor", () => {
 
 describe("commission and payout", () => {
   it("uses one rounding rule everywhere", () => {
-    // 350.000 × 15% = 52.500 → rounded to 53.000, so the payout is 297.000
-    expect(commissionFor(350_000)).toBe(53_000)
-    expect(payoutFor(350_000)).toBe(297_000)
+    // New bookings use 20%: 350.000 × 20% = 70.000, leaving 280.000.
+    expect(commissionFor(350_000)).toBe(70_000)
+    expect(payoutFor(350_000)).toBe(280_000)
     expect(commissionFor(350_000) + payoutFor(350_000)).toBe(350_000)
+  })
+
+  it("retains the historical fee when an existing booking supplies its 15% snapshot", () => {
+    expect(commissionFor(350_000, .15)).toBe(53_000)
+    expect(payoutFor(350_000, .15)).toBe(297_000)
+    expect(POLICY.commissionRate).toBe(.2)
+  })
+
+  it("still rounds a new fee to whole thousands", () => {
+    expect(commissionFor(352_500)).toBe(71_000)
+    expect(payoutFor(352_500)).toBe(281_500)
   })
 
   it("matches the quote for the same price", () => {
@@ -53,8 +64,8 @@ describe("buildQuote", () => {
     const quote = buildQuote({ servicePrice: 300_000, atHome: true, distanceKm: 4.9, urgent: false })
     expect(quote.total).toBe(350_000)
     expect(quote.travelFee).toBe(50_000)
-    expect(quote.commission).toBe(45_000)
-    expect(quote.payout).toBe(305_000)
+    expect(quote.commission).toBe(60_000)
+    expect(quote.payout).toBe(290_000)
   })
 
   it("ignores travel distance for studio visits", () => {

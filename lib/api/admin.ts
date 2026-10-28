@@ -780,6 +780,8 @@ export interface FinanceSummary {
   gmv: number
   serviceRevenue: number
   commission: number
+  mcnCommission: number
+  mcnPaid: number
   discounts: number
   created: number
   cancelled: number
@@ -834,6 +836,8 @@ export async function financeReport(from: string, to: string): Promise<ActionRes
         gmv: num("gmv"),
         serviceRevenue: num("serviceRevenue"),
         commission: num("commission"),
+        mcnCommission: num("mcnCommission"),
+        mcnPaid: num("mcnPaid"),
         discounts: num("discounts"),
         created: num("created"),
         cancelled: num("cancelled"),
