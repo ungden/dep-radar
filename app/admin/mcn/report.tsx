@@ -390,7 +390,7 @@ function PolicyPanel({
   action: ReturnType<typeof useMcnAction>;
 }) {
   const [now] = useState(() => Date.now());
-  const [share, setShare] = useState(data.policy.feeShareRate * 100),
+  const [share, setShare] = useState(Math.round(data.policy.feeShareRate * 1000) / 10),
     [hold, setHold] = useState(data.policy.holdDays),
     [minimum, setMinimum] = useState(data.policy.minimumPayout),
     [date, setDate] = useState(""),
@@ -400,7 +400,7 @@ function PolicyPanel({
     <Card className="p-4">
       <h2 className="font-bold">Chính sách MCN & lịch hiệu lực</h2>
       <p className="mt-2 text-meta">
-        Phí KTV 20%. Hiện MCN nhận {data.policy.feeShareRate * 100}% khoản phí;
+        Phí KTV 20%. Hiện MCN nhận {Math.round(data.policy.feeShareRate * 1000) / 10}% khoản phí;
         giữ {data.policy.holdDays} ngày; chi tối thiểu{" "}
         {formatPrice(data.policy.minimumPayout)}. Thay đổi báo trước ít nhất 24
         giờ. Booking mới chốt tỷ lệ và thời gian giữ; ngưỡng chi áp dụng tại lúc
@@ -494,7 +494,7 @@ function PolicyPanel({
                 timeZone: "Asia/Ho_Chi_Minh",
               })}
             </strong>{" "}
-            · MCN {p.share_rate * 100}% phí · {p.hold_days} ngày ·{" "}
+            · MCN {Math.round(p.share_rate * 1000) / 10}% phí · {p.hold_days} ngày ·{" "}
             {formatPrice(p.minimum_payout)}
             {p.cancelled_at ? " · Đã huỷ" : ""}
             <p className="mt-1">{p.reason}</p>

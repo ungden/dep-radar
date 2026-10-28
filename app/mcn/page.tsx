@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic"
 export default async function McnPage() {
   const policy = await getMcnPolicy()
   const feePercent = Math.round(POLICY.commissionRate * 100)
-  const mcnPercent = feePercent * policy.feeShareRate
+  const mcnPercent = Math.round(feePercent * Math.round(policy.feeShareRate * 1000) / 10) / 100
   const exampleCommission = commissionFor(500000)
   const mcn = Math.round(exampleCommission * policy.feeShareRate)
   const exampleSplit = {mcn, platform: exampleCommission - mcn}
@@ -51,7 +51,7 @@ export default async function McnPage() {
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           {[
             { label: "KTV", pct: `${100 - feePercent}%`, desc: "Giá dịch vụ, cộng toàn bộ phí di chuyển và đặt gấp", icon: Users, color: "bg-highlight-soft" },
-            { label: "Network MCN", pct: `${mcnPercent}%`, desc: `Tương đương ${policy.feeShareRate * 100}% khoản phí dịch vụ đã thu`, icon: Handshake, color: "bg-accent-soft" },
+            { label: "Network MCN", pct: `${mcnPercent}%`, desc: `Tương đương ${Math.round(policy.feeShareRate * 1000) / 10}% khoản phí dịch vụ đã thu`, icon: Handshake, color: "bg-accent-soft" },
             { label: "360đẹp", pct: `${feePercent - mcnPercent}%`, desc: "Phần phí còn lại để vận hành và phát triển nền tảng", icon: ShieldCheck, color: "bg-subtle" },
           ].map(({ label, pct, desc, icon: Icon, color }) => (
             <Card key={label} className="p-5">
@@ -62,7 +62,7 @@ export default async function McnPage() {
             </Card>
           ))}
         </div>
-        <p className="mt-3 text-label leading-relaxed text-muted">Tỷ lệ minh hoạ trên giá dịch vụ. Số tiền thực tế được tính từ phí của từng lịch hẹn sau làm tròn; network nhận {policy.feeShareRate * 100}% khoản phí đó. Điều khoản được lưu tại thời điểm tạo lịch, không áp dụng hồi tố.</p>
+        <p className="mt-3 text-label leading-relaxed text-muted">Tỷ lệ minh hoạ trên giá dịch vụ. Số tiền thực tế được tính từ phí của từng lịch hẹn sau làm tròn; network nhận {Math.round(policy.feeShareRate * 1000) / 10}% khoản phí đó. Điều khoản được lưu tại thời điểm tạo lịch, không áp dụng hồi tố.</p>
         <div className="mt-5 rounded-[var(--radius-lg)] border border-line bg-surface p-5">
           <p className="flex items-center gap-2 text-body font-bold"><Wallet className="size-5 text-accent" aria-hidden /> Một lịch dịch vụ 500.000đ + di chuyển 50.000đ</p>
           <dl className="mt-4 grid grid-cols-1 gap-3 text-body sm:grid-cols-3">

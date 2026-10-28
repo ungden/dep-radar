@@ -287,7 +287,7 @@ export default async function PolicyPage() {
         <Section title="Network MCN dành cho KTV">
           <p>
             KTV có thể tự nguyện tham gia một network đã được 360dep duyệt để được hỗ trợ tuyển dụng, hoàn thiện hồ sơ và phát triển nghề.
-            Tổng phí dịch vụ là 20%; 360dep chia {mcnPolicy.feeShareRate*100}% khoản phí thực tế đó cho MCN, tương đương khoảng {20*mcnPolicy.feeShareRate}% giá dịch vụ.
+            Tổng phí dịch vụ là 20%; 360dep chia {Math.round(mcnPolicy.feeShareRate*1000)/10}% khoản phí thực tế đó cho MCN, tương đương khoảng {Math.round(2000*mcnPolicy.feeShareRate)/100}% giá dịch vụ.
             KTV giữ khoảng 80%, sàn giữ khoảng 16%; số tiền chính xác theo quy tắc làm tròn phí trong lịch hẹn.
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-5">
