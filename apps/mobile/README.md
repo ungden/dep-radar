@@ -1,4 +1,14 @@
-# 360dep — app iOS / Android
+# 360dep - Làm Đẹp Tại Nhà — app iOS / Android
+
+Tên hiển thị trên kho ứng dụng và cấu hình native: **360dep - Làm Đẹp Tại Nhà**
+(24 ký tự, giới hạn kho là 30). `app.json` chuẩn bị phiên bản **1.2.2**;
+tên dưới biểu tượng trên thiết bị đổi sau khi người dùng cài bản build mới.
+Slug EAS `360dep`, bundle ID/package `vn.dep360.app` và scheme `dep360` giữ nguyên.
+
+Ngày 28/10/2026: đã lưu tên mới trong App Store Connect ở bản nháp 1.2.2
+(Prepare for Submission, chưa có build). Bản 1.2.1 đang Ready for Distribution.
+Google Play đã nhận riêng thay đổi tên vào mục Changes in review, đang chạy quick checks;
+release Android 1.2.1 (14) cũ vẫn chưa gửi duyệt. Tên mới chưa được xác nhận hiển thị công khai.
 
 Expo Router (SDK 57), một app hai chế độ như web: **khách** và **360dep Đối tác** (thư mục `studio`, người làm). Chỉ tài khoản đã có hồ sơ đối tác mới thấy nút chuyển trong Tôi; khách chỉ thấy một dòng nhỏ cuối Tôi dẫn tới `/doi-tac`.
 App đọc/ghi cùng Supabase với web, bằng **publishable/anon key**, qua cùng bảng, RLS và RPC.
