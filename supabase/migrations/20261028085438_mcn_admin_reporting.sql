@@ -18,6 +18,8 @@ $$;
 create function public.mcn_policy() returns jsonb language sql stable security invoker set search_path='' as $$ select mcn_private.policy() $$;
 revoke all on function mcn_private.policy(),public.mcn_policy() from public,anon,authenticated;
 grant execute on function mcn_private.policy(),public.mcn_policy() to anon,authenticated;
+-- Anonymous callers can resolve only the explicitly granted public policy helper.
+grant usage on schema mcn_private to anon;
 alter table public.bookings add column mcn_hold_days int not null default 7 check(mcn_hold_days between 7 and 90);
 alter table public.bookings drop constraint booking_mcn_split;
 alter table public.bookings add constraint booking_mcn_split check (

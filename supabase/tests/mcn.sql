@@ -274,6 +274,8 @@ begin
   perform set_config('request.jwt.claim.sub', '', true);
   perform pg_temp.reject_mcn('apply', '{}');
   set local role anon;
+  assert (public.mcn_policy()->>'feeShareRate')::numeric=.2,'public policy loads without an authenticated session';
+  assert not has_function_privilege('anon','public.mcn_admin_report(date,date,uuid,integer)','EXECUTE'),'public policy does not open admin reports';
   denied := false;
   begin perform public.mcn_workspace(); exception when insufficient_privilege then denied := true; end;
   assert denied, 'anonymous callers must not access MCN workspace';
