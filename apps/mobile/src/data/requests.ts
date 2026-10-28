@@ -49,8 +49,14 @@ export async function postJob(input: {
   description: string
   /** Per person; post_job takes the suggested price when it is left out. */
   price?: number
+  rights?: import("@/shared").RightsAgreement
+  usageScope?: "personal"|"commercial"
+  consentRepost?: boolean
+  items?: import("@/shared").PricedCartItem[]
+  references?: string[]
   maxTotal: number
 }) {
+  if (input.items) return rpc<string>("post_cart_job_with_rights", { p_items: input.items,p_starts_at:toTimestamptz(input.date,input.time),p_address:input.addressId,p_description:input.description,p_max_total:input.maxTotal,p_references:input.references??[],p_usage:input.usageScope??"personal",p_repost:input.consentRepost??false,p_rights:input.rights??{} })
   return rpc<string>("post_job_checked", {
     p_template: input.templateId,
     p_variant: input.variantId,
@@ -74,7 +80,7 @@ function toRequest(row: Row): MyRequest {
     contract: row.service_contract ?? undefined, maxTotal: row.max_total ?? null,
     templateId: row.template_id,
     variantId: row.variant_id,
-    quantity: row.quantity ?? 1,
+    quantity: row.service_contract?.lines ? 1 : row.quantity ?? 1,
     description: row.description ?? "",
     startsAt: row.starts_at,
     date: localDate(row.starts_at),
@@ -84,7 +90,7 @@ function toRequest(row: Row): MyRequest {
     atHome: Boolean(row.at_home),
     status: row.status,
     createdAt: row.created_at,
-    price: Number(row.price ?? getVariant(row.template_id, row.variant_id)?.suggestedPrice ?? 0),
+    price: Number(row.service_contract?.servicePrice ?? row.price ?? getVariant(row.template_id, row.variant_id)?.suggestedPrice ?? 0),
     notified: row.notified == null ? null : Number(row.notified),
     bookingId: row.booking_id ?? null,
     referencePhotos: Array.isArray(row.reference_photos) ? (row.reference_photos as string[]) : [],

@@ -43,6 +43,7 @@ declare
   org_a uuid; org_b uuid; member_a uuid; member_b uuid; invite_b uuid; invite_expired uuid;
   before_join uuid; with_a uuid; payout_booking uuid; after_leave uuid; with_b uuid; suspended_booking uuid; refund_booking uuid; recovery_booking uuid;
   commission_a uuid; commission_large uuid; commission_refund uuid; commission_recovery uuid; payout_id uuid; retry_id uuid; report_id uuid;
+  report_today date := (now() at time zone public.app_timezone())::date;
   target_policy uuid; snapshot jsonb; result jsonb; row_data jsonb; expected_fee int; before_count int; denied boolean; table_name text;
 begin
   insert into auth.users (id, email, phone, raw_user_meta_data, raw_app_meta_data, created_at, updated_at)
@@ -286,13 +287,13 @@ begin
   perform set_config('request.jwt.claim.sub',stranger::text,true);
   set local role authenticated;
   denied:=false;
-  begin perform public.mcn_admin_report(current_date-100,current_date); exception when insufficient_privilege then denied:=true; end;
+  begin perform public.mcn_admin_report(report_today-100,report_today); exception when insufficient_privilege then denied:=true; end;
   assert denied,'non-admin cannot read aggregate financial or audit data';
   perform pg_temp.reject_mcn('policy',jsonb_build_object('effectiveAt',now()+interval '2 days','feeShareRate',.25,'holdDays',10,'minimumPayout',200000,'reason','Policy test only'));
   reset role;
   perform set_config('request.jwt.claim.sub',admin_id::text,true);
   set local role authenticated;
-  result:=public.mcn_admin_report(current_date-100,current_date);
+  result:=public.mcn_admin_report(report_today-100,report_today);
   assert jsonb_array_length(result->'networks')=2,'report contains both organizations even without revenue';
   assert jsonb_array_length(result->'events')>0,'admin has a readable consent and settlement timeline';
   assert (result->'policy'->>'feeShareRate')::numeric=.2,'default policy preserves original split';

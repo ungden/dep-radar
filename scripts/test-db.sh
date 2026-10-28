@@ -22,4 +22,4 @@ SUPABASE_TEST_URL="${SUPABASE_TEST_URL:-http://127.0.0.1:54321}" \
 SUPABASE_TEST_ANON_KEY="$ANON_KEY" \
 SUPABASE_TEST_SERVICE_KEY="$SERVICE_KEY" \
 SUPABASE_TEST_JWT_SECRET="$JWT_SECRET" \
-  npx vitest run tests/rls.integration.test.ts
+  npx vitest run tests/rls.integration.test.ts tests/commerce.integration.test.ts

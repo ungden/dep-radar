@@ -81,6 +81,7 @@ export default function RequestDetail() {
         <Txt v="meta" color={colors.inkSoft}>
           {r.district}, {r.city}
         </Txt>
+        {r.contract?.lines?.map((line,i)=><Txt key={i}>{line.recipient} · {line.name} · {line.label} · {line.quantity} {line.unit} · {formatPrice(line.total)}</Txt>)}
         {r.description ? <Txt color={colors.inkSoft}>{r.description}</Txt> : null}
         <ReferencePhotos paths={r.referencePhotos} title="Ảnh mẫu bạn gửi" />
       </Card>

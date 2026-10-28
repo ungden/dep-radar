@@ -96,7 +96,7 @@ const REVIEW_COLUMNS = [`${REVIEW_COLUMNS_OLD}, published_at`, REVIEW_COLUMNS_OL
 const PRICE_COLUMNS = "pro_id, template_id, variant_id, price"
 /** With the partner's note on each package (since 22/10/2026); the plain columns are the fallback. */
 const PRICE_NOTE_COLUMNS = `${PRICE_COLUMNS}, note`
-const LISTING_COLUMNS = "pro_id, template_id, active"
+const LISTING_COLUMNS = "pro_id, template_id, active, service_setup"
 
 /** A PostgREST select builder, filtered further by forPros(). */
 type Build = (columns: string) => any
@@ -233,6 +233,7 @@ function assemble(proRows: Row[], workRows: Row[], reviewRows: Row[], priceRows:
       proId: slug,
       templateId: row.template_id,
       active: Boolean(row.active),
+      setup: row.service_setup ?? undefined,
       prices: Object.fromEntries(
         priceRows.filter((p) => p.pro_id === row.pro_id && p.template_id === row.template_id).map((p) => [p.variant_id, p.price]),
       ),

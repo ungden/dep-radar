@@ -2,6 +2,8 @@
 
 import { serviceLocationOpen } from "@/lib/launch"
 
+import { SiteFields } from "@/components/site-fields"
+import type { ServiceSetup } from "@/lib/service-cart"
 import * as React from "react"
 import { moveRadio } from "@/lib/radio-navigation"
 import Link from "next/link"
@@ -184,6 +186,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
     ),
   )
   // The partner's own words on each package (makeup); empty means the catalogue's "Bao gồm".
+  const [setup,setSetup]=React.useState<ServiceSetup>(existing?.setup??{equipmentConfirmed:false,needs:{},note:""})
   const withNotes = allowsPackageNote(tpl)
   const [notes, setNotes] = React.useState<Record<string, string>>(() => ({ ...(existing?.notes ?? {}) }))
   const [error, setError] = React.useState<string | null>(null)
@@ -194,9 +197,10 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
     if (!Object.keys(chosen).length) return setError("Chọn ít nhất một gói.")
     const bad = tpl.variants.find((v) => chosen[v.id] !== undefined && !isPriceAllowed(v, chosen[v.id]))
     if (bad) return setError(`Chọn một mức giá có sẵn cho gói ${bad.label}.`)
+    if(!setup.equipmentConfirmed)return setError("Xác nhận có đủ dụng cụ cho dịch vụ.")
     setBusy(true)
     const chosenNotes = withNotes ? Object.fromEntries(Object.keys(chosen).map((id) => [id, (notes[id] ?? "").trim()])) : undefined
-    const problem = await act(() => actions.saveProService(templateId, chosen, existing?.active ?? true, chosenNotes), "Đã lưu bảng giá")
+    const problem = await act(() => actions.saveProService(templateId, chosen, existing?.active ?? true, chosenNotes,setup), "Đã lưu bảng giá")
     setBusy(false)
     if (problem) setError(problem)
     else onClose()
@@ -279,6 +283,7 @@ function PriceEditor({ templateId, onClose }: { templateId: string; onClose: () 
       </ul>
       <p className="mt-3 text-label text-muted">{PRICE_LEVEL_NOTE}</p>
 
+      <div className="mt-4 space-y-3"><label className="flex gap-2"><input type="checkbox" checked={setup.equipmentConfirmed} onChange={e=>setSetup(s=>({...s,equipmentConfirmed:e.target.checked}))}/>Tôi có đủ dụng cụ để thực hiện các gói đã niêm yết</label><SiteFields title="Yêu cầu nơi làm của khách" value={setup.needs} onChange={needs=>setSetup(s=>({...s,needs}))}/><textarea className="w-full rounded-xl border p-3" maxLength={500} aria-label="Hướng dẫn chuẩn bị" placeholder="Ví dụ: chỗ đặt đèn, vị trí dùng nước, thợ mang bộ gội di động…" value={setup.note} onChange={e=>setSetup(s=>({...s,note:e.target.value}))}/></div>
       {error && <p className="mt-3 rounded-xl bg-danger-soft px-3.5 py-2.5 text-body text-danger">{error}</p>}
 
       <div className="mt-5 flex gap-2">

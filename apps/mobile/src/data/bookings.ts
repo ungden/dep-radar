@@ -203,6 +203,7 @@ export async function fetchSlots(input: {
   templateId: string
   variantId: string
   quantity: number
+  items?: import("@/shared").CartItem[]
   date: string
   atHome: boolean
   addressId: string | null
@@ -221,11 +222,9 @@ export async function fetchSlots(input: {
     lat = (data as Row | null)?.lat ?? null
     lng = (data as Row | null)?.lng ?? null
   }
-  const { data, error } = await supabase.rpc("free_slots", {
+  const { data, error } = await supabase.rpc(input.items ? "cart_slots" : "free_slots", {
     p_pro: input.proUuid,
-    p_template: input.templateId,
-    p_variant: input.variantId,
-    p_quantity: input.quantity,
+    ...(input.items ? { p_items: input.items } : { p_template: input.templateId, p_variant: input.variantId, p_quantity: input.quantity }),
     p_date: input.date,
     p_at_home: input.atHome,
     p_lat: lat ?? undefined,
@@ -247,8 +246,13 @@ export const createBooking = (input: {
   expectedTotal: number
   expectedUnit: number
   sessions?: string[]
+  rights?: import("@/shared").RightsAgreement
+  quoteId?: string
+  references?: string[]
+  usageScope?: "personal" | "commercial"
+  consentRepost?: boolean
 }) =>
-  rpc<string>("create_booking_checked", {
+  input.quoteId ? rpc<string>("create_cart_booking_with_rights", { p_quote: input.quoteId, p_note: input.note, p_payment: "cash", p_sessions: input.sessions ?? [], p_usage: input.usageScope ?? "personal", p_repost: input.consentRepost ?? false, p_references: input.references ?? [], p_rights: input.rights ?? {} }) : rpc<string>("create_booking_checked", {
     p_pro: input.proUuid,
     p_template: input.templateId,
     p_variant: input.variantId,

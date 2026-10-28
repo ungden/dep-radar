@@ -1,9 +1,10 @@
 "use client"
 
+import { DeliveryWorkspace } from "./delivery-workspace"
 import * as React from "react"
 import { moveRadio } from "@/lib/radio-navigation"
 import Link from "next/link"
-import { Check, CheckCircle2, Clock, Download, Link2, Star, Ticket, UserX } from "lucide-react"
+import { Check, CheckCircle2, Clock, Link2, Star, Ticket, UserX } from "lucide-react"
 import { Sheet } from "@/components/sheet"
 import { Button, buttonClass, inputClass } from "@/components/ui"
 import { getTemplate } from "@/lib/catalog"
@@ -108,82 +109,9 @@ export function BookingTimeline({ booking }: { booking: Booking }) {
 }
 
 /** The files owed after a photo or video session: hand-over for the freelancer, pick-up for the customer. */
-export function DeliveryPanel({ booking, isPro }: { booking: Booking; isPro: boolean }) {
-  const state = useApp()
-  const act = useAct()
-  const [url, setUrl] = React.useState("")
-  const [note, setNote] = React.useState("")
-  const [error, setError] = React.useState<string | null>(null)
-  const d = booking.delivery
-  if (!d || booking.status !== "completed") return null
-  const days = getTemplate(booking.templateId)?.deliveryDays
-
-  if (d.deliveredAt && d.url)
-    return (
-      <section className="rounded-[var(--radius-lg)] border border-line bg-surface p-4">
-        <p className="text-lead font-bold tracking-tight">File đã giao</p>
-        {d.note && <p className="mt-1 whitespace-pre-line text-body text-ink-soft">{d.note}</p>}
-        <a href={d.url} target="_blank" rel="noreferrer noopener" className={cn(buttonClass("primary", "md"), "mt-3 w-full")}>
-          <Download className="size-4" /> Mở link tải file
-        </a>
-        {!isPro && !d.acceptedAt && (
-          <Button
-            variant="outline"
-            className="mt-2 w-full"
-            onClick={() => void act(() => actions.acceptDelivery(booking.id), "Đã xác nhận nhận file").then(setError)}
-          >
-            Đã nhận đủ file
-          </Button>
-        )}
-        {d.acceptedAt && <p className="mt-2 text-center text-meta font-semibold text-success">Khách đã xác nhận nhận file</p>}
-        {error && <p className="mt-2 text-body text-danger">{error}</p>}
-      </section>
-    )
-
-  if (!isPro)
-    return (
-      <p className="rounded-[var(--radius-lg)] bg-subtle px-4 py-3 text-body">
-        {getPro(state, booking.proId)?.name ?? booking.proName} đang chỉnh ảnh/clip.
-        {d.dueAt ? ` Hạn giao: ${formatDateLong(localDate(d.dueAt))}.` : ""} Link tải file sẽ hiện ở đây.
-      </p>
-    )
-
-  return (
-    <form
-      className="rounded-[var(--radius-lg)] border border-line bg-surface p-4"
-      onSubmit={(e) => {
-        e.preventDefault()
-        void act(() => actions.deliverBooking(booking.id, url.trim(), note.trim()), "Đã giao file cho khách").then(setError)
-      }}
-    >
-      <p className="text-lead font-bold tracking-tight">Giao file cho khách</p>
-      <p className="mt-1 text-body text-ink-soft">
-        Dán link Google Drive, Google Photos hoặc iCloud đã mở quyền xem.
-        {d.dueAt ? ` Hạn: ${formatDateLong(localDate(d.dueAt))}` : days ? ` Hạn: ${days} ngày sau buổi chụp` : ""}.
-      </p>
-      <input
-        type="url"
-        required
-        inputMode="url"
-        placeholder="https://drive.google.com/…"
-        value={url}
-        onChange={(e) => setUrl(e.target.value)}
-        className={cn(inputClass, "mt-3")}
-      />
-      <textarea
-        rows={2}
-        maxLength={500}
-        placeholder="Lời nhắn (tuỳ chọn): số ảnh, cách tải…"
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        className={cn(inputClass, "mt-2 resize-none")}
-      />
-      <Button type="submit" className="mt-3 w-full" disabled={!/^https?:\/\//.test(url.trim())}>
-        Giao file
-      </Button>
-      {error && <p className="mt-2 text-body text-danger">{error}</p>}
-    </form>
-  )
+export function DeliveryPanel({ booking }: { booking: Booking; isPro: boolean }) {
+  if (!booking.delivery || booking.status !== 'completed') return null
+  return <DeliveryWorkspace bookingId={booking.id}/>
 }
 
 /** The other bookings of the same session ("Đặt chung một buổi"). */

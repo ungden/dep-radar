@@ -1,3 +1,7 @@
+import { EMPTY_RIGHTS } from "@/shared"
+import { RightsFields } from "@/components/rights-fields"
+import { SiteFields } from "@/components/site-fields"
+import type { SiteFacilities } from "@/shared"
 import * as React from "react"
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet"
 import { Stack, router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router"
@@ -7,7 +11,7 @@ import { takeLastSavedAddress } from "@/data/addresses"
 import { rpc } from "@/data/supabase"
 import { toTimestamptz } from "@/data/format"
 import { createBooking, fetchSlots } from "@/data/bookings"
-import { setBookingReferences, uploadReference } from "@/data/references"
+import { uploadReference } from "@/data/references"
 import { ReferencePicker, type PickedPhoto } from "@/components/reference-photos"
 import { addDays, formatDateLong, formatDuration, formatKm, formatPrice, todayISO, weekdayShort } from "@/data/format"
 import { askForPushPermission } from "@/data/push"
@@ -26,6 +30,8 @@ import { haptic } from "@/ui/haptics"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
+
+import { validateCart, cartItemTotal,cartHasMedia,cartMenuGroup, type CartItem } from "@/shared"
 
 const SLOT_GAP = 8
 
@@ -107,26 +113,53 @@ function BookingFlow() {
 
   // What can come with the main service: the partner's other single-session options, same place
   // (attach_addons chains them right after it, no travel fee). Same rule as the web booking page.
+  const [recipients, setRecipients] = React.useState<Record<string, string>>({})
+  const [regions, setRegions] = React.useState<Record<string, "hand" | "foot">>({})
+  const [site,setSite]=React.useState<SiteFacilities>({})
+  const [readyBy, setReadyBy] = React.useState("")
+  const [usageScope, setUsageScope] = React.useState<"personal" | "commercial">("personal")
+  const [rights,setRights]=React.useState(EMPTY_RIGHTS)
+  const [consentRepost, setConsentRepost] = React.useState(false)
+  const [copies, setCopies] = React.useState<{ key: string; template: string; variant: string; quantity: number }[]>([])
+  const copySequence = React.useRef(0)
+  const copyLine = (template: string, variant: string, quantity: number) => {
+    const key = `copy:${++copySequence.current}`
+    setCopies(rows => [...rows, { key, template, variant, quantity }])
+    setRecipients(rows => ({ ...rows, [key]: `Bạn ${copySequence.current + 1}` }))
+  }
   const addonOptions = listed.flatMap((l) => {
     const t = getTemplate(l.templateId)!
     if (t.studioOnly && atHome) return []
     return t.variants
-      .filter((v) => l.prices[v.id] != null && (v.sessions ?? 1) === 1 && serviceQuantity(v) === 1 && !(t.id === template?.id && v.id === variant?.id))
+      .filter((v) => l.prices[v.id] != null && (v.sessions ?? 1) === 1 && serviceQuantity(v) === 1)
       .map((v) => {
         const key = `${t.id}/${v.id}`
-        const count = v.unit ? serviceQuantity(v, addons[key] ?? 10) : 1
-        return { key, templateId: t.id, variantId: v.id, name: t.name, variant: v, unitPrice: l.prices[v.id], count, price: l.prices[v.id] * count, minutes: serviceDuration(v, count) }
+        const count = v.unit ? serviceQuantity(v, addons[key] ?? (v.unit === "viên" ? 1 : 10)) : 1
+        return { key, templateId: t.id, variantId: v.id, name: t.name, variant: v, unitPrice: l.prices[v.id], count, price: cartItemTotal({template:t.id,variant:v.id,quantity:count},l.prices[v.id]), minutes: serviceDuration(v, count) }
       })
   })
-  const chosenAddons = addonOptions.filter((o) => addons[o.key] !== undefined)
+  const copyOptions = copies.flatMap(row => {
+    const t = getTemplate(row.template), v = t?.variants.find(v => v.id === row.variant)
+    const unitPrice = listed.find(l => l.templateId === row.template)?.prices[row.variant]
+    if (!t || !v || unitPrice == null) return []
+    const count = serviceQuantity(v, addons[row.key] ?? row.quantity)
+    return [{ key: row.key, templateId: t.id, variantId: v.id, name: t.name, label: v.label, variant: v, unitPrice, count, price: cartItemTotal({template:t.id,variant:v.id,quantity:count},unitPrice), minutes: serviceDuration(v, count) }]
+  })
+  const menuOptions=[...addonOptions].sort((a,b)=>cartMenuGroup(a.templateId).rank-cartMenuGroup(b.templateId).rank)
+  const chosenAddons = [...addonOptions.filter((o) => addons[o.key] !== undefined), ...copyOptions]
   const addonsTotal = chosenAddons.reduce((sum, o) => sum + o.price, 0)
+  const totalDuration=(variant?serviceDuration(variant,heads):0)+chosenAddons.reduce((sum,o)=>sum+o.minutes,0)
   const toggleAddon = (key: string) =>
     setAddons((m) => {
       const next = { ...m }
       if (next[key] !== undefined) delete next[key]
-      else if (chosenAddons.length < 3) next[key] = 10
+      else if (chosenAddons.length < 39) next[key] = addonOptions.find(o => o.key === key)?.variant.unit === "viên" ? 1 : 10
       return next
     })
+  const rawCartItems: CartItem[] = template && variant ? [{ template: template.id, variant: variant.id, quantity: heads, recipient: recipients.main || "Mình", ...(template.category === "nail" ? { region: variant.id === "hand-foot" ? "both" as const : regions.main ?? (template.id === "nail-pedicure" ? "foot" as const : "hand" as const) } : {}) }, ...chosenAddons.map(o => ({ template: o.templateId, variant: o.variantId, quantity: o.count, recipient: recipients[o.key] || "Mình", ...(getTemplate(o.templateId)?.category === "nail" ? { region: o.variantId === "hand-foot" ? "both" as const : regions[o.key] ?? (o.templateId === "nail-pedicure" ? "foot" as const : "hand" as const) } : {}) }))] : []
+  const cartItems=rawCartItems.map(item=>({...item,site}))
+  const cartKey = JSON.stringify(cartItems)
+  const cartError = validateCart(cartItems)
   const addresses = app.uid ? app.me.addresses : []
   const chosenId = addressId && addresses.some((a) => a.id === addressId) ? addressId : ((addresses.find((a) => a.isDefault) ?? addresses[0])?.id ?? null)
   const address = addresses.find((a) => a.id === chosenId) ?? null
@@ -138,36 +171,37 @@ function BookingFlow() {
   const km = atHome && pro && place ? travelDistanceKm(pro.city, pro.district, place.city, place.district) : null
   const tooFar = atHome && pro && place ? km === null || km > pro.maxTravelKm : false
 
-  const slotKey = [pro?.uuid, listing?.templateId, variant?.id, heads, date, atHome, atHome ? chosenId : null].join("|")
+  const slotKey = [pro?.uuid, listing?.templateId, variant?.id, heads, date, atHome, atHome ? chosenId : null, cartKey].join("|")
   React.useEffect(() => {
     if (!pro || !listing || !variant) return
     let live = true
     setSlotError(null)
     setSlots(null)
-    fetchSlots({ proUuid: pro.uuid, templateId: listing.templateId, variantId: variant.id, quantity: heads, date, atHome, addressId: atHome ? chosenId : null })
+    fetchSlots({ proUuid: pro.uuid, templateId: listing.templateId, variantId: variant.id, quantity: heads, date, atHome, addressId: atHome ? chosenId : null, items: JSON.parse(cartKey) })
       .then((list) => live && setSlots({ key: slotKey, list }))
       .catch((e: Error) => live && setSlotError(e.message))
     return () => {
       live = false
     }
-  }, [slotKey, pro, listing, variant, heads, date, atHome, chosenId, slotRetry])
-  const daySlots = slots?.key === slotKey ? slots.list : null
+  }, [slotKey, pro, listing, variant, heads, date, atHome, chosenId, slotRetry, cartKey])
+  const daySlots = slots?.key === slotKey ? slots.list.filter(s => !readyBy || Date.parse(s.startsAt) + ((variant ? serviceDuration(variant, heads) : 0) + chosenAddons.reduce((sum,o)=>sum+o.minutes,0) + 30) * 60000 <= Date.parse(toTimestamptz(date, readyBy))) : null
   const picked = time && daySlots?.some((s) => s.startsAt === time.startsAt) ? time : null
 
-  const quoteKey = [slotKey, picked?.startsAt, app.uid, app.me?.account?.phone].join("|")
-  const [quoteRetry, retryQuote] = React.useReducer((n: number) => n + 1, 0)
-  const [verified, setVerified] = React.useState<{ key: string; quote?: PriceQuote & { unitPrice: number; expiresAt: string }; error?: string } | null>(null)
+  const [secondAddressId,setSecondAddressId]=React.useState<string|null>(null)
   const [secondDate, setSecondDate] = React.useState("")
   const [secondTime, setSecondTime] = React.useState("09:00")
+  const quoteKey = [slotKey, picked?.startsAt, app.uid, app.me?.account?.phone, readyBy, secondDate, secondTime,secondAddressId].join("|")
+  const [quoteRetry, retryQuote] = React.useReducer((n: number) => n + 1, 0)
+  const [verified, setVerified] = React.useState<{ key: string; quote?: PriceQuote & { unitPrice: number; expiresAt: string; quoteId?: string }; error?: string } | null>(null)
   React.useEffect(() => {
     if (!app.uid || !pro || !listing || !variant || !picked || (atHome && !address)) return
     let live = true
     setVerified(null)
-    void rpc<PriceQuote & { unitPrice: number; expiresAt: string }>("booking_quote", { p_pro: pro.uuid, p_template: listing.templateId, p_variant: variant.id, p_starts_at: picked.startsAt, p_at_home: atHome, p_address_id: atHome ? chosenId : null, p_quantity: heads }).then((r) => { if (live) setVerified({ key: quoteKey, ...(r.ok ? { quote: r.data } : { error: r.error }) }) }).catch(() => { if (live) setVerified({ key: quoteKey, error: "Không xác nhận được tổng tiền. Kiểm tra kết nối và thử lại." }) })
+    void rpc<PriceQuote & { unitPrice: number; expiresAt: string; quoteId?: string }>("cart_quote_with_visits", { p_pro: pro.uuid, p_items: JSON.parse(cartKey), p_starts_at: picked.startsAt, p_at_home: atHome, p_address_id: atHome ? chosenId : null, p_visits:(variant.sessions??1)>1&&secondDate?[{startsAt:toTimestamptz(secondDate,secondTime),addressId:secondAddressId??chosenId}]:[], p_ready_by: readyBy ? toTimestamptz(date, readyBy) : null }).then((r) => { if (live) setVerified({ key: quoteKey, ...(r.ok ? { quote: r.data } : { error: r.error }) }) }).catch(() => { if (live) setVerified({ key: quoteKey, error: "Không xác nhận được tổng tiền. Kiểm tra kết nối và thử lại." }) })
     return () => { live = false }
-  }, [quoteKey, app.uid, pro, listing, variant, picked, atHome, address, chosenId, heads, quoteRetry])
+  }, [quoteKey, app.uid, pro, listing, variant, picked, atHome, address, chosenId, heads, quoteRetry, cartKey, readyBy, secondDate, secondTime,secondAddressId])
   const confirmedQuote = verified?.key === quoteKey ? verified.quote : null
-  const quote = confirmedQuote ?? (picked ? buildQuote({ servicePrice, atHome, distanceKm: km, urgent: isUrgent(date, picked.time) }) : null)
+  const quote = confirmedQuote ?? (picked ? buildQuote({ servicePrice: servicePrice + addonsTotal, atHome, distanceKm: km, urgent: isUrgent(date, picked.time) }) : null)
 
 
   // Leaving with choices made asks first; a sent booking leaves freely.
@@ -227,14 +261,18 @@ function BookingFlow() {
     if (atHome && !address) return addAddress()
     if (!app.me.account?.phone) return router.push("/so-dien-thoai")
     if (!picked) return
-    if (!confirmedQuote) return setError(verified?.error ?? "Đang kiểm tra tổng tiền.")
+    if (cartError) return setError(cartError)
+    if (!confirmedQuote?.quoteId) return setError(verified?.error ?? "Đang kiểm tra tổng tiền.")
     const secondAt = appointmentAt(secondDate, secondTime)
     if ((variant.sessions ?? 1) > 1 && (!secondAt || secondAt <= picked.startsAt)) return setError("Chọn ngày, giờ hợp lệ cho buổi thứ hai sau buổi đầu.")
     setBusy(true)
     setError(null)
     try {
+    const referencePaths: string[] = []
+    for (const photo of photos) referencePaths.push(await uploadReference(app.uid, photo))
     const res = await createBooking({
       proUuid: pro.uuid,
+      quoteId: confirmedQuote.quoteId, rights, usageScope: cartHasMedia(cartItems)?usageScope:"personal", consentRepost, references: referencePaths,
       templateId: template.id,
       variantId: variant.id,
       startsAt: picked.startsAt,
@@ -249,22 +287,6 @@ function BookingFlow() {
       haptic.error()
       return setError(res.error)
     }
-    // The main booking stands; its add-ons are chained after it, and a failure only says so.
-    if (chosenAddons.length) {
-      const attached = await rpc<string[]>("attach_addons", { p_parent: res.data, p_items: chosenAddons.map((o) => ({ template: o.templateId, variant: o.variantId, quantity: o.count })) })
-      if (!attached.ok) Alert.alert("Đã gửi lịch hẹn", `Nhưng chưa thêm được dịch vụ đi kèm: ${attached.error}`)
-    }
-    // The booking stands; its reference photos follow, and a failure only says so.
-    if (photos.length && app.uid) {
-      try {
-        const paths: string[] = []
-        for (const p of photos) paths.push(await uploadReference(app.uid, p))
-        const sent = await setBookingReferences(res.data, paths)
-        if (!sent.ok) throw new Error(sent.error)
-      } catch (e) {
-        Alert.alert("Đã gửi lịch hẹn", `Nhưng chưa gửi được ảnh mẫu: ${e instanceof Error ? e.message : "lỗi kết nối"}`)
-      }
-    }
     haptic.success()
     setDoneId(res.data)
     void app.refreshMe()
@@ -276,7 +298,7 @@ function BookingFlow() {
 
   const next = () => (step < 3 ? setStep(step + 1) : void submit())
   // Step 3 never dead-ends: signed out it leads to sign-in, without an address to the address form.
-  const canNext = step === 1 ? true : step === 2 ? Boolean(picked) : Boolean(picked) && !tooFar
+  const canNext = !cartError && (step === 1 ? true : step === 2 ? Boolean(picked) : Boolean(picked) && !tooFar)
   const action =
     step < 3 ? "Tiếp tục" : !app.uid ? "Đăng nhập để đặt" : atHome && !address ? "Thêm địa chỉ" : !app.me.account?.phone ? "Thêm số điện thoại" : "Gửi lịch hẹn"
   const days = Array.from({ length: 14 }, (_, i) => addDays(todayISO(), i))
@@ -290,7 +312,7 @@ function BookingFlow() {
   ].map(group => ({ ...group, slots: daySlots?.filter(slot => Number(slot.time.slice(0, 2)) >= group.from && Number(slot.time.slice(0, 2)) < group.to) ?? [] })).filter(group => group.slots.length)
   const chooseDate = (value: string) => { setDate(value); setTime(null) }
   const priceLabel = quote ? confirmedQuote ? "Tổng tiền" : "Tạm tính" : "Giá dịch vụ"
-  const displayedPrice = formatPrice((quote?.total ?? servicePrice) + addonsTotal)
+  const displayedPrice = formatPrice(quote?.total ?? (servicePrice + addonsTotal))
   const needsQuote = Boolean(app.uid && app.me.account?.phone && picked && (!atHome || address))
 
   return (
@@ -375,18 +397,22 @@ function BookingFlow() {
                 {atHome ? (template.onLocation ? "Làm tại địa điểm bạn chọn." : "Làm tại nhà bạn.") : `Làm tại studio: ${pro.studioAddress ?? ""}`}
               </Txt>
             )}
+            <View style={{ gap: 8 }}><TimeField label="Cần hoàn thiện trước (tuỳ chọn, gồm30 phút dự phòng)" value={readyBy} onChange={setReadyBy} /><Txt>Người nhận dịch vụ chính</Txt><TextInput accessibilityLabel="Người nhận dịch vụ chính" maxLength={60} value={recipients.main || "Mình"} onChangeText={value => setRecipients(m => ({ ...m, main: value }))} style={{ padding: 12, borderWidth: 1, borderRadius: 12 }} />{template.category === "nail" && variant.id !== "hand-foot" && <View style={{ flexDirection: "row", gap: 8 }}>{(["hand", "foot"] as const).map(region => <Button key={region} label={region === "hand" ? "10 móng tay" : "10 móng chân"} variant={(regions.main ?? (template.id === "nail-pedicure" ? "foot" : "hand")) === region ? "primary" : "secondary"} onPress={() => setRegions(m => ({ ...m, main: region }))} />)}</View>}{cartError && <ErrorNote text={cartError} />}</View>
+            <SiteFields value={site} onChange={setSite} requirements={listings.filter(s=>cartItems.some(i=>i.template===s.templateId)).map(s=>s.setup).filter(s=>!!s)}/>
+            <Button label="Thêm người hoặc vùng với dịch vụ này" variant="secondary" disabled={cartItems.length >= 40} onPress={() => copyLine(template.id, variant.id, heads)} />
+            {copyOptions.map(o => <View key={o.key} style={{ gap: 8 }}><Txt>{o.name} · {o.variant.label} · {formatPrice(o.price)}</Txt><TextInput accessibilityLabel="Người nhận dòng thêm" maxLength={60} value={recipients[o.key] || "Mình"} onChangeText={value => setRecipients(m => ({ ...m, [o.key]: value }))} style={{ padding: 12, borderWidth: 1, borderRadius: 12 }} />{getTemplate(o.templateId)?.category === "nail" && o.variantId !== "hand-foot" && <Button label={(regions[o.key] ?? "hand") === "hand" ? "Tay · đổi sang chân" : "Chân · đổi sang tay"} variant="secondary" onPress={() => setRegions(m => ({ ...m, [o.key]: (m[o.key] ?? "hand") === "hand" ? "foot" : "hand" }))} />}<Button label="Xóa dòng" variant="ghost" onPress={() => setCopies(rows => rows.filter(row => row.key !== o.key))} /></View>)}
             {addonOptions.length ? (
               <View style={{ gap: 8 }}>
                 <Txt v="controlMeta" w={600}>
-                  Thêm dịch vụ đi kèm (tuỳ chọn)
+                  Menu · thêm vào buổi dịch vụ
                 </Txt>
                 <Txt v="meta" color={colors.inkSoft}>
-                  Làm nối tiếp ngay sau dịch vụ chính, theo giá {pro.name} niêm yết, không tính thêm phí di chuyển. Tối đa 3.
+                  Làm nối tiếp ngay sau dịch vụ chính, theo giá {pro.name} niêm yết, không tính thêm phí di chuyển. Các món được chốt chung trong một lịch.
                 </Txt>
-                {addonOptions.map((o) => {
+                {menuOptions.map((o,index) => {
                   const on = addons[o.key] !== undefined
                   return (
-                    <View key={o.key} style={{ gap: 6 }}>
+                    <View key={o.key} style={{ gap: 6 }}>{(index===0||cartMenuGroup(menuOptions[index-1].templateId).rank!==cartMenuGroup(o.templateId).rank)&&<Txt w={700}>{cartMenuGroup(o.templateId).label}</Txt>}
                       <Option
                         selected={on}
                         title={`${o.name} · ${o.variant.label}`}
@@ -394,6 +420,8 @@ function BookingFlow() {
                         right={formatPrice(o.price)}
                         onPress={() => toggleAddon(o.key)}
                       />
+                      {on && <Button label="Thêm cho người/vùng khác" variant="secondary" onPress={() => copyLine(o.templateId, o.variantId, o.count)} />}
+                      {on && <View style={{ gap: 8 }}><TextInput accessibilityLabel={`Người nhận ${o.name}`} maxLength={60} value={recipients[o.key] || "Mình"} onChangeText={value => setRecipients(m => ({ ...m, [o.key]: value }))} style={{ padding: 12, borderWidth: 1, borderRadius: 12 }} />{getTemplate(o.templateId)?.category === "nail" && o.variantId !== "hand-foot" && <View style={{ flexDirection: "row", gap: 8 }}>{(["hand", "foot"] as const).map(region => <Button key={region} label={region === "hand" ? "Tay" : "Chân"} variant={(regions[o.key] ?? (o.templateId === "nail-pedicure" ? "foot" : "hand")) === region ? "primary" : "secondary"} onPress={() => setRegions(m => ({ ...m, [o.key]: region }))} />)}</View>}</View>}
                       {on && o.variant.unit ? (
                         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12 }}>
                           <Txt v="control" w={600}>Số {o.variant.unit}</Txt>
@@ -416,6 +444,7 @@ function BookingFlow() {
 
         {step === 2 ? (
           <>
+            <Card style={{gap:8}}><Txt w={700}>Giỏ dịch vụ · {cartItems.length} món · {totalDuration} phút</Txt>{cartItems.map((item,i)=>{const t=getTemplate(item.template)!,v=t.variants.find(v=>v.id===item.variant)!,unit=listings.find(s=>s.templateId===item.template)!.prices[item.variant];return <Txt key={i}>{item.recipient} · {t.name} · {v.id==='hand'&&item.region?'10 móng':v.label} · {item.region==='foot'?'Chân':item.region==='hand'?'Tay':''} · {item.quantity} {v.unit??'gói'} · {formatPrice(cartItemTotal(item,unit))}</Txt>})}</Card>
             {largeText ? <DateField compact label="Ngày hẹn" hideLabel value={date} onChange={chooseDate} maxDate={days[days.length - 1]} /> : <View style={{ gap: 12 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Icon name="calendar" size={20} color={colors.accentDark} />
@@ -550,6 +579,7 @@ function BookingFlow() {
             ) : null}
             {needsQuote && !confirmedQuote && (verified?.key === quoteKey && verified.error ? <ErrorNote text={verified.error} onRetry={retryQuote} /> : <Txt v="meta" color={colors.inkSoft}>Đang xác nhận tổng tiền…</Txt>)}
             {(variant.sessions ?? 1) > 1 && <View style={{ gap: 8 }}><Txt v="control" w={600}>Buổi thứ hai (đã gồm trong giá)</Txt><DateField compact label="Ngày buổi thứ hai" value={secondDate} onChange={setSecondDate} minDate={date} /><TimeField compact label="Giờ buổi thứ hai" value={secondTime} onChange={setSecondTime} /><Txt v="meta">Hệ thống giữ cả hai buổi cùng lúc và kiểm tra giờ trống khi gửi.</Txt></View>}
+            {(variant.sessions??1)>1&&atHome&&<View style={{gap:8}}><Txt>Địa chỉ buổi thứ hai · phí chuyến tính riêng trong tổng</Txt>{addresses.map(a=><Chip key={a.id} label={`${a.detail}, ${a.district}`} selected={(secondAddressId??chosenId)===a.id} onPress={()=>setSecondAddressId(a.id)}/>)}</View>}
             {quote && picked ? (
               <Card>
                 <Txt w={700}>
@@ -563,10 +593,12 @@ function BookingFlow() {
                 {quote.travelFee ? <Line label={`Phí di chuyển${quote.distanceKm !== null ? ` (~${formatKm(quote.distanceKm)})` : ""}`} value={formatPrice(quote.travelFee)} /> : null}
                 {quote.urgentFee ? <Line label="Phí gấp" value={formatPrice(quote.urgentFee)} /> : null}
                 <Line label={confirmedQuote ? "Tổng tiền" : "Tạm tính"} value={formatPrice(quote.total)} strong />
+                <View style={{ gap: 8 }}><Txt>Mục đích sử dụng hình ảnh</Txt><Button label={usageScope === "personal" ? "Cá nhân" : "Thương mại"} variant="secondary" onPress={() => setUsageScope(v => v === "personal" ? "commercial" : "personal")} /><Button label={consentRepost ? "Cho phép đăng tác phẩm" : "Không cho phép đăng tác phẩm"} variant="secondary" onPress={() => setConsentRepost(v => !v)} /></View>
+                {cartHasMedia(cartItems)&&<RightsFields value={rights} onChange={setRights}/>}
                 {chosenAddons.map((o) => (
-                  <Line key={o.key} label={`${o.name} · ${o.variant.label}${o.variant.unit ? ` × ${o.count} ${o.variant.unit}` : ""}`} value={formatPrice(o.price)} />
+                  <Line key={o.key} label={`${recipients[o.key] || "Mình"} · ${o.name} · ${o.variant.label}${o.variant.unit ? ` × ${o.count} ${o.variant.unit}` : ""}`} value={formatPrice(o.price)} />
                 ))}
-                {chosenAddons.length ? <Line label="Tổng cả lịch (gồm dịch vụ đi kèm)" value={formatPrice(quote.total + addonsTotal)} strong /> : null}
+                {chosenAddons.length ? <Line label="Tổng cả lịch (gồm dịch vụ đi kèm)" value={formatPrice(quote.total)} strong /> : null}
                 <Txt v="meta" color={colors.muted}>
                   Thanh toán sau khi làm xong. {atHome ? "Khoảng cách ước tính theo phường/xã. " : ""}Giá được xác nhận lại khi gửi lịch. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để người làm kịp sắp xếp.
                 </Txt>

@@ -1,3 +1,9 @@
+import { requestedCart,cartHasMedia, type PricedCartItem } from "@/shared"
+import { RequestCartEditor } from "@/components/request-cart-editor"
+import { EMPTY_RIGHTS } from "@/shared"
+import { RightsFields } from "@/components/rights-fields"
+import { SiteFields } from "@/components/site-fields"
+import type { SiteFacilities } from "@/shared"
 import * as React from "react"
 import { Stack, router, useFocusEffect, useNavigation } from "expo-router"
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native"
@@ -5,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { CATEGORIES, POLICY, templatesByCategory, tierLabels, serviceQuantity, isUrgent, PRICE_LEVEL_NOTE, type CategoryId } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
 import { addDays, formatDateLong, formatDuration, formatPrice, todayISO, weekdayShort } from "@/data/format"
-import { setJobReferences, uploadReference } from "@/data/references"
+import { uploadReference } from "@/data/references"
 import { postJob, requestPrice } from "@/data/requests"
 import { ReferencePicker, type PickedPhoto } from "@/components/reference-photos"
 import { CategoryTiles } from "@/components/category-icon"
@@ -41,6 +47,12 @@ export default function NewRequest() {
   const [category, setCategory] = React.useState<CategoryId>("nail")
   const [templateId, setTemplateId] = React.useState(templatesByCategory("nail")[0].id)
   const [variantId, setVariantId] = React.useState(templatesByCategory("nail")[0].variants[0].id)
+  const [site,setSite]=React.useState<SiteFacilities>({})
+  const [rights,setRights]=React.useState(EMPTY_RIGHTS)
+  const [usageScope,setUsageScope]=React.useState<"personal"|"commercial">("personal")
+  const [extras,setExtras]=React.useState<PricedCartItem[]>([])
+  const [recipient,setRecipient]=React.useState("Mình")
+  const [region,setRegion]=React.useState<"hand"|"foot">("hand")
   const [quantity, setQuantity] = React.useState(1)
   /** The chosen price level per person; null is "Tiêu chuẩn". */
   const [feeLimit, setFeeLimit] = React.useState<number>(POLICY.nearTravelFee)
@@ -99,8 +111,11 @@ export default function NewRequest() {
   const addresses = app.me.addresses
   const chosen = addresses.find((a) => a.id === addressId) ?? addresses.find((a) => a.isDefault) ?? addresses[0] ?? null
   const days = Array.from({ length: 21 }, (_, i) => addDays(todayISO(), i))
-  const maxTotal = price * heads + feeLimit + (isUrgent(date, time) ? POLICY.urgentFee : 0)
-  const valid = (variant.sessions ?? 1) === 1 && !tpl.studioOnly && Boolean(chosen) && date >= todayISO()
+  const rawItems: PricedCartItem[]=[{template:tpl.id,variant:variant.id,quantity:heads,unitPrice:price,recipient,...(tpl.category==="nail"&&variant.id!=="hand-foot"?{region}:{})},...extras]
+  const items=rawItems.map(item=>({...item,site}))
+  const cart=requestedCart(items)
+  const maxTotal = cart.total + feeLimit + (isUrgent(date, time) ? POLICY.urgentFee : 0)
+  const valid = !cart.error && (variant.sessions ?? 1) === 1 && !tpl.studioOnly && Boolean(chosen) && date >= todayISO()
 
   const pickCategory = (c: CategoryId) => {
     setCategory(c)
@@ -116,11 +131,16 @@ export default function NewRequest() {
   }
 
   const submit = async () => {
+    if (!valid) return setError(cart.error ?? "Chọn đủ thông tin yêu cầu.")
     if (!chosen) return
     if (!app.me.account?.phone) return router.push("/so-dien-thoai")
     setBusy(true)
     setError(null)
+    try {
+    const paths: string[]=[]
+    for(const photo of photos) paths.push(await uploadReference(app.uid!,photo))
     const res = await postJob({
+      items,rights,usageScope:cartHasMedia(items)?usageScope:"personal",references:paths,
       templateId: tpl.id,
       variantId: variant.id,
       date,
@@ -137,22 +157,11 @@ export default function NewRequest() {
       haptic.error()
       return setError(res.error)
     }
-    // The request is up; its photos follow. If they fail, it still stands and says so.
-    if (photos.length && app.uid) {
-      try {
-        const paths: string[] = []
-        for (const p of photos) paths.push(await uploadReference(app.uid, p))
-        const sentPhotos = await setJobReferences(res.data, paths)
-        if (!sentPhotos.ok) throw new Error(sentPhotos.error)
-      } catch (e) {
-        Alert.alert("Đã đăng yêu cầu", `Nhưng chưa gửi được ảnh mẫu: ${e instanceof Error ? e.message : "lỗi kết nối"}`)
-      }
-    }
-    setBusy(false)
     haptic.success()
     setSent(true)
     leaving.current = true
     router.replace({ pathname: "/yeu-cau/[id]", params: { id: res.data } })
+    } catch(e) { setError(e instanceof Error?e.message:'Không gửi được yêu cầu.'); } finally { setBusy(false); }
   }
 
   return (
@@ -240,6 +249,8 @@ export default function NewRequest() {
           <Txt v="meta" color={colors.inkSoft}>
             Tối đa 3 ảnh kiểu bạn muốn (tone makeup, kiểu tóc, mẫu nail). Người làm xem trước khi nhận, để chỉ người làm được mới nhận.
           </Txt>
+          <TextInput accessibilityLabel="Người nhận dịch vụ chính" value={recipient} maxLength={60} onChangeText={setRecipient}/>{tpl.category==='nail'&&variant.id!=='hand-foot'&&<View style={{flexDirection:'row',gap:8}}><Chip label="Tay" selected={region==='hand'} onPress={()=>setRegion('hand')}/><Chip label="Chân" selected={region==='foot'} onPress={()=>setRegion('foot')}/></View>}
+          <SiteFields value={site} onChange={setSite}/><RequestCartEditor value={extras} onChange={setExtras}/><Chip label={usageScope==='personal'?'Hình ảnh cá nhân':'Hình ảnh thương mại'} onPress={()=>setUsageScope(usageScope==='personal'?'commercial':'personal')}/>{cartHasMedia(items)&&<RightsFields value={rights} onChange={setRights}/>}<Txt>Tổng dịch vụ: {formatPrice(cart.total)} · {cart.durationMin} phút</Txt>{cart.error&&<ErrorNote text={cart.error}/>}
           <ReferencePicker value={photos} onChange={setPhotos} disabled={busy} />
         </Group>
 

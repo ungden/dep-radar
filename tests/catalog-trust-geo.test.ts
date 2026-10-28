@@ -228,7 +228,7 @@ describe("package scheduling", () => {
   })
 
   it("reserves sequential makeup time for each person and separate bridal appointments", () => {
-    expect(serviceDuration(getVariant("makeup-photo", "group3")!, 3)).toBe(135)
+    expect(serviceDuration(getVariant("makeup-photo", "group3")!, 3)).toBe(180)
     const bridal = getVariant("makeup-bridal", "two")!
     expect(bridal.sessions).toBe(2)
     expect(serviceDuration(bridal, 1)).toBe(180)
