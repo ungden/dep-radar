@@ -4,6 +4,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export PGHOST="${PGHOST:-/tmp}"
+# Match hosted Supabase/CI; business dates must explicitly use app_timezone().
+export PGTZ=UTC
 case "$PGHOST" in /tmp|/var/run/postgresql|localhost|127.0.0.1|::1) ;; *) echo 'Only a local PostgreSQL cluster is allowed.' >&2; exit 1;; esac
 qa_db="${COMMERCE_TEST_DB:-dep360_qa_commerce_$$}"
 case "$qa_db" in dep360_qa_*) ;; *) echo 'Use a disposable dep360_qa_ database name.' >&2; exit 1;; esac
