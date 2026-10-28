@@ -16,5 +16,6 @@ for migration in supabase/migrations/*.sql; do
 done
 psql -X -v ON_ERROR_STOP=1 -q -d "$qa_db" -f supabase/seed/catalog.sql -f supabase/seed/demo.sql
 psql -X -v ON_ERROR_STOP=1 -q -d "$qa_db" -c 'grant all on all tables in schema public to service_role'
-psql -X -v ON_ERROR_STOP=1 -q -d "$qa_db" -f supabase/tests/rules.sql -f supabase/tests/commerce_lifecycle.sql
+psql -X -v ON_ERROR_STOP=1 -q -d "$qa_db" -c 'begin' -f supabase/tests/partner-flow.sql -c 'rollback'
+psql -X -v ON_ERROR_STOP=1 -q -d "$qa_db" -f supabase/tests/mcn.sql -f supabase/tests/rules.sql -f supabase/tests/commerce_lifecycle.sql
 printf 'Full migration chain and SQL rules passed: %s\n' "$qa_db"

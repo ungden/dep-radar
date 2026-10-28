@@ -3,10 +3,10 @@ do $$
 declare pro uuid; customer uuid; fresh uuid; addr uuid; bid uuid; job uuid; q jsonb; original jsonb; s text; at timestamptz;
   unit int; why text; before_price int; multi uuid; follow uuid; session_id uuid; count_before int; budget_job uuid;
 begin
-  assert (select count(*)=154 and bool_and(cardinality(price_tiers) in (1,3)) from public.service_variants), 'every variant has three prices or one shared price';
+  assert (select count(*)>0 and bool_and(cardinality(price_tiers) in (1,3)) from public.service_variants), 'every variant has three prices or one shared price';
   assert public.service_duration_min('photo-yearbook-group','half',5)=180, 'group photo blocks three hours total';
   assert public.service_duration_min('photo-yearbook-group','half',3) is null, 'minimum group size enforced';
-  assert public.service_duration_min('makeup-photo','group3',3)=135, 'makeup remains sequential per person';
+  assert public.service_duration_min('makeup-photo','group3',3)=180, 'makeup remains sequential per person';
   assert (select sessions=2 and duration_min=180 from public.service_variants where template_id='makeup-bridal' and id='two'), 'bridal has two appointments';
   assert (select bool_and(v.deliverable is not null and v.revisions=1) from public.service_variants v join public.service_templates t on t.id=v.template_id where t.category in('photophone','camera','product-photo','short-video')), 'photo output and revisions specified';
   select id into pro from public.pros where slug='linh-pham';

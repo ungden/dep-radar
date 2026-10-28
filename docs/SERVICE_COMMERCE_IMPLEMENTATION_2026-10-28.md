@@ -21,7 +21,7 @@ Cập nhật 29/10/2026. Đã triển khai web, mã nguồn app và database; đ
 - Web và app TypeScript; ESLint; catalog source/seed đồng bộ; production build web.
 - 317 unit tests qua. Bộ chạy mặc định bỏ qua integration khi thiếu biến môi trường; các test API được chạy riêng với JWT khách/đối tác/service role.
 - 41 kiểm thử API qua PostgREST: gồm RLS hiện hữu, tạo cả giỏ, retry, chủ quote, trùng vùng, cạnh tranh một slot, matching cả giỏ, quyền sử dụng, đề xuất hai bên và chống ghi trực tiếp.
-- Chạy toàn bộ migration từ database trống, seed catalog/demo thật và `supabase/tests/rules.sql` thành công.
+- Chạy toàn bộ migration từ database trống, seed catalog/demo thật , onboarding đối tác, MCN và `supabase/tests/rules.sql` thành công.
 - `commerce_lifecycle.sql`: tạo/đổi/nhận việc; lịch sử hợp đồng; vòng sửa hai đầu ra độc lập; sửa thiếu file; menu opt-in và điều kiện nơi làm; trần mắt mèo; địa chỉ khác nhau cho trial/ngày lễ; đối soát tổng phí/phân bổ; deadline không bị vượt bởi báo thêm công.
 - Kiểm tra Chrome local: chọn bốn dòng cho hai người, tổng 410.000đ / 130 phút; chặn nền màu trùng và nút tiếp tục. Ảnh QA lưu ngoài repo tại thư mục visualization của chat.
 
