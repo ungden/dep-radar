@@ -382,6 +382,9 @@ function Sidebar({ groups, tab, onPick, onClose }: { groups: NavGroup[]; tab: Ta
         ))}
       </nav>
       <div className="shrink-0 border-t border-line p-2.5">
+        <Link href="/admin/mcn" className="flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium text-ink-soft hover:bg-subtle hover:text-ink">
+          <Users className="size-4 text-muted" aria-hidden /> Network MCN
+        </Link>
         <ShopLink href="/" className="flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] text-ink-soft hover:bg-subtle hover:text-ink">
           <ArrowLeft className="size-4 text-muted" /> Về trang khách
         </ShopLink>

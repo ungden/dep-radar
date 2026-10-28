@@ -11,7 +11,7 @@ Văn bản ràng buộc pháp lý là [Quy chế hoạt động](https://www.360
 | Quy định | Giá trị |
 | --- | --- |
 | Phí nền tảng của khách | 0đ, không đặt cọc |
-| Hoa hồng (đối tác trả, tính trên giá dịch vụ) | 15% |
+| Hoa hồng (đối tác trả, tính trên giá dịch vụ) | 20% |
 | Người làm nhận hoặc từ chối lịch trong | 2 giờ |
 | Di chuyển dưới 5 km | 50.000đ |
 | Di chuyển từ 5 km (kể cả trên 10 km) | 100.000đ tối đa |

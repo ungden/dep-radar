@@ -120,6 +120,15 @@ export default function PartnerPage() {
         <p className="mt-3 text-meta text-muted">Mỗi gói có đúng 3 mức giá có sẵn, bạn chọn mức hợp với tay nghề.</p>
       </section>
 
+      <section className="mt-12 rounded-[var(--radius-xl)] border border-line bg-surface p-6 md:flex md:items-center md:justify-between md:gap-8 md:p-8">
+        <div className="max-w-xl">
+          <p className="eyebrow">Dành cho tổ chức & cộng đồng nghề</p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight">Bạn đang phát triển một đội ngũ KTV?</h2>
+          <p className="mt-3 text-body leading-relaxed text-ink-soft">Hợp tác MCN cùng 360đẹp để tuyển chọn, hướng dẫn và đồng hành cùng KTV. Network nhận phần chia từ phí của sàn, KTV không đóng thêm phí MCN.</p>
+        </div>
+        <ButtonLink href="/mcn" variant="outline" className="mt-5 shrink-0 md:mt-0">Tìm hiểu network MCN <ArrowRight className="size-4" aria-hidden /></ButtonLink>
+      </section>
+
       <section className="mt-12 rounded-[var(--radius-xl)] bg-highlight-soft p-6 md:flex md:items-center md:justify-between md:gap-8 md:p-10">
         <div className="max-w-xl">
           <h2 className="font-display text-[26px] font-semibold leading-tight tracking-tight md:text-[32px]">Bắt đầu trong sáu bước</h2>

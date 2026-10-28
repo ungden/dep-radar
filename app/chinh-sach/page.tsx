@@ -282,6 +282,23 @@ export default function PolicyPage() {
           </p>
         </Section>
 
+        <Section title="Network MCN dành cho KTV">
+          <p>
+            KTV có thể tự nguyện tham gia một network đã được 360dep duyệt để được hỗ trợ tuyển dụng, hoàn thiện hồ sơ và phát triển nghề.
+            Tổng phí dịch vụ là 20%; 360dep chia 20% khoản phí thực tế đó cho MCN, tương đương khoảng 4% giá dịch vụ.
+            KTV giữ khoảng 80%, sàn giữ khoảng 16%; số tiền chính xác theo quy tắc làm tròn phí trong lịch hẹn.
+          </p>
+          <ul className="mt-3 list-disc space-y-1 pl-5">
+            <li>Ví dụ dịch vụ 500.000đ: KTV giữ 400.000đ, MCN nhận 20.000đ, sàn giữ 80.000đ. Phí di chuyển và đặt gấp thuộc KTV 100%.</li>
+            <li>Mức phí 20% áp dụng từ lần cập nhật chính sách này cho lịch tạo mới; lịch đã tạo giữ nguyên mức phí đã chốt.</li>
+            <li>MCN gửi lời mời; chỉ KTV mới được xác nhận gia nhập. Mỗi KTV tham gia một network tại một thời điểm, có thể rời bất cứ lúc nào.</li>
+            <li>Network và tỷ lệ chia được chốt khi tạo lịch. Gia nhập hay rời network không thay đổi các lịch đã tạo trước đó.</li>
+            <li>Hoa hồng MCN chỉ phát sinh khi lịch hoàn thành; giữ tối thiểu 7 ngày, chờ thu đủ phí và xử lý khiếu nại trước khi chi trả.</li>
+            <li>MCN không được tự thu thêm phí, nhận lịch thay KTV hoặc truy cập CCCD, ví riêng, tin nhắn và địa chỉ khách.</li>
+          </ul>
+          <Link href="/mcn" className="mt-3 inline-block text-accent underline underline-offset-2">Xem chương trình MCN và cách tham gia</Link>
+        </Section>
+
         <Section title="16. Duyệt hồ sơ đối tác">
           <p>
             Hồ sơ đối tác mới được AI kiểm tra trước khi hiện với khách: ảnh tác phẩm có phải ảnh thật của việc đã làm, phần giới thiệu có

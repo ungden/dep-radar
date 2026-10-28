@@ -38,9 +38,10 @@ begin
   assert public.travel_fee(-1) = 0 and public.travel_fee('NaN') = 0, 'invalid distances';
 
   raise notice 'commission rounds the same way as the UI';
-  assert public.commission_for(350000, 0.15) = 53000, 'commission of 350.000';
+  assert public.commission_for(350000, 0.15) = 53000, 'historical 15% commission of 350.000 remains available';
+  assert public.commission_for(352500, 0.20) = 71000, 'new 20% commission rounds to whole thousands';
   q := public.build_quote(350000, 1, false, null, false);
-  assert q.commission = 53000 and q.payout = 297000, format('quote %s/%s', q.commission, q.payout);
+  assert q.commission = 70000 and q.payout = 280000, format('quote %s/%s', q.commission, q.payout);
   assert q.commission + q.payout = q.total, 'commission and payout add back up';
 
   raise notice 'fees belong to the freelancer, commission only to the service';
@@ -498,6 +499,8 @@ begin
       'send_offer', 'accept_offer', 'withdraw_offer', 'write_review', 'reply_review', 'open_thread',
       'send_message', 'send_location', 'set_job_references', 'replace_working_hours', 'my_wallet_balance', 'mark_thread_read', 'delete_my_account',
       'set_my_phone', 'set_interests',
+      -- MCN entry points enforce organization ownership, KTV consent and admin-only settlement
+      'mcn_workspace', 'mcn_command',
       -- photo & video, combos, casting calls, two-way reviews
       'set_booking_terms', 'deliver_booking', 'accept_delivery', 'link_bookings',
       'create_casting', 'close_casting', 'apply_casting', 'withdraw_application', 'decide_application',
@@ -2225,7 +2228,7 @@ begin
   assert not exists (select 1 from information_schema.columns
                      where table_schema = 'public' and table_name = 'fee_policy' and column_name = 'own_client_commission_rate'),
     'fee_policy still has an own-client rate';
-  assert (select commission_rate from public.fee_policy) = 0.15, 'the commission is not 15%';
+  assert (select commission_rate from public.fee_policy) = 0.20, 'new bookings must use 20% commission';
   raise notice 'FLAT COMMISSION PASS';
 end $$;
 

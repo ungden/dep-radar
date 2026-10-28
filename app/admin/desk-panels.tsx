@@ -287,7 +287,7 @@ export function FinancePanel({ pros }: { pros: AdminPro[] }) {
       {s && (
         <>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-            <Figure label="Hoa hồng 360dep" value={formatPrice(s.commission)} hint="Doanh thu của công ty (chưa gồm VAT)" strong />
+            <Figure label="Tổng phí từ KTV" value={formatPrice(s.commission)} hint="Gồm phần chia MCN; chưa trừ chi phí" strong />
             <Figure label="Khách trả người làm" value={formatPrice(s.gmv)} hint={`${s.completed} lịch hoàn thành`} />
             <Figure label="Tiền nạp ví vào" value={formatPrice(s.topupsSepay + s.topupsStaff)} hint={`SePay ${formatPrice(s.topupsSepay)} · tay ${formatPrice(s.topupsStaff)}`} />
             <Figure
@@ -298,6 +298,9 @@ export function FinancePanel({ pros }: { pros: AdminPro[] }) {
             />
           </div>
           <Card className="grid grid-cols-2 gap-x-6 gap-y-1.5 p-4 text-body md:grid-cols-3">
+            <Line label="Hoa hồng MCN phát sinh" value={formatPrice(s.mcnCommission)} />
+            <Line label="Sàn giữ sau chia MCN" value={formatPrice(s.commission - s.mcnCommission)} />
+            <Line label="Đã chuyển MCN trong kỳ" value={formatPrice(s.mcnPaid)} />
             <Line label="Lịch tạo mới" value={String(s.created)} />
             <Line label="Khách/người làm huỷ" value={String(s.cancelled)} />
             <Line label="Vắng mặt" value={String(s.noShows)} />
@@ -313,8 +316,8 @@ export function FinancePanel({ pros }: { pros: AdminPro[] }) {
           <Card className="p-4">
             <p className="font-semibold">Xuất file cho kế toán</p>
             <p className="mt-0.5 text-meta text-muted">
-              File CSV mở bằng Excel. Hoa hồng là doanh thu của công ty để xuất hoá đơn và kê khai; danh sách theo người làm có họ tên trên
-              CCCD và doanh thu, dùng khi cung cấp thông tin người bán cho cơ quan thuế.
+              File CSV mở bằng Excel. Phí từ KTV là tổng phí trước chia MCN. Phần sàn giữ chưa trừ voucher, hoàn phí, thuế và chi phí vận hành.
+              Hoa hồng MCN theo ngày hoàn thành lịch; tiền chuyển MCN theo ngày chi trả. Kế toán đối chiếu thêm sổ MCN trước khi kê khai.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <a className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-[13px] font-medium shadow-sm hover:bg-subtle" href={`/admin/export?kind=bookings&${range}`}>

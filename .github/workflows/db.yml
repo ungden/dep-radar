@@ -41,5 +41,7 @@ jobs:
           (printf 'BEGIN;\n'; cat supabase/tests/partner-flow.sql; printf 'ROLLBACK;\n') | docker exec -i supabase_db_dep360 psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f -
       - name: Business rules
         run: docker exec -i supabase_db_dep360 psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f - < supabase/tests/rules.sql
+      - name: MCN consent, attribution, permissions and settlement
+        run: docker exec -i supabase_db_dep360 psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f - < supabase/tests/mcn.sql
       - name: Row level security, over the API
         run: npm run test:db

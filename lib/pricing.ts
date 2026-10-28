@@ -7,7 +7,7 @@ import type { PriceQuote } from "./types"
  */
 export const POLICY = {
   /** Flat commission on the service price, paid by the freelancer. */
-  commissionRate: 0.15,
+  commissionRate: 0.20,
   /** Freelancer must accept (or decline) a booking in the app within this window. */
   confirmWithinHours: 2,
   /** Share of an online payment kept for the freelancer on late cancellation. */

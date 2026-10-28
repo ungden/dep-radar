@@ -115,6 +115,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/mcn" className="hover:text-white">
+                  Hợp tác network MCN
+                </Link>
+              </li>
+              <li>
                 <Link href="/pros" className="hover:text-white">
                   Tất cả người làm
                 </Link>
