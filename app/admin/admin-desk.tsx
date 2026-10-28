@@ -53,6 +53,7 @@ type Result = { ok: true } | { ok: false; error: string }
  * link lands in the same place.
  */
 export function AdminDesk({
+  mcnOverview,
   queue,
   checks,
   pros,
@@ -64,6 +65,7 @@ export function AdminDesk({
   initialTab,
   initialFilter,
 }: {
+  mcnOverview?: React.ReactNode
   queue: ProfileQueueItem[]
   checks: PendingCheck[]
   pros: AdminPro[]
@@ -239,6 +241,7 @@ export function AdminDesk({
               </p>
             )}
 
+          {tab === "overview" && mcnOverview}
           {tab === "overview" && (
             <OverviewPanel
               overview={overview}

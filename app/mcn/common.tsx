@@ -72,8 +72,8 @@ export function mcnDate(value: string | null) {
   if (!Number.isFinite(date.getTime())) return "—"
   return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Ho_Chi_Minh" }).format(date)
 }
-export function McnSplit({ compact = false }: { compact?: boolean }) {
+export function McnSplit({ compact = false, policy = MCN_POLICY }: { compact?: boolean; policy?: import("@/lib/mcn-admin-types").McnPolicy }) {
   const feePercent = Math.round(POLICY.commissionRate * 100)
-  const mcnPercent = feePercent * MCN_POLICY.feeShareRate
-  return <div className={cn("rounded-[var(--radius-lg)] bg-highlight-soft", compact ? "p-4" : "p-5")}><p className="text-meta font-bold">Phí hiện tại: KTV {100 - feePercent}% · MCN {mcnPercent}% · Sàn {feePercent - mcnPercent}%</p><p className="mt-2 text-meta leading-relaxed text-ink-soft">MCN nhận 20% khoản phí dịch vụ thực tế sau làm tròn, trích từ phí của sàn. KTV không đóng thêm phí MCN; nhận toàn bộ phí di chuyển và đặt gấp. Mỗi lịch hẹn lưu điều khoản tại thời điểm tạo.</p></div>
+  const mcnPercent = feePercent * policy.feeShareRate
+  return <div className={cn("rounded-[var(--radius-lg)] bg-highlight-soft", compact ? "p-4" : "p-5")}><p className="text-meta font-bold">Phí hiện tại: KTV {100 - feePercent}% · MCN {mcnPercent}% · Sàn {feePercent - mcnPercent}%</p><p className="mt-2 text-meta leading-relaxed text-ink-soft">MCN nhận {policy.feeShareRate * 100}% khoản phí dịch vụ thực tế sau làm tròn, trích từ phí của sàn. KTV không đóng thêm phí MCN; nhận toàn bộ phí di chuyển và đặt gấp. Mỗi lịch hẹn lưu điều khoản tại thời điểm tạo.</p></div>
 }

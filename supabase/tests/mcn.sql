@@ -43,7 +43,7 @@ declare
   org_a uuid; org_b uuid; member_a uuid; member_b uuid; invite_b uuid; invite_expired uuid;
   before_join uuid; with_a uuid; payout_booking uuid; after_leave uuid; with_b uuid; suspended_booking uuid; refund_booking uuid; recovery_booking uuid;
   commission_a uuid; commission_large uuid; commission_refund uuid; commission_recovery uuid; payout_id uuid; retry_id uuid; report_id uuid;
-  snapshot jsonb; result jsonb; row_data jsonb; expected_fee int; before_count int; denied boolean; table_name text;
+  target_policy uuid; snapshot jsonb; result jsonb; row_data jsonb; expected_fee int; before_count int; denied boolean; table_name text;
 begin
   insert into auth.users (id, email, phone, raw_user_meta_data, raw_app_meta_data, created_at, updated_at)
   select id, 'mcn-' || id || '@example.invalid', phone, jsonb_build_object('full_name', label), '{}', now(), now()
@@ -279,6 +279,39 @@ begin
   assert denied, 'anonymous callers must not access MCN workspace';
   reset role;
   assert exists(select 1 from public.mcn_events), 'sensitive MCN changes leave an audit trail';
+
+  raise notice 'MCN admin reports and effective policy';
+  perform set_config('request.jwt.claim.sub',stranger::text,true);
+  set local role authenticated;
+  denied:=false;
+  begin perform public.mcn_admin_report(current_date-100,current_date); exception when insufficient_privilege then denied:=true; end;
+  assert denied,'non-admin cannot read aggregate financial or audit data';
+  perform pg_temp.reject_mcn('policy',jsonb_build_object('effectiveAt',now()+interval '2 days','feeShareRate',.25,'holdDays',10,'minimumPayout',200000,'reason','Policy test only'));
+  reset role;
+  perform set_config('request.jwt.claim.sub',admin_id::text,true);
+  set local role authenticated;
+  result:=public.mcn_admin_report(current_date-100,current_date);
+  assert jsonb_array_length(result->'networks')=2,'report contains both organizations even without revenue';
+  assert jsonb_array_length(result->'events')>0,'admin has a readable consent and settlement timeline';
+  assert (result->'policy'->>'feeShareRate')::numeric=.2,'default policy preserves original split';
+  perform pg_temp.reject_mcn('policy',jsonb_build_object('effectiveAt',now(),'feeShareRate',.25,'holdDays',10,'minimumPayout',200000,'reason','Policy test only'));
+  target_policy := pg_temp.command_id('policy',jsonb_build_object('effectiveAt',now()+interval '2 days','feeShareRate',.25,'holdDays',10,'minimumPayout',200000,'reason','Policy test only'));
+  assert (public.mcn_policy()->>'feeShareRate')::numeric=.2,'future policy must not apply early';
+  perform public.mcn_command('cancel_policy',jsonb_build_object('id',target_policy,'reason','Cancel scheduled test policy'));
+  reset role;
+  assert exists(select 1 from mcn_private.policies where id=target_policy and cancelled_at is not null),'cancellation preserves history';
+  -- Make a scheduled policy effective only inside this rolled-back fixture.
+  update mcn_private.policies set effective_at=now()-interval '1 minute',cancelled_at=null where id=target_policy;
+  update public.mcn_organizations set status='approved' where id=org_b;
+  recovery_booking:=pg_temp.mcn_booking(pro_a,customer,350000,22);
+  assert (select mcn_share_rate=.25 and mcn_commission=17500 and mcn_hold_days=10 from public.bookings where id=recovery_booking),'new booking snapshots effective share and hold';
+  assert (select mcn_share_rate=.2 and mcn_hold_days=7 from public.bookings where id=with_b),'existing booking retains prior contract';
+  update public.bookings set status='completed',completed_at=now() where id=recovery_booking;
+  assert (select available_at=completed_at+interval '10 days' from public.mcn_commissions where booking_id=recovery_booking),'availability uses booking hold snapshot';
+  perform set_config('request.jwt.claim.sub',admin_id::text,true);
+  set local role authenticated;
+  perform pg_temp.reject_mcn('cancel_policy',jsonb_build_object('id',target_policy,'reason','Cannot cancel effective policy'));
+  reset role;
   raise notice 'MCN BUSINESS AND SECURITY RULES PASS';
 end $$;
 rollback;

@@ -24,7 +24,7 @@ export function McnDashboard({ workspace }: { workspace: McnWorkspace }) {
         <McnFeedback value={action.feedback} />
         {!workspace.available ? <McnUnavailable error={workspace.error} /> : <>
           {organizations.length > 1 && <Field label="Chọn network"><select className={inputClass} value={organization?.id ?? ""} onChange={(e) => setSelectedId(e.target.value)}>{organizations.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}</select></Field>}
-          {organization ? <><NetworkWorkspace key={organization.id} organization={organization} workspace={workspace} action={action} />{organization.status === "rejected" && <ApplicationForm key={organization.id} action={action} initial={organization} />}</> : <ApplicationForm action={action} />}
+          {organization ? <><NetworkWorkspace key={organization.id} organization={organization} workspace={workspace} action={action} />{organization.status === "rejected" && <ApplicationForm key={organization.id} action={action} initial={organization} policy={workspace.policy} />}</> : <ApplicationForm action={action} policy={workspace.policy} />}
         </>}
         <div className="flex flex-wrap gap-4 text-meta"><Link href="/mcn" className="text-accent underline underline-offset-4">Cách hợp tác & chia doanh thu</Link>{workspace.isPro && <Link href="/studio/network" className="text-accent underline underline-offset-4">Network của tôi với vai trò KTV</Link>}</div>
       </RequireSession>
@@ -32,7 +32,7 @@ export function McnDashboard({ workspace }: { workspace: McnWorkspace }) {
   )
 }
 
-function ApplicationForm({ action, initial }: { action: McnAction; initial?: McnOrganization }) {
+function ApplicationForm({ action, initial, policy }: { policy?: import("@/lib/mcn-admin-types").McnPolicy; action: McnAction; initial?: McnOrganization }) {
   const [consent, setConsent] = useState(false)
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -43,7 +43,7 @@ function ApplicationForm({ action, initial }: { action: McnAction; initial?: Mcn
   }
   return <>
     <div><p className="eyebrow">Trở thành đối tác phát triển</p><h2 className="mt-2 text-[28px] font-bold tracking-tight">{initial ? "Bổ sung & gửi lại hồ sơ" : "Đăng ký network MCN"}</h2><p className="mt-3 max-w-2xl text-body leading-relaxed text-ink-soft">Dành cho tổ chức tuyển chọn, hướng dẫn và hỗ trợ đội ngũ KTV. Thông tin pháp lý và tài khoản nhận tiền giúp 360đẹp xác minh, ký kết và đối soát đúng bên.</p></div>
-    <McnSplit />
+    <McnSplit policy={policy} />
     <form onSubmit={(e) => void submit(e)} className="space-y-6">
       <Card className="space-y-4 p-5 md:p-6">
         <h3 className="text-lead font-bold">Thông tin tổ chức</h3>
@@ -104,8 +104,8 @@ function NetworkWorkspace({ organization, workspace, action }: { organization: M
       </Card></li>)}</ul> : <Card><EmptyState icon={<Users className="size-6" />} title={members.length ? "Không có thành viên phù hợp" : "Bắt đầu từ một KTV phù hợp"} text={members.length ? "Thử tên khác hoặc đổi bộ lọc trạng thái." : "KTV được mời tự quyết định tham gia. Network chỉ có thành viên sau khi họ đồng ý."} /></Card>}
     </section>
     <McnLedger commissions={commissions} payouts={payouts} />
-    <Card className="p-5"><p className="flex items-center gap-2 font-bold"><Handshake className="size-5 text-accent" aria-hidden />Thông tin đối soát</p><p className="mt-3 text-body">{organization.bankName} · {organization.bankAccount}</p><p className="mt-1 text-meta text-muted">{organization.bankHolder}</p><p className="mt-3 text-meta leading-relaxed text-ink-soft">360đẹp đối soát thủ công từ 100.000đ đủ điều kiện. Khoản cần thu hồi từ kỳ trước sẽ được trừ trước khi chuyển tiền. Liên hệ hỗ trợ để cập nhật thông tin pháp lý hoặc tài khoản nhận tiền.</p><Link href="/tro-giup" className="mt-3 inline-block text-meta font-semibold text-accent underline underline-offset-4">Liên hệ hỗ trợ</Link></Card>
-    <McnSplit compact />
+    <Card className="p-5"><p className="flex items-center gap-2 font-bold"><Handshake className="size-5 text-accent" aria-hidden />Thông tin đối soát</p><p className="mt-3 text-body">{organization.bankName} · {organization.bankAccount}</p><p className="mt-1 text-meta text-muted">{organization.bankHolder}</p><p className="mt-3 text-meta leading-relaxed text-ink-soft">360đẹp đối soát thủ công theo ngưỡng chi hiện hành. Khoản cần thu hồi từ kỳ trước sẽ được trừ trước khi chuyển tiền. Liên hệ hỗ trợ để cập nhật thông tin pháp lý hoặc tài khoản nhận tiền.</p><Link href="/tro-giup" className="mt-3 inline-block text-meta font-semibold text-accent underline underline-offset-4">Liên hệ hỗ trợ</Link></Card>
+    <McnSplit compact policy={workspace.policy} />
     {support && <SupportSheet key={support.id} member={support} action={action} onClose={() => setSupport(null)} />}
     <Sheet open={Boolean(remove)} onClose={() => { if (!action.busy) setRemove(null) }} title="Kết thúc hợp tác với KTV"><p className="text-body leading-relaxed">Kết thúc hợp tác với <strong>{remove?.proName}</strong>? Những lịch tạo sau khi kết thúc sẽ không chia hoa hồng cho network. Những lịch đã ghi nhận vẫn theo điều khoản đã lưu.</p><p className="mt-3 text-meta text-muted">Hồ sơ, khách hàng và tiền của KTV vẫn do KTV quản lý.</p><McnFeedback value={action.feedback?.error ? action.feedback : null} /><div className="mt-5 flex flex-wrap gap-2"><Button variant="danger" disabled={action.busy} onClick={() => { if (remove) void action.run(() => removeMcnPro(remove.id), "Đã kết thúc hợp tác. Điều khoản các lịch đã tạo được giữ nguyên.").then((ok) => { if (ok) setRemove(null) }) }}>Xác nhận kết thúc</Button><Button variant="outline" disabled={action.busy} onClick={() => setRemove(null)}>Giữ hợp tác</Button></div></Sheet>
   </>

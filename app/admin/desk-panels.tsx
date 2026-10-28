@@ -586,6 +586,7 @@ export function SettingsPanel({ settings, fees, log }: { settings: PlatformSetti
 
 function describe(a: AdminAction) {
   const d = a.detail
+  if (a.action.startsWith("mcn:")) return `MCN · ${a.action.slice(4)} · ${JSON.stringify(d)}`
   switch (a.action) {
     case "account:lock":
       return `Khoá tài khoản${d.reason ? `: ${String(d.reason)}` : ""}`

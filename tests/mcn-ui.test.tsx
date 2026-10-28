@@ -9,6 +9,7 @@ import { McnAdminDesk } from "@/app/admin/mcn/desk"
 import type { McnCommission, McnMembership, McnOrganization, McnWorkspace } from "@/lib/mcn-types"
 
 const api = vi.hoisted(() => ({
+  mcnAdminReport: vi.fn(), scheduleMcnPolicy: vi.fn(), cancelMcnPolicy: vi.fn(),
   applyMcn: vi.fn(), reviewMcn: vi.fn(), inviteMcnPro: vi.fn(), respondMcnInvitation: vi.fn(), leaveMcn: vi.fn(),
   removeMcnPro: vi.fn(), saveMcnSupport: vi.fn(), recordMcnPayout: vi.fn(), reverseMcnCommission: vi.fn(), refresh: vi.fn(),
 }))
@@ -55,6 +56,7 @@ async function submit(form: HTMLFormElement) { await act(async () => { form.disp
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
   Object.values(api).forEach((mock) => mock.mockReset())
+  api.mcnAdminReport.mockResolvedValue({ok:false,error:"Report unavailable in this fixture"})
   HTMLDialogElement.prototype.showModal = function () { this.open = true }
   HTMLDialogElement.prototype.close = function () { this.open = false }
   host = document.createElement("div")
@@ -178,3 +180,23 @@ describe("MCN payout confirmation", () => {
     expect(dialog.open).toBe(true)
   })
 })
+
+
+describe("MCN dashboard",()=>{
+ it("shows report errors without blocking the settlement desk",async()=>{
+  await render(<McnAdminDesk workspace={workspace({isAdmin:true})}/>);
+  expect(host.textContent).toContain("Report unavailable in this fixture");
+  expect(host.textContent).toContain("Ghi nhận chuyển khoản đối soát");
+ });
+ it("shows consolidated period metrics and accounting exports",async()=>{
+  api.mcnAdminReport.mockResolvedValue({ok:true,data:{policy:{feeShareRate:.2,holdDays:7,minimumPayout:100000},policies:[],events:[],daily:[],networks:[{
+   id:organization.id,name:organization.name,status:'approved',active:2,invited:4,joined:2,activated:1,working:1,created:3,cancelled:1,no_shows:0,reported:1,completed:2,revenue:1000000,fee:200000,earned:40000,paid:20000,eligible:200000,held:40000,recovery:50000
+  }]}});
+  await render(<McnAdminDesk workspace={workspace({isAdmin:true})}/>);
+  expect(host.textContent).toContain('50.0%');
+  const links=[...host.querySelectorAll<HTMLAnchorElement>('a[href^="/admin/mcn/export?"]')];
+  expect(links).toHaveLength(4);
+  expect(links.map(a=>new URL(a.href).searchParams.get('kind'))).toEqual(['networks','commissions','payouts','events']);
+  expect(host.textContent).toContain('150.000');
+ });
+});
