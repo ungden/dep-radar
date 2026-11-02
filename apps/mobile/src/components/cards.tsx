@@ -4,7 +4,7 @@ import { View } from "react-native"
 import { categoryLabel, type ProService } from "@/shared"
 import { formatKm, formatPrice, formatShortPrice } from "@/data/format"
 import { fromPrice, type AppPro, type AppWork } from "@/data/public"
-import { card, colors, radius } from "@/theme"
+import { card, colors, photoRadius, radius } from "@/theme"
 import { Avatar, Photo, Rating, Skeleton, VerifiedMark } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -31,18 +31,10 @@ export const PostCard = React.memo(function PostCard({
     <Press
       onPress={() => router.push({ pathname: "/works/[id]", params: { id: work.id } })}
       accessibilityLabel={`${work.title}${price ? `, từ ${formatPrice(price)}` : ""}${pro ? `, ${pro.name}` : ""}`}
-      style={{ ...card, marginBottom: 12 }}
+      style={{ marginBottom: 24, gap: 8 }}
     >
-      <View style={{ borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, overflow: "hidden" }}>
+      <View style={{ borderRadius: photoRadius, overflow: "hidden" }}>
         <Photo uri={work.images[0]} recyclingKey={work.id} rounded={0} />
-        {/* A fact, not a slogan: the person has bookings switched on. */}
-        {pro?.acceptingJobs ? (
-          <View style={{ position: "absolute", top: 8, left: 8, paddingHorizontal: 9, height: 24, borderRadius: radius.full, backgroundColor: "rgba(255,255,255,0.92)", justifyContent: "center" }}>
-            <Txt v="label" w={600} color={colors.accent}>
-              Có thể đặt
-            </Txt>
-          </View>
-        ) : null}
         <View style={{ position: "absolute", top: 0, right: 0 }}>
           <SaveHeart work={work} onPhoto />
         </View>
@@ -70,13 +62,14 @@ export const PostCard = React.memo(function PostCard({
           </View>
         ) : null}
       </View>
-      <View style={{ padding: 10, gap: 5 }}>
+      <View style={{ paddingHorizontal: 2, gap: 3 }}>
       <Txt w={600} numberOfLines={2}>
         {work.title}
       </Txt>
       {price !== null ? (
-        <Txt w={600} tabular color={colors.accentDark}>
-          Từ {formatPrice(price)}
+        <Txt tabular>
+          <Txt v="meta" color={colors.muted}>Từ </Txt>
+          <Txt w={700}>{formatPrice(price)}</Txt>
         </Txt>
       ) : null}
       {pro ? (
@@ -107,7 +100,7 @@ export const PostCard = React.memo(function PostCard({
 export function PostCardSkeleton() {
   return (
     <View style={{ gap: 8, paddingBottom: 20 }}>
-      <Skeleton style={{ aspectRatio: 4 / 5, borderRadius: radius.md }} />
+      <Skeleton style={{ aspectRatio: 4 / 5, borderRadius: photoRadius }} />
       <Skeleton style={{ height: 16, width: "85%" }} />
       <Skeleton style={{ height: 16, width: "50%" }} />
       <Skeleton style={{ height: 14, width: "65%" }} />

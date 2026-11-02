@@ -10,32 +10,35 @@ import { Press } from "@/ui/press"
 import { Sheet, useSheet } from "@/ui/sheet"
 import { Txt } from "@/ui/text"
 
-/** City · logo · chat and notifications, with the real unread counts. */
+/**
+ * One compact row: the logo, then where the customer is looking (a pill they
+ * can change), chat and notifications with the real unread counts.
+ */
 export function TopBar() {
   const { city, setCity, uid, me } = useApp()
   const sheet = useSheet()
   const needSignIn = (path: "/tin-nhan" | "/thong-bao") => router.push(uid ? path : "/login")
 
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: gutter - 4, minHeight: 52, paddingVertical: 4, gap: 8 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", paddingLeft: gutter, paddingRight: gutter - 8, minHeight: 52, gap: 4 }}>
       <View style={{ flex: 1, alignItems: "flex-start" }}>
-        <Press
-          onPress={sheet.open}
-          accessibilityLabel={`Khu vực: ${city ?? "Cả nước"}. Đổi khu vực`}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4, minHeight: 44, paddingVertical: 8, paddingHorizontal: 4, maxWidth: "100%" }}
-        >
-          <Icon name="pin" size={16} />
-          <Txt v="meta" w={700} style={{ flexShrink: 1 }}>
+        <Wordmark size={22} />
+      </View>
+      <Press
+        onPress={sheet.open}
+        accessibilityLabel={`Khu vực: ${city ?? "Cả nước"}. Đổi khu vực`}
+        style={{ flexDirection: "row", alignItems: "center", gap: 4, minHeight: 44, paddingHorizontal: 6, flexShrink: 1 }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 32, paddingHorizontal: 10, borderRadius: radius.full, backgroundColor: colors.subtle }}>
+          <Icon name="pin" size={14} />
+          <Txt v="meta" w={600} numberOfLines={1} style={{ flexShrink: 1 }}>
             {city ?? "Cả nước"}
           </Txt>
-          <Icon name="down" size={14} color={colors.muted} />
-        </Press>
-      </View>
-      <Wordmark size={24} />
-      <View style={{ flex: 1, flexDirection: "row", justifyContent: "flex-end" }}>
-        <IconButton name="chat" label="Tin nhắn" badge={me.unreadMessages} onPress={() => needSignIn("/tin-nhan")} />
-        <IconButton name="bell" label="Thông báo" badge={me.unreadNotifications} onPress={() => needSignIn("/thong-bao")} />
-      </View>
+          <Icon name="down" size={12} color={colors.muted} />
+        </View>
+      </Press>
+      <IconButton name="chat" label="Tin nhắn" badge={me.unreadMessages} onPress={() => needSignIn("/tin-nhan")} />
+      <IconButton name="bell" label="Thông báo" badge={me.unreadNotifications} onPress={() => needSignIn("/thong-bao")} />
 
       <Sheet sheet={sheet} title="Bạn đang ở đâu?" size="medium">
         <Txt color={colors.inkSoft}>

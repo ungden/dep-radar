@@ -23,7 +23,7 @@ import {
   logoTransform,
   showsAverage,
 } from "@/shared"
-import { aspect, colors, radius } from "@/theme"
+import { aspect, colors, photoRadius, radius } from "@/theme"
 import { Button } from "./button"
 import { Icon } from "./icon"
 import { Press } from "./press"
@@ -34,7 +34,7 @@ export function Photo({
   uri,
   ratio = aspect.photo,
   style,
-  rounded = radius.md,
+  rounded = photoRadius,
   recyclingKey,
 }: {
   uri?: string

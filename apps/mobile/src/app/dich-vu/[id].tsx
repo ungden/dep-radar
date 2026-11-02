@@ -1,10 +1,12 @@
 import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import { ScrollView, View, useWindowDimensions } from "react-native"
-import { providerLocationOpen, categoryLabel, excludes, getTemplate, placeLabel, rankScore, listedOptions, serviceDuration, serviceQuantity } from "@/shared"
+import { providerLocationOpen, categoryLabel, excludes, getTemplate, placeLabel, rankScore, listedOptions, serviceDuration, serviceQuantity, showsAverage } from "@/shared"
 import { formatDuration, formatKm, formatPrice } from "@/data/format"
 import { type AppPro, type AppWork } from "@/data/public"
 import { PostCard, ProCardSkeleton } from "@/components/cards"
+import { BookingBar } from "@/components/booking-bar"
+import { illustration, offerRating } from "@/components/tiles"
 import { useApp } from "@/state/app"
 import { ConductNote } from "@/components/conduct"
 import { needsConductNote } from "@/shared"
@@ -27,6 +29,8 @@ export default function ServiceScreen() {
   const params = useLocalSearchParams<{ id: string; place?: string; verified?: string; minTotal?: string; maxTotal?: string }>()
   const { id } = params
   const [showPriceFrame, setShowPriceFrame] = React.useState(false)
+  const scroller = React.useRef<ScrollView>(null)
+  const prosY = React.useRef(0)
   const minTotal = Math.max(0, Number(params.minTotal) || 0)
   const maxTotal = Math.max(0, Number(params.maxTotal) || 0)
   const priceOk = (total: number) => total >= minTotal && (!maxTotal || total <= maxTotal)
@@ -63,122 +67,210 @@ export default function ServiceScreen() {
     return prices.length ? [{ variant, price: Math.min(...prices) }] : []
   })
 
-  return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.canvas }}
-      contentContainerStyle={{ paddingTop: 8, paddingBottom: 48, gap: 28 }}
-      refreshControl={refreshControl(app.loading && Boolean(data), () => void app.refresh())}
-    >
-      <Stack.Screen options={{ title: "" }} />
+  // Who can be booked right now, and from how much.
+  const bookable = ranked.filter((p) => p.acceptingJobs)
+  const from = availablePackages.length ? availablePackages.reduce((m, x) => (x.price < m.price ? x : m)) : null
+  const rating = offerRating(ranked)
+  const catalogFrom = [...template.variants].sort((x, y) => x.tiers[0] - y.tiers[0])[0]
+  // Real work of this service first; without any, its category's illustrations, labelled.
+  const real = works.slice(0, 6)
+  const gallery = real.length
+    ? real.map((w) => ({ key: w.id, uri: w.images[0], work: w.id as string | undefined }))
+    : [0, 1, 2].map((i) => ({ key: `ill-${i}`, uri: illustration(template.category, i), work: undefined as string | undefined }))
+  const shotWidth = Math.round(Math.min(width * 0.7, 320))
+  const book = (pro: AppPro) => {
+    const listing = data?.services.find((s) => s.proId === pro.id && s.templateId === template.id && s.active)
+    const start = listedOptions(template, listing?.prices ?? {}, app.studioBookingOpen).filter((o) => priceOk(o.minimumTotal)).sort((x, y) => x.minimumTotal - y.minimumTotal)[0]
+    router.push({ pathname: "/book/[proId]", params: { proId: pro.id, template: template.id, variant: start?.variant.id ?? "" } })
+  }
+  const cta =
+    bookable.length === 1
+      ? { label: "Chọn lịch", onPress: () => book(bookable[0]) }
+      : bookable.length > 1
+        ? { label: "Chọn người & lịch", onPress: () => scroller.current?.scrollTo({ y: Math.max(0, prosY.current - 12), animated: true }) }
+        : { label: "Đăng yêu cầu", onPress: () => router.push("/yeu-cau/moi") }
 
-      {/* What it is */}
-      <View style={{ paddingHorizontal: gutter, gap: 6 }}>
-        <Txt v="meta" w={600} color={colors.muted}>
-          {categoryLabel(template.category)}
-        </Txt>
-        <Txt v="h1">{template.name}</Txt>
-        <Txt color={colors.inkSoft}>{template.description}</Txt>
-        <View style={{ gap: 10, marginTop: 10 }}>
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <Stack.Screen options={{ title: "" }} />
+      <ScrollView
+        ref={scroller}
+        contentContainerStyle={{ paddingTop: 4, paddingBottom: 140, gap: 28 }}
+        refreshControl={refreshControl(app.loading && Boolean(data), () => void app.refresh())}
+      >
+        {/* The work itself, first */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} snapToInterval={shotWidth + 8} decelerationRate="fast" contentContainerStyle={{ paddingHorizontal: gutter, gap: 8 }}>
+          {gallery.map((g, i) => {
+            const shot = (
+              <>
+                <Photo uri={g.uri} recyclingKey={g.key} />
+                <View style={{ position: "absolute", left: 8, bottom: 8, paddingHorizontal: 8, height: 22, borderRadius: radius.full, justifyContent: "center", backgroundColor: "rgba(20,18,19,0.55)" }}>
+                  <Txt v="label" w={600} color={colors.surface} style={{ fontSize: 12, lineHeight: 16 }}>
+                    {g.work ? `${i + 1}/${gallery.length}` : "Ảnh minh hoạ"}
+                  </Txt>
+                </View>
+              </>
+            )
+            const work = g.work
+            return work ? (
+              <Press key={g.key} onPress={() => router.push({ pathname: "/works/[id]", params: { id: work } })} accessibilityLabel={`Ảnh thật ${i + 1}/${gallery.length}, mở bài đăng`} style={{ width: shotWidth }}>
+                {shot}
+              </Press>
+            ) : (
+              <View key={g.key} accessible accessibilityLabel={`Ảnh minh hoạ ${i + 1}/${gallery.length}`} style={{ width: shotWidth }}>
+                {shot}
+              </View>
+            )
+          })}
+        </ScrollView>
+
+        {/* What it is, what it costs */}
+        <View style={{ paddingHorizontal: gutter, gap: 6, marginTop: -8 }}>
+          <Txt v="meta" w={600} color={colors.muted}>
+            {categoryLabel(template.category)}
+          </Txt>
+          <Txt v="h1">{template.name}</Txt>
+          <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", columnGap: 8, rowGap: 2 }}>
+            {from ? (
+              <Txt tabular>
+                <Txt v="meta" color={colors.muted}>Từ </Txt>
+                <Txt v="lead" w={700}>
+                  {formatPrice(from.price)}
+                  {from.variant.perPerson ? "/người" : ""}
+                </Txt>
+              </Txt>
+            ) : (
+              // Nobody to book: 360đẹp's own price band is still the real starting price.
+              <Txt tabular>
+                <Txt v="meta" color={colors.muted}>Giá từ </Txt>
+                <Txt v="lead" w={700}>
+                  {formatPrice(catalogFrom.tiers[0])}
+                  {catalogFrom.perPerson ? "/người" : ""}
+                </Txt>
+                <Txt v="meta" color={colors.muted}> theo bảng giá 360đẹp</Txt>
+              </Txt>
+            )}
+            <Txt v="meta" color={colors.muted}>
+              {"· "}
+              {formatDuration(serviceDuration(from?.variant ?? catalogFrom, serviceQuantity(from?.variant ?? catalogFrom)))}
+            </Txt>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            {showsAverage(rating.count) ? <Rating average={rating.average} count={rating.count} /> : null}
+            <Txt v="meta" color={colors.inkSoft}>
+              {showsAverage(rating.count) ? "· " : ""}
+              {loadingFirst ? "Đang tải người nhận…" : bookable.length ? `${bookable.length} người đang nhận lịch${where}` : `Chưa có người nhận${where}`}
+            </Txt>
+          </View>
+          <Txt color={colors.inkSoft} style={{ marginTop: 6 }}>
+            {template.description}
+          </Txt>
+        </View>
+
+        {/* Who does it here: the decision, so it comes before the details */}
+        <View
+          style={{ paddingHorizontal: gutter, gap: 14 }}
+          onLayout={(e) => {
+            prosY.current = e.nativeEvent.layout.y
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+            <Txt v="h2" style={{ flexShrink: 1 }}>
+              Chọn người làm{where}
+            </Txt>
+            {ranked.length > 0 ? (
+              <Txt color={colors.muted} tabular>
+                {ranked.length}
+              </Txt>
+            ) : null}
+          </View>
+          {loadingFirst ? (
+            <>
+              <ProCardSkeleton />
+              <ProCardSkeleton />
+            </>
+          ) : app.dataError && !data ? (
+            <ErrorNote text={app.dataError} onRetry={() => void app.refresh()} />
+          ) : ranked.length === 0 ? (
+            <View style={{ borderWidth: 1, borderStyle: "dashed", borderColor: colors.lineStrong, borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 24, gap: 8, alignItems: "center" }}>
+              <Txt v="lead" w={700} center>
+                Chưa có ai nhận dịch vụ này{where}
+              </Txt>
+              <Txt color={colors.inkSoft} center style={{ maxWidth: 320 }}>
+                {elsewhere ? `Có ${elsewhere} người nhận ở nơi khác.` : "Đăng yêu cầu để người làm gần bạn nhận việc, hoặc quay lại sau."}
+              </Txt>
+              {elsewhere ? <Button label="Xem cả nước" variant="secondary" onPress={() => app.setCity(null)} style={{ marginTop: 8, alignSelf: "center" }} /> : null}
+            </View>
+          ) : (
+            ranked.map((p) => <ProOffer key={p.id} pro={p} templateId={template.id} minTotal={minTotal} maxTotal={maxTotal} onBook={() => book(p)} />)
+          )}
+        </View>
+
+        {/* Options, price first */}
+        <View style={{ paddingHorizontal: gutter }}>
+          <Card style={{ padding: 18, gap: 0, borderWidth: 1, borderColor: colors.line }}>
+            <Txt v="title" w={700}>Gói & giá</Txt>
+            {availablePackages.length ? availablePackages.map(({ variant: v, price }, i) => <View key={v.id}>
+              {i > 0 && <Divider />}
+              <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12, paddingVertical: 14 }}>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Txt w={600}>{v.label}</Txt>
+                  <Txt v="meta" color={colors.inkSoft}>{formatDuration(serviceDuration(v, serviceQuantity(v)))}</Txt>
+                  {(v.minQuantity ?? 1) > 1 && <Txt v="meta" color={colors.inkSoft}>Tối thiểu {v.minQuantity} người · từ {formatPrice(price * v.minQuantity!)}/nhóm</Txt>}
+                </View>
+                <Txt w={700} tabular>Từ {formatPrice(price)}{v.perPerson ? "/người" : ""}</Txt>
+              </View>
+            </View>) : <Txt color={colors.inkSoft} style={{ marginVertical: 12 }}>Chưa có gói phù hợp với lựa chọn này.</Txt>}
+            <Button label={showPriceFrame ? "Ẩn khung giá tham khảo" : "Xem khung 3 mức giá"} variant="ghost" full onPress={() => setShowPriceFrame((v) => !v)} />
+            {showPriceFrame && <View style={{ gap: 16, marginTop: 12 }}>
+              <Txt v="meta" color={colors.inkSoft}>Khung giá tham khảo. Người làm chọn một mức cho từng gói; mức đang nhận lịch nằm ở trên.</Txt>
+              {template.variants.map((v) => <View key={v.id} style={{ gap: 8 }}><Txt w={600}>{v.label}</Txt><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{v.tiers.map((tier) => <Txt key={tier} v="meta" style={{ backgroundColor: colors.subtle, padding: 8, borderRadius: radius.sm }}>{formatPrice(tier)}{v.perPerson ? "/người" : ""}</Txt>)}</View></View>)}
+            </View>}
+          </Card>
+        </View>
+
+        {/* What is included */}
+        <View style={{ paddingHorizontal: gutter, gap: 10 }}>
+          <Txt v="h2">Bao gồm</Txt>
           <Fact icon="pin" text={placeLabel(template, undefined, app.studioBookingOpen)} />
           {template.deliverable ? (
             <Fact icon="box" text={`${template.deliverable}${template.deliveryDays ? `, giao trong ${template.deliveryDays} ngày` : ""}`} />
           ) : null}
-          {template.includes.map((line) =>
-            excludes(line) ? (
-              <Fact key={line} text={line} soft />
-            ) : (
-              <Fact key={line} icon="check" text={line} />
-            ),
-          )}
-        </View>
-        {needsConductNote(template.category) ? (
-          <View style={{ marginTop: 12 }}>
-            <ConductNote />
-          </View>
-        ) : null}
-      </View>
-
-      {/* Options, price first */}
-      <View style={{ paddingHorizontal: gutter }}>
-        <Card style={{ padding: 18, gap: 0, borderWidth: 1, borderColor: colors.line }}>
-          <Txt v="lead" w={700}>Gói đang có người nhận</Txt>
-          {availablePackages.length ? availablePackages.map(({ variant: v, price }, i) => <View key={v.id}>
-            {i > 0 && <Divider />}
-            <View style={{ gap: 8, paddingVertical: 14 }}>
-              <Txt w={600}>{v.label}</Txt>
-              <Txt v="meta" color={colors.inkSoft}>{formatDuration(serviceDuration(v, serviceQuantity(v)))}</Txt>
-              <Txt v="lead" w={700} tabular>Từ {formatPrice(price)}{v.perPerson ? "/người" : ""}</Txt>
-              {(v.minQuantity ?? 1) > 1 && <Txt v="meta" color={colors.inkSoft}>Tối thiểu {v.minQuantity} người · từ {formatPrice(price * v.minQuantity!)}/nhóm</Txt>}
+          {template.includes.map((line) => (excludes(line) ? <Fact key={line} text={line} soft /> : <Fact key={line} icon="check" text={line} />))}
+          {needsConductNote(template.category) ? (
+            <View style={{ marginTop: 6 }}>
+              <ConductNote />
             </View>
-          </View>) : <Txt color={colors.inkSoft} style={{ marginVertical: 12 }}>Chưa có gói phù hợp với lựa chọn này.</Txt>}
-          <Button label={showPriceFrame ? "Ẩn khung giá tham khảo" : "Xem khung 3 mức giá"} variant="ghost" full onPress={() => setShowPriceFrame((v) => !v)} />
-          {showPriceFrame && <View style={{ gap: 16, marginTop: 12 }}>
-            <Txt v="meta" color={colors.inkSoft}>Khung giá tham khảo. Người làm chọn một mức cho từng gói; mức đang nhận lịch nằm ở trên.</Txt>
-            {template.variants.map((v) => <View key={v.id} style={{ gap: 8 }}><Txt w={600}>{v.label}</Txt><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{v.tiers.map((tier) => <Txt key={tier} v="meta" style={{ backgroundColor: colors.subtle, padding: 8, borderRadius: radius.sm }}>{formatPrice(tier)}{v.perPerson ? "/người" : ""}</Txt>)}</View></View>)}
-          </View>}
-        </Card>
-      </View>
-
-      {/* Who does it here */}
-      <View style={{ paddingHorizontal: gutter, gap: 14 }}>
-        <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
-          <Txt v="h2" style={{ flexShrink: 1 }}>
-            Chọn người làm{where}
-          </Txt>
-          {ranked.length > 0 ? (
-            <Txt color={colors.muted} tabular>
-              {ranked.length}
-            </Txt>
           ) : null}
         </View>
-        {loadingFirst ? (
-          <>
-            <ProCardSkeleton />
-            <ProCardSkeleton />
-          </>
-        ) : app.dataError && !data ? (
-          <ErrorNote text={app.dataError} onRetry={() => void app.refresh()} />
-        ) : ranked.length === 0 ? (
-          <View style={{ borderWidth: 1, borderStyle: "dashed", borderColor: colors.line, borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 24, gap: 8, alignItems: "center" }}>
-            <Txt v="lead" w={700} center>
-              Chưa có ai nhận dịch vụ này{where}
-            </Txt>
-            <Txt color={colors.inkSoft} center style={{ maxWidth: 320 }}>
-              {elsewhere
-                ? `Có ${elsewhere} người nhận ở nơi khác.`
-                : "Đăng yêu cầu để người làm gần bạn nhận việc, hoặc quay lại sau."}
-            </Txt>
-            <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
-              {elsewhere ? <Button label="Xem cả nước" onPress={() => app.setCity(null)} /> : null}
-              <Button
-                label="Đăng yêu cầu"
-                variant={elsewhere ? "secondary" : "primary"}
-                onPress={() => router.push("/yeu-cau/moi")}
-              />
+
+        {/* Real photos, as posts */}
+        {works.length > 0 ? (
+          <View style={{ paddingHorizontal: gutter, gap: 14 }}>
+            <Txt v="h2">Tác phẩm của dịch vụ này</Txt>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: COLUMN_GAP }}>
+              {works.map((w) => {
+                const pro = data?.pros.find((p) => p.id === w.proId)
+                return (
+                  <View key={w.id} style={{ width: cardWidth }}>
+                    <PostCard work={w} pro={pro} services={data?.services ?? []} distanceKm={pro ? app.distanceTo(pro) : null} />
+                  </View>
+                )
+              })}
             </View>
           </View>
-        ) : (
-          ranked.map((p) => <ProOffer key={p.id} pro={p} templateId={template.id} minTotal={minTotal} maxTotal={maxTotal} />)
-        )}
-      </View>
+        ) : null}
+      </ScrollView>
 
-      {/* Real photos */}
-      {works.length > 0 ? (
-        <View style={{ paddingHorizontal: gutter, gap: 14 }}>
-          <Txt v="h2">Ảnh thật của dịch vụ này</Txt>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: COLUMN_GAP }}>
-            {works.map((w) => {
-              const pro = data?.pros.find((p) => p.id === w.proId)
-              return (
-                <View key={w.id} style={{ width: cardWidth }}>
-                  <PostCard work={w} pro={pro} services={data?.services ?? []} distanceKm={pro ? app.distanceTo(pro) : null} />
-                </View>
-              )
-            })}
-          </View>
-        </View>
-      ) : null}
-    </ScrollView>
+      {/* Booking is never more than one tap away */}
+      <BookingBar
+        title={from ? `Từ ${formatPrice(from.price)}${from.variant.perPerson ? "/người" : ""}` : null}
+        note={bookable.length === 1 ? `với ${bookable[0].name}` : from ? formatDuration(serviceDuration(from.variant, serviceQuantity(from.variant))) : "Không mất phí đăng yêu cầu"}
+        action={cta.label}
+        onPress={cta.onPress}
+        disabled={loadingFirst}
+      />
+    </View>
   )
 }
 
@@ -194,7 +286,7 @@ function Fact({ icon, text, soft }: { icon?: "pin" | "box" | "check"; text: stri
 }
 
 /** One person who does this service here: their price, their work, and the way to book them. */
-function ProOffer({ pro, templateId, minTotal, maxTotal }: { pro: AppPro; templateId: string; minTotal: number; maxTotal: number }) {
+function ProOffer({ pro, templateId, minTotal, maxTotal, onBook }: { pro: AppPro; templateId: string; minTotal: number; maxTotal: number; onBook: () => void }) {
   const app = useApp()
   const listing = app.data?.services.find((s) => s.proId === pro.id && s.templateId === templateId && s.active)
   const start = listedOptions(getTemplate(templateId)!, listing?.prices ?? {}, app.studioBookingOpen).filter((o) => o.minimumTotal >= minTotal && (!maxTotal || o.minimumTotal <= maxTotal)).sort((a, b) => a.minimumTotal - b.minimumTotal)[0]
@@ -260,9 +352,9 @@ function ProOffer({ pro, templateId, minTotal, maxTotal }: { pro: AppPro; templa
         <Button label="Xem hồ sơ" variant="secondary" size="sm" onPress={openProfile} style={{ flex: 1 }} />
         {pro.acceptingJobs ? (
           <Button
-            label="Đặt lịch"
+            label="Chọn lịch"
             size="sm"
-            onPress={() => router.push({ pathname: "/book/[proId]", params: { proId: pro.id, template: templateId, variant: start?.variant.id ?? "" } })}
+            onPress={onBook}
             style={{ flex: 1 }}
           />
         ) : (

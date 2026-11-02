@@ -17,7 +17,7 @@ export interface TabSpec {
 }
 
 /**
- * Five tabs, the middle one a rose "+". The selected tab is rose.
+ * Five tabs, the middle one a small rose "+". The selected tab is ink.
  */
 export function TabBar({ state, navigation, specs }: BottomTabBarProps & { specs: Record<string, TabSpec> }) {
   const insets = useSafeAreaInsets()
@@ -44,6 +44,10 @@ export function TabBar({ state, navigation, specs }: BottomTabBarProps & { specs
       })}
     </Sheet>
   </View>
+  // Light and level: every tab the same height, the label under the icon,
+  // the selected one in ink. "+" is a small rose tile in the same row, not a
+  // bubble that drops its label below the others.
+  const label = { fontSize: 12, lineHeight: 16 }
   return (
     <View
       style={{
@@ -51,7 +55,7 @@ export function TabBar({ state, navigation, specs }: BottomTabBarProps & { specs
         backgroundColor: colors.surface,
         borderTopWidth: 1,
         borderTopColor: colors.line,
-        paddingBottom: Math.max(insets.bottom, 8),
+        paddingBottom: Math.max(insets.bottom, 6),
         paddingTop: 6,
       }}
     >
@@ -62,9 +66,13 @@ export function TabBar({ state, navigation, specs }: BottomTabBarProps & { specs
         const onPress = () => choose(index)
         if (spec.center) {
           return (
-            <Press key={route.key} onPress={onPress} accessibilityLabel={spec.label} style={{ flex: 1, minHeight: 56, alignItems: "center", justifyContent: "center", gap: 4, paddingHorizontal: 2 }}>
-              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}><Icon name="plus" size={22} color={colors.surface} /></View>
-              <Txt v="meta" w={600} center>{spec.label}</Txt>
+            <Press key={route.key} onPress={onPress} accessibilityLabel={spec.label} style={{ flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 3, paddingHorizontal: 2 }}>
+              <View style={{ width: 40, height: 28, borderRadius: 10, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}>
+                <Icon name="plus" size={18} color={colors.surface} />
+              </View>
+              <Txt v="label" w={600} color={colors.ink} center style={label} numberOfLines={1}>
+                {spec.label}
+              </Txt>
             </Press>
           )
         }
@@ -75,14 +83,13 @@ export function TabBar({ state, navigation, specs }: BottomTabBarProps & { specs
             accessibilityRole="tab"
             accessibilityState={{ selected: focused }}
             accessibilityLabel={spec.badge ? `${spec.label}, ${spec.badge} mới` : spec.label}
-            style={{ flex: 1, minHeight: 56, alignItems: "center", gap: 2, paddingHorizontal: 2 }}
+            style={{ flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 3, paddingHorizontal: 2 }}
           >
-            <View style={{ height: 3, width: 18, borderRadius: 2, backgroundColor: focused ? colors.ink : "transparent", marginBottom: 3 }} />
-            <View>
-              <Icon name={spec.icon} size={23} color={focused ? colors.ink : colors.muted} />
-              {spec.badge ? <CountBadge count={spec.badge} style={{ position: "absolute", top: -6, right: -12 }} /> : null}
+            <View style={{ height: 28, justifyContent: "center" }}>
+              <Icon name={spec.icon} size={22} color={focused ? colors.ink : colors.muted} />
+              {spec.badge ? <CountBadge count={spec.badge} style={{ position: "absolute", top: -4, right: -12 }} /> : null}
             </View>
-            <Txt v="meta" w={focused ? 700 : 500} color={focused ? colors.ink : colors.muted} center>
+            <Txt v="label" w={focused ? 600 : 500} color={focused ? colors.ink : colors.muted} center style={label} numberOfLines={1}>
               {spec.label}
             </Txt>
           </Press>

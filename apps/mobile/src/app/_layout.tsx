@@ -73,6 +73,7 @@ function Navigator() {
       <Stack.Screen name="tin-nhan/[id]" options={{ title: "" }} />
       <Stack.Screen name="thong-bao" options={{ title: "Thông báo" }} />
       <Stack.Screen name="dip/[id]" options={{ title: "" }} />
+      <Stack.Screen name="dich-vu/index" options={{ title: "Dịch vụ" }} />
       <Stack.Screen name="dich-vu/[id]" options={{ title: "" }} />
       <Stack.Screen name="da-luu" options={{ title: "Đã lưu" }} />
       <Stack.Screen name="dia-chi/index" options={{ title: "Địa chỉ" }} />

@@ -1,121 +1,72 @@
 import * as React from "react"
-import { Image } from "expo-image"
 import { router } from "expo-router"
-import {
-  ScrollView,
-  View,
-  useWindowDimensions,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-} from "react-native"
+import { ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import {
-  CATEGORIES,
-  VERTICALS,
-  getVertical,
-  interestsFrom,
-  rankFeed,
-  categoryRow,
-  serviceOffers,
-  type CategoryId,
-  type ServiceOffer,
-  type VerticalFilter,
-} from "@/shared"
-import { formatDuration, formatPrice } from "@/data/format"
+import { CATEGORIES, categoryRow, interestsFrom, rankFeed, serviceOffers, type CategoryId } from "@/shared"
 import type { AppWork } from "@/data/public"
-import { PostCard, PostCardSkeleton } from "@/components/cards"
-import { TextTabs } from "@/components/switches"
+import { PostCard } from "@/components/cards"
 import { OfflineNote } from "@/components/offline-note"
+import {
+  CatalogTile,
+  CategoryRail,
+  GRID_GAP,
+  ProTile,
+  Section,
+  ServiceTile,
+  TileGrid,
+  TileSkeleton,
+  comingSoon,
+  illustration,
+  tileWidth,
+} from "@/components/tiles"
 import { TopBar } from "@/components/top-bar"
 import { useApp } from "@/state/app"
 import { useBrowse } from "@/state/derived"
-import { card, colors, gutter, radius } from "@/theme"
-import { Button } from "@/ui/button"
-import { EmptyState, ErrorNote, Photo, SectionHeader, Skeleton } from "@/ui/bits"
+import { colors, gutter, radius } from "@/theme"
+import { EmptyState, ErrorNote } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
-import { CategoryIcon, CategoryTiles } from "@/components/category-icon"
 import { Press } from "@/ui/press"
 import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
 
-const TRADES: { value: VerticalFilter; label: string }[] = [{ value: "all", label: "Tất cả" }, ...VERTICALS.map((v) => ({ value: v.id, label: v.label }))]
-/** The most offered first; the rest one tap away, so the first screen stays short. */
-const SERVICES_FIRST = 8
-const COLUMN_GAP = 12
+/** Bookable services on the first screen; the rest one tap away in the list. */
+const SERVICES_FIRST = 6
+const SOON_FIRST = 4
+const PEOPLE_FIRST = 8
+const WORKS_FIRST = 6
 
+const openList = (category?: CategoryId) => router.push(category ? { pathname: "/dich-vu", params: { category } } : "/dich-vu")
 const openRequestForm = () => router.push("/yeu-cau/moi")
 
 /**
- * Khám phá sells services: what someone in the customer's city actually
- * offers, with the real lowest price, most offered first. Real work comes
- * after, as proof. Same list as the web home (lib/offers.ts).
+ * Khám phá is a marketplace front page, photo first: search at the top,
+ * categories as pictures, then what can be booked here (two to a row, the
+ * photo doing the selling), the people who do it, their real work, and what
+ * is coming. Every scroll shows more work or more choices, not more words.
  */
 export default function Explore() {
   const app = useApp()
   const browse = useBrowse()
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
-  const [vertical, setVertical] = React.useState<VerticalFilter>("all")
-  const [category, setCategory] = React.useState<CategoryId | "all">("all")
-  const [expanded, setExpanded] = React.useState(false)
-  const [allCategories, setAllCategories] = React.useState(false)
-  const [stuck, setStuck] = React.useState(false)
-  const switchY = React.useRef(Number.POSITIVE_INFINITY)
-  const scroller = React.useRef<ScrollView>(null)
-  const servicesY = React.useRef(0)
-  // Set when a category is tapped: once the list under it has laid out, scroll to it.
-  const scrollToServices = React.useRef(false)
+  const tile = tileWidth(width)
 
   // One clock per data load, so the order does not reshuffle while scrolling.
   const loadedAt = app.data
   const now = React.useMemo(() => new Date(), [loadedAt])
 
-  const chooseTrade = (v: VerticalFilter) => {
-    setVertical(v)
-    setCategory("all")
-    setExpanded(false)
-    setAllCategories(false)
-  }
-  React.useEffect(() => setExpanded(false), [app.city])
-
   // browse.* leaves out people this person blocked.
   const offers = React.useMemo(
-    () => (app.data ? serviceOffers({ studioBookingOpen: app.studioBookingOpen, pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical }) : []),
-    [app.data, browse, app.city, vertical, app.studioBookingOpen],
+    () => (app.data ? serviceOffers({ studioBookingOpen: app.studioBookingOpen, pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical: "all" }) : []),
+    [app.data, browse, app.city, app.studioBookingOpen],
   )
-  // One row of the categories with the most on offer here; the rest (and the
-  // ones nobody offers yet) behind "Xem thêm". Same as the web.
-  const categories = CATEGORIES.filter((c) => vertical === "all" || c.vertical === vertical)
-  const shownCategory = categories.some((c) => c.id === category) ? category : "all"
-  const tiles = categoryRow(categories, offers, shownCategory, 4)
-  const shownCategoryInfo = CATEGORIES.find((c) => c.id === shownCategory)
-  const shown = offers.filter((o) => shownCategory === "all" || o.template.category === shownCategory)
-  // After the tap, once the list has laid out (its top moves when "Xem thêm" folds away).
-  React.useEffect(() => {
-    if (!scrollToServices.current) return
-    scrollToServices.current = false
-    const t = setTimeout(() => scroller.current?.scrollTo({ y: Math.max(0, servicesY.current - 56), animated: true }), 80)
-    return () => clearTimeout(t)
-  }, [shownCategory])
-  const visible = expanded || shownCategory !== "all" ? shown : shown.slice(0, SERVICES_FIRST)
-  // A service with no work of its own borrows one from its category. Never the
-  // same picture on two cards (it reads as the same service): the service the
-  // work was made for keeps it, a borrower shows its icon instead.
-  const works = app.data?.works
-  const photos = React.useMemo(() => {
-    const own = (o: ServiceOffer) =>
-      Boolean(o.photo && works?.some((w) => w.templateId === o.template.id && w.images.includes(o.photo!)))
-    const used = new Set(visible.filter(own).map((o) => o.photo!))
-    return visible.map((o) => {
-      if (!o.photo) return undefined
-      if (own(o)) return o.photo
-      if (used.has(o.photo)) return undefined
-      used.add(o.photo)
-      return o.photo
-    })
-  }, [visible, works])
+  // Every category, most on offer here first; the ones nobody offers yet stay, dimmed.
+  const rail = React.useMemo(() => categoryRow(CATEGORIES, offers, "all", CATEGORIES.length + 1), [offers])
+  const soonCategories = React.useMemo(() => new Set(CATEGORIES.filter((c) => !rail.offered.has(c.id)).map((c) => c.id)), [rail])
+  const soon = React.useMemo(() => comingSoon(offers, CATEGORIES, app.studioBookingOpen, SOON_FIRST), [offers, app.studioBookingOpen])
+  const people = React.useMemo(() => browse.peopleFor("all").slice(0, PEOPLE_FIRST), [browse])
 
-  // A short row of real work under the services, as proof, not as the page.
+  // Real work, as proof, ranked the same way as the web feed.
   const proof = React.useMemo(() => {
     if (!app.data) return []
     return (
@@ -124,7 +75,7 @@ export default function Explore() {
         browse.pros,
         {
           studioBookingOpen: app.studioBookingOpen,
-          vertical,
+          vertical: "all",
           interests: interestsFrom({ chosen: [], booked: app.me.bookedCategories, saved: browse.savedCategories }),
           followed: browse.followedSlugs,
           distanceKm: (proId) => {
@@ -136,84 +87,79 @@ export default function Explore() {
         },
         "for-you",
       ) as AppWork[] // rankFeed returns the same objects it was given
-    ).slice(0, 8)
-  }, [app, browse, vertical, now])
+    ).slice(0, WORKS_FIRST)
+  }, [app, browse, now])
+
+  // Illustrations take turns within a category, so two tiles never share one.
+  const turns = new Map<CategoryId, number>()
+  const nextTurn = (c: CategoryId) => {
+    const n = turns.get(c) ?? 0
+    turns.set(c, n + 1)
+    return n
+  }
 
   // Nothing yet, or the city just changed and its catalogue is on the way.
   const loadingFirst = (!app.data || app.stale) && !app.dataError && app.configured
-  const cardWidth = width - gutter * 2
-
-  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const past = e.nativeEvent.contentOffset.y > switchY.current
-    if (past !== stuck) setStuck(past)
-  }
-
-  const title = `${shownCategoryInfo ? shownCategoryInfo.label : vertical === "all" ? "Dịch vụ" : getVertical(vertical).label}${app.city ? ` ở ${app.city}` : ""}`
+  const where = app.city ? ` ở ${app.city}` : ""
+  const bookable = offers.slice(0, SERVICES_FIRST)
 
   let services: React.ReactNode
   if (loadingFirst) {
     services = (
-      <Grid>
+      <TileGrid>
         {[0, 1, 2, 3].map((i) => (
-          <ServiceCardSkeleton key={i} width={cardWidth} />
+          <TileSkeleton key={i} width={tile} />
         ))}
-      </Grid>
+      </TileGrid>
     )
   } else if (!app.configured) {
     services = <EmptyState title="App chưa kết nối máy chủ" text="Chưa tải được dịch vụ. Vui lòng thử lại sau." />
   } else if (app.dataError) {
     services = <ErrorNote text={app.dataError} onRetry={() => void app.refresh()} />
-  } else if (!shown.length) {
+  } else if (!offers.length) {
     services = (
-      <EmptySupply
-        city={app.city}
-        label={shownCategoryInfo?.label}
-        onAllCities={() => app.setCity(null)}
-      />
+      <View style={{ gap: 4 }}>
+        <EmptyState
+          title={`Chưa có ai nhận lịch${where}`}
+          text="Đăng yêu cầu: người làm quanh bạn sẽ thấy và nhận việc. Không mất phí đăng."
+          action="Đăng yêu cầu"
+          onAction={openRequestForm}
+        />
+        {app.city ? (
+          <Press onPress={() => app.setCity(null)} accessibilityRole="button" style={{ alignSelf: "center", minHeight: 44, justifyContent: "center" }}>
+            <Txt w={600} color={colors.accentDark}>
+              Xem cả nước
+            </Txt>
+          </Press>
+        ) : null}
+      </View>
     )
   } else {
     services = (
-      <View style={{ gap: 20 }}>
-        <Grid>
-          {visible.map((o, i) => (
-            <ServiceCard key={o.template.id} offer={o} photo={photos[i]} width={cardWidth} />
-          ))}
-        </Grid>
-        {visible.length < shown.length ? (
-          <Button label={`Xem tất cả ${shown.length} dịch vụ`} variant="secondary" full onPress={() => setExpanded(true)} />
-        ) : null}
-      </View>
+      <TileGrid>
+        {bookable.map((o) => (
+          <ServiceTile key={o.template.id} offer={o} width={tile} index={o.photo ? 0 : nextTurn(o.template.category)} />
+        ))}
+      </TileGrid>
     )
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas, paddingTop: insets.top }}>
       <TopBar />
-      <View style={{ flex: 1 }}>
-        <ScrollView
-          ref={scroller}
-          onScroll={onScroll}
-          scrollEventThrottle={32}
-          contentContainerStyle={{ paddingBottom: 40, gap: 20 }}
-          refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}
-        >
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 32, gap: 28 }}
+        refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}
+      >
+        <View style={{ gap: 16, paddingTop: 4 }}>
           <OfflineNote />
-          <View style={{ paddingHorizontal: gutter, gap: 12 }}>
-            <Txt v="h1">Đẹp hơn, theo cách của bạn.</Txt>
-            <Txt color={colors.inkSoft}>Tìm dịch vụ phù hợp, xem giá rõ ràng và chọn người làm bạn tin tưởng.</Txt>
-            <View style={{ borderRadius: radius.xl, overflow: "hidden", backgroundColor: colors.subtle }}>
-              <Image source={require("../../../assets/images/beauty-editorial.webp")} style={{ width: "100%", aspectRatio: 2 }} contentFit="cover" accessible={false} />
-            </View>
-            <Txt v="meta" color={colors.muted}>Ảnh minh họa · Xem giá trước khi đặt</Txt>
-          </View>
-          {/* Search */}
-          <View style={{ paddingHorizontal: gutter, paddingTop: 4 }}>
+          {/* Search first: the fastest way to the thing you came for. */}
+          <View style={{ paddingHorizontal: gutter }}>
             <Press
               onPress={() => router.push({ pathname: "/tim", params: { focus: "1" } })}
-              accessibilityLabel="Tìm dịch vụ"
+              accessibilityLabel="Tìm dịch vụ hoặc người làm"
               style={{
-                minHeight: 52,
-                paddingVertical: 12,
+                minHeight: 48,
                 borderRadius: radius.full,
                 backgroundColor: colors.surface,
                 borderWidth: 1,
@@ -221,213 +167,101 @@ export default function Explore() {
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 10,
-                paddingHorizontal: 18,
+                paddingHorizontal: 16,
               }}
             >
-              <Icon name="search" size={20} />
-              <Txt color={colors.muted}>Bạn muốn làm gì hôm nay?</Txt>
+              <Icon name="search" size={18} />
+              <Txt color={colors.muted} numberOfLines={1} style={{ flex: 1 }}>
+                Nail, makeup, chụp ảnh…
+              </Txt>
             </Press>
           </View>
 
-          {/* Trade switch (a copy sticks under the top bar once scrolled past) */}
-          <View
-            onLayout={(e) => {
-              switchY.current = e.nativeEvent.layout.y
-            }}
-            style={{ marginTop: -8 }}
-          >
-            <TextTabs items={TRADES} value={vertical} onChange={chooseTrade} />
-          </View>
+          {/* Categories, as pictures; a tap opens that category's list. */}
+          <CategoryRail
+            items={rail.ordered}
+            soon={app.data ? soonCategories : undefined}
+            photoFor={(c) => browse.photoFor(c) ?? illustration(c)}
+            onChange={(c) => openList(c)}
+            onAll={() => openList()}
+          />
+        </View>
 
-          {/* Categories: one row, the rest behind "Xem thêm" */}
-          {categories.length > 1 ? (
-            <View style={{ paddingHorizontal: gutter - 4 }}>
-              <CategoryTiles
-                items={(allCategories ? tiles.ordered : tiles.row).map((c) => ({
-                  id: c.id,
-                  label: c.id === "photophone" || c.id === "skincare" ? c.label : c.short ?? c.label,
-                  soon: !tiles.offered.has(c.id),
-                }))}
-                value={shownCategory}
-                // Tapping the chosen category again goes back to everything.
-                onChange={(id) => {
-                  const next = id === shownCategory ? "all" : (id as CategoryId)
-                  setCategory(next)
-                  setAllCategories(false)
-                  // Its services are below the fold on a phone: take the person there.
-                  scrollToServices.current = next !== "all"
-                }}
-                more={tiles.more ? { open: allCategories, onToggle: () => setAllCategories((v) => !v) } : undefined}
-              />
-            </View>
-          ) : null}
+        {/* What can be booked here */}
+        <View style={{ gap: 14 }}>
+          <Section
+            title={`Đặt được ngay${where}`}
+            note={!loadingFirst && offers.length ? `${offers.length} dịch vụ đang nhận lịch` : undefined}
+            action={offers.length > bookable.length ? "Xem tất cả" : undefined}
+            onAction={() => openList()}
+          />
+          <View style={{ paddingHorizontal: gutter }}>{services}</View>
+        </View>
 
-          {/* Services */}
-          <View
-            style={{ paddingHorizontal: gutter, gap: 14 }}
-            onLayout={(e) => {
-              servicesY.current = e.nativeEvent.layout.y
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-              <Txt v="h2" style={{ flexShrink: 1 }}>
-                {title}
-              </Txt>
-              {shownCategoryInfo ? (
-                <Press
-                  onPress={() => setCategory("all")}
-                  accessibilityLabel="Xem tất cả dịch vụ"
-                  style={{ flexDirection: "row", alignItems: "center", gap: 4, minHeight: 44, paddingVertical: 10, paddingLeft: 12, paddingRight: 10, borderRadius: radius.full, backgroundColor: colors.subtle }}
-                >
-                  <Txt v="meta" w={600}>
-                    Tất cả
-                  </Txt>
-                  <Icon name="close" size={12} color={colors.ink} />
-                </Press>
-              ) : shown.length > 0 ? (
-                <Txt v="meta" color={colors.muted}>
-                  {shown.length} dịch vụ
-                </Txt>
-              ) : null}
-            </View>
-            {services}
-          </View>
-
-          {/* Real work, as proof */}
-          {proof.length > 0 ? (
-            <View style={{ paddingHorizontal: gutter, gap: 14, marginTop: 20 }}>
-              <SectionHeader title="Tác phẩm thật từ người làm" action="Xem tất cả" onAction={() => router.push("/tim")} />
-              {/* PostCard pads its own bottom. */}
-              <Grid rowGap={4}>
-                {proof.map((w) => {
-                  const pro = browse.proById.get(w.proId)
-                  return (
-                    <View key={w.id} style={{ width: cardWidth }}>
-                      <PostCard work={w} pro={pro} services={browse.services} distanceKm={pro ? app.distanceTo(pro) : null} />
-                    </View>
-                  )
-                })}
-              </Grid>
-            </View>
-          ) : loadingFirst ? (
-            <View style={{ paddingHorizontal: gutter }}>
-              <Grid>
-                {[0, 1].map((i) => (
-                  <View key={i} style={{ width: cardWidth }}>
-                    <PostCardSkeleton />
-                  </View>
-                ))}
-              </Grid>
-            </View>
-          ) : null}
-
-          {/* Anything else */}
-          {shown.length > 0 && <View style={{ marginHorizontal: gutter, marginTop: 8, backgroundColor: colors.subtle, borderRadius: radius.xl, padding: 20, gap: 8 }}>
-            <Txt v="title" w={700}>
-              Không thấy dịch vụ bạn cần?
-            </Txt>
-            <Txt color={colors.inkSoft}>Đăng yêu cầu với giá theo bảng giá 360dep, người làm gần bạn nhận việc. Không mất phí đăng.</Txt>
-            <Button label="Đăng yêu cầu" onPress={openRequestForm} style={{ marginTop: 6 }} />
-          </View>
-          }
-          {/* Tuyển mẫu (working as a model) is partner work: reached from Tôi > Trở thành đối tác, not from here. */}
-        </ScrollView>
-        {stuck ? (
-          <View style={{ position: "absolute", top: 0, left: 0, right: 0, backgroundColor: colors.canvas, borderBottomWidth: 1, borderBottomColor: colors.line }}>
-            <TextTabs items={TRADES} value={vertical} onChange={chooseTrade} />
+        {/* The people, with their own work */}
+        {people.length > 0 ? (
+          <View style={{ gap: 14 }}>
+            <Section title={`Người làm${where}`} note="Đang nhận lịch, xếp theo xác minh và đánh giá" />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: gutter, gap: GRID_GAP }}>
+              {people.map(({ pro, km }) => (
+                <ProTile key={pro.id} pro={pro} photos={browse.photosOf.get(pro.id) ?? []} price={browse.priceOf(pro.id)} distanceKm={km} width={Math.min(280, Math.round(width * 0.68))} />
+              ))}
+            </ScrollView>
           </View>
         ) : null}
-      </View>
-    </View>
-  )
-}
 
-function Grid({ children, rowGap = 24 }: { children: React.ReactNode; rowGap?: number }) {
-  return <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: COLUMN_GAP, rowGap }}>{children}</View>
-}
-
-/**
- * One thing for sale: the service, a real photo of it (never text on it), the
- * lowest real price here, and who offers it. The whole card opens the service,
- * where the customer picks a person and books.
- */
-const ServiceCard = React.memo(function ServiceCard({ offer, photo, width }: { offer: ServiceOffer; photo: string | undefined; width: number }) {
-  const { template, pros, fromPrice } = offer
-  const who = pros.length === 1 ? pros[0].name : `${pros.length} người nhận`
-  return (
-    <Press
-      onPress={() => router.push({ pathname: "/dich-vu/[id]", params: { id: template.id } })}
-      accessibilityLabel={`${template.name}, từ ${formatPrice(fromPrice)}${offer.variant.perPerson ? " mỗi người" : ""}${offer.minimumQuantity > 1 ? `, tối thiểu ${offer.minimumQuantity} người` : ""}, ${who}`}
-      style={{ width, ...card }}
-    >
-      <View style={{ borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, overflow: "hidden" }}>
-        {photo ? (
-          <Photo uri={photo} ratio={4 / 3} rounded={0} recyclingKey={template.id} />
-        ) : (
-          <View style={{ height: 56, backgroundColor: colors.subtle, alignItems: "center", justifyContent: "center" }}>
-            <CategoryIcon id={template.category} size={28} />
+        {/* Real work, as proof */}
+        {proof.length > 0 ? (
+          <View style={{ gap: 14 }}>
+            <Section title="Tác phẩm thật" note="Ảnh do người làm đăng" action="Xem thêm" onAction={() => router.push("/tim")} />
+            <View style={{ paddingHorizontal: gutter, flexDirection: "row", flexWrap: "wrap", columnGap: GRID_GAP }}>
+              {proof.map((w) => {
+                const pro = browse.proById.get(w.proId)
+                return (
+                  <View key={w.id} style={{ width: tile }}>
+                    <PostCard work={w} pro={pro} services={browse.services} distanceKm={pro ? app.distanceTo(pro) : null} />
+                  </View>
+                )
+              })}
+            </View>
           </View>
-        )}
-      </View>
-      <View style={{ padding: 16, gap: 8 }}>
-      <Txt v="lead" w={700}>
-        {template.name}
-      </Txt>
-      <Txt v="lead" color={colors.ink} tabular>
-        Từ{" "}
-        <Txt v="lead" w={700} color={colors.ink}>
-          {formatPrice(fromPrice)}{offer.variant.perPerson ? "/người" : ""}
-        </Txt>{" "}
-        · {formatDuration(offer.durationMin)}
-      </Txt>
-      {offer.minimumQuantity > 1 && <Txt v="meta" color={colors.inkSoft}>Tối thiểu {offer.minimumQuantity} người · từ {formatPrice(offer.minimumTotal)}/nhóm</Txt>}
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 4 }}>
-        <Txt v="meta" color={colors.inkSoft} style={{ flexShrink: 1 }}>
-          {who}
-        </Txt>
-        <View style={{ minHeight: 44, paddingVertical: 10, paddingHorizontal: 18, borderRadius: radius.full, backgroundColor: colors.accent, justifyContent: "center" }}>
-          <Txt v="meta" w={700} color={colors.surface}>
-            Xem giá
-          </Txt>
-        </View>
-      </View>
-      </View>
-    </Press>
-  )
-})
+        ) : null}
 
-function ServiceCardSkeleton({ width }: { width: number }) {
-  return (
-    <View style={{ width, gap: 8 }}>
-      <Skeleton style={{ aspectRatio: 4 / 3, borderRadius: radius.lg }} />
-      <Skeleton style={{ height: 16, width: "85%" }} />
-      <Skeleton style={{ height: 14, width: "60%" }} />
-      <Skeleton style={{ height: 14, width: "45%" }} />
-    </View>
-  )
-}
+        {/* The rest of the catalogue: real price bands, nobody to book yet */}
+        {!loadingFirst && app.data && soon.length > 0 ? (
+          <View style={{ gap: 14 }}>
+            <Section title={`Sắp có${where}`} note="Giá theo bảng giá 360đẹp · đăng yêu cầu để được nhận" />
+            <View style={{ paddingHorizontal: gutter }}>
+              <TileGrid>
+                {soon.map((t) => (
+                  <CatalogTile key={t.id} template={t} width={tile} index={nextTurn(t.category)} />
+                ))}
+              </TileGrid>
+            </View>
+          </View>
+        ) : null}
 
-/**
- * Nobody here offers this yet. The customer is the one reading, so the next
- * step is a request (people who do it nearby will see it), not "open a profile".
- */
-function EmptySupply({ city, label, onAllCities }: { city: string | null; label?: string; onAllCities: () => void }) {
-  const title = `${label ? `${label}: c` : "C"}hưa có ai nhận lịch${city ? ` ở ${city}` : ""}`
-  return (
-    <View style={{ gap: 12 }}>
-      <EmptyState
-        title={title}
-        text="Đăng yêu cầu: khi có người làm việc này quanh bạn, họ thấy yêu cầu và nhận việc. Không mất phí đăng."
-        action="Đăng yêu cầu"
-        onAction={openRequestForm}
-      />
-      {city ? (
-        <Press onPress={onAllCities} accessibilityRole="button" style={{ alignSelf: "center", paddingVertical: 8 }}>
-          <Txt w={600} color={colors.accentDark}>
-            Xem cả nước
-          </Txt>
-        </Press>
-      ) : null}
+        {/* Anything else */}
+        {!loadingFirst && app.data ? (
+          <Press
+            onPress={openRequestForm}
+            accessibilityLabel="Không thấy dịch vụ bạn cần? Đăng yêu cầu"
+            style={{ marginHorizontal: gutter, flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: radius.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line }}
+          >
+            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center" }}>
+              <Icon name="plus" size={20} color={colors.accentDark} />
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Txt w={600}>Không thấy dịch vụ bạn cần?</Txt>
+              <Txt v="meta" color={colors.inkSoft}>
+                Đăng yêu cầu, người làm gần bạn gửi báo giá. Không mất phí.
+              </Txt>
+            </View>
+            <Icon name="right" size={14} color={colors.muted} />
+          </Press>
+        ) : null}
+        {/* Tuyển mẫu (working as a model) is partner work: reached from Tôi > Trở thành đối tác, not from here. */}
+      </ScrollView>
     </View>
   )
 }

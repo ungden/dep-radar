@@ -29,16 +29,17 @@ export const controlMetrics = {
   paddingVertical: 8,
 } as const
 
+/** Photos: 16pt corners everywhere, 4:5 for work, 1:1 for small thumbnails. */
+export const photoRadius = 16
+
 /**
- * A white card lifted just off the warm page, the web's --shadow-soft. Cards
- * group a photo with what it costs and who does it.
+ * A white card on the warm page, edged by a hairline instead of a shadow:
+ * the photo inside does the lifting. Cards group a photo with what it costs
+ * and who does it.
  */
 export const card = {
   backgroundColor: colors.surface,
   borderRadius: radius.lg,
-  shadowColor: "#141213",
-  shadowOpacity: 0.1,
-  shadowRadius: 12,
-  shadowOffset: { width: 0, height: 4 },
-  elevation: 2,
+  borderWidth: 1,
+  borderColor: colors.line,
 } as const
