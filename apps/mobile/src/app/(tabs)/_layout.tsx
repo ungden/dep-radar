@@ -7,8 +7,7 @@ import { colors } from "@/theme"
 
 const SPECS: Record<string, TabSpec> = {
   index: { label: "Khám phá", icon: "explore" },
-  tim: { label: "Tìm", icon: "search" },
-  dang: { label: "Yêu cầu", icon: "plus", center: true },
+  artist: { label: "Artist", icon: "brush" },
   "lich-hen": { label: "Lịch hẹn", icon: "calendar" },
   toi: { label: "Tôi", icon: "person" },
 }
@@ -30,17 +29,9 @@ export default function CustomerTabs() {
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.canvas } }}
     >
       <Tabs.Screen name="index" />
+      <Tabs.Screen name="artist" />
+      {/* Search, opened from Khám phá: it has no tab of its own. */}
       <Tabs.Screen name="tim" />
-      <Tabs.Screen
-        name="dang"
-        listeners={{
-          tabPress: (e) => {
-            // "+" posts a request: a form that slides up over the current tab.
-            e.preventDefault()
-            router.push("/yeu-cau/moi")
-          },
-        }}
-      />
       <Tabs.Screen name="lich-hen" />
       <Tabs.Screen name="toi" />
     </Tabs>

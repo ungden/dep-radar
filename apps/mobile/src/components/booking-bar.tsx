@@ -61,7 +61,7 @@ export function BookingBar({
             </Txt>
           ) : null}
           {title ? (
-            <Txt v={compact ? "control" : "lead"} w={compact ? 600 : 700} tabular>
+            <Txt v={compact ? "control" : "lead"} w={compact ? 600 : 700} tabular color={colors.accentDark}>
               {title}
             </Txt>
           ) : null}

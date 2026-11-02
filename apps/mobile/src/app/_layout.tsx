@@ -65,7 +65,8 @@ function Navigator() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="studio" options={{ headerShown: false }} />
       <Stack.Screen name="works/[id]" options={{ headerTransparent: true, title: "" }} />
-      <Stack.Screen name="pros/[id]" options={{ headerTransparent: true, title: "" }} />
+      {/* The cover photos run to the top of the screen, under the floating buttons. */}
+      <Stack.Screen name="pros/[id]" options={{ headerTransparent: true, headerStyle: { backgroundColor: "transparent" }, scrollEdgeEffects: { top: "hidden", bottom: "automatic", left: "automatic", right: "automatic" }, title: "" }} />
       <Stack.Screen name="book/[proId]" options={{ title: "Đặt lịch", presentation: "modal" }} />
       <Stack.Screen name="bookings/[id]" options={{ title: "Lịch hẹn" }} />
       <Stack.Screen name="bao-cao" options={{ title: "Báo cáo vấn đề" }} />
@@ -78,9 +79,9 @@ function Navigator() {
       <Stack.Screen name="da-luu" options={{ title: "Đã lưu" }} />
       <Stack.Screen name="dia-chi/index" options={{ title: "Địa chỉ" }} />
       <Stack.Screen name="dia-chi/sua" options={{ title: "Địa chỉ", presentation: "modal" }} />
-      <Stack.Screen name="yeu-cau/index" options={{ title: "Yêu cầu của tôi" }} />
-      <Stack.Screen name="yeu-cau/moi" options={{ title: "Đăng yêu cầu", presentation: "modal" }} />
-      <Stack.Screen name="yeu-cau/[id]" options={{ title: "Yêu cầu" }} />
+      <Stack.Screen name="yeu-cau/index" options={{ title: "Đơn theo dịch vụ" }} />
+      <Stack.Screen name="yeu-cau/moi" options={{ title: "Đặt theo dịch vụ", presentation: "modal" }} />
+      <Stack.Screen name="yeu-cau/[id]" options={{ title: "" }} />
       <Stack.Screen name="danh-gia/[bookingId]" options={{ title: "Đánh giá", presentation: "modal" }} />
       <Stack.Screen name="tuyen-mau/index" options={{ title: "Tuyển mẫu" }} />
       <Stack.Screen name="tuyen-mau/[id]" options={{ title: "" }} />

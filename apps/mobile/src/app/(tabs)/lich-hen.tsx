@@ -59,16 +59,16 @@ export default function MyBookings() {
           <View style={{ gap: 10, paddingBottom: 10 }}>
             <Press
               onPress={() => router.push("/yeu-cau")}
-              accessibilityLabel="Yêu cầu của tôi"
+              accessibilityLabel="Đơn theo dịch vụ"
               style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.accentSoft, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12 }}
             >
               <Icon name="megaphone" size={20} color={colors.accentDark} />
               <View style={{ flex: 1 }}>
                 <Txt w={700} color={colors.accentDark}>
-                  Yêu cầu của tôi
+                  Đơn theo dịch vụ
                 </Txt>
                 <Txt v="meta" color={colors.accentDark}>
-                  Yêu cầu đã đăng, và ai đã nhận việc.
+                  Đơn đang chờ, và Artist đã nhận.
                 </Txt>
               </View>
               <Icon name="right" size={14} color={colors.accentDark} />
@@ -84,7 +84,7 @@ export default function MyBookings() {
               ))}
             </View>
           ) : bookings.error ? null : tab === "upcoming" ? (
-            <EmptyState title="Chưa có lịch sắp tới" text="Tìm người làm và đặt lịch, họ sẽ xem và nhận lịch trong 2 giờ." action="Khám phá" onAction={() => router.navigate("/")} />
+            <EmptyState title="Chưa có lịch sắp tới" text="Chọn Artist và đặt lịch, họ sẽ xem và nhận lịch trong 2 giờ." action="Khám phá" onAction={() => router.navigate("/")} />
           ) : (
             <EmptyState title="Chưa có lịch nào đã qua" />
           )

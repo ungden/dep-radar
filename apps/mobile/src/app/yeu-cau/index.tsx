@@ -19,11 +19,11 @@ import { Txt } from "@/ui/text"
 export default function MyRequests() {
   const { uid } = useApp()
   const requests = useAsync(uid ? () => listMyRequests(uid) : null, [uid])
-  if (!uid) return <SignInGate title="Yêu cầu" text="Đăng nhập để đăng yêu cầu và xem ai đã nhận việc." />
+  if (!uid) return <SignInGate title="Đơn theo dịch vụ" text="Đăng nhập để đặt theo dịch vụ và xem Artist nào đã nhận." />
 
   return (
     <>
-      <Stack.Screen options={{ headerRight: () => <Button label="Đăng" icon="plus" size="sm" variant="ghost" onPress={() => router.push("/yeu-cau/moi")} /> }} />
+      <Stack.Screen options={{ headerRight: () => <Button label="Đặt" icon="plus" size="sm" variant="ghost" onPress={() => router.push("/yeu-cau/moi")} /> }} />
       <FlashList
         style={{ backgroundColor: colors.canvas }}
         data={requests.value ?? []}
@@ -42,7 +42,7 @@ export default function MyRequests() {
                   ? router.push({ pathname: "/bookings/[id]", params: { id: item.bookingId } })
                   : router.push({ pathname: "/yeu-cau/[id]", params: { id: item.id } })
               }
-              accessibilityLabel={`${t?.name ?? "Yêu cầu"}, ${progress}`}
+              accessibilityLabel={`${t?.name ?? "Đơn"}, ${progress}`}
               style={{ backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, gap: 6, marginBottom: 10 }}
             >
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
@@ -83,9 +83,9 @@ export default function MyRequests() {
             </View>
           ) : requests.error ? null : (
             <EmptyState
-              title="Bạn chưa đăng yêu cầu nào"
-              text="Chọn dịch vụ, giờ và nơi làm. Giá theo bảng giá 360dep; người làm gần bạn nhận việc, ai nhận trước sẽ làm."
-              action="Đăng yêu cầu"
+              title="Bạn chưa có đơn nào"
+              text="Chọn dịch vụ, giờ và nơi làm. Giá theo bảng giá 360dep; Artist nhận trước sẽ đến."
+              action="Đặt theo dịch vụ"
               onAction={() => router.push("/yeu-cau/moi")}
             />
           )

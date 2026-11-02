@@ -5,7 +5,6 @@ import { ScrollView, View } from "react-native"
 import {
   CATALOG,
   CATEGORY_TINTS,
-  categoryLabel,
   categoryPhoto,
   serviceDuration,
   serviceLocationOpen,
@@ -17,7 +16,7 @@ import {
   type ServiceOffer,
   type ServiceTemplate,
 } from "@/shared"
-import { formatDuration, formatKm, formatPrice, formatRating, formatShortPrice } from "@/data/format"
+import { formatDuration, formatKm, formatPrice, formatRating } from "@/data/format"
 import { imageUrl } from "@/data/links"
 import type { AppPro } from "@/data/public"
 import { colors, gutter, photoRadius, radius } from "@/theme"
@@ -49,7 +48,7 @@ function RatingInline({ average, count }: { average: number; count: number }) {
   if (!showsAverage(count)) return null
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-      <Icon name="star" size={12} color={colors.ink} />
+      <Icon name="star" size={12} color={colors.highlight} />
       <Txt v="meta" w={600} tabular>
         {formatRating(average)}
       </Txt>
@@ -61,7 +60,7 @@ function RatingInline({ average, count }: { average: number; count: number }) {
 }
 
 /** A small label on a photo: legible on any picture, never covering the subject. */
-function PhotoBadge({ text, position, tone = "dark" }: { text: string; position: "tl" | "bl"; tone?: "dark" | "light" }) {
+export function PhotoBadge({ text, position }: { text: string; position: "tl" | "bl" }) {
   return (
     <View
       style={{
@@ -72,10 +71,10 @@ function PhotoBadge({ text, position, tone = "dark" }: { text: string; position:
         height: 22,
         borderRadius: radius.full,
         justifyContent: "center",
-        backgroundColor: tone === "dark" ? "rgba(20,18,19,0.55)" : "rgba(255,255,255,0.94)",
+        backgroundColor: "rgba(20,18,19,0.55)",
       }}
     >
-      <Txt v="label" w={600} color={tone === "dark" ? colors.surface : colors.ink} style={{ fontSize: 12, lineHeight: 16 }}>
+      <Txt v="label" w={600} color={colors.surface} style={{ fontSize: 12, lineHeight: 16 }}>
         {text}
       </Txt>
     </View>
@@ -92,12 +91,15 @@ export const ServiceTile = React.memo(function ServiceTile({
   width,
   index = 0,
   href,
+  brief = false,
 }: {
   offer: ServiceOffer
   width: number
   /** Position in the grid, so neighbouring illustrations differ. */
   index?: number
   href?: Href
+  /** Name and price only, for the first screen. */
+  brief?: boolean
 }) {
   const { template, pros, fromPrice } = offer
   const photo = offer.photo ?? illustration(template.category, index)
@@ -120,40 +122,43 @@ export const ServiceTile = React.memo(function ServiceTile({
         </Txt>
         <Txt tabular numberOfLines={1}>
           <Txt v="meta" color={colors.muted}>Từ </Txt>
-          <Txt w={700}>{price}</Txt>
+          <Txt w={700} color={colors.accentDark}>{price}</Txt>
         </Txt>
-        <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", columnGap: 6 }}>
-          <Txt v="meta" color={colors.muted}>
-            {formatDuration(offer.durationMin)}
-            {offer.minimumQuantity > 1 ? ` · tối thiểu ${offer.minimumQuantity} người` : ""}
-          </Txt>
-          {showsAverage(rating.count) ? <Txt v="meta" color={colors.muted}>·</Txt> : null}
-          <RatingInline {...rating} />
-        </View>
-        <Txt v="meta" color={colors.inkSoft} numberOfLines={1}>
-          {who}
-        </Txt>
+        {brief ? null : (
+          <>
+            <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", columnGap: 6 }}>
+              <Txt v="meta" color={colors.muted}>
+                {formatDuration(offer.durationMin)}
+                {offer.minimumQuantity > 1 ? ` · tối thiểu ${offer.minimumQuantity} người` : ""}
+              </Txt>
+              {showsAverage(rating.count) ? <Txt v="meta" color={colors.muted}>·</Txt> : null}
+              <RatingInline {...rating} />
+            </View>
+            <Txt v="meta" color={colors.inkSoft} numberOfLines={1}>
+              {who}
+            </Txt>
+          </>
+        )}
       </View>
     </Press>
   )
 })
 
 /**
- * A catalogue service nobody here offers yet. 360đẹp sets the price bands,
- * so "giá từ" is real; the photo is an illustration and says so. It leads to
- * the service page, where the customer can post a request.
+ * A catalogue service nobody here offers yet, shown like any other: it can
+ * still be requested. 360đẹp sets the price bands, so "từ" is real; the photo
+ * is an illustration and says so.
  */
-export function CatalogTile({ template, width, index = 0 }: { template: ServiceTemplate; width: number; index?: number }) {
+export function CatalogTile({ template, width, index = 0, brief = false }: { template: ServiceTemplate; width: number; index?: number; brief?: boolean }) {
   const start = [...template.variants].sort((a, b) => a.tiers[0] - b.tiers[0])[0]
   return (
     <Press
       onPress={() => router.push({ pathname: "/dich-vu/[id]", params: { id: template.id } })}
-      accessibilityLabel={`${template.name}, chưa có người nhận ở đây, giá từ ${formatPrice(start.tiers[0])}, ảnh minh hoạ`}
+      accessibilityLabel={`${template.name}, từ ${formatPrice(start.tiers[0])}, ảnh minh hoạ`}
       style={{ width, gap: 8 }}
     >
       <View>
         <Photo uri={illustration(template.category, index)} recyclingKey={`cat-${template.id}`} />
-        <PhotoBadge text="Sắp có" position="tl" tone="light" />
         <PhotoBadge text="Ảnh minh hoạ" position="bl" />
       </View>
       <View style={{ gap: 2, paddingHorizontal: 2 }}>
@@ -161,18 +166,17 @@ export function CatalogTile({ template, width, index = 0 }: { template: ServiceT
           {template.name}
         </Txt>
         <Txt tabular numberOfLines={1}>
-          <Txt v="meta" color={colors.muted}>Giá từ </Txt>
-          <Txt w={700}>
+          <Txt v="meta" color={colors.muted}>Từ </Txt>
+          <Txt w={700} color={colors.accentDark}>
             {formatPrice(start.tiers[0])}
             {start.perPerson ? "/người" : ""}
           </Txt>
         </Txt>
-        <Txt v="meta" color={colors.muted}>
-          {formatDuration(serviceDuration(start, serviceQuantity(start)))}
-        </Txt>
-        <Txt v="meta" color={colors.inkSoft} numberOfLines={1}>
-          Đăng yêu cầu để được nhận
-        </Txt>
+        {brief ? null : (
+          <Txt v="meta" color={colors.muted}>
+            {formatDuration(serviceDuration(start, serviceQuantity(start)))}
+          </Txt>
+        )}
       </View>
     </Press>
   )
@@ -189,71 +193,106 @@ export function TileSkeleton({ width }: { width: number }) {
   )
 }
 
+/** A choice in a sideways row (a category, a service). Selected is rose. */
+export function Pill({ label, selected, onPress, onCanvas = true }: { label: string; selected: boolean; onPress: () => void; onCanvas?: boolean }) {
+  return (
+    <Press onPress={onPress} haptic="select" accessibilityRole="tab" accessibilityState={{ selected }} style={{ minHeight: 44, justifyContent: "center" }}>
+      <View style={{ height: 36, paddingHorizontal: 14, borderRadius: radius.full, justifyContent: "center", backgroundColor: selected ? colors.accent : colors.surface, borderWidth: onCanvas ? 1 : 0, borderColor: selected ? colors.accent : colors.line }}>
+        <Txt v="meta" w={600} color={selected ? colors.surface : colors.ink} numberOfLines={1}>
+          {label}
+        </Txt>
+      </View>
+    </Press>
+  )
+}
+
 /** Tiles two to a row. */
 export function TileGrid({ children }: { children: React.ReactNode }) {
   return <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: GRID_GAP, rowGap: 24 }}>{children}</View>
 }
 
 /**
- * A person, for a sideways row: their own work fills the top (never an
- * illustration: a picture under a name reads as that person's work), then
- * who they are, real reviews, distance and from-price.
+ * An Artist in a list: their own work on top (never an illustration: a picture
+ * under a name reads as that person's work), then who they are, real reviews,
+ * distance and their price. Without any work yet, a single coloured row.
  */
-export function ProTile({ pro, photos, price, distanceKm, width }: { pro: AppPro; photos: string[]; price: number | null; distanceKm: number | null; width: number }) {
-  const tint = CATEGORY_TINTS[pro.categories[0] ?? "nail"]
-  const h = Math.round(width * 0.62)
-  return (
-    <Press
-      onPress={() => router.push({ pathname: "/pros/[id]", params: { id: pro.id } })}
-      accessibilityLabel={`${pro.name}${pro.identity === "verified" ? ", đã xác minh" : ""}, ${pro.title || pro.categories.map(categoryLabel).join(", ")}`}
-      style={{ width, gap: 10 }}
-    >
-      {photos.length ? (
-        <View style={{ height: h, flexDirection: "row", gap: 3, borderRadius: photoRadius, overflow: "hidden" }}>
-          <Image source={{ uri: photos[0] }} style={{ flex: 2, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
-          {photos.length > 1 ? (
-            <View style={{ flex: 1, gap: 3 }}>
-              {[photos[1], photos[2]].map((uri, i) =>
-                uri ? (
-                  <Image key={i} source={{ uri }} style={{ flex: 1, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
-                ) : (
-                  <View key={i} style={{ flex: 1, backgroundColor: colors.subtle }} />
-                ),
-              )}
-            </View>
-          ) : null}
-        </View>
-      ) : (
-        <View style={{ height: h, borderRadius: photoRadius, backgroundColor: tint.bg, alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={64} />
-          <Txt v="meta" color={colors.inkSoft}>
-            Chưa đăng tác phẩm
+export function ArtistCard({
+  pro,
+  photos,
+  price,
+  serviceName,
+  distanceKm,
+  serviceId,
+}: {
+  pro: AppPro
+  photos: string[]
+  price: number | null
+  /** The service the price is for; without one, the price is their lowest. */
+  serviceName?: string
+  distanceKm: number | null
+  serviceId?: string
+}) {
+  const open = () => router.push({ pathname: "/pros/[id]", params: serviceId ? { id: pro.id, service: serviceId } : { id: pro.id } })
+  const a11y = `${pro.name}${pro.identity === "verified" ? ", đã xác minh" : ""}${price !== null ? `, từ ${formatPrice(price)}` : ""}`
+  const where = distanceKm !== null ? formatKm(distanceKm) : pro.district
+  const name = (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+      <Txt w={600} numberOfLines={1} style={{ flexShrink: 1 }}>
+        {pro.name}
+      </Txt>
+      {pro.identity === "verified" ? <VerifiedMark size={14} /> : null}
+    </View>
+  )
+  if (!photos.length) {
+    return (
+      <Press onPress={open} accessibilityLabel={a11y} style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: radius.lg, backgroundColor: colors.highlightSoft }}>
+        <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={44} />
+        <View style={{ flex: 1, gap: 1 }}>
+          {name}
+          <Txt v="meta" color={colors.inkSoft} numberOfLines={2}>
+            {showsAverage(pro.rating.count) ? `${formatRating(pro.rating.average)} (${pro.rating.count})` : "Mới"} · {where} · Chưa đăng tác phẩm
           </Txt>
         </View>
-      )}
+        {price !== null ? (
+          <Txt w={700} tabular color={colors.accentDark}>
+            {formatPrice(price)}
+          </Txt>
+        ) : null}
+      </Press>
+    )
+  }
+  return (
+    <Press onPress={open} accessibilityLabel={a11y} style={{ padding: 12, gap: 10, borderRadius: radius.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line }}>
+      <View style={{ flexDirection: "row", gap: 4 }}>
+        {[0, 1, 2].map((i) =>
+          photos[i] ? (
+            <Image key={i} source={{ uri: photos[i] }} style={{ flex: 1, height: 104, borderRadius: radius.sm, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
+          ) : (
+            <View key={i} style={{ flex: 1 }} />
+          ),
+        )}
+      </View>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={36} />
+        <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={44} />
         <View style={{ flex: 1, gap: 1 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Txt w={600} numberOfLines={1} style={{ flexShrink: 1 }}>
-              {pro.name}
-            </Txt>
-            {pro.identity === "verified" ? <VerifiedMark size={14} /> : null}
-          </View>
+          {name}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            {showsAverage(pro.rating.count) ? (
-              <RatingInline {...pro.rating} />
-            ) : (
-              <Txt v="meta" w={600} color={colors.inkSoft}>
-                Mới
-              </Txt>
-            )}
+            {showsAverage(pro.rating.count) ? <RatingInline {...pro.rating} /> : <Txt v="meta" w={600} color={colors.inkSoft}>Mới</Txt>}
             <Txt v="meta" color={colors.muted} numberOfLines={1} style={{ flexShrink: 1 }}>
-              · {distanceKm !== null ? formatKm(distanceKm) : pro.district}
-              {price !== null ? ` · từ ${formatShortPrice(price)}` : ""}
+              · {where}
             </Txt>
           </View>
         </View>
+        {price !== null ? (
+          <View style={{ alignItems: "flex-end", maxWidth: "40%" }}>
+            <Txt v="meta" color={colors.muted} numberOfLines={1}>
+              {serviceName ?? "Từ"}
+            </Txt>
+            <Txt w={700} tabular color={colors.accentDark}>
+              {formatPrice(price)}
+            </Txt>
+          </View>
+        ) : null}
       </View>
     </Press>
   )
@@ -277,15 +316,15 @@ export function CategoryRail({
   value?: CategoryId | "all"
   onChange: (id: CategoryId) => void
   onAll?: () => void
-  /** Nobody offers these here yet: shown, dimmed. */
+  /** Nobody offers these here yet: said to screen readers, the tile stays in full colour. */
   soon?: ReadonlySet<CategoryId>
 }) {
   const SIZE = 68
+  const LABEL = 84
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: gutter, gap: 12 }}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: gutter - 4, gap: 4 }}>
       {items.map((c) => {
         const active = value === c.id
-        const dim = soon?.has(c.id) && !active
         return (
           <Press
             key={c.id}
@@ -293,7 +332,7 @@ export function CategoryRail({
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             accessibilityLabel={soon?.has(c.id) ? `${c.label}, chưa có người nhận lịch` : c.label}
-            style={{ width: SIZE + 4, alignItems: "center", gap: 6 }}
+            style={{ width: LABEL, alignItems: "center", gap: 6 }}
           >
             <View
               style={{
@@ -302,10 +341,10 @@ export function CategoryRail({
                 borderRadius: photoRadius + 2,
                 padding: 2,
                 borderWidth: 2,
-                borderColor: active ? colors.ink : "transparent",
+                borderColor: active ? colors.ink : CATEGORY_TINTS[c.id].fg,
               }}
             >
-              <View style={{ flex: 1, borderRadius: photoRadius - 2, overflow: "hidden", backgroundColor: CATEGORY_TINTS[c.id].bg, opacity: dim ? 0.55 : 1 }}>
+              <View style={{ flex: 1, borderRadius: photoRadius - 2, overflow: "hidden", backgroundColor: CATEGORY_TINTS[c.id].bg }}>
                 {photoFor(c.id) ? (
                   <Image source={{ uri: photoFor(c.id) }} style={{ flex: 1 }} contentFit="cover" transition={150} accessible={false} />
                 ) : (
@@ -315,7 +354,7 @@ export function CategoryRail({
                 )}
               </View>
             </View>
-            <Txt v="meta" w={active ? 700 : 500} color={dim ? colors.muted : colors.ink} center numberOfLines={2} style={{ fontSize: 13, lineHeight: 17 }}>
+            <Txt v="meta" w={active ? 700 : 500} center numberOfLines={2} style={{ fontSize: 13, lineHeight: 17 }}>
               {/* Two short lines fit; the English shorts read worse than the Vietnamese label. */}
               {c.id === "skincare" || c.id === "photophone" ? c.label : c.short ?? c.label}
             </Txt>
@@ -323,10 +362,10 @@ export function CategoryRail({
         )
       })}
       {onAll ? (
-        <Press onPress={onAll} accessibilityLabel="Tất cả dịch vụ" style={{ width: SIZE + 4, alignItems: "center", gap: 6 }}>
+        <Press onPress={onAll} accessibilityLabel="Tất cả dịch vụ" style={{ width: LABEL, alignItems: "center", gap: 6 }}>
           <View style={{ width: SIZE + 4, height: SIZE + 4, padding: 2 }}>
-            <View style={{ flex: 1, borderRadius: photoRadius - 2, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}>
-              <Icon name="right" size={20} color={colors.ink} />
+            <View style={{ flex: 1, borderRadius: photoRadius - 2, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}>
+              <Icon name="right" size={20} color={colors.surface} />
             </View>
           </View>
           <Txt v="meta" w={500} center style={{ fontSize: 13, lineHeight: 17 }}>
@@ -352,10 +391,10 @@ export function Section({ title, note, action, onAction }: { title: string; note
       </View>
       {action ? (
         <Press onPress={onAction} accessibilityLabel={action} style={{ minHeight: 44, justifyContent: "center", paddingLeft: 8, flexDirection: "row", alignItems: "center", gap: 2 }}>
-          <Txt v="meta" w={600}>
+          <Txt v="meta" w={600} color={colors.accentDark}>
             {action}
           </Txt>
-          <Icon name="right" size={12} color={colors.ink} />
+          <Icon name="right" size={12} color={colors.accentDark} />
         </Press>
       ) : null}
     </View>
@@ -363,13 +402,13 @@ export function Section({ title, note, action, onAction }: { title: string; note
 }
 
 /**
- * Catalogue services nobody here offers yet, for the "Sắp có" row: one per
- * category first (so the row shows the range), in catalogue order.
+ * Catalogue services nobody here offers yet, to fill out a grid: one per
+ * category first (so it shows the range), in catalogue order.
  */
-export function comingSoon(offers: readonly ServiceOffer[], categories: readonly Category[], studioBookingOpen: boolean, limit: number): ServiceTemplate[] {
+export function notYetOffered(offers: readonly ServiceOffer[], categories: readonly Category[], studioBookingOpen: boolean, limit: number): ServiceTemplate[] {
   const offered = new Set(offers.map((o) => o.template.id))
   const inScope = new Set(categories.map((c) => c.id))
-  const open = CATALOG.filter((t) => inScope.has(t.category) && !offered.has(t.id) && serviceLocationOpen(t, studioBookingOpen))
+  const open = CATALOG.filter((t) => inScope.has(t.category) && !t.addon && !offered.has(t.id) && serviceLocationOpen(t, studioBookingOpen))
   const firsts: ServiceTemplate[] = []
   const seen = new Set<CategoryId>()
   for (const t of open) if (!seen.has(t.category)) { seen.add(t.category); firsts.push(t) }

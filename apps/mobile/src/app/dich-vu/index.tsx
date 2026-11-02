@@ -15,12 +15,11 @@ import {
   type VerticalFilter,
 } from "@/shared"
 import { OfflineNote } from "@/components/offline-note"
-import { CatalogTile, ServiceTile, TileGrid, TileSkeleton, comingSoon, tileWidth } from "@/components/tiles"
+import { CatalogTile, Pill, ServiceTile, TileGrid, TileSkeleton, notYetOffered, tileWidth } from "@/components/tiles"
 import { useApp } from "@/state/app"
 import { useBrowse } from "@/state/derived"
 import { colors, gutter, radius } from "@/theme"
 import { EmptyState, ErrorNote } from "@/ui/bits"
-import { Button } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { refreshControl } from "@/ui/refresh"
@@ -53,7 +52,8 @@ function trusted(trust: Trust, pro: Pro) {
 /**
  * Every service in a category (or all of them), photo first, two to a row,
  * with the filters people actually use: where, how much, how well reviewed,
- * and in what order. Below, what 360đẹp lists but nobody here offers yet.
+ * and in what order. After what people offer here comes the rest of the
+ * catalogue: it can still be requested.
  */
 export default function ServiceList() {
   const params = useLocalSearchParams<{ category?: string; vertical?: string }>()
@@ -92,18 +92,17 @@ export default function ServiceList() {
   const chips = categoryRow(scope, offers, category, scope.length + 1).ordered
   const shown = offers.filter((o) => category === "all" || o.template.category === category)
   const soonScope = category === "all" ? scope : scope.filter((c) => c.id === category)
-  // Filters narrow who can be booked; "Sắp có" is the catalogue, so it only listens to the category.
+  // Price and reviews describe people, so a filtered list leaves the rest of the catalogue out.
   const allHere = React.useMemo(
     () => (app.data ? serviceOffers({ studioBookingOpen: app.studioBookingOpen, pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical }) : []),
     [app.data, app.studioBookingOpen, app.city, browse, vertical],
   )
-  const soon = app.data ? comingSoon(allHere, soonScope, app.studioBookingOpen, category === "all" ? 6 : 12) : []
+  const filtered = price !== "any" || trust !== "any"
+  const rest = app.data && !filtered ? notYetOffered(allHere, soonScope, app.studioBookingOpen, 40) : []
 
   const chosen = CATEGORIES.find((c) => c.id === category)
   const title = chosen ? chosen.label : vertical === "all" ? "Tất cả dịch vụ" : getVertical(vertical).label
-  const where = app.city ? ` ở ${app.city}` : ""
   const loading = (!app.data || app.stale) && !app.dataError && app.configured
-  const filtered = price !== "any" || trust !== "any"
   const hasAddress = app.me.addresses.length > 0
 
   const open = (p: Panel) => {
@@ -131,23 +130,18 @@ export default function ServiceList() {
     body = <EmptyState title="App chưa kết nối máy chủ" text="Chưa tải được dịch vụ. Vui lòng thử lại sau." />
   } else if (app.dataError && !app.data) {
     body = <ErrorNote text={app.dataError} onRetry={() => void app.refresh()} />
-  } else if (!shown.length) {
+  } else if (!shown.length && !rest.length) {
     body = (
       <View style={{ gap: 4 }}>
         <EmptyState
-          title={filtered ? "Không có dịch vụ khớp bộ lọc" : `${chosen ? `${chosen.label}: c` : "C"}hưa có ai nhận lịch${where}`}
-          text={filtered ? "Thử bỏ bớt bộ lọc." : "Đăng yêu cầu: người làm quanh bạn sẽ thấy và nhận việc. Không mất phí đăng."}
-          action={filtered ? "Bỏ bộ lọc" : "Đăng yêu cầu"}
-          onAction={
-            filtered
-              ? () => {
-                  setPrice("any")
-                  setTrust("any")
-                }
-              : () => router.push("/yeu-cau/moi")
-          }
+          title="Không có dịch vụ khớp bộ lọc"
+          text="Thử bỏ bớt bộ lọc."
+          action="Bỏ bộ lọc"
+          onAction={() => {
+            setPrice("any")
+            setTrust("any")
+          }}
         />
-        {!filtered && app.city ? <Button label="Xem cả nước" variant="ghost" full onPress={() => app.setCity(null)} /> : null}
       </View>
     )
   } else {
@@ -162,6 +156,9 @@ export default function ServiceList() {
             // The service page lists only the people who pass the same filters.
             href={{ pathname: "/dich-vu/[id]", params: { id: o.template.id, verified: trust === "verified" ? "1" : "", minTotal: price === "300to600" ? "300000" : price === "gt600" ? "600001" : "", maxTotal: price === "lt300" ? "299999" : price === "300to600" ? "600000" : "" } }}
           />
+        ))}
+        {rest.map((t) => (
+          <CatalogTile key={t.id} template={t} width={tile} index={nextTurn(t.category)} />
         ))}
       </TileGrid>
     )
@@ -193,29 +190,9 @@ export default function ServiceList() {
 
         <View style={{ paddingHorizontal: gutter, paddingTop: 16, gap: 16 }}>
           <OfflineNote />
-          {!loading && shown.length ? (
-            <Txt v="meta" color={colors.muted}>
-              {shown.length} dịch vụ đang nhận lịch{where}
-            </Txt>
-          ) : null}
           {body}
         </View>
 
-        {!loading && soon.length ? (
-          <View style={{ paddingHorizontal: gutter, paddingTop: 36, gap: 14 }}>
-            <View style={{ gap: 2 }}>
-              <Txt v="h2">Sắp có{where}</Txt>
-              <Txt v="meta" color={colors.muted}>
-                Giá theo bảng giá 360đẹp · đăng yêu cầu để được nhận
-              </Txt>
-            </View>
-            <TileGrid>
-              {soon.map((t) => (
-                <CatalogTile key={t.id} template={t} width={tile} index={nextTurn(t.category)} />
-              ))}
-            </TileGrid>
-          </View>
-        ) : null}
       </ScrollView>
 
       <Sheet sheet={sheet} title={TITLE[panel]} size="medium">
@@ -261,31 +238,12 @@ export default function ServiceList() {
   )
 }
 
-/** A category to switch to. Selected is ink, like every selected state. */
-function Pill({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
-  return (
-    <Press
-      onPress={onPress}
-      haptic="select"
-      accessibilityRole="tab"
-      accessibilityState={{ selected }}
-      style={{ minHeight: 44, justifyContent: "center" }}
-    >
-      <View style={{ height: 36, paddingHorizontal: 14, borderRadius: radius.full, justifyContent: "center", backgroundColor: selected ? colors.ink : colors.surface, borderWidth: 1, borderColor: selected ? colors.ink : colors.line }}>
-        <Txt v="meta" w={600} color={selected ? colors.surface : colors.ink}>
-          {label}
-        </Txt>
-      </View>
-    </Press>
-  )
-}
-
 /** A filter that opens its choices; on when it narrows the list. */
 function FilterChip({ label, active, onPress, icon }: { label: string; active: boolean; onPress: () => void; icon?: "pin" | "star" | "filter" }) {
   const fg = active ? colors.accentDark : colors.ink
   return (
     <Press onPress={onPress} accessibilityLabel={`${label}, đổi`} style={{ minHeight: 44, justifyContent: "center" }}>
-      <View style={{ height: 36, paddingLeft: 12, paddingRight: 10, borderRadius: radius.full, flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: active ? colors.accentSoft : colors.subtle, borderWidth: 1, borderColor: active ? colors.accent : colors.subtle }}>
+      <View style={{ height: 36, paddingLeft: 12, paddingRight: 10, borderRadius: radius.full, flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: active ? colors.accentSoft : colors.surface, borderWidth: 1, borderColor: active ? colors.accent : colors.line }}>
         {icon ? <Icon name={icon} size={13} color={fg} /> : null}
         <Txt v="meta" w={600} color={fg}>
           {label}

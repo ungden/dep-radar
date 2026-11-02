@@ -69,7 +69,7 @@ export const PostCard = React.memo(function PostCard({
       {price !== null ? (
         <Txt tabular>
           <Txt v="meta" color={colors.muted}>Từ </Txt>
-          <Txt w={700}>{formatPrice(price)}</Txt>
+          <Txt w={700} color={colors.accentDark}>{formatPrice(price)}</Txt>
         </Txt>
       ) : null}
       {pro ? (
@@ -150,7 +150,7 @@ export function ProCard({
       </View>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
         {price !== null ? (
-          <Txt v="meta" w={700} tabular>
+          <Txt v="meta" w={700} tabular color={colors.accentDark}>
             Từ {formatShortPrice(price)}
           </Txt>
         ) : null}

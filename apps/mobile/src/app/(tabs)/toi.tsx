@@ -112,7 +112,7 @@ export default function Me() {
       <Section>
         <Row icon="heart" label="Đã lưu" detail={app.me.savedWorkIds.length ? String(app.me.savedWorkIds.length) : undefined} onPress={() => router.push("/da-luu")} />
         <Divider style={{ marginLeft: 52 }} />
-        <Row icon="megaphone" label="Yêu cầu của tôi" onPress={() => router.push("/yeu-cau")} />
+        <Row icon="megaphone" label="Đơn theo dịch vụ" onPress={() => router.push("/yeu-cau")} />
         <Divider style={{ marginLeft: 52 }} />
         <Row icon="home" label="Địa chỉ" detail={app.me.addresses.length ? String(app.me.addresses.length) : undefined} onPress={() => router.push("/dia-chi")} />
         <Divider style={{ marginLeft: 52 }} />

@@ -29,12 +29,12 @@ export function TopBar() {
         accessibilityLabel={`Khu vực: ${city ?? "Cả nước"}. Đổi khu vực`}
         style={{ flexDirection: "row", alignItems: "center", gap: 4, minHeight: 44, paddingHorizontal: 6, flexShrink: 1 }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 32, paddingHorizontal: 10, borderRadius: radius.full, backgroundColor: colors.subtle }}>
-          <Icon name="pin" size={14} />
-          <Txt v="meta" w={600} numberOfLines={1} style={{ flexShrink: 1 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 32, paddingHorizontal: 10, borderRadius: radius.full, backgroundColor: colors.surface }}>
+          <Icon name="pin" size={14} color={colors.accent} />
+          <Txt v="meta" w={600} numberOfLines={1} color={colors.accentDark} style={{ flexShrink: 1 }}>
             {city ?? "Cả nước"}
           </Txt>
-          <Icon name="down" size={12} color={colors.muted} />
+          <Icon name="down" size={12} color={colors.accentDark} />
         </View>
       </Press>
       <IconButton name="chat" label="Tin nhắn" badge={me.unreadMessages} onPress={() => needSignIn("/tin-nhan")} />

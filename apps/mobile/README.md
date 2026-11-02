@@ -49,10 +49,11 @@ Cột đang được thêm song song (`works.kind`, `works.video_path`, `booking
 
 ## Đã làm
 
-Khách: Khám phá photo-first (02/11/2026: header gọn, tìm kiếm trên cùng, danh mục bằng ảnh, lưới 2 cột "Đặt được ngay",
-người làm kèm ảnh của chính họ, tác phẩm thật, "Sắp có" theo bảng giá 360đẹp; ảnh minh hoạ luôn có nhãn) ·
+Khách, 2 kiểu đặt (03/11/2026): Khám phá hỏi "Bạn muốn đặt thế nào?" rồi tới lưới Dịch vụ (ảnh minh hoạ luôn có nhãn) ·
+Kiểu 1, Đặt theo dịch vụ (`yeu-cau/moi` → `post_job_checked`, chờ ở `yeu-cau/[id]`, Artist nhận trước được đơn) ·
+Kiểu 2, Tự chọn Artist (tab `artist`: chọn dịch vụ, xem Artist và giá của họ, `pros/[id]` → `book/[proId]`) ·
 Danh sách dịch vụ (`dich-vu/index`: chip danh mục, lọc Khu vực / Giá / Đánh giá / Sắp xếp) ·
-Chi tiết dịch vụ (gallery, giá, chọn người làm, thanh "Chọn lịch" dính đáy) · Chi tiết bài (ảnh/clip, gói giá, theo dõi, lưu, "Mẫu tương tự", thanh đặt lịch dính đáy) · Hồ sơ người làm · Tìm + bộ lọc (bottom sheet) · Trang dịp · Đặt lịch 3 bước (`free_slots` → `create_booking`,
+Chi tiết dịch vụ (`dich-vu/[id]`: nối 2 kiểu) · Tìm (`tim`, mở từ ô tìm kiếm, không còn là tab) · Chi tiết bài (ảnh/clip, gói giá, theo dõi, lưu, "Mẫu tương tự", thanh đặt lịch dính đáy) · Hồ sơ người làm · Tìm + bộ lọc (bottom sheet) · Trang dịp · Đặt lịch 3 bước (`free_slots` → `create_booking`,
 lỗi của database hiện nguyên văn) · Lịch hẹn + chi tiết (dòng thời gian, huỷ có lý do qua `cancel_booking`) ·
 Tin nhắn (Realtime, `send_message`, `mark_thread_read`, `open_thread`) · Thông báo · Tôi (đã lưu, địa chỉ,
 đổi sang Đối tác, mật khẩu, đăng xuất, xoá tài khoản) · Đăng nhập bằng số điện thoại hoặc email + mật khẩu (qua `/api/auth/*` của web rồi `setSession`), Google hoặc Apple; thêm/đổi số điện thoại trong Tôi (`set_my_phone`); tài khoản đăng ký bằng số được mời thêm email để lấy lại mật khẩu.

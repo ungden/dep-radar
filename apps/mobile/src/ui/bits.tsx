@@ -98,8 +98,8 @@ export function Chip({ label, selected, onPress, icon }: { label: string; select
         paddingHorizontal: 14,
         borderRadius: radius.full,
         borderWidth: 1,
-        borderColor: selected ? colors.ink : colors.line,
-        backgroundColor: selected ? colors.ink : colors.surface,
+        borderColor: selected ? colors.accent : colors.line,
+        backgroundColor: selected ? colors.accent : colors.surface,
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
@@ -114,7 +114,7 @@ export function Chip({ label, selected, onPress, icon }: { label: string; select
 }
 
 export function VerifiedMark({ size = 15 }: { size?: number }) {
-  return <Icon name="verified" size={size} color={colors.ink} />
+  return <Icon name="verified" size={size} color={colors.success} />
 }
 
 /**
@@ -131,7 +131,7 @@ export function Rating({ average, count, showCount = true }: { average: number; 
     )
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-      <Icon name="star" size={13} color={colors.ink} />
+      <Icon name="star" size={13} color={colors.highlight} />
       <Txt v="meta" w={600} tabular>
         {formatRating(average)}
       </Txt>

@@ -114,8 +114,8 @@ export async function closeJob(jobId: string): Promise<Result> {
 
 /** How far along a request is, in the customer's words. */
 export function requestProgress(r: MyRequest): string {
-  if (r.status === "booked") return "Đã có người nhận việc"
+  if (r.status === "booked") return "Đã có Artist nhận đơn"
   if (r.status !== "open") return r.status === "expired" ? "Hết hạn, chưa ai nhận" : "Đã đóng"
-  if (r.notified === null) return "Đang tìm người làm"
-  return r.notified > 0 ? `Đang tìm người làm · đã báo cho ${r.notified} người` : "Đang tìm người làm · chưa báo được cho ai"
+  if (r.notified === null) return "Đang chờ Artist nhận"
+  return r.notified > 0 ? `Đã báo cho ${r.notified} Artist` : "Chưa có Artist nào trong khu vực để báo"
 }
