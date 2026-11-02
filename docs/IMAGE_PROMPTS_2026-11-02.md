@@ -102,6 +102,10 @@ Chưa có chỗ nào trong app dùng tới, chỉ tạo khi cần.
 4. **Massage và người mẫu**: trang phục kín đáo, bối cảnh chuyên nghiệp, đúng quy định dịch vụ lành mạnh (`lib/conduct.ts`).
 5. **Đồng bộ màu** với bộ hiện có: tông kem ấm, không quá hồng, không quá xanh.
 
+## Trạng thái (03/11/2026)
+
+Nhóm A và B đã tạo bằng Codex, đã gắn vào `lib/design/photos.ts`. Nhóm C chưa tạo vì chưa có chỗ dùng.
+
 ## Gắn vào code
 
 Thêm đường dẫn vào `lib/design/photos.ts`, ví dụ:
