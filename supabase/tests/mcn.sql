@@ -286,13 +286,13 @@ begin
   perform set_config('request.jwt.claim.sub',stranger::text,true);
   set local role authenticated;
   denied:=false;
-  begin perform public.mcn_admin_report(current_date-100,current_date); exception when insufficient_privilege then denied:=true; end;
+  begin perform public.mcn_admin_report(current_date-100,(now() at time zone public.app_timezone())::date); exception when insufficient_privilege then denied:=true; end;
   assert denied,'non-admin cannot read aggregate financial or audit data';
   perform pg_temp.reject_mcn('policy',jsonb_build_object('effectiveAt',now()+interval '2 days','feeShareRate',.25,'holdDays',10,'minimumPayout',200000,'reason','Policy test only'));
   reset role;
   perform set_config('request.jwt.claim.sub',admin_id::text,true);
   set local role authenticated;
-  result:=public.mcn_admin_report(current_date-100,current_date);
+  result:=public.mcn_admin_report(current_date-100,(now() at time zone public.app_timezone())::date);
   assert jsonb_array_length(result->'networks')=2,'report contains both organizations even without revenue';
   assert jsonb_array_length(result->'events')>0,'admin has a readable consent and settlement timeline';
   assert (result->'policy'->>'feeShareRate')::numeric=.2,'default policy preserves original split';
