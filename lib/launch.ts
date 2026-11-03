@@ -1,12 +1,12 @@
 import type { Pro, ServiceTemplate } from "./types"
 
 /**
- * Launch switch. While the seeded demo freelancers, customers, works and
- * reviews are live, the site says so (home banner, footer, /chinh-sach). On
- * launch day: run supabase/scripts/remove-demo-data.sql, then set this to false
- * and deploy. See docs/launch.md.
+ * Launch switch. While seeded demo freelancers, customers, works and reviews
+ * are public, the site says so (home banner, footer, /chinh-sach). Off since
+ * 03/11/2026: the seed profiles have been hidden since 05/10 (rows kept), so
+ * every public profile is real. Turn it on again if they are ever re-published.
  */
-export const DEMO_DATA_LIVE = true
+export const DEMO_DATA_LIVE = false
 
 /**
  * Identity verification (CCCD front and back + a portrait holding the card,
