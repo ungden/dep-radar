@@ -291,9 +291,11 @@ export async function postJob(input: {
 
 export async function closeJob(jobId: string): Promise<ActionResult> {
   const supabase = await supabaseServer()
-  const { error } = await supabase.from("jobs").delete().eq("id", jobId)
+  // One an Artist has just taken deletes nothing and raises no error, so count what went.
+  const { data, error } = await supabase.from("jobs").delete().eq("id", jobId).select("id")
   if (error) return { ok: false, error: messageFor(error) }
   revalidatePath("/requests")
+  if (!data?.length) return { ok: false, error: "Yêu cầu này vừa có người nhận hoặc đã đóng. Tải lại để xem lịch hẹn." }
   return { ok: true, data: undefined }
 }
 

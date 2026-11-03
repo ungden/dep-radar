@@ -18,7 +18,7 @@ export default function Blocked() {
           const name = pro?.name ?? "Người dùng đã chặn"
           return (
             <View key={id} style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.md, padding: 12 }}>
-              <Avatar name={name} uri={pro?.avatar} tone={pro?.tone} size={40} />
+              <Avatar name={name} uri={pro?.avatar} artist={Boolean(pro)} tone={pro?.tone} size={40} />
               <Txt w={600} style={{ flex: 1 }} numberOfLines={1}>
                 {name}
               </Txt>

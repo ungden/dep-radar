@@ -175,7 +175,7 @@ export default function WriteReview() {
       {header}
       <ScrollView contentContainerStyle={{ padding: gutter, gap: 20 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.md, padding: 12 }}>
-          <Avatar name={b.pro.name} uri={b.pro.avatar} size={44} />
+          <Avatar name={b.pro.name} uri={b.pro.avatar} artist size={44} />
           <View style={{ flex: 1 }}>
             <Txt w={700}>{b.pro.name}</Txt>
             <Txt v="meta" color={colors.muted}>

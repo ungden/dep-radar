@@ -1,5 +1,5 @@
 import { getTemplate, getVariant, verticalOf, type ServiceContract, type BookingStatus, type CategoryId, type PriceQuote } from "@/shared"
-import { localDate, localTime } from "./format"
+import { localDate, localTime, toTimestamptz } from "./format"
 import { imageUrl } from "./links"
 import { one, rpc, selectWithFallback, supabase, type Row } from "./supabase"
 
@@ -272,6 +272,9 @@ export const confirmBookingDone = (id: string) => rpc("confirm_booking_done", { 
 export const reportProNoShow = (id: string, detail: string) => rpc("report_pro_no_show", { p_booking: id, p_detail: detail })
 /** The customer's answer to being marked absent, within 24 hours (20260924100700_no_show_hold.sql). */
 export const disputeNoShow = (id: string, reason: string) => rpc<string>("dispute_no_show", { p_booking: id, p_reason: reason })
+export const markNoShow = (id: string, reason: string) => rpc("mark_no_show", { p_booking: id, p_reason: reason })
+export const requestReschedule = (id: string, date: string, time: string) => rpc("request_reschedule", { p_booking: id, p_starts_at: toTimestamptz(date, time) })
+export const deliverBooking = (id: string, url: string, note: string) => rpc("deliver_booking", { p_booking: id, p_url: url, p_note: note })
 export const respondReschedule = (id: string, accept: boolean) => rpc("respond_reschedule", { p_booking: id, p_accept: accept })
 export const acceptDelivery = (id: string) => rpc("accept_delivery", { p_booking: id })
 export const confirmPaymentReceived = (id: string) => rpc("confirm_payment_received", { p_booking: id })

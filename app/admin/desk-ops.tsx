@@ -5,6 +5,8 @@ import Link from "next/link"
 import { BadgeCheck, CalendarCheck, CalendarClock, Check, ChevronRight, CircleAlert, CircleCheck, Download, Flag as FlagIcon, KeyRound, MessageCircleQuestion, Settings, Star, UserCheck, UserPlus, Wallet } from "lucide-react"
 import { Badge, Button, Card, EmptyState, Panel, StatusBadge, Table, TableFoot, Td, Th, Tr, inputClass } from "./ui"
 import {
+  adminCloseJob,
+  adminRenotifyJob,
   adminRequests,
   adminReviews,
   decideProfile,
@@ -382,7 +384,7 @@ export function BookingsPanel({ bookings, initialFilter }: { bookings: AdminBook
           </thead>
           <tbody>
             {shown.map((b) => (
-              <Tr key={b.id} className={cn("cursor-pointer", overdue(b) && "bg-danger-soft/30")} onClick={() => window.open(`/bookings/${b.id}`, "_blank")}>
+              <Tr key={b.id} className={cn("cursor-pointer", overdue(b) && "bg-danger-soft/30")} onClick={() => window.open(`/admin/bookings/${b.id}`, "_blank")}>
                 <Td>
                   {KNOWN_STATUS.has(b.status) ? <StatusBadge status={b.status as BookingStatus} /> : <Badge>{b.status}</Badge>}
                   {b.status === "pending" && b.confirmBy && (
@@ -392,7 +394,7 @@ export function BookingsPanel({ bookings, initialFilter }: { bookings: AdminBook
                   )}
                 </Td>
                 <Td>
-                  <Link href={`/bookings/${b.id}`} target="_blank" onClick={(e) => e.stopPropagation()} className="font-medium text-ink hover:underline">
+                  <Link href={`/admin/bookings/${b.id}`} target="_blank" onClick={(e) => e.stopPropagation()} className="font-medium text-ink hover:underline">
                     {b.customerName} → {b.proName}
                   </Link>
                   <span className="block text-label text-muted">#{b.id.slice(0, 8)}</span>
@@ -544,11 +546,11 @@ const JOB_STATUS: Record<string, { label: string; tone: string }> = {
 const COMPENSATION: Record<string, string> = { free: "Miễn phí dịch vụ", discount: "Giảm giá", paid: "Có thù lao" }
 
 /**
- * What customers asked for and what partners are casting for. Read-only: the
- * point is to see demand nobody answered (an open request with no offers) and
- * to look up a case when someone writes to support.
+ * What customers asked for and what partners are casting for: to see demand
+ * nobody could answer (an open order no partner was told about), to tell them
+ * again or close it, and to look up a case when someone writes to support.
  */
-export function RequestsPanel() {
+export function RequestsPanel({ run }: { run: Run }) {
   const [view, setView] = React.useState<"jobs" | "castings">("jobs")
   const [jobFilter, setJobFilter] = React.useState<"open" | "unanswered" | "all">("open")
   const [data, setData] = React.useState<{ jobs: AdminJob[]; castings: AdminCasting[] } | null>(null)
@@ -574,7 +576,7 @@ export function RequestsPanel() {
   const castings = data?.castings ?? []
   const jobTest = {
     open: (j: AdminJob) => j.status === "open",
-    unanswered: (j: AdminJob) => j.status === "open" && j.offers === 0,
+    unanswered: (j: AdminJob) => j.status === "open" && j.notified === 0,
     all: () => true,
   }
   const shownJobs = jobs.filter(jobTest[jobFilter])
@@ -601,7 +603,7 @@ export function RequestsPanel() {
             onChange={setJobFilter}
             items={[
               { value: "open", label: "Đang mở", count: jobs.filter(jobTest.open).length },
-              { value: "unanswered", label: "Chưa ai báo giá", count: jobs.filter(jobTest.unanswered).length },
+              { value: "unanswered", label: "Chưa báo được ai", count: jobs.filter(jobTest.unanswered).length },
               { value: "all", label: "Tất cả", count: jobs.length },
             ]}
           />
@@ -611,31 +613,7 @@ export function RequestsPanel() {
             <ul className="space-y-2">
               {shownJobs.map((j) => (
                 <li key={j.id}>
-                  <Card className={cn("p-3.5", j.status === "open" && j.offers === 0 && "ring-1 ring-warning/40")}>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={cn("rounded-md px-1.5 py-0.5 text-label font-medium", JOB_STATUS[j.status]?.tone ?? "bg-subtle")}>
-                        {JOB_STATUS[j.status]?.label ?? j.status}
-                      </span>
-                      <span className="text-body font-semibold">{j.service}</span>
-                      <span className="ml-auto text-label text-muted">{timeAgo(j.createdAt)}</span>
-                    </div>
-                    <p className="mt-0.5 text-label text-muted">
-                      {j.customer} · hẹn {localTime(j.startsAt)} {localDate(j.startsAt)} · {j.atHome ? "tại nhà" : "tại tiệm"}
-                      {j.place ? ` · ${j.place}` : ""}
-                    </p>
-                    {j.description && <p className="mt-1.5 line-clamp-3 text-meta text-ink-soft">{j.description}</p>}
-                    <p className={cn("mt-1.5 text-label font-semibold", j.offers === 0 ? "text-warning" : "text-ink-soft")}>
-                      {j.offers === 0 ? "Chưa có đối tác nào báo giá" : `${j.offers} báo giá`}
-                      {j.bookingId && (
-                        <>
-                          {" · "}
-                          <Link href={`/bookings/${j.bookingId}`} target="_blank" className="text-ink underline underline-offset-2">
-                            Mở lịch hẹn
-                          </Link>
-                        </>
-                      )}
-                    </p>
-                  </Card>
+                  <JobCard job={j} run={run} onChanged={load} />
                 </li>
               ))}
             </ul>
@@ -673,5 +651,85 @@ export function RequestsPanel() {
         </ul>
       )}
     </div>
+  )
+}
+
+/** One order: who it reached, and what the staff can do while it is open. */
+function JobCard({ job: j, run, onChanged }: { job: AdminJob; run: Run; onChanged: () => void }) {
+  const [closing, setClosing] = React.useState(false)
+  const [reason, setReason] = React.useState("")
+  const open = j.status === "open"
+  const stuck = open && j.notified === 0
+  const renotify = async () => {
+    let told = 0
+    const ok = await run(async () => {
+      const r = await adminRenotifyJob(j.id)
+      if (!r.ok) return r
+      told = r.data
+      return { ok: true }
+    }, "Đã báo lại đơn.")
+    if (ok) window.alert(`Đã báo cho ${told} đối tác.`)
+    onChanged()
+  }
+  return (
+    <Card className={cn("p-3.5", stuck && "ring-1 ring-warning/40")}>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={cn("rounded-md px-1.5 py-0.5 text-label font-medium", JOB_STATUS[j.status]?.tone ?? "bg-subtle")}>{JOB_STATUS[j.status]?.label ?? j.status}</span>
+        <span className="text-body font-semibold">{j.service}</span>
+        {j.price !== null && <span className="text-meta tabular-nums text-ink-soft">{formatPrice(j.price * j.quantity)}</span>}
+        <span className="ml-auto text-label text-muted">{timeAgo(j.createdAt)}</span>
+      </div>
+      <p className="mt-0.5 text-label text-muted">
+        {j.customer}
+        {j.customerPhone && (
+          <>
+            {" · "}
+            <a href={`tel:${j.customerPhone}`} className="underline underline-offset-2">
+              {j.customerPhone}
+            </a>
+          </>
+        )}{" "}
+        · hẹn {localTime(j.startsAt)} {localDate(j.startsAt)} · {j.atHome ? "tại nhà" : "tại tiệm"}
+        {j.place ? ` · ${j.place}` : ""}
+      </p>
+      {j.description && <p className="mt-1.5 line-clamp-3 text-meta text-ink-soft">{j.description}</p>}
+      <p className={cn("mt-1.5 text-label font-semibold", stuck ? "text-warning" : "text-ink-soft")}>
+        {j.notified === null ? "Không rõ đã báo bao nhiêu đối tác" : j.notified === 0 ? "Chưa báo được đối tác nào" : `Đã báo ${j.notified} đối tác`}
+        {j.bookingId && (
+          <>
+            {" · "}
+            <Link href={`/admin/bookings/${j.bookingId}`} target="_blank" className="text-ink underline underline-offset-2">
+              Mở lịch hẹn
+            </Link>
+          </>
+        )}
+      </p>
+      {open && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <ActButton size="sm" variant="ghost" onClick={renotify}>
+            Báo lại đối tác
+          </ActButton>
+          {closing ? (
+            <>
+              <input className={cn(inputClass, "h-8 min-w-48 flex-1 text-meta")} value={reason} maxLength={280} onChange={(e) => setReason(e.target.value)} placeholder="Lý do đóng đơn, khách sẽ đọc" aria-label="Lý do đóng đơn" />
+              <ActButton
+                size="sm"
+                variant="danger"
+                disabled={reason.trim().length < 5}
+                onClick={async () => {
+                  if (await run(() => adminCloseJob(j.id, reason), "Đã đóng đơn. Khách được báo.")) onChanged()
+                }}
+              >
+                Đóng đơn
+              </ActButton>
+            </>
+          ) : (
+            <Button size="sm" variant="ghost" onClick={() => setClosing(true)}>
+              Đóng đơn
+            </Button>
+          )}
+        </div>
+      )}
+    </Card>
   )
 }

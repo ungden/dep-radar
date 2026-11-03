@@ -113,7 +113,7 @@ export default function WorkDetail() {
               accessibilityLabel={`Xem hồ sơ ${pro.name}`}
               style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.md, padding: 12 }}
             >
-              <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={44} />
+              <Avatar name={pro.name} uri={pro.avatar} artist tone={pro.tone} size={44} />
               <View style={{ flex: 1, gap: 2 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                   <Txt w={700} numberOfLines={1} style={{ flexShrink: 1 }}>

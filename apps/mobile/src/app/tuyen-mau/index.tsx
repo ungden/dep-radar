@@ -89,7 +89,7 @@ function CastingCard({ casting: c }: { casting: CastingItem }) {
         </Txt>
       </View>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8, borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 10 }}>
-        <Avatar name={c.pro.name} uri={c.pro.avatar} size={24} />
+        <Avatar name={c.pro.name} uri={c.pro.avatar} artist size={24} />
         <Txt v="meta" w={600} numberOfLines={1} style={{ flexShrink: 1 }}>
           {c.pro.name}
         </Txt>

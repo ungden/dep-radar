@@ -12,12 +12,14 @@ import { useBrowse } from "@/state/derived"
 import { colors, fonts, gutter, radius } from "@/theme"
 import { EmptyState, ErrorNote } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
+import { Press } from "@/ui/press"
 import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
 
 /**
  * The second way to book: the customer picks the service they want, sees who
- * does it with that person's own work and price, and chooses. Only people
+ * does it with that person's work, what they offer and their price, and
+ * chooses. Only people
  * taking bookings; nearest first when we know the address.
  */
 export default function Artists() {
@@ -66,6 +68,15 @@ export default function Artists() {
       .slice(0, 3)
       .map((w) => w.images[0])
   }
+
+  // Named on the card: the chosen service first, then the rest.
+  const servicesOf = (proId: string) =>
+    browse.services
+      .filter((s) => s.proId === proId && s.active && Object.keys(s.prices).length)
+      .map((s) => getTemplate(s.templateId))
+      .filter((t) => t !== undefined && !t.addon)
+      .sort((a, b) => Number(b?.id === chosen?.id) - Number(a?.id === chosen?.id))
+      .map((t) => t!.name)
 
   const loading = (!app.data || app.stale) && !app.dataError && app.configured
   const where = app.city ? ` ở ${app.city}` : ""
@@ -126,8 +137,39 @@ export default function Artists() {
           </View>
         }
         renderItem={({ item: { pro, km } }) => (
-          <ArtistCard pro={pro} photos={photosOf(pro.id)} price={browse.priceOf(pro.id, chosen?.id)} serviceName={chosen?.name} serviceId={chosen?.id} distanceKm={km} />
+          <ArtistCard
+            pro={pro}
+            photos={photosOf(pro.id)}
+            photoCount={browse.works.filter((w) => w.proId === pro.id && w.images[0]).length}
+            services={servicesOf(pro.id)}
+            illustrationOf={chosen?.category ?? pro.categories[0] ?? "nail"}
+            price={browse.priceOf(pro.id, chosen?.id)}
+            distanceKm={km}
+            serviceId={chosen?.id}
+          />
         )}
+        ListFooterComponent={
+          !loading && shown.length ? (
+            <Press
+              onPress={() => router.push(chosen ? { pathname: "/yeu-cau/moi", params: { template: chosen.id } } : "/yeu-cau/moi")}
+              accessibilityRole="button"
+              accessibilityLabel="Đặt theo dịch vụ, Artist sẽ vào nhận đơn"
+              style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, marginTop: 12, marginBottom: 8, borderRadius: radius.lg, backgroundColor: colors.highlightSoft }}
+            >
+              <View style={{ flex: 1, gap: 2 }}>
+                <Txt w={700}>Chưa thấy Artist hợp ý?</Txt>
+                <Txt v="meta" color={colors.inkSoft}>
+                  Đặt theo dịch vụ, Artist sẽ vào nhận đơn.
+                </Txt>
+              </View>
+              <View style={{ minHeight: 38, paddingHorizontal: 14, borderRadius: radius.full, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}>
+                <Txt v="meta" w={600}>
+                  Đặt ngay
+                </Txt>
+              </View>
+            </Press>
+          ) : null
+        }
         ListEmptyComponent={
           loading ? (
             <View style={{ gap: 12 }}>

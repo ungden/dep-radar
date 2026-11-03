@@ -74,7 +74,7 @@ export const PostCard = React.memo(function PostCard({
       ) : null}
       {pro ? (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={20} />
+          <Avatar name={pro.name} uri={pro.avatar} artist tone={pro.tone} size={20} />
           <Txt v="meta" w={600} numberOfLines={1} style={{ flexShrink: 1 }}>
             {pro.name}
           </Txt>
@@ -129,7 +129,7 @@ export function ProCard({
       style={{ width, ...card, padding: 12, gap: 10 }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={44} />
+        <Avatar name={pro.name} uri={pro.avatar} artist tone={pro.tone} size={44} />
         <View style={{ flex: 1, gap: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <Txt w={700} numberOfLines={1} style={{ flexShrink: 1 }}>

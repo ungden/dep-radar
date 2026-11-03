@@ -60,7 +60,10 @@ export function Photo({
   )
 }
 
-export function Avatar({ name, uri, tone = colors.subtle, size = 40 }: { name: string; uri?: string; tone?: string; size?: number }) {
+/** The app's own picture for an Artist who has not added a photo. */
+const DEFAULT_ARTIST_AVATAR = require("../../assets/images/default-avatar.png")
+
+export function Avatar({ name, uri, tone = colors.subtle, size = 40, artist }: { name: string; uri?: string; tone?: string; size?: number; artist?: boolean }) {
   return (
     <View
       style={{
@@ -75,6 +78,8 @@ export function Avatar({ name, uri, tone = colors.subtle, size = 40 }: { name: s
     >
       {uri ? (
         <Image source={{ uri }} style={{ width: size, height: size }} contentFit="cover" transition={150} accessible={false} />
+      ) : artist ? (
+        <Image source={DEFAULT_ARTIST_AVATAR} style={{ width: size, height: size }} contentFit="cover" accessible={false} />
       ) : (
         <Txt w={700} color={colors.inkSoft} style={{ fontSize: Math.max(13, size * 0.36), lineHeight: Math.max(16, size * 0.44) }}>
           {initials(name)}

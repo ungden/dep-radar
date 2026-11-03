@@ -10,7 +10,7 @@ import { Stack, router, useSegments } from "expo-router"
 import * as SplashScreen from "expo-splash-screen"
 import { StatusBar } from "expo-status-bar"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
-import { useNotificationTaps } from "@/data/push"
+import { askForPushPermission, useNotificationTaps } from "@/data/push"
 import { AppProvider, useApp } from "@/state/app"
 import { colors, fonts } from "@/theme"
 
@@ -38,7 +38,7 @@ export default function RootLayout() {
 }
 
 function Navigator() {
-  const { ready, uid, termsAccepted } = useApp()
+  const { ready, uid, termsAccepted, myPro } = useApp()
   const segments = useSegments()
   React.useEffect(() => {
     if (ready) void SplashScreen.hideAsync()
@@ -50,6 +50,11 @@ function Navigator() {
   React.useEffect(() => {
     if (ready && uid && termsAccepted === false && !inAuthFlow) router.push("/dieu-khoan")
   }, [ready, uid, termsAccepted, inAuthFlow])
+  // Orders go to whoever hears first, so a partner needs pushes before any booking exists.
+  const isPartner = Boolean(myPro)
+  React.useEffect(() => {
+    if (ready && uid && isPartner && termsAccepted !== false && !inAuthFlow) void askForPushPermission(uid)
+  }, [ready, uid, isPartner, termsAccepted, inAuthFlow])
   if (!ready) return null
   return (
     <Stack

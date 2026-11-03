@@ -526,7 +526,9 @@ begin
       -- staff read the chat behind a report (20261008100200)
       'admin_report_chat',
       -- reports with evidence, followed through (20261008100300)
-      'ask_report_info', 'add_report_evidence'
+      'ask_report_info', 'add_report_evidence',
+      -- the staff act on one post, order or booking (20261103100000)
+      'admin_set_work_hidden', 'admin_cancel_booking', 'admin_complete_booking', 'admin_close_job', 'admin_renotify_job'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 

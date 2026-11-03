@@ -84,6 +84,10 @@ export interface AdminReport {
   claim: { id: string; amount: number } | null
   /** Who the report is about, when it names someone. */
   target: string | null
+  targetId: string | null
+  /** The post or the review it is about, to read and act on from the report. */
+  work: { id: string; slug: string; title: string; photo: string | null; video: boolean; hidden: boolean; proName: string } | null
+  review: { bookingId: string; rating: number; body: string; author: string; hidden: boolean } | null
   staffQuestion: string | null
   updatedAt: string
   /** Photos and clips from the reporter, signed for an hour (private evidence bucket). */
@@ -237,10 +241,10 @@ export async function adminReports(): Promise<AdminReport[]> {
   const { data, error } = await supabase
     .from("reports")
     .select(
-      "id, reason, detail, status, created_at, updated_at, booking_id, resolution, staff_question, evidence_paths, accounts!reports_reporter_id_fkey (full_name), target:accounts!reports_target_account_id_fkey (full_name)",
+      "id, reason, detail, status, created_at, updated_at, booking_id, resolution, staff_question, evidence_paths, target_account_id, accounts!reports_reporter_id_fkey (full_name), target:accounts!reports_target_account_id_fkey (full_name), work:works!reports_work_id_fkey (id, slug, title, image_paths, video_path, hidden_at, pro:pros!works_pro_id_fkey (display_name)), review:reviews!reports_review_booking_id_fkey (booking_id, rating, body, author_name, hidden_at)",
     )
     .order("created_at", { ascending: false })
-    .limit(50)
+    .limit(200)
   if (error) {
     console.error("adminReports failed:", error.message)
     return []
@@ -254,7 +258,10 @@ export async function adminReports(): Promise<AdminReport[]> {
   const paths = (data ?? []).flatMap((r) => r.evidence_paths ?? [])
   const signed = paths.length && (await isAdmin()) ? await supabaseAdmin().storage.from("evidence").createSignedUrls(paths, 60 * 60) : null
   const url = new Map((signed?.data ?? []).flatMap((x) => (x.path && x.signedUrl ? [[x.path, x.signedUrl] as const] : [])))
-  return (data ?? []).map((r) => ({
+  return (data ?? []).map((r) => {
+    const work = row(r.work)
+    const review = row(r.review)
+    return {
     id: r.id,
     reason: r.reason,
     detail: r.detail ?? "",
@@ -265,10 +272,26 @@ export async function adminReports(): Promise<AdminReport[]> {
     resolution: r.resolution,
     claim: claimOf.get(r.id) ?? null,
     target: (row(r.target).full_name as string | undefined) ?? null,
+    targetId: r.target_account_id,
+    work: work.id
+      ? {
+          id: String(work.id),
+          slug: String(work.slug ?? work.id),
+          title: String(work.title ?? ""),
+          photo: ((work.image_paths as string[] | null) ?? [])[0] ?? null,
+          video: Boolean(work.video_path),
+          hidden: Boolean(work.hidden_at),
+          proName: String(row(work.pro).display_name ?? "Đối tác"),
+        }
+      : null,
+    review: review.booking_id
+      ? { bookingId: String(review.booking_id), rating: Number(review.rating ?? 0), body: String(review.body ?? ""), author: String(review.author_name || "Khách"), hidden: Boolean(review.hidden_at) }
+      : null,
     staffQuestion: r.staff_question,
     updatedAt: r.updated_at,
     evidence: (r.evidence_paths ?? []).map((p) => ({ path: p, url: url.get(p) ?? "", video: /\.(mp4|mov|webm)$/i.test(p) })),
-  }))
+    }
+  })
 }
 
 // Decisions -------------------------------------------------------------------
@@ -307,6 +330,35 @@ export async function setSuspended(proId: string, suspended: boolean, reason = "
 
 export async function setReviewHidden(bookingId: string, hidden: boolean) {
   return call("set_review_hidden", { p_booking: bookingId, p_hidden: hidden })
+}
+
+/** One post or clip, off the profile and the feed. The partner is told why. */
+export async function setWorkHidden(workId: string, hidden: boolean, reason = "") {
+  return call("admin_set_work_hidden", { p_work: workId, p_hidden: hidden, p_reason: reason })
+}
+
+/** Ends a booking on behalf of 360dep: both sides read the reason, no fee is charged. */
+export async function adminCancelBooking(bookingId: string, reason: string) {
+  return call("admin_cancel_booking", { p_booking: bookingId, p_reason: reason })
+}
+
+/** Closes a job that happened but nobody closed. The fee is charged as on any completion. */
+export async function adminCompleteBooking(bookingId: string, note = "") {
+  return call("admin_complete_booking", { p_booking: bookingId, p_note: note })
+}
+
+/** Closes an open order; the customer reads the reason. */
+export async function adminCloseJob(jobId: string, reason: string) {
+  return call("admin_close_job", { p_job: jobId, p_reason: reason })
+}
+
+/** Tells whoever can take an open order right now. Returns how many. */
+export async function adminRenotifyJob(jobId: string): Promise<ActionResult<number>> {
+  const supabase = await supabaseServer()
+  const { data, error } = await supabase.rpc("admin_renotify_job" as never, { p_job: jobId } as never)
+  if (error) return { ok: false, error: error.message }
+  revalidatePath("/admin")
+  return { ok: true, data: Number(data ?? 0) }
 }
 
 export async function resolveReport(reportId: string, status: string, resolution = "") {
@@ -1274,7 +1326,11 @@ export interface AdminJob {
   place: string
   atHome: boolean
   customer: string
-  offers: number
+  /** Null on a very old order; otherwise how many partners were told. */
+  notified: number | null
+  customerPhone: string | null
+  price: number | null
+  quantity: number
   bookingId: string | null
 }
 
@@ -1307,7 +1363,7 @@ export async function adminRequests(): Promise<ActionResult<{ jobs: AdminJob[]; 
   const [jobsRes, castingsRes] = await Promise.all([
     service
       .from("jobs")
-      .select("id, created_at, starts_at, status, template_id, variant_id, description, city, district, at_home, booking_id, customer:accounts!jobs_customer_id_fkey (full_name)")
+      .select("id, created_at, starts_at, status, template_id, variant_id, description, city, district, at_home, booking_id, notified, price, quantity, customer:accounts!jobs_customer_id_fkey (full_name, phone)")
       .order("created_at", { ascending: false })
       .limit(150),
     service
@@ -1320,14 +1376,9 @@ export async function adminRequests(): Promise<ActionResult<{ jobs: AdminJob[]; 
   if (castingsRes.error) return { ok: false, error: messageFor(castingsRes.error) }
   const jobs = jobsRes.data ?? []
   const castings = castingsRes.data ?? []
-  const [offersRes, appsRes] = await Promise.all([
-    jobs.length ? service.from("offers").select("job_id").in("job_id", jobs.map((j) => j.id)) : Promise.resolve({ data: [] as { job_id: string }[] }),
-    castings.length
-      ? service.from("casting_applications").select("casting_id, status").in("casting_id", castings.map((c) => c.id))
-      : Promise.resolve({ data: [] as { casting_id: string; status: string }[] }),
-  ])
-  const offers = new Map<string, number>()
-  for (const o of offersRes.data ?? []) offers.set(o.job_id, (offers.get(o.job_id) ?? 0) + 1)
+  const appsRes = castings.length
+    ? await service.from("casting_applications").select("casting_id, status").in("casting_id", castings.map((c) => c.id))
+    : { data: [] as { casting_id: string; status: string }[] }
   const apps = new Map<string, { all: number; pending: number }>()
   for (const a of appsRes.data ?? []) {
     const n = apps.get(a.casting_id) ?? { all: 0, pending: 0 }
@@ -1349,7 +1400,10 @@ export async function adminRequests(): Promise<ActionResult<{ jobs: AdminJob[]; 
         place: place(j.district, j.city),
         atHome: Boolean(j.at_home),
         customer: String(row(j.customer).full_name ?? "Khách"),
-        offers: offers.get(j.id) ?? 0,
+        notified: j.notified,
+        customerPhone: (row(j.customer).phone as string | null | undefined) ?? null,
+        price: j.price,
+        quantity: j.quantity ?? 1,
         bookingId: j.booking_id,
       })),
       castings: castings.map((c) => ({
@@ -1368,5 +1422,76 @@ export async function adminRequests(): Promise<ActionResult<{ jobs: AdminJob[]; 
         pending: apps.get(c.id)?.pending ?? 0,
       })),
     },
+  }
+}
+
+// One booking, in full -------------------------------------------------------------------
+
+export interface AdminBookingDetail {
+  id: string
+  status: string
+  source: string
+  startsAt: string
+  endsAt: string
+  createdAt: string
+  confirmedAt: string | null
+  completedAt: string | null
+  cancelledAt: string | null
+  cancelledBy: string | null
+  cancelReason: string | null
+  paidAt: string | null
+  serviceLabel: string
+  note: string
+  atHome: boolean
+  place: string
+  addressNote: string
+  servicePrice: number
+  travelFee: number
+  urgentFee: number
+  total: number
+  discount: number
+  commission: number
+  customer: { id: string; name: string; phone: string | null }
+  pro: { id: string; slug: string; name: string; phone: string | null; suspended: boolean }
+}
+
+/** The customer's and partner's page refuses anyone else, so the desk has its own. Phones included: support calls them. */
+export async function adminBookingDetail(id: string): Promise<AdminBookingDetail | null> {
+  if (!(await isAdmin())) return null
+  const service = supabaseAdmin()
+  const { data: b, error } = await service.from("bookings").select("*").eq("id", id).maybeSingle()
+  if (error) throw new Error(messageFor(error))
+  if (!b) return null
+  const [accounts, pro] = await Promise.all([
+    service.from("accounts").select("id, full_name, phone").in("id", [b.customer_id, b.pro_id]),
+    service.from("pros").select("slug, display_name, suspended_at").eq("id", b.pro_id).maybeSingle(),
+  ])
+  const account = (who: string) => (accounts.data ?? []).find((a) => a.id === who)
+  return {
+    id: b.id,
+    status: b.status,
+    source: b.source,
+    startsAt: b.starts_at,
+    endsAt: b.ends_at,
+    createdAt: b.created_at,
+    confirmedAt: b.confirmed_at,
+    completedAt: b.completed_at,
+    cancelledAt: b.cancelled_at,
+    cancelledBy: b.cancelled_by,
+    cancelReason: b.cancel_reason,
+    paidAt: b.paid_at,
+    serviceLabel: serviceName(b.template_id, b.variant_id),
+    note: b.note ?? "",
+    atHome: Boolean(b.at_home),
+    place: [b.address, b.district, b.city].filter(Boolean).join(", "),
+    addressNote: b.address_note ?? "",
+    servicePrice: b.service_price,
+    travelFee: b.travel_fee,
+    urgentFee: b.urgent_fee,
+    total: b.total ?? 0,
+    discount: b.discount ?? 0,
+    commission: b.commission,
+    customer: { id: b.customer_id, name: account(b.customer_id)?.full_name || "Khách", phone: account(b.customer_id)?.phone ?? null },
+    pro: { id: b.pro_id, slug: pro.data?.slug ?? "", name: pro.data?.display_name || "Đối tác", phone: account(b.pro_id)?.phone ?? null, suspended: Boolean(pro.data?.suspended_at) },
   }
 }

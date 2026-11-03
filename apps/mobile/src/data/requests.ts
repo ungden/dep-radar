@@ -1,4 +1,4 @@
-import { getVariant, type ServiceContract, type ServiceVariant } from "@/shared"
+import { getVariant, type BookingStatus, type ServiceContract, type ServiceVariant } from "@/shared"
 import { localDate, localTime, toTimestamptz } from "./format"
 import { messageFor, rpc, selectWithFallback, supabase, type Result, type Row } from "./supabase"
 
@@ -30,6 +30,8 @@ export interface MyRequest {
   notified: number | null
   /** The booking it became once someone took it. */
   bookingId: string | null
+  /** Where that booking stands now: a taken order can still be cancelled. */
+  bookingStatus: BookingStatus | null
   /** The reference photos sent with it, paths in the references bucket. */
   referencePhotos: string[]
 }
@@ -87,6 +89,7 @@ function toRequest(row: Row): MyRequest {
     price: Number(row.price ?? getVariant(row.template_id, row.variant_id)?.suggestedPrice ?? 0),
     notified: row.notified == null ? null : Number(row.notified),
     bookingId: row.booking_id ?? null,
+    bookingStatus: null,
     referencePhotos: Array.isArray(row.reference_photos) ? (row.reference_photos as string[]) : [],
   }
 }
@@ -97,25 +100,46 @@ export async function listMyRequests(uid: string): Promise<MyRequest[]> {
     (c) => supabase.from("jobs").select(c).eq("customer_id", uid).order("created_at", { ascending: false }).limit(100),
     COLUMN_SETS,
   )
-  return rows.map(toRequest)
+  return withBookingStatus(rows.map(toRequest))
 }
 
 export async function getMyRequest(uid: string, id: string): Promise<MyRequest | null> {
   const rows = await selectWithFallback("request", (c) => supabase.from("jobs").select(c).eq("customer_id", uid).eq("id", id).limit(1), COLUMN_SETS)
-  return rows[0] ? toRequest(rows[0]) : null
+  return rows[0] ? (await withBookingStatus([toRequest(rows[0])]))[0] : null
 }
 
-/** Only an open request can be deleted; customers no longer edit one (the price is part of the deal). */
+async function withBookingStatus(requests: MyRequest[]): Promise<MyRequest[]> {
+  const ids = requests.flatMap((r) => (r.bookingId ? [r.bookingId] : []))
+  if (!ids.length) return requests
+  const { data, error } = await supabase.from("bookings").select("id, status").in("id", ids)
+  if (error) throw new Error(messageFor(error, "Không tải được lịch hẹn của đơn."))
+  const status = new Map((data ?? []).map((b) => [b.id as string, b.status as BookingStatus]))
+  return requests.map((r) => ({ ...r, bookingStatus: r.bookingId ? (status.get(r.bookingId) ?? null) : null }))
+}
+
+/** A taken order whose booking did not go ahead: the customer can order again. */
+export const bookingFellThrough = (r: MyRequest) =>
+  r.bookingStatus === "cancelled" || r.bookingStatus === "declined" || r.bookingStatus === "expired" || r.bookingStatus === "no_show"
+
+/**
+ * Only an open request can be deleted; customers no longer edit one (the price
+ * is part of the deal). One an Artist has just taken deletes nothing and raises
+ * no error, so count what went.
+ */
 export async function closeJob(jobId: string): Promise<Result> {
-  const { error } = await supabase.from("jobs").delete().eq("id", jobId)
-  if (error) return { ok: false, error: messageFor(error, "Không xoá được yêu cầu.") }
+  const { data, error } = await supabase.from("jobs").delete().eq("id", jobId).select("id")
+  if (error) return { ok: false, error: messageFor(error, "Không huỷ được đơn.") }
+  if (!data?.length) return { ok: false, error: "Đơn này vừa có Artist nhận hoặc đã đóng. Tải lại để xem lịch hẹn." }
   return { ok: true, data: undefined }
 }
 
 /** How far along a request is, in the customer's words. */
 export function requestProgress(r: MyRequest): string {
-  if (r.status === "booked") return "Đã có Artist nhận đơn"
+  if (r.status === "booked") {
+    if (r.bookingStatus === "completed") return "Đã hoàn thành"
+    return bookingFellThrough(r) ? "Lịch hẹn đã huỷ" : "Đã có Artist nhận đơn"
+  }
   if (r.status !== "open") return r.status === "expired" ? "Hết hạn, chưa ai nhận" : "Đã đóng"
   if (r.notified === null) return "Đang chờ Artist nhận"
-  return r.notified > 0 ? `Đã báo cho ${r.notified} Artist` : "Chưa có Artist nào trong khu vực để báo"
+  return r.notified > 0 ? `Đã báo cho ${r.notified} Artist` : "Chưa báo được Artist nào"
 }

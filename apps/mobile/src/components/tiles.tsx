@@ -219,82 +219,127 @@ export function TileGrid({ children }: { children: React.ReactNode }) {
 export function ArtistCard({
   pro,
   photos,
+  photoCount,
+  services,
+  illustrationOf,
   price,
-  serviceName,
   distanceKm,
   serviceId,
 }: {
   pro: AppPro
+  /** Their own work, up to three, the chosen service's first. */
   photos: string[]
+  /** All their posts, for "+12 ảnh". */
+  photoCount: number
+  /** What they offer, the chosen service first. */
+  services: string[]
+  /** What the card shows, labelled, while they have posted nothing. */
+  illustrationOf: CategoryId
   price: number | null
-  /** The service the price is for; without one, the price is their lowest. */
-  serviceName?: string
   distanceKm: number | null
   serviceId?: string
 }) {
   const open = () => router.push({ pathname: "/pros/[id]", params: serviceId ? { id: pro.id, service: serviceId } : { id: pro.id } })
-  const a11y = `${pro.name}${pro.identity === "verified" ? ", đã xác minh" : ""}${price !== null ? `, từ ${formatPrice(price)}` : ""}`
-  const where = distanceKm !== null ? formatKm(distanceKm) : pro.district
-  const name = (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-      <Txt w={600} numberOfLines={1} style={{ flexShrink: 1 }}>
-        {pro.name}
-      </Txt>
-      {pro.identity === "verified" ? <VerifiedMark size={14} /> : null}
-    </View>
-  )
-  if (!photos.length) {
-    return (
-      <Press onPress={open} accessibilityLabel={a11y} style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: radius.lg, backgroundColor: colors.highlightSoft }}>
-        <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={44} />
-        <View style={{ flex: 1, gap: 1 }}>
-          {name}
-          <Txt v="meta" color={colors.inkSoft} numberOfLines={2}>
-            {showsAverage(pro.rating.count) ? `${formatRating(pro.rating.average)} (${pro.rating.count})` : "Mới"} · {where} · Chưa đăng tác phẩm
-          </Txt>
-        </View>
-        {price !== null ? (
-          <Txt w={700} tabular color={colors.accentDark}>
-            {formatPrice(price)}
-          </Txt>
-        ) : null}
-      </Press>
-    )
-  }
+  const a11y = `${pro.name}${pro.identity === "verified" ? ", đã xác minh" : ""}${price !== null ? `, giá từ ${formatPrice(price)}` : ""}`
+  const isNew = !showsAverage(pro.rating.count) && pro.stats.completedJobs === 0
+  const facts = [pro.stats.completedJobs > 0 ? `${pro.stats.completedJobs} lịch` : null, distanceKm !== null ? formatKm(distanceKm) : pro.district].filter(Boolean).join(" · ")
+  const extra = photoCount - photos.length
   return (
-    <Press onPress={open} accessibilityLabel={a11y} style={{ padding: 12, gap: 10, borderRadius: radius.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line }}>
-      <View style={{ flexDirection: "row", gap: 4 }}>
-        {[0, 1, 2].map((i) =>
-          photos[i] ? (
-            <Image key={i} source={{ uri: photos[i] }} style={{ flex: 1, height: 104, borderRadius: radius.sm, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
-          ) : (
-            <View key={i} style={{ flex: 1 }} />
-          ),
-        )}
-      </View>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={44} />
-        <View style={{ flex: 1, gap: 1 }}>
-          {name}
+    <Press onPress={open} accessibilityLabel={a11y} style={{ borderRadius: radius.xl, overflow: "hidden", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line }}>
+      {photos.length ? (
+        <View style={{ flexDirection: "row", height: 180, gap: 3 }}>
+          <Image source={{ uri: photos[0] }} style={{ flex: 2, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
+          {photos.length > 1 ? (
+            <View style={{ flex: 1, gap: 3 }}>
+              <Image source={{ uri: photos[1] }} style={{ flex: 1, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
+              {photos[2] ? (
+                <View style={{ flex: 1 }}>
+                  <Image source={{ uri: photos[2] }} style={{ flex: 1, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
+                  {extra > 0 ? (
+                    <View style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(20,18,19,0.45)" }}>
+                      <Txt v="meta" w={700} color={colors.surface}>
+                        +{extra} ảnh
+                      </Txt>
+                    </View>
+                  ) : null}
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+        </View>
+      ) : (
+        <View style={{ height: 150 }}>
+          <Image source={{ uri: illustration(illustrationOf, pro.name.length % 3) }} style={{ flex: 1, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
+          <PhotoBadge text="Ảnh minh hoạ" position="tl" />
+        </View>
+      )}
+      <View style={{ paddingHorizontal: 14, paddingBottom: 14, gap: 10 }}>
+        <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", gap: 10, marginTop: -30 }}>
+          <View style={{ padding: 3, borderRadius: 32, backgroundColor: colors.surface }}>
+            <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={58} artist />
+          </View>
+          {pro.identity === "verified" ? (
+            <CardTag label="Đã xác minh" bg={colors.successSoft} fg={colors.success} />
+          ) : isNew ? (
+            <CardTag label="Artist mới" bg={colors.highlightSoft} fg={colors.ink} />
+          ) : null}
+        </View>
+        <View style={{ gap: 2 }}>
+          <Txt v="title" numberOfLines={1}>
+            {pro.name}
+          </Txt>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            {showsAverage(pro.rating.count) ? <RatingInline {...pro.rating} /> : <Txt v="meta" w={600} color={colors.inkSoft}>Mới</Txt>}
-            <Txt v="meta" color={colors.muted} numberOfLines={1} style={{ flexShrink: 1 }}>
-              · {where}
+            {showsAverage(pro.rating.count) ? <RatingInline {...pro.rating} /> : null}
+            <Txt v="meta" color={colors.inkSoft} numberOfLines={1} style={{ flexShrink: 1 }}>
+              {showsAverage(pro.rating.count) && facts ? "· " : ""}
+              {facts}
+            </Txt>
+          </View>
+          {photos.length ? null : (
+            <Txt v="meta" color={colors.muted}>
+              Chưa đăng tác phẩm
+            </Txt>
+          )}
+        </View>
+        {services.length ? (
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+            {services.slice(0, 2).map((name) => (
+              <CardTag key={name} label={name} bg={colors.accentSoft} fg={colors.accentDark} />
+            ))}
+            {services.length > 2 ? <CardTag label={`+${services.length - 2} dịch vụ`} bg={colors.accentSoft} fg={colors.accentDark} /> : null}
+          </View>
+        ) : null}
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.line }}>
+          {price !== null ? (
+            <View>
+              <Txt v="meta" color={colors.muted}>
+                Giá từ
+              </Txt>
+              <Txt v="title" tabular color={colors.accentDark}>
+                {formatPrice(price)}
+              </Txt>
+            </View>
+          ) : (
+            <View />
+          )}
+          <View style={{ minHeight: 42, paddingHorizontal: 20, borderRadius: radius.full, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}>
+            <Txt w={600} color={colors.surface}>
+              Xem và đặt
             </Txt>
           </View>
         </View>
-        {price !== null ? (
-          <View style={{ alignItems: "flex-end", maxWidth: "40%" }}>
-            <Txt v="meta" color={colors.muted} numberOfLines={1}>
-              {serviceName ?? "Từ"}
-            </Txt>
-            <Txt w={700} tabular color={colors.accentDark}>
-              {formatPrice(price)}
-            </Txt>
-          </View>
-        ) : null}
       </View>
     </Press>
+  )
+}
+
+function CardTag({ label, bg, fg }: { label: string; bg: string; fg: string }) {
+  return (
+    <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full, backgroundColor: bg }}>
+      <Txt v="meta" w={600} color={fg} numberOfLines={1}>
+        {label}
+      </Txt>
+    </View>
   )
 }
 

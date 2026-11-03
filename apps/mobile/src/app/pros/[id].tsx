@@ -1,20 +1,23 @@
 import * as React from "react"
+import { BottomSheetTextInput } from "@gorhom/bottom-sheet"
 import { Image } from "expo-image"
 import { Stack, router, useLocalSearchParams } from "expo-router"
-import { ScrollView, View, useWindowDimensions } from "react-native"
+import { Alert, ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { CATEGORY_TINTS, serviceLocationOpen, providerLocationOpen, categoryLabel, getTemplate, perUnitSuffix, showsAverage, verticalOf, type Pro, tierLabels } from "@/shared"
 import { formatDuration, formatKm, formatPrice, formatRating, formatResponseTime } from "@/data/format"
 import { loadProExtras } from "@/data/public"
+import { replyReview } from "@/data/reviews"
 import { BookingBar } from "@/components/booking-bar"
 import { FollowButton } from "@/components/follow-button"
 import { useSafetyMenu } from "@/components/safety"
 import { useApp, useProLookup } from "@/state/app"
-import { colors, gutter, radius } from "@/theme"
-import { IconButton } from "@/ui/button"
+import { colors, fonts, gutter, radius } from "@/theme"
+import { Button, IconButton } from "@/ui/button"
 import { Avatar, Card, EmptyState, Photo, VerifiedMark } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
+import { Sheet, useSheet } from "@/ui/sheet"
 import { Txt } from "@/ui/text"
 
 /** How much shows before "Xem tất cả". */
@@ -57,6 +60,25 @@ export default function ProProfile() {
         }
       : null,
   )
+  const replySheet = useSheet()
+  const [replyTo, setReplyTo] = React.useState<{ id: string; author: string } | null>(null)
+  const [replyText, setReplyText] = React.useState("")
+  const [replying, setReplying] = React.useState(false)
+  const openReply = (id: string, author: string) => {
+    setReplyTo({ id, author })
+    setReplyText("")
+    replySheet.open()
+  }
+  const sendReply = async () => {
+    if (!replyTo) return
+    setReplying(true)
+    const res = await replyReview(replyTo.id, replyText.trim())
+    setReplying(false)
+    if (!res.ok) return Alert.alert("Chưa gửi được", res.error)
+    replySheet.close()
+    void app.refresh()
+  }
+
   const reportReview = (bookingId: string, author: string) => {
     if (!app.uid) return router.push("/login")
     setFlagged({ bookingId, author })
@@ -133,7 +155,7 @@ export default function ProProfile() {
       <View style={{ paddingHorizontal: gutter, gap: 14 }}>
         <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginTop: -40 }}>
           <View style={{ borderWidth: 4, borderColor: colors.canvas, borderRadius: 48 }}>
-            <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={80} />
+            <Avatar name={pro.name} uri={pro.avatar} artist tone={pro.tone} size={80} />
           </View>
           {!isMe ? (
             <View>
@@ -335,17 +357,27 @@ export default function ProProfile() {
                   <Txt v="meta">{r.reply}</Txt>
                 </View>
               ) : null}
-              <Press
-                onPress={() => reportReview(r.id, r.author)}
-                accessibilityRole="button"
-                accessibilityLabel={`Báo cáo đánh giá của ${r.author}`}
-                style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 4, minHeight: 32 }}
-              >
-                <Icon name="flag" size={13} color={colors.muted} />
-                <Txt v="meta" color={colors.muted}>
-                  Báo cáo
-                </Txt>
-              </Press>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+                {isMine && !r.reply ? (
+                  <Press onPress={() => openReply(r.id, r.author)} accessibilityRole="button" accessibilityLabel={`Trả lời đánh giá của ${r.author}`} style={{ flexDirection: "row", alignItems: "center", gap: 4, minHeight: 32 }}>
+                    <Icon name="chat" size={13} color={colors.accentDark} />
+                    <Txt v="meta" w={600} color={colors.accentDark}>
+                      Trả lời
+                    </Txt>
+                  </Press>
+                ) : null}
+                <Press
+                  onPress={() => reportReview(r.id, r.author)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Báo cáo đánh giá của ${r.author}`}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4, minHeight: 32 }}
+                >
+                  <Icon name="flag" size={13} color={colors.muted} />
+                  <Txt v="meta" color={colors.muted}>
+                    Báo cáo
+                  </Txt>
+                </Press>
+              </View>
             </View>
           ))
         ) : (
@@ -390,6 +422,20 @@ export default function ProProfile() {
           </Card>
         ) : null}
       </View>
+      {isMine ? (
+        <Sheet sheet={replySheet} title={replyTo ? `Trả lời ${replyTo.author}` : "Trả lời"} footer={<Button label="Gửi trả lời" full busy={replying} disabled={replyText.trim().length < 2} onPress={() => void sendReply()} />}>
+          <Txt color={colors.inkSoft}>Câu trả lời hiện công khai trên hồ sơ và chỉ gửi được một lần.</Txt>
+          <BottomSheetTextInput
+            value={replyText}
+            onChangeText={setReplyText}
+            placeholder="Cảm ơn bạn đã tin tưởng…"
+            placeholderTextColor={colors.muted}
+            multiline
+            maxLength={1000}
+            style={{ minHeight: 88, backgroundColor: colors.subtle, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
+          />
+        </Sheet>
+      ) : null}
     </ScrollView>
       {/* The page scrolls under the status bar: this keeps the clock readable on photos and text. */}
       <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top, backgroundColor: "rgba(250,248,245,0.88)" }} />

@@ -4,7 +4,6 @@ import { Alert, Linking, Platform, ScrollView, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { confirmBooking, listBookings, type BookingItem } from "@/data/bookings"
 import { addDays, formatCountdown, formatPrice, localDate, todayISO } from "@/data/format"
-import { askForPushPermission } from "@/data/push"
 import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
 import { PartnerAppointments } from "@/components/partner-appointments"
 import { StudioHeader } from "@/components/studio-header"
@@ -35,11 +34,6 @@ export default function Today() {
   const hasPending = all.some((b) => b.status === "pending")
   // Ticks only while a confirmation countdown is on screen.
   const now = useNow(hasPending)
-
-  // A booking waiting to be accepted is the moment push notifications make sense.
-  React.useEffect(() => {
-    if (hasPending && uid) void askForPushPermission(uid)
-  }, [hasPending, uid])
 
   const today = todayISO()
   const monday = addDays(today, -((new Date(`${today}T00:00:00Z`).getUTCDay() + 6) % 7))

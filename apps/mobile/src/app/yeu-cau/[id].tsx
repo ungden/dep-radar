@@ -5,7 +5,7 @@ import { CATALOG_VERSION, serviceDuration, getTemplate, getVariant } from "@/sha
 import { getBooking } from "@/data/bookings"
 import { openThread } from "@/data/chat"
 import { formatDateLong, formatDuration, formatPrice } from "@/data/format"
-import { closeJob, getMyRequest, requestProgress } from "@/data/requests"
+import { bookingFellThrough, closeJob, getMyRequest, requestProgress } from "@/data/requests"
 import { ReferencePhotos } from "@/components/reference-photos"
 import { useApp } from "@/state/app"
 import { useAsync } from "@/state/use-async"
@@ -53,13 +53,17 @@ export default function RequestDetail() {
         <Skeleton style={{ height: 160, borderRadius: radius.lg }} />
       </View>
     )
-  if (request.error) return <View style={{ padding: gutter }}><ErrorNote text={request.error} onRetry={() => void request.reload()} /></View>
+  // A failed check every ten seconds should not wipe a screen that is showing the order.
+  if (request.error && !r) return <View style={{ padding: gutter }}><ErrorNote text={request.error} onRetry={() => void request.reload()} /></View>
   if (!r) return <EmptyState title="Không tìm thấy đơn" action="Về danh sách" onAction={() => router.replace("/yeu-cau")} />
 
   const t = getTemplate(r.templateId)
   const v = getVariant(r.templateId, r.variantId)
   const name = r.contract?.serviceName ?? t?.name ?? r.templateId
-  const artist = b?.pro
+  const fellThrough = bookingFellThrough(r)
+  const artist = fellThrough ? undefined : b?.pro
+  const nobodyTold = r.status === "open" && r.notified === 0
+  const tone = r.status === "open" ? "waiting" : r.status === "booked" && !fellThrough ? "done" : "over"
 
   const cancel = () =>
     Alert.alert("Huỷ đơn này?", "Artist sẽ không thấy và không nhận được đơn này nữa.", [
@@ -69,8 +73,28 @@ export default function RequestDetail() {
         style: "destructive",
         onPress: async () => {
           const res = await closeJob(r.id)
-          if (!res.ok) return Alert.alert("Chưa huỷ được", res.error)
+          if (!res.ok) {
+            void request.reload()
+            return Alert.alert("Chưa huỷ được", res.error)
+          }
           router.back()
+        },
+      },
+    ])
+
+  // Two Artists at the door otherwise: the order has to go before choosing one.
+  const chooseInstead = () =>
+    Alert.alert("Tự chọn Artist?", "Đơn đang chờ sẽ được huỷ để không có hai Artist cùng đến.", [
+      { text: "Thôi", style: "cancel" },
+      {
+        text: "Huỷ đơn và chọn",
+        onPress: async () => {
+          const res = await closeJob(r.id)
+          if (!res.ok) {
+            void request.reload()
+            return Alert.alert("Chưa huỷ được", res.error)
+          }
+          router.navigate({ pathname: "/artist", params: { service: r.templateId } })
         },
       },
     ])
@@ -91,9 +115,13 @@ export default function RequestDetail() {
       refreshControl={refreshControl(request.refreshing, () => void request.refresh())}
     >
       {/* The header takes the banner's colour, so the two read as one block. */}
-      <Stack.Screen options={{ headerStyle: { backgroundColor: TONES[r.status === "open" ? "waiting" : r.status === "booked" ? "done" : "over"].bg }, headerShadowVisible: false }} />
-      {r.status === "open" ? (
+      <Stack.Screen options={{ headerStyle: { backgroundColor: TONES[tone].bg }, headerShadowVisible: false }} />
+      {nobodyTold ? (
+        <Banner icon="person" tone="waiting" title="Chưa có Artist phù hợp" text="Lúc này chưa có Artist nào làm được đơn này trong khu vực của bạn. Đơn vẫn mở, nhưng có thể phải chờ lâu." />
+      ) : r.status === "open" ? (
         <Banner icon="person" tone="waiting" title="Đang chờ Artist nhận đơn" text="Artist quanh bạn đã được báo. Ai nhận trước sẽ đến làm cho bạn." />
+      ) : fellThrough ? (
+        <Banner icon="calendar" tone="over" title={r.bookingStatus === "no_show" ? "Lịch hẹn báo vắng mặt" : "Lịch hẹn đã huỷ"} text={b?.cancelReason ?? "Bạn có thể đặt lại, hoặc tự chọn Artist."} />
       ) : r.status === "booked" ? (
         <Banner icon="check" tone="done" title="Đã có Artist nhận đơn" text={`${r.time}, ${formatDateLong(r.date)}`} />
       ) : (
@@ -105,7 +133,7 @@ export default function RequestDetail() {
         {artist ? (
           <Card>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              <Avatar name={artist.name} uri={artist.avatar} size={56} />
+              <Avatar name={artist.name} uri={artist.avatar} artist size={56} />
               <Txt v="title" style={{ flex: 1 }} numberOfLines={2}>
                 {artist.name}
               </Txt>
@@ -149,16 +177,16 @@ export default function RequestDetail() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 14, borderRadius: radius.md, backgroundColor: colors.highlightSoft }}>
               <Icon name="bell" size={20} />
               <View style={{ flex: 1, gap: 2 }}>
-                <Txt v="meta">Bạn có thể thoát app. Có người nhận, chúng tôi sẽ báo ngay.</Txt>
+                <Txt v="meta">{nobodyTold ? "Bạn có thể thoát app. Khi có người nhận, chúng tôi sẽ báo." : "Bạn có thể thoát app. Có người nhận, chúng tôi sẽ báo ngay."}</Txt>
                 <Txt v="meta" color={colors.inkSoft}>
                   {requestProgress(r)}
                 </Txt>
               </View>
             </View>
-            <Button label="Tự chọn Artist thay vì chờ" variant="secondary" full onPress={() => router.navigate({ pathname: "/artist", params: { service: r.templateId } })} />
+            <Button label="Tự chọn Artist thay vì chờ" variant={nobodyTold ? "primary" : "secondary"} full onPress={chooseInstead} />
             <Button label="Huỷ đơn" variant="ghost" full onPress={cancel} />
           </>
-        ) : r.status === "booked" && r.bookingId ? (
+        ) : r.status === "booked" && r.bookingId && !fellThrough ? (
           <>
             {booking.error ? <ErrorNote text={booking.error} onRetry={() => void booking.reload()} /> : null}
             <Button label={artist ? `Nhắn tin với ${artist.name}` : "Nhắn tin"} full size="lg" disabled={!artist} busy={opening} onPress={() => void message()} />
@@ -168,6 +196,7 @@ export default function RequestDetail() {
           <>
             <Button label="Đặt lại" full onPress={() => router.push({ pathname: "/yeu-cau/moi", params: { template: r.templateId } })} />
             <Button label="Tự chọn Artist" variant="secondary" full onPress={() => router.navigate({ pathname: "/artist", params: { service: r.templateId } })} />
+            {r.bookingId ? <Button label="Xem lịch hẹn" variant="ghost" full onPress={() => router.push({ pathname: "/bookings/[id]", params: { id: r.bookingId! } })} /> : null}
           </>
         )}
       </View>

@@ -3,7 +3,7 @@ import { Stack, router } from "expo-router"
 import { View } from "react-native"
 import { getTemplate, getVariant } from "@/shared"
 import { formatDateLong, formatPrice, timeAgo } from "@/data/format"
-import { listMyRequests, requestProgress } from "@/data/requests"
+import { bookingFellThrough, listMyRequests, requestProgress } from "@/data/requests"
 import { REQUEST_STATUS } from "@/components/request-status"
 import { SignInGate } from "@/components/sign-in-gate"
 import { useApp } from "@/state/app"
@@ -33,7 +33,7 @@ export default function MyRequests() {
         renderItem={({ item }) => {
           const t = getTemplate(item.templateId)
           const v = getVariant(item.templateId, item.variantId)
-          const status = REQUEST_STATUS[item.status] ?? REQUEST_STATUS.closed
+          const status = bookingFellThrough(item) ? { ...REQUEST_STATUS.closed, label: "Đã huỷ lịch" } : (REQUEST_STATUS[item.status] ?? REQUEST_STATUS.closed)
           const progress = requestProgress(item)
           return (
             <Press
@@ -63,7 +63,7 @@ export default function MyRequests() {
                 {item.time}, {formatDateLong(item.date)} · {item.district}, {item.city}
               </Txt>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                <Txt v="meta" w={600} color={item.status === "booked" ? colors.success : item.status === "open" ? colors.accentDark : colors.muted} style={{ flex: 1 }}>
+                <Txt v="meta" w={600} color={item.status === "booked" && !bookingFellThrough(item) ? colors.success : item.status === "open" ? colors.accentDark : colors.muted} style={{ flex: 1 }}>
                   {item.status === "booked" && item.bookingId ? `${progress} · Xem lịch hẹn` : progress}
                 </Txt>
                 <Txt w={700} tabular>

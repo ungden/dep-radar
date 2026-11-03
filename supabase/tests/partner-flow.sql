@@ -50,9 +50,26 @@ begin
   perform set_config('request.jwt.claim.sub',pro::text,true);
   select public.job_problem(pro,j) into why from public.jobs j where id=budget_job;
   assert why like 'Tổng tiền vượt%',format('fee above approved cap refused: %s',why);
-  perform public.save_pro_service('nail-extension',jsonb_build_object('tips',case when unit=240000 then 140000 else 240000 end),true);
+  -- Listed above the order's level: refused. At or below it: told, and paid the order's level.
+  perform public.save_pro_service('nail-extension',jsonb_build_object('tips',(select max(t) from public.service_variants v,unnest(v.price_tiers) t where v.template_id='nail-extension' and v.id='tips')),true);
+  update public.jobs set price=(select min(t) from public.service_variants v,unnest(v.price_tiers) t where v.template_id='nail-extension' and v.id='tips') where id=job;
   select public.job_problem(pro,j) into why from public.jobs j where id=job;
-  assert why like 'Mức giá yêu cầu khác%', format('mismatched tier refused: %s',why);
+  assert why like 'Mức giá khách chọn thấp hơn%', format('a partner above the order''s level refused: %s',why);
+  update public.jobs set price=unit where id=job;
+  perform public.save_pro_service('nail-extension',jsonb_build_object('tips',(select min(t) from public.service_variants v,unnest(v.price_tiers) t where v.template_id='nail-extension' and v.id='tips')),true);
+  select public.job_problem(pro,j) into why from public.jobs j where id=job;
+  assert why is null, format('a partner below the order''s level may take it: %s',why);
+  -- A second order for the same service and time is refused; a direct booking closes the first.
+  perform set_config('request.jwt.claim.sub',customer::text,true);
+  begin
+    perform public.post_job_checked('nail-extension','tips',at+interval '1 day',true,addr,1,'','cash',unit,unit+100000);
+    assert false, 'a second order for the same service and time';
+  exception when check_violation then null; end;
+  q:=public.booking_quote(pro,'nail-extension','tips',at+interval '1 day',true,addr,1);
+  perform public.create_booking_checked(pro,'nail-extension','tips',at+interval '1 day',true,addr,1,'','cash',(q->>'total')::int,(q->>'unitPrice')::int,'{}');
+  assert (select status='closed' from public.jobs where id=job), 'a direct booking closes the waiting order';
+  perform set_config('request.jwt.claim.sub',pro::text,true);
+  perform public.save_pro_service('nail-extension',jsonb_build_object('tips',unit),true);
   -- One package reserves both appointments atomically and retains travel buffers.
   perform set_config('app.system_write','on',true);
   update public.pros set categories=array['nail','makeup','lash-brow']::public.category_id[],studio_address='Studio test' where id=pro;

@@ -10,6 +10,7 @@ import {
   decideProfile,
   setAcceptingJobs,
   setSuspended,
+  setWorkHidden,
   type AdminPro,
   type AdminProDetail,
 } from "@/lib/api/admin"
@@ -294,6 +295,9 @@ export function ProDrawer({ proId, onClose, run }: { proId: string; onClose: () 
                         <p className="mt-1 truncate text-label text-ink-soft" title={w.hiddenReason ?? w.title}>
                           {w.title}
                         </p>
+                        <ActButton size="sm" variant="ghost" onClick={() => act(() => setWorkHidden(w.id, !w.hiddenReason), w.hiddenReason ? "Đã cho hiện lại bài đăng." : "Đã ẩn bài đăng. Đối tác được báo.")}>
+                          {w.hiddenReason ? "Hiện lại" : "Ẩn bài"}
+                        </ActButton>
                       </li>
                     ))}
                   </ul>

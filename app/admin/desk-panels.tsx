@@ -598,6 +598,18 @@ function describe(a: AdminAction) {
       return `Hỏi thêm người báo: ${String(d.question ?? "")}`
     case "report:view_chat":
       return "Xem tin nhắn hai bên của một báo cáo"
+    case "work:hide":
+      return `Ẩn một bài đăng${d.reason ? `: ${String(d.reason)}` : ""}`
+    case "work:show":
+      return "Cho hiện lại một bài đăng"
+    case "booking:cancel":
+      return `Huỷ một lịch hẹn: ${String(d.reason ?? "")}`
+    case "booking:complete":
+      return `Đóng một lịch hẹn là hoàn thành${d.note ? `: ${String(d.note)}` : ""}`
+    case "job:close":
+      return `Đóng một đơn: ${String(d.reason ?? "")}`
+    case "job:renotify":
+      return `Báo lại đơn cho ${String(d.told ?? 0)} đối tác`
     case "wallet:adjust":
       return `Điều chỉnh ví ${formatPrice(Number(d.amount ?? 0))}: ${String(d.note ?? "")}`
     case "profile_review": {

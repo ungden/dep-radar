@@ -114,7 +114,7 @@ export default function CastingDetail() {
           accessibilityLabel={`Xem hồ sơ ${c.pro.name}`}
           style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.md, padding: 12 }}
         >
-          <Avatar name={c.pro.name} uri={c.pro.avatar} size={44} />
+          <Avatar name={c.pro.name} uri={c.pro.avatar} artist size={44} />
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <Txt w={700} numberOfLines={1} style={{ flexShrink: 1 }}>

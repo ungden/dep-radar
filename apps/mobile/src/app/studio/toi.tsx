@@ -73,7 +73,7 @@ export default function StudioMe() {
           accessibilityLabel="Xem hồ sơ công khai"
           style={{ flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14 }}
         >
-          <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={56} />
+          <Avatar name={pro.name} uri={pro.avatar} artist tone={pro.tone} size={56} />
           <View style={{ flex: 1, gap: 2 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <Txt v="lead" w={700}>

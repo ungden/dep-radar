@@ -297,7 +297,7 @@ function ProOffer({ pro, templateId, minTotal, maxTotal }: { pro: AppPro; templa
       {photo ? (
         <Image source={{ uri: photo }} style={{ width: 56, height: 56, borderRadius: radius.sm, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
       ) : (
-        <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={56} />
+        <Avatar name={pro.name} uri={pro.avatar} artist tone={pro.tone} size={56} />
       )}
       <View style={{ flex: 1, gap: 1 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>

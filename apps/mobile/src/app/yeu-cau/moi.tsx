@@ -4,6 +4,7 @@ import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } fr
 import { CATEGORIES, POLICY, getTemplate, templatesByCategory, tierLabels, serviceQuantity, isUrgent, type CategoryId } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
 import { addDays, formatDateLong, formatDuration, formatPrice, todayISO, weekdayShort } from "@/data/format"
+import { askForPushPermission } from "@/data/push"
 import { setJobReferences, uploadReference } from "@/data/references"
 import { postJob, requestPrice } from "@/data/requests"
 import { ReferencePicker, type PickedPhoto } from "@/components/reference-photos"
@@ -29,8 +30,9 @@ const TIMES = Array.from({ length: 28 }, (_, i) => {
 
 /**
  * Đặt theo dịch vụ: what, when, where, at one of the option's fixed price
- * levels (a higher level is usually taken sooner). Every Artist who can do it
- * is told and the first to take it gets it. The same post_job RPC as
+ * levels (an Artist listed at or below the level can take it, so a higher level
+ * reaches more of them). Every Artist who can do it is told and the first to
+ * take it gets it. The same post_job RPC as
  * app/requests/new on the web. Requests are for work at the customer's place;
  * studio visits are currently closed. Coming from a service page, the service
  * is already chosen and can be changed. Anyone can look through services and
@@ -95,11 +97,19 @@ export default function NewRequest() {
   const days = Array.from({ length: 21 }, (_, i) => addDays(todayISO(), i))
   const maxTotal = price * heads + feeLimit + (isUrgent(date, time) ? POLICY.urgentFee : 0)
   const valid = (variant.sessions ?? 1) === 1 && !tpl.studioOnly && date >= todayISO()
-  // Said before sending, not discovered after a long wait.
+  // Said before sending, not discovered after a long wait. Hours, distance and
+  // the partner's wallet are checked when it is posted (jobs.notified).
   const area = chosen?.city ?? app.city
   const nobodyHere =
     Boolean(app.data) &&
-    !app.data?.pros.some((p) => p.published && p.acceptingJobs && !app.blocked.has(p.uuid) && (!area || p.city === area) && app.data?.services.some((s) => s.proId === p.id && s.templateId === tpl.id && s.active))
+    !app.data?.pros.some(
+      (p) =>
+        p.published &&
+        p.acceptingJobs &&
+        !app.blocked.has(p.uuid) &&
+        (!area || p.city === area) &&
+        app.data?.services.some((s) => s.proId === p.id && s.templateId === tpl.id && s.active && s.prices[variant.id] != null && s.prices[variant.id] <= price),
+    )
 
   const pickCategory = (c: CategoryId) => {
     setCategory(c)
@@ -152,6 +162,8 @@ export default function NewRequest() {
     haptic.success()
     setSent(true)
     leaving.current = true
+    // The waiting screen promises a notification when someone takes it.
+    void askForPushPermission(app.uid)
     router.replace({ pathname: "/yeu-cau/[id]", params: { id: res.data } })
   }
 
@@ -234,7 +246,7 @@ export default function NewRequest() {
           ) : null}
         </Group>
 
-        <Group title="Mức giá" note="Mức cao thường có người nhận nhanh hơn.">
+        <Group title="Mức giá" note="Mức càng cao, càng nhiều Artist nhận được.">
           <View style={{ flexDirection: "row", gap: 8 }} accessibilityRole="radiogroup">
             {variant.tiers.map((t, i) => {
               const selected = t === price
@@ -328,7 +340,7 @@ export default function NewRequest() {
 
         {nobodyHere ? (
           <View style={{ padding: 14, borderRadius: radius.md, backgroundColor: colors.highlightSoft }}>
-            <Txt v="meta">Khu vực này chưa có Artist nhận dịch vụ này, có thể phải chờ lâu.</Txt>
+            <Txt v="meta">Khu vực này chưa có Artist nhận dịch vụ này ở mức giá đã chọn, có thể phải chờ lâu.</Txt>
           </View>
         ) : null}
 
