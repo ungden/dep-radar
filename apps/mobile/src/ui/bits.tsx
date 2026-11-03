@@ -23,7 +23,7 @@ import {
   logoTransform,
   showsAverage,
 } from "@/shared"
-import { aspect, colors, radius } from "@/theme"
+import { aspect, colors, photoRadius, radius, hairline } from "@/theme"
 import { Button } from "./button"
 import { Icon } from "./icon"
 import { Press } from "./press"
@@ -34,7 +34,7 @@ export function Photo({
   uri,
   ratio = aspect.photo,
   style,
-  rounded = radius.md,
+  rounded = photoRadius,
   recyclingKey,
 }: {
   uri?: string
@@ -60,7 +60,10 @@ export function Photo({
   )
 }
 
-export function Avatar({ name, uri, tone = colors.subtle, size = 40 }: { name: string; uri?: string; tone?: string; size?: number }) {
+/** The app's own picture for an Artist who has not added a photo. */
+const DEFAULT_ARTIST_AVATAR = require("../../assets/images/default-avatar.png")
+
+export function Avatar({ name, uri, tone = colors.subtle, size = 40, artist }: { name: string; uri?: string; tone?: string; size?: number; artist?: boolean }) {
   return (
     <View
       style={{
@@ -75,6 +78,8 @@ export function Avatar({ name, uri, tone = colors.subtle, size = 40 }: { name: s
     >
       {uri ? (
         <Image source={{ uri }} style={{ width: size, height: size }} contentFit="cover" transition={150} accessible={false} />
+      ) : artist ? (
+        <Image source={DEFAULT_ARTIST_AVATAR} style={{ width: size, height: size }} contentFit="cover" accessible={false} />
       ) : (
         <Txt w={700} color={colors.inkSoft} style={{ fontSize: Math.max(13, size * 0.36), lineHeight: Math.max(16, size * 0.44) }}>
           {initials(name)}
@@ -97,9 +102,9 @@ export function Chip({ label, selected, onPress, icon }: { label: string; select
         maxWidth: "100%",
         paddingHorizontal: 14,
         borderRadius: radius.full,
-        borderWidth: 1,
-        borderColor: selected ? colors.ink : colors.line,
-        backgroundColor: selected ? colors.ink : colors.surface,
+        borderWidth: hairline,
+        borderColor: selected ? colors.accent : colors.line,
+        backgroundColor: selected ? colors.accent : colors.surface,
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
@@ -114,7 +119,7 @@ export function Chip({ label, selected, onPress, icon }: { label: string; select
 }
 
 export function VerifiedMark({ size = 15 }: { size?: number }) {
-  return <Icon name="verified" size={size} color={colors.ink} />
+  return <Icon name="verified" size={size} color={colors.success} />
 }
 
 /**
@@ -131,7 +136,7 @@ export function Rating({ average, count, showCount = true }: { average: number; 
     )
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-      <Icon name="star" size={13} color={colors.ink} />
+      <Icon name="star" size={13} color={colors.highlight} />
       <Txt v="meta" w={600} tabular>
         {formatRating(average)}
       </Txt>
@@ -162,18 +167,22 @@ export function SectionHeader({ title, action, onAction }: { title: string; acti
 }
 
 /** Says what is true and offers one thing to do. */
+/** Nothing here yet: the app's own picture in a soft ring, so the page is not left blank. */
 export function EmptyState({ title, text, action, onAction }: { title: string; text?: string; action?: string; onAction?: () => void }) {
   return (
-    <View style={{ paddingVertical: 32, paddingHorizontal: 8, alignItems: "center", gap: 8 }}>
-      <Txt v="lead" w={700} center>
+    <View style={{ paddingVertical: 48, paddingHorizontal: 20, alignItems: "center", gap: 10 }}>
+      <View style={{ width: 128, height: 128, borderRadius: 64, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+        <Image source={DEFAULT_ARTIST_AVATAR} style={{ width: 88, height: 88, borderRadius: 44 }} contentFit="cover" accessible={false} />
+      </View>
+      <Txt v="title" center>
         {title}
       </Txt>
       {text ? (
-        <Txt color={colors.inkSoft} center style={{ maxWidth: 320 }}>
+        <Txt color={colors.inkSoft} center style={{ maxWidth: 300 }}>
           {text}
         </Txt>
       ) : null}
-      {action ? <Button label={action} onPress={onAction} style={{ marginTop: 8, alignSelf: "center" }} /> : null}
+      {action ? <Button label={action} onPress={onAction} style={{ marginTop: 14, alignSelf: "center", minWidth: 180 }} /> : null}
     </View>
   )
 }
@@ -253,7 +262,7 @@ export function Line({ label, value, strong }: { label: string; value: string; s
 
 /** A block on a white surface, separated from the next by space, not a shadow. */
 export function Card({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
-  return <View style={[{ backgroundColor: colors.surface, borderRadius: radius.md, padding: 16, gap: 8 }, style]}>{children}</View>
+  return <View style={[{ backgroundColor: colors.surface, borderRadius: radius.lg, padding: 20, gap: 10 }, style]}>{children}</View>
 }
 
 export function ErrorNote({ text, onRetry }: { text: string; onRetry?: () => void }) {

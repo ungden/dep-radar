@@ -10,7 +10,7 @@ import { Stack, router, useSegments } from "expo-router"
 import * as SplashScreen from "expo-splash-screen"
 import { StatusBar } from "expo-status-bar"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
-import { useNotificationTaps } from "@/data/push"
+import { askForPushPermission, useNotificationTaps } from "@/data/push"
 import { AppProvider, useApp } from "@/state/app"
 import { colors, fonts } from "@/theme"
 
@@ -38,7 +38,7 @@ export default function RootLayout() {
 }
 
 function Navigator() {
-  const { ready, uid, termsAccepted } = useApp()
+  const { ready, uid, termsAccepted, myPro } = useApp()
   const segments = useSegments()
   React.useEffect(() => {
     if (ready) void SplashScreen.hideAsync()
@@ -50,12 +50,18 @@ function Navigator() {
   React.useEffect(() => {
     if (ready && uid && termsAccepted === false && !inAuthFlow) router.push("/dieu-khoan")
   }, [ready, uid, termsAccepted, inAuthFlow])
+  // Orders go to whoever hears first, so a partner needs pushes before any booking exists.
+  const isPartner = Boolean(myPro)
+  React.useEffect(() => {
+    if (ready && uid && isPartner && termsAccepted !== false && !inAuthFlow) void askForPushPermission(uid)
+  }, [ready, uid, isPartner, termsAccepted, inAuthFlow])
   if (!ready) return null
   return (
     <Stack
       screenOptions={{
         headerShadowVisible: false,
-        headerStyle: { backgroundColor: colors.canvas },
+        // The same soft rose as the tabs, so an inner page does not open plain.
+        headerStyle: { backgroundColor: colors.accentSoft },
         headerTintColor: colors.ink,
         headerTitleStyle: { fontFamily: fonts[700], fontSize: 17, color: colors.ink },
         headerBackButtonDisplayMode: "minimal",
@@ -64,8 +70,10 @@ function Navigator() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="studio" options={{ headerShown: false }} />
+      <Stack.Screen name="tim" options={{ title: "Tìm" }} />
       <Stack.Screen name="works/[id]" options={{ headerTransparent: true, title: "" }} />
-      <Stack.Screen name="pros/[id]" options={{ headerTransparent: true, title: "" }} />
+      {/* The cover photos run to the top of the screen, under the floating buttons. */}
+      <Stack.Screen name="pros/[id]" options={{ headerTransparent: true, headerStyle: { backgroundColor: "transparent" }, scrollEdgeEffects: { top: "hidden", bottom: "automatic", left: "automatic", right: "automatic" }, title: "" }} />
       <Stack.Screen name="book/[proId]" options={{ title: "Đặt lịch", presentation: "modal" }} />
       <Stack.Screen name="bookings/[id]" options={{ title: "Lịch hẹn" }} />
       <Stack.Screen name="bao-cao" options={{ title: "Báo cáo vấn đề" }} />
@@ -73,13 +81,14 @@ function Navigator() {
       <Stack.Screen name="tin-nhan/[id]" options={{ title: "" }} />
       <Stack.Screen name="thong-bao" options={{ title: "Thông báo" }} />
       <Stack.Screen name="dip/[id]" options={{ title: "" }} />
+      <Stack.Screen name="dich-vu/index" options={{ title: "Dịch vụ" }} />
       <Stack.Screen name="dich-vu/[id]" options={{ title: "" }} />
       <Stack.Screen name="da-luu" options={{ title: "Đã lưu" }} />
       <Stack.Screen name="dia-chi/index" options={{ title: "Địa chỉ" }} />
       <Stack.Screen name="dia-chi/sua" options={{ title: "Địa chỉ", presentation: "modal" }} />
-      <Stack.Screen name="yeu-cau/index" options={{ title: "Yêu cầu của tôi" }} />
-      <Stack.Screen name="yeu-cau/moi" options={{ title: "Đăng yêu cầu", presentation: "modal" }} />
-      <Stack.Screen name="yeu-cau/[id]" options={{ title: "Yêu cầu" }} />
+      <Stack.Screen name="yeu-cau/index" options={{ title: "Đơn theo dịch vụ" }} />
+      <Stack.Screen name="yeu-cau/moi" options={{ title: "Đặt theo dịch vụ", presentation: "modal" }} />
+      <Stack.Screen name="yeu-cau/[id]" options={{ title: "" }} />
       <Stack.Screen name="danh-gia/[bookingId]" options={{ title: "Đánh giá", presentation: "modal" }} />
       <Stack.Screen name="tuyen-mau/index" options={{ title: "Tuyển mẫu" }} />
       <Stack.Screen name="tuyen-mau/[id]" options={{ title: "" }} />

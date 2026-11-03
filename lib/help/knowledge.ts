@@ -723,7 +723,7 @@ const ENTRIES: HelpEntry[] = [
     audience: "doi-tac",
     topic: "dat-lich",
     q: "“Việc mới” là gì? Vì sao tôi không nhận được yêu cầu?",
-    a: "Việc mới là yêu cầu khách đăng: người bấm \"Nhận việc\" trước được làm, lịch xác nhận ngay. Bạn chỉ nhận được khi: đang nhận khách, ví không âm, cùng thành phố, niêm yết đúng gói và đúng mức giá khách chọn, trong bán kính, còn giờ trống, tổng tiền không vượt mức khách đồng ý, và hai bên không chặn nhau. Thông báo chỉ gửi một lần lúc khách đăng cho những ai đủ điều kiện lúc đó.",
+    a: "Việc mới là yêu cầu khách đăng: người bấm \"Nhận việc\" trước được làm, lịch xác nhận ngay. Bạn chỉ nhận được khi: đang nhận khách, ví không âm, cùng thành phố, niêm yết đúng gói với giá bằng hoặc thấp hơn mức khách chọn (bạn được trả theo mức khách chọn), trong bán kính, còn giờ trống, tổng tiền không vượt mức khách đồng ý, và hai bên không chặn nhau. Thông báo chỉ gửi một lần lúc khách đăng cho những ai đủ điều kiện lúc đó.",
     keywords: ["viec moi", "yeu cau", "nhan viec", "khong nhan duoc"],
   },
 

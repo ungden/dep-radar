@@ -2,14 +2,14 @@ import * as React from "react"
 import { FlashList } from "@shopify/flash-list"
 import { router } from "expo-router"
 import { View } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { isUpcoming, listBookings } from "@/data/bookings"
 import { BookingRow } from "@/components/booking-row"
+import { PageBand } from "@/components/page-band"
 import { SignInGate } from "@/components/sign-in-gate"
 import { TextTabs } from "@/components/switches"
 import { useApp } from "@/state/app"
 import { useAsync } from "@/state/use-async"
-import { colors, gutter, radius } from "@/theme"
+import { colors, gutter, radius, hairline } from "@/theme"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { EmptyState, ErrorNote, Skeleton } from "@/ui/bits"
@@ -18,7 +18,6 @@ import { Txt } from "@/ui/text"
 
 export default function MyBookings() {
   const { uid } = useApp()
-  const insets = useSafeAreaInsets()
   const [tab, setTab] = React.useState<"upcoming" | "past">("upcoming")
   const bookings = useAsync(uid ? () => listBookings(uid, "customer") : null, [uid])
 
@@ -31,11 +30,8 @@ export default function MyBookings() {
       : all.filter((b) => !isUpcoming(b))
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.canvas, paddingTop: insets.top + 8 }}>
-      <Txt v="h1" style={{ paddingHorizontal: gutter }}>
-        Lịch hẹn
-      </Txt>
-      <View style={{ borderBottomWidth: 1, borderBottomColor: colors.line, marginTop: 4 }}>
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <PageBand title="Lịch hẹn">
         <TextTabs
           items={[
             { value: "upcoming", label: "Sắp tới" },
@@ -44,8 +40,9 @@ export default function MyBookings() {
           value={tab}
           onChange={setTab}
         />
-      </View>
+      </PageBand>
       <FlashList
+        contentInsetAdjustmentBehavior="automatic"
         data={list}
         keyExtractor={(b) => b.id}
         contentContainerStyle={{ padding: gutter }}
@@ -59,16 +56,16 @@ export default function MyBookings() {
           <View style={{ gap: 10, paddingBottom: 10 }}>
             <Press
               onPress={() => router.push("/yeu-cau")}
-              accessibilityLabel="Yêu cầu của tôi"
+              accessibilityLabel="Đơn theo dịch vụ"
               style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.accentSoft, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12 }}
             >
               <Icon name="megaphone" size={20} color={colors.accentDark} />
               <View style={{ flex: 1 }}>
                 <Txt w={700} color={colors.accentDark}>
-                  Yêu cầu của tôi
+                  Đơn theo dịch vụ
                 </Txt>
                 <Txt v="meta" color={colors.accentDark}>
-                  Yêu cầu đã đăng, và ai đã nhận việc.
+                  Đơn đang chờ, và Artist đã nhận.
                 </Txt>
               </View>
               <Icon name="right" size={14} color={colors.accentDark} />
@@ -84,7 +81,7 @@ export default function MyBookings() {
               ))}
             </View>
           ) : bookings.error ? null : tab === "upcoming" ? (
-            <EmptyState title="Chưa có lịch sắp tới" text="Tìm người làm và đặt lịch, họ sẽ xem và nhận lịch trong 2 giờ." action="Khám phá" onAction={() => router.navigate("/")} />
+            <EmptyState title="Chưa có lịch sắp tới" text="Chọn Artist và đặt lịch, họ sẽ xem và nhận lịch trong 2 giờ." action="Khám phá" onAction={() => router.navigate("/")} />
           ) : (
             <EmptyState title="Chưa có lịch nào đã qua" />
           )

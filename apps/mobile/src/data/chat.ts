@@ -8,6 +8,8 @@ export interface ThreadSummary {
   id: string
   otherName: string
   otherAvatar?: string
+  /** The other side is the Artist: they get the default picture until they add one. */
+  otherIsArtist: boolean
   proSlug: string
   bookingId: string | null
   lastMessage: string
@@ -56,6 +58,7 @@ export async function listThreads(uid: string): Promise<ThreadSummary[]> {
         id: t.id,
         otherName: String((iAmPro ? t.customer_name : pro.display_name) || "Người dùng"),
         otherAvatar: iAmPro ? undefined : imageUrl(pro.avatar_path, "avatars"),
+        otherIsArtist: !iAmPro,
         proSlug: String(pro.slug ?? ""),
         bookingId: t.booking_id ?? null,
         lastMessage: last

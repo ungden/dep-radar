@@ -1,21 +1,13 @@
 import * as React from "react"
 import { router } from "expo-router"
-import { Tabs } from "expo-router/js-tabs"
-import { TabBar, type TabSpec } from "@/components/tab-bar"
+import { NativeTabs } from "expo-router/unstable-native-tabs"
 import { useApp } from "@/state/app"
 import { colors } from "@/theme"
-
-const SPECS: Record<string, TabSpec> = {
-  index: { label: "Khám phá", icon: "explore" },
-  tim: { label: "Tìm", icon: "search" },
-  dang: { label: "Yêu cầu", icon: "plus", center: true },
-  "lich-hen": { label: "Lịch hẹn", icon: "calendar" },
-  toi: { label: "Tôi", icon: "person" },
-}
 
 /** A freelancer opens the app straight into Studio, once per launch. */
 let routedByMode = false
 
+/** The system's own tab bar: Liquid Glass on iOS, Material on Android. */
 export default function CustomerTabs() {
   const { mode, data } = useApp()
   React.useEffect(() => {
@@ -25,24 +17,23 @@ export default function CustomerTabs() {
   }, [mode, data])
 
   return (
-    <Tabs
-      tabBar={(props) => <TabBar {...props} specs={SPECS} />}
-      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.canvas } }}
-    >
-      <Tabs.Screen name="index" />
-      <Tabs.Screen name="tim" />
-      <Tabs.Screen
-        name="dang"
-        listeners={{
-          tabPress: (e) => {
-            // "+" posts a request: a form that slides up over the current tab.
-            e.preventDefault()
-            router.push("/yeu-cau/moi")
-          },
-        }}
-      />
-      <Tabs.Screen name="lich-hen" />
-      <Tabs.Screen name="toi" />
-    </Tabs>
+    <NativeTabs tintColor={colors.accent}>
+      <NativeTabs.Trigger name="index" contentStyle={{ backgroundColor: colors.canvas }}>
+        <NativeTabs.Trigger.Label>Khám phá</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="sparkles" md="explore" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="artist" contentStyle={{ backgroundColor: colors.canvas }}>
+        <NativeTabs.Trigger.Label>Artist</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="paintbrush.pointed" md="brush" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="lich-hen" contentStyle={{ backgroundColor: colors.canvas }}>
+        <NativeTabs.Trigger.Label>Lịch hẹn</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="calendar" md="calendar_month" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="toi" contentStyle={{ backgroundColor: colors.canvas }}>
+        <NativeTabs.Trigger.Label>Tôi</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="person" md="person" />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   )
 }

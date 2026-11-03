@@ -2,7 +2,7 @@ import * as React from "react"
 import { router } from "expo-router"
 import { ScrollView, View } from "react-native"
 import { CategoryIcon } from "@/components/category-icon"
-import { colors, gutter, radius } from "@/theme"
+import { colors, gutter, radius, hairline } from "@/theme"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
@@ -43,7 +43,7 @@ function Option({ icon, title, text, onPress, external }: { icon: React.ReactNod
     <Press
       onPress={onPress}
       accessibilityLabel={`${title}. ${text}`}
-      style={{ flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, padding: 16 }}
+      style={{ flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: hairline, borderColor: colors.line, padding: 16 }}
     >
       {icon}
       <View style={{ flex: 1, gap: 2 }}>

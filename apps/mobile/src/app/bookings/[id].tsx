@@ -13,10 +13,12 @@ import {
   confirmPaymentReceived,
   declineBooking,
   markDeparted,
+  markNoShow,
   disputeNoShow,
   getBooking,
   hasDisputedNoShow,
   reportProNoShow,
+  requestReschedule,
   respondReschedule,
   startBooking,
   type BookingItem,
@@ -32,6 +34,7 @@ import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
 import { StatusPill } from "@/components/booking-row"
 import { CustomerReviewCard } from "@/components/customer-review"
 import { useSafetyMenu } from "@/components/safety"
+import { DeliverCard, RescheduleButton } from "@/components/partner-booking-actions"
 import { Timeline, type TimelineStep } from "@/components/timeline"
 import { useApp } from "@/state/app"
 import { useNow } from "@/state/keyboard"
@@ -77,7 +80,7 @@ export default function BookingDetail() {
   const app = useApp()
   const booking = useAsync(app.uid ? () => getBooking(id, app.uid!) : null, [id, app.uid])
   const reasonSheet = useSheet()
-  const [reasonFor, setReasonFor] = React.useState<"cancel" | "decline" | "noshow" | "dispute">("cancel")
+  const [reasonFor, setReasonFor] = React.useState<"cancel" | "decline" | "noshow" | "dispute" | "absent">("cancel")
   const [reason, setReason] = React.useState("")
   const [busy, setBusy] = React.useState<string | null>(null)
   const bv = booking.value
@@ -143,7 +146,9 @@ export default function BookingDetail() {
   }
   const confirmLeft = Date.parse(b.confirmBy) - now
   const hoursToStart = (Date.parse(b.startsAt) - now) / 3_600_000
-  const canCancel = ["pending", "confirmed"].includes(b.status)
+  // A partner answers a booking still waiting with "Từ chối", above.
+  const canCancel = b.status === "confirmed" || (b.status === "pending" && !iAmPro)
+  const canMarkAbsent = iAmPro && (b.status === "confirmed" || b.status === "in_progress") && now >= Date.parse(b.startsAt) + 15 * 60_000
   const active = bookingChatOpen(b.status)
   // Each side's number only while the job is live (data/bookings.ts reads it that way too).
   const phone = active ? (iAmPro ? b.customer.phone : b.pro.phone) : null
@@ -175,6 +180,7 @@ export default function BookingDetail() {
       min: 0,
     },
     dispute: { title: "Khiếu nại báo vắng mặt", action: "Gửi khiếu nại", done: "Đã gửi khiếu nại. 360dep sẽ xem xét.", placeholder: "Chuyện gì đã xảy ra?", min: 10 },
+    absent: { title: "Khách vắng mặt", action: "Báo khách vắng mặt", done: "Đã báo khách vắng mặt", placeholder: "Bạn đã chờ tới mấy giờ, có gọi được khách không… (không bắt buộc)", min: 0 },
   }
   const sheet = SHEET[reasonFor]
 
@@ -216,7 +222,7 @@ export default function BookingDetail() {
 
       <Card>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <Avatar name={other} uri={iAmPro ? undefined : b.pro.avatar} size={44} />
+          <Avatar name={other} uri={iAmPro ? undefined : b.pro.avatar} artist={!iAmPro} size={44} />
           <View style={{ flex: 1 }}>
             <Txt w={700}>{other}</Txt>
             <Txt v="meta" color={colors.inkSoft}>
@@ -440,6 +446,17 @@ export default function BookingDetail() {
             </Txt>
           )
         ) : null}
+        {iAmPro && b.status === "completed" && b.delivery && !b.delivery.acceptedAt ? <DeliverCard booking={b} onDone={() => void booking.reload()} /> : null}
+        {canMarkAbsent ? <Button label="Khách vắng mặt" variant="danger" full onPress={() => openSheet("absent")} /> : null}
+        {iAmPro && b.status === "confirmed" && hoursToStart > 0 ? (
+          b.rescheduleTo && b.rescheduleBy === "pro" ? (
+            <Txt v="meta" color={colors.muted} center>
+              Đã đề nghị đổi sang {at(b.rescheduleTo)}, chờ {b.customer.name} trả lời.
+            </Txt>
+          ) : (
+            <RescheduleButton onSend={(date, time) => run("reschedule", () => requestReschedule(b.id, date, time), "Đã gửi đề nghị đổi giờ")} />
+          )
+        ) : null}
         {iAmPro && b.status === "completed" ? <CustomerReviewCard booking={b} now={now} onDone={() => void booking.reload()} /> : null}
         {canCancel ? <Button label={iAmPro ? "Huỷ lịch đã nhận" : "Huỷ lịch"} variant="danger" full onPress={() => openSheet("cancel")} /> : null}
         {canCancel && !iAmPro ? (
@@ -467,6 +484,8 @@ export default function BookingDetail() {
               const task =
                 reasonFor === "decline"
                   ? () => declineBooking(b.id, text)
+                  : reasonFor === "absent"
+                    ? () => markNoShow(b.id, text)
                   : reasonFor === "noshow"
                     ? () => reportProNoShow(b.id, text)
                     : reasonFor === "dispute"
@@ -479,7 +498,9 @@ export default function BookingDetail() {
         }
       >
         <Txt color={colors.inkSoft}>
-          {reasonFor === "noshow"
+          {reasonFor === "absent"
+            ? `Chỉ báo khi bạn đã tới nơi và chờ quá 15 phút. Bạn không mất phí 360dep cho lịch này.${b.quote.travelFee > 0 ? ` 360dep bù phí di chuyển ${formatPrice(b.quote.travelFee)} vào ví bạn sau 24 giờ nếu khách không khiếu nại.` : ""}`
+            : reasonFor === "noshow"
             ? `Lịch hẹn sẽ được huỷ (tính là ${b.pro.name} huỷ) và 360dep nhận báo cáo để xem xét. Chỉ báo khi người làm thật sự không đến.`
             : reasonFor === "dispute"
               ? "Kể ngắn gọn chuyện đã xảy ra (ít nhất 10 ký tự). 360dep sẽ xem xét và liên hệ nếu cần."
@@ -494,7 +515,7 @@ export default function BookingDetail() {
           placeholderTextColor={colors.muted}
           multiline
           maxLength={reasonFor === "dispute" || reasonFor === "noshow" ? 1000 : 300}
-          style={{ minHeight: 88, backgroundColor: colors.subtle, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
+          style={{ minHeight: 88, backgroundColor: colors.subtle, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 17, color: colors.ink, textAlignVertical: "top" }}
         />
       </Sheet>
     </ScrollView>

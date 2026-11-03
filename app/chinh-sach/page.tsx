@@ -73,7 +73,7 @@ export default async function PolicyPage() {
               Quá hạn, lịch tự hết hạn và khung giờ được trả lại cho người khác đặt.
             </li>
             <li>
-              Hoặc khách đăng yêu cầu: khách chọn một trong ba mức giá cho gói và tổng phụ phí tối đa đồng ý. Chỉ đối tác đang niêm yết đúng mức giá, đủ điều kiện và không vượt tổng này mới nhận được. 360dep báo cho mọi người làm phù hợp quanh khách; ai bấm “Nhận việc” trước thì được việc, lịch hẹn được xác
+              Hoặc khách đăng yêu cầu: khách chọn một trong ba mức giá cho gói và tổng phụ phí tối đa đồng ý. Đối tác niêm yết bằng hoặc thấp hơn mức khách chọn, đủ điều kiện và không vượt tổng này thì nhận được, và làm theo đúng mức khách đã chọn. 360dep báo cho mọi người làm phù hợp quanh khách; ai bấm “Nhận việc” trước thì được việc, lịch hẹn được xác
               nhận ngay. Không có báo giá hay trả giá.
             </li>
             <li>

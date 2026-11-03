@@ -181,7 +181,7 @@ export function useSafetyMenu(target: Target | null) {
             placeholderTextColor={colors.muted}
             multiline
             maxLength={1000}
-            style={{ minHeight: 96, backgroundColor: colors.subtle, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
+            style={{ minHeight: 96, backgroundColor: colors.subtle, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 17, color: colors.ink, textAlignVertical: "top" }}
             accessibilityLabel="Chi tiết báo cáo"
           />
           <Txt w={600}>Ảnh, clip làm bằng chứng (nếu có)</Txt>

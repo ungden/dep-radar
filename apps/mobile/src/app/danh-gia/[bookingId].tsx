@@ -13,7 +13,7 @@ import { STAR_WORDS, StarPicker } from "@/components/stars"
 import { useApp } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
 import { useAsync } from "@/state/use-async"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, radius, hairline } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
 import { Avatar, Chip, EmptyState, ErrorNote, Skeleton } from "@/ui/bits"
 import { haptic } from "@/ui/haptics"
@@ -175,7 +175,7 @@ export default function WriteReview() {
       {header}
       <ScrollView contentContainerStyle={{ padding: gutter, gap: 20 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.md, padding: 12 }}>
-          <Avatar name={b.pro.name} uri={b.pro.avatar} size={44} />
+          <Avatar name={b.pro.name} uri={b.pro.avatar} artist size={44} />
           <View style={{ flex: 1 }}>
             <Txt w={700}>{b.pro.name}</Txt>
             <Txt v="meta" color={colors.muted}>
@@ -218,7 +218,7 @@ export default function WriteReview() {
             placeholder="Kết quả có giống mẫu không, có đến đúng giờ, dụng cụ có sạch không…"
             placeholderTextColor={colors.muted}
             accessibilityLabel="Nội dung đánh giá"
-            style={{ minHeight: 110, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
+            style={{ minHeight: 110, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 17, color: colors.ink, textAlignVertical: "top" }}
           />
           <Txt v="meta" color={bodyOk ? colors.muted : colors.warning}>
             {bodyOk ? "Cảm ơn bạn!" : `Ít nhất ${MIN_BODY} ký tự (còn ${MIN_BODY - text.trim().length})`}
@@ -256,7 +256,7 @@ export default function WriteReview() {
         </Txt>
         {error ? <ErrorNote text={error} /> : null}
       </ScrollView>
-      <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: keyboard ? 12 : Math.max(insets.bottom, 12), backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line }}>
+      <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: keyboard ? 12 : Math.max(insets.bottom, 12), backgroundColor: colors.surface, borderTopWidth: hairline, borderTopColor: colors.line }}>
         <Button label={editing ? "Lưu thay đổi" : "Gửi đánh giá"} full size="lg" disabled={!valid || (editing && !dirty)} busy={busy} onPress={() => void submit()} />
       </View>
     </KeyboardAvoidingView>

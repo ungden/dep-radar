@@ -1,21 +1,26 @@
 import * as React from "react"
-import { Stack, router, useFocusEffect, useNavigation } from "expo-router"
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { CATEGORIES, POLICY, templatesByCategory, tierLabels, serviceQuantity, isUrgent, PRICE_LEVEL_NOTE, type CategoryId } from "@/shared"
+import { Stack, router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router"
+import { Image } from "expo-image"
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View, useWindowDimensions } from "react-native"
+import Animated, { FadeIn } from "react-native-reanimated"
+import { CATEGORIES, POLICY, getTemplate, templatesByCategory, tierLabels, serviceQuantity, isUrgent, type CategoryId } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
-import { addDays, formatDateLong, formatDuration, formatPrice, todayISO, weekdayShort } from "@/data/format"
+import { addDays, formatDateLong, formatDuration, formatPrice, localTime, todayISO, weekdayShort } from "@/data/format"
+import { askForPushPermission } from "@/data/push"
 import { setJobReferences, uploadReference } from "@/data/references"
 import { postJob, requestPrice } from "@/data/requests"
 import { ReferencePicker, type PickedPhoto } from "@/components/reference-photos"
+import { BookingBar } from "@/components/booking-bar"
 import { CategoryTiles } from "@/components/category-icon"
+import { PhotoBadge, illustration } from "@/components/tiles"
 import { useApp } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
 import { ConductNote } from "@/components/conduct"
 import { needsConductNote } from "@/shared"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, radius, hairline } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
-import { Chip, EmptyState, ErrorNote } from "@/ui/bits"
+import { Icon } from "@/ui/icon"
+import { ErrorNote } from "@/ui/bits"
 import { haptic } from "@/ui/haptics"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
@@ -27,20 +32,32 @@ const TIMES = Array.from({ length: 28 }, (_, i) => {
 })
 
 /**
- * Đăng yêu cầu: what, when, where, at one of the option's fixed price levels
- * (a higher level is usually taken sooner). Every freelancer who can do
- * it is told and the first to take it gets it. The same post_job RPC as
- * app/requests/new on the web. Requests are for work at the customer's
- * place; studio visits are currently closed.
+ * Đặt theo dịch vụ, one question to a screen: what, which package and level,
+ * when, where, then a summary to send. An Artist listed at or below the level
+ * can take it, so a higher level reaches more of them. Every Artist who can do
+ * it is told and the first to take it gets it (post_job, as app/requests/new on
+ * the web). Requests are for work at the customer's place; studio visits are
+ * currently closed. Coming from a service page, the first question is skipped.
+ * Anyone can look through services and prices here; signing in is asked for
+ * only when sending.
  */
+const STEPS = ["service", "package", "when", "where", "confirm"] as const
+
 export default function NewRequest() {
   const app = useApp()
-  const insets = useSafeAreaInsets()
   const keyboard = useKeyboardVisible()
   const navigation = useNavigation()
-  const [category, setCategory] = React.useState<CategoryId>("nail")
-  const [templateId, setTemplateId] = React.useState(templatesByCategory("nail")[0].id)
-  const [variantId, setVariantId] = React.useState(templatesByCategory("nail")[0].variants[0].id)
+  const params = useLocalSearchParams<{ template?: string }>()
+  const given = React.useMemo(() => {
+    const t = params.template ? getTemplate(params.template) : undefined
+    return t && !t.addon ? t : undefined
+  }, [params.template])
+  const first = given ? 1 : 0
+  const [step, setStep] = React.useState(first)
+  const { width } = useWindowDimensions()
+  const [category, setCategory] = React.useState<CategoryId>(given?.category ?? "nail")
+  const [templateId, setTemplateId] = React.useState(given?.id ?? templatesByCategory("nail")[0].id)
+  const [variantId, setVariantId] = React.useState((given ?? templatesByCategory("nail")[0]).variants[0].id)
   const [quantity, setQuantity] = React.useState(1)
   /** The chosen price level per person; null is "Tiêu chuẩn". */
   const [feeLimit, setFeeLimit] = React.useState<number>(POLICY.nearTravelFee)
@@ -61,14 +78,14 @@ export default function NewRequest() {
     }, []),
   )
 
-  const dirty = !sent && (Boolean(description.trim()) || photos.length > 0 || category !== "nail")
+  const dirty = !sent && (Boolean(description.trim()) || photos.length > 0)
   const leaving = React.useRef(false)
   React.useEffect(() => {
     if (!dirty) return
     return navigation.addListener("beforeRemove", (e) => {
       if (leaving.current) return
       e.preventDefault()
-      Alert.alert("Bỏ yêu cầu đang viết?", undefined, [
+      Alert.alert("Bỏ đơn đang đặt?", undefined, [
         { text: "Ở lại", style: "cancel" },
         { text: "Bỏ", style: "destructive", onPress: () => navigation.dispatch(e.data.action) },
       ])
@@ -76,20 +93,7 @@ export default function NewRequest() {
   }, [dirty, navigation])
 
   const close = <IconButton name="close" label="Đóng" onPress={() => router.back()} />
-  if (!app.uid) {
-    return (
-      <View style={{ flex: 1, backgroundColor: colors.canvas, paddingHorizontal: gutter, justifyContent: "center" }}>
-        <Stack.Screen options={{ headerRight: () => close }} />
-        <EmptyState
-          title="Đăng yêu cầu, có người nhận"
-          text="Chọn bạn cần gì, khi nào, ở đâu. Giá theo bảng giá 360dep; người làm gần bạn nhận việc, ai nhận trước sẽ làm. Không mất phí đăng."
-          action="Đăng nhập để đăng"
-          onAction={() => router.push("/login")}
-        />
-      </View>
-    )
-  }
-
+  const back = <IconButton name="back" label="Quay lại" onPress={() => setStep((n) => n - 1)} />
   const templates = templatesByCategory(category)
   const tpl = templates.find((t) => t.id === templateId) ?? templates[0]
   const variant = tpl.variants.find((v) => v.id === variantId) ?? tpl.variants[0]
@@ -100,7 +104,27 @@ export default function NewRequest() {
   const chosen = addresses.find((a) => a.id === addressId) ?? addresses.find((a) => a.isDefault) ?? addresses[0] ?? null
   const days = Array.from({ length: 21 }, (_, i) => addDays(todayISO(), i))
   const maxTotal = price * heads + feeLimit + (isUrgent(date, time) ? POLICY.urgentFee : 0)
-  const valid = (variant.sessions ?? 1) === 1 && !tpl.studioOnly && Boolean(chosen) && date >= todayISO()
+  const valid = (variant.sessions ?? 1) === 1 && !tpl.studioOnly && date >= todayISO()
+  // Said before sending, not discovered after a long wait. Hours, distance and
+  // the partner's wallet are checked when it is posted (jobs.notified).
+  const area = chosen?.city ?? app.city
+  const nobodyHere =
+    Boolean(app.data) &&
+    !app.data?.pros.some(
+      (p) =>
+        p.published &&
+        p.acceptingJobs &&
+        !app.blocked.has(p.uuid) &&
+        (!area || p.city === area) &&
+        app.data?.services.some((s) => s.proId === p.id && s.templateId === tpl.id && s.active && s.prices[variant.id] != null && s.prices[variant.id] <= price),
+    )
+
+  const name = STEPS[step]
+  const now = localTime(new Date())
+  const openTimes = TIMES.filter((t) => date > todayISO() || t > now)
+  const canContinue =
+    name === "package" ? (variant.sessions ?? 1) === 1 && !tpl.studioOnly : name === "service" ? !tpl.studioOnly : name === "when" ? openTimes.includes(time) : true
+  const timeWidth = Math.floor((width - gutter * 2 - 20) / 3)
 
   const pickCategory = (c: CategoryId) => {
     setCategory(c)
@@ -116,7 +140,8 @@ export default function NewRequest() {
   }
 
   const submit = async () => {
-    if (!chosen) return
+    if (!app.uid) return router.push("/login")
+    if (!chosen) return router.push({ pathname: "/dia-chi/sua", params: { city: app.city ?? "" } })
     if (!app.me.account?.phone) return router.push("/so-dien-thoai")
     setBusy(true)
     setError(null)
@@ -145,222 +170,289 @@ export default function NewRequest() {
         const sentPhotos = await setJobReferences(res.data, paths)
         if (!sentPhotos.ok) throw new Error(sentPhotos.error)
       } catch (e) {
-        Alert.alert("Đã đăng yêu cầu", `Nhưng chưa gửi được ảnh mẫu: ${e instanceof Error ? e.message : "lỗi kết nối"}`)
+        Alert.alert("Đã gửi đơn", `Nhưng chưa gửi được ảnh mẫu: ${e instanceof Error ? e.message : "lỗi kết nối"}`)
       }
     }
     setBusy(false)
     haptic.success()
     setSent(true)
     leaving.current = true
+    // The waiting screen promises a notification when someone takes it.
+    void askForPushPermission(app.uid)
     router.replace({ pathname: "/yeu-cau/[id]", params: { id: res.data } })
   }
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.canvas }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}>
-      <Stack.Screen options={{ gestureEnabled: !dirty, headerRight: () => close }} />
-      <ScrollView contentContainerStyle={{ padding: gutter, gap: 22 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
-        <Txt color={colors.inkSoft}>Giá theo bảng giá 360dep. Người làm gần bạn rảnh giờ đó được báo ngay; ai nhận trước sẽ làm cho bạn. Không mất phí đăng.</Txt>
-
-        <Group title="Bạn cần làm gì?">
-          <CategoryTiles items={CATEGORIES.map((c) => ({ id: c.id, label: c.label }))} value={category} onChange={(id) => pickCategory(id as CategoryId)} />
-        </Group>
-
-        <Group title="Dịch vụ">
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {templates.map((t) => (
-              <Chip
-                key={t.id}
-                label={t.name}
-                selected={t.id === tpl.id}
-                onPress={() => pickVariant(t.id, t.variants[0].id)}
-              />
-            ))}
-          </View>
-          {tpl.studioOnly ? (
-            <Txt v="meta" color={colors.warning}>
-              Dịch vụ cần thiết bị tại studio hiện chưa mở. Hãy chọn dịch vụ làm tận nơi.
-            </Txt>
-          ) : null}
-        </Group>
-
-        <Group title="Gói">
-          {tpl.variants.map((v) => {
-            const selected = v.id === variant.id
-            return (
-              <Press
-                key={v.id}
-                haptic="select"
-                onPress={() => pickVariant(tpl.id, v.id)}
-                accessibilityState={{ selected }}
-                style={{ padding: 14, borderRadius: radius.md, backgroundColor: selected ? colors.accentSoft : colors.surface, borderWidth: 2, borderColor: selected ? colors.accent : "transparent", gap: 2 }}
-              >
-                <Txt w={selected ? 700 : 600}>
-                  {v.label} · {formatDuration(v.durationMin)}
-                </Txt>
-                <Txt v="meta" color={colors.inkSoft}>
-                  Từ {formatPrice(v.minPrice)}
-                  {v.perPerson ? " mỗi người" : ""}
-                </Txt>
-              </Press>
-            )
-          })}
-          {variant.perPerson ? (
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <Txt w={600}>Số người</Txt>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-                <Button label="−" variant="secondary" size="sm" disabled={heads <= (variant.minQuantity ?? 1)} onPress={() => setQuantity(heads - 1)} />
-                <Txt v="lead" w={700} tabular accessibilityLabel={`${heads} người`}>
-                  {heads}
-                </Txt>
-                <Button label="+" variant="secondary" size="sm" disabled={heads >= (variant.maxQuantity ?? 1)} onPress={() => setQuantity(heads + 1)} />
+      <Stack.Screen options={{ gestureEnabled: !dirty, headerRight: () => close, headerLeft: step > first ? () => back : undefined }} />
+      <View style={{ height: 3, marginHorizontal: gutter, borderRadius: 2, backgroundColor: colors.line }} accessibilityLabel={`Bước ${step + 1 - first} trên ${STEPS.length - first}`}>
+        <View style={{ height: 3, width: `${((step + 1 - first) / (STEPS.length - first)) * 100}%`, borderRadius: 2, backgroundColor: colors.accent }} />
+      </View>
+      <ScrollView key={name} contentContainerStyle={{ padding: gutter, paddingTop: 24, paddingBottom: 40 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
+        <Animated.View entering={FadeIn.duration(220)} style={{ gap: 32 }}>
+          {name === "service" ? (
+            <>
+              <Question title="Bạn cần làm gì?" />
+              <CategoryTiles items={CATEGORIES.map((c) => ({ id: c.id, label: c.label }))} value={category} onChange={(id) => pickCategory(id as CategoryId)} />
+              <View style={{ gap: 12 }}>
+                {templates.filter((t) => !t.addon).map((t) => (
+                  <Option key={t.id} title={t.name} selected={t.id === tpl.id} onPress={() => pickVariant(t.id, t.variants[0].id)} />
+                ))}
               </View>
-            </View>
-          ) : null}
-          {tpl.includes.length ? (
-            <Txt v="meta" color={colors.muted}>
-              Bao gồm: {tpl.includes.join(" · ")}
-            </Txt>
-          ) : null}
-        </Group>
-
-        <Group title="Mô tả thêm (không bắt buộc)">
-          <TextInput
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            maxLength={300}
-            placeholder="VD: da hơi dầu, muốn makeup trong trẻo, bền đến tối…"
-            placeholderTextColor={colors.muted}
-            accessibilityLabel="Mô tả thêm"
-            style={{ minHeight: 88, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
-          />
-        </Group>
-
-        <Group title="Ảnh mẫu (không bắt buộc)">
-          <Txt v="meta" color={colors.inkSoft}>
-            Tối đa 3 ảnh kiểu bạn muốn (tone makeup, kiểu tóc, mẫu nail). Người làm xem trước khi nhận, để chỉ người làm được mới nhận.
-          </Txt>
-          <ReferencePicker value={photos} onChange={setPhotos} disabled={busy} />
-        </Group>
-
-        <Group title="Ngày">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: gutter }} style={{ marginHorizontal: -gutter }}>
-            {days.map((d) => {
-              const selected = d === date
-              return (
-                <Press
-                  key={d}
-                  haptic="select"
-                  onPress={() => setDate(d)}
-                  accessibilityState={{ selected }}
-                  accessibilityLabel={formatDateLong(d)}
-                  style={{ width: 56, paddingVertical: 10, borderRadius: radius.md, alignItems: "center", backgroundColor: selected ? colors.accent : colors.surface }}
-                >
-                  <Txt v="meta" color={selected ? colors.surface : colors.muted}>
-                    {d === todayISO() ? "Nay" : weekdayShort(d)}
-                  </Txt>
-                  <Txt v="lead" w={700} color={selected ? colors.surface : colors.ink}>
-                    {Number(d.slice(8))}
-                  </Txt>
-                </Press>
-              )
-            })}
-          </ScrollView>
-        </Group>
-
-        <Group title="Giờ bắt đầu">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: gutter }} style={{ marginHorizontal: -gutter }}>
-            {TIMES.map((t) => (
-              <Chip key={t} label={t} selected={t === time} onPress={() => setTime(t)} />
-            ))}
-          </ScrollView>
-        </Group>
-
-        <Group title="Làm tại">
-          {addresses.map((a) => {
-            const selected = a.id === chosen?.id
-            return (
-              <Press
-                key={a.id}
-                haptic="select"
-                onPress={() => setAddressId(a.id)}
-                accessibilityState={{ selected }}
-                style={{ padding: 14, borderRadius: radius.md, backgroundColor: selected ? colors.accentSoft : colors.surface, borderWidth: 2, borderColor: selected ? colors.accent : "transparent", gap: 2 }}
-              >
-                <Txt w={selected ? 700 : 600}>{a.label || "Địa chỉ"}</Txt>
-                <Txt v="meta" color={colors.inkSoft}>
-                  {[a.detail, a.district, a.city].filter(Boolean).join(", ")}
+              {tpl.studioOnly ? (
+                <Txt v="meta" color={colors.warning}>
+                  Dịch vụ cần thiết bị tại studio hiện chưa mở. Hãy chọn dịch vụ làm tận nơi.
                 </Txt>
-              </Press>
-            )
-          })}
-          <Button
-            label={addresses.length ? "Thêm địa chỉ khác" : "Thêm địa chỉ"}
-            variant={addresses.length ? "secondary" : "primary"}
-            size="sm"
-            icon="plus"
-            onPress={() => router.push({ pathname: "/dia-chi/sua", params: { city: app.city ?? "" } })}
-          />
-        </Group>
+              ) : null}
+            </>
+          ) : null}
 
-        <Group title="Giá">
-          <View style={{ backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, gap: 10 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
-              <Txt color={colors.inkSoft} style={{ flexShrink: 1 }}>
-                {heads > 1 ? `${formatPrice(price)} × ${heads} người` : "Giá dịch vụ"}
-              </Txt>
-              <Txt v="title" w={800} tabular>
-                {formatPrice(price * heads)}
-              </Txt>
-            </View>
-            <View style={{ flexDirection: "row", gap: 8 }} accessibilityRole="radiogroup">
-              {variant.tiers.map((t, i) => {
-                const selected = t === price
+          {name === "package" ? (
+            <>
+              <Press onPress={() => setStep(0)} accessibilityLabel={`${tpl.name}. Đổi dịch vụ`} style={{ borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surface }}>
+                <View style={{ height: 150 }}>
+                  <Image source={{ uri: illustration(category, 1) }} style={{ flex: 1, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
+                  <PhotoBadge text="Ảnh minh hoạ" position="tl" />
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 16 }}>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Txt v="title">{tpl.name}</Txt>
+                    {tpl.includes.length ? (
+                      <Txt v="meta" color={colors.muted} numberOfLines={2}>
+                        {tpl.includes.join(" · ")}
+                      </Txt>
+                    ) : null}
+                  </View>
+                  <Txt v="meta" w={600} color={colors.accentDark}>
+                    Đổi
+                  </Txt>
+                </View>
+              </Press>
+              <View style={{ gap: 12 }}>
+                <Txt v="title">Chọn gói</Txt>
+                {tpl.variants.map((v) => (
+                  <Option key={v.id} title={v.label} note={formatDuration(v.durationMin)} selected={v.id === variant.id} onPress={() => pickVariant(tpl.id, v.id)} />
+                ))}
+                {variant.perPerson ? (
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 }}>
+                    <Txt w={600}>Số người</Txt>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+                      <Button label="−" variant="secondary" size="sm" disabled={heads <= (variant.minQuantity ?? 1)} onPress={() => setQuantity(heads - 1)} />
+                      <Txt v="lead" w={700} tabular accessibilityLabel={`${heads} người`}>
+                        {heads}
+                      </Txt>
+                      <Button label="+" variant="secondary" size="sm" disabled={heads >= (variant.maxQuantity ?? 1)} onPress={() => setQuantity(heads + 1)} />
+                    </View>
+                  </View>
+                ) : null}
+                {(variant.sessions ?? 1) > 1 ? <ErrorNote text="Gói nhiều buổi: đặt trực tiếp từ hồ sơ Artist để chọn đủ lịch." /> : null}
+              </View>
+              <View style={{ gap: 12 }} accessibilityRole="radiogroup">
+                <View style={{ gap: 2 }}>
+                  <Txt v="title">Chọn mức giá</Txt>
+                  <Txt v="meta" color={colors.muted}>
+                    Mức càng cao, càng nhiều Artist nhận được.
+                  </Txt>
+                </View>
+                {variant.tiers.map((t, i) => (
+                  <Option key={t} title={labels[i]} trailing={formatPrice(t)} selected={t === price} onPress={() => setTier(t)} />
+                ))}
+              </View>
+            </>
+          ) : null}
+
+          {name === "when" ? (
+            <>
+              <Question title="Khi nào bạn muốn làm?" />
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingHorizontal: gutter }} style={{ marginHorizontal: -gutter }}>
+                {days.map((d) => {
+                  const selected = d === date
+                  return (
+                    <Press
+                      key={d}
+                      haptic="select"
+                      onPress={() => setDate(d)}
+                      accessibilityState={{ selected }}
+                      accessibilityLabel={formatDateLong(d)}
+                      style={{ width: 68, paddingVertical: 14, gap: 4, borderRadius: radius.md, alignItems: "center", backgroundColor: selected ? colors.accent : colors.surface }}
+                    >
+                      <Txt v="meta" color={selected ? colors.surface : colors.muted}>
+                        {d === todayISO() ? "Nay" : weekdayShort(d)}
+                      </Txt>
+                      <Txt v="title" tabular color={selected ? colors.surface : colors.ink}>
+                        {Number(d.slice(8))}
+                      </Txt>
+                    </Press>
+                  )
+                })}
+              </ScrollView>
+              {[
+                { label: "Sáng", from: "00:00", to: "12:00" },
+                { label: "Chiều", from: "12:00", to: "18:00" },
+                { label: "Tối", from: "18:00", to: "24:00" },
+              ].map((part) => {
+                const times = openTimes.filter((t) => t >= part.from && t < part.to)
+                if (!times.length) return null
                 return (
-                  <Press
-                    key={t}
-                    haptic="select"
-                    onPress={() => setTier(t)}
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected }}
-                    style={{ flex: 1, alignItems: "center", paddingVertical: 10, borderRadius: radius.md, backgroundColor: selected ? colors.accent : colors.subtle, gap: 2 }}
-                  >
-                    <Txt v="meta" color={selected ? "#fff" : colors.muted}>
-                      {labels[i]}
+                  <View key={part.label} style={{ gap: 12 }}>
+                    <Txt w={600} color={colors.inkSoft}>
+                      {part.label}
                     </Txt>
-                    <Txt w={700} tabular color={selected ? "#fff" : colors.ink}>
-                      {formatPrice(t)}
-                    </Txt>
-                  </Press>
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+                      {times.map((t) => {
+                        const selected = t === time
+                        return (
+                          <Press
+                            key={t}
+                            haptic="select"
+                            onPress={() => setTime(t)}
+                            accessibilityState={{ selected }}
+                            style={{ width: timeWidth, height: 48, borderRadius: radius.md, alignItems: "center", justifyContent: "center", backgroundColor: selected ? colors.accent : colors.surface }}
+                          >
+                            <Txt w={600} tabular color={selected ? colors.surface : colors.ink}>
+                              {t}
+                            </Txt>
+                          </Press>
+                        )
+                      })}
+                    </View>
+                  </View>
                 )
               })}
-            </View>
-            <Txt v="meta" color={colors.inkSoft}>
-              {PRICE_LEVEL_NOTE}
-            </Txt>
-          </View>
-        </Group>
+            </>
+          ) : null}
 
-        <Txt v="meta" color={colors.muted}>
-          Trả tiền mặt hoặc chuyển khoản cho người làm sau khi xong, không cần cọc. Làm tại nhà có phí di chuyển theo khoảng cách; bắt đầu trong {POLICY.urgentWithinHours} giờ tới có thêm phí đặt gấp. Các khoản phí hiện rõ trước khi xác nhận lịch.
-        </Txt>
-        <Group title="Phí di chuyển tối đa đồng ý"><View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>{[POLICY.nearTravelFee, POLICY.travelFeeCap].map((n) => <Chip key={n} label={formatPrice(n)} selected={n === feeLimit} onPress={() => setFeeLimit(n)} />)}</View><Txt>Tổng tối đa {formatPrice(maxTotal)} (đã gồm phí gấp nếu có).</Txt></Group>
-        {(variant.sessions ?? 1) > 1 && <ErrorNote text="Gói nhiều buổi: đặt trực tiếp từ hồ sơ đối tác để chọn đủ lịch." />}
-        {needsConductNote(category) ? <ConductNote /> : null}
-        {error ? <ErrorNote text={error} /> : null}
+          {name === "where" ? (
+            <>
+              <Question title="Artist đến đâu?" />
+              <View style={{ gap: 12 }}>
+                {addresses.map((a) => (
+                  <Option key={a.id} title={a.label || "Địa chỉ"} note={[a.detail, a.district, a.city].filter(Boolean).join(", ")} selected={a.id === chosen?.id} onPress={() => setAddressId(a.id)} />
+                ))}
+                {app.uid ? (
+                  <Button
+                    label={addresses.length ? "Thêm địa chỉ khác" : "Thêm địa chỉ"}
+                    variant={addresses.length ? "secondary" : "primary"}
+                    icon="plus"
+                    full
+                    onPress={() => router.push({ pathname: "/dia-chi/sua", params: { city: app.city ?? "" } })}
+                  />
+                ) : (
+                  <Txt color={colors.inkSoft}>Bạn thêm địa chỉ sau khi đăng nhập, ở bước gửi đơn.</Txt>
+                )}
+              </View>
+              <View style={{ gap: 12 }}>
+                <View style={{ gap: 2 }}>
+                  <Txt v="title">Phí di chuyển tối đa</Txt>
+                  <Txt v="meta" color={colors.muted}>
+                    Artist ở xa hơn mức này sẽ không nhận được đơn.
+                  </Txt>
+                </View>
+                {[POLICY.nearTravelFee, POLICY.travelFeeCap].map((n) => (
+                  <Option key={n} title={formatPrice(n)} selected={n === feeLimit} onPress={() => setFeeLimit(n)} />
+                ))}
+              </View>
+            </>
+          ) : null}
+
+          {name === "confirm" ? (
+            <>
+              <Question title="Xem lại đơn của bạn" />
+              <View style={{ borderRadius: radius.lg, backgroundColor: colors.surface, paddingHorizontal: 16 }}>
+                <Summary label="Dịch vụ" value={`${tpl.name}, ${variant.label}${heads > 1 ? `, ${heads} người` : ""}`} onEdit={() => setStep(1)} />
+                <Summary label="Mức giá" value={`${labels[variant.tiers.indexOf(price)] ?? ""} · ${formatPrice(price * heads)}`} onEdit={() => setStep(1)} />
+                <Summary label="Thời gian" value={`${time}, ${formatDateLong(date)}`} onEdit={() => setStep(2)} />
+                <Summary label="Địa chỉ" value={chosen ? [chosen.detail, chosen.district, chosen.city].filter(Boolean).join(", ") : "Thêm ở bước gửi đơn"} onEdit={() => setStep(3)} last />
+              </View>
+              {nobodyHere ? (
+                <View style={{ padding: 16, borderRadius: radius.md, backgroundColor: colors.highlightSoft }}>
+                  <Txt v="meta">Khu vực này chưa có Artist nhận dịch vụ này ở mức giá đã chọn, có thể phải chờ lâu.</Txt>
+                </View>
+              ) : null}
+              <View style={{ gap: 12 }}>
+                <Txt v="title">Thêm cho Artist</Txt>
+                <TextInput
+                  value={description}
+                  onChangeText={setDescription}
+                  multiline
+                  maxLength={300}
+                  placeholder="VD: da hơi dầu, muốn makeup trong trẻo… (không bắt buộc)"
+                  placeholderTextColor={colors.muted}
+                  accessibilityLabel="Mô tả thêm"
+                  style={{ minHeight: 96, backgroundColor: colors.surface, borderRadius: radius.md, padding: 16, fontFamily: fonts[400], fontSize: 17, color: colors.ink, textAlignVertical: "top" }}
+                />
+                <ReferencePicker value={photos} onChange={setPhotos} disabled={busy} />
+                <Txt v="meta" color={colors.muted}>
+                  Tối đa 3 ảnh kiểu bạn muốn. Artist xem trước khi nhận đơn.
+                </Txt>
+              </View>
+              {needsConductNote(category) ? <ConductNote /> : null}
+              <Txt v="meta" color={colors.muted}>
+                Tổng tối đa {formatPrice(maxTotal)}, đã gồm phí di chuyển và phí gấp nếu có. Trả tiền mặt hoặc chuyển khoản cho Artist sau khi xong, không cần cọc.
+              </Txt>
+              {error ? <ErrorNote text={error} /> : null}
+            </>
+          ) : null}
+        </Animated.View>
       </ScrollView>
-      <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: keyboard ? 12 : Math.max(insets.bottom, 12), backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line }}>
-        <Button label={busy ? "Đang đăng…" : "Đăng yêu cầu"} full size="lg" disabled={!valid} busy={busy} onPress={() => void submit()} />
-      </View>
+      <BookingBar
+        inline
+        keyboard={keyboard}
+        title={formatPrice(price * heads)}
+        note={heads > 1 ? `${formatPrice(price)} × ${heads} người, chưa gồm phí di chuyển` : "Chưa gồm phí di chuyển"}
+        action={name !== "confirm" ? "Tiếp tục" : busy ? "Đang gửi…" : !app.uid ? "Đăng nhập để đặt" : !chosen ? "Thêm địa chỉ" : "Tìm Artist"}
+        disabled={name === "confirm" ? !valid : !canContinue}
+        busy={busy}
+        onPress={() => (name === "confirm" ? void submit() : setStep((n) => n + 1))}
+      />
     </KeyboardAvoidingView>
   )
 }
 
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
+function Question({ title }: { title: string }) {
+  return <Txt v="h1">{title}</Txt>
+}
+
+/** One choice on its own row, tall enough to breathe; the ring says which is chosen. */
+function Option({ title, note, trailing, selected, onPress }: { title: string; note?: string; trailing?: string; selected: boolean; onPress: () => void }) {
   return (
-    <View style={{ gap: 10 }}>
-      <Txt w={700}>{title}</Txt>
-      {children}
-    </View>
+    <Press
+      haptic="select"
+      onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      style={{ flexDirection: "row", alignItems: "center", gap: 14, minHeight: 64, paddingHorizontal: 16, paddingVertical: 14, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 2, borderColor: selected ? colors.accent : colors.surface }}
+    >
+      <View style={{ flex: 1, gap: 2 }}>
+        <Txt w={600}>{title}</Txt>
+        {note ? (
+          <Txt v="meta" color={colors.inkSoft}>
+            {note}
+          </Txt>
+        ) : null}
+      </View>
+      {trailing ? (
+        <Txt w={700} tabular color={selected ? colors.accentDark : colors.ink}>
+          {trailing}
+        </Txt>
+      ) : null}
+      <View style={{ width: 24, height: 24, borderRadius: 12, borderWidth: selected ? 0 : 1.5, borderColor: colors.line, backgroundColor: selected ? colors.accent : "transparent", alignItems: "center", justifyContent: "center" }}>
+        {selected ? <Icon name="check" size={13} color={colors.surface} /> : null}
+      </View>
+    </Press>
+  )
+}
+
+function Summary({ label, value, onEdit, last }: { label: string; value: string; onEdit: () => void; last?: boolean }) {
+  return (
+    <Press onPress={onEdit} accessibilityLabel={`${label}: ${value}. Sửa`} style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60, paddingVertical: 14, borderBottomWidth: last ? 0 : hairline, borderBottomColor: colors.line }}>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Txt v="meta" color={colors.muted}>
+          {label}
+        </Txt>
+        <Txt w={500}>{value}</Txt>
+      </View>
+      <Icon name="right" size={13} color={colors.muted} />
+    </Press>
   )
 }

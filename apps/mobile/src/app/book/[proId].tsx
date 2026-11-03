@@ -19,7 +19,7 @@ import { useApp, usePro } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
 import { ConductNote } from "@/components/conduct"
 import { needsConductNote } from "@/shared"
-import { colors, controlMetrics, fonts, gutter, radius } from "@/theme"
+import { colors, controlMetrics, fonts, gutter, radius, hairline } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
 import { Card, Chip, EmptyState, ErrorNote, Line } from "@/ui/bits"
 import { haptic } from "@/ui/haptics"
@@ -431,7 +431,7 @@ function BookingFlow() {
                       onPress={() => chooseDate(d)}
                       accessibilityState={{ selected }}
                       accessibilityLabel={d === todayISO() ? `Hôm nay, ${formatDateLong(d)}` : formatDateLong(d)}
-                      style={{ width: Math.max(56, 44 * controlScale), minHeight: controlMetrics.minHeight, paddingVertical: 8, gap: 2, borderRadius: radius.md, borderWidth: 1, borderColor: selected ? colors.accentDark : colors.line, alignItems: "center", backgroundColor: selected ? colors.accent : colors.surface }}
+                      style={{ width: Math.max(56, 44 * controlScale), minHeight: controlMetrics.minHeight, paddingVertical: 8, gap: 2, borderRadius: radius.md, borderWidth: hairline, borderColor: selected ? colors.accentDark : colors.line, alignItems: "center", backgroundColor: selected ? colors.accent : colors.surface }}
                     >
                       <Txt v="controlMeta" color={selected ? colors.surface : colors.muted}>
                         {d === todayISO() ? "Nay" : weekdayShort(d)}
@@ -584,7 +584,7 @@ function BookingFlow() {
                 multiline
                 maxLength={500}
                 accessibilityLabel={`Ghi chú cho ${pro.name}`}
-                style={{ minHeight: 88, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
+                style={{ minHeight: 88, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 17, color: colors.ink, textAlignVertical: "top" }}
               />
               <Txt v="control" w={600} style={{ marginTop: 6 }}>
                 Ảnh mẫu (không bắt buộc)

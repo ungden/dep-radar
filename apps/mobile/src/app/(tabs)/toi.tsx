@@ -2,12 +2,12 @@ import * as React from "react"
 import { router } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { Alert, ScrollView, View } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { isPhoneEmail } from "@/shared"
 import { deleteMyAccount } from "@/data/actions"
 import { hasPassword, needsRecoveryEmail } from "@/data/auth"
 import { formatPhone } from "@/data/format"
 import { webLink } from "@/data/links"
+import { PageBand } from "@/components/page-band"
 import { SignInGate } from "@/components/sign-in-gate"
 import { useApp } from "@/state/app"
 import { colors, gutter, radius } from "@/theme"
@@ -19,7 +19,6 @@ import { Txt } from "@/ui/text"
 
 export default function Me() {
   const app = useApp()
-  const insets = useSafeAreaInsets()
   const [deleting, setDeleting] = React.useState(false)
   if (!app.uid) return <SignInGate title="Tôi" text="Đăng nhập để lưu mẫu yêu thích, đặt lịch và nhắn tin với người làm." footer={
     <Press onPress={() => router.push("/doi-tac")} accessibilityRole="link" style={{ padding: 20, backgroundColor: colors.surface, borderRadius: radius.lg, gap: 8 }}>
@@ -72,8 +71,9 @@ export default function Me() {
     )
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.canvas }} contentContainerStyle={{ paddingTop: insets.top + 8, paddingHorizontal: gutter, paddingBottom: 40, gap: 20 }}>
-      <Txt v="h1">Tôi</Txt>
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+    <PageBand title="Tôi" />
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ paddingTop: 20, paddingHorizontal: gutter, paddingBottom: 40, gap: 20 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
         <Avatar name={name} size={60} />
         <View style={{ flex: 1, gap: 2 }}>
@@ -112,7 +112,7 @@ export default function Me() {
       <Section>
         <Row icon="heart" label="Đã lưu" detail={app.me.savedWorkIds.length ? String(app.me.savedWorkIds.length) : undefined} onPress={() => router.push("/da-luu")} />
         <Divider style={{ marginLeft: 52 }} />
-        <Row icon="megaphone" label="Yêu cầu của tôi" onPress={() => router.push("/yeu-cau")} />
+        <Row icon="megaphone" label="Đơn theo dịch vụ" onPress={() => router.push("/yeu-cau")} />
         <Divider style={{ marginLeft: 52 }} />
         <Row icon="home" label="Địa chỉ" detail={app.me.addresses.length ? String(app.me.addresses.length) : undefined} onPress={() => router.push("/dia-chi")} />
         <Divider style={{ marginLeft: 52 }} />
@@ -167,6 +167,7 @@ export default function Me() {
         </Press>
       )}
     </ScrollView>
+    </View>
   )
 }
 

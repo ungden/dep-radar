@@ -30,7 +30,7 @@ import { ChatNotice, OffAppHint } from "@/components/conduct"
 import { useSafetyMenu } from "@/components/safety"
 import { useApp } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, radius, hairline } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
 import { ErrorNote } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
@@ -190,7 +190,7 @@ export default function Conversation() {
     paddingBottom: Math.max(insets.bottom, 12),
     gap: 8,
     backgroundColor: colors.surface,
-    borderTopWidth: 1,
+    borderTopWidth: hairline,
     borderTopColor: colors.line,
   } as const
 
@@ -228,7 +228,7 @@ export default function Conversation() {
     )
   } else {
     footer = (
-      <View style={{ backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line }}>
+      <View style={{ backgroundColor: colors.surface, borderTopWidth: hairline, borderTopColor: colors.line }}>
         <OffAppHint text={text} />
         {photos.length ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: gutter, paddingTop: 10 }}>
@@ -276,7 +276,7 @@ export default function Conversation() {
             placeholderTextColor={colors.muted}
             multiline
             maxLength={2000}
-            style={{ flex: 1, maxHeight: 120, minHeight: 44, backgroundColor: colors.subtle, borderRadius: 22, paddingHorizontal: 16, paddingTop: 11, paddingBottom: 11, fontFamily: fonts[400], fontSize: 15, color: colors.ink }}
+            style={{ flex: 1, maxHeight: 120, minHeight: 44, backgroundColor: colors.subtle, borderRadius: 22, paddingHorizontal: 16, paddingTop: 11, paddingBottom: 11, fontFamily: fonts[400], fontSize: 17, color: colors.ink }}
             accessibilityLabel="Nội dung tin nhắn"
           />
           <Press

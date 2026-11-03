@@ -2,7 +2,6 @@ import * as React from "react"
 import { FlashList } from "@shopify/flash-list"
 import { router, useLocalSearchParams } from "expo-router"
 import { ScrollView, TextInput, View, useWindowDimensions } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
   providerLocationOpen,
   CATEGORIES,
@@ -20,17 +19,17 @@ import {
   type ServiceOffer,
   type VerticalFilter,
 } from "@/shared"
-import { fold, formatDuration, formatPrice } from "@/data/format"
+import { fold } from "@/data/format"
 import type { AppPro } from "@/data/public"
 import { ProCard, ProCardSkeleton } from "@/components/cards"
-import { CategoryIcon } from "@/components/category-icon"
+import { ServiceTile, tileWidth } from "@/components/tiles"
 import { OfflineNote } from "@/components/offline-note"
 import { TextTabs } from "@/components/switches"
 import { useApp } from "@/state/app"
 import { useBrowse } from "@/state/derived"
-import { card, colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, radius, hairline } from "@/theme"
 import { Button } from "@/ui/button"
-import { Chip, EmptyState, ErrorNote, Photo } from "@/ui/bits"
+import { Chip, EmptyState, ErrorNote } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { refreshControl } from "@/ui/refresh"
@@ -76,8 +75,8 @@ export default function Search() {
   const params = useLocalSearchParams<{ category?: string; vertical?: string; focus?: string }>()
   const app = useApp()
   const browse = useBrowse()
-  const insets = useSafeAreaInsets()
-  const { fontScale } = useWindowDimensions()
+  const { fontScale, width } = useWindowDimensions()
+  const tile = tileWidth(width)
   const sheet = useSheet()
   const input = React.useRef<TextInput>(null)
   const [mode, setMode] = React.useState<Mode>("services")
@@ -190,19 +189,16 @@ export default function Search() {
   )
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.canvas, paddingTop: insets.top + 8 }}>
-      <View style={{ gap: 12, paddingBottom: 8 }}>
-        <Txt v="h1" style={{ paddingHorizontal: gutter }}>
-          Tìm
-        </Txt>
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <View style={{ gap: 12, paddingTop: 8, paddingBottom: 8 }}>
         <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: gutter }}>
           <View
             style={{
               flex: 1,
-              minHeight: 48, paddingVertical: 8,
-              borderRadius: radius.full,
+              minHeight: 44, paddingVertical: 6,
+              borderRadius: radius.sm,
               backgroundColor: colors.surface,
-              borderWidth: 1,
+              borderWidth: hairline,
               borderColor: colors.line,
               flexDirection: "row",
               alignItems: "center",
@@ -248,7 +244,7 @@ export default function Search() {
                 haptic="select"
                 onPress={() => setFilters((cur) => ({ ...cur, ...f.clear }))}
                 accessibilityLabel={`Bỏ lọc ${f.label}`}
-                style={{ minHeight: 44, paddingVertical: 8, paddingLeft: 12, paddingRight: 8, borderRadius: radius.full, backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accent, flexDirection: "row", alignItems: "center", gap: 6 }}
+                style={{ minHeight: 44, paddingVertical: 8, paddingLeft: 12, paddingRight: 8, borderRadius: radius.full, backgroundColor: colors.accentSoft, borderWidth: hairline, borderColor: colors.accent, flexDirection: "row", alignItems: "center", gap: 6 }}
               >
                 <Txt v="meta" w={600} color={colors.accentDark}>
                   {f.label}
@@ -264,7 +260,7 @@ export default function Search() {
           </ScrollView>
         ) : null}
 
-        <View style={{ borderBottomWidth: 1, borderBottomColor: colors.line }}>
+        <View style={{ borderBottomWidth: hairline, borderBottomColor: colors.line }}>
           <TextTabs
             size="body"
             value={mode}
@@ -292,9 +288,10 @@ export default function Search() {
           keyExtractor={(o) => o.template.id}
           contentContainerStyle={{ paddingHorizontal: gutter, paddingBottom: 24 }}
           keyboardDismissMode="on-drag"
-          renderItem={({ item }) => (
-            <View style={{ paddingBottom: 12 }}>
-              <ServiceRow offer={item} filters={filters} />
+          numColumns={2}
+          renderItem={({ item, index }) => (
+            <View style={{ paddingBottom: 24, alignItems: index % 2 ? "flex-end" : "flex-start" }}>
+              <ServiceTile offer={item} width={tile} index={index} href={serviceHref(item, filters)} />
             </View>
           )}
           refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}
@@ -366,44 +363,13 @@ export default function Search() {
   )
 }
 
-/** A service for sale, as a row: its photo (or icon), the lowest price here, how many people offer it. */
-function ServiceRow({ offer, filters }: { offer: ServiceOffer; filters: Filters }) {
-  const { template, pros, fromPrice, photo } = offer
-  const who = pros.length === 1 ? pros[0].name : `${pros.length} người nhận`
-  return (
-    <Press
-      onPress={() => router.push({ pathname: "/dich-vu/[id]", params: { id: template.id, place: filters.place, verified: filters.verified ? "1" : "", minTotal: filters.price === "300to600" ? "300000" : filters.price === "gt600" ? "600001" : "", maxTotal: filters.price === "lt300" ? "299999" : filters.price === "300to600" ? "600000" : "" } })}
-      accessibilityLabel={`${template.name}, từ ${formatPrice(fromPrice)}${offer.variant.perPerson ? " mỗi người" : ""}${offer.minimumQuantity > 1 ? `, tối thiểu ${offer.minimumQuantity} người` : ""}, ${who}`}
-      style={{ ...card, flexDirection: "row", gap: 12, padding: 10, alignItems: "center" }}
-    >
-      <View style={{ width: 72, borderRadius: radius.md, overflow: "hidden" }}>
-        {photo ? (
-          <Photo uri={photo} rounded={radius.md} recyclingKey={template.id} />
-        ) : (
-          <View style={{ aspectRatio: 4 / 5, backgroundColor: colors.subtle, alignItems: "center", justifyContent: "center" }}>
-            <CategoryIcon id={template.category} size={30} />
-          </View>
-        )}
-      </View>
-      <View style={{ flex: 1, gap: 3 }}>
-        <Txt w={700} >
-          {template.name}
-        </Txt>
-        <Txt v="meta" color={colors.muted} tabular >
-          Từ{" "}
-          <Txt v="meta" w={700} color={colors.accentDark}>
-            {formatPrice(fromPrice)}{offer.variant.perPerson ? "/người" : ""}
-          </Txt>{" "}
-          · {formatDuration(offer.durationMin)}
-        </Txt>
-        {offer.minimumQuantity > 1 && <Txt v="meta" color={colors.inkSoft}>Tối thiểu {offer.minimumQuantity} người · {formatPrice(offer.minimumTotal)}/nhóm</Txt>}
-        <Txt v="meta" color={colors.inkSoft} >
-          {categoryLabel(template.category)} · {who}
-        </Txt>
-      </View>
-      <Icon name="right" size={14} color={colors.muted} />
-    </Press>
-  )
+/** The service page lists only the people who pass the same filters. */
+function serviceHref(offer: ServiceOffer, filters: Filters) {
+  const { price } = filters
+  return {
+    pathname: "/dich-vu/[id]" as const,
+    params: { id: offer.template.id, place: filters.place, verified: filters.verified ? "1" : "", minTotal: price === "300to600" ? "300000" : price === "gt600" ? "600001" : "", maxTotal: price === "lt300" ? "299999" : price === "300to600" ? "600000" : "" },
+  }
 }
 
 function Group({ title, children }: { title: string; children: React.ReactNode }) {

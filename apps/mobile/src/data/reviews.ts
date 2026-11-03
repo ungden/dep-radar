@@ -34,6 +34,9 @@ export const writeReview = (input: { bookingId: string; rating: number; tags: st
     p_photo_paths: input.photos,
   })
 
+/** The partner's one public answer to a review of them. Same RPC as replyReview() on the web. */
+export const replyReview = (bookingId: string, reply: string) => rpc("reply_review", { p_booking: bookingId, p_reply: reply })
+
 /**
  * A result photo, already re-encoded by reencodePhoto() (which drops the EXIF
  * block and its GPS position). Goes to the public `reviews` bucket under the

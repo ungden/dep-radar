@@ -2,7 +2,7 @@ import * as React from "react"
 import { View } from "react-native"
 import Svg, { Circle, Path, Rect } from "react-native-svg"
 import { CATEGORY_ICONS, CATEGORY_TINTS, ICON_SOFT_OPACITY, ICON_STROKE, type CategoryIconId } from "@/shared"
-import { colors } from "@/theme"
+import { colors, hairline } from "@/theme"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
@@ -90,7 +90,7 @@ export function CategoryTiles({
               alignItems: "center",
               justifyContent: "center",
               backgroundColor: colors.surface,
-              borderWidth: 1,
+              borderWidth: hairline,
               borderColor: colors.line,
             }}
           >

@@ -13,7 +13,7 @@ import { useSafetyMenu } from "@/components/safety"
 import { useApp } from "@/state/app"
 import { IconButton } from "@/ui/button"
 import { useBrowse } from "@/state/derived"
-import { colors, gutter, radius } from "@/theme"
+import { colors, gutter, radius, hairline } from "@/theme"
 import { Avatar, EmptyState, Rating, SectionHeader, VerifiedMark } from "@/ui/bits"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
@@ -113,7 +113,7 @@ export default function WorkDetail() {
               accessibilityLabel={`Xem hồ sơ ${pro.name}`}
               style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.md, padding: 12 }}
             >
-              <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={44} />
+              <Avatar name={pro.name} uri={pro.avatar} artist tone={pro.tone} size={44} />
               <View style={{ flex: 1, gap: 2 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                   <Txt w={700} numberOfLines={1} style={{ flexShrink: 1 }}>
@@ -140,7 +140,7 @@ export default function WorkDetail() {
                 Gói và giá
               </Txt>
               {variants.map((v) => (
-                <View key={v.id} style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.line, gap: 12 }}>
+                <View key={v.id} style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 10, borderBottomWidth: hairline, borderBottomColor: colors.line, gap: 12 }}>
                   <View style={{ flex: 1 }}>
                     <Txt w={600}>{v.label}</Txt>
                     <Txt v="meta" color={colors.muted}>

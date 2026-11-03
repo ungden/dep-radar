@@ -1,7 +1,7 @@
 import * as React from "react"
 import { View } from "react-native"
 import { formatDateLong, todayISO } from "@/data/format"
-import { colors, controlMetrics, radius } from "@/theme"
+import { colors, controlMetrics, radius, hairline } from "@/theme"
 import { IconButton } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -37,7 +37,7 @@ export function DateField({ label, value, onChange, minDate = todayISO(), maxDat
         setOpened(true)
       }}
       accessibilityLabel={`${label}, ${value ? formatDateLong(value) : "chưa chọn"}. Chọn ngày`}
-      style={{ minHeight: compact ? controlMetrics.minHeight : 48, paddingHorizontal: 12, paddingVertical: compact ? controlMetrics.paddingVertical : 12, borderRadius: radius.md, borderWidth: 1, borderColor: colors.lineStrong, backgroundColor: colors.surface, flexDirection: "row", alignItems: "center", gap: 12 }}
+      style={{ minHeight: compact ? controlMetrics.minHeight : 48, paddingHorizontal: 12, paddingVertical: compact ? controlMetrics.paddingVertical : 12, borderRadius: radius.md, borderWidth: hairline, borderColor: colors.lineStrong, backgroundColor: colors.surface, flexDirection: "row", alignItems: "center", gap: 12 }}
     >
       <Txt v={compact ? "control" : "body"} style={{ flex: 1 }}>{value ? formatDateLong(value) : "Chọn ngày"}</Txt>
       <Icon name="down" size={20} color={colors.inkSoft} />

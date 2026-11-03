@@ -1,6 +1,6 @@
 import * as React from "react"
 import { TextInput, View, type TextInputProps } from "react-native"
-import { colors, fonts, radius } from "@/theme"
+import { colors, fonts, radius, hairline } from "@/theme"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
@@ -10,7 +10,7 @@ const input = {
   height: 52,
   paddingHorizontal: 16,
   fontFamily: fonts[400],
-  fontSize: 16,
+  fontSize: 17,
   color: colors.ink,
 } as const
 
@@ -19,7 +19,7 @@ const box = {
   alignItems: "center",
   backgroundColor: colors.surface,
   borderRadius: radius.md,
-  borderWidth: 1,
+  borderWidth: hairline,
   borderColor: colors.lineStrong,
 } as const
 

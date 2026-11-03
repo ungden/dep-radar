@@ -120,7 +120,7 @@ export default function Referral() {
                 autoCapitalize="characters"
                 autoCorrect={false}
                 accessibilityLabel="Mã giới thiệu của bạn bè"
-                style={{ flex: 1, height: 46, backgroundColor: colors.subtle, borderRadius: radius.md, paddingHorizontal: 14, fontFamily: fonts[600], fontSize: 16, letterSpacing: 2, color: colors.ink }}
+                style={{ flex: 1, height: 46, backgroundColor: colors.subtle, borderRadius: radius.md, paddingHorizontal: 14, fontFamily: fonts[600], fontSize: 17, letterSpacing: 2, color: colors.ink }}
               />
               <Button label="Nhập mã" disabled={code.length !== 6} busy={claiming} onPress={() => void claim()} />
             </View>

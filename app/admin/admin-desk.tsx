@@ -30,7 +30,7 @@ import {
 } from "lucide-react"
 import { Avatar, LogoMark } from "@/components/ui"
 import { Button, Card, EmptyState, inputClass } from "./ui"
-import { askReportInfo, decideCheck, decideNoShowCompensation, overrideAiDecision, recordTopup, reportChat, resolveReport } from "@/lib/api/admin"
+import { askReportInfo, decideCheck, decideNoShowCompensation, overrideAiDecision, recordTopup, reportChat, resolveReport, setAccountSuspended, setReviewHidden, setWorkHidden } from "@/lib/api/admin"
 import { EvidenceGrid } from "@/components/evidence-picker"
 import type { AdminAction, AdminBooking, AdminOverview, AdminPro, AdminReport, AiDecisionItem, FeePolicyView, PendingCheck, PlatformSettings, ProfileQueueItem, ReportChatMessage } from "@/lib/api/admin"
 import { ApprovalsPanel } from "./desk-approvals"
@@ -298,7 +298,7 @@ export function AdminDesk({
 
           {tab === "bookings" && <BookingsPanel key={view.filter} bookings={bookings} initialFilter={view.filter} />}
 
-          {tab === "requests" && <RequestsPanel />}
+          {tab === "requests" && <RequestsPanel run={run} />}
 
           {tab === "reviews" && <ReviewsPanel key={view.filter} initialFilter={view.filter} run={run} />}
 
@@ -433,7 +433,7 @@ function ReportsPanel({ reports, initialFilter, run }: { reports: AdminReport[];
       {shown.map((r) => (
         <ReportCard key={r.id} report={r} run={run} />
       ))}
-      {reports.length >= 50 && <p className="text-label text-muted">Hiện 50 báo cáo mới nhất.</p>}
+      {reports.length >= 200 && <p className="text-label text-muted">Hiện 200 báo cáo mới nhất.</p>}
     </div>
   )
 }
@@ -870,7 +870,7 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: Run }) {
         {r.bookingId && (
           <>
             {" · "}
-            <a href={`/bookings/${r.bookingId}`} target="_blank" rel="noreferrer" className="text-accent underline underline-offset-2">
+            <a href={`/admin/bookings/${r.bookingId}`} target="_blank" rel="noreferrer" className="text-accent underline underline-offset-2">
               Mở lịch hẹn
             </a>
           </>
@@ -878,6 +878,45 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: Run }) {
       </p>
       {r.detail && <p className="mt-2 whitespace-pre-wrap rounded-lg bg-canvas px-3 py-2 text-meta">{r.detail}</p>}
       {r.evidence.length > 0 && <EvidenceGrid items={r.evidence} />}
+      {r.work && (
+        <div className="mt-2 flex items-center gap-3 rounded-lg border border-line p-2.5">
+          {r.work.photo && storagePhoto(r.work.photo) && <Image src={r.work.photo} alt="" width={56} height={56} className={cn("size-14 shrink-0 rounded-md object-cover", r.work.hidden && "opacity-40")} />}
+          <div className="min-w-0 flex-1">
+            <a href={`/works/${r.work.slug}`} target="_blank" rel="noreferrer" className="block truncate text-meta font-medium hover:underline">
+              {r.work.video ? "Clip" : "Bài"}: {r.work.title}
+            </a>
+            <p className="text-label text-muted">
+              {r.work.proName}
+              {r.work.hidden && " · đang ẩn"}
+            </p>
+          </div>
+          <ActButton
+            size="sm"
+            variant={r.work.hidden ? "ghost" : "danger"}
+            onClick={() => run(() => setWorkHidden(r.work!.id, !r.work!.hidden, note), r.work!.hidden ? "Đã cho hiện lại bài đăng." : "Đã ẩn bài đăng. Đối tác được báo.")}
+          >
+            {r.work.hidden ? "Hiện lại" : "Ẩn bài"}
+          </ActButton>
+        </div>
+      )}
+      {r.review && (
+        <div className="mt-2 flex items-start gap-3 rounded-lg border border-line p-2.5">
+          <div className="min-w-0 flex-1">
+            <p className="text-label text-muted">
+              Đánh giá {r.review.rating} sao của {r.review.author}
+              {r.review.hidden && " · đang ẩn"}
+            </p>
+            <p className="mt-0.5 whitespace-pre-wrap text-meta">{r.review.body || "(không có nội dung)"}</p>
+          </div>
+          <ActButton
+            size="sm"
+            variant={r.review.hidden ? "ghost" : "danger"}
+            onClick={() => run(() => setReviewHidden(r.review!.bookingId, !r.review!.hidden), r.review!.hidden ? "Đã cho hiện lại đánh giá." : "Đã ẩn đánh giá.")}
+          >
+            {r.review.hidden ? "Hiện lại" : "Ẩn đánh giá"}
+          </ActButton>
+        </div>
+      )}
       {r.staffQuestion && open && <p className="mt-2 text-label text-warning">Đã hỏi người báo: {r.staffQuestion} (chờ trả lời)</p>}
       {!open && r.resolution && <p className="mt-2 text-label text-ink-soft">Kết quả: {r.resolution}</p>}
       <ReportChat reportId={r.id} />
@@ -924,6 +963,17 @@ function ReportCard({ report: r, run }: { report: AdminReport; run: Run }) {
               <ActButton size="sm" onClick={() => run(() => resolveReport(r.id, "resolved", note), "Đã đóng báo cáo. Người báo được báo kết quả.")}>
                 Đã xử lý
               </ActButton>
+              {r.targetId && (
+                <ActButton
+                  size="sm"
+                  variant="danger"
+                  disabled={note.trim().length < 5}
+                  title="Ghi lý do vào ô trên trước khi khoá"
+                  onClick={() => run(() => setAccountSuspended(r.targetId!, true, note), "Đã khoá tài khoản bị báo cáo.")}
+                >
+                  Khoá {r.target ?? "tài khoản"}
+                </ActButton>
+              )}
             </div>
           )}
         </div>

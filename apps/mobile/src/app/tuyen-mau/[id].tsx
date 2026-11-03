@@ -9,7 +9,7 @@ import { useSafetyMenu } from "@/components/safety"
 import { useApp } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
 import { useAsync } from "@/state/use-async"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, radius, hairline } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
 import { Avatar, Card, EmptyState, ErrorNote, Skeleton, VerifiedMark } from "@/ui/bits"
 import { haptic } from "@/ui/haptics"
@@ -114,7 +114,7 @@ export default function CastingDetail() {
           accessibilityLabel={`Xem hồ sơ ${c.pro.name}`}
           style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.md, padding: 12 }}
         >
-          <Avatar name={c.pro.name} uri={c.pro.avatar} size={44} />
+          <Avatar name={c.pro.name} uri={c.pro.avatar} artist size={44} />
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <Txt w={700} numberOfLines={1} style={{ flexShrink: 1 }}>
@@ -166,7 +166,7 @@ export default function CastingDetail() {
               placeholder="VD: Mình rảnh cả buổi, móng tay khoẻ, chưa làm gel 2 tuần nay."
               placeholderTextColor={colors.muted}
               accessibilityLabel={`Lời nhắn cho ${c.pro.name}`}
-              style={{ minHeight: 96, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
+              style={{ minHeight: 96, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 17, color: colors.ink, textAlignVertical: "top" }}
             />
             <Txt v="meta" color={colors.muted}>
               Người tuyển sẽ thấy tên và lời nhắn của bạn.
@@ -176,7 +176,7 @@ export default function CastingDetail() {
         {error ? <ErrorNote text={error} /> : null}
       </ScrollView>
       {canApply ? (
-        <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: keyboard ? 12 : Math.max(insets.bottom, 12), backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line }}>
+        <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: keyboard ? 12 : Math.max(insets.bottom, 12), backgroundColor: colors.surface, borderTopWidth: hairline, borderTopColor: colors.line }}>
           {app.uid ? (
             <Button label="Ứng tuyển" full size="lg" busy={busy} onPress={() => void apply()} />
           ) : (

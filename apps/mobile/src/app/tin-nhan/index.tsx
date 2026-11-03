@@ -30,7 +30,7 @@ export default function Threads() {
           accessibilityLabel={`${item.otherName}${item.unread ? `, ${item.unread} tin chưa đọc` : ""}: ${item.lastMessage}`}
           style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: gutter, paddingVertical: 12 }}
         >
-          <Avatar name={item.otherName} uri={item.otherAvatar} size={48} />
+          <Avatar name={item.otherName} uri={item.otherAvatar} artist={item.otherIsArtist} size={48} />
           <View style={{ flex: 1, gap: 2 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
               <Txt w={item.unread ? 800 : 600} numberOfLines={1} style={{ flexShrink: 1 }}>

@@ -1,6 +1,6 @@
 import { View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { colors, controlMetrics, gutter, radius } from "@/theme"
+import { colors, controlMetrics, gutter, radius, hairline } from "@/theme"
 import { Button } from "@/ui/button"
 import { Txt } from "@/ui/text"
 
@@ -43,7 +43,7 @@ export function BookingBar({
       style={{
         ...(inline ? null : { position: "absolute", left: 0, right: 0, bottom: 0 }),
         backgroundColor: colors.surface,
-        borderTopWidth: 1,
+        borderTopWidth: hairline,
         borderTopColor: colors.line,
         paddingHorizontal: gutter,
         paddingTop: compact ? 8 : 12,
@@ -61,7 +61,7 @@ export function BookingBar({
             </Txt>
           ) : null}
           {title ? (
-            <Txt v={compact ? "control" : "lead"} w={compact ? 600 : 700} tabular>
+            <Txt v={compact ? "control" : "lead"} w={compact ? 600 : 700} tabular color={colors.accentDark}>
               {title}
             </Txt>
           ) : null}
