@@ -32,7 +32,7 @@ language sql stable security definer set search_path = '' as $$
 $$;
 
 -- 3 ---------------------------------------------------------------------------
-do $$
+do $patch$
 declare
   patch record; definition text; fixed text;
 begin
@@ -51,7 +51,7 @@ begin
     if fixed = definition then raise exception '% changed: review this migration', patch.fn; end if;
     execute fixed;
   end loop;
-end $$;
+end $patch$;
 
 -- 4 ---------------------------------------------------------------------------
 do $$
