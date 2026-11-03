@@ -1,6 +1,6 @@
 import Link from "next/link"
-import { MessageCircleWarning, ShieldCheck } from "lucide-react"
-import { CHAT_NOTICE, CONDUCT, offAppHint } from "@/lib/conduct"
+import { Heart, MessageCircleWarning, ShieldCheck, UserPlus } from "lucide-react"
+import { CHAT_NOTICE, CONDUCT, customerNote, offAppHint } from "@/lib/conduct"
 import { cn } from "@/lib/utils"
 
 /**
@@ -53,6 +53,35 @@ export function ChatNotice({ defaultOpen }: { defaultOpen?: boolean }) {
         ))}
       </ul>
     </details>
+  )
+}
+
+/** For the partner, above the conversation: who this customer is, and the two messages worth sending before leaving home. */
+export function CustomerNote({ history, onAskLocation, onConfirm }: { history: { withMe: number; overall: number }; onAskLocation?: () => void; onConfirm?: () => void }) {
+  const note = customerNote(history)
+  const Mark = note.regular ? Heart : UserPlus
+  return (
+    <div className={cn("mb-3 rounded-[var(--radius-lg)] p-3.5", note.regular ? "bg-success-soft" : "bg-highlight-soft")}>
+      <p className="flex items-center gap-2 text-meta font-bold text-ink">
+        <Mark aria-hidden className="size-4 shrink-0" />
+        {note.title}
+      </p>
+      {note.text && <p className="mt-1 text-meta text-ink-soft">{note.text}</p>}
+      {!note.regular && (onAskLocation || onConfirm) && (
+        <div className="mt-2.5 flex flex-wrap gap-2">
+          {onAskLocation && (
+            <button type="button" onClick={onAskLocation} className="min-h-10 rounded-full bg-accent px-4 text-meta font-semibold text-white">
+              Xin vị trí
+            </button>
+          )}
+          {onConfirm && (
+            <button type="button" onClick={onConfirm} className="min-h-10 rounded-full bg-surface px-4 text-meta font-semibold text-ink">
+              Xác nhận lịch
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 

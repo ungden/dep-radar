@@ -1,7 +1,7 @@
 import * as React from "react"
 import * as WebBrowser from "expo-web-browser"
 import { View } from "react-native"
-import { CHAT_NOTICE, CONDUCT, offAppHint } from "@/shared"
+import { CHAT_NOTICE, CONDUCT, customerNote, offAppHint } from "@/shared"
 import { webLink } from "@/data/links"
 import { colors, radius, hairline } from "@/theme"
 import { Icon } from "@/ui/icon"
@@ -43,6 +43,35 @@ export function ConductNote() {
           <Txt v="meta" w={700} color={colors.accentDark}>Xem quy định</Txt>
         )}
       </View>
+    </Press>
+  )
+}
+
+/** For the partner, above the conversation: who this customer is, and the two messages worth sending before leaving home. */
+export function CustomerNote({ history, onAskLocation, onConfirm }: { history: { withMe: number; overall: number }; onAskLocation?: () => void; onConfirm?: () => void }) {
+  const note = customerNote(history)
+  return (
+    <View style={{ marginBottom: 12, padding: 14, gap: 8, borderRadius: radius.lg, backgroundColor: note.regular ? colors.successSoft : colors.highlightSoft }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <Icon name={note.regular ? "heart" : "person"} size={16} color={note.regular ? colors.success : colors.ink} />
+        <Txt v="meta" w={700} style={{ flex: 1 }}>{note.title}</Txt>
+      </View>
+      {note.text ? <Txt v="meta" color={colors.inkSoft}>{note.text}</Txt> : null}
+      {!note.regular && (onAskLocation || onConfirm) ? (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 2 }}>
+          {onAskLocation ? <AskButton label="Xin vị trí" icon="pin" primary onPress={onAskLocation} /> : null}
+          {onConfirm ? <AskButton label="Xác nhận lịch" icon="calendar" onPress={onConfirm} /> : null}
+        </View>
+      ) : null}
+    </View>
+  )
+}
+
+function AskButton({ label, icon, primary, onPress }: { label: string; icon: "pin" | "calendar"; primary?: boolean; onPress: () => void }) {
+  return (
+    <Press onPress={onPress} accessibilityRole="button" accessibilityLabel={`${label}, điền sẵn vào ô nhắn tin`} style={{ minHeight: 40, paddingHorizontal: 14, borderRadius: radius.full, flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: primary ? colors.accent : colors.surface }}>
+      <Icon name={icon} size={16} color={primary ? colors.surface : colors.ink} />
+      <Txt v="meta" w={600} color={primary ? colors.surface : colors.ink}>{label}</Txt>
     </Press>
   )
 }

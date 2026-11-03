@@ -94,6 +94,8 @@ export interface ThreadHeader {
   chatStatus: ChatStatus | null
   /** When it closed; null while waiting or open. */
   closesAt: string | null
+  /** When the booking is, for the partner's message confirming it. */
+  startsAt: string | null
 }
 
 export async function threadHeader(threadId: string, uid: string): Promise<ThreadHeader | null> {
@@ -102,7 +104,7 @@ export async function threadHeader(threadId: string, uid: string): Promise<Threa
   // returned only when selected by name.
   let { data, error } = await supabase
     .from("threads")
-    .select(`${base}, chat_status, closes_at, booking:bookings!threads_booking_id_fkey (template_id)`)
+    .select(`${base}, chat_status, closes_at, booking:bookings!threads_booking_id_fkey (template_id, starts_at)`)
     .eq("id", threadId)
     .maybeSingle()
   if (error) ({ data } = await supabase.from("threads").select(base).eq("id", threadId).maybeSingle())
@@ -116,6 +118,7 @@ export async function threadHeader(threadId: string, uid: string): Promise<Threa
     proId: String(row.pro_id),
     bookingId: (row.booking_id ?? null) as string | null,
     templateId: (one(row.booking).template_id ?? null) as string | null,
+    startsAt: (one(row.booking).starts_at ?? null) as string | null,
     iAmPro,
     otherId: String(iAmPro ? row.customer_id : row.pro_id),
     chatStatus: asChatStatus(row.chat_status),
@@ -197,6 +200,13 @@ export async function sendMessage(threadId: string, body: string, imagePaths: st
 export async function sendLocation(threadId: string, lat: number, lng: number): Promise<{ ok: true } | { ok: false; error: string }> {
   const res = await rpc<string>("send_location", { p_thread: threadId, p_lat: lat, p_lng: lng })
   return res.ok ? { ok: true } : { ok: false, error: res.error === "Có lỗi xảy ra, vui lòng thử lại." ? "Không gửi được vị trí." : res.error }
+}
+
+/** For the partner: completed bookings of this customer, with them and overall. Null when the server has no answer. */
+export async function customerHistory(threadId: string): Promise<{ withMe: number; overall: number } | null> {
+  const res = await rpc<{ with_me: number; overall: number }[]>("customer_history", { p_thread: threadId })
+  const row = res.ok ? res.data?.[0] : null
+  return row ? { withMe: row.with_me, overall: row.overall } : null
 }
 
 export const markThreadRead = (threadId: string) => rpc("mark_thread_read", { p_thread: threadId })

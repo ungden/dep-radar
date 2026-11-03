@@ -8,9 +8,10 @@ import * as Location from "expo-location"
 import * as WebBrowser from "expo-web-browser"
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { LOCATION_DENIED, LOCATION_FAILED, chatState, directionsLink, locationConfirm, roundPoint, vnTime } from "@/shared"
+import { CHAT_ASKS, LOCATION_DENIED, LOCATION_FAILED, chatState, directionsLink, distanceFromPointKm, locationConfirm, roundPoint, vnTime } from "@/shared"
 import {
   CHAT_MAX_PHOTOS,
+  customerHistory,
   listMessages,
   markThreadRead,
   messageFromRow,
@@ -23,10 +24,10 @@ import {
   type ChatMessage,
   type ThreadHeader,
 } from "@/data/chat"
-import { formatDay, localDate, localTime } from "@/data/format"
+import { formatDay, formatKm, localDate, localTime } from "@/data/format"
 import { webLink } from "@/data/links"
 import { reencodePhoto } from "@/data/works"
-import { ChatNotice, OffAppHint } from "@/components/conduct"
+import { ChatNotice, CustomerNote, OffAppHint } from "@/components/conduct"
 import { useSafetyMenu } from "@/components/safety"
 import { useApp } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
@@ -58,6 +59,8 @@ export default function Conversation() {
   const [photos, setPhotos] = React.useState<Picked[]>([])
   const [error, setError] = React.useState<string | null>(null)
   const [sending, setSending] = React.useState(false)
+  const [history, setHistory] = React.useState<{ withMe: number; overall: number } | null>(null)
+  const input = React.useRef<TextInput>(null)
   const { refreshMe } = app
   const keyboard = useKeyboardVisible()
   const blocked = header ? app.blocked.has(header.otherId) : false
@@ -104,6 +107,24 @@ export default function Conversation() {
 
   // A server without chat_status yet: leave the box open, send_message decides.
   const state = header?.chatStatus ? chatState(header.chatStatus) : { open: true, note: undefined }
+
+  // Only the partner of this thread is told who the customer is, while the chat is open.
+  const askHistory = Boolean(header?.iAmPro && header.chatStatus === "open")
+  React.useEffect(() => {
+    if (!askHistory || !id) return
+    let live = true
+    void customerHistory(id).then((h) => live && setHistory(h))
+    return () => {
+      live = false
+    }
+  }, [askHistory, id])
+  const write = (words: string) => {
+    setText(words)
+    input.current?.focus()
+  }
+  const gotLocation = messages.some((m) => !m.mine && m.point)
+  const pro = app.myPro
+  const kmOf = (point: { lat: number; lng: number }) => (header?.iAmPro && pro ? distanceFromPointKm([point.lat, point.lng], pro.city, pro.district) : null)
 
   const pick = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -270,6 +291,7 @@ export default function Conversation() {
             <Icon name="pin" size={22} color={colors.inkSoft} />
           </Press>
           <TextInput
+            ref={input}
             value={text}
             onChangeText={setText}
             placeholder="Nhắn tin"
@@ -318,7 +340,20 @@ export default function Conversation() {
         keyboardDismissMode="interactive"
         contentContainerStyle={{ padding: gutter }}
         // Open until the first message; one tap away after that.
-        ListHeaderComponent={blocked || !loaded ? null : <ChatNotice defaultOpen={messages.length === 0} />}
+        ListHeaderComponent={
+          blocked || !loaded ? null : (
+            <>
+              {askHistory && history ? (
+                <CustomerNote
+                  history={history}
+                  onAskLocation={gotLocation ? undefined : () => write(CHAT_ASKS.location)}
+                  onConfirm={header?.startsAt ? () => write(CHAT_ASKS.confirm(vnTime(new Date(header.startsAt!)))) : undefined}
+                />
+              ) : null}
+              <ChatNotice defaultOpen={messages.length === 0} />
+            </>
+          )
+        }
         renderItem={({ item, index }) => {
           const day = localDate(item.createdAt)
           const newDay = index === 0 || localDate(messages[index - 1].createdAt) !== day
@@ -349,7 +384,7 @@ export default function Conversation() {
                     </Txt>
                   ) : null}
                   {item.point ? (
-                    <LocationCard point={item.point} mine={item.mine} />
+                    <LocationCard point={item.point} mine={item.mine} km={item.mine ? null : kmOf(item.point)} />
                   ) : item.body ? (
                     <Txt color={item.mine ? colors.surface : colors.ink}>{item.body}</Txt>
                   ) : null}
@@ -385,7 +420,7 @@ async function openInGoogleMaps(lat: number, lng: number) {
 }
 
 /** A sent location: where it is, and the way there in Google Maps. */
-function LocationCard({ point, mine }: { point: { lat: number; lng: number }; mine: boolean }) {
+function LocationCard({ point, mine, km }: { point: { lat: number; lng: number }; mine: boolean; km: number | null }) {
   return (
     <View style={{ width: 220, gap: 10 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -406,7 +441,7 @@ function LocationCard({ point, mine }: { point: { lat: number; lng: number }; mi
             {mine ? "Vị trí của bạn" : "Vị trí đã gửi"}
           </Txt>
           <Txt v="meta" color={mine ? colors.subtleStrong : colors.muted}>
-            {point.lat.toFixed(5)}, {point.lng.toFixed(5)}
+            {km !== null ? `Cách bạn ${formatKm(km)}` : `${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}`}
           </Txt>
         </View>
       </View>

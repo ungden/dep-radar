@@ -188,6 +188,27 @@ begin
   assert (select amount from public.wallet_entries where booking_id = booking and kind = 'commission')
        = -(select commission from public.bookings where id = booking), 'the debit matches the quote';
 
+  raise notice 'only the partner of a thread reads how often the customer has booked';
+  declare
+    chat uuid;
+    h record;
+  begin
+    select id into chat from public.threads where booking_id = booking;
+    if chat is null then
+      insert into public.threads (customer_id, pro_id, booking_id, customer_name)
+        values (customer, linh, booking, 'Khách') returning id into chat;
+    end if;
+    perform set_config('request.jwt.claim.sub', linh::text, true);
+    select * into h from public.customer_history(chat);
+    assert h.with_me >= 1 and h.overall >= h.with_me, format('history: %s of %s', h.with_me, h.overall);
+    perform set_config('request.jwt.claim.sub', customer::text, true);
+    begin
+      perform public.customer_history(chat);
+      assert false, 'a customer read their own history as a partner would';
+    exception when insufficient_privilege then null;
+    end;
+  end;
+
   raise notice 'only the customer reviews, and only a finished job';
   perform set_config('request.jwt.claim.sub', customer::text, true);
   select rating_count into n from public.pros where id = linh;

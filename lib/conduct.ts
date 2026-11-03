@@ -46,6 +46,24 @@ export const CHAT_NOTICE = {
   ],
 } as const
 
+/**
+ * What a partner reads at the top of a chat about who they are meeting: only
+ * counts of completed bookings. It never suggests taking money up front, which
+ * CHAT_NOTICE tells the customer not to pay.
+ */
+export function customerNote({ withMe, overall }: { withMe: number; overall: number }): { regular: boolean; title: string; text: string | null } {
+  if (withMe > 0) return { regular: true, title: `Khách quen, đã đặt bạn ${withMe} lần`, text: null }
+  const text = "Nhắn xác nhận và xin vị trí trước khi đi để tránh đi uổng công."
+  if (overall > 0) return { regular: false, title: `Khách mới với bạn, đã có ${overall} lịch hoàn thành trên 360đẹp`, text }
+  return { regular: false, title: "Khách đặt lần đầu", text }
+}
+
+/** Put in the box to write in by the partner's two buttons; they can still edit it. */
+export const CHAT_ASKS = {
+  location: "Bạn gửi giúp mình vị trí bằng nút ghim trong khung chat để mình canh giờ đi nhé.",
+  confirm: (when: string) => `Mình xác nhận lịch ${when} nhé.`,
+} as const
+
 const OFF_APP = /\b(zalo|za lo|facebook|fb\.com|messenger|telegram|tele|instagram|insta|viber|whatsapp)\b|m\.me\//i
 const MONEY = /(chuyển\s*(khoản|tiền)\s*trước|đặt\s*cọc|\bcọc\b|\bstk\b|số\s*tài\s*khoản|ck\s*trước)/i
 

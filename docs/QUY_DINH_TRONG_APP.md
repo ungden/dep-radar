@@ -61,6 +61,17 @@ Hãy chốt giờ, địa chỉ, dịch vụ và giá ngay trong tin nhắn này
 | Gửi em stk | Không chuyển tiền trước hay đặt cọc: trên 360đẹp, khách trả sau khi làm xong. Khoản chuyển trước không được hỗ trợ khi có tranh chấp. |
 | Mình ở tầng 3, chị đến lúc 9 giờ nhé | (không nhắc) |
 
+**Nhắc riêng cho Artist về khách** (web và app; chỉ Artist thấy, khi cuộc trò chuyện đang mở; chỉ dựa trên số lịch đã hoàn thành):
+
+- Khách chưa có lịch nào: "Khách đặt lần đầu". Nhắn xác nhận và xin vị trí trước khi đi để tránh đi uổng công.
+- Khách đã có lịch với người khác: "Khách mới với bạn, đã có 4 lịch hoàn thành trên 360đẹp".
+- Khách đã đặt Artist này: "Khách quen, đã đặt bạn 3 lần".
+
+Hai nút điền sẵn vào ô nhắn tin, Artist vẫn sửa được trước khi gửi:
+
+- Xin vị trí: "Bạn gửi giúp mình vị trí bằng nút ghim trong khung chat để mình canh giờ đi nhé."
+- Xác nhận lịch: "Mình xác nhận lịch 14:00 12/11 nhé."
+
 **Khi nào nhắn được:** cuộc trò chuyện mở khi người làm nhận lịch và đóng khi lịch kết thúc.
 
 - Trước khi nhận: "Nhắn tin mở khi người làm nhận lịch."

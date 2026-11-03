@@ -9,6 +9,7 @@ import { MobileLinks } from "@/components/mobile-links"
 import { ArtistCard, CitySelect, artistFromPrice } from "@/components/shop"
 import { ButtonLink, EmptyState, PageSkeleton } from "@/components/ui"
 import { CATEGORIES, categoryLabel, getTemplate } from "@/lib/catalog"
+import { ARTIST_SORTS, sortArtists, type ArtistSort } from "@/lib/discovery"
 import { providerLocationOpen } from "@/lib/launch"
 import { moveRadio } from "@/lib/radio-navigation"
 import { distanceToCustomer, useApp } from "@/lib/store"
@@ -81,7 +82,13 @@ function ChooseArtist() {
 
   const chosen = asked ? getTemplate(asked) : undefined
   const offersIt = (proId: string, templateId: string) => state.proServices.some((s) => s.proId === proId && s.templateId === templateId && s.active && Object.keys(s.prices).length > 0)
-  const shown = people.filter(({ pro }) => (chosen ? offersIt(pro.id, chosen.id) : !category || pro.categories.includes(category)))
+  const hasAddress = !isPro && Boolean(state.customerAddress)
+  const [sort, setSort] = React.useState<ArtistSort>("near")
+  // Nothing to measure from without an address: the next best order.
+  const order = sort === "near" && !hasAddress ? "rated" : sort
+  const sorts = hasAddress ? ARTIST_SORTS : ARTIST_SORTS.filter((s) => s.id !== "near")
+  const matching = people.filter(({ pro }) => (chosen ? offersIt(pro.id, chosen.id) : !category || pro.categories.includes(category)))
+  const shown = sortArtists(matching, order)
 
   // Work of the chosen service first, so the card answers "how do they do this".
   const worksOf = (proId: string) => state.works.filter((w) => w.proId === proId && w.images[0])
@@ -147,15 +154,20 @@ function ChooseArtist() {
         <div className="min-w-0">
           {state.catalogError ? (
             <DataUnavailable />
-          ) : shown.length ? (
+          ) : null}
+          {!state.catalogError && matching.length ? (
+            <div role="radiogroup" aria-label="Sắp xếp Artist" className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:px-0">
+              {sorts.map((s) => (
+                <ServiceChip key={s.id} label={s.label} active={order === s.id} onPick={() => setSort(s.id)} />
+              ))}
+            </div>
+          ) : null}
+          {state.catalogError ? null : shown.length ? (
             <>
-              <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                <p className="text-meta text-muted md:text-[16px]">
-                  {shown.length.toLocaleString("vi-VN")} Artist{what}
-                  {where}
-                </p>
-                <p className="text-meta font-bold md:text-[16px]">{!isPro && state.customerAddress ? "Gần bạn trước" : "Đánh giá cao trước"}</p>
-              </div>
+              <p className="mb-4 text-meta text-muted md:text-[16px]">
+                {shown.length.toLocaleString("vi-VN")} Artist{what}
+                {where}
+              </p>
               <ul className="grid gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-3">
                 {shown.map(({ pro, km }, i) => (
                   <li key={pro.id}>
@@ -178,7 +190,7 @@ function ChooseArtist() {
           ) : (
             <div className="rounded-[var(--radius-xl)] bg-surface">
               <EmptyState
-                title={chosen || category ? `Chưa có Artist${what}${where}` : `Chưa có Artist nào${where}`}
+                title={matching.length ? "Chưa có Artist mới" : chosen || category ? `Chưa có Artist${what}${where}` : `Chưa có Artist nào${where}`}
                 text="Bạn vẫn đặt được theo dịch vụ, Artist mới vào sẽ thấy đơn của bạn."
                 action={<ButtonLink href={orderHref} className="rounded-[var(--radius-md)] shadow-none">Đặt theo dịch vụ</ButtonLink>}
               />

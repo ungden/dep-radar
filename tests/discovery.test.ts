@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest"
 import { CATEGORIES, getVariant, tierLabels } from "@/lib/catalog"
-import { albumsOf, isRadius, pinPriority, priorityFirst, withinRadius } from "@/lib/discovery"
+import { albumsOf, isNewArtist, isRadius, pinPriority, priorityFirst, sortArtists, withinRadius } from "@/lib/discovery"
 import { DISTRICT_COORDS, MIN_ROAD_KM, cityOfPoint, distanceFromPointKm, isLatLng, travelDistanceKm, type LatLng } from "@/lib/geo"
 import { fromPriceIn, levelName, levelOfPrice, mainCategory, proLevelIn } from "@/lib/levels"
-import type { ProService } from "@/lib/types"
+import type { Pro, ProService } from "@/lib/types"
 
 // nail-gel/hand levels: 90k, 130k, 180k; nail-extension/tips: see the catalogue.
 const tier = (templateId: string, variantId: string, level: 0 | 1 | 2) => getVariant(templateId, variantId)!.tiers[level]!
@@ -169,5 +169,39 @@ describe("Nail and Makeup first", () => {
     const albums = albumsOf(works)
     expect(albums.map((a) => a.category)).toEqual(["nail", "makeup", "hair"])
     expect(albums[0].works.map((w) => w.id)).toEqual(["3", "4"])
+  })
+})
+
+describe("sorting Artists", () => {
+  const now = Date.parse("2026-11-04")
+  const person = (id: string, km: number | null, jobs: number, average: number, count: number, joinedAt: string) => ({
+    km,
+    pro: { id, joinedAt, stats: { completedJobs: jobs }, rating: { average, count }, identity: "none" } as unknown as Pro,
+  })
+  const far = person("far", 9, 120, 4.9, 80, "2025-01-01")
+  const near = person("near", 1, 3, 4.2, 6, "2025-06-01")
+  const fresh = person("fresh", 4, 0, 0, 0, "2026-10-20")
+  const unknown = person("unknown", null, 40, 4.5, 20, "2025-03-01")
+  const list = [far, near, fresh, unknown]
+  const ids = (sort: Parameters<typeof sortArtists>[1]) => sortArtists(list, sort, now).map((p) => p.pro.id)
+
+  it("puts the nearest first and those without a distance last", () => {
+    expect(ids("near")).toEqual(["near", "fresh", "far", "unknown"])
+  })
+  it("orders by completed bookings", () => {
+    expect(ids("popular")).toEqual(["far", "unknown", "near", "fresh"])
+  })
+  it("does not let one good review beat a long record", () => {
+    expect(ids("rated")[0]).toBe("far")
+  })
+  it("keeps only new people, the most recent first", () => {
+    expect(ids("new")).toEqual(["fresh"])
+    expect(isNewArtist(fresh.pro, now)).toBe(true)
+    expect(isNewArtist(far.pro, now)).toBe(false)
+    expect(isNewArtist({ joinedAt: "2026-10-10", stats: { completedJobs: 5 } } as Pro, now)).toBe(true)
+  })
+  it("does not change the list it was given", () => {
+    sortArtists(list, "popular", now)
+    expect(list[0]).toBe(far)
   })
 })

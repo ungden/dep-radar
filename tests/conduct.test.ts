@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { needsConductNote, offAppHint } from "@/lib/conduct"
+import { CHAT_ASKS, customerNote, needsConductNote, offAppHint } from "@/lib/conduct"
 
 describe("offAppHint", () => {
   it("stays quiet for ordinary booking talk", () => {
@@ -26,5 +26,16 @@ describe("needsConductNote", () => {
     expect(needsConductNote("nail")).toBe(false)
     expect(needsConductNote("photophone")).toBe(false)
     expect(needsConductNote(null)).toBe(false)
+  })
+})
+
+describe("customerNote", () => {
+  it("tells a partner whether the customer is new, and never to take money first", () => {
+    expect(customerNote({ withMe: 0, overall: 0 })).toMatchObject({ regular: false, title: "Khách đặt lần đầu" })
+    expect(customerNote({ withMe: 0, overall: 4 }).title).toContain("Khách mới với bạn")
+    expect(customerNote({ withMe: 3, overall: 4 })).toMatchObject({ regular: true, title: "Khách quen, đã đặt bạn 3 lần" })
+    for (const words of [customerNote({ withMe: 0, overall: 0 }).text, CHAT_ASKS.location, CHAT_ASKS.confirm("14:00")]) {
+      expect(offAppHint(words ?? "")).toBeNull()
+    }
   })
 })

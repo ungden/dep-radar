@@ -4,15 +4,18 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Ban, Flag, ImagePlus, MapPin, MoreHorizontal, Navigation, Send } from "lucide-react"
-import { ChatNotice, OffAppHint } from "@/components/conduct"
+import { ChatNotice, CustomerNote, OffAppHint } from "@/components/conduct"
 import { ReportButton } from "@/components/report-button"
+import { formatKm } from "@/components/shop"
 import { Sheet } from "@/components/sheet"
 import { SupportLink } from "@/components/support-link"
 import { Button, ButtonLink, PageHeader, inputClass } from "@/components/ui"
 import { listMessages, sendLocation, sendMessage, type ChatMessage, type ThreadHeader } from "@/lib/api/chat"
 import { LOCATION_DENIED, LOCATION_FAILED, directionsLink, locationConfirm, mapsLink } from "@/lib/chat-location"
 import { actions, useAct } from "@/lib/client-actions"
-import { chatState } from "@/lib/connection"
+import { CHAT_ASKS } from "@/lib/conduct"
+import { chatState, vnTime } from "@/lib/connection"
+import { distanceFromPointKm } from "@/lib/geo"
 import { useApp } from "@/lib/store"
 import { supabaseBrowser } from "@/lib/supabase/client"
 import { uploadImage } from "@/lib/uploads"
@@ -33,10 +36,13 @@ export function Conversation({
   threadId,
   header,
   initial,
+  history,
 }: {
   threadId: string
   header: ThreadHeader
   initial: ChatMessage[]
+  /** The partner's view of this customer; null for the customer. */
+  history: { withMe: number; overall: number } | null
 }) {
   const state = useApp()
   const [messages, setMessages] = React.useState(initial)
@@ -52,6 +58,9 @@ export function Conversation({
   const chat = chatState(header.chatStatus)
   const blocked = state.blockedAccounts.includes(header.otherId)
   const canSend = chat.open && !blocked
+  const me = header.iAmPro ? state.pros.find((p) => p.id === header.proSlug) : undefined
+  const gotLocation = messages.some((m) => !m.mine && m.point)
+  const startsAt = header.startsAt
 
   const reload = React.useCallback(async () => {
     setMessages(await listMessages(threadId))
@@ -160,6 +169,13 @@ export function Conversation({
       />
 
       {/* Open by default until the first message; one tap away after that. */}
+      {history && canSend && (
+        <CustomerNote
+          history={history}
+          onAskLocation={gotLocation ? undefined : () => setDraft(CHAT_ASKS.location)}
+          onConfirm={startsAt ? () => setDraft(CHAT_ASKS.confirm(vnTime(new Date(startsAt)))) : undefined}
+        />
+      )}
       <ChatNotice defaultOpen={messages.length === 0} />
 
       <div className="flex-1 space-y-2 pb-4">
@@ -182,7 +198,7 @@ export function Conversation({
                 </span>
               ))}
               {m.point ? (
-                <LocationCard point={m.point} mine={m.mine} />
+                <LocationCard point={m.point} mine={m.mine} km={!m.mine && me ? distanceFromPointKm([m.point.lat, m.point.lng], me.city, me.district) : null} />
               ) : (
                 m.body && <p className="whitespace-pre-wrap leading-relaxed">{m.body}</p>
               )}
@@ -307,7 +323,7 @@ export function Conversation({
 }
 
 /** A sent location: where it is, and a way there in Google Maps. */
-function LocationCard({ point, mine }: { point: { lat: number; lng: number }; mine: boolean }) {
+function LocationCard({ point, mine, km }: { point: { lat: number; lng: number }; mine: boolean; km: number | null }) {
   return (
     <div className="w-56 space-y-2">
       <a href={mapsLink(point.lat, point.lng)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5">
@@ -317,7 +333,7 @@ function LocationCard({ point, mine }: { point: { lat: number; lng: number }; mi
         <span className="min-w-0">
           <span className="block font-semibold">{mine ? "Vị trí của bạn" : "Vị trí đã gửi"}</span>
           <span className={cn("block text-label tabular-nums", mine ? "text-white/70" : "text-muted")}>
-            {point.lat.toFixed(5)}, {point.lng.toFixed(5)}
+            {km !== null ? `Cách bạn ${formatKm(km)}` : `${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}`}
           </span>
         </span>
       </a>
