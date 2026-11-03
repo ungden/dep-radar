@@ -2,6 +2,7 @@ import { Redirect } from "expo-router"
 import { NativeTabs } from "expo-router/unstable-native-tabs"
 import { useApp } from "@/state/app"
 import { colors } from "@/theme"
+import { tabBarProps } from "@/ui/native-tabs"
 
 const TABS = [
   { name: "index", label: "Hôm nay", sf: "house", md: "home" },
@@ -16,7 +17,7 @@ export default function StudioTabs() {
   const { uid, myPro, data } = useApp()
   if (data && (!uid || !myPro)) return <Redirect href="/" />
   return (
-    <NativeTabs tintColor={colors.accent}>
+    <NativeTabs {...tabBarProps}>
       {TABS.map((t) => (
         <NativeTabs.Trigger key={t.name} name={t.name} contentStyle={{ backgroundColor: colors.canvas }}>
           <NativeTabs.Trigger.Label>{t.label}</NativeTabs.Trigger.Label>
