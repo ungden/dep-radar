@@ -84,11 +84,11 @@ export default function Artists() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
-      <View style={{ gap: 12, paddingTop: insets.top + 8, paddingBottom: 8, backgroundColor: colors.accentSoft, borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl }}>
+      <View style={{ gap: 12, paddingTop: insets.top + 8, paddingBottom: 8, backgroundColor: colors.accentSoft }}>
         <Txt v="h1" style={{ paddingHorizontal: gutter }}>
           Chọn Artist
         </Txt>
-        <View style={{ marginHorizontal: gutter, minHeight: 48, borderRadius: radius.full, backgroundColor: colors.surface, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16 }}>
+        <View style={{ marginHorizontal: gutter, minHeight: 40, borderRadius: radius.sm, backgroundColor: colors.surface, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16 }}>
           <Icon name="search" size={18} color={colors.accent} />
           <TextInput
             value={query}
@@ -98,7 +98,7 @@ export default function Artists() {
             returnKeyType="search"
             clearButtonMode="while-editing"
             accessibilityLabel="Tìm tên Artist"
-            style={{ flex: 1, fontFamily: fonts[400], fontSize: 16, color: colors.ink }}
+            style={{ flex: 1, fontFamily: fonts[400], fontSize: 17, color: colors.ink }}
           />
         </View>
         <View style={{ gap: 2 }}>
@@ -118,7 +118,8 @@ export default function Artists() {
         data={shown}
         keyExtractor={(p) => p.pro.id}
         keyboardDismissMode="on-drag"
-        contentContainerStyle={{ padding: gutter, gap: 12 }}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ padding: gutter, gap: 20 }}
         refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}
         ListHeaderComponent={
           <View style={{ gap: 12 }}>
@@ -154,7 +155,7 @@ export default function Artists() {
               onPress={() => router.push(chosen ? { pathname: "/yeu-cau/moi", params: { template: chosen.id } } : "/yeu-cau/moi")}
               accessibilityRole="button"
               accessibilityLabel="Đặt theo dịch vụ, Artist sẽ vào nhận đơn"
-              style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, marginTop: 12, marginBottom: 8, borderRadius: radius.lg, backgroundColor: colors.highlightSoft }}
+              style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 18, marginTop: 20, marginBottom: 8, borderRadius: radius.lg, backgroundColor: colors.highlightSoft }}
             >
               <View style={{ flex: 1, gap: 2 }}>
                 <Txt w={700}>Chưa thấy Artist hợp ý?</Txt>
@@ -162,8 +163,8 @@ export default function Artists() {
                   Đặt theo dịch vụ, Artist sẽ vào nhận đơn.
                 </Txt>
               </View>
-              <View style={{ minHeight: 38, paddingHorizontal: 14, borderRadius: radius.full, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}>
-                <Txt v="meta" w={600}>
+              <View style={{ minHeight: 34, paddingHorizontal: 14, borderRadius: radius.full, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}>
+                <Txt v="meta" w={700} color={colors.accentDark}>
                   Đặt ngay
                 </Txt>
               </View>

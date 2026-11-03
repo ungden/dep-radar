@@ -82,7 +82,7 @@ export function CustomerReviewCard({ booking: b, now, onDone }: { booking: Booki
         placeholder={needsReason ? "Chuyện gì đã xảy ra? Người làm khác sẽ đọc được." : "Nhận xét về khách (không bắt buộc)"}
         placeholderTextColor={colors.muted}
         accessibilityLabel="Nhận xét về khách"
-        style={{ minHeight: 80, backgroundColor: colors.subtle, borderRadius: radius.md, padding: 12, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
+        style={{ minHeight: 80, backgroundColor: colors.subtle, borderRadius: radius.md, padding: 12, fontFamily: fonts[400], fontSize: 17, color: colors.ink, textAlignVertical: "top" }}
       />
       {needsReason && body.trim().length < MIN_REASON ? (
         <Txt v="meta" color={colors.warning}>

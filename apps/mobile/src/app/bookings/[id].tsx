@@ -515,7 +515,7 @@ export default function BookingDetail() {
           placeholderTextColor={colors.muted}
           multiline
           maxLength={reasonFor === "dispute" || reasonFor === "noshow" ? 1000 : 300}
-          style={{ minHeight: 88, backgroundColor: colors.subtle, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
+          style={{ minHeight: 88, backgroundColor: colors.subtle, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 17, color: colors.ink, textAlignVertical: "top" }}
         />
       </Sheet>
     </ScrollView>

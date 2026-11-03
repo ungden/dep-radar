@@ -5,7 +5,7 @@ import { ScrollView, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { webLink } from "@/data/links"
 import { useApp } from "@/state/app"
-import { colors, gutter, radius } from "@/theme"
+import { colors, gutter, radius, hairline } from "@/theme"
 import { Button } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import { Txt } from "@/ui/text"
@@ -66,7 +66,7 @@ export default function Terms() {
           onPress={() => void WebBrowser.openBrowserAsync(webLink("/chinh-sach"))}
         />
       </ScrollView>
-      <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 16), gap: 8, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line }}>
+      <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 16), gap: 8, backgroundColor: colors.surface, borderTopWidth: hairline, borderTopColor: colors.line }}>
         {reading ? (
           <Button label="Đóng" full size="lg" onPress={() => router.back()} />
         ) : (

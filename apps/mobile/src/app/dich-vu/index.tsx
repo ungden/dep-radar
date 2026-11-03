@@ -18,7 +18,7 @@ import { OfflineNote } from "@/components/offline-note"
 import { CatalogTile, Pill, ServiceTile, TileGrid, TileSkeleton, notYetOffered, tileWidth } from "@/components/tiles"
 import { useApp } from "@/state/app"
 import { useBrowse } from "@/state/derived"
-import { colors, gutter, radius } from "@/theme"
+import { colors, gutter, radius, hairline } from "@/theme"
 import { EmptyState, ErrorNote } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -173,7 +173,7 @@ export default function ServiceList() {
         refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}
       >
         {/* Category, then filters: two rows that stay under the header. */}
-        <View style={{ backgroundColor: colors.canvas, paddingBottom: 10, gap: 8, borderBottomWidth: 1, borderBottomColor: colors.line }}>
+        <View style={{ backgroundColor: colors.canvas, paddingBottom: 10, gap: 8, borderBottomWidth: hairline, borderBottomColor: colors.line }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: gutter, gap: 8, paddingTop: 4 }}>
             <Pill label="Tất cả" selected={category === "all"} onPress={() => setCategory("all")} />
             {chips.map((c) => (
@@ -243,7 +243,7 @@ function FilterChip({ label, active, onPress, icon }: { label: string; active: b
   const fg = active ? colors.accentDark : colors.ink
   return (
     <Press onPress={onPress} accessibilityLabel={`${label}, đổi`} style={{ minHeight: 44, justifyContent: "center" }}>
-      <View style={{ height: 36, paddingLeft: 12, paddingRight: 10, borderRadius: radius.full, flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: active ? colors.accentSoft : colors.surface, borderWidth: 1, borderColor: active ? colors.accent : colors.line }}>
+      <View style={{ height: 36, paddingLeft: 12, paddingRight: 10, borderRadius: radius.full, flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: active ? colors.accentSoft : colors.surface, borderWidth: hairline, borderColor: active ? colors.accent : colors.line }}>
         {icon ? <Icon name={icon} size={13} color={fg} /> : null}
         <Txt v="meta" w={600} color={fg}>
           {label}
@@ -266,7 +266,7 @@ function Options<T extends string>({ value, options, onChange }: { value: T; opt
             onPress={() => onChange(o.value)}
             accessibilityRole="radio"
             accessibilityState={{ checked: selected }}
-            style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 48, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.md, backgroundColor: selected ? colors.subtle : colors.surface, borderWidth: 1, borderColor: selected ? colors.ink : colors.line }}
+            style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 48, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.md, backgroundColor: selected ? colors.subtle : colors.surface, borderWidth: hairline, borderColor: selected ? colors.ink : colors.line }}
           >
             <Txt w={selected ? 600 : 400}>{o.label}</Txt>
             {selected ? <Icon name="check" size={16} color={colors.ink} /> : null}

@@ -6,7 +6,7 @@ import { compensationLabel, listCastings, type CastingItem } from "@/data/castin
 import { formatDateLong } from "@/data/format"
 import { useApp } from "@/state/app"
 import { useAsync } from "@/state/use-async"
-import { colors, gutter, radius } from "@/theme"
+import { colors, gutter, radius, hairline } from "@/theme"
 import { Avatar, EmptyState, ErrorNote, Skeleton, VerifiedMark } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -59,7 +59,7 @@ function CastingCard({ casting: c }: { casting: CastingItem }) {
     <Press
       onPress={() => router.push({ pathname: "/tuyen-mau/[id]", params: { id: c.id } })}
       accessibilityLabel={`${c.title}, ${compensationLabel(c)}, ${formatDateLong(c.date)} ${c.time}, ${c.district}`}
-      style={{ backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, padding: 14, gap: 8, marginBottom: 12 }}
+      style={{ backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: hairline, borderColor: colors.line, padding: 14, gap: 8, marginBottom: 12 }}
     >
       <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
         <View style={{ backgroundColor: colors.subtle, borderRadius: radius.full, paddingHorizontal: 10, paddingVertical: 3 }}>
@@ -88,7 +88,7 @@ function CastingCard({ casting: c }: { casting: CastingItem }) {
           {c.district}, {c.city}
         </Txt>
       </View>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 10 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, borderTopWidth: hairline, borderTopColor: colors.line, paddingTop: 10 }}>
         <Avatar name={c.pro.name} uri={c.pro.avatar} artist size={24} />
         <Txt v="meta" w={600} numberOfLines={1} style={{ flexShrink: 1 }}>
           {c.pro.name}

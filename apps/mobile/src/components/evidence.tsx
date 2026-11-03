@@ -5,7 +5,7 @@ import { ActivityIndicator, View } from "react-native"
 import * as WebBrowser from "expo-web-browser"
 import { VIDEO_MAX_SECONDS } from "@/shared"
 import { EVIDENCE_MAX, removeEvidence, uploadEvidence, type MyReport, type PickedMedia } from "@/data/safety"
-import { colors, radius } from "@/theme"
+import { colors, radius, hairline } from "@/theme"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
@@ -109,7 +109,7 @@ export function EvidencePicker({
           <Press
             onPress={() => void pick()}
             accessibilityLabel="Thêm ảnh hoặc clip"
-            style={{ width: TILE, height: TILE, borderRadius: radius.sm, borderWidth: 1, borderStyle: "dashed", borderColor: colors.line, alignItems: "center", justifyContent: "center", gap: 2 }}
+            style={{ width: TILE, height: TILE, borderRadius: radius.sm, borderWidth: hairline, borderStyle: "dashed", borderColor: colors.line, alignItems: "center", justifyContent: "center", gap: 2 }}
           >
             <Icon name="camera" size={20} color={colors.muted} />
             <Txt v="meta" color={colors.muted} style={{ fontSize: 11 }}>

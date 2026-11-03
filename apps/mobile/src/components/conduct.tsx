@@ -3,7 +3,7 @@ import * as WebBrowser from "expo-web-browser"
 import { View } from "react-native"
 import { CHAT_NOTICE, CONDUCT, offAppHint } from "@/shared"
 import { webLink } from "@/data/links"
-import { colors, radius } from "@/theme"
+import { colors, radius, hairline } from "@/theme"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
@@ -21,7 +21,7 @@ export function ConductNote() {
       accessibilityRole="button"
       accessibilityState={{ expanded: open }}
       accessibilityLabel={`${CONDUCT.title}. ${CONDUCT.short}`}
-      style={{ flexDirection: "row", gap: 12, padding: 14, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface }}
+      style={{ flexDirection: "row", gap: 12, padding: 14, borderRadius: radius.lg, borderWidth: hairline, borderColor: colors.line, backgroundColor: colors.surface }}
     >
       <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: colors.successSoft, alignItems: "center", justifyContent: "center" }}>
         <Icon name="verified" size={18} color={colors.success} />
@@ -56,7 +56,7 @@ export function ChatNotice({ defaultOpen }: { defaultOpen?: boolean }) {
       accessibilityRole="button"
       accessibilityState={{ expanded: open }}
       accessibilityLabel={CHAT_NOTICE.title}
-      style={{ marginBottom: 12, padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.highlightSoft, gap: 6 }}
+      style={{ marginBottom: 12, padding: 12, borderRadius: radius.lg, borderWidth: hairline, borderColor: colors.line, backgroundColor: colors.highlightSoft, gap: 6 }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
         <Icon name="verified" size={16} color={colors.ink} />

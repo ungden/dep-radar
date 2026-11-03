@@ -6,7 +6,7 @@ import { Txt } from "./text"
 
 type Variant = "primary" | "secondary" | "ghost" | "danger"
 
-/** The main action is a rose pill. Secondary actions are outlined. */
+/** The main action is filled rose, a secondary one tinted, as native buttons are. */
 export function Button({
   label,
   onPress,
@@ -31,8 +31,8 @@ export function Button({
   compact?: boolean
 }) {
   const height = compact ? controlMetrics.minHeight : size === "sm" ? 44 : size === "lg" ? 56 : 48
-  const bg = variant === "primary" ? colors.accent : variant === "ghost" ? "transparent" : colors.surface
-  const fg = variant === "primary" ? colors.surface : variant === "danger" ? colors.danger : colors.ink
+  const bg = variant === "primary" ? colors.accent : variant === "secondary" ? colors.accentSoft : variant === "danger" ? colors.dangerSoft : "transparent"
+  const fg = variant === "primary" ? colors.surface : variant === "danger" ? colors.danger : variant === "secondary" ? colors.accentDark : colors.ink
   return (
     <Press
       onPress={onPress}
@@ -43,10 +43,8 @@ export function Button({
           minHeight: height,
           paddingVertical: compact ? controlMetrics.paddingVertical : 12,
           paddingHorizontal: compact ? 16 : size === "sm" ? 14 : 22,
-          borderRadius: compact ? radius.md : radius.full,
+          borderRadius: size === "sm" ? radius.sm : radius.md,
           backgroundColor: bg,
-          borderWidth: variant === "secondary" || variant === "danger" ? 1 : 0,
-          borderColor: colors.line,
           alignItems: "center",
           justifyContent: "center",
           alignSelf: full ? "stretch" : "flex-start",
@@ -56,7 +54,7 @@ export function Button({
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8, maxWidth: "100%" }}>
         {busy ? <ActivityIndicator size="small" color={fg} /> : icon ? <Icon name={icon} size={size === "sm" ? 16 : 18} color={fg} /> : null}
-        <Txt v={compact ? "control" : size === "sm" ? "meta" : "body"} w={compact ? 600 : 700} color={fg} style={{ flexShrink: 1 }} center>
+        <Txt v={compact ? "control" : size === "sm" ? "meta" : "body"} w={600} color={fg} style={{ flexShrink: 1 }} center>
           {label}
         </Txt>
       </View>

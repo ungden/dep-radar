@@ -12,7 +12,7 @@ import { BookingBar } from "@/components/booking-bar"
 import { FollowButton } from "@/components/follow-button"
 import { useSafetyMenu } from "@/components/safety"
 import { useApp, useProLookup } from "@/state/app"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, radius, hairline } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
 import { Avatar, Card, EmptyState, Photo, VerifiedMark } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
@@ -183,7 +183,7 @@ export default function ProProfile() {
         </View>
 
         {/* Three real numbers, or the honest absence of one */}
-        <View style={{ flexDirection: "row", paddingVertical: 14, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line }}>
+        <View style={{ flexDirection: "row", paddingVertical: 14, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: hairline, borderColor: colors.line }}>
           <Stat value={String(pro.stats.completedJobs)} label="lịch đã xong" />
           <Stat
             star={showsAverage(pro.rating.count)}
@@ -209,7 +209,7 @@ export default function ProProfile() {
                   haptic="select"
                   onPress={() => setPicked({ template: s.templateId })}
                   accessibilityLabel={`${t.name}, từ ${formatPrice(Math.min(...options.map((v) => s.prices[v.id])))}`}
-                  style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line }}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: hairline, borderColor: colors.line }}
                 >
                   <Txt w={600} style={{ flex: 1 }}>
                     {t.name}
@@ -302,7 +302,7 @@ export default function ProProfile() {
                 {w.video ? (
                   <View style={{ position: "absolute", left: 6, bottom: 6, flexDirection: "row", alignItems: "center", gap: 3, height: 20, paddingHorizontal: 7, borderRadius: radius.full, backgroundColor: "rgba(20,18,19,0.66)" }}>
                     <Icon name="play" size={10} color={colors.surface} />
-                    <Txt v="label" color={colors.surface} style={{ fontSize: 12, lineHeight: 16 }}>
+                    <Txt v="label" color={colors.surface} style={{ fontSize: 13, lineHeight: 17 }}>
                       Clip
                     </Txt>
                   </View>
@@ -327,7 +327,7 @@ export default function ProProfile() {
         <Heading title="Khách đánh giá" count={reviews.length} first={REVIEWS_FIRST} open={allReviews} onToggle={() => setAllReviews((v) => !v)} />
         {reviews.length ? (
           shownReviews.map((r) => (
-            <View key={r.id} style={{ padding: 14, gap: 6, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line }}>
+            <View key={r.id} style={{ padding: 14, gap: 6, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: hairline, borderColor: colors.line }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
                 <Txt w={600} style={{ flexShrink: 1 }}>
                   {r.author}
@@ -399,7 +399,7 @@ export default function ProProfile() {
             ))}
           </View>
         ) : null}
-        <Card style={{ borderWidth: 1, borderColor: colors.line }}>
+        <Card style={{ borderWidth: hairline, borderColor: colors.line }}>
           <Info label="Hình thức" value={[pro.homeService ? "Đến tận nơi" : null, studioBookingOpen && pro.studioAddress ? "Tại studio" : null].filter(Boolean).join(" · ") || "Chưa ghi"} />
           {studioBookingOpen && pro.studioAddress ? <Info label="Studio" value={pro.studioAddress} /> : null}
           {pro.homeService ? <Info label="Đi xa tối đa" value={`${pro.maxTravelKm} km`} /> : null}
@@ -408,7 +408,7 @@ export default function ProProfile() {
           {photoPeople && extras.equipment ? <Info label="Thiết bị" value={extras.equipment} /> : null}
         </Card>
         {extras.model ? (
-          <Card style={{ borderWidth: 1, borderColor: colors.line }}>
+          <Card style={{ borderWidth: hairline, borderColor: colors.line }}>
             <Txt v="lead" w={700}>
               Thẻ người mẫu
             </Txt>
@@ -432,7 +432,7 @@ export default function ProProfile() {
             placeholderTextColor={colors.muted}
             multiline
             maxLength={1000}
-            style={{ minHeight: 88, backgroundColor: colors.subtle, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
+            style={{ minHeight: 88, backgroundColor: colors.subtle, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 17, color: colors.ink, textAlignVertical: "top" }}
           />
         </Sheet>
       ) : null}

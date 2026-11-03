@@ -2,7 +2,6 @@ import * as React from "react"
 import { FlashList } from "@shopify/flash-list"
 import { router, useLocalSearchParams } from "expo-router"
 import { ScrollView, TextInput, View, useWindowDimensions } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
   providerLocationOpen,
   CATEGORIES,
@@ -28,7 +27,7 @@ import { OfflineNote } from "@/components/offline-note"
 import { TextTabs } from "@/components/switches"
 import { useApp } from "@/state/app"
 import { useBrowse } from "@/state/derived"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, radius, hairline } from "@/theme"
 import { Button } from "@/ui/button"
 import { Chip, EmptyState, ErrorNote } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
@@ -76,7 +75,6 @@ export default function Search() {
   const params = useLocalSearchParams<{ category?: string; vertical?: string; focus?: string }>()
   const app = useApp()
   const browse = useBrowse()
-  const insets = useSafeAreaInsets()
   const { fontScale, width } = useWindowDimensions()
   const tile = tileWidth(width)
   const sheet = useSheet()
@@ -191,19 +189,16 @@ export default function Search() {
   )
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.canvas, paddingTop: insets.top + 8 }}>
-      <View style={{ gap: 12, paddingBottom: 8 }}>
-        <Txt v="h1" style={{ paddingHorizontal: gutter }}>
-          Tìm
-        </Txt>
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <View style={{ gap: 12, paddingTop: 8, paddingBottom: 8 }}>
         <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: gutter }}>
           <View
             style={{
               flex: 1,
-              minHeight: 48, paddingVertical: 8,
-              borderRadius: radius.full,
+              minHeight: 44, paddingVertical: 6,
+              borderRadius: radius.sm,
               backgroundColor: colors.surface,
-              borderWidth: 1,
+              borderWidth: hairline,
               borderColor: colors.line,
               flexDirection: "row",
               alignItems: "center",
@@ -249,7 +244,7 @@ export default function Search() {
                 haptic="select"
                 onPress={() => setFilters((cur) => ({ ...cur, ...f.clear }))}
                 accessibilityLabel={`Bỏ lọc ${f.label}`}
-                style={{ minHeight: 44, paddingVertical: 8, paddingLeft: 12, paddingRight: 8, borderRadius: radius.full, backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accent, flexDirection: "row", alignItems: "center", gap: 6 }}
+                style={{ minHeight: 44, paddingVertical: 8, paddingLeft: 12, paddingRight: 8, borderRadius: radius.full, backgroundColor: colors.accentSoft, borderWidth: hairline, borderColor: colors.accent, flexDirection: "row", alignItems: "center", gap: 6 }}
               >
                 <Txt v="meta" w={600} color={colors.accentDark}>
                   {f.label}
@@ -265,7 +260,7 @@ export default function Search() {
           </ScrollView>
         ) : null}
 
-        <View style={{ borderBottomWidth: 1, borderBottomColor: colors.line }}>
+        <View style={{ borderBottomWidth: hairline, borderBottomColor: colors.line }}>
           <TextTabs
             size="body"
             value={mode}

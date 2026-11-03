@@ -23,7 +23,7 @@ import {
   logoTransform,
   showsAverage,
 } from "@/shared"
-import { aspect, colors, photoRadius, radius } from "@/theme"
+import { aspect, colors, photoRadius, radius, hairline } from "@/theme"
 import { Button } from "./button"
 import { Icon } from "./icon"
 import { Press } from "./press"
@@ -102,7 +102,7 @@ export function Chip({ label, selected, onPress, icon }: { label: string; select
         maxWidth: "100%",
         paddingHorizontal: 14,
         borderRadius: radius.full,
-        borderWidth: 1,
+        borderWidth: hairline,
         borderColor: selected ? colors.accent : colors.line,
         backgroundColor: selected ? colors.accent : colors.surface,
         flexDirection: "row",
@@ -167,18 +167,22 @@ export function SectionHeader({ title, action, onAction }: { title: string; acti
 }
 
 /** Says what is true and offers one thing to do. */
+/** Nothing here yet: the app's own picture in a soft ring, so the page is not left blank. */
 export function EmptyState({ title, text, action, onAction }: { title: string; text?: string; action?: string; onAction?: () => void }) {
   return (
-    <View style={{ paddingVertical: 32, paddingHorizontal: 8, alignItems: "center", gap: 8 }}>
-      <Txt v="lead" w={700} center>
+    <View style={{ paddingVertical: 48, paddingHorizontal: 20, alignItems: "center", gap: 10 }}>
+      <View style={{ width: 128, height: 128, borderRadius: 64, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+        <Image source={DEFAULT_ARTIST_AVATAR} style={{ width: 88, height: 88, borderRadius: 44 }} contentFit="cover" accessible={false} />
+      </View>
+      <Txt v="title" center>
         {title}
       </Txt>
       {text ? (
-        <Txt color={colors.inkSoft} center style={{ maxWidth: 320 }}>
+        <Txt color={colors.inkSoft} center style={{ maxWidth: 300 }}>
           {text}
         </Txt>
       ) : null}
-      {action ? <Button label={action} onPress={onAction} style={{ marginTop: 8, alignSelf: "center" }} /> : null}
+      {action ? <Button label={action} onPress={onAction} style={{ marginTop: 14, alignSelf: "center", minWidth: 180 }} /> : null}
     </View>
   )
 }
@@ -258,7 +262,7 @@ export function Line({ label, value, strong }: { label: string; value: string; s
 
 /** A block on a white surface, separated from the next by space, not a shadow. */
 export function Card({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
-  return <View style={[{ backgroundColor: colors.surface, borderRadius: radius.md, padding: 16, gap: 8 }, style]}>{children}</View>
+  return <View style={[{ backgroundColor: colors.surface, borderRadius: radius.lg, padding: 20, gap: 10 }, style]}>{children}</View>
 }
 
 export function ErrorNote({ text, onRetry }: { text: string; onRetry?: () => void }) {

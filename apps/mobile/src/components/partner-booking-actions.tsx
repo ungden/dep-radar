@@ -2,7 +2,7 @@ import * as React from "react"
 import { Alert, ScrollView, TextInput, View } from "react-native"
 import { deliverBooking, type BookingItem } from "@/data/bookings"
 import { addDays, formatDateLong, localDate, todayISO, weekdayShort } from "@/data/format"
-import { colors, fonts, radius } from "@/theme"
+import { colors, fonts, radius, hairline } from "@/theme"
 import { Button } from "@/ui/button"
 import { Card, Chip } from "@/ui/bits"
 import { Press } from "@/ui/press"
@@ -52,7 +52,7 @@ export function RescheduleButton({ onSend }: { onSend: (date: string, time: stri
                 onPress={() => setDate(d)}
                 accessibilityState={{ selected }}
                 accessibilityLabel={formatDateLong(d)}
-                style={{ width: 64, paddingVertical: 8, borderRadius: radius.md, alignItems: "center", backgroundColor: selected ? colors.accent : colors.surface, borderWidth: 1, borderColor: selected ? colors.accent : colors.line }}
+                style={{ width: 64, paddingVertical: 8, borderRadius: radius.md, alignItems: "center", backgroundColor: selected ? colors.accent : colors.surface, borderWidth: hairline, borderColor: selected ? colors.accent : colors.line }}
               >
                 <Txt v="meta" color={selected ? colors.surface : colors.muted}>
                   {d === todayISO() ? "Nay" : weekdayShort(d)}
@@ -88,7 +88,7 @@ export function DeliverCard({ booking: b, onDone }: { booking: BookingItem; onDo
     Alert.alert("Đã giao file cho khách")
     onDone()
   }
-  const input = { backgroundColor: colors.subtle, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink } as const
+  const input = { backgroundColor: colors.subtle, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 17, color: colors.ink } as const
   return (
     <Card>
       <Txt w={700}>{delivery?.deliveredAt ? "Đã giao file, có thể đổi link" : "Giao file cho khách"}</Txt>

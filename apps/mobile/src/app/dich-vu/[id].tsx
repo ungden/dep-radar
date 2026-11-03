@@ -10,7 +10,7 @@ import { illustration, offerRating } from "@/components/tiles"
 import { useApp } from "@/state/app"
 import { ConductNote } from "@/components/conduct"
 import { needsConductNote } from "@/shared"
-import { colors, gutter, radius } from "@/theme"
+import { colors, gutter, radius, hairline } from "@/theme"
 import { Button } from "@/ui/button"
 import { Avatar, Card, Divider, EmptyState, ErrorNote, Photo, Rating, Skeleton, VerifiedMark } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
@@ -95,7 +95,7 @@ export default function ServiceScreen() {
               <>
                 <Photo uri={g.uri} recyclingKey={g.key} />
                 <View style={{ position: "absolute", left: 8, bottom: 8, paddingHorizontal: 8, height: 22, borderRadius: radius.full, justifyContent: "center", backgroundColor: "rgba(20,18,19,0.55)" }}>
-                  <Txt v="label" w={600} color={colors.surface} style={{ fontSize: 12, lineHeight: 16 }}>
+                  <Txt v="label" w={600} color={colors.surface} style={{ fontSize: 13, lineHeight: 17 }}>
                     {g.work ? `${i + 1}/${gallery.length}` : "Ảnh minh hoạ"}
                   </Txt>
                 </View>
@@ -204,7 +204,7 @@ export default function ServiceScreen() {
 
         {/* Options, price first */}
         <View style={{ paddingHorizontal: gutter }}>
-          <Card style={{ padding: 18, gap: 0, borderWidth: 1, borderColor: colors.line }}>
+          <Card style={{ padding: 18, gap: 0, borderWidth: hairline, borderColor: colors.line }}>
             <Txt v="title" w={700}>Gói & giá</Txt>
             {packages.length ? packages.map(({ variant: v, price }, i) => <View key={v.id}>
               {i > 0 && <Divider />}
@@ -292,7 +292,7 @@ function ProOffer({ pro, templateId, minTotal, maxTotal }: { pro: AppPro; templa
     <Press
       onPress={() => router.push({ pathname: "/pros/[id]", params: { id: pro.id, service: templateId } })}
       accessibilityLabel={`${pro.name}${price !== null ? `, từ ${formatPrice(price)}` : ""}`}
-      style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line }}
+      style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: hairline, borderColor: colors.line }}
     >
       {photo ? (
         <Image source={{ uri: photo }} style={{ width: 56, height: 56, borderRadius: radius.sm, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />

@@ -60,7 +60,8 @@ function Navigator() {
     <Stack
       screenOptions={{
         headerShadowVisible: false,
-        headerStyle: { backgroundColor: colors.canvas },
+        // The same soft rose as the tabs, so an inner page does not open plain.
+        headerStyle: { backgroundColor: colors.accentSoft },
         headerTintColor: colors.ink,
         headerTitleStyle: { fontFamily: fonts[700], fontSize: 17, color: colors.ink },
         headerBackButtonDisplayMode: "minimal",
@@ -69,6 +70,7 @@ function Navigator() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="studio" options={{ headerShown: false }} />
+      <Stack.Screen name="tim" options={{ title: "Tìm" }} />
       <Stack.Screen name="works/[id]" options={{ headerTransparent: true, title: "" }} />
       {/* The cover photos run to the top of the screen, under the floating buttons. */}
       <Stack.Screen name="pros/[id]" options={{ headerTransparent: true, headerStyle: { backgroundColor: "transparent" }, scrollEdgeEffects: { top: "hidden", bottom: "automatic", left: "automatic", right: "automatic" }, title: "" }} />

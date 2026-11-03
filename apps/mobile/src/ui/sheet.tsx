@@ -9,7 +9,7 @@ import {
 } from "@gorhom/bottom-sheet"
 import { View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { colors, radius } from "@/theme"
+import { colors, radius, hairline } from "@/theme"
 import { IconButton } from "./button"
 import { Txt } from "./text"
 
@@ -66,7 +66,7 @@ export function Sheet({
             paddingTop: 10,
             paddingBottom: Math.max(insets.bottom, 12),
             backgroundColor: colors.surface,
-            borderTopWidth: 1,
+            borderTopWidth: hairline,
             borderTopColor: colors.line,
           }}
         >

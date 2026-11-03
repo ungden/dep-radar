@@ -13,7 +13,7 @@ import { StudioHeader } from "@/components/studio-header"
 import { TextTabs } from "@/components/switches"
 import { useApp } from "@/state/app"
 import { useAsync } from "@/state/use-async"
-import { colors, gutter } from "@/theme"
+import { colors, gutter, hairline } from "@/theme"
 import { Button } from "@/ui/button"
 import { EmptyState, ErrorNote, Skeleton } from "@/ui/bits"
 import { refreshControl } from "@/ui/refresh"
@@ -38,7 +38,7 @@ export default function StudioCalendar() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas, paddingTop: insets.top }}>
       <StudioHeader title="Lịch" />
-      <View style={{ borderBottomWidth: 1, borderBottomColor: colors.line }}>
+      <View style={{ borderBottomWidth: hairline, borderBottomColor: colors.line }}>
         <TextTabs
           items={[
             { value: "upcoming", label: "Sắp tới" },

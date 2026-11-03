@@ -7,7 +7,7 @@ import { WardPicker } from "@/components/ward-picker"
 import { deleteAddress, saveAddress } from "@/data/addresses"
 import { useApp } from "@/state/app"
 import { useKeyboardVisible } from "@/state/keyboard"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, radius, hairline } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
 import { Chip, ErrorNote } from "@/ui/bits"
 import { haptic } from "@/ui/haptics"
@@ -71,7 +71,7 @@ export default function EditAddress() {
       },
     ])
 
-  const input = { backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink } as const
+  const input = { backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: 14, fontFamily: fonts[400], fontSize: 17, color: colors.ink } as const
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.canvas }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}>
@@ -160,7 +160,7 @@ export default function EditAddress() {
         {error ? <ErrorNote text={error} /> : null}
         {existing ? <Button label="Xoá địa chỉ" variant="danger" icon="trash" full onPress={remove} /> : null}
       </ScrollView>
-      <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: keyboard ? 12 : Math.max(insets.bottom, 12), backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line }}>
+      <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: keyboard ? 12 : Math.max(insets.bottom, 12), backgroundColor: colors.surface, borderTopWidth: hairline, borderTopColor: colors.line }}>
         <Button label="Lưu địa chỉ" full size="lg" disabled={!valid} busy={busy} onPress={() => void save()} />
       </View>
     </KeyboardAvoidingView>

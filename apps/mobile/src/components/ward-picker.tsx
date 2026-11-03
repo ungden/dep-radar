@@ -3,7 +3,7 @@ import * as Location from "expo-location"
 import { FlatList, Modal, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { LOCATION_DENIED, LOCATION_FAILED, isLegacyDistrict, searchWards, wardOfPoint } from "@/shared"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, radius, hairline } from "@/theme"
 import { IconButton } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -129,7 +129,7 @@ export function WardPicker({
               borderRadius: radius.md,
               paddingHorizontal: 14,
               fontFamily: fonts[400],
-              fontSize: 16,
+              fontSize: 17,
               color: colors.ink,
             }}
             accessibilityLabel="Tìm phường, xã"
@@ -168,7 +168,7 @@ export function WardPicker({
                 <Press
                   onPress={() => pick({ city, district: item.name })}
                   accessibilityState={{ selected }}
-                  style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.line, flexDirection: "row", alignItems: "center", gap: 10 }}
+                  style={{ paddingVertical: 12, borderBottomWidth: hairline, borderBottomColor: colors.line, flexDirection: "row", alignItems: "center", gap: 10 }}
                 >
                   <View style={{ flex: 1, gap: 2 }}>
                     <Txt w={selected ? 700 : 500}>{item.name}</Txt>

@@ -8,7 +8,7 @@ import { CATALOG, categoryLabel } from "@/shared"
 import { reencodePhoto, saveWork, uploadPhoto, uploadVideo, worksSupportVideo } from "@/data/works"
 import { StudioHeader } from "@/components/studio-header"
 import { useApp } from "@/state/app"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, radius, hairline } from "@/theme"
 import { Button } from "@/ui/button"
 import { Chip, ErrorNote } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
@@ -202,7 +202,7 @@ export default function PostWork() {
             placeholder="Gel trơn hồng đất"
             placeholderTextColor={colors.muted}
             maxLength={80}
-            style={{ height: 50, backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: 14, fontFamily: fonts[600], fontSize: 15, color: colors.ink }}
+            style={{ height: 50, backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: 14, fontFamily: fonts[600], fontSize: 17, color: colors.ink }}
           />
           <Txt w={700}>Mô tả</Txt>
           <TextInput
@@ -212,7 +212,7 @@ export default function PostWork() {
             placeholderTextColor={colors.muted}
             multiline
             maxLength={600}
-            style={{ minHeight: 96, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 15, color: colors.ink, textAlignVertical: "top" }}
+            style={{ minHeight: 96, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, fontFamily: fonts[400], fontSize: 17, color: colors.ink, textAlignVertical: "top" }}
           />
         </View>
 
@@ -235,7 +235,7 @@ function MediaButton({ icon, label, onPress }: { icon: "camera" | "photos"; labe
     <Press
       onPress={onPress}
       accessibilityLabel={label}
-      style={{ width: 96, height: 120, borderRadius: radius.sm, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderStyle: "dashed", alignItems: "center", justifyContent: "center", gap: 6 }}
+      style={{ width: 96, height: 120, borderRadius: radius.sm, backgroundColor: colors.surface, borderWidth: hairline, borderColor: colors.line, borderStyle: "dashed", alignItems: "center", justifyContent: "center", gap: 6 }}
     >
       <Icon name={icon} size={24} />
       <Txt v="meta" w={600}>

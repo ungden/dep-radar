@@ -3,7 +3,7 @@ import { Image } from "expo-image"
 import * as ImagePicker from "expo-image-picker"
 import { Modal, Pressable, ScrollView, View, useWindowDimensions } from "react-native"
 import { MAX_REFERENCES, signReferences } from "@/data/references"
-import { colors, radius } from "@/theme"
+import { colors, radius, hairline } from "@/theme"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
@@ -41,7 +41,7 @@ export function ReferencePicker({ value, onChange, disabled }: { value: PickedPh
           onPress={() => void pick()}
           disabled={disabled}
           accessibilityLabel="Thêm ảnh mẫu"
-          style={{ width: 88, height: 110, borderRadius: radius.md, borderWidth: 1, borderStyle: "dashed", borderColor: colors.subtleStrong, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", gap: 6 }}
+          style={{ width: 88, height: 110, borderRadius: radius.md, borderWidth: hairline, borderStyle: "dashed", borderColor: colors.subtleStrong, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", gap: 6 }}
         >
           <Icon name="photos" size={22} color={colors.inkSoft} />
           <Txt v="label" color={colors.inkSoft}>

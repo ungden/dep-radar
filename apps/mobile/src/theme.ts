@@ -1,7 +1,15 @@
-import { aspect, colors, fontSize, motion, radius, space } from "@/shared"
+import { StyleSheet } from "react-native"
+import { aspect, colors as sharedColors, fontSize, motion, radius, space } from "@/shared"
 
 /** The shared tokens (lib/design/tokens.ts), plus what only the app needs. */
-export { aspect, colors, fontSize, motion, radius, space }
+export { aspect, fontSize, motion, radius, space }
+
+/**
+ * A native grouped background: white cards stand out from it by themselves, so
+ * they need no border. Lines are a hair thick, and that much darker to show.
+ */
+export const colors = { ...sharedColors, canvas: "#F3F0EA", line: "#D9D2C7" }
+export const hairline = StyleSheet.hairlineWidth
 
 /** Inter, as on the web; loaded in app/_layout.tsx. A custom font ignores fontWeight, so each weight is its own family. */
 export const fonts = {
@@ -16,14 +24,14 @@ export type Weight = keyof typeof fonts
 
 
 /** Side gutter of every screen. */
-export const gutter = space[4]
+export const gutter = 20
 
 /** Dense selection controls have their own type scale; reading text keeps full Dynamic Type. */
 export const controlMetrics = {
-  fontSize: 16,
-  lineHeight: 22,
-  metaFontSize: 14,
-  metaLineHeight: 20,
+  fontSize: 17,
+  lineHeight: 23,
+  metaFontSize: 15,
+  metaLineHeight: 21,
   maxFontSizeMultiplier: 1.35,
   minHeight: 48,
   paddingVertical: 8,
@@ -33,13 +41,10 @@ export const controlMetrics = {
 export const photoRadius = 16
 
 /**
- * A white card on the warm page, edged by a hairline instead of a shadow:
- * the photo inside does the lifting. Cards group a photo with what it costs
+ * A white card on the grouped background: the photo inside does the lifting. Cards group a photo with what it costs
  * and who does it.
  */
 export const card = {
   backgroundColor: colors.surface,
   borderRadius: radius.lg,
-  borderWidth: 1,
-  borderColor: colors.line,
 } as const

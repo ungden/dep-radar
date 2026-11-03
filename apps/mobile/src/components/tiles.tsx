@@ -19,7 +19,7 @@ import {
 import { formatDuration, formatKm, formatPrice, formatRating } from "@/data/format"
 import { imageUrl } from "@/data/links"
 import type { AppPro } from "@/data/public"
-import { colors, gutter, photoRadius, radius } from "@/theme"
+import { colors, gutter, photoRadius, radius, hairline } from "@/theme"
 import { Avatar, Photo, Skeleton, VerifiedMark } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -74,7 +74,7 @@ export function PhotoBadge({ text, position }: { text: string; position: "tl" | 
         backgroundColor: "rgba(20,18,19,0.55)",
       }}
     >
-      <Txt v="label" w={600} color={colors.surface} style={{ fontSize: 12, lineHeight: 16 }}>
+      <Txt v="label" w={600} color={colors.surface} style={{ fontSize: 13, lineHeight: 17 }}>
         {text}
       </Txt>
     </View>
@@ -245,7 +245,7 @@ export function ArtistCard({
   const facts = [pro.stats.completedJobs > 0 ? `${pro.stats.completedJobs} lịch` : null, distanceKm !== null ? formatKm(distanceKm) : pro.district].filter(Boolean).join(" · ")
   const extra = photoCount - photos.length
   return (
-    <Press onPress={open} accessibilityLabel={a11y} style={{ borderRadius: radius.xl, overflow: "hidden", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line }}>
+    <Press onPress={open} accessibilityLabel={a11y} style={{ borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surface }}>
       {photos.length ? (
         <View style={{ flexDirection: "row", height: 180, gap: 3 }}>
           <Image source={{ uri: photos[0] }} style={{ flex: 2, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
@@ -273,7 +273,7 @@ export function ArtistCard({
           <PhotoBadge text="Ảnh minh hoạ" position="tl" />
         </View>
       )}
-      <View style={{ paddingHorizontal: 14, paddingBottom: 14, gap: 10 }}>
+      <View style={{ paddingHorizontal: 18, paddingBottom: 18, gap: 14 }}>
         <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", gap: 10, marginTop: -30 }}>
           <View style={{ padding: 3, borderRadius: 32, backgroundColor: colors.surface }}>
             <Avatar name={pro.name} uri={pro.avatar} tone={pro.tone} size={58} artist />
@@ -309,7 +309,7 @@ export function ArtistCard({
             {services.length > 2 ? <CardTag label={`+${services.length - 2} dịch vụ`} bg={colors.accentSoft} fg={colors.accentDark} /> : null}
           </View>
         ) : null}
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.line }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingTop: 14, borderTopWidth: hairline, borderTopColor: colors.line }}>
           {price !== null ? (
             <View>
               <Txt v="meta" color={colors.muted}>
@@ -322,8 +322,8 @@ export function ArtistCard({
           ) : (
             <View />
           )}
-          <View style={{ minHeight: 42, paddingHorizontal: 20, borderRadius: radius.full, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}>
-            <Txt w={600} color={colors.surface}>
+          <View style={{ minHeight: 34, paddingHorizontal: 16, borderRadius: radius.full, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center" }}>
+            <Txt v="meta" w={700} color={colors.accentDark}>
               Xem và đặt
             </Txt>
           </View>
@@ -383,13 +383,13 @@ export function CategoryRail({
               style={{
                 width: SIZE + 4,
                 height: SIZE + 4,
-                borderRadius: photoRadius + 2,
+                borderRadius: (SIZE + 4) / 2,
                 padding: 2,
                 borderWidth: 2,
                 borderColor: active ? colors.ink : CATEGORY_TINTS[c.id].fg,
               }}
             >
-              <View style={{ flex: 1, borderRadius: photoRadius - 2, overflow: "hidden", backgroundColor: CATEGORY_TINTS[c.id].bg }}>
+              <View style={{ flex: 1, borderRadius: SIZE / 2, overflow: "hidden", backgroundColor: CATEGORY_TINTS[c.id].bg }}>
                 {photoFor(c.id) ? (
                   <Image source={{ uri: photoFor(c.id) }} style={{ flex: 1 }} contentFit="cover" transition={150} accessible={false} />
                 ) : (
@@ -399,7 +399,7 @@ export function CategoryRail({
                 )}
               </View>
             </View>
-            <Txt v="meta" w={active ? 700 : 500} center numberOfLines={2} style={{ fontSize: 13, lineHeight: 17 }}>
+            <Txt v="meta" w={active ? 700 : 500} center numberOfLines={2} style={{ fontSize: 14, lineHeight: 18 }}>
               {/* Two short lines fit; the English shorts read worse than the Vietnamese label. */}
               {c.id === "skincare" || c.id === "photophone" ? c.label : c.short ?? c.label}
             </Txt>
@@ -409,11 +409,11 @@ export function CategoryRail({
       {onAll ? (
         <Press onPress={onAll} accessibilityLabel="Tất cả dịch vụ" style={{ width: LABEL, alignItems: "center", gap: 6 }}>
           <View style={{ width: SIZE + 4, height: SIZE + 4, padding: 2 }}>
-            <View style={{ flex: 1, borderRadius: photoRadius - 2, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}>
+            <View style={{ flex: 1, borderRadius: SIZE / 2, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}>
               <Icon name="right" size={20} color={colors.surface} />
             </View>
           </View>
-          <Txt v="meta" w={500} center style={{ fontSize: 13, lineHeight: 17 }}>
+          <Txt v="meta" w={500} center style={{ fontSize: 14, lineHeight: 18 }}>
             Tất cả
           </Txt>
         </Press>

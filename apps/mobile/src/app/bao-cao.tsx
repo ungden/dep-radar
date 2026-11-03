@@ -14,7 +14,7 @@ import {
 } from "@/data/safety"
 import { useApp } from "@/state/app"
 import { useAsync } from "@/state/use-async"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, radius, hairline } from "@/theme"
 import { Button } from "@/ui/button"
 import { Card, Chip, EmptyState, ErrorNote } from "@/ui/bits"
 import { haptic } from "@/ui/haptics"
@@ -34,7 +34,7 @@ const inputStyle = {
   borderRadius: radius.md,
   padding: 14,
   fontFamily: fonts[400],
-  fontSize: 15,
+  fontSize: 17,
   color: colors.ink,
   textAlignVertical: "top" as const,
 }
@@ -217,7 +217,7 @@ function ReportItem({ uid, report: r, onChanged }: { uid: string; report: MyRepo
         />
       ) : null}
       {open && adding ? (
-        <View style={{ gap: 8, borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 10 }}>
+        <View style={{ gap: 8, borderTopWidth: hairline, borderTopColor: colors.line, paddingTop: 10 }}>
           <TextInput
             value={note}
             onChangeText={setNote}

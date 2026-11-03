@@ -4,7 +4,7 @@ import { InputAccessoryView, Keyboard, KeyboardAvoidingView, Platform, Pressable
 import { setMyPhone } from "@/data/actions"
 import { formatPhone, toE164 } from "@/data/format"
 import { useApp } from "@/state/app"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, radius, hairline } from "@/theme"
 import { Button } from "@/ui/button"
 import { ErrorNote } from "@/ui/bits"
 import { Txt } from "@/ui/text"
@@ -89,7 +89,7 @@ export default function Phone() {
       {Platform.OS === "ios" ? (
         <InputAccessoryView nativeID={KEYBOARD_BAR}>
           <View
-            style={{ flexDirection: "row", justifyContent: "flex-end", backgroundColor: colors.subtle, borderTopWidth: 1, borderTopColor: colors.line, paddingHorizontal: gutter }}
+            style={{ flexDirection: "row", justifyContent: "flex-end", backgroundColor: colors.subtle, borderTopWidth: hairline, borderTopColor: colors.line, paddingHorizontal: gutter }}
           >
             <Pressable onPress={() => Keyboard.dismiss()} accessibilityRole="button" accessibilityLabel="Xong" hitSlop={8} style={{ paddingVertical: 10, paddingHorizontal: 4 }}>
               <Txt w={600} color={colors.accent}>

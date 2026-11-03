@@ -88,81 +88,73 @@ export default function Explore() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
-      <View style={{ backgroundColor: colors.accentSoft, paddingTop: insets.top }}>
+      {/* A flat bar that stays put; the page scrolls under it. */}
+      <View style={{ backgroundColor: colors.accentSoft, paddingTop: insets.top, paddingBottom: 10, gap: 6 }}>
         <TopBar />
-      </View>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 24 }} refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}>
-        {/* The header's rose runs on behind search and categories, so the page opens in colour. */}
-        <View style={{ gap: 14, paddingTop: 4, paddingBottom: 14, backgroundColor: colors.accentSoft, borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl }}>
-          <OfflineNote />
-          {/* Search first: the fastest way to the thing you came for. */}
-          <View style={{ paddingHorizontal: gutter }}>
-            <Press
-              onPress={() => router.push({ pathname: "/tim", params: { focus: "1" } })}
-              accessibilityLabel="Tìm dịch vụ hoặc Artist"
-              style={{ minHeight: 48, borderRadius: radius.full, backgroundColor: colors.surface, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16 }}
-            >
-              <Icon name="search" size={18} color={colors.accent} />
-              <Txt color={colors.muted} numberOfLines={1} style={{ flex: 1 }}>
-                Nail, makeup, tên Artist…
-              </Txt>
-            </Press>
-          </View>
-
-          {/* Categories, as pictures; a tap opens that category's list. */}
-          <CategoryRail
-            items={rail.ordered}
-            soon={app.data ? soonCategories : undefined}
-            photoFor={(c) => browse.photoFor(c) ?? illustration(c)}
-            onChange={(c) => openList(c)}
-            onAll={() => openList()}
-          />
-        </View>
-
-        {/* The two ways to book */}
-        <View style={{ paddingHorizontal: gutter, gap: 12 }}>
-          <Txt v="h2">Bạn muốn đặt thế nào?</Txt>
+        <View style={{ paddingHorizontal: gutter }}>
           <Press
-            onPress={() => router.push("/yeu-cau/moi")}
-            accessibilityLabel="Đặt theo dịch vụ. Chọn dịch vụ và giờ, Artist rảnh sẽ nhận đơn."
-            style={{ height: 176, borderRadius: radius.lg, overflow: "hidden", justifyContent: "flex-end", backgroundColor: colors.subtle }}
+            onPress={() => router.push({ pathname: "/tim", params: { focus: "1" } })}
+            accessibilityLabel="Tìm dịch vụ hoặc Artist"
+            style={{ minHeight: 40, borderRadius: radius.sm, backgroundColor: colors.surface, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12 }}
           >
-            <Image source={{ uri: illustration("nail", 1) }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" transition={150} accessible={false} />
-            <PhotoBadge text="Ảnh minh hoạ" position="tl" />
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, backgroundColor: "rgba(20,18,19,0.62)" }}>
-              <View style={{ flex: 1, gap: 2 }}>
-                <Txt v="h2" color={colors.surface}>
-                  Đặt theo dịch vụ
-                </Txt>
-                <Txt v="meta" color={colors.surface}>
+            <Icon name="search" size={16} color={colors.muted} />
+            <Txt color={colors.muted} numberOfLines={1} style={{ flex: 1 }}>
+              Nail, makeup, tên Artist…
+            </Txt>
+          </Press>
+        </View>
+      </View>
+      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ paddingTop: 20, paddingBottom: 32, gap: 36 }} refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}>
+        <OfflineNote />
+        {/* Categories, as pictures; a tap opens that category's list. */}
+        <CategoryRail
+          items={rail.ordered}
+          soon={app.data ? soonCategories : undefined}
+          photoFor={(c) => browse.photoFor(c) ?? illustration(c)}
+          onChange={(c) => openList(c)}
+          onAll={() => openList()}
+        />
+
+        {/* The two ways to book, side by side */}
+        <View style={{ paddingHorizontal: gutter, gap: 12 }}>
+          <Txt v="title">Bạn muốn đặt thế nào?</Txt>
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <Press
+              onPress={() => router.push("/yeu-cau/moi")}
+              accessibilityLabel="Đặt theo dịch vụ. Chọn dịch vụ và giờ, Artist rảnh sẽ nhận đơn."
+              style={{ flex: 1, borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surface }}
+            >
+              <View style={{ height: 112 }}>
+                <Image source={{ uri: illustration("nail", 1) }} style={{ flex: 1, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
+                <PhotoBadge text="Ảnh minh hoạ" position="tl" />
+              </View>
+              <View style={{ padding: 14, gap: 4 }}>
+                <Txt w={700}>Đặt theo dịch vụ</Txt>
+                <Txt v="meta" color={colors.inkSoft}>
                   Chọn dịch vụ và giờ, Artist rảnh sẽ nhận đơn
                 </Txt>
               </View>
-              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}>
-                <Icon name="right" size={16} color={colors.accentDark} />
+            </Press>
+            <Press
+              onPress={() => router.navigate("/artist")}
+              accessibilityLabel="Tự chọn Artist. Xem tác phẩm và giá, chọn người bạn thích."
+              style={{ flex: 1, borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surface }}
+            >
+              {realWork ? (
+                <Image source={{ uri: realWork }} style={{ height: 112, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
+              ) : (
+                <View style={{ height: 112, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center" }}>
+                  <Icon name="person" size={40} color={colors.accent} />
+                </View>
+              )}
+              <View style={{ padding: 14, gap: 4 }}>
+                <Txt w={700}>Tự chọn Artist</Txt>
+                <Txt v="meta" color={colors.inkSoft}>
+                  Xem tác phẩm và giá, chọn người bạn thích
+                </Txt>
               </View>
-            </View>
-          </Press>
-          <Press
-            onPress={() => router.navigate("/artist")}
-            accessibilityLabel="Tự chọn Artist. Xem tác phẩm và giá, chọn người bạn thích."
-            style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10, paddingRight: 14, borderRadius: radius.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line }}
-          >
-            {realWork ? (
-              <Image source={{ uri: realWork }} style={{ width: 68, height: 68, borderRadius: radius.md, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
-            ) : (
-              <View style={{ width: 68, height: 68, borderRadius: radius.md, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center" }}>
-                <Icon name="person" size={28} color={colors.accent} />
-              </View>
-            )}
-            <View style={{ flex: 1, gap: 2 }}>
-              <Txt v="title">Tự chọn Artist</Txt>
-              <Txt v="meta" color={colors.inkSoft}>
-                Xem tác phẩm và giá, chọn người bạn thích
-              </Txt>
-            </View>
-            <Icon name="right" size={14} color={colors.ink} />
-          </Press>
+            </Press>
+          </View>
         </View>
 
         {/* The services */}

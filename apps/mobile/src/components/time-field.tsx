@@ -1,6 +1,6 @@
 import * as React from "react"
 import { ScrollView, View, useWindowDimensions } from "react-native"
-import { colors, controlMetrics, radius } from "@/theme"
+import { colors, controlMetrics, radius, hairline } from "@/theme"
 import { Button } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -25,7 +25,7 @@ export function TimeField({ label, value, onChange, allowEndOfDay = false, compa
     <Press accessibilityLabel={`${label}, ${value}. Chọn giờ`} onPress={() => {
       const [h, m] = value.split(":").map(Number)
       setHour(Number.isFinite(h) ? Math.min(h, allowEndOfDay ? 24 : 23) : 9); setMinute(Number.isFinite(m) ? m : 0); setOpened(true)
-    }} style={{ minHeight: compact ? controlMetrics.minHeight : 48, paddingHorizontal: 12, paddingVertical: compact ? controlMetrics.paddingVertical : 12, borderRadius: radius.md, borderWidth: 1, borderColor: compact ? colors.lineStrong : colors.line, backgroundColor: colors.surface, ...(compact ? { flexDirection: "row", alignItems: "center", gap: 12 } : null) }}>
+    }} style={{ minHeight: compact ? controlMetrics.minHeight : 48, paddingHorizontal: 12, paddingVertical: compact ? controlMetrics.paddingVertical : 12, borderRadius: radius.md, borderWidth: hairline, borderColor: compact ? colors.lineStrong : colors.line, backgroundColor: colors.surface, ...(compact ? { flexDirection: "row", alignItems: "center", gap: 12 } : null) }}>
       <Txt v={compact ? "control" : "body"} w={600} tabular style={compact ? { flex: 1 } : undefined}>{value}</Txt>
       {compact && <Icon name="down" size={20} color={colors.inkSoft} />}
     </Press>
