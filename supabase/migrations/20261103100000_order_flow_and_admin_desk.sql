@@ -294,42 +294,24 @@ begin
   limit greatest(1, least(coalesce(p_limit, 200), 1000));
 end $$;
 
--- Same as 20260926100000, with its own words when the staff close a job.
-create or replace function public.finish_booking(p_booking uuid, p_by text) returns void
-language plpgsql security definer set search_path = '' as $$
-declare b public.bookings; days int; due timestamptz; balance int;
+-- Its own words when the staff close a job. Patched in place like
+-- 20261006100001: finish_booking has been rewritten by later migrations
+-- (vnd(), deliveryDays from the contract, the check on unfinished sessions).
+do $$
+declare
+  definition text;
+  customer_title text := $t$case when p_by = 'auto' then 'Lịch hẹn đã tự động hoàn thành' else 'Lịch hẹn đã hoàn thành' end$t$;
+  pro_title text := $t$case when p_by = 'auto' then 'Lịch hẹn đã tự động hoàn thành' else 'Khách xác nhận đã xong' end$t$;
 begin
-  select * into b from public.bookings where id = p_booking for update;
-  if b.status not in ('confirmed', 'in_progress') then
-    raise exception 'Job không ở trạng thái có thể hoàn thành.' using errcode = 'check_violation';
+  select pg_get_functiondef('public.finish_booking(uuid,text)'::regprocedure) into definition;
+  if position(customer_title in definition) = 0 or position(pro_title in definition) = 0 then
+    raise exception 'finish_booking changed: review this migration';
   end if;
-  select delivery_days into days from public.service_templates where id = b.template_id;
-  due := case when days is not null then now() + make_interval(days => days) end;
-  update public.bookings set status = 'completed', completed_at = now(), delivery_due_at = due where id = p_booking;
-  insert into public.wallet_entries (pro_id, booking_id, kind, amount, note)
-  values (b.pro_id, b.id, 'commission', -b.commission, 'Phí dịch vụ 360dep')
-  on conflict (booking_id, kind) do nothing;
-
-  if p_by <> 'customer' then
-    perform public.notify(b.customer_id, 'booking_completed',
-      case p_by when 'auto' then 'Lịch hẹn đã tự động hoàn thành' when 'admin' then '360dep đã đóng lịch hẹn: hoàn thành' else 'Lịch hẹn đã hoàn thành' end,
-      case when due is not null then 'Ảnh/clip sẽ được giao trước ' || to_char(due at time zone public.app_timezone(), 'DD/MM') || '. '
-           else '' end || 'Đánh giá trong 14 ngày để giúp người sau chọn đúng.',
-      '/bookings/' || p_booking);
-  end if;
-
-  -- The bill, now. Settled from a prepaid balance if there is one.
-  balance := public.wallet_balance(b.pro_id);
-  if balance < 0 then
-    perform public.notify(b.pro_id, 'fee_due',
-      'Thanh toán phí ' || to_char(-balance, 'FM999G999G999') || 'đ để nhận đơn tiếp',
-      'Phí 360dep của lịch hẹn vừa xong. Chuyển khoản theo mã trong Ví; nạp dư để lần sau khỏi chờ.',
-      '/studio/wallet');
-  elsif p_by <> 'pro' then
-    perform public.notify(b.pro_id, 'booking_completed',
-      case p_by when 'auto' then 'Lịch hẹn đã tự động hoàn thành' when 'admin' then '360dep đã đóng lịch hẹn: hoàn thành' else 'Khách xác nhận đã xong' end,
-      'Phí đã trừ vào ví. Đánh giá khách trong 14 ngày.', '/bookings/' || p_booking);
-  end if;
+  definition := replace(definition, customer_title,
+    $t$case p_by when 'auto' then 'Lịch hẹn đã tự động hoàn thành' when 'admin' then '360dep đã đóng lịch hẹn: hoàn thành' else 'Lịch hẹn đã hoàn thành' end$t$);
+  definition := replace(definition, pro_title,
+    $t$case p_by when 'auto' then 'Lịch hẹn đã tự động hoàn thành' when 'admin' then '360dep đã đóng lịch hẹn: hoàn thành' else 'Khách xác nhận đã xong' end$t$);
+  execute definition;
 end $$;
 
 -- One post or clip, reported or not. Same words as admin_override_ai_decision.
