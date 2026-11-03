@@ -26,7 +26,7 @@ const citySlug = (city: string) =>
 export function Footer() {
   return (
     <footer className="mt-20 hidden bg-ink text-white/70 md:block">
-      <div className="mx-auto max-w-[1200px] px-6 pb-10 pt-14">
+      <div className="mx-auto max-w-[1216px] px-6 pb-10 pt-14">
         <div className="grid gap-10 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
           <div>
             <span className="inline-flex items-center gap-2.5">
@@ -121,7 +121,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/pros" className="hover:text-white">
-                  Tất cả người làm
+                  Tất cả Artist
                 </Link>
               </li>
               <li>

@@ -5,7 +5,7 @@ import { ArrowRight, BriefcaseBusiness, ImagePlus, Megaphone, UserRoundSearch, U
 import { PageHeader } from "@/components/ui"
 import { useApp } from "@/lib/store"
 
-type Option = { href: string; title: string; text: string; icon: React.ComponentType<{ className?: string }> }
+type Option = { href: string; title: string; text: string; icon: React.ComponentType<{ className?: string }>; /** Open to visitors: it asks for a sign-in at its last step. */ open?: boolean }
 
 /**
  * What the centre "＋" button opens. A customer and a freelancer post
@@ -22,7 +22,7 @@ export default function PostPage() {
         { href: "/studio/jobs", title: "Nhận việc mới", text: "Khách gần bạn đăng yêu cầu với giá sẵn. Ai bấm nhận trước được việc.", icon: BriefcaseBusiness },
       ]
     : [
-        { href: "/requests/new", title: "Đăng yêu cầu", text: "Nói bạn cần gì, khi nào, ở đâu. Người làm gần bạn được báo, ai nhận trước sẽ làm.", icon: Megaphone },
+        { href: "/dat-lich", title: "Đặt theo dịch vụ", text: "Nói bạn cần gì, khi nào, ở đâu. Artist gần bạn được báo, ai nhận trước sẽ làm.", icon: Megaphone, open: true },
         { href: "/tuyen-mau", title: "Làm mẫu", text: "Thợ nail, makeup, người chụp đang tìm mẫu. Được làm đẹp miễn phí hoặc có thù lao.", icon: UserRoundSearch },
       ]
 
@@ -33,7 +33,7 @@ export default function PostPage() {
         {options.map((o) => (
           <li key={o.href}>
             <Link
-              href={session ? o.href : `/login?next=${encodeURIComponent(o.href)}`}
+              href={session || o.open ? o.href : `/login?next=${encodeURIComponent(o.href)}`}
               className="flex items-center gap-4 rounded-[var(--radius-lg)] border border-line bg-surface p-4 transition-colors hover:border-ink"
             >
               <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-subtle">

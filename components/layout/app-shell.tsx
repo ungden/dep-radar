@@ -3,10 +3,11 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Bell, BriefcaseBusiness, CalendarDays, Compass, House, ListChecks, MessageCircle, Plus, Search, ShieldCheck, User } from "lucide-react"
+import { Bell, BriefcaseBusiness, CalendarDays, Compass, House, ListChecks, MessageCircle, MessageSquare, Paintbrush, Plus, Search, ShieldCheck, User } from "lucide-react"
 import { Footer } from "@/components/layout/footer"
 import { LiveRegionProvider } from "@/components/live-region"
-import { Avatar, Logo } from "@/components/ui"
+import { CitySelect } from "@/components/shop"
+import { Avatar, Logo, Wordmark } from "@/components/ui"
 import { actions } from "@/lib/client-actions"
 import { useApp } from "@/lib/store"
 import { cn } from "@/lib/utils"
@@ -20,11 +21,10 @@ type NavItem = {
   primary?: boolean
 }
 
-/** The same five places on the phone and in the app (apps/mobile). */
+/** The same four places on the phone and in the app (apps/mobile). Search is in the bar on top. */
 const CUSTOMER_NAV: NavItem[] = [
-  { href: "/", label: "Khám phá", icon: Compass, match: /^\/($|works|dip|pros)/ },
-  { href: "/search", label: "Tìm", icon: Search, match: /^\/search/ },
-  { href: "/dang", label: "Yêu cầu", icon: Plus, primary: true, match: /^\/(dang|requests\/new)/ },
+  { href: "/", label: "Khám phá", icon: Compass, match: /^\/($|search|works|dip|dich-vu)/ },
+  { href: "/pros", label: "Artist", icon: Paintbrush, match: /^\/pros/ },
   { href: "/bookings", label: "Lịch hẹn", icon: CalendarDays, match: /^\/(bookings|requests)/ },
   { href: "/me", label: "Tôi", icon: User, match: /^\/(me|saved)/ },
 ]
@@ -38,15 +38,14 @@ const PRO_NAV: NavItem[] = [
 ]
 
 /**
- * Desktop has room for words; it shows the places, not the post button.
- * "Tuyển mẫu" is not here: it is for people who want to model, not for
- * booking, and lives in the footer and in "Tôi".
+ * Desktop has room for words; it shows the places, not the post button. The
+ * wordmark goes home. "Đã lưu" is under the account (/me), and "Tuyển mẫu" is
+ * for people who want to model, not for booking: footer and "Tôi".
  */
 const CUSTOMER_TOP: NavItem[] = [
-  { href: "/", label: "Khám phá", icon: Compass, match: /^\/($|works|dip)/ },
-  { href: "/pros", label: "Người làm", icon: User, match: /^\/pros/ },
-  { href: "/bookings", label: "Lịch hẹn", icon: CalendarDays, match: /^\/(bookings|requests)/ },
-  { href: "/saved", label: "Đã lưu", icon: User, match: /^\/saved/ },
+  { href: "/search", label: "Dịch vụ", icon: Compass, match: /^\/(search|dich-vu|dat-lich|requests\/new)/ },
+  { href: "/pros", label: "Artist", icon: Paintbrush, match: /^\/pros/ },
+  { href: "/bookings", label: "Lịch hẹn", icon: CalendarDays, match: /^\/(bookings|requests(?!\/new))/ },
 ]
 
 const PRO_TOP: NavItem[] = [
@@ -60,7 +59,131 @@ const PRO_TOP: NavItem[] = [
 // The operations desk draws its own frame: sidebar, top bar, no shop footer.
 const FULLSCREEN = [/^\/login/, /^\/admin(\/|$)/]
 // A profile has its own bottom bar ("Từ X · Đặt lịch"), like a work and a booking.
-const NO_TABBAR = [/^\/book\//, /^\/works\//, /^\/pros\/./, /^\/bookings\/./, /^\/requests\/./, /^\/studio\/verify/]
+const NO_TABBAR = [/^\/book\//, /^\/dat-lich/, /^\/works\//, /^\/pros\/./, /^\/bookings\/./, /^\/requests\/./, /^\/studio\/verify/]
+// The pages a customer starts from carry the rose bar on a phone too; the rest have their own back bar.
+const PHONE_BAR = [/^\/$/, /^\/pros$/]
+
+/** Type and go: the results, with every filter, are on /search. */
+function HeaderSearch({ className }: { className?: string }) {
+  const router = useRouter()
+  const [q, setQ] = React.useState("")
+  return (
+    <form
+      role="search"
+      className={cn("flex h-[46px] min-w-0 items-center gap-2.5 rounded-xl bg-surface px-4 focus-within:ring-2 focus-within:ring-accent/40", className)}
+      onSubmit={(e) => {
+        e.preventDefault()
+        router.push(`/search${q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ""}`)
+      }}
+    >
+      <Search className="size-[18px] shrink-0 text-muted" aria-hidden />
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        type="search"
+        placeholder="Nail, makeup, tên Artist…"
+        aria-label="Tìm dịch vụ hoặc Artist"
+        className="h-full min-w-0 flex-1 bg-transparent text-[16px] text-ink placeholder:text-muted focus:outline-none"
+      />
+    </form>
+  )
+}
+
+function InboxLinks({ unread }: { unread: number }) {
+  const box = "relative inline-flex size-11 items-center justify-center rounded-full hover:bg-white/70"
+  return (
+    <>
+      <Link href="/tin-nhan" aria-label="Tin nhắn" className={box}>
+        <MessageSquare className="size-[22px]" aria-hidden />
+      </Link>
+      <Link href="/thong-bao" aria-label={unread > 0 ? `Thông báo, ${unread} chưa đọc` : "Thông báo"} className={box}>
+        <Bell className="size-[22px]" aria-hidden />
+        {unread > 0 && (
+          <span className="absolute right-0.5 top-0.5 min-w-[18px] rounded-full bg-accent px-1 text-center text-[11px] font-bold leading-[18px] text-white ring-2 ring-accent-soft">
+            {unread > 9 ? "9+" : unread}
+          </span>
+        )}
+      </Link>
+    </>
+  )
+}
+
+const barPill = "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-surface px-4 text-[15px] font-semibold text-ink hover:bg-white/70"
+
+/** A flat rose bar, as in the app: the places, search, messages, the account. Nothing floats over the page. */
+function CustomerHeader({ top, isActive }: { top: NavItem[]; isActive: (item: NavItem) => boolean }) {
+  const router = useRouter()
+  const state = useApp()
+  const { session } = state
+  return (
+    <header className="sticky top-0 z-40 hidden bg-accent-soft md:block">
+      <div className="mx-auto flex h-[76px] max-w-[1216px] items-center gap-5 px-6 lg:gap-10">
+        <Link href="/" aria-label="360đẹp" className="shrink-0">
+          <Wordmark size={30} />
+        </Link>
+        <nav aria-label="Điều hướng chính" className="flex shrink-0 items-center gap-5 lg:gap-[30px]">
+          {top.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive(item) ? "page" : undefined}
+              className={cn("inline-flex h-11 items-center whitespace-nowrap text-[16px] hover:text-accent-dark", isActive(item) ? "font-bold text-accent-dark" : "font-medium text-ink")}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <HeaderSearch className="ml-auto max-w-[420px] flex-1" />
+        <div className="flex shrink-0 items-center gap-1">
+          {/* Staff only. The middleware and is_admin() in the database still guard /admin itself.
+              A full page load: the desk loads a smaller snapshot than the shop (app/layout.tsx). */}
+          {session?.isAdmin && (
+            // eslint-disable-next-line @next/next/no-html-link-for-pages
+            <a href="/admin" className={cn(barPill, "mr-1 hidden xl:inline-flex")}>
+              <ShieldCheck className="size-4" aria-hidden /> Admin
+            </a>
+          )}
+          {/* Only an account that is already a partner has two modes; also on /me on narrower screens. */}
+          {session?.proId && (
+            <button
+              type="button"
+              onClick={async () => {
+                await actions.switchRole("pro")
+                router.push("/studio")
+              }}
+              className={cn(barPill, "mr-1 hidden xl:inline-flex")}
+            >
+              Chế độ đối tác
+            </button>
+          )}
+          <InboxLinks unread={state.unreadNotifications} />
+          <Link href={session ? "/me" : "/login"} aria-label={session ? "Tài khoản" : "Đăng nhập"} className="ml-1 inline-flex size-10 items-center justify-center rounded-full bg-surface text-accent hover:bg-white/70">
+            <User className="size-5" aria-hidden />
+          </Link>
+        </div>
+      </div>
+    </header>
+  )
+}
+
+/** The same bar on a phone: wordmark, area, messages, then search. The places are in the tab bar. */
+function PhoneBar() {
+  const state = useApp()
+  return (
+    <div className="bg-accent-soft pt-[env(safe-area-inset-top)] md:hidden">
+      <div className="flex min-h-[52px] items-center gap-1 pl-4 pr-2">
+        <Link href="/" aria-label="360đẹp" className="mr-auto shrink-0">
+          <Wordmark size={26} />
+        </Link>
+        <CitySelect value={state.city} variant="bar" className="max-w-[140px]" />
+        <InboxLinks unread={state.unreadNotifications} />
+      </div>
+      <div className="px-4 pb-3">
+        <HeaderSearch />
+      </div>
+    </div>
+  )
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -78,7 +201,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <LiveRegionProvider>
-      <div className="min-h-dvh">
+      <div className={cn("min-h-dvh", !isPro && "shop-theme")}>
+      {!isPro && <CustomerHeader top={top} isActive={isActive} />}
+      {!isPro && PHONE_BAR.some((r) => r.test(pathname)) && <PhoneBar />}
+      {isPro && (
       <header className="sticky top-0 z-40 hidden border-b border-line bg-[rgb(255_253_250/0.92)] backdrop-blur-md md:block">
         <div className="mx-auto flex h-[68px] max-w-[1200px] items-center gap-6 px-6">
           <Link href={isPro ? "/studio" : "/"} aria-label={isPro ? "360dep Đối tác" : "360dep"} className="flex shrink-0 items-center gap-2">
@@ -103,14 +229,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
-          {pathname !== "/" && !isPro && (
-            <Link
-              href="/search"
-              className="hidden h-10 w-60 shrink-0 items-center gap-2 overflow-hidden whitespace-nowrap rounded-full border border-line bg-surface px-4 text-meta text-muted shadow-[0_1px_2px_rgb(28_24_18/0.04)] hover:border-ink xl:inline-flex"
-            >
-              <Search className="size-4 shrink-0 text-ink" /> <span className="truncate">Tìm nail, makeup, chụp ảnh…</span>
-            </Link>
-          )}
           {session ? (
             <div className="flex items-center gap-1.5">
               {/* Staff only. The middleware and is_admin() in the database still guard /admin itself.
@@ -165,8 +283,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         </div>
       </header>
+      )}
 
-      <main className={cn("mx-auto max-w-[1200px] px-4 md:px-6", showTabbar ? "pb-28 md:pb-10" : "pb-6")} id="main">
+      <main className={cn("mx-auto px-4 md:px-6", isPro ? "max-w-[1200px]" : "max-w-[1216px]", showTabbar ? "pb-28 md:pb-10" : "pb-6")} id="main">
         {children}
       </main>
 
@@ -178,7 +297,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           aria-label="Điều hướng chính"
           className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-[rgb(255_253_250/0.94)] shadow-[0_-8px_24px_-18px_rgb(28_24_18/0.25)] backdrop-blur-md md:hidden"
         >
-          <ul className="mx-auto grid max-w-md grid-cols-5">
+          <ul className={cn("mx-auto grid max-w-md", nav.length === 4 ? "grid-cols-4" : "grid-cols-5")}>
             {nav.map((item) => {
               const active = isActive(item)
               const Icon = item.icon

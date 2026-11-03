@@ -269,7 +269,7 @@ function Step({ index, template: t, state, city }: { index: number; template: Se
                   : "Đăng yêu cầu: khi có người làm việc này quanh bạn, họ được báo và ai nhận trước sẽ làm."}
               </p>
               <div className="mt-4 flex flex-wrap justify-center gap-2">
-                <ButtonLink href={`/requests/new?service=${t.id}`} size="sm">
+                <ButtonLink href={`/dat-lich?service=${t.id}`} size="sm">
                   Đăng yêu cầu
                 </ButtonLink>
                 {all.length > 0 && (

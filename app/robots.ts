@@ -14,6 +14,7 @@ export default function robots(): MetadataRoute.Robots {
         "/requests",
         "/me",
         "/book",
+        "/dat-lich",
         "/tin-nhan",
         "/thong-bao",
         "/search",

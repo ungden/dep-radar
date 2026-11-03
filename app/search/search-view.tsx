@@ -247,7 +247,7 @@ function SearchView() {
         </form>
       </div>
 
-      <div className="sticky top-0 z-30 -mx-4 mt-3 bg-canvas/95 px-4 py-2.5 backdrop-blur md:top-16 md:mx-0 md:mt-5 md:px-0">
+      <div className="sticky top-0 z-30 -mx-4 mt-3 bg-canvas/95 px-4 py-2.5 backdrop-blur md:top-[76px] md:mx-0 md:mt-5 md:px-0">
         <VerticalSwitch value={vertical} onChange={setVertical} />
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -516,7 +516,7 @@ function NoResults({ vertical, filtered, onClear }: { vertical: VerticalFilter; 
         {filtered ? (
           <Button onClick={onClear}>Xoá bộ lọc</Button>
         ) : (
-          <ButtonLink href="/requests/new">Đăng yêu cầu</ButtonLink>
+          <ButtonLink href="/dat-lich">Đăng yêu cầu</ButtonLink>
         )}
       </div>
     </div>
