@@ -551,7 +551,9 @@ begin
       -- the staff act on one post, order or booking (20261103100000)
       'admin_set_work_hidden', 'admin_cancel_booking', 'admin_complete_booking', 'admin_close_job', 'admin_renotify_job',
       -- transfers the bank reported with no pay code (20261103110000)
-      'admin_unmatched_transfers', 'admin_resolve_transfer'
+      'admin_unmatched_transfers', 'admin_resolve_transfer',
+      -- the partner of a thread reads how often this customer has booked (20261105100000)
+      'customer_history'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 
