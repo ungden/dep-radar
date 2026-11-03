@@ -470,7 +470,7 @@ begin
     and p.proname <> all (array[
       'app_timezone', 'travel_distance_km', 'travel_fee', 'commission_for', 'is_urgent', 'build_quote',
       'service_duration_min', 'listed_price', 'within_working_hours', 'availability_problem', 'free_slots',
-      'slugify', 'is_admin', 'is_pro', 'free_days', 'mcn_policy',
+      'slugify', 'is_admin', 'is_pro', 'is_live_pro', 'free_days', 'mcn_policy',
       -- the feed: reporting and reading interest counts, and the content check
       'log_work_events', 'work_stats_30d', 'banned_content',
       -- called by a row level security policy
@@ -488,7 +488,7 @@ begin
       -- read-only helpers
       'app_timezone', 'travel_distance_km', 'travel_fee', 'commission_for', 'is_urgent', 'build_quote',
       'service_duration_min', 'listed_price', 'within_working_hours', 'availability_problem', 'free_slots',
-      'slugify', 'is_admin', 'is_pro', 'log_work_events', 'work_stats_30d', 'banned_content', 'applied_to_casting',
+      'slugify', 'is_admin', 'is_pro', 'is_live_pro', 'log_work_events', 'work_stats_30d', 'banned_content', 'applied_to_casting',
       'free_days',
       -- the state machine and the things a person does to their own account
       'create_partner', 'partner_setup', 'save_partner_profile', 'confirm_partner_hours', 'submit_partner_profile',
@@ -528,7 +528,9 @@ begin
       -- reports with evidence, followed through (20261008100300)
       'ask_report_info', 'add_report_evidence',
       -- the staff act on one post, order or booking (20261103100000)
-      'admin_set_work_hidden', 'admin_cancel_booking', 'admin_complete_booking', 'admin_close_job', 'admin_renotify_job'
+      'admin_set_work_hidden', 'admin_cancel_booking', 'admin_complete_booking', 'admin_close_job', 'admin_renotify_job',
+      -- transfers the bank reported with no pay code (20261103110000)
+      'admin_unmatched_transfers', 'admin_resolve_transfer'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 

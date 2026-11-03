@@ -18,8 +18,10 @@ import { localDate, localTime } from "@/lib/utils"
  */
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 
+// A name or memo starting with =, +, - or @ would run as a formula in Excel.
 const cell = (v: unknown) => {
-  const s = v == null ? "" : String(v)
+  const raw = v == null ? "" : String(v)
+  const s = typeof v === "string" && /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
 }
 const csv = (head: string[], rows: unknown[][]) => "﻿" + [head, ...rows].map((r) => r.map(cell).join(",")).join("\r\n") + "\r\n"

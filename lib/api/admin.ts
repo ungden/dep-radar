@@ -1495,3 +1495,23 @@ export async function adminBookingDetail(id: string): Promise<AdminBookingDetail
     pro: { id: b.pro_id, slug: pro.data?.slug ?? "", name: pro.data?.display_name || "Đối tác", phone: account(b.pro_id)?.phone ?? null, suspended: Boolean(pro.data?.suspended_at) },
   }
 }
+
+// Transfers the bank reported with no pay code -----------------------------------------
+
+export interface UnmatchedTransfer {
+  ref: string
+  content: string
+  amount: number
+  createdAt: string
+}
+
+export async function unmatchedTransfers(): Promise<ActionResult<UnmatchedTransfer[]>> {
+  const supabase = await supabaseServer()
+  const { data, error } = await supabase.rpc("admin_unmatched_transfers" as never)
+  if (error) return { ok: false, error: messageFor(error) }
+  return { ok: true, data: (data ?? []) as unknown as UnmatchedTransfer[] }
+}
+
+export async function resolveTransfer(ref: string) {
+  return call("admin_resolve_transfer", { p_ref: ref })
+}
