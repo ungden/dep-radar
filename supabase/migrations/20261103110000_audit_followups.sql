@@ -69,10 +69,9 @@ begin
   execute definition;
 
   select pg_get_functiondef('public.record_bank_topup(text,integer,text)'::regprocedure) into definition;
-  needle := E'begin\n  for code in';
-  if position(needle in definition) = 0 then raise exception 'record_bank_topup changed: review this migration'; end if;
-  definition := replace(definition, needle,
-    E'begin\n  if exists (select 1 from public.wallet_entries where ref = ''staff:'' || p_ref) then return false; end if;\n  for code in');
+  needle := regexp_replace(definition, '\mbegin\M', E'begin\n  if exists (select 1 from public.wallet_entries where ref = ''staff:'' || p_ref) then return false; end if;');
+  if needle = definition then raise exception 'record_bank_topup changed: review this migration'; end if;
+  definition := needle;
   execute definition;
 end $$;
 
