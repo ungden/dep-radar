@@ -145,6 +145,15 @@ export default function NewRequest() {
     if (!app.me.account?.phone) return router.push("/so-dien-thoai")
     setBusy(true)
     setError(null)
+    // Photos go up first, so partners told about the order can already see them.
+    const paths: string[] = []
+    try {
+      for (const p of photos) paths.push(await uploadReference(app.uid, p))
+    } catch (e) {
+      setBusy(false)
+      haptic.error()
+      return setError(`Chưa tải được ảnh mẫu: ${e instanceof Error ? e.message : "lỗi kết nối"}`)
+    }
     const res = await postJob({
       templateId: tpl.id,
       variantId: variant.id,
@@ -162,16 +171,9 @@ export default function NewRequest() {
       haptic.error()
       return setError(res.error)
     }
-    // The request is up; its photos follow. If they fail, it still stands and says so.
-    if (photos.length && app.uid) {
-      try {
-        const paths: string[] = []
-        for (const p of photos) paths.push(await uploadReference(app.uid, p))
-        const sentPhotos = await setJobReferences(res.data, paths)
-        if (!sentPhotos.ok) throw new Error(sentPhotos.error)
-      } catch (e) {
-        Alert.alert("Đã gửi đơn", `Nhưng chưa gửi được ảnh mẫu: ${e instanceof Error ? e.message : "lỗi kết nối"}`)
-      }
+    if (paths.length) {
+      const sentPhotos = await setJobReferences(res.data, paths)
+      if (!sentPhotos.ok) Alert.alert("Đã gửi đơn", `Nhưng chưa gắn được ảnh mẫu: ${sentPhotos.error}`)
     }
     setBusy(false)
     haptic.success()
@@ -179,7 +181,9 @@ export default function NewRequest() {
     leaving.current = true
     // The waiting screen promises a notification when someone takes it.
     void askForPushPermission(app.uid)
-    router.replace({ pathname: "/yeu-cau/[id]", params: { id: res.data } })
+    // A card screen, opened after this modal has gone.
+    router.dismiss()
+    router.push({ pathname: "/yeu-cau/[id]", params: { id: res.data } })
   }
 
   return (

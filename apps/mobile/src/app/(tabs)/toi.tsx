@@ -20,7 +20,7 @@ import { Txt } from "@/ui/text"
 export default function Me() {
   const app = useApp()
   const [deleting, setDeleting] = React.useState(false)
-  if (!app.uid) return <SignInGate title="Tôi" text="Đăng nhập để lưu mẫu yêu thích, đặt lịch và nhắn tin với người làm." footer={
+  if (!app.uid) return <SignInGate title="Tôi" text="Đăng nhập để lưu mẫu yêu thích, đặt lịch và nhắn tin với Artist." footer={
     <Press onPress={() => router.push("/doi-tac")} accessibilityRole="link" style={{ padding: 20, backgroundColor: colors.surface, borderRadius: radius.lg, gap: 8 }}>
       <Txt v="lead" w={700}>Bạn muốn nhận khách?</Txt>
       <Txt color={colors.inkSoft}>Mở hồ sơ, niêm yết giá và nhận lịch trên 360đẹp.</Txt>
@@ -47,7 +47,7 @@ export default function Me() {
   const deleteAccount = () =>
     Alert.alert(
       "Xoá tài khoản?",
-      "Tên, số điện thoại, địa chỉ, mẫu đã lưu và ảnh bạn đăng sẽ bị xoá. Lịch hẹn đã xong vẫn được giữ ẩn danh cho người làm. Không thể hoàn tác.",
+      "Tên, số điện thoại, địa chỉ, mẫu đã lưu và ảnh bạn đăng sẽ bị xoá. Lịch hẹn đã xong vẫn được giữ ẩn danh cho Artist. Không thể hoàn tác.",
       [
         { text: "Thôi", style: "cancel" },
         {
@@ -94,7 +94,7 @@ export default function Me() {
             Thêm số điện thoại để đặt lịch
           </Txt>
           <Txt v="meta" color={colors.warning}>
-            Người làm chỉ thấy số này khi đang có lịch hẹn với bạn.
+            Artist chỉ thấy số này khi đang có lịch hẹn với bạn.
           </Txt>
         </Press>
       ) : null}

@@ -29,7 +29,7 @@ export default function PortfolioImages() {
   const [subject, setSubject] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState<"share" | "save" | null>(null)
 
-  if (!pro) return <EmptyState title="Dành cho người làm" text="Ảnh portfolio có khi bạn đã có hồ sơ người làm." />
+  if (!pro) return <EmptyState title="Dành cho Artist" text="Ảnh portfolio có khi bạn đã có hồ sơ Artist." />
   if (!pro.published)
     return <EmptyState title="Hồ sơ chưa mở" text="Có ảnh portfolio khi hồ sơ của bạn đã mở với khách. Thêm tác phẩm, dịch vụ và giờ làm để mở hồ sơ." />
 

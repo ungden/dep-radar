@@ -57,7 +57,7 @@ export default function Phone() {
       <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ padding: gutter, gap: 16 }}>
         <Txt v="h2">{currentPhone ? "Đổi số điện thoại" : "Số điện thoại của bạn"}</Txt>
         <Txt color={colors.inkSoft}>
-          Cần để đặt lịch. Người làm chỉ thấy số này khi đang có lịch hẹn với bạn (từ lúc họ nhận lịch tới khi xong), để liên lạc. Số không hiện công khai ở đâu cả.
+          Cần để đặt lịch. Artist chỉ thấy số này khi đang có lịch hẹn với bạn (từ lúc họ nhận lịch tới khi xong), để liên lạc. Số không hiện công khai ở đâu cả.
         </Txt>
         <Txt color={colors.inkSoft}>Nếu đặt mật khẩu (trong Tôi), bạn cũng đăng nhập được bằng số này. Mỗi số chỉ dùng cho một tài khoản. Bạn có thể tự đổi số trong Tôi.</Txt>
         {currentPhone ? <Txt color={colors.inkSoft}>Sau khi lưu, dùng số mới để đăng nhập bằng mật khẩu. Số cũ sẽ không còn đăng nhập tài khoản này.</Txt> : null}

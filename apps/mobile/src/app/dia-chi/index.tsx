@@ -124,13 +124,13 @@ export default function Addresses() {
           ))}
           <Button label="Thêm địa chỉ" icon="plus" full onPress={() => router.push("/dia-chi/sua")} />
           <Txt v="meta" color={colors.muted}>
-            Khoảng cách tới người làm tính từ địa chỉ mặc định: từ đúng chỗ bạn ghim, hoặc ước tính theo phường / xã.
+            Khoảng cách tới Artist tính từ địa chỉ mặc định: từ đúng chỗ bạn ghim, hoặc ước tính theo phường / xã.
           </Txt>
         </>
       ) : (
         <EmptyState
           title="Chưa có địa chỉ"
-          text="Lưu một địa chỉ để thấy khoảng cách tới người làm và đặt làm tại nhà."
+          text="Lưu một địa chỉ để thấy khoảng cách tới Artist và đặt làm tại nhà."
           action="Thêm địa chỉ"
           onAction={() => router.push("/dia-chi/sua")}
         />

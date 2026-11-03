@@ -184,7 +184,7 @@ function BookingFlow() {
   }, [dirty, navigation])
 
   if (!pro) {
-    return <View style={{ flex: 1, backgroundColor: colors.canvas }}>{app.data ? <EmptyState title="Không tìm thấy người làm" /> : null}</View>
+    return <View style={{ flex: 1, backgroundColor: colors.canvas }}>{app.data ? <EmptyState title="Không tìm thấy Artist" /> : null}</View>
   }
   if (!listings.length || !template || !variant) {
     return (
@@ -568,7 +568,7 @@ function BookingFlow() {
                 ))}
                 {chosenAddons.length ? <Line label="Tổng cả lịch (gồm dịch vụ đi kèm)" value={formatPrice(quote.total + addonsTotal)} strong /> : null}
                 <Txt v="meta" color={colors.muted}>
-                  Thanh toán sau khi làm xong. {atHome ? "Khoảng cách ước tính theo phường/xã. " : ""}Giá được xác nhận lại khi gửi lịch. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để người làm kịp sắp xếp.
+                  Thanh toán sau khi làm xong. {atHome ? "Khoảng cách ước tính theo phường/xã. " : ""}Giá được xác nhận lại khi gửi lịch. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để Artist kịp sắp xếp.
                 </Txt>
               </Card>
             ) : null}

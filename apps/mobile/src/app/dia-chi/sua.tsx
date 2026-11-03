@@ -136,7 +136,7 @@ export default function EditAddress() {
             accessibilityLabel="Số nhà, tên đường"
           />
         </Group>
-        <Group title="Ghi chú cho người làm">
+        <Group title="Ghi chú cho Artist">
           <TextInput
             value={note}
             onChangeText={setNote}

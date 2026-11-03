@@ -2,6 +2,7 @@ import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet"
 import { Alert, Linking, Platform, ScrollView, View } from "react-native"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { BLIND_NOTE, POLICY, bookingChatOpen, customerJobActions, reviewWindow, verticalOf } from "@/shared"
 import * as WebBrowser from "expo-web-browser"
 import {
@@ -34,22 +35,24 @@ import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
 import { StatusPill } from "@/components/booking-row"
 import { CustomerReviewCard } from "@/components/customer-review"
 import { useSafetyMenu } from "@/components/safety"
-import { DeliverCard, RescheduleButton } from "@/components/partner-booking-actions"
+import { ActionRow, DeliverCard, RescheduleButton } from "@/components/partner-booking-actions"
 import { Timeline, type TimelineStep } from "@/components/timeline"
 import { useApp } from "@/state/app"
 import { useNow } from "@/state/keyboard"
 import { useAsync } from "@/state/use-async"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, hairline, radius } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
 import { Avatar, Card, EmptyState, ErrorNote, Line, Skeleton } from "@/ui/bits"
 import { haptic } from "@/ui/haptics"
+import { Icon, type IconName } from "@/ui/icon"
+import { Press } from "@/ui/press"
 import { Sheet, useSheet } from "@/ui/sheet"
 import { Txt } from "@/ui/text"
 
 function stepsFor(b: BookingItem): TimelineStep[] {
   const steps: TimelineStep[] = [
     { label: "Đã gửi lịch", at: b.createdAt },
-    { label: "Người làm nhận lịch", at: b.confirmedAt },
+    { label: "Artist nhận lịch", at: b.confirmedAt },
     { label: "Bắt đầu làm", at: b.startedAt },
     { label: verticalOf(b.category) === "photo" ? "Xong buổi chụp" : "Hoàn thành", at: b.completedAt },
   ]
@@ -62,8 +65,8 @@ function stepsFor(b: BookingItem): TimelineStep[] {
     if (b.delivery.deliveredAt) steps.push({ label: "Khách đã nhận file", at: b.delivery.acceptedAt })
   }
   const stopped: Partial<Record<BookingItem["status"], string>> = {
-    cancelled: b.cancelledBy === "pro" ? "Người làm đã huỷ" : "Đã huỷ",
-    declined: "Người làm từ chối",
+    cancelled: b.cancelledBy === "pro" ? "Artist đã huỷ" : "Đã huỷ",
+    declined: "Artist từ chối",
     expired: "Hết hạn xác nhận, lịch tự huỷ",
     no_show: "Báo vắng mặt",
   }
@@ -76,8 +79,9 @@ function stepsFor(b: BookingItem): TimelineStep[] {
 }
 
 export default function BookingDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id, decline } = useLocalSearchParams<{ id: string; decline?: string }>()
   const app = useApp()
+  const insets = useSafeAreaInsets()
   const booking = useAsync(app.uid ? () => getBooking(id, app.uid!) : null, [id, app.uid])
   const reasonSheet = useSheet()
   const [reasonFor, setReasonFor] = React.useState<"cancel" | "decline" | "noshow" | "dispute" | "absent">("cancel")
@@ -104,6 +108,16 @@ export default function BookingDetail() {
         }
       : null,
   )
+
+  // Hôm nay's "Từ chối" lands on this booking with the reason already asked for.
+  const askDecline = decline === "1" && bv?.status === "pending" && bv.pro.id === app.uid
+  React.useEffect(() => {
+    if (!askDecline) return
+    setReasonFor("decline")
+    setReason("")
+    reasonSheet.open()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [askDecline])
 
   if (!app.uid) return <EmptyState title="Cần đăng nhập" action="Đăng nhập" onAction={() => router.push("/login")} />
   const b = booking.value
@@ -154,7 +168,7 @@ export default function BookingDetail() {
   const phone = active ? (iAmPro ? b.customer.phone : b.pro.phone) : null
   const other = iAmPro ? b.customer.name : b.pro.name
   const phoneNote =
-    b.status === "pending" ? (iAmPro ? "Số hiện khi bạn nhận lịch" : "Số hiện khi người làm nhận lịch") : active ? "Chưa có số" : "Lịch hẹn đã kết thúc"
+    b.status === "pending" ? (iAmPro ? "Số hiện khi bạn nhận lịch" : "Số hiện khi Artist nhận lịch") : active ? "Chưa có số" : "Lịch hẹn đã kết thúc"
   const job = customerJobActions({ status: b.status, startsAt: new Date(b.startsAt), endsAt: new Date(b.endsAt) }, new Date(now))
   const at = (d: Date | string) => `${localTime(d)} ${formatDateLong(localDate(d))}`
   const review = reviewWindow(b.completedAt, new Date(now))
@@ -173,21 +187,33 @@ export default function BookingDetail() {
     cancel: { title: "Huỷ lịch hẹn", action: "Xác nhận huỷ", done: "Đã huỷ lịch hẹn", placeholder: "Lý do", min: 1 },
     decline: { title: "Từ chối lịch này", action: "Xác nhận từ chối", done: "Đã từ chối lịch", placeholder: "Lý do", min: 1 },
     noshow: {
-      title: "Người làm không đến",
-      action: "Báo người làm không đến",
+      title: "Artist không đến",
+      action: "Báo Artist không đến",
       done: "Đã báo 360dep. Lịch hẹn đã huỷ.",
-      placeholder: "Bạn đã chờ tới mấy giờ, có gọi được người làm không… (không bắt buộc)",
+      placeholder: "Bạn đã chờ tới mấy giờ, có gọi được Artist không… (không bắt buộc)",
       min: 0,
     },
     dispute: { title: "Khiếu nại báo vắng mặt", action: "Gửi khiếu nại", done: "Đã gửi khiếu nại. 360dep sẽ xem xét.", placeholder: "Chuyện gì đã xảy ra?", min: 10 },
     absent: { title: "Khách vắng mặt", action: "Báo khách vắng mặt", done: "Đã báo khách vắng mặt", placeholder: "Bạn đã chờ tới mấy giờ, có gọi được khách không… (không bắt buộc)", min: 0 },
   }
   const sheet = SHEET[reasonFor]
+  // The partner's next step stays at the bottom of the screen.
+  const canStart = iAmPro && b.status === "confirmed" && hoursToStart <= 0.25
+  const canDepart = iAmPro && b.status === "confirmed" && b.atHome && !b.departedAt && hoursToStart <= 3
+  const canComplete = iAmPro && b.status === "in_progress"
+  const fixedAction = canComplete
+    ? { label: "Hoàn thành", key: "complete", disabled: Date.parse(b.startsAt) > now, task: () => completeBooking(b.id), done: "Đã hoàn thành" }
+    : canStart
+      ? { label: "Bắt đầu làm", key: "start", disabled: false, task: () => startBooking(b.id), done: "Đã bắt đầu" }
+      : canDepart
+        ? { label: "Tôi đang đến", key: "departed", disabled: false, task: () => markDeparted(b.id), done: "Đã báo khách bạn đang đến" }
+        : null
 
   return (
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.canvas }}
-      contentContainerStyle={{ padding: gutter, gap: 16, paddingBottom: 48 }}
+      contentContainerStyle={{ padding: gutter, gap: 20, paddingBottom: 48 }}
       automaticallyAdjustKeyboardInsets
       keyboardShouldPersistTaps="handled"
     >
@@ -200,8 +226,8 @@ export default function BookingDetail() {
           {b.variantLabel}
           {b.quantity > 1 ? ` × ${b.quantity} người` : ""} · {formatDuration(b.durationMin)}
         </Txt>
-        <Txt v="lead" w={700}>
-          {b.time} · {formatDateLong(b.date)}
+        <Txt v="h1" style={{ marginTop: 6 }}>
+          {b.time}, {formatDateLong(b.date)}
         </Txt>
       </View>
 
@@ -231,15 +257,15 @@ export default function BookingDetail() {
           </View>
         </View>
         {phone || active || (iAmPro && b.atHome) ? (
-          <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-            {phone ? <Button label="Gọi" icon="phone" size="sm" onPress={() => call(phone)} /> : null}
-            {active ? <Button label="Nhắn tin" icon="chat" size="sm" variant="secondary" busy={busy === "chat"} onPress={() => void message()} /> : null}
-            {iAmPro && b.atHome ? <Button label="Chỉ đường" icon="directions" size="sm" variant="secondary" onPress={directions} /> : null}
+          <View style={{ flexDirection: "row", marginTop: 8 }}>
+            {phone ? <RoundAction icon="phone" label="Gọi" onPress={() => call(phone)} /> : null}
+            {active ? <RoundAction icon="chat" label="Nhắn tin" onPress={() => void message()} /> : null}
+            {iAmPro && b.atHome ? <RoundAction icon="directions" label="Chỉ đường" onPress={directions} /> : null}
           </View>
         ) : null}
         {b.status === "pending" ? (
           <Txt v="meta" color={colors.muted}>
-            {iAmPro ? "Nhắn tin mở khi bạn nhận lịch." : "Nhắn tin mở khi người làm nhận lịch."}
+            {iAmPro ? "Nhắn tin mở khi bạn nhận lịch." : "Nhắn tin mở khi Artist nhận lịch."}
           </Txt>
         ) : null}
       </Card>
@@ -269,14 +295,14 @@ export default function BookingDetail() {
           <>
             <Line label="Tổng" value={formatPrice(b.quote.total)} />
             <Line label="Voucher 360dep" value={`−${formatPrice(b.discount)}`} />
-            <Line label="Khách trả người làm" value={formatPrice(Math.max(0, b.quote.total - b.discount))} strong />
+            <Line label="Khách trả Artist" value={formatPrice(Math.max(0, b.quote.total - b.discount))} strong />
           </>
         ) : (
           <Line label={b.paymentMethod === "cash" ? "Khách trả sau khi làm xong" : "Khách đã trả qua 360dep"} value={formatPrice(b.quote.total)} strong />
         )}
         {iAmPro ? (
           <>
-            <Line label={`Hoa hồng ${Math.round(b.quote.commissionRate * 100)}%`} value={`−${formatPrice(b.quote.commission)}`} />
+            <Line label={`Phí 360dep ${Math.round(b.quote.commissionRate * 100)}%`} value={`−${formatPrice(b.quote.commission)}`} />
             <Line label="Bạn nhận" value={formatPrice(b.quote.payout)} strong />
             {b.discount > 0 ? (
               <Txt v="meta" color={colors.muted}>
@@ -325,11 +351,11 @@ export default function BookingDetail() {
         {!iAmPro && job.confirmDone ? (
           <Button label="Xác nhận đã xong" icon="check" full busy={busy === "done"} onPress={confirmDone} />
         ) : null}
-        {!iAmPro && job.reportNoShow ? <Button label="Người làm không đến" variant="danger" full onPress={() => openSheet("noshow")} /> : null}
+        {!iAmPro && job.reportNoShow ? <Button label="Artist không đến" variant="danger" full onPress={() => openSheet("noshow")} /> : null}
         {active && Date.parse(b.startsAt) <= now ? (
           <Txt v="meta" color={colors.muted} center>
             Nếu không ai bấm hoàn thành, lịch tự hoàn thành lúc {at(job.autoCompleteAt)}
-            {!iAmPro ? ". Người làm không đến thì báo trước lúc đó." : "."}
+            {!iAmPro ? ". Artist không đến thì báo trước lúc đó." : "."}
           </Txt>
         ) : null}
         {noShowOpen && disputed.value === false ? (
@@ -339,7 +365,7 @@ export default function BookingDetail() {
             </Txt>
             <Txt v="meta" color={colors.warning}>
               Nếu không đúng, khiếu nại trước {at(new Date(Date.parse(b.cancelledAt!) + 24 * 3_600_000))}.
-              {b.quote.travelFee > 0 ? " Khi bạn khiếu nại, khoản bù phí di chuyển cho người làm được giữ lại tới khi 360dep xem xét xong." : ""}
+              {b.quote.travelFee > 0 ? " Khi bạn khiếu nại, khoản bù phí di chuyển cho Artist được giữ lại tới khi 360dep xem xét xong." : ""}
             </Txt>
             <Button label="Khiếu nại" size="sm" variant="secondary" onPress={() => openSheet("dispute")} />
           </Card>
@@ -354,7 +380,7 @@ export default function BookingDetail() {
           <Txt w={700} center>
             {iAmPro ? "Bạn đã báo đang di chuyển" : `${b.pro.name} đang trên đường tới`} · từ {localTime(b.departedAt)}
           </Txt>
-        ) : iAmPro && b.status === "confirmed" && b.atHome && hoursToStart <= 3 ? (
+        ) : canStart && canDepart ? (
           <Button label="Tôi đang đến" variant="secondary" full busy={busy === "departed"} onPress={() => void run("departed", () => markDeparted(b.id), "Đã báo khách bạn đang đến")} />
         ) : null}
         {/* A new time the other side proposed (20260918040300); the answer re-checks the slot. */}
@@ -387,7 +413,7 @@ export default function BookingDetail() {
         {!iAmPro && active ? (
           <Button label="Đổi giờ hoặc đặt thêm dịch vụ (mở trên web)" size="sm" variant="ghost" full onPress={() => void WebBrowser.openBrowserAsync(webLink(`/bookings/${b.id}`))} />
         ) : null}
-        {iAmPro && b.status === "cancelled" && b.cancelReason === "Người làm không đến" && b.cancelledAt && now <= Date.parse(b.cancelledAt) + 24 * 3_600_000 ? (
+        {iAmPro && b.status === "cancelled" && b.cancelReason === "Artist không đến" && b.cancelledAt && now <= Date.parse(b.cancelledAt) + 24 * 3_600_000 ? (
           <Card style={{ backgroundColor: colors.warningSoft, gap: 6 }}>
             <Txt w={700} color={colors.warning}>
               Khách báo bạn không đến
@@ -398,25 +424,10 @@ export default function BookingDetail() {
             <Button label="Khiếu nại (mở trên web)" size="sm" variant="secondary" onPress={() => void WebBrowser.openBrowserAsync(webLink(`/bookings/${b.id}`))} />
           </Card>
         ) : null}
-        {iAmPro && b.status === "confirmed" && hoursToStart <= 0.25 ? (
-          <Button label="Bắt đầu làm" full busy={busy === "start"} onPress={() => void run("start", () => startBooking(b.id), "Đã bắt đầu")} />
-        ) : null}
-        {iAmPro && b.status === "in_progress" ? (
-          <>
-            {/* complete_booking refuses it before the start time; say so before the tap. */}
-            <Button
-              label="Hoàn thành"
-              full
-              busy={busy === "complete"}
-              disabled={Date.parse(b.startsAt) > now}
-              onPress={() => void run("complete", () => completeBooking(b.id), "Đã hoàn thành")}
-            />
-            {Date.parse(b.startsAt) > now ? (
-              <Txt v="meta" color={colors.muted} center>
-                Bấm hoàn thành được từ {at(b.startsAt)}.
-              </Txt>
-            ) : null}
-          </>
+        {canComplete && Date.parse(b.startsAt) > now ? (
+          <Txt v="meta" color={colors.muted} center>
+            Bấm hoàn thành được từ {at(b.startsAt)}.
+          </Txt>
         ) : null}
         {!iAmPro && b.status === "completed" ? (
           b.reviewed && b.reviewPublishedAt ? (
@@ -447,23 +458,28 @@ export default function BookingDetail() {
           )
         ) : null}
         {iAmPro && b.status === "completed" && b.delivery && !b.delivery.acceptedAt ? <DeliverCard booking={b} onDone={() => void booking.reload()} /> : null}
-        {canMarkAbsent ? <Button label="Khách vắng mặt" variant="danger" full onPress={() => openSheet("absent")} /> : null}
-        {iAmPro && b.status === "confirmed" && hoursToStart > 0 ? (
-          b.rescheduleTo && b.rescheduleBy === "pro" ? (
-            <Txt v="meta" color={colors.muted} center>
-              Đã đề nghị đổi sang {at(b.rescheduleTo)}, chờ {b.customer.name} trả lời.
-            </Txt>
-          ) : (
-            <RescheduleButton onSend={(date, time) => run("reschedule", () => requestReschedule(b.id, date, time), "Đã gửi đề nghị đổi giờ")} />
-          )
-        ) : null}
         {iAmPro && b.status === "completed" ? <CustomerReviewCard booking={b} now={now} onDone={() => void booking.reload()} /> : null}
-        {canCancel ? <Button label={iAmPro ? "Huỷ lịch đã nhận" : "Huỷ lịch"} variant="danger" full onPress={() => openSheet("cancel")} /> : null}
+        {b.rescheduleTo && b.rescheduleBy === "pro" && iAmPro && b.status === "confirmed" ? (
+          <Txt v="meta" color={colors.muted} center>
+            Đã đề nghị đổi sang {at(b.rescheduleTo)}, chờ {b.customer.name} trả lời.
+          </Txt>
+        ) : null}
+        {iAmPro && (b.status === "confirmed" || b.status === "in_progress") ? (
+          <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 20 }}>
+            {b.status === "confirmed" && hoursToStart > 0 && !(b.rescheduleTo && b.rescheduleBy === "pro") ? (
+              <RescheduleButton onSend={(date, time) => run("reschedule", () => requestReschedule(b.id, date, time), "Đã gửi đề nghị đổi giờ")} />
+            ) : null}
+            {canMarkAbsent ? <ActionRow label="Khách vắng mặt" danger onPress={() => openSheet("absent")} /> : null}
+            {canCancel ? <ActionRow label="Huỷ lịch đã nhận" danger last onPress={() => openSheet("cancel")} /> : null}
+          </View>
+        ) : canCancel ? (
+          <Button label="Huỷ lịch" variant="danger" full onPress={() => openSheet("cancel")} />
+        ) : null}
         {canCancel && !iAmPro ? (
           <Txt v="meta" color={colors.muted} center>
             {hoursToStart >= POLICY.freeCancelHours
               ? "Huỷ trước giờ hẹn không mất phí."
-              : "Huỷ vẫn không mất phí, nhưng đã sát giờ: báo người làm sớm. Huỷ sát giờ nhiều lần có thể bị hạn chế tài khoản."}
+              : "Huỷ vẫn không mất phí, nhưng đã sát giờ: báo Artist sớm. Huỷ sát giờ nhiều lần có thể bị hạn chế tài khoản."}
           </Txt>
         ) : null}
       </View>
@@ -501,7 +517,7 @@ export default function BookingDetail() {
           {reasonFor === "absent"
             ? `Chỉ báo khi bạn đã tới nơi và chờ quá 15 phút. Bạn không mất phí 360dep cho lịch này.${b.quote.travelFee > 0 ? ` 360dep bù phí di chuyển ${formatPrice(b.quote.travelFee)} vào ví bạn sau 24 giờ nếu khách không khiếu nại.` : ""}`
             : reasonFor === "noshow"
-            ? `Lịch hẹn sẽ được huỷ (tính là ${b.pro.name} huỷ) và 360dep nhận báo cáo để xem xét. Chỉ báo khi người làm thật sự không đến.`
+            ? `Lịch hẹn sẽ được huỷ (tính là ${b.pro.name} huỷ) và 360dep nhận báo cáo để xem xét. Chỉ báo khi Artist thật sự không đến.`
             : reasonFor === "dispute"
               ? "Kể ngắn gọn chuyện đã xảy ra (ít nhất 10 ký tự). 360dep sẽ xem xét và liên hệ nếu cần."
               : iAmPro
@@ -519,5 +535,24 @@ export default function BookingDetail() {
         />
       </Sheet>
     </ScrollView>
+    {fixedAction ? (
+      <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 12), backgroundColor: colors.surface, borderTopWidth: hairline, borderTopColor: colors.line }}>
+        <Button label={fixedAction.label} size="lg" full busy={busy === fixedAction.key} disabled={fixedAction.disabled} onPress={() => void run(fixedAction.key, fixedAction.task, fixedAction.done)} />
+      </View>
+    ) : null}
+    </View>
+  )
+}
+
+function RoundAction({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
+  return (
+    <Press onPress={onPress} accessibilityLabel={label} style={{ flex: 1, alignItems: "center", gap: 8, minHeight: 44 }}>
+      <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center" }}>
+        <Icon name={icon} size={22} color={colors.accent} />
+      </View>
+      <Txt v="meta" w={500}>
+        {label}
+      </Txt>
+    </Press>
   )
 }

@@ -1,8 +1,9 @@
+import { Image } from "expo-image"
+import { PhotoBadge, Pill, illustration } from "@/components/tiles"
 import * as React from "react"
 import { FlashList } from "@shopify/flash-list"
 import { router, useIsFocused } from "expo-router"
 import { Alert, View } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { getTemplate, getVariant, travelDistanceKm } from "@/shared"
 import { formatDateLong, formatKm, formatPrice } from "@/data/format"
 import { jobGone, listJobs, takeJob, type JobItem } from "@/data/jobs"
@@ -11,9 +12,10 @@ import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
 import { StudioHeader } from "@/components/studio-header"
 import { useApp } from "@/state/app"
 import { useAsync } from "@/state/use-async"
-import { colors, gutter, radius } from "@/theme"
+import { colors, gutter, hairline, radius } from "@/theme"
 import { Button } from "@/ui/button"
-import { Card, Chip, EmptyState, ErrorNote, Skeleton } from "@/ui/bits"
+import { EmptyState, ErrorNote, Skeleton } from "@/ui/bits"
+import { Icon } from "@/ui/icon"
 import { haptic } from "@/ui/haptics"
 import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
@@ -27,7 +29,6 @@ type Scope = "match" | "all"
  */
 export default function NewJobs() {
   const app = useApp()
-  const insets = useSafeAreaInsets()
   const pro = app.myPro
   const uid = app.uid
   const jobs = useAsync(uid ? () => listJobs(uid) : null, [uid])
@@ -66,22 +67,24 @@ export default function NewJobs() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.canvas, paddingTop: insets.top }}>
-      <StudioHeader title="Việc mới" />
-      <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: gutter, paddingBottom: 12 }}>
-        <Chip label="Bạn nhận được" selected={scope === "match"} onPress={() => setScope("match")} />
-        <Chip label="Tất cả" selected={scope === "all"} onPress={() => setScope("all")} />
-      </View>
-      {!pro.acceptingJobs ? (
-        <Txt v="meta" color={colors.warning} style={{ paddingHorizontal: gutter, paddingBottom: 8 }}>
-          Bạn đang tạm nghỉ nhận lịch. Bật lại ở tab Tôi để nhận việc.
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <StudioHeader title="Việc mới" subtitle="Ai nhận trước được việc">
+        <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: gutter, paddingTop: 4, paddingBottom: 8 }}>
+          <Pill label="Bạn nhận được" selected={scope === "match"} onCanvas={false} onPress={() => setScope("match")} />
+          <Pill label="Tất cả" selected={scope === "all"} onCanvas={false} onPress={() => setScope("all")} />
+        </View>
+      </StudioHeader>
+      {!pro.published || !pro.acceptingJobs ? (
+        <Txt v="meta" color={colors.warning} style={{ paddingHorizontal: gutter, paddingTop: 12 }}>
+          {pro.published ? "Bạn đang tạm nghỉ nhận lịch. Bật lại ở Hôm nay để nhận việc." : "Việc mới hiện ở đây sau khi hồ sơ của bạn được duyệt."}
         </Txt>
       ) : null}
       <FlashList
         data={list}
         keyExtractor={(j) => j.id}
         extraData={[busy, fee.owing]}
-        contentContainerStyle={{ paddingHorizontal: gutter, paddingBottom: 24 }}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ paddingHorizontal: gutter, paddingTop: 20, paddingBottom: 32 }}
         refreshControl={refreshControl(jobs.refreshing, () => {
           void jobs.refresh()
           void fee.refresh()
@@ -92,46 +95,70 @@ export default function NewJobs() {
           const km = kmTo(j)
           const why = problem(j)
           return (
-            <Card style={{ marginBottom: 12 }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
-                <Txt w={700} style={{ flex: 1 }}>
-                  {j.contract?.serviceName ?? t?.name ?? j.templateId}
-                  {v ? ` · ${j.contract?.variantLabel ?? v.label}` : ""}
-                  {j.quantity > 1 ? ` × ${j.quantity} người` : ""}
-                </Txt>
-                <Txt v="lead" w={800} tabular>
-                  {formatPrice(j.price * j.quantity)}
-                </Txt>
+            <View style={{ marginBottom: 20, borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surface, opacity: why ? 0.72 : 1 }}>
+              <View style={{ height: 132 }}>
+                <Image source={{ uri: illustration(t?.category ?? "nail", j.district.length) }} style={{ flex: 1, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
+                <PhotoBadge text="Ảnh minh hoạ" position="tl" />
               </View>
-              <Txt v="meta" color={colors.inkSoft}>
-                {j.time}, {formatDateLong(j.date)} · {j.district}, {j.city}
-                {km !== null ? ` · cách ${formatKm(km)}` : ""}
-              </Txt>
-              {j.description ? <Txt color={colors.inkSoft}>{j.description}</Txt> : null}
-              <ReferencePhotos paths={j.referencePhotos} title="Ảnh mẫu khách muốn" />
-              <Txt v="meta" color={colors.muted}>
-                {j.customerName} · {j.atHome ? "làm tại nhà khách" : "làm tại studio"}
-                {j.quantity > 1 ? ` · ${formatPrice(j.price)}/người` : ""} · tổng và phụ phí được máy chủ kiểm tra
-              </Txt>
-              {j.eligibility?.payout != null && <Txt v="meta" color={colors.success}>Bạn nhận {formatPrice(j.eligibility.payout)}, đã gồm phụ phí sau hoa hồng.</Txt>}
-              {why ? (
-                <Txt v="meta" color={fee.owing && why === OWING_NOTE ? colors.warning : colors.muted}>
-                  {why}
-                </Txt>
-              ) : null}
-              <Button label="Nhận việc" size="sm" busy={busy === j.id} disabled={Boolean(why) || Boolean(busy)} onPress={() => void take(j)} />
-            </Card>
+              <View style={{ padding: 18, gap: 12 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Txt v="title">{j.contract?.serviceName ?? t?.name ?? j.templateId}</Txt>
+                    {v ? (
+                      <Txt v="meta" color={colors.inkSoft}>
+                        {j.contract?.variantLabel ?? v.label}
+                        {j.quantity > 1 ? ` × ${j.quantity} người` : ""}
+                      </Txt>
+                    ) : null}
+                  </View>
+                  <Txt w={600} tabular>
+                    {formatPrice(j.price * j.quantity)}
+                  </Txt>
+                </View>
+                <View style={{ gap: 4 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <Icon name="clock" size={16} color={colors.muted} />
+                    <Txt v="meta" color={colors.inkSoft}>
+                      {j.time}, {formatDateLong(j.date)}
+                    </Txt>
+                  </View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <Icon name="pin" size={16} color={colors.muted} />
+                    <Txt v="meta" color={colors.inkSoft} style={{ flexShrink: 1 }}>
+                      {j.district}
+                      {km !== null ? ` · cách bạn ${formatKm(km)}` : ""}
+                    </Txt>
+                  </View>
+                </View>
+                {j.description ? <Txt color={colors.inkSoft}>{j.description}</Txt> : null}
+                <ReferencePhotos paths={j.referencePhotos} title="Ảnh mẫu khách muốn" />
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingTop: 14, borderTopWidth: hairline, borderTopColor: colors.line }}>
+                  {why ? (
+                    <Txt v="meta" color={fee.owing && why === OWING_NOTE ? colors.warning : colors.muted} style={{ flex: 1 }}>
+                      {why}
+                    </Txt>
+                  ) : (
+                    <>
+                      <View>
+                        <Txt v="meta" color={colors.muted}>
+                          Bạn nhận
+                        </Txt>
+                        <Txt v="title" tabular color={colors.accentDark}>
+                          {j.eligibility?.payout != null ? formatPrice(j.eligibility.payout) : "—"}
+                        </Txt>
+                      </View>
+                      <Button label="Nhận việc" size="sm" busy={busy === j.id} disabled={Boolean(busy)} style={{ borderRadius: radius.full, paddingHorizontal: 20 }} onPress={() => void take(j)} />
+                    </>
+                  )}
+                </View>
+              </View>
+            </View>
           )
         }}
         ListHeaderComponent={
           <View style={{ gap: 12, paddingBottom: fee.owing || jobs.error ? 12 : 0 }}>
             {fee.owing ? <FeeCard fee={fee.value} /> : null}
             {jobs.error ? <ErrorNote text={jobs.error} onRetry={() => void jobs.reload()} /> : null}
-            {list.length ? (
-              <Txt v="meta" color={colors.muted}>
-                Giá khách đã chốt. Ai bấm nhận trước được việc, lịch hẹn xác nhận ngay và bạn nhắn tin được với khách.
-              </Txt>
-            ) : null}
           </View>
         }
         ListEmptyComponent={
