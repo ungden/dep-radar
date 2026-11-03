@@ -177,8 +177,8 @@ export default function Search() {
         title={query.trim() ? `Chưa có kết quả cho “${query.trim()}”` : "Không có gì khớp"}
         text={
           active.length
-            ? "Thử bỏ bớt bộ lọc, hoặc đăng yêu cầu để người làm nhận việc."
-            : `Đăng yêu cầu, người làm${app.city ? ` ở ${app.city}` : ""} sẽ thấy và nhận việc. Không mất phí đăng.`
+            ? "Thử bỏ bớt bộ lọc, hoặc đăng yêu cầu để Artist nhận việc."
+            : `Đăng yêu cầu, Artist${app.city ? ` ở ${app.city}` : ""} sẽ thấy và nhận việc. Không mất phí đăng.`
         }
         action="Đăng yêu cầu"
         onAction={() => router.push("/yeu-cau/moi")}
@@ -211,12 +211,12 @@ export default function Search() {
               ref={input}
               value={query}
               onChangeText={setQuery}
-              placeholder="Nail, chụp ảnh, tên người làm…"
+              placeholder="Nail, chụp ảnh, tên Artist…"
               placeholderTextColor={colors.muted}
               returnKeyType="search"
               clearButtonMode="while-editing"
               style={{ flex: 1, fontFamily: fonts[400], fontSize: 17, color: colors.ink }}
-              accessibilityLabel="Tìm dịch vụ hoặc người làm"
+              accessibilityLabel="Tìm dịch vụ hoặc Artist"
             />
           </View>
           <Press
@@ -267,7 +267,7 @@ export default function Search() {
             onChange={setMode}
             items={[
               { value: "services", label: `Dịch vụ${loading ? "" : ` ${services.length}`}` },
-              { value: "people", label: `Người làm${loading ? "" : ` ${people.length}`}` },
+              { value: "people", label: `Artist${loading ? "" : ` ${people.length}`}` },
             ]}
           />
         </View>

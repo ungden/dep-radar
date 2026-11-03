@@ -74,7 +74,7 @@ export default function Threads() {
             text={
               mode === "pro"
                 ? "Nhận lịch hoặc nhận việc xong, bạn nhắn tin được với khách trong lịch hẹn đó."
-                : "Nhắn tin mở khi người làm nhận lịch của bạn: vào lịch hẹn và bấm Nhắn tin."
+                : "Nhắn tin mở khi Artist nhận lịch của bạn: vào lịch hẹn và bấm Nhắn tin."
             }
             action={mode === "pro" ? undefined : "Xem lịch hẹn"}
             onAction={() => router.navigate("/lich-hen")}

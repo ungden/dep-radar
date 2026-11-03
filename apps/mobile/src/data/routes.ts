@@ -34,6 +34,10 @@ export function routeForLink(link: string): Href | null {
   // 'fee_due' / 'wallet_topup': "Hôm nay" shows what is owed and how to pay it
   // (the wallet's history stays on the web, one tap from there).
   if (path === "/studio" || path === "/studio/wallet") return "/studio"
+  // Notifications about the partner's profile and posts.
+  if (path === "/studio/profile" || path === "/studio/profile/edit") return "/ho-so-doi-tac?step=0"
+  if (path === "/studio/works") return "/ho-so-doi-tac?step=4"
+  if (path === "/studio/schedule") return "/studio/lich"
   if (path === "/") return "/"
   return null
 }

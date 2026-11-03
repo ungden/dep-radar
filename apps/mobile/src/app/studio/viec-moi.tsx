@@ -74,9 +74,9 @@ export default function NewJobs() {
           <Pill label="Tất cả" selected={scope === "all"} onCanvas={false} onPress={() => setScope("all")} />
         </View>
       </StudioHeader>
-      {!pro.acceptingJobs ? (
+      {!pro.published || !pro.acceptingJobs ? (
         <Txt v="meta" color={colors.warning} style={{ paddingHorizontal: gutter, paddingTop: 12 }}>
-          Bạn đang tạm nghỉ nhận lịch. Bật lại ở Hôm nay để nhận việc.
+          {pro.published ? "Bạn đang tạm nghỉ nhận lịch. Bật lại ở Hôm nay để nhận việc." : "Việc mới hiện ở đây sau khi hồ sơ của bạn được duyệt."}
         </Txt>
       ) : null}
       <FlashList

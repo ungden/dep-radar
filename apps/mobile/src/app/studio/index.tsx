@@ -55,8 +55,14 @@ export default function Today() {
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
       <StudioHeader title="Hôm nay" subtitle={formatDateLong(today)}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: gutter, paddingTop: 8, paddingBottom: 12 }}>
-          <Txt w={600}>{app.myPro?.acceptingJobs ? "Đang nhận lịch mới" : "Đang tạm nghỉ"}</Txt>
-          <AcceptingSwitch />
+          {app.myPro?.published ? (
+            <>
+              <Txt w={600}>{app.myPro.acceptingJobs ? "Đang nhận lịch mới" : "Đang tạm nghỉ"}</Txt>
+              <AcceptingSwitch />
+            </>
+          ) : (
+            <Txt w={600}>Hồ sơ chưa hiện với khách, xem ở tab Tôi</Txt>
+          )}
         </View>
       </StudioHeader>
       <ScrollView

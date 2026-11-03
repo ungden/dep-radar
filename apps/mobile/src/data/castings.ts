@@ -64,7 +64,7 @@ function toCasting(row: Row, uid: string | null): CastingItem {
     myApplication: own ? { id: own.id, status: own.status, message: own.message ?? "" } : null,
     pro: {
       slug: pro.slug ?? "",
-      name: pro.display_name || "Người làm",
+      name: pro.display_name || "Artist",
       avatar: imageUrl(pro.avatar_path, "avatars"),
       verified: pro.identity_status === "verified",
       title: pro.title ?? "",

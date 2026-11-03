@@ -52,7 +52,7 @@ import { Txt } from "@/ui/text"
 function stepsFor(b: BookingItem): TimelineStep[] {
   const steps: TimelineStep[] = [
     { label: "Đã gửi lịch", at: b.createdAt },
-    { label: "Người làm nhận lịch", at: b.confirmedAt },
+    { label: "Artist nhận lịch", at: b.confirmedAt },
     { label: "Bắt đầu làm", at: b.startedAt },
     { label: verticalOf(b.category) === "photo" ? "Xong buổi chụp" : "Hoàn thành", at: b.completedAt },
   ]
@@ -65,8 +65,8 @@ function stepsFor(b: BookingItem): TimelineStep[] {
     if (b.delivery.deliveredAt) steps.push({ label: "Khách đã nhận file", at: b.delivery.acceptedAt })
   }
   const stopped: Partial<Record<BookingItem["status"], string>> = {
-    cancelled: b.cancelledBy === "pro" ? "Người làm đã huỷ" : "Đã huỷ",
-    declined: "Người làm từ chối",
+    cancelled: b.cancelledBy === "pro" ? "Artist đã huỷ" : "Đã huỷ",
+    declined: "Artist từ chối",
     expired: "Hết hạn xác nhận, lịch tự huỷ",
     no_show: "Báo vắng mặt",
   }
@@ -168,7 +168,7 @@ export default function BookingDetail() {
   const phone = active ? (iAmPro ? b.customer.phone : b.pro.phone) : null
   const other = iAmPro ? b.customer.name : b.pro.name
   const phoneNote =
-    b.status === "pending" ? (iAmPro ? "Số hiện khi bạn nhận lịch" : "Số hiện khi người làm nhận lịch") : active ? "Chưa có số" : "Lịch hẹn đã kết thúc"
+    b.status === "pending" ? (iAmPro ? "Số hiện khi bạn nhận lịch" : "Số hiện khi Artist nhận lịch") : active ? "Chưa có số" : "Lịch hẹn đã kết thúc"
   const job = customerJobActions({ status: b.status, startsAt: new Date(b.startsAt), endsAt: new Date(b.endsAt) }, new Date(now))
   const at = (d: Date | string) => `${localTime(d)} ${formatDateLong(localDate(d))}`
   const review = reviewWindow(b.completedAt, new Date(now))
@@ -187,10 +187,10 @@ export default function BookingDetail() {
     cancel: { title: "Huỷ lịch hẹn", action: "Xác nhận huỷ", done: "Đã huỷ lịch hẹn", placeholder: "Lý do", min: 1 },
     decline: { title: "Từ chối lịch này", action: "Xác nhận từ chối", done: "Đã từ chối lịch", placeholder: "Lý do", min: 1 },
     noshow: {
-      title: "Người làm không đến",
-      action: "Báo người làm không đến",
+      title: "Artist không đến",
+      action: "Báo Artist không đến",
       done: "Đã báo 360dep. Lịch hẹn đã huỷ.",
-      placeholder: "Bạn đã chờ tới mấy giờ, có gọi được người làm không… (không bắt buộc)",
+      placeholder: "Bạn đã chờ tới mấy giờ, có gọi được Artist không… (không bắt buộc)",
       min: 0,
     },
     dispute: { title: "Khiếu nại báo vắng mặt", action: "Gửi khiếu nại", done: "Đã gửi khiếu nại. 360dep sẽ xem xét.", placeholder: "Chuyện gì đã xảy ra?", min: 10 },
@@ -265,7 +265,7 @@ export default function BookingDetail() {
         ) : null}
         {b.status === "pending" ? (
           <Txt v="meta" color={colors.muted}>
-            {iAmPro ? "Nhắn tin mở khi bạn nhận lịch." : "Nhắn tin mở khi người làm nhận lịch."}
+            {iAmPro ? "Nhắn tin mở khi bạn nhận lịch." : "Nhắn tin mở khi Artist nhận lịch."}
           </Txt>
         ) : null}
       </Card>
@@ -295,7 +295,7 @@ export default function BookingDetail() {
           <>
             <Line label="Tổng" value={formatPrice(b.quote.total)} />
             <Line label="Voucher 360dep" value={`−${formatPrice(b.discount)}`} />
-            <Line label="Khách trả người làm" value={formatPrice(Math.max(0, b.quote.total - b.discount))} strong />
+            <Line label="Khách trả Artist" value={formatPrice(Math.max(0, b.quote.total - b.discount))} strong />
           </>
         ) : (
           <Line label={b.paymentMethod === "cash" ? "Khách trả sau khi làm xong" : "Khách đã trả qua 360dep"} value={formatPrice(b.quote.total)} strong />
@@ -351,11 +351,11 @@ export default function BookingDetail() {
         {!iAmPro && job.confirmDone ? (
           <Button label="Xác nhận đã xong" icon="check" full busy={busy === "done"} onPress={confirmDone} />
         ) : null}
-        {!iAmPro && job.reportNoShow ? <Button label="Người làm không đến" variant="danger" full onPress={() => openSheet("noshow")} /> : null}
+        {!iAmPro && job.reportNoShow ? <Button label="Artist không đến" variant="danger" full onPress={() => openSheet("noshow")} /> : null}
         {active && Date.parse(b.startsAt) <= now ? (
           <Txt v="meta" color={colors.muted} center>
             Nếu không ai bấm hoàn thành, lịch tự hoàn thành lúc {at(job.autoCompleteAt)}
-            {!iAmPro ? ". Người làm không đến thì báo trước lúc đó." : "."}
+            {!iAmPro ? ". Artist không đến thì báo trước lúc đó." : "."}
           </Txt>
         ) : null}
         {noShowOpen && disputed.value === false ? (
@@ -365,7 +365,7 @@ export default function BookingDetail() {
             </Txt>
             <Txt v="meta" color={colors.warning}>
               Nếu không đúng, khiếu nại trước {at(new Date(Date.parse(b.cancelledAt!) + 24 * 3_600_000))}.
-              {b.quote.travelFee > 0 ? " Khi bạn khiếu nại, khoản bù phí di chuyển cho người làm được giữ lại tới khi 360dep xem xét xong." : ""}
+              {b.quote.travelFee > 0 ? " Khi bạn khiếu nại, khoản bù phí di chuyển cho Artist được giữ lại tới khi 360dep xem xét xong." : ""}
             </Txt>
             <Button label="Khiếu nại" size="sm" variant="secondary" onPress={() => openSheet("dispute")} />
           </Card>
@@ -413,7 +413,7 @@ export default function BookingDetail() {
         {!iAmPro && active ? (
           <Button label="Đổi giờ hoặc đặt thêm dịch vụ (mở trên web)" size="sm" variant="ghost" full onPress={() => void WebBrowser.openBrowserAsync(webLink(`/bookings/${b.id}`))} />
         ) : null}
-        {iAmPro && b.status === "cancelled" && b.cancelReason === "Người làm không đến" && b.cancelledAt && now <= Date.parse(b.cancelledAt) + 24 * 3_600_000 ? (
+        {iAmPro && b.status === "cancelled" && b.cancelReason === "Artist không đến" && b.cancelledAt && now <= Date.parse(b.cancelledAt) + 24 * 3_600_000 ? (
           <Card style={{ backgroundColor: colors.warningSoft, gap: 6 }}>
             <Txt w={700} color={colors.warning}>
               Khách báo bạn không đến
@@ -479,7 +479,7 @@ export default function BookingDetail() {
           <Txt v="meta" color={colors.muted} center>
             {hoursToStart >= POLICY.freeCancelHours
               ? "Huỷ trước giờ hẹn không mất phí."
-              : "Huỷ vẫn không mất phí, nhưng đã sát giờ: báo người làm sớm. Huỷ sát giờ nhiều lần có thể bị hạn chế tài khoản."}
+              : "Huỷ vẫn không mất phí, nhưng đã sát giờ: báo Artist sớm. Huỷ sát giờ nhiều lần có thể bị hạn chế tài khoản."}
           </Txt>
         ) : null}
       </View>
@@ -517,7 +517,7 @@ export default function BookingDetail() {
           {reasonFor === "absent"
             ? `Chỉ báo khi bạn đã tới nơi và chờ quá 15 phút. Bạn không mất phí 360dep cho lịch này.${b.quote.travelFee > 0 ? ` 360dep bù phí di chuyển ${formatPrice(b.quote.travelFee)} vào ví bạn sau 24 giờ nếu khách không khiếu nại.` : ""}`
             : reasonFor === "noshow"
-            ? `Lịch hẹn sẽ được huỷ (tính là ${b.pro.name} huỷ) và 360dep nhận báo cáo để xem xét. Chỉ báo khi người làm thật sự không đến.`
+            ? `Lịch hẹn sẽ được huỷ (tính là ${b.pro.name} huỷ) và 360dep nhận báo cáo để xem xét. Chỉ báo khi Artist thật sự không đến.`
             : reasonFor === "dispute"
               ? "Kể ngắn gọn chuyện đã xảy ra (ít nhất 10 ký tự). 360dep sẽ xem xét và liên hệ nếu cần."
               : iAmPro

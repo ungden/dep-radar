@@ -166,7 +166,7 @@ export default function Referral() {
           )}
           {r.vouchers.some((v) => isUsable(v)) ? (
             <Txt v="meta" color={colors.muted}>
-              Chọn voucher trong trang lịch hẹn, trước giờ hẹn. Bạn trả người làm số tiền đã trừ voucher; 360dep trả phần voucher cho người làm.
+              Chọn voucher trong trang lịch hẹn, trước giờ hẹn. Bạn trả Artist số tiền đã trừ voucher; 360dep trả phần voucher cho Artist.
             </Txt>
           ) : null}
         </View>
@@ -182,11 +182,11 @@ function Rules({ s }: { s: ReferralSettings }) {
       <Rule n={1} text="Bạn bè đăng ký 360dep và nhập mã của bạn trong 30 ngày đầu." />
       <Rule
         n={2}
-        text={`Khi họ hoàn thành lịch hẹn đầu tiên từ ${formatPrice(s.minTotal)} (với người làm khác bạn), cả hai nhận voucher ${formatPrice(s.customerAmount)}, dùng trong ${s.voucherDays} ngày.`}
+        text={`Khi họ hoàn thành lịch hẹn đầu tiên từ ${formatPrice(s.minTotal)} (với Artist khác bạn), cả hai nhận voucher ${formatPrice(s.customerAmount)}, dùng trong ${s.voucherDays} ngày.`}
       />
       <Rule
         n={3}
-        text={`Bạn bè là người làm: khi họ xong 3 job cho 3 khách khác nhau, cả hai nhận ${formatPrice(s.proAmount)}, cộng vào ví nếu là người làm, hoặc thành voucher.`}
+        text={`Bạn bè là Artist: khi họ xong 3 job cho 3 khách khác nhau, cả hai nhận ${formatPrice(s.proAmount)}, cộng vào ví nếu là Artist, hoặc thành voucher.`}
       />
       <Txt v="meta" color={colors.muted}>
         Mỗi người bạn được tính một lần, trong 90 ngày kể từ khi nhập mã. Mỗi tháng nhận tối đa {s.monthlyCap} phần thưởng giới thiệu. Voucher dùng cho lịch hẹn từ {formatPrice(s.minTotal)}.
@@ -213,7 +213,7 @@ function Rule({ n, text }: { n: number; text: string }) {
 function RewardRow({ reward: w, isPro }: { reward: ReferralReward; isPro: boolean }) {
   const label = w.asReferrer
     ? w.kind === "pro"
-      ? "Người làm bạn giới thiệu đã xong 3 job"
+      ? "Artist bạn giới thiệu đã xong 3 job"
       : "Bạn bè bạn giới thiệu đã dùng dịch vụ lần đầu"
     : w.kind === "pro"
       ? "Quà giới thiệu: bạn đã xong 3 job đầu tiên"
