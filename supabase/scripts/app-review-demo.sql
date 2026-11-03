@@ -56,21 +56,21 @@ insert into public.bookings (id, customer_id, pro_id, template_id, variant_id, s
 values
   -- Customer side, with Linh Phạm
   ('ae000000-0000-4000-8000-000000000001', '09b832da-c782-4638-acd9-b59541cea00e', '5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-gel', 'hand-foot', 'direct',
-   '2026-10-24 03:00+00', 90, 30, true, 'Hà Nội', 'Ba Đình', '12 Kim Mã', 21.0341, 105.8142, 'Tông nude hoặc hồng đất.',
-   300000, 4.8, 0, 0, 0.15, 45000, 'cash', 'confirmed', '2026-10-24 01:00+00', '2026-10-08 10:20+00', null, '2026-10-08 10:00+00'),
+   '2026-11-24 03:00+00', 90, 30, true, 'Hà Nội', 'Ba Đình', '12 Kim Mã', 21.0341, 105.8142, 'Tông nude hoặc hồng đất.',
+   300000, 4.8, 0, 0, 0.20, 60000, 'cash', 'confirmed', '2026-11-24 01:00+00', '2026-10-08 10:20+00', null, '2026-10-08 10:00+00'),
   ('ae000000-0000-4000-8000-000000000002', '09b832da-c782-4638-acd9-b59541cea00e', '5cb61497-1c4a-49d9-80a2-9864426c89bb', 'nail-extension', 'builder', 'direct',
    '2026-09-28 08:00+00', 120, 30, true, 'Hà Nội', 'Ba Đình', '12 Kim Mã', 21.0341, 105.8142, '',
-   280000, 4.8, 0, 0, 0.15, 42000, 'cash', 'completed', '2026-09-28 06:00+00', '2026-09-27 12:00+00', '2026-09-28 10:00+00', '2026-09-27 11:40+00'),
+   280000, 4.8, 0, 0, 0.20, 56000, 'cash', 'completed', '2026-09-28 06:00+00', '2026-09-27 12:00+00', '2026-09-28 10:00+00', '2026-09-27 11:40+00'),
   -- Partner side, with seed customers
   ('ae000000-0000-4000-8000-000000000003', 'f06b6da3-a344-4f36-8c08-bef99f162401', '09b832da-c782-4638-acd9-b59541cea00e', 'nail-extension', 'gelx', 'direct',
-   '2026-10-20 07:00+00', 100, 30, true, 'Hà Nội', 'Đống Đa', '25 Tôn Đức Thắng', 21.0181, 105.829, 'Dáng móng vuông, màu trơn.',
-   350000, 2.4, 0, 0, 0.15, 52500, 'cash', 'pending', '2026-10-20 05:00+00', null, null, now()),
+   '2026-11-20 07:00+00', 100, 30, true, 'Hà Nội', 'Đống Đa', '25 Tôn Đức Thắng', 21.0181, 105.829, 'Dáng móng vuông, màu trơn.',
+   350000, 2.4, 0, 0, 0.20, 70000, 'cash', 'pending', '2026-11-20 05:00+00', null, null, now()),
   ('ae000000-0000-4000-8000-000000000004', '9a937381-49b2-4ef9-8edb-2c55ae893c48', '09b832da-c782-4638-acd9-b59541cea00e', 'nail-extension', 'gelx', 'direct',
-   '2026-10-22 03:00+00', 100, 30, true, 'Hà Nội', 'Cầu Giấy', '88 Trần Duy Hưng', 21.0362, 105.7906, 'Dáng bầu, dài vừa.',
-   350000, 2.6, 0, 0, 0.15, 52500, 'cash', 'confirmed', '2026-10-22 01:00+00', '2026-10-09 06:10+00', null, '2026-10-09 06:00+00'),
+   '2026-11-22 03:00+00', 100, 30, true, 'Hà Nội', 'Cầu Giấy', '88 Trần Duy Hưng', 21.0362, 105.7906, 'Dáng bầu, dài vừa.',
+   350000, 2.6, 0, 0, 0.20, 70000, 'cash', 'confirmed', '2026-11-22 01:00+00', '2026-10-09 06:10+00', null, '2026-10-09 06:00+00'),
   ('ae000000-0000-4000-8000-000000000005', 'bdb0d68c-8db6-41bf-8584-4569b2534db0', '09b832da-c782-4638-acd9-b59541cea00e', 'nail-extension', 'gelx', 'direct',
    '2026-10-02 08:00+00', 100, 30, true, 'Hà Nội', 'Ba Đình', '5 Liễu Giai', 21.0341, 105.8142, '',
-   350000, 1.2, 0, 0, 0.15, 52500, 'cash', 'completed', '2026-10-02 06:00+00', '2026-10-01 09:00+00', '2026-10-02 10:00+00', '2026-10-01 08:30+00');
+   350000, 1.2, 0, 0, 0.20, 70000, 'cash', 'completed', '2026-10-02 06:00+00', '2026-10-01 09:00+00', '2026-10-02 10:00+00', '2026-10-01 08:30+00');
 
 -- Chats ----------------------------------------------------------------------
 insert into public.threads (id, customer_id, pro_id, booking_id, customer_name, created_at) values
@@ -114,7 +114,7 @@ insert into public.reviews (booking_id, pro_id, customer_id, rating, body, autho
 -- Partner wallet: a top-up, then the commission of the completed job ---------
 insert into public.wallet_entries (id, pro_id, booking_id, kind, amount, ref, note, created_at) values
   ('ae000000-0000-4000-8000-000000000021', '09b832da-c782-4638-acd9-b59541cea00e', null, 'topup', 200000, 'DEMO', 'Nạp ví mẫu', '2026-10-01 08:00+00'),
-  ('ae000000-0000-4000-8000-000000000022', '09b832da-c782-4638-acd9-b59541cea00e', 'ae000000-0000-4000-8000-000000000005', 'commission', -52500, null, 'Hoa hồng job hoàn thành', '2026-10-02 10:00+00');
+  ('ae000000-0000-4000-8000-000000000022', '09b832da-c782-4638-acd9-b59541cea00e', 'ae000000-0000-4000-8000-000000000005', 'commission', -70000, null, 'Hoa hồng job hoàn thành', '2026-10-02 10:00+00');
 
 -- Notifications --------------------------------------------------------------
 -- The messages trigger added one per thread; the closed chats count as read.
