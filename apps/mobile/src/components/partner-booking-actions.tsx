@@ -5,6 +5,7 @@ import { addDays, formatDateLong, localDate, todayISO, weekdayShort } from "@/da
 import { colors, fonts, radius, hairline } from "@/theme"
 import { Button } from "@/ui/button"
 import { Card, Chip } from "@/ui/bits"
+import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { Sheet, useSheet } from "@/ui/sheet"
 import { Txt } from "@/ui/text"
@@ -13,6 +14,16 @@ const TIMES = Array.from({ length: 28 }, (_, i) => {
   const minutes = 8 * 60 + i * 30
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
 })
+
+/** A less common step on a booking, one row of a grouped list. */
+export function ActionRow({ label, danger, last, onPress }: { label: string; danger?: boolean; last?: boolean; onPress: () => void }) {
+  return (
+    <Press onPress={onPress} accessibilityLabel={label} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 56, borderBottomWidth: last ? 0 : hairline, borderBottomColor: colors.line }}>
+      <Txt color={danger ? colors.danger : colors.ink}>{label}</Txt>
+      <Icon name="right" size={14} color={colors.muted} />
+    </Press>
+  )
+}
 
 /** A new time for a confirmed booking. The customer answers on their booking; request_reschedule checks the slot. */
 export function RescheduleButton({ onSend }: { onSend: (date: string, time: string) => Promise<unknown> }) {
@@ -23,7 +34,7 @@ export function RescheduleButton({ onSend }: { onSend: (date: string, time: stri
   const days = Array.from({ length: 21 }, (_, i) => addDays(todayISO(), i))
   return (
     <>
-      <Button label="Đề nghị đổi giờ" variant="secondary" full onPress={sheet.open} />
+      <ActionRow label="Đề nghị đổi giờ" onPress={sheet.open} />
       <Sheet
         sheet={sheet}
         title="Đề nghị đổi giờ"

@@ -1,11 +1,12 @@
 import * as React from "react"
 import { router } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
-import { Alert, ScrollView, Switch, View } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { setAcceptingJobs } from "@/data/actions"
+import { ScrollView, View } from "react-native"
+import { formatPrice } from "@/data/format"
 import { webLink } from "@/data/links"
 import { supabase } from "@/data/supabase"
+import { AcceptingSwitch } from "@/components/accepting-switch"
+import { useFee } from "@/components/fee-card"
 import { StudioHeader } from "@/components/studio-header"
 import { useApp } from "@/state/app"
 import { colors, gutter, radius } from "@/theme"
@@ -41,33 +42,24 @@ function useReview(uid: string | null) {
 
 export default function StudioMe() {
   const app = useApp()
-  const insets = useSafeAreaInsets()
   const pro = app.myPro
-  const [accepting, setAccepting] = React.useState(pro?.acceptingJobs ?? true)
+  const fee = useFee(app.uid ?? null)
   const review = useReview(app.uid ?? null)
   if (!pro || !app.uid) return null
   const pending = !pro.published && review?.status === "pending"
   const refused = !pro.published && (review?.status === "changes_requested" || review?.status === "rejected")
   const uid = app.uid
 
-  const toggle = async (value: boolean) => {
-    setAccepting(value)
-    const res = await setAcceptingJobs(uid, value)
-    if (!res.ok) {
-      setAccepting(!value)
-      return Alert.alert("Chưa đổi được", res.error)
-    }
-    void app.refresh()
-  }
   const web = (path: string) => async () => {
     await WebBrowser.openBrowserAsync(webLink(path))
     void app.refresh()
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.canvas }} contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 40, gap: 20 }}>
-      <StudioHeader title="Tôi" />
-      <View style={{ paddingHorizontal: gutter, gap: 20 }}>
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+    <StudioHeader title="Tôi" />
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ paddingTop: 24, paddingBottom: 40 }}>
+      <View style={{ paddingHorizontal: gutter, gap: 24 }}>
         <Press
           onPress={() => router.push({ pathname: "/pros/[id]", params: { id: pro.id } })}
           accessibilityLabel="Xem hồ sơ công khai"
@@ -124,13 +116,29 @@ export default function StudioMe() {
           <View style={{ flex: 1 }}>
             <Txt w={700}>Nhận lịch mới</Txt>
             <Txt v="meta" color={colors.inkSoft}>
-              {accepting ? "Khách đặt được lịch và bạn nhận được việc mới." : "Tạm nghỉ: khách không đặt được, lịch đã nhận vẫn giữ."}
+              {pro.acceptingJobs ? "Khách đặt được lịch và bạn nhận được việc mới." : "Tạm nghỉ: khách không đặt được, lịch đã nhận vẫn giữ."}
             </Txt>
           </View>
-          <Switch value={accepting} onValueChange={(v) => void toggle(v)} trackColor={{ true: colors.accent, false: colors.subtleStrong }} accessibilityLabel="Nhận lịch mới" />
+          <AcceptingSwitch />
         </View>
 
-        <View style={{ backgroundColor: colors.surface, borderRadius: radius.md }}>
+        <Press onPress={web("/studio/wallet")} accessibilityRole="link" accessibilityLabel="Ví và phí 360dep, mở trên web" style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 20 }}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Txt v="meta" color={colors.muted}>
+              Số dư ví
+            </Txt>
+            <Txt v="h2" tabular color={fee.owing ? colors.danger : colors.ink}>
+              {fee.value ? formatPrice(fee.value.balance) : "—"}
+            </Txt>
+          </View>
+          <View style={{ minHeight: 38, paddingHorizontal: 18, borderRadius: radius.full, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center" }}>
+            <Txt v="meta" w={700} color={colors.accentDark}>
+              Nạp ví
+            </Txt>
+          </View>
+        </Press>
+
+        <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg }}>
           <Row icon="briefcase" label="Dịch vụ và bảng giá" internal onPress={() => router.push("/ho-so-doi-tac?step=1")} />
           <Divider style={{ marginLeft: 52 }} />
           <Row icon="clock" label="Giờ làm việc" internal onPress={() => router.push("/ho-so-doi-tac?step=3")} />
@@ -138,8 +146,6 @@ export default function StudioMe() {
           <Row icon="person" label="Sửa hồ sơ" internal onPress={() => router.push("/ho-so-doi-tac?step=0")} />
           <Divider style={{ marginLeft: 52 }} />
           <Row icon="photos" label="Quản lý tác phẩm" internal onPress={() => router.push("/ho-so-doi-tac?step=4")} />
-          <Divider style={{ marginLeft: 52 }} />
-          <Row icon="shop" label="Ví và hoa hồng" onPress={web("/studio/wallet")} />
           <Divider style={{ marginLeft: 52 }} />
           <Row icon="briefcase" label="Network MCN của tôi" onPress={web("/studio/network")} />
           <Divider style={{ marginLeft: 52 }} />
@@ -149,7 +155,7 @@ export default function StudioMe() {
           Ví, network MCN và xác minh danh tính mở trên web; bạn có thể cần đăng nhập lại.
         </Txt>
 
-        <View style={{ backgroundColor: colors.surface, borderRadius: radius.md }}>
+        <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg }}>
           <Row icon="share" label="Ảnh portfolio để đăng mạng xã hội" internal onPress={() => router.push("/anh-portfolio")} />
           <Divider style={{ marginLeft: 52 }} />
           <Row icon="gift" label="Giới thiệu bạn bè" internal onPress={() => router.push("/gioi-thieu")} />
@@ -170,6 +176,7 @@ export default function StudioMe() {
         </View>
       </View>
     </ScrollView>
+    </View>
   )
 }
 
@@ -182,7 +189,7 @@ function Row({ icon, label, onPress, internal }: { icon: IconName; label: string
       style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, minHeight: 56, paddingVertical: 14 }}
     >
       <Icon name={icon} size={20} />
-      <Txt w={600} style={{ flex: 1 }}>
+      <Txt style={{ flex: 1 }}>
         {label}
       </Txt>
       {internal ? null : (

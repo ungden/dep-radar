@@ -2,6 +2,7 @@ import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet"
 import { Alert, Linking, Platform, ScrollView, View } from "react-native"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { BLIND_NOTE, POLICY, bookingChatOpen, customerJobActions, reviewWindow, verticalOf } from "@/shared"
 import * as WebBrowser from "expo-web-browser"
 import {
@@ -34,15 +35,17 @@ import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
 import { StatusPill } from "@/components/booking-row"
 import { CustomerReviewCard } from "@/components/customer-review"
 import { useSafetyMenu } from "@/components/safety"
-import { DeliverCard, RescheduleButton } from "@/components/partner-booking-actions"
+import { ActionRow, DeliverCard, RescheduleButton } from "@/components/partner-booking-actions"
 import { Timeline, type TimelineStep } from "@/components/timeline"
 import { useApp } from "@/state/app"
 import { useNow } from "@/state/keyboard"
 import { useAsync } from "@/state/use-async"
-import { colors, fonts, gutter, radius } from "@/theme"
+import { colors, fonts, gutter, hairline, radius } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
 import { Avatar, Card, EmptyState, ErrorNote, Line, Skeleton } from "@/ui/bits"
 import { haptic } from "@/ui/haptics"
+import { Icon, type IconName } from "@/ui/icon"
+import { Press } from "@/ui/press"
 import { Sheet, useSheet } from "@/ui/sheet"
 import { Txt } from "@/ui/text"
 
@@ -76,8 +79,9 @@ function stepsFor(b: BookingItem): TimelineStep[] {
 }
 
 export default function BookingDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id, decline } = useLocalSearchParams<{ id: string; decline?: string }>()
   const app = useApp()
+  const insets = useSafeAreaInsets()
   const booking = useAsync(app.uid ? () => getBooking(id, app.uid!) : null, [id, app.uid])
   const reasonSheet = useSheet()
   const [reasonFor, setReasonFor] = React.useState<"cancel" | "decline" | "noshow" | "dispute" | "absent">("cancel")
@@ -104,6 +108,16 @@ export default function BookingDetail() {
         }
       : null,
   )
+
+  // Hôm nay's "Từ chối" lands on this booking with the reason already asked for.
+  const askDecline = decline === "1" && bv?.status === "pending" && bv.pro.id === app.uid
+  React.useEffect(() => {
+    if (!askDecline) return
+    setReasonFor("decline")
+    setReason("")
+    reasonSheet.open()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [askDecline])
 
   if (!app.uid) return <EmptyState title="Cần đăng nhập" action="Đăng nhập" onAction={() => router.push("/login")} />
   const b = booking.value
@@ -183,11 +197,23 @@ export default function BookingDetail() {
     absent: { title: "Khách vắng mặt", action: "Báo khách vắng mặt", done: "Đã báo khách vắng mặt", placeholder: "Bạn đã chờ tới mấy giờ, có gọi được khách không… (không bắt buộc)", min: 0 },
   }
   const sheet = SHEET[reasonFor]
+  // The partner's next step stays at the bottom of the screen.
+  const canStart = iAmPro && b.status === "confirmed" && hoursToStart <= 0.25
+  const canDepart = iAmPro && b.status === "confirmed" && b.atHome && !b.departedAt && hoursToStart <= 3
+  const canComplete = iAmPro && b.status === "in_progress"
+  const fixedAction = canComplete
+    ? { label: "Hoàn thành", key: "complete", disabled: Date.parse(b.startsAt) > now, task: () => completeBooking(b.id), done: "Đã hoàn thành" }
+    : canStart
+      ? { label: "Bắt đầu làm", key: "start", disabled: false, task: () => startBooking(b.id), done: "Đã bắt đầu" }
+      : canDepart
+        ? { label: "Tôi đang đến", key: "departed", disabled: false, task: () => markDeparted(b.id), done: "Đã báo khách bạn đang đến" }
+        : null
 
   return (
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.canvas }}
-      contentContainerStyle={{ padding: gutter, gap: 16, paddingBottom: 48 }}
+      contentContainerStyle={{ padding: gutter, gap: 20, paddingBottom: 48 }}
       automaticallyAdjustKeyboardInsets
       keyboardShouldPersistTaps="handled"
     >
@@ -200,8 +226,8 @@ export default function BookingDetail() {
           {b.variantLabel}
           {b.quantity > 1 ? ` × ${b.quantity} người` : ""} · {formatDuration(b.durationMin)}
         </Txt>
-        <Txt v="lead" w={700}>
-          {b.time} · {formatDateLong(b.date)}
+        <Txt v="h1" style={{ marginTop: 6 }}>
+          {b.time}, {formatDateLong(b.date)}
         </Txt>
       </View>
 
@@ -231,10 +257,10 @@ export default function BookingDetail() {
           </View>
         </View>
         {phone || active || (iAmPro && b.atHome) ? (
-          <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-            {phone ? <Button label="Gọi" icon="phone" size="sm" onPress={() => call(phone)} /> : null}
-            {active ? <Button label="Nhắn tin" icon="chat" size="sm" variant="secondary" busy={busy === "chat"} onPress={() => void message()} /> : null}
-            {iAmPro && b.atHome ? <Button label="Chỉ đường" icon="directions" size="sm" variant="secondary" onPress={directions} /> : null}
+          <View style={{ flexDirection: "row", marginTop: 8 }}>
+            {phone ? <RoundAction icon="phone" label="Gọi" onPress={() => call(phone)} /> : null}
+            {active ? <RoundAction icon="chat" label="Nhắn tin" onPress={() => void message()} /> : null}
+            {iAmPro && b.atHome ? <RoundAction icon="directions" label="Chỉ đường" onPress={directions} /> : null}
           </View>
         ) : null}
         {b.status === "pending" ? (
@@ -276,7 +302,7 @@ export default function BookingDetail() {
         )}
         {iAmPro ? (
           <>
-            <Line label={`Hoa hồng ${Math.round(b.quote.commissionRate * 100)}%`} value={`−${formatPrice(b.quote.commission)}`} />
+            <Line label={`Phí 360dep ${Math.round(b.quote.commissionRate * 100)}%`} value={`−${formatPrice(b.quote.commission)}`} />
             <Line label="Bạn nhận" value={formatPrice(b.quote.payout)} strong />
             {b.discount > 0 ? (
               <Txt v="meta" color={colors.muted}>
@@ -354,7 +380,7 @@ export default function BookingDetail() {
           <Txt w={700} center>
             {iAmPro ? "Bạn đã báo đang di chuyển" : `${b.pro.name} đang trên đường tới`} · từ {localTime(b.departedAt)}
           </Txt>
-        ) : iAmPro && b.status === "confirmed" && b.atHome && hoursToStart <= 3 ? (
+        ) : canStart && canDepart ? (
           <Button label="Tôi đang đến" variant="secondary" full busy={busy === "departed"} onPress={() => void run("departed", () => markDeparted(b.id), "Đã báo khách bạn đang đến")} />
         ) : null}
         {/* A new time the other side proposed (20260918040300); the answer re-checks the slot. */}
@@ -398,25 +424,10 @@ export default function BookingDetail() {
             <Button label="Khiếu nại (mở trên web)" size="sm" variant="secondary" onPress={() => void WebBrowser.openBrowserAsync(webLink(`/bookings/${b.id}`))} />
           </Card>
         ) : null}
-        {iAmPro && b.status === "confirmed" && hoursToStart <= 0.25 ? (
-          <Button label="Bắt đầu làm" full busy={busy === "start"} onPress={() => void run("start", () => startBooking(b.id), "Đã bắt đầu")} />
-        ) : null}
-        {iAmPro && b.status === "in_progress" ? (
-          <>
-            {/* complete_booking refuses it before the start time; say so before the tap. */}
-            <Button
-              label="Hoàn thành"
-              full
-              busy={busy === "complete"}
-              disabled={Date.parse(b.startsAt) > now}
-              onPress={() => void run("complete", () => completeBooking(b.id), "Đã hoàn thành")}
-            />
-            {Date.parse(b.startsAt) > now ? (
-              <Txt v="meta" color={colors.muted} center>
-                Bấm hoàn thành được từ {at(b.startsAt)}.
-              </Txt>
-            ) : null}
-          </>
+        {canComplete && Date.parse(b.startsAt) > now ? (
+          <Txt v="meta" color={colors.muted} center>
+            Bấm hoàn thành được từ {at(b.startsAt)}.
+          </Txt>
         ) : null}
         {!iAmPro && b.status === "completed" ? (
           b.reviewed && b.reviewPublishedAt ? (
@@ -447,18 +458,23 @@ export default function BookingDetail() {
           )
         ) : null}
         {iAmPro && b.status === "completed" && b.delivery && !b.delivery.acceptedAt ? <DeliverCard booking={b} onDone={() => void booking.reload()} /> : null}
-        {canMarkAbsent ? <Button label="Khách vắng mặt" variant="danger" full onPress={() => openSheet("absent")} /> : null}
-        {iAmPro && b.status === "confirmed" && hoursToStart > 0 ? (
-          b.rescheduleTo && b.rescheduleBy === "pro" ? (
-            <Txt v="meta" color={colors.muted} center>
-              Đã đề nghị đổi sang {at(b.rescheduleTo)}, chờ {b.customer.name} trả lời.
-            </Txt>
-          ) : (
-            <RescheduleButton onSend={(date, time) => run("reschedule", () => requestReschedule(b.id, date, time), "Đã gửi đề nghị đổi giờ")} />
-          )
-        ) : null}
         {iAmPro && b.status === "completed" ? <CustomerReviewCard booking={b} now={now} onDone={() => void booking.reload()} /> : null}
-        {canCancel ? <Button label={iAmPro ? "Huỷ lịch đã nhận" : "Huỷ lịch"} variant="danger" full onPress={() => openSheet("cancel")} /> : null}
+        {b.rescheduleTo && b.rescheduleBy === "pro" && iAmPro && b.status === "confirmed" ? (
+          <Txt v="meta" color={colors.muted} center>
+            Đã đề nghị đổi sang {at(b.rescheduleTo)}, chờ {b.customer.name} trả lời.
+          </Txt>
+        ) : null}
+        {iAmPro && (b.status === "confirmed" || b.status === "in_progress") ? (
+          <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 20 }}>
+            {b.status === "confirmed" && hoursToStart > 0 && !(b.rescheduleTo && b.rescheduleBy === "pro") ? (
+              <RescheduleButton onSend={(date, time) => run("reschedule", () => requestReschedule(b.id, date, time), "Đã gửi đề nghị đổi giờ")} />
+            ) : null}
+            {canMarkAbsent ? <ActionRow label="Khách vắng mặt" danger onPress={() => openSheet("absent")} /> : null}
+            {canCancel ? <ActionRow label="Huỷ lịch đã nhận" danger last onPress={() => openSheet("cancel")} /> : null}
+          </View>
+        ) : canCancel ? (
+          <Button label="Huỷ lịch" variant="danger" full onPress={() => openSheet("cancel")} />
+        ) : null}
         {canCancel && !iAmPro ? (
           <Txt v="meta" color={colors.muted} center>
             {hoursToStart >= POLICY.freeCancelHours
@@ -519,5 +535,24 @@ export default function BookingDetail() {
         />
       </Sheet>
     </ScrollView>
+    {fixedAction ? (
+      <View style={{ paddingHorizontal: gutter, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 12), backgroundColor: colors.surface, borderTopWidth: hairline, borderTopColor: colors.line }}>
+        <Button label={fixedAction.label} size="lg" full busy={busy === fixedAction.key} disabled={fixedAction.disabled} onPress={() => void run(fixedAction.key, fixedAction.task, fixedAction.done)} />
+      </View>
+    ) : null}
+    </View>
+  )
+}
+
+function RoundAction({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
+  return (
+    <Press onPress={onPress} accessibilityLabel={label} style={{ flex: 1, alignItems: "center", gap: 8, minHeight: 44 }}>
+      <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center" }}>
+        <Icon name={icon} size={22} color={colors.accent} />
+      </View>
+      <Txt v="meta" w={500}>
+        {label}
+      </Txt>
+    </Press>
   )
 }

@@ -3,7 +3,6 @@ import { FlashList } from "@shopify/flash-list"
 import { router } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { View } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { isUpcoming, listBookings, type BookingItem } from "@/data/bookings"
 import { formatDay } from "@/data/format"
 import { webLink } from "@/data/links"
@@ -13,7 +12,7 @@ import { StudioHeader } from "@/components/studio-header"
 import { TextTabs } from "@/components/switches"
 import { useApp } from "@/state/app"
 import { useAsync } from "@/state/use-async"
-import { colors, gutter, hairline } from "@/theme"
+import { colors, gutter } from "@/theme"
 import { Button } from "@/ui/button"
 import { EmptyState, ErrorNote, Skeleton } from "@/ui/bits"
 import { refreshControl } from "@/ui/refresh"
@@ -23,7 +22,6 @@ type Row = { kind: "day"; date: string } | { kind: "booking"; booking: BookingIt
 
 export default function StudioCalendar() {
   const { uid } = useApp()
-  const insets = useSafeAreaInsets()
   const [tab, setTab] = React.useState<"upcoming" | "past">("upcoming")
   const bookings = useAsync(uid ? () => listBookings(uid, "pro") : null, [uid])
 
@@ -36,9 +34,8 @@ export default function StudioCalendar() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.canvas, paddingTop: insets.top }}>
-      <StudioHeader title="Lịch" />
-      <View style={{ borderBottomWidth: hairline, borderBottomColor: colors.line }}>
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <StudioHeader title="Lịch">
         <TextTabs
           items={[
             { value: "upcoming", label: "Sắp tới" },
@@ -47,11 +44,12 @@ export default function StudioCalendar() {
           value={tab}
           onChange={setTab}
         />
-      </View>
+      </StudioHeader>
       <FlashList
         data={rows}
         keyExtractor={(r) => (r.kind === "day" ? `d:${r.date}` : r.booking.id)}
         getItemType={(r) => r.kind}
+        contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{ padding: gutter }}
         refreshControl={refreshControl(bookings.refreshing, () => void bookings.refresh())}
         renderItem={({ item }) =>

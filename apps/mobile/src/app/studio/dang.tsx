@@ -3,7 +3,6 @@ import { Image } from "expo-image"
 import * as ImagePicker from "expo-image-picker"
 import { router } from "expo-router"
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { CATALOG, categoryLabel } from "@/shared"
 import { reencodePhoto, saveWork, uploadPhoto, uploadVideo, worksSupportVideo } from "@/data/works"
 import { StudioHeader } from "@/components/studio-header"
@@ -31,7 +30,6 @@ interface Picked {
  */
 export default function PostWork() {
   const app = useApp()
-  const insets = useSafeAreaInsets()
   const pro = app.myPro
   const templates = React.useMemo(() => CATALOG.filter((t) => pro?.categories.includes(t.category)), [pro])
   const [templateId, setTemplateId] = React.useState<string | null>(null)
@@ -126,8 +124,8 @@ export default function PostWork() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.canvas }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 48, gap: 20 }} keyboardShouldPersistTaps="handled">
-        <StudioHeader title="Đăng tác phẩm" subtitle="Ảnh thật bạn làm. Vị trí chụp trong ảnh được xoá trước khi tải lên." />
+      <StudioHeader title="Đăng tác phẩm" subtitle="Ảnh thật bạn làm. Vị trí chụp trong ảnh được xoá trước khi tải lên." />
+      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ paddingTop: 24, paddingBottom: 48, gap: 24 }} keyboardShouldPersistTaps="handled">
 
         <View style={{ paddingHorizontal: gutter, gap: 10 }}>
           <Txt w={700}>Ảnh ({photos.length}/{MAX_PHOTOS})</Txt>
