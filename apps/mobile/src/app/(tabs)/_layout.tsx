@@ -3,6 +3,7 @@ import { router } from "expo-router"
 import { NativeTabs } from "expo-router/unstable-native-tabs"
 import { useApp } from "@/state/app"
 import { colors } from "@/theme"
+import { tabBarProps } from "@/ui/native-tabs"
 
 /** A freelancer opens the app straight into Studio, once per launch. */
 let routedByMode = false
@@ -17,7 +18,7 @@ export default function CustomerTabs() {
   }, [mode, data])
 
   return (
-    <NativeTabs tintColor={colors.accent}>
+    <NativeTabs {...tabBarProps}>
       <NativeTabs.Trigger name="index" contentStyle={{ backgroundColor: colors.canvas }}>
         <NativeTabs.Trigger.Label>Khám phá</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="sparkles" md="explore" />
