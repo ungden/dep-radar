@@ -91,16 +91,18 @@ export function AddressPicker({
   )
 }
 
-function NewAddressForm({
+export function NewAddressForm({
   city: initialCity,
   district: initialDistrict,
   onSaved,
   onCancel,
+  className,
 }: {
   city: string
   district?: string
   onSaved: (id: string) => void
   onCancel?: () => void
+  className?: string
 }) {
   // Empty with "Nhà" as the hint: a prefilled value got typed onto ("NhàNhà riêng").
   const [label, setLabel] = React.useState("")
@@ -116,7 +118,7 @@ function NewAddressForm({
   const valid = detail.trim().length >= 3 && districtsOf(city).includes(district)
 
   return (
-    <div className="mt-2 rounded-xl border border-line bg-surface p-3">
+    <div className={cn("mt-2 rounded-xl border border-line bg-surface p-3", className)}>
       <div className="grid grid-cols-2 gap-2">
         <Field label="Tên địa chỉ">
           <input className={cn(inputClass, "text-body")} value={label} placeholder="Nhà" onChange={(e) => setLabel(e.target.value)} />

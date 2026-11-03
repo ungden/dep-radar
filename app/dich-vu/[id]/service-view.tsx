@@ -146,7 +146,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
                     : "Đăng yêu cầu: khi có người làm việc này quanh bạn, họ được báo và ai nhận trước sẽ làm. Không mất phí."}
                 </p>
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
-                  <ButtonLink href={`/requests/new?service=${template.id}`}>Đăng yêu cầu</ButtonLink>
+                  <ButtonLink href={`/dat-lich?service=${template.id}`}>Đăng yêu cầu</ButtonLink>
                   {elsewhere.length > 0 && (
                     <button
                       type="button"

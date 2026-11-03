@@ -1,449 +1,238 @@
 "use client"
 
-import { providerLocationOpen } from "@/lib/launch"
-
-import { moveRadio } from "@/lib/radio-navigation"
-import { DataUnavailable } from "@/components/data-unavailable"
-
 import * as React from "react"
 import { Suspense } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { ChevronDown, LocateFixed, MapPin } from "lucide-react"
-import { ProCard, VerticalSwitch } from "@/components/beauty"
-import { CategoryTiles } from "@/components/category-icon"
-import { sortPros } from "@/components/trust"
-import { Button, ButtonLink, Chip, EmptyState, PageSkeleton } from "@/components/ui"
-import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
-import { CATEGORIES, PRICE_LEVEL_NOTE, categoryLabel, isVertical, verticalOf } from "@/lib/catalog"
-import { actions } from "@/lib/client-actions"
-import { PRIORITY_CATEGORIES, RADII_KM, isRadius, priorityFirst, withinRadius, type RadiusKm } from "@/lib/discovery"
-import type { VerticalFilter } from "@/lib/feed"
-import { CITIES } from "@/lib/geo"
-import { useHere, type HereStatus } from "@/lib/here"
-import { LEVELS, isLevel, levelName, type Level } from "@/lib/levels"
-import { categoryLevel, distanceFrom, useApp } from "@/lib/store"
-import { categoriesInTrade } from "@/lib/trade"
-import { isVerified } from "@/lib/trust"
-import type { CategoryId, CustomerAddress } from "@/lib/types"
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
+import { DataUnavailable } from "@/components/data-unavailable"
+import { MobileLinks } from "@/components/mobile-links"
+import { ArtistCard, CitySelect, artistFromPrice } from "@/components/shop"
+import { ButtonLink, EmptyState, PageSkeleton } from "@/components/ui"
+import { CATEGORIES, categoryLabel, getTemplate } from "@/lib/catalog"
+import { providerLocationOpen } from "@/lib/launch"
+import { moveRadio } from "@/lib/radio-navigation"
+import { distanceToCustomer, useApp } from "@/lib/store"
+import { rankScore } from "@/lib/trust"
+import type { CategoryId, ServiceTemplate } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-type Sort = "match" | "rating" | "jobs" | "near"
-type Focus = "nail" | "makeup" | "other"
-
-const TITLE: Record<VerticalFilter, string> = {
-  all: "Người làm",
-  beauty: "Thợ làm đẹp",
-  photo: "Người chụp & quay",
-  model: "Người mẫu",
-}
-
-const SORT_LABEL: Record<Sort, string> = {
-  match: "Phù hợp nhất",
-  rating: "Đánh giá cao",
-  jobs: "Nhiều lịch nhất",
-  near: "Gần bạn nhất",
-}
+/** Services in the side list before "Xem thêm"; the phone's row of chips swipes through all. */
+const SIDE_FIRST = 8
 
 export function ProsPageView() {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <ProsView />
+      <ChooseArtist />
     </Suspense>
   )
 }
 
-function ProsView() {
+/**
+ * The second way to book: pick the service, see who does it with their own
+ * work and price, and choose. Only people taking bookings; nearest first when
+ * we know the address. As the app's Artist tab (apps/mobile/src/app/(tabs)/artist.tsx).
+ */
+function ChooseArtist() {
   const state = useApp()
-  const router = useRouter()
-  const pathname = usePathname()
   const params = useSearchParams()
-  const here = useHere()
-  const { city, followedPros, session } = state
+  const { city, session } = state
+  const studioBookingOpen = state.platform?.studioBookingOpen
 
-  // No category in the link opens on Nail, what most customers come for;
-  // "?category=all" is an explicit choice of every category.
+  const asked = params.get("service")
   const rawCategory = params.get("category")
-  const rawTrade = params.get("nganh") ?? params.get("vertical")
-  const trade = isVertical(rawTrade) ? rawTrade : null
-  const category: CategoryId | null = CATEGORIES.some((c) => c.id === rawCategory)
-    ? (rawCategory as CategoryId)
-    : null
-  // A category link carries its trade with it.
-  const vertical: VerticalFilter = trade ?? (category ? verticalOf(category) : "all")
-  const focus: Focus = category === "nail" || category === "makeup" ? category : "other"
+  const category: CategoryId | null = CATEGORIES.some((c) => c.id === rawCategory) ? (rawCategory as CategoryId) : null
 
-  // Level and radius live in the URL, so coming back from a profile keeps them.
-  const rawLevel = params.get("cap")
-  const levelParam = rawLevel === null ? null : Number(rawLevel)
-  // A level is a price picked in one category, so it filters only with one chosen.
-  const level: Level | null = category && isLevel(levelParam) ? levelParam : null
-  const rawRadius = Number(params.get("km"))
-  const radius: RadiusKm | null = isRadius(rawRadius) ? rawRadius : null
-
-  // Distance is the customer's: a partner browsing sees districts, as on the cards.
-  const isPro = session?.role === "pro"
-  const knowsWhere = !isPro && Boolean(here.point || state.customerAddress)
-  const radiusOn = radius !== null && knowsWhere
-
-  const [rawSort, setSort] = React.useState<Sort>("match")
-  const sort: Sort = rawSort === "near" && !knowsWhere ? "match" : rawSort
-  const [onlyFollowing, setOnlyFollowing] = React.useState(false)
-  const [verifiedOnly, setVerifiedOnly] = React.useState(false)
-
-  const setParams = (patch: Record<string, string | null>) => {
+  // In the URL, so coming back from a profile keeps it. A plain history entry:
+  // this filters what the page already has, nothing to fetch.
+  const setService = (id: string | null) => {
     const next = new URLSearchParams(params.toString())
-    next.delete("vertical")
-    for (const [k, v] of Object.entries(patch)) {
-      if (v) next.set(k, v)
-      else next.delete(k)
-    }
-    router.replace(`${pathname}${next.size ? `?${next}` : ""}`, { scroll: false })
+    next.delete("category")
+    if (id) next.set("service", id)
+    else next.delete("service")
+    window.history.replaceState(null, "", `${window.location.pathname}${next.size ? `?${next}` : ""}`)
   }
-  const setFocus = (f: Focus) => setParams({ category: f === "other" ? "all" : f, nganh: null })
-  // Within "Danh mục khác" a trade without the chosen category shows all of its categories.
-  const setVertical = (v: VerticalFilter) =>
-    setParams({ nganh: v === "all" ? null : v, category: category && (v === "all" || verticalOf(category) === v) ? category : "all" })
 
-  const kmOf = (proId: string) => (isPro ? null : distanceFrom(state, proId, here.point))
+  const isPro = session?.role === "pro"
+  const kmOf = React.useCallback((proId: string) => (isPro ? null : distanceToCustomer(state, proId)), [isPro, state])
 
-  const filtered = state.pros.filter(
-    (p) =>
-      providerLocationOpen(p, state.platform?.studioBookingOpen) && p.published &&
-      (!city || p.city === city) &&
-      (vertical === "all" || p.categories.some((c) => verticalOf(c) === vertical)) &&
-      (!category || p.categories.includes(category)) &&
-      (level === null || (category !== null && categoryLevel(state, p.id, category) === level)) &&
-      (!radiusOn || withinRadius(kmOf(p.id), radius)) &&
-      (!onlyFollowing || followedPros.includes(p.id)) &&
-      (!verifiedOnly || isVerified(p)),
+  const people = React.useMemo(
+    () =>
+      state.pros
+        .filter((p) => providerLocationOpen(p, studioBookingOpen) && p.published && p.acceptingJobs && (!city || p.city === city))
+        .map((pro) => ({ pro, km: kmOf(pro.id) }))
+        .sort((a, b) => (a.km !== null && b.km !== null && a.km !== b.km ? a.km - b.km : rankScore(b.pro) - rankScore(a.pro))),
+    [state.pros, studioBookingOpen, city, kmOf],
   )
-  const pros =
-    sort === "near"
-      ? sortPros(state, filtered, "match").sort((a, b) => (kmOf(a.id) ?? Infinity) - (kmOf(b.id) ?? Infinity))
-      : sortPros(state, filtered, sort)
 
-  const newTrade = vertical === "photo" || vertical === "model" || (category !== null && verticalOf(category) !== "beauty")
-  const narrowed = onlyFollowing || verifiedOnly || level !== null || radiusOn
+  // The services someone here does, most people first; the one asked for stays even with nobody.
+  const services = React.useMemo(() => {
+    const here = new Set(people.map((p) => p.pro.id))
+    const counts = new Map<string, number>()
+    for (const s of state.proServices) {
+      if (!s.active || !here.has(s.proId) || !Object.keys(s.prices).length || getTemplate(s.templateId)?.addon) continue
+      counts.set(s.templateId, (counts.get(s.templateId) ?? 0) + 1)
+    }
+    if (asked && !counts.has(asked)) counts.set(asked, 0)
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([id]) => getTemplate(id))
+      .filter((t): t is ServiceTemplate => t !== undefined && (!category || t.category === category))
+  }, [people, state.proServices, asked, category])
+
+  const chosen = asked ? getTemplate(asked) : undefined
+  const offersIt = (proId: string, templateId: string) => state.proServices.some((s) => s.proId === proId && s.templateId === templateId && s.active && Object.keys(s.prices).length > 0)
+  const shown = people.filter(({ pro }) => (chosen ? offersIt(pro.id, chosen.id) : !category || pro.categories.includes(category)))
+
+  // Work of the chosen service first, so the card answers "how do they do this".
+  const worksOf = (proId: string) => state.works.filter((w) => w.proId === proId && w.images[0])
+  const photosOf = (proId: string) =>
+    [...worksOf(proId)]
+      .sort((a, b) => Number(b.templateId === chosen?.id) - Number(a.templateId === chosen?.id))
+      .slice(0, 3)
+      .map((w) => w.images[0])
+  const serviceNamesOf = (proId: string) =>
+    state.proServices
+      .filter((s) => s.proId === proId && s.active && Object.keys(s.prices).length > 0)
+      .map((s) => getTemplate(s.templateId))
+      .filter((t): t is ServiceTemplate => t !== undefined && !t.addon)
+      .sort((a, b) => Number(b.id === chosen?.id) - Number(a.id === chosen?.id))
+      .map((t) => t.name)
+
+  const orderHref = chosen ? `/dat-lich?service=${chosen.id}` : category ? `/dat-lich?category=${category}` : "/dat-lich"
+  const where = city ? ` ở ${city}` : " trên toàn quốc"
+  const what = chosen ? ` làm ${chosen.name}` : category ? ` làm ${categoryLabel(category)}` : ""
+  const [sideOpen, setSideOpen] = React.useState(false)
+  const inSide = sideOpen || services.length <= SIDE_FIRST ? services : services.slice(0, SIDE_FIRST)
+  // A service chosen from further down still shows, so the choice stays in sight.
+  const side = chosen && !inSide.includes(chosen) && services.includes(chosen) ? [...inSide, chosen] : inSide
 
   return (
-    <div className="pt-4 md:pt-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="roomy pt-5 md:pt-10">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-10">
+        <aside className="min-w-0">
+          <h1 className="text-[30px] font-bold tracking-[-0.03em]">Chọn Artist</h1>
+
+          {/* A phone keeps the filters in one sideways row. */}
+          <div role="radiogroup" aria-label="Dịch vụ" className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 lg:hidden">
+            <CitySelect value={city} variant="chip" />
+            <ServiceChip label="Tất cả" active={!chosen} onPick={() => setService(null)} />
+            {services.map((t) => (
+              <ServiceChip key={t.id} label={t.name} active={chosen?.id === t.id} onPick={() => setService(t.id)} />
+            ))}
+          </div>
+
+          <div className="mt-7 hidden space-y-7 lg:block">
+            <div>
+              <p className="mb-2 text-[16px] font-bold">Dịch vụ</p>
+              <div role="radiogroup" aria-label="Dịch vụ" className="space-y-0.5">
+                <ServiceRow label="Tất cả" active={!chosen} onPick={() => setService(null)} />
+                {side.map((t) => (
+                  <ServiceRow key={t.id} label={t.name} active={chosen?.id === t.id} onPick={() => setService(t.id)} />
+                ))}
+              </div>
+              {services.length > SIDE_FIRST && (
+                <button type="button" onClick={() => setSideOpen((v) => !v)} className="mt-1 inline-flex min-h-11 items-center px-4 text-meta font-semibold text-accent-dark hover:underline">
+                  {sideOpen ? "Thu gọn" : `Xem thêm ${services.length - SIDE_FIRST} dịch vụ`}
+                </button>
+              )}
+            </div>
+            <div>
+              <p className="mb-2 text-[16px] font-bold">Khu vực</p>
+              <CitySelect value={city} />
+            </div>
+            <StillLooking href={orderHref} />
+          </div>
+        </aside>
+
         <div className="min-w-0">
-          <h1 className="text-[30px] font-extrabold leading-tight tracking-[-0.03em] md:text-[40px]">{TITLE[vertical]}</h1>
-          {pros.length > 0 && (
-            <p className="mt-1 text-body text-ink-soft">
-              {pros.length.toLocaleString("vi-VN")} người
-              {category ? ` làm ${categoryLabel(category)}` : ""} {city ? `ở ${city}` : "trên toàn quốc"}
-            </p>
+          {state.catalogError ? (
+            <DataUnavailable />
+          ) : shown.length ? (
+            <>
+              <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <p className="text-meta text-muted md:text-[16px]">
+                  {shown.length.toLocaleString("vi-VN")} Artist{what}
+                  {where}
+                </p>
+                <p className="text-meta font-bold md:text-[16px]">{!isPro && state.customerAddress ? "Gần bạn trước" : "Đánh giá cao trước"}</p>
+              </div>
+              <ul className="grid gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-3">
+                {shown.map(({ pro, km }, i) => (
+                  <li key={pro.id}>
+                    <ArtistCard
+                      pro={pro}
+                      photos={photosOf(pro.id)}
+                      photoCount={worksOf(pro.id).length}
+                      services={serviceNamesOf(pro.id)}
+                      illustrationOf={chosen?.category ?? category ?? pro.categories[0] ?? "nail"}
+                      price={artistFromPrice(state.proServices, pro.id, chosen?.id, studioBookingOpen)}
+                      km={km}
+                      priority={i < 3}
+                      href={`/pros/${pro.id}${chosen ? `?album=${chosen.category}` : category ? `?album=${category}` : ""}`}
+                    />
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-5 text-meta text-muted">Xếp theo đánh giá thật, số lịch đã làm và trạng thái xác minh danh tính. Không ai trả tiền để lên đầu.</p>
+            </>
+          ) : (
+            <div className="rounded-[var(--radius-xl)] bg-surface">
+              <EmptyState
+                title={chosen || category ? `Chưa có Artist${what}${where}` : `Chưa có Artist nào${where}`}
+                text="Bạn vẫn đặt được theo dịch vụ, Artist mới vào sẽ thấy đơn của bạn."
+                action={<ButtonLink href={orderHref} className="rounded-[var(--radius-md)] shadow-none">Đặt theo dịch vụ</ButtonLink>}
+              />
+            </div>
           )}
+          <StillLooking href={orderHref} className="mt-5 lg:hidden" />
         </div>
-        <CityPicker value={city} />
       </div>
-
-      {/* Nail and Makeup first, one tap apart; every other category one tap further. */}
-      <div className="sticky top-0 z-30 -mx-4 mt-4 bg-canvas/95 px-4 py-2.5 backdrop-blur md:top-16 md:mx-0 md:px-0">
-        <FocusSwitch value={focus} onChange={setFocus} />
-      </div>
-
-      {/* Every filter in one card, so the people start right under it. */}
-      <div className="mt-3 space-y-4 rounded-[var(--radius-xl)] border border-line bg-surface p-4 md:p-5">
-      {focus === "other" && (
-        <>
-          <VerticalSwitch value={vertical} onChange={setVertical} />
-          <CategoryTiles
-            row
-            items={[
-              { id: "all", label: "Tất cả" },
-              ...priorityFirst(categoriesInTrade(vertical))
-                .filter((c) => !PRIORITY_CATEGORIES.includes(c.id))
-                .map((c) => ({ id: c.id, label: c.short ?? c.label })),
-            ]}
-            value={category ?? "all"}
-            onChange={(id) => setParams({ category: id })}
-          />
-        </>
-      )}
-
-      <div className="space-y-3">
-        {category && (
-          <div>
-            <FilterRow label="Mức giá">
-              <Choice active={level === null} onClick={() => setParams({ cap: null })}>
-                Tất cả
-              </Choice>
-              {LEVELS.map((l) => (
-                <Choice key={l} active={level === l} onClick={() => setParams({ cap: String(l) })}>
-                  {levelName(l)}
-                </Choice>
-              ))}
-            </FilterRow>
-            <p className="mt-1.5 text-label leading-snug text-muted">{PRICE_LEVEL_NOTE}</p>
-          </div>
-        )}
-        {!isPro && (
-          <div>
-            <FilterRow label="Khoảng cách">
-              <Choice active={radius === null} onClick={() => setParams({ km: null })}>
-                Tất cả
-              </Choice>
-              {RADII_KM.map((r) => (
-                <Choice key={r} active={radius === r} onClick={() => setParams({ km: String(r) })}>
-                  {r} km
-                </Choice>
-              ))}
-            </FilterRow>
-            <WhereFrom
-              point={here.point !== null}
-              address={state.customerAddress}
-              status={here.status}
-              radius={radius}
-              onLocate={here.request}
-              onClear={here.clear}
-            />
-          </div>
-        )}
-      </div>
-      </div>
-
-      <div className="no-scrollbar -mx-4 mt-4 flex items-center gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
-        <label className="relative inline-flex min-h-12 focus-within:outline-2 focus-within:outline-ink focus-within:outline-offset-2 shrink-0 items-center gap-1 rounded-full border border-line bg-surface pl-4 pr-3 text-meta font-medium">
-          <span className="sr-only">Sắp xếp</span>
-          {SORT_LABEL[sort]}
-          <ChevronDown className="size-4 text-muted" />
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as Sort)}
-            className="absolute inset-0 cursor-pointer opacity-0"
-          >
-            <option value="match">{SORT_LABEL.match}</option>
-            <option value="rating">{SORT_LABEL.rating}</option>
-            <option value="jobs">{SORT_LABEL.jobs}</option>
-            {knowsWhere && <option value="near">{SORT_LABEL.near}</option>}
-          </select>
-        </label>
-        {IDENTITY_VERIFICATION_OPEN && (
-          <Chip active={verifiedOnly} onClick={() => setVerifiedOnly((v) => !v)}>
-            Đã xác minh
-          </Chip>
-        )}
-        {session && (
-          <Chip active={onlyFollowing} onClick={() => setOnlyFollowing((v) => !v)}>
-            Đang theo dõi
-          </Chip>
-        )}
-      </div>
-
-      {sort === "match" && (
-        <p className="mt-3 text-meta text-muted">
-          Xếp theo đánh giá thật, số lịch đã làm và trạng thái xác minh danh tính. Không ai trả tiền để lên đầu.
-        </p>
-      )}
-
-      {state.catalogError ? <DataUnavailable /> : pros.length ? (
-        <ul className="mt-5 grid gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
-          {pros.map((p) => (
-            <li key={p.id}>
-              <ProCard pro={p} category={category} className="h-full" />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <EmptyState
-          title={onlyFollowing ? "Bạn chưa theo dõi ai ở đây" : "Chưa có ai phù hợp"}
-          text={
-            narrowed
-              ? "Bỏ bớt bộ lọc để xem thêm người."
-              : newTrade
-                ? "Ngành này vừa mở trên 360dep. Đăng yêu cầu để người làm quanh bạn thấy và nhận việc."
-                : city
-                  ? `Chưa có ai ở ${city} nhận việc này. Thử khu vực khác, hoặc đăng yêu cầu để người làm quanh bạn nhận việc.`
-                  : "Thử chọn dịch vụ hoặc khu vực khác. Bạn cũng có thể đăng yêu cầu; việc có người nhận phụ thuộc nguồn cung."
-          }
-          action={narrowed ? undefined : <ButtonLink href="/requests/new">Đăng yêu cầu</ButtonLink>}
-        />
-      )}
+      <MobileLinks className="mt-10" />
     </div>
   )
 }
 
-function FocusSwitch({ value, onChange }: { value: Focus; onChange: (f: Focus) => void }) {
-  const items: { id: Focus; label: string }[] = [
-    { id: "nail", label: categoryLabel("nail") },
-    { id: "makeup", label: categoryLabel("makeup") },
-    { id: "other", label: "Danh mục khác" },
-  ]
-  return (
-    <div role="radiogroup" aria-label="Danh mục" className="grid grid-cols-3 gap-1 rounded-full bg-subtle p-1 sm:inline-grid sm:min-w-[420px]">
-      {items.map((it) => {
-        const active = value === it.id
-        return (
-          <button
-            key={it.id}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            onClick={() => onChange(it.id)}
-            className={cn(
-              "inline-flex h-10 min-w-0 items-center justify-center whitespace-nowrap rounded-full px-1 text-[clamp(12px,3.5vw,14px)] font-semibold tracking-[-0.01em] transition-colors sm:px-3 sm:tracking-normal",
-              active ? "bg-ink text-white shadow-[var(--shadow-soft)]" : "text-ink hover:bg-subtle-strong",
-            )}
-          >
-            {it.label}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
-  const id = React.useId()
-  return (
-    // The label sits above the choices on a phone, so all four fit in one row.
-    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-      <span id={id} className="shrink-0 whitespace-nowrap text-meta font-semibold text-ink sm:w-[88px]">
-        {label}
-      </span>
-      {/* Scrolls on its own on a very narrow phone, so the page never does. */}
-      <div
-        role="radiogroup"
-        aria-labelledby={id}
-        className="no-scrollbar -mx-4 flex min-w-0 flex-1 gap-1.5 overflow-x-auto px-4 py-1 sm:mx-0 sm:flex-wrap sm:px-0"
-      >
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function Choice({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function ServiceRow({ label, active, onPick }: { label: string; active: boolean; onPick: () => void }) {
   return (
     <button
       type="button"
       role="radio"
       aria-checked={active}
       tabIndex={active ? 0 : -1}
-      onKeyDown={(event) => moveRadio(event, onClick)}
-      onClick={onClick}
-      className={cn(
-        "relative inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full border px-3 text-meta font-medium transition-colors after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
-        active ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink",
-      )}
+      onKeyDown={(e) => moveRadio(e, onPick)}
+      onClick={onPick}
+      className={cn("flex min-h-11 w-full items-center rounded-xl px-4 py-2 text-left text-[16px] leading-snug transition-colors", active ? "bg-accent font-semibold text-white" : "font-medium text-ink hover:bg-subtle")}
     >
-      {children}
+      {label}
     </button>
   )
 }
 
-/**
- * Where distances are measured from, and how to change it. Without a location
- * or an address there is nothing to measure from, so a chosen radius asks for
- * one instead of quietly showing nobody.
- */
-function WhereFrom({
-  point,
-  address,
-  status,
-  radius,
-  onLocate,
-  onClear,
-}: {
-  point: boolean
-  address: CustomerAddress | null
-  status: HereStatus
-  radius: RadiusKm | null
-  onLocate: () => void
-  onClear: () => void
-}) {
-  const problem =
-    status === "denied"
-      ? "Trình duyệt chưa cho phép lấy vị trí. Bạn có thể bật lại trong cài đặt trình duyệt, hoặc chọn địa chỉ."
-      : status === "unavailable"
-        ? "Chưa lấy được vị trí lúc này. Thử lại, hoặc chọn địa chỉ."
-        : null
-  const locate = (
+function ServiceChip({ label, active, onPick }: { label: string; active: boolean; onPick: () => void }) {
+  return (
     <button
       type="button"
-      onClick={onLocate}
-      disabled={status === "asking"}
-      className="inline-flex min-h-11 items-center gap-1.5 font-semibold text-ink underline-offset-4 hover:underline disabled:opacity-50"
+      role="radio"
+      aria-checked={active}
+      tabIndex={active ? 0 : -1}
+      onKeyDown={(e) => moveRadio(e, onPick)}
+      onClick={onPick}
+      className={cn("inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-full px-4 text-meta font-semibold transition-colors", active ? "bg-accent text-white" : "bg-surface text-ink")}
     >
-      <LocateFixed className="size-4" aria-hidden />
-      {status === "asking" ? "Đang lấy vị trí…" : "Dùng vị trí hiện tại"}
+      {label}
     </button>
-  )
-
-  if (point)
-    return (
-      <div className="mt-1 text-label leading-snug text-muted">
-        <p>
-          Tính từ vị trí hiện tại của bạn, tới quận của người làm. Vị trí chỉ lưu trên trình duyệt này, không gửi đi đâu.
-        </p>
-        <button type="button" onClick={onClear} className="min-h-11 font-semibold text-ink underline-offset-4 hover:underline">
-          {address ? "Dùng địa chỉ đã lưu" : "Bỏ vị trí"}
-        </button>
-      </div>
-    )
-
-  if (address)
-    return (
-      <div className="mt-1 text-label leading-snug text-muted">
-        <p>
-          Tính từ địa chỉ đã lưu ({address.district}, {address.city}), theo phường/xã.
-        </p>
-        <div className="flex flex-wrap items-center gap-x-4">{locate}</div>
-        {problem && <p className="text-warning">{problem}</p>}
-      </div>
-    )
-
-  if (radius === null)
-    return (
-      <div className="mt-1 text-label text-muted">
-        {locate}
-        {problem && <p className="text-warning">{problem}</p>}
-      </div>
-    )
-
-  return (
-    <div className="mt-2 rounded-[var(--radius-lg)] border border-line bg-surface p-3.5">
-      <p className="flex items-start gap-2 text-body font-semibold">
-        <MapPin className="mt-0.5 size-4 shrink-0 text-muted" aria-hidden />
-        Bạn ở đâu? Chưa lọc theo khoảng cách vì chưa biết vị trí của bạn.
-      </p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <Button size="sm" onClick={onLocate} disabled={status === "asking"}>
-          <LocateFixed className="size-4" aria-hidden />
-          {status === "asking" ? "Đang lấy vị trí…" : "Dùng vị trí hiện tại"}
-        </Button>
-        <ButtonLink href="/me/dia-chi" variant="outline" size="sm">
-          Chọn địa chỉ
-        </ButtonLink>
-      </div>
-      {problem && <p className="mt-2 text-meta text-warning">{problem}</p>}
-      <p className="mt-2 text-label text-muted">Vị trí chỉ dùng trên trình duyệt này để tính khoảng cách, không gửi đi đâu.</p>
-    </div>
   )
 }
 
-function CityPicker({ value }: { value: string | null }) {
+/** Not everyone wants to choose: the other way to book, one tap from any list. */
+function StillLooking({ href, className }: { href: string; className?: string }) {
   return (
-    <label className="relative inline-flex min-h-12 focus-within:rounded-lg focus-within:outline-2 focus-within:outline-ink focus-within:outline-offset-2 items-center gap-1.5 rounded-full border border-line bg-surface pl-4 pr-3 text-body font-semibold">
-      <MapPin className="size-4" />
-      {value ?? "Toàn quốc"}
-      <ChevronDown className="size-4 text-muted" />
-      <select
-        aria-label="Chọn khu vực"
-        value={value ?? ""}
-        onChange={(e) => void actions.setCity(e.target.value || null)}
-        className="absolute inset-0 cursor-pointer opacity-0"
-      >
-        <option value="">Toàn quốc</option>
-        {CITIES.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
-    </label>
+    <div className={cn("rounded-[var(--radius-lg)] bg-highlight-soft p-5", className)}>
+      <p className="text-body font-bold">Chưa thấy ai hợp ý?</p>
+      <p className="mt-1 text-meta text-ink-soft">Đặt theo dịch vụ, Artist sẽ vào nhận đơn.</p>
+      <Link href={href} className="mt-3.5 inline-flex h-11 items-center rounded-full bg-surface px-[18px] text-meta font-bold text-accent-dark hover:bg-white/70">
+        Đặt ngay
+      </Link>
+    </div>
   )
 }

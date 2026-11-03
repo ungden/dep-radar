@@ -210,7 +210,7 @@ export default async function CityCategoryPage({ params }: { params: Params }) {
                   Đăng yêu cầu: {person} quanh bạn được báo, ai nhận trước sẽ làm.
                 </p>
                 <div className="mt-5 flex flex-wrap justify-center gap-2">
-                  <ButtonLink href="/requests/new">Đăng yêu cầu</ButtonLink>
+                  <ButtonLink href="/dat-lich">Đăng yêu cầu</ButtonLink>
                 </div>
               </div>
             )}
