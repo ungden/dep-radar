@@ -170,3 +170,29 @@ label:has(input[type="file"]:focus-visible) {
   background: var(--color-canvas);
   color: var(--color-ink);
 }
+
+/*
+ * The customer's shop: the same grouped background as the app
+ * (apps/mobile/src/theme.ts), so white cards stand out by themselves and need
+ * no border. `subtle` moves with it, or a quiet fill would vanish on the page.
+ */
+.shop-theme {
+  --color-canvas: #F3F0EA;
+  --color-line: #D9D2C7;
+  --color-subtle: #EBE7E0;
+  --color-subtle-strong: #DFD9CF;
+  background: var(--color-canvas);
+}
+
+/* Pages laid out like the app: body 17px, nothing a customer reads under 15px. */
+.roomy {
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.5;
+  --text-meta: 0.9375rem;
+  --text-meta--line-height: 1.45;
+  --text-label: 0.9375rem;
+  --text-label--line-height: 1.4;
+  --text-lead: 1.25rem;
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+}
