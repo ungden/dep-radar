@@ -52,7 +52,9 @@ export async function POST(request: Request) {
     }
     if (data === true) return NextResponse.json({ success: true, credited: true })
   }
-  // No pay code in the memo, or this transaction was already credited. Staff
-  // record the first kind by hand from /admin.
+  // No pay code in the memo, or this transaction was already credited. The
+  // first kind waits in Tài chính for the staff; the database skips the second.
+  const { error: unmatched } = await admin.rpc("record_unmatched_transfer" as never, { p_ref: tx.ref, p_content: tx.content, p_amount: tx.amount } as never)
+  if (unmatched) console.error("sepay webhook: record_unmatched_transfer failed for", tx.ref, unmatched.message)
   return NextResponse.json({ success: true, credited: false })
 }

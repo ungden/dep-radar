@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { Download, KeyRound, Lock, Search, Unlock } from "lucide-react"
+import { ActButton, PanelError } from "./desk-shared"
 import { Badge, Button, Card, EmptyState, Field, Table, Td, Th, Tr, inputClass } from "./ui"
 import {
   adjustWallet,
@@ -11,12 +12,15 @@ import {
   adminResetPassword,
   catalogUsage,
   financeReport,
+  resolveTransfer,
   setAccountSuspended,
+  unmatchedTransfers,
   updatePlatformSettings,
   type AdminAction,
   type AdminCustomer,
   type AdminHelpQuestion,
   type AdminPro,
+  type UnmatchedTransfer,
   type FeePolicyView,
   type FinanceByPro,
   type FinanceSummary,
@@ -368,6 +372,7 @@ export function FinancePanel({ pros }: { pros: AdminPro[] }) {
         </>
       )}
 
+      <UnmatchedTransfers />
       <AdjustWallet pros={pros} onDone={() => setTick((t) => t + 1)} />
     </div>
   )
@@ -393,6 +398,52 @@ function Line({ label, value }: { label: string; value: string }) {
 }
 
 /** A signed correction to a freelancer's wallet, e.g. a fee charged on a job that did not happen. */
+/** Money that reached the bank with no pay code in the memo: nobody was credited until the staff act. */
+function UnmatchedTransfers() {
+  const [rows, setRows] = React.useState<UnmatchedTransfer[]>([])
+  const [error, setError] = React.useState<string | null>(null)
+  const [tick, setTick] = React.useState(0)
+  React.useEffect(() => {
+    let live = true
+    void unmatchedTransfers().then((r) => {
+      if (!live) return
+      if (r.ok) setRows(r.data)
+      else setError(r.error)
+    })
+    return () => {
+      live = false
+    }
+  }, [tick])
+  if (error) return <PanelError text={error} onRetry={() => { setError(null); setTick((t) => t + 1) }} />
+  if (rows.length === 0) return null
+  return (
+    <Card className="space-y-2 p-3.5">
+      <p className="text-body font-semibold">Chuyển khoản chưa rõ người nhận ({rows.length})</p>
+      <p className="text-label text-muted">Nội dung không có mã nạp. Cộng ví ở mục Ghi nhận nạp ví với đúng mã giao dịch, rồi bấm Đã xử lý.</p>
+      <ul className="space-y-2">
+        {rows.map((t) => (
+          <li key={t.ref} className="flex flex-wrap items-center gap-2 border-t border-line pt-2">
+            <span className="text-meta font-semibold tabular-nums">{formatPrice(t.amount)}</span>
+            <span className="min-w-0 flex-1 break-words text-meta text-ink-soft">{t.content || "(không có nội dung)"}</span>
+            <span className="text-label text-muted">{t.ref}</span>
+            <ActButton
+              size="sm"
+              variant="ghost"
+              onClick={async () => {
+                const r = await resolveTransfer(t.ref)
+                if (!r.ok) setError(r.error)
+                setTick((n) => n + 1)
+              }}
+            >
+              Đã xử lý
+            </ActButton>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  )
+}
+
 function AdjustWallet({ pros, onDone }: { pros: AdminPro[]; onDone: () => void }) {
   const refresh = useRefresh()
   const [proId, setProId] = React.useState("")
@@ -598,6 +649,20 @@ function describe(a: AdminAction) {
       return `Hỏi thêm người báo: ${String(d.question ?? "")}`
     case "report:view_chat":
       return "Xem tin nhắn hai bên của một báo cáo"
+    case "pro:lock":
+      return `Khoá hồ sơ đối tác${d.reason ? `: ${String(d.reason)}` : ""}`
+    case "pro:unlock":
+      return "Mở khoá hồ sơ đối tác"
+    case "review:hide":
+      return "Ẩn một đánh giá"
+    case "review:show":
+      return "Cho hiện lại một đánh giá"
+    case "report:resolve":
+      return `Xử lý báo cáo: ${String(d.status ?? "")}${d.note ? `, ${String(d.note)}` : ""}`
+    case "wallet:topup":
+      return `Ghi nhận nạp ${formatPrice(Number(d.amount ?? 0))}${d.ref ? `, mã ${String(d.ref)}` : ""}`
+    case "transfer:resolve":
+      return `Đã xử lý chuyển khoản ${String(d.ref ?? "")}`
     case "work:hide":
       return `Ẩn một bài đăng${d.reason ? `: ${String(d.reason)}` : ""}`
     case "work:show":
