@@ -128,9 +128,19 @@ function BookingDetail() {
           <p className="font-semibold">{booking.serviceName}</p>
           <p className="text-body text-ink-soft">
             {booking.variantLabel}
-            {booking.quantity > 1 ? ` · ${booking.quantity} người` : ""} · {formatPrice(booking.quote.servicePrice)} ·{" "}
+            {booking.quantity > 1 && !booking.lines ? ` · ${booking.quantity} người` : ""} · {formatPrice(booking.quote.servicePrice)} ·{" "}
             {formatDuration(booking.durationMin)}
           </p>
+          {booking.lines && (
+            <ul className="mt-1.5 space-y-0.5 text-meta text-ink-soft">
+              {booking.lines.map((line) => (
+                <li key={line.id} className="flex justify-between gap-3">
+                  <span>{line.serviceName} · {line.variantLabel}{line.quantity > 1 ? ` × ${line.quantity}` : ""}</span>
+                  <span className="tabular-nums">{formatPrice(line.servicePrice)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
           {booking.source === "job" && <p className="mt-0.5 text-label text-accent">Từ yêu cầu đã đăng</p>}
         </div>
       </Card>
@@ -225,7 +235,7 @@ function BookingDetail() {
                 ? `Đã quá hạn huỷ miễn phí. Nếu huỷ, ${Math.round(POLICY.lateCancelRate * 100)}% giá trị lịch hẹn được chuyển cho ${pro.name} để bù thời gian giữ lịch.`
                 : `Đã sát giờ hẹn (dưới ${POLICY.freeCancelHours} tiếng). Huỷ vẫn không mất phí, nhưng hãy báo ${pro.name} sớm để họ sắp xếp lại; huỷ sát giờ nhiều lần có thể bị hạn chế tài khoản.`}
           </p>
-          {!booking.rescheduleTo && <ProposeNewTime booking={booking} />}
+          {!booking.rescheduleTo && !booking.lines && <ProposeNewTime booking={booking} />}
           {/* Cancelling is possible, not the point of the page: a text button,
               with one more tap to confirm. */}
           {confirmCancel ? (
@@ -516,9 +526,11 @@ function ProTrouble({ booking, onError }: { booking: Booking; onError: (message:
   if (mode === "none") {
     return (
       <div className="flex flex-wrap gap-3 text-meta">
-        <button type="button" className="text-muted underline underline-offset-2" onClick={() => setMode("reschedule")}>
-          Đề nghị đổi giờ
-        </button>
+        {!booking.lines && (
+          <button type="button" className="text-muted underline underline-offset-2" onClick={() => setMode("reschedule")}>
+            Đề nghị đổi giờ
+          </button>
+        )}
         {/* cancel_booking refuses from the start time: after that the job ends by completion or a no-show. */}
         {now < Date.parse(toTimestamptz(booking.date, booking.time)) && (
           <button type="button" className="text-muted underline underline-offset-2" onClick={() => setMode("cancel")}>

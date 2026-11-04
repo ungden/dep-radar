@@ -1,3 +1,4 @@
+import { foldCartLines } from "@/lib/service-cart"
 import { catalogReadStatus } from "@/lib/catalog-read"
 import { cookies } from "next/headers"
 import { getTemplate, getVariant } from "@/lib/catalog"
@@ -509,7 +510,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
             service_price, distance_km, travel_fee, urgent_fee, total, commission_rate, commission, payout,
             payment_method, confirm_by, cancel_reason, cancelled_by, cancelled_at, completed_at,
             reschedule_to, reschedule_by, created_at,
-            ${legacy === 0 ? "service_contract, customer_name, paid_at, parent_booking_id, departed_at, started_at, reference_photos," : ""}
+            ${legacy === 0 ? "service_contract, customer_name, paid_at, parent_booking_id, in_cart, departed_at, started_at, reference_photos," : ""}
             ${legacy >= 2 ? "" : "usage_scope, consent_repost, booking_group_id, delivery_due_at, delivered_at, delivery_url, delivery_note, delivery_accepted_at,"}
             ${legacy >= 1 ? "" : "discount, voucher_id,"}
             customer:accounts!bookings_customer_id_fkey (full_name, phone),
@@ -587,7 +588,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     : null
 
   const disputed = new Set(rowsOf<Row>("disputes", disputesRes).map((row) => row.booking_id as string))
-  const bookings: Booking[] = rowsOf("bookings", bookingsRes).map((row: Row) => {
+  const bookings: Booking[] = foldCartLines(rowsOf("bookings", bookingsRes).map((row: Row): Booking => {
     const template = getTemplate(row.template_id)
     const review = first(row.reviews)
     const variant = getVariant(row.template_id, row.variant_id)
@@ -657,6 +658,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
       cancelledAt: row.cancelled_at ?? undefined,
       paidAt: row.paid_at ?? undefined,
       parentBookingId: row.parent_booking_id ?? undefined,
+      cartParentId: row.in_cart ? (row.parent_booking_id ?? null) : null,
       departedAt: row.departed_at ?? undefined,
       startedAt: row.started_at ?? undefined,
       referencePhotos: Array.isArray(row.reference_photos) ? row.reference_photos : [],
@@ -674,7 +676,7 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
         : undefined,
       disputed: disputed.has(row.id),
     }
-  })
+  }))
 
   // What freelancers said about customers: the caller's own reviews either way
   // round, plus -- for a freelancer -- the history of every customer they have a

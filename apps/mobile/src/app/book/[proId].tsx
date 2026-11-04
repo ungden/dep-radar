@@ -2,11 +2,11 @@ import * as React from "react"
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet"
 import { Stack, router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router"
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View, useWindowDimensions } from "react-native"
-import { providerLocationOpen, serviceLocationOpen, appointmentAt, CITIES, POLICY, buildQuote, districtsOf, getTemplate, isUrgent, perUnitSuffix, serviceDuration, travelDistanceKm, serviceQuantity, type PriceQuote } from "@/shared"
+import { providerLocationOpen, serviceLocationOpen, appointmentAt, CITIES, POLICY, buildQuote, cartItems, cartLineKey, cartMinutes, cartOrder, districtsOf, getTemplate, getVariant, isUrgent, perUnitSuffix, serviceDuration, toggleCartLine, travelDistanceKm, serviceQuantity, type CartLine, type PriceQuote } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
 import { rpc } from "@/data/supabase"
 import { toTimestamptz } from "@/data/format"
-import { createBooking, fetchSlots } from "@/data/bookings"
+import { createCartBooking, fetchSlots } from "@/data/bookings"
 import { setBookingReferences, uploadReference } from "@/data/references"
 import { ReferencePicker, type PickedPhoto } from "@/components/reference-photos"
 import { addDays, formatDateLong, formatDuration, formatKm, formatPrice, todayISO, weekdayShort } from "@/data/format"
@@ -30,11 +30,12 @@ import { Txt } from "@/ui/text"
 const SLOT_GAP = 8
 
 /**
- * Three steps: what, when, where. The price shown is the same preview the web
- * shows (lib/pricing); the database prices it again in create_booking and its
- * answer is the one that counts. A refusal is shown word for word.
+ * Four steps: what, the cart, when, where. The price shown is the same preview
+ * the web shows (lib/pricing); the database prices the whole cart again in
+ * create_cart_booking and its answer is the one that counts. A refusal is shown
+ * word for word.
  *
- * Signed out, step 3 still works: the customer picks a city and district for
+ * Signed out, the last step still works: the customer picks a city and district for
  * the estimate, then "Đăng nhập để đặt" opens sign-in on top of this screen,
  * which stays mounted, so every choice is still here when they come back.
  */
@@ -59,21 +60,17 @@ function BookingFlow() {
     () => (pro ? (app.data?.services ?? []).filter((s) => s.proId === pro.id && providerLocationOpen(pro, studioBookingOpen) && s.active && Object.keys(s.prices).length && serviceLocationOpen(getTemplate(s.templateId), studioBookingOpen)) : []),
     [app.data, pro, studioBookingOpen],
   )
-  // Add-ons (nail art per finger, an elaborate hairdo) are only chosen on top of a main service.
-  const listings = React.useMemo(() => listed.filter((s) => !getTemplate(s.templateId)!.addon), [listed])
   const [step, setStep] = React.useState(1)
   React.useEffect(() => { content.current?.scrollTo({ y: 0, animated: false }) }, [step])
-  const [templateId, setTemplateId] = React.useState<string | null>(null)
-  const [variantId, setVariantId] = React.useState<string | null>(null)
-  const [quantity, setQuantity] = React.useState(1)
+  // Everything chosen, starting with the service the customer came from.
+  const [cart, setCart] = React.useState<CartLine[] | null>(null)
+  const [cartNote, setCartNote] = React.useState<{ templateId: string; text: string } | null>(null)
   const [atHomePref, setAtHomePref] = React.useState(true)
   const [date, setDate] = React.useState(addDays(todayISO(), 1))
   const [time, setTime] = React.useState<{ startsAt: string; time: string } | null>(null)
   const [addressId, setAddressId] = React.useState<string | null>(null)
   const [estCity, setEstCity] = React.useState<string | null>(null)
   const [estDistrict, setEstDistrict] = React.useState<string | null>(null)
-  // Add-ons chosen with the booking: "template/variant" -> how many (fingers, stones; 1 otherwise).
-  const [addons, setAddons] = React.useState<Record<string, number>>({})
   const [note, setNote] = React.useState("")
   const [noteOpen, setNoteOpen] = React.useState(false)
   const [photos, setPhotos] = React.useState<PickedPhoto[]>([])
@@ -92,41 +89,36 @@ function BookingFlow() {
     }, []),
   )
 
-  // Start on the service the customer came from, or the first one listed.
-  const listing = listings.find((s) => s.templateId === templateId) ?? listings.find((s) => s.templateId === params.template) ?? listings[0]
-  const template = listing ? getTemplate(listing.templateId) : undefined
-  const offered = template && listing ? template.variants.filter((v) => listing.prices[v.id] != null) : []
-  const variant = offered.find((v) => v.id === variantId) ?? offered.find((v) => v.id === params.variant) ?? offered[0]
-  const heads = variant ? serviceQuantity(variant, quantity) : 1
-  const unit = variant && listing ? listing.prices[variant.id] : 0
-  const servicePrice = unit * heads
+  const priceOf = (line: Pick<CartLine, "templateId" | "variantId">) => listed.find((l) => l.templateId === line.templateId)?.prices[line.variantId]
+  const cameFrom = React.useMemo<CartLine[]>(() => {
+    const t = params.template ? getTemplate(params.template) : undefined
+    const listing = t && !t.addon ? listed.find((l) => l.templateId === t.id) : undefined
+    const v = listing ? (t!.variants.find((o) => o.id === params.variant && listing.prices[o.id] != null) ?? t!.variants.find((o) => listing.prices[o.id] != null)) : undefined
+    return t && v ? [{ templateId: t.id, variantId: v.id, quantity: serviceQuantity(v, v.unit ? 10 : 1) }] : []
+  }, [listed, params.template, params.variant])
+  // Only what this Artist still lists, whatever was chosen a moment ago.
+  const lines = React.useMemo(() => cartOrder((cart ?? cameFrom).filter((line) => priceOf(line) != null)), [cart, cameFrom, listed]) // eslint-disable-line react-hooks/exhaustive-deps
+  const main = lines[0]
+  const template = main ? getTemplate(main.templateId) : undefined
+  const variant = main ? getVariant(main.templateId, main.variantId) : undefined
+  const servicePrice = lines.reduce((sum, line) => sum + (priceOf(line) ?? 0) * line.quantity, 0)
+  const minutes = cartMinutes(lines)
 
   const canStudio = studioBookingOpen && Boolean(pro?.studioAddress)
-  const canHome = Boolean(pro?.homeService) && !template?.studioOnly
+  const canHome = Boolean(pro?.homeService) && !lines.some((line) => getTemplate(line.templateId)?.studioOnly)
   const atHome = canHome && (atHomePref || !canStudio)
 
-  // What can come with the main service: the partner's other single-session options, same place
-  // (attach_addons chains them right after it, no travel fee). Same rule as the web booking page.
-  const addonOptions = listed.flatMap((l) => {
-    const t = getTemplate(l.templateId)!
-    if (t.studioOnly && atHome) return []
-    return t.variants
-      .filter((v) => l.prices[v.id] != null && (v.sessions ?? 1) === 1 && serviceQuantity(v) === 1 && !(t.id === template?.id && v.id === variant?.id))
-      .map((v) => {
-        const key = `${t.id}/${v.id}`
-        const count = v.unit ? serviceQuantity(v, addons[key] ?? 10) : 1
-        return { key, templateId: t.id, variantId: v.id, name: t.name, variant: v, unitPrice: l.prices[v.id], count, price: l.prices[v.id] * count, minutes: serviceDuration(v, count) }
-      })
-  })
-  const chosenAddons = addonOptions.filter((o) => addons[o.key] !== undefined)
-  const addonsTotal = chosenAddons.reduce((sum, o) => sum + o.price, 0)
-  const toggleAddon = (key: string) =>
-    setAddons((m) => {
-      const next = { ...m }
-      if (next[key] !== undefined) delete next[key]
-      else if (chosenAddons.length < 3) next[key] = 10
-      return next
-    })
+  const tap = (templateId: string, variantId: string) => {
+    const result = toggleCartLine(lines, templateId, variantId)
+    if ("problem" in result) return setCartNote({ templateId, text: result.problem })
+    setCartNote(null)
+    setCart(result.lines)
+    setTime(null)
+  }
+  const setCount = (line: CartLine, quantity: number) => {
+    setCart(lines.map((l) => (cartLineKey(l) === cartLineKey(line) ? { ...l, quantity } : l)))
+    setTime(null)
+  }
   const addresses = app.uid ? app.me.addresses : []
   const chosenId = addressId && addresses.some((a) => a.id === addressId) ? addressId : ((addresses.find((a) => a.isDefault) ?? addresses[0])?.id ?? null)
   const address = addresses.find((a) => a.id === chosenId) ?? null
@@ -138,40 +130,41 @@ function BookingFlow() {
   const km = atHome && pro && place ? travelDistanceKm(pro.city, pro.district, place.city, place.district) : null
   const tooFar = atHome && pro && place ? km === null || km > pro.maxTravelKm : false
 
-  const slotKey = [pro?.uuid, listing?.templateId, variant?.id, heads, date, atHome, atHome ? chosenId : null].join("|")
+  const cartKey = JSON.stringify(cartItems(lines))
+  const slotKey = [pro?.uuid, cartKey, date, atHome, atHome ? chosenId : null].join("|")
   React.useEffect(() => {
-    if (!pro || !listing || !variant) return
+    if (!pro || !lines.length || step < 3) return
     let live = true
     setSlotError(null)
     setSlots(null)
-    fetchSlots({ proUuid: pro.uuid, templateId: listing.templateId, variantId: variant.id, quantity: heads, date, atHome, addressId: atHome ? chosenId : null })
+    fetchSlots({ proUuid: pro.uuid, lines, date, atHome, addressId: atHome ? chosenId : null })
       .then((list) => live && setSlots({ key: slotKey, list }))
       .catch((e: Error) => live && setSlotError(e.message))
     return () => {
       live = false
     }
-  }, [slotKey, pro, listing, variant, heads, date, atHome, chosenId, slotRetry])
+  }, [slotKey, step, slotRetry]) // eslint-disable-line react-hooks/exhaustive-deps
   const daySlots = slots?.key === slotKey ? slots.list : null
   const picked = time && daySlots?.some((s) => s.startsAt === time.startsAt) ? time : null
 
   const quoteKey = [slotKey, picked?.startsAt, app.uid, app.me?.account?.phone].join("|")
   const [quoteRetry, retryQuote] = React.useReducer((n: number) => n + 1, 0)
-  const [verified, setVerified] = React.useState<{ key: string; quote?: PriceQuote & { unitPrice: number; expiresAt: string }; error?: string } | null>(null)
+  const [verified, setVerified] = React.useState<{ key: string; quote?: PriceQuote; error?: string } | null>(null)
   const [secondDate, setSecondDate] = React.useState("")
   const [secondTime, setSecondTime] = React.useState("09:00")
   React.useEffect(() => {
-    if (!app.uid || !pro || !listing || !variant || !picked || (atHome && !address)) return
+    if (!app.uid || !pro || !lines.length || !picked || (atHome && !address)) return
     let live = true
     setVerified(null)
-    void rpc<PriceQuote & { unitPrice: number; expiresAt: string }>("booking_quote", { p_pro: pro.uuid, p_template: listing.templateId, p_variant: variant.id, p_starts_at: picked.startsAt, p_at_home: atHome, p_address_id: atHome ? chosenId : null, p_quantity: heads }).then((r) => { if (live) setVerified({ key: quoteKey, ...(r.ok ? { quote: r.data } : { error: r.error }) }) }).catch(() => { if (live) setVerified({ key: quoteKey, error: "Không xác nhận được tổng tiền. Kiểm tra kết nối và thử lại." }) })
+    void rpc<PriceQuote>("cart_quote", { p_pro: pro.uuid, p_items: cartItems(lines), p_starts_at: picked.startsAt, p_at_home: atHome, p_address_id: atHome ? chosenId : null }).then((r) => { if (live) setVerified({ key: quoteKey, ...(r.ok ? { quote: r.data } : { error: r.error }) }) }).catch(() => { if (live) setVerified({ key: quoteKey, error: "Không xác nhận được tổng tiền. Kiểm tra kết nối và thử lại." }) })
     return () => { live = false }
-  }, [quoteKey, app.uid, pro, listing, variant, picked, atHome, address, chosenId, heads, quoteRetry])
+  }, [quoteKey, quoteRetry]) // eslint-disable-line react-hooks/exhaustive-deps
   const confirmedQuote = verified?.key === quoteKey ? verified.quote : null
   const quote = confirmedQuote ?? (picked ? buildQuote({ servicePrice, atHome, distanceKm: km, urgent: isUrgent(date, picked.time) }) : null)
 
 
   // Leaving with choices made asks first; a sent booking leaves freely.
-  const dirty = !doneId && (step > 1 || Boolean(time) || Boolean(note.trim()) || photos.length > 0 || templateId !== null)
+  const dirty = !doneId && (step > 1 || Boolean(time) || Boolean(note.trim()) || photos.length > 0 || cart !== null)
   React.useEffect(() => {
     if (!dirty) return
     return navigation.addListener("beforeRemove", (e) => {
@@ -186,7 +179,7 @@ function BookingFlow() {
   if (!pro) {
     return <View style={{ flex: 1, backgroundColor: colors.canvas }}>{app.data ? <EmptyState title="Không tìm thấy Artist" /> : null}</View>
   }
-  if (!listings.length || !template || !variant) {
+  if (!listed.some((l) => !getTemplate(l.templateId)!.addon)) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.canvas, paddingHorizontal: gutter }}>
         <EmptyState title="Chưa đặt được" text={`${pro.name} chưa đặt giá dịch vụ nào để nhận lịch.`} action="Quay lại" onAction={() => router.back()} />
@@ -229,30 +222,23 @@ function BookingFlow() {
     if (!picked) return
     if (!confirmedQuote) return setError(verified?.error ?? "Đang kiểm tra tổng tiền.")
     const secondAt = appointmentAt(secondDate, secondTime)
-    if ((variant.sessions ?? 1) > 1 && (!secondAt || secondAt <= picked.startsAt)) return setError("Chọn ngày, giờ hợp lệ cho buổi thứ hai sau buổi đầu.")
+    if ((variant?.sessions ?? 1) > 1 && (!secondAt || secondAt <= picked.startsAt)) return setError("Chọn ngày, giờ hợp lệ cho buổi thứ hai sau buổi đầu.")
     setBusy(true)
     setError(null)
     try {
-    const res = await createBooking({
+    const res = await createCartBooking({
       proUuid: pro.uuid,
-      templateId: template.id,
-      variantId: variant.id,
+      lines,
       startsAt: picked.startsAt,
       atHome,
       addressId: atHome ? chosenId : null,
-      quantity: heads,
       note: note.trim(),
-      expectedTotal: confirmedQuote.total, expectedUnit: confirmedQuote.unitPrice,
-      sessions: (variant.sessions ?? 1) > 1 ? [secondAt!] : [],
+      expectedTotal: confirmedQuote.total,
+      sessions: (variant?.sessions ?? 1) > 1 ? [secondAt!] : [],
     })
     if (!res.ok) {
       haptic.error()
       return setError(res.error)
-    }
-    // The main booking stands; its add-ons are chained after it, and a failure only says so.
-    if (chosenAddons.length) {
-      const attached = await rpc<string[]>("attach_addons", { p_parent: res.data, p_items: chosenAddons.map((o) => ({ template: o.templateId, variant: o.variantId, quantity: o.count })) })
-      if (!attached.ok) Alert.alert("Đã gửi lịch hẹn", `Nhưng chưa thêm được dịch vụ đi kèm: ${attached.error}`)
     }
     // The booking stands; its reference photos follow, and a failure only says so.
     if (photos.length && app.uid) {
@@ -274,11 +260,11 @@ function BookingFlow() {
     finally { setBusy(false) }
   }
 
-  const next = () => (step < 3 ? setStep(step + 1) : void submit())
-  // Step 3 never dead-ends: signed out it leads to sign-in, without an address to the address form.
-  const canNext = step === 1 ? true : step === 2 ? Boolean(picked) : Boolean(picked) && !tooFar
+  const next = () => (step < 4 ? setStep(step + 1) : void submit())
+  // The last step never dead-ends: signed out it leads to sign-in, without an address to the address form.
+  const canNext = step <= 2 ? lines.length > 0 : step === 3 ? Boolean(picked) : Boolean(picked) && !tooFar
   const action =
-    step < 3 ? "Tiếp tục" : !app.uid ? "Đăng nhập để đặt" : atHome && !address ? "Thêm địa chỉ" : !app.me.account?.phone ? "Thêm số điện thoại" : "Gửi lịch hẹn"
+    step === 1 ? "Xem giỏ" : step === 2 ? "Chọn giờ" : step === 3 ? "Tiếp tục" : !app.uid ? "Đăng nhập để đặt" : atHome && !address ? "Thêm địa chỉ" : !app.me.account?.phone ? "Thêm số điện thoại" : "Gửi lịch hẹn"
   const days = Array.from({ length: 14 }, (_, i) => addDays(todayISO(), i))
   const controlScale = Math.min(fontScale, controlMetrics.maxFontSizeMultiplier)
   const slotColumns = Math.max(1, Math.min(4, Math.floor((width - gutter * 2 + SLOT_GAP) / (Math.max(76, 72 * controlScale) + SLOT_GAP))))
@@ -289,80 +275,87 @@ function BookingFlow() {
     { label: "Buổi tối", from: 18, to: 24 },
   ].map(group => ({ ...group, slots: daySlots?.filter(slot => Number(slot.time.slice(0, 2)) >= group.from && Number(slot.time.slice(0, 2)) < group.to) ?? [] })).filter(group => group.slots.length)
   const chooseDate = (value: string) => { setDate(value); setTime(null) }
-  const priceLabel = quote ? confirmedQuote ? "Tổng tiền" : "Tạm tính" : "Giá dịch vụ"
-  const displayedPrice = formatPrice((quote?.total ?? servicePrice) + addonsTotal)
+  const cartSummary = lines.length ? `${lines.length} món · ${formatDuration(minutes)}` : "Chưa chọn món"
+  const priceLabel = step <= 2 || !quote ? cartSummary : confirmedQuote ? "Tổng tiền" : "Tạm tính"
+  const displayedPrice = formatPrice(quote?.total ?? servicePrice)
   const needsQuote = Boolean(app.uid && app.me.account?.phone && picked && (!atHome || address))
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.canvas }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}>
       <Stack.Screen
         options={{
-          title: step === 1 ? "Chọn dịch vụ" : step === 2 ? "Chọn lịch" : "Xác nhận lịch",
+          title: step === 1 ? "Chọn món" : step === 2 ? "Giỏ của bạn" : step === 3 ? "Chọn giờ" : "Xác nhận lịch",
           gestureEnabled: !dirty,
           headerLeft: step > 1 ? () => <IconButton name="back" label="Quay lại bước trước" onPress={() => setStep(step - 1)} /> : undefined,
           headerRight: () => <IconButton name="close" label="Đóng" onPress={() => router.back()} />,
         }}
       />
       <ScrollView ref={content} style={{ flex: 1 }} contentContainerStyle={{ padding: gutter, gap: 16, paddingBottom: 24 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }} accessibilityLabel={`Bước ${step} trên 3`} accessible>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }} accessibilityLabel={`Bước ${step} trên 4`} accessible>
           <View style={{ flex: 1, flexDirection: "row", gap: 6 }}>
-            {[1, 2, 3].map(number => <View key={number} style={{ flex: 1, height: 3, borderRadius: 2, backgroundColor: number <= step ? colors.accent : colors.subtleStrong }} />)}
+            {[1, 2, 3, 4].map(number => <View key={number} style={{ flex: 1, height: 3, borderRadius: 2, backgroundColor: number <= step ? colors.accent : colors.subtleStrong }} />)}
           </View>
-          <Txt v="controlMeta" color={colors.inkSoft}>{step}/3</Txt>
+          <Txt v="controlMeta" color={colors.inkSoft}>{step}/4</Txt>
         </View>
 
         {step === 1 ? (
           <>
-            <View style={{ gap: 8 }}>
-              {listings.map((s) => {
-                const t = getTemplate(s.templateId)!
-                const selected = s.templateId === template.id
+            <Txt color={colors.inkSoft}>Chọn các món bạn muốn {pro.name} làm trong một lần hẹn.</Txt>
+            {listed
+              .filter((l) => !getTemplate(l.templateId)!.addon || lines.some((line) => getTemplate(line.templateId)?.category === getTemplate(l.templateId)!.category))
+              .sort((x, y) => Number(Boolean(getTemplate(x.templateId)!.addon)) - Number(Boolean(getTemplate(y.templateId)!.addon)))
+              .map((l) => {
+                const t = getTemplate(l.templateId)!
                 return (
-                  <Option
-                    key={s.templateId}
-                    selected={selected}
-                    title={t.name}
-                    subtitle={`Từ ${formatPrice(Math.min(...Object.values(s.prices)))}`}
-                    onPress={() => {
-                      setTemplateId(s.templateId)
-                      setVariantId(null)
-                      setTime(null)
-                    }}
-                  />
+                  <View key={l.templateId} style={{ gap: 8 }}>
+                    <Txt v="control" w={600}>{t.name}</Txt>
+                    {t.variants.filter((v) => l.prices[v.id] != null).map((v) => {
+                      const line = lines.find((c) => c.templateId === t.id && c.variantId === v.id)
+                      const count = line?.quantity ?? serviceQuantity(v, v.unit ? 10 : 1)
+                      return (
+                        <View key={v.id} style={{ gap: 6 }}>
+                          <Option
+                            selected={Boolean(line)}
+                            title={v.label}
+                            subtitle={line ? `Đã thêm · ${formatDuration(serviceDuration(v, count))}` : formatDuration(serviceDuration(v, count))}
+                            right={`${formatPrice(l.prices[v.id])}${perUnitSuffix(v)}`}
+                            onPress={() => tap(t.id, v.id)}
+                          />
+                          {line && v.perPerson ? <Counter variant={v} line={line} onChange={setCount} /> : null}
+                        </View>
+                      )
+                    })}
+                    {cartNote?.templateId === t.id ? <Txt v="meta" color={colors.danger}>{cartNote.text}</Txt> : null}
+                  </View>
+                )
+              })}
+          </>
+        ) : null}
+
+        {step === 2 ? (
+          <>
+            <Txt color={colors.inkSoft}>Một lịch, một Artist, làm liền nhau.</Txt>
+            <View style={{ gap: 8 }}>
+              {lines.map((line) => {
+                const t = getTemplate(line.templateId)!
+                const v = getVariant(line.templateId, line.variantId)!
+                return (
+                  <Card key={cartLineKey(line)} style={{ gap: 8 }}>
+                    <View style={{ flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <Txt v="control" w={600}>{t.name}</Txt>
+                        <Txt v="controlMeta" color={colors.inkSoft}>{v.label}{v.perPerson ? ` × ${line.quantity} ${v.unit ?? "người"}` : ""} · {formatDuration(serviceDuration(v, line.quantity))}</Txt>
+                      </View>
+                      <Txt v="control" w={600} tabular>{formatPrice((priceOf(line) ?? 0) * line.quantity)}</Txt>
+                    </View>
+                    {v.perPerson ? <Counter variant={v} line={line} onChange={setCount} /> : null}
+                    <Button label="Bỏ món này" variant="ghost" size="sm" onPress={() => tap(line.templateId, line.variantId)} />
+                  </Card>
                 )
               })}
             </View>
-            <View style={{ gap: 8 }}>
-              <Txt v="controlMeta" w={600}>
-                Gói
-              </Txt>
-              {offered.map((v) => (
-                <Option
-                  key={v.id}
-                  selected={v.id === variant.id}
-                  title={v.label}
-                  subtitle={`${formatDuration(v.durationMin)}${v.perPerson ? v.durationRule === "fixed" ? " · cả nhóm, giá mỗi người" : " · mỗi người" : ""}`}
-                  right={formatPrice(listing!.prices[v.id])}
-                  onPress={() => {
-                    setVariantId(v.id)
-                    setTime(null)
-                  }}
-                />
-              ))}
-            </View>
-            {variant.perPerson ? (
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                <Txt v="control" w={600}>Số người</Txt>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-                  <Button compact label="−" variant="secondary" size="sm" disabled={heads <= (variant.minQuantity ?? 1)} onPress={() => setQuantity(heads - 1)} />
-                  <Txt v="control" w={600} tabular accessibilityLabel={`${heads} người`}>
-                    {heads}
-                  </Txt>
-                  <Button compact label="+" variant="secondary" size="sm" disabled={heads >= (variant.maxQuantity ?? 1)} onPress={() => setQuantity(heads + 1)} />
-                </View>
-              </View>
-            ) : null}
-            {canHome && canStudio ? (
+            <Button label={lines.length ? `Thêm món khác của ${pro.name}` : "Chọn món"} icon="plus" variant="secondary" full onPress={() => setStep(1)} />
+            {template && canHome && canStudio ? (
               <View style={{ gap: 8 }}>
                 <Txt v="controlMeta" w={600}>
                   Làm ở đâu
@@ -370,52 +363,17 @@ function BookingFlow() {
                 <Option selected={atHome} title={template.onLocation ? "Tại địa điểm bạn chọn" : "Tại nhà bạn"} onPress={() => setAtHomePref(true)} />
                 <Option selected={!atHome} title="Tại studio" subtitle={pro.studioAddress} onPress={() => setAtHomePref(false)} />
               </View>
-            ) : (
+            ) : template ? (
               <Txt v="meta" color={colors.inkSoft}>
                 {atHome ? (template.onLocation ? "Làm tại địa điểm bạn chọn." : "Làm tại nhà bạn.") : `Làm tại studio: ${pro.studioAddress ?? ""}`}
               </Txt>
-            )}
-            {addonOptions.length ? (
-              <View style={{ gap: 8 }}>
-                <Txt v="controlMeta" w={600}>
-                  Thêm dịch vụ đi kèm (tuỳ chọn)
-                </Txt>
-                <Txt v="meta" color={colors.inkSoft}>
-                  Làm nối tiếp ngay sau dịch vụ chính, theo giá {pro.name} niêm yết, không tính thêm phí di chuyển. Tối đa 3.
-                </Txt>
-                {addonOptions.map((o) => {
-                  const on = addons[o.key] !== undefined
-                  return (
-                    <View key={o.key} style={{ gap: 6 }}>
-                      <Option
-                        selected={on}
-                        title={`${o.name} · ${o.variant.label}`}
-                        subtitle={`${o.variant.unit ? `${formatPrice(o.unitPrice)}${perUnitSuffix(o.variant)} · ` : ""}${formatDuration(o.minutes)}`}
-                        right={formatPrice(o.price)}
-                        onPress={() => toggleAddon(o.key)}
-                      />
-                      {on && o.variant.unit ? (
-                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12 }}>
-                          <Txt v="control" w={600}>Số {o.variant.unit}</Txt>
-                          <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-                            <Button compact label="−" variant="secondary" size="sm" disabled={o.count <= (o.variant.minQuantity ?? 1)} onPress={() => setAddons((m) => ({ ...m, [o.key]: o.count - 1 }))} />
-                            <Txt v="control" w={600} tabular accessibilityLabel={`${o.count} ${o.variant.unit}`}>
-                              {o.count}
-                            </Txt>
-                            <Button compact label="+" variant="secondary" size="sm" disabled={o.count >= (o.variant.maxQuantity ?? 1)} onPress={() => setAddons((m) => ({ ...m, [o.key]: o.count + 1 }))} />
-                          </View>
-                        </View>
-                      ) : null}
-                    </View>
-                  )
-                })}
-              </View>
             ) : null}
           </>
         ) : null}
 
-        {step === 2 ? (
+        {step === 3 ? (
           <>
+            <Txt color={colors.inkSoft}>Chỉ hiện giờ đủ {formatDuration(minutes)} làm liền.</Txt>
             {largeText ? <DateField compact label="Ngày hẹn" hideLabel value={date} onChange={chooseDate} maxDate={days[days.length - 1]} /> : <View style={{ gap: 12 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Icon name="calendar" size={20} color={colors.accentDark} />
@@ -484,7 +442,7 @@ function BookingFlow() {
           </>
         ) : null}
 
-        {step === 3 ? (
+        {step === 4 && template ? (
           <>
             {atHome ? (
               <View style={{ gap: 8 }}>
@@ -545,28 +503,23 @@ function BookingFlow() {
             {time && daySlots && !picked ? (
               <View style={{ gap: 8 }}>
                 <Txt color={colors.danger}>Giờ {time.time} không còn trống với địa điểm này.</Txt>
-                <Button label="Chọn lại giờ" variant="secondary" size="sm" onPress={() => setStep(2)} />
+                <Button label="Chọn lại giờ" variant="secondary" size="sm" onPress={() => setStep(3)} />
               </View>
             ) : null}
             {needsQuote && !confirmedQuote && (verified?.key === quoteKey && verified.error ? <ErrorNote text={verified.error} onRetry={retryQuote} /> : <Txt v="meta" color={colors.inkSoft}>Đang xác nhận tổng tiền…</Txt>)}
-            {(variant.sessions ?? 1) > 1 && <View style={{ gap: 8 }}><Txt v="control" w={600}>Buổi thứ hai (đã gồm trong giá)</Txt><DateField compact label="Ngày buổi thứ hai" value={secondDate} onChange={setSecondDate} minDate={date} /><TimeField compact label="Giờ buổi thứ hai" value={secondTime} onChange={setSecondTime} /><Txt v="meta">Hệ thống giữ cả hai buổi cùng lúc và kiểm tra giờ trống khi gửi.</Txt></View>}
+            {(variant?.sessions ?? 1) > 1 && <View style={{ gap: 8 }}><Txt v="control" w={600}>Buổi thứ hai (đã gồm trong giá)</Txt><DateField compact label="Ngày buổi thứ hai" value={secondDate} onChange={setSecondDate} minDate={date} /><TimeField compact label="Giờ buổi thứ hai" value={secondTime} onChange={setSecondTime} /><Txt v="meta">Hệ thống giữ cả hai buổi cùng lúc và kiểm tra giờ trống khi gửi.</Txt></View>}
             {quote && picked ? (
               <Card>
-                <Txt w={700}>
-                  {template.name} · {variant.label}
-                  {heads > 1 ? ` × ${heads}` : ""}
-                </Txt>
                 <Txt v="meta" color={colors.inkSoft}>
-                  {date.split("-").reverse().join("/")} lúc {picked.time}
+                  {date.split("-").reverse().join("/")} lúc {picked.time} · {formatDuration(minutes)}
                 </Txt>
-                <Line label="Dịch vụ" value={formatPrice(quote.servicePrice)} />
+                {lines.map((line) => {
+                  const v = getVariant(line.templateId, line.variantId)!
+                  return <Line key={cartLineKey(line)} label={`${getTemplate(line.templateId)!.name} · ${v.label}${v.perPerson ? ` × ${line.quantity} ${v.unit ?? "người"}` : ""}`} value={formatPrice((priceOf(line) ?? 0) * line.quantity)} />
+                })}
                 {quote.travelFee ? <Line label={`Phí di chuyển${quote.distanceKm !== null ? ` (~${formatKm(quote.distanceKm)})` : ""}`} value={formatPrice(quote.travelFee)} /> : null}
                 {quote.urgentFee ? <Line label="Phí gấp" value={formatPrice(quote.urgentFee)} /> : null}
                 <Line label={confirmedQuote ? "Tổng tiền" : "Tạm tính"} value={formatPrice(quote.total)} strong />
-                {chosenAddons.map((o) => (
-                  <Line key={o.key} label={`${o.name} · ${o.variant.label}${o.variant.unit ? ` × ${o.count} ${o.variant.unit}` : ""}`} value={formatPrice(o.price)} />
-                ))}
-                {chosenAddons.length ? <Line label="Tổng cả lịch (gồm dịch vụ đi kèm)" value={formatPrice(quote.total + addonsTotal)} strong /> : null}
                 <Txt v="meta" color={colors.muted}>
                   Thanh toán sau khi làm xong. {atHome ? "Khoảng cách ước tính theo phường/xã. " : ""}Giá được xác nhận lại khi gửi lịch. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để Artist kịp sắp xếp.
                 </Txt>
@@ -594,7 +547,7 @@ function BookingFlow() {
               </Txt>
               <ReferencePicker value={photos} onChange={setPhotos} disabled={busy} />
             </View> : <Button compact label="Thêm ghi chú, ảnh mẫu" icon="plus" variant="secondary" full onPress={() => setNoteOpen(true)} />}
-            {template && needsConductNote(template.category) ? <ConductNote /> : null}
+            {lines.some((line) => needsConductNote(getTemplate(line.templateId)!.category)) ? <ConductNote /> : null}
             {error ? <ErrorNote text={error} /> : null}
           </>
         ) : null}
@@ -606,13 +559,29 @@ function BookingFlow() {
         keyboard={keyboard}
         title={displayedPrice}
         summaryLabel={priceLabel}
-        actionOnly={largeText && step === 3}
+        actionOnly={largeText && step === 4}
         action={action}
-        disabled={!canNext || (step === 3 && needsQuote && !confirmedQuote)}
+        disabled={!canNext || (step === 4 && needsQuote && !confirmedQuote)}
         busy={busy}
         onPress={next}
       />
     </KeyboardAvoidingView>
+  )
+}
+
+function Counter({ variant, line, onChange }: { variant: NonNullable<ReturnType<typeof getVariant>>; line: CartLine; onChange: (line: CartLine, quantity: number) => void }) {
+  const unit = variant.unit ?? "người"
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12 }}>
+      <Txt v="control" w={600}>Số {unit}</Txt>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+        <Button compact label="−" variant="secondary" size="sm" disabled={line.quantity <= (variant.minQuantity ?? 1)} onPress={() => onChange(line, line.quantity - 1)} />
+        <Txt v="control" w={600} tabular accessibilityLabel={`${line.quantity} ${unit}`}>
+          {line.quantity}
+        </Txt>
+        <Button compact label="+" variant="secondary" size="sm" disabled={line.quantity >= (variant.maxQuantity ?? 1)} onPress={() => onChange(line, line.quantity + 1)} />
+      </View>
+    </View>
   )
 }
 

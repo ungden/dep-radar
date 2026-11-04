@@ -225,7 +225,7 @@ export default function BookingDetail() {
         <Txt v="h2">{b.serviceName}</Txt>
         <Txt color={colors.inkSoft}>
           {b.variantLabel}
-          {b.quantity > 1 ? ` × ${b.quantity} người` : ""} · {formatDuration(b.durationMin)}
+          {b.quantity > 1 && !b.lines ? ` × ${b.quantity} người` : ""} · {formatDuration(b.durationMin)}
         </Txt>
         <Txt v="h1" style={{ marginTop: 6 }}>
           {b.time}, {formatDateLong(b.date)}
@@ -290,7 +290,7 @@ export default function BookingDetail() {
       <BookingContract booking={b} />
       {b.status === "completed" && b.delivery && !b.delivery.acceptedAt && <Txt color={colors.warning}>{b.delivery.deliveredAt ? "Chờ khách xác nhận sản phẩm" : "Xong buổi làm · chờ giao sản phẩm"}</Txt>}
       <Card>
-        <Line label="Dịch vụ" value={formatPrice(b.quote.servicePrice)} />
+        {b.lines ? b.lines.map((line) => <Line key={line.id} label={`${line.serviceName} · ${line.variantLabel}${line.quantity > 1 ? ` × ${line.quantity}` : ""}`} value={formatPrice(line.servicePrice)} />) : <Line label="Dịch vụ" value={formatPrice(b.quote.servicePrice)} />}
         {b.quote.travelFee ? <Line label="Phí di chuyển" value={formatPrice(b.quote.travelFee)} /> : null}
         {b.quote.urgentFee ? <Line label="Phí gấp" value={formatPrice(b.quote.urgentFee)} /> : null}
         {b.discount > 0 ? (
@@ -413,7 +413,7 @@ export default function BookingDetail() {
           <Button label="Đã nhận đủ file" icon="check" full busy={busy === "files"} onPress={() => void run("files", () => acceptDelivery(b.id), "Đã xác nhận nhận file")} />
         ) : null}
         {!iAmPro && active ? (
-          <Button label="Đổi giờ hoặc đặt thêm dịch vụ (mở trên web)" size="sm" variant="ghost" full onPress={() => void WebBrowser.openBrowserAsync(webLink(`/bookings/${b.id}`))} />
+          <Button label={b.lines ? "Đặt thêm dịch vụ (mở trên web)" : "Đổi giờ hoặc đặt thêm dịch vụ (mở trên web)"} size="sm" variant="ghost" full onPress={() => void WebBrowser.openBrowserAsync(webLink(`/bookings/${b.id}`))} />
         ) : null}
         {iAmPro && b.status === "cancelled" && b.cancelReason === "Artist không đến" && b.cancelledAt && now <= Date.parse(b.cancelledAt) + 24 * 3_600_000 ? (
           <Card style={{ backgroundColor: colors.warningSoft, gap: 6 }}>
@@ -468,7 +468,7 @@ export default function BookingDetail() {
         ) : null}
         {iAmPro && (b.status === "confirmed" || b.status === "in_progress") ? (
           <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 20 }}>
-            {b.status === "confirmed" && hoursToStart > 0 && !(b.rescheduleTo && b.rescheduleBy === "pro") ? (
+            {b.status === "confirmed" && hoursToStart > 0 && !b.lines && !(b.rescheduleTo && b.rescheduleBy === "pro") ? (
               <RescheduleButton onSend={(date, time) => run("reschedule", () => requestReschedule(b.id, date, time), "Đã gửi đề nghị đổi giờ")} />
             ) : null}
             {canMarkAbsent ? <ActionRow label="Khách vắng mặt" danger onPress={() => openSheet("absent")} /> : null}

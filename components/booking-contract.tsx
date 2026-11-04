@@ -17,8 +17,10 @@ export function BookingContract({ booking }: { booking: Booking }) {
   if (!c) return null
   return <Card className="space-y-3 p-4">
     <p className="font-semibold">Phạm vi dịch vụ đã chốt</p>
-    <p className="text-body">{c.variantLabel} · {c.tierLabel} · {c.quantity > 1 ? `× ${c.quantity} · ` : ""}{c.durationMin} phút{c.sessions > 1 ? ` / buổi, ${c.sessions} buổi` : ""}</p>
-    <ul className="list-disc pl-5 text-body text-ink-soft">{c.includes.map((x) => <li key={x}>{x}</li>)}</ul>
+    {(booking.lines?.flatMap((line) => line.contract ?? []) ?? [c]).map((scope) => <div key={`${scope.serviceName}/${scope.variantLabel}`} className="space-y-1">
+      <p className="text-body">{booking.lines ? `${scope.serviceName} · ` : ""}{scope.variantLabel} · {scope.tierLabel} · {scope.quantity > 1 ? `× ${scope.quantity} · ` : ""}{scope.durationMin} phút{scope.sessions > 1 ? ` / buổi, ${scope.sessions} buổi` : ""}</p>
+      <ul className="list-disc pl-5 text-body text-ink-soft">{scope.includes.map((x) => <li key={x}>{x}</li>)}</ul>
+    </div>)}
     {c.deliverable && <p className="text-body">Sản phẩm bàn giao: {c.deliverable}{c.deliveryDays ? ` · trong ${c.deliveryDays} ngày sau buổi làm` : ""} · {c.revisions} lượt sửa.</p>}
     {c.followupDays && <p className="text-body">Gồm một buổi dặm trong {c.followupDays} ngày, không thu thêm tiền.</p>}
     {sessions.map((s) => <div key={s.id} className="rounded-xl bg-subtle p-3 text-body"><p>Buổi {s.sequence} · {localTime(s.starts_at)}, {formatDateLong(localDate(s.starts_at))} · {s.duration_min} phút · {s.confirmed ? "đã xác nhận" : "chờ phía còn lại xác nhận"}</p>{!s.confirmed && !s.mine && <Button size="sm" className="mt-2" disabled={busy} onClick={async () => { setBusy(true); const r = await confirmFollowup(s.id); if (!r.ok) setError(r.error); else await load(); setBusy(false) }}>Xác nhận buổi dặm</Button>}</div>)}

@@ -110,6 +110,33 @@ export async function fetchSlots(input: {
   return { ok: true, data: ((data ?? []) as unknown as string[]).map((startsAt) => ({ startsAt, time: localTime(startsAt) })) }
 }
 
+/** Start times with room for the whole cart. */
+export async function fetchCartSlots(input: {
+  proId: string
+  items: { template: string; variant: string; quantity: number }[]
+  date: string
+  atHome: boolean
+  addressId?: string | null
+}): Promise<ActionResult<{ startsAt: string; time: string }[]>> {
+  const supabase = await supabaseServer()
+  const pro = await proIdFor(input.proId)
+  if (!pro) return { ok: false, error: "Không tải được giờ trống. Thử lại nhé." }
+  const { lat, lng } = await slotOrigin(pro, input.atHome, input.addressId)
+  const { data, error } = await supabase.rpc("cart_slots", {
+    p_pro: pro,
+    p_items: input.items,
+    p_date: input.date,
+    p_at_home: input.atHome,
+    p_lat: lat ?? undefined,
+    p_lng: lng ?? undefined,
+  })
+  if (error) {
+    console.error("cart_slots failed:", error.message)
+    return { ok: false, error: "Không tải được giờ trống. Kiểm tra kết nối và thử lại." }
+  }
+  return { ok: true, data: ((data ?? []) as unknown as string[]).map((startsAt) => ({ startsAt, time: localTime(startsAt) })) }
+}
+
 /**
  * Which days, from `from` (yyyy-mm-dd, Vietnam time) for `days` days (at most
  * 21), have at least one bookable start time. Same rules as fetchSlots, so a day
@@ -186,6 +213,37 @@ export async function createBooking(input: {
   )
 }
 
+/** The whole cart in one transaction: a line that no longer fits leaves nothing behind. */
+export async function createCartBooking(input: {
+  proId: string
+  items: { template: string; variant: string; quantity: number }[]
+  startsAt: string
+  atHome: boolean
+  addressId?: string | null
+  note?: string
+  paymentMethod?: PaymentMethod
+  expectedTotal: number
+  sessions?: string[]
+}) {
+  const pro = await proIdFor(input.proId)
+  if (!pro) return { ok: false as const, error: "Không tìm thấy chuyên viên." }
+  return rpc<string>(
+    "create_cart_booking",
+    {
+      p_pro: pro,
+      p_items: input.items,
+      p_starts_at: input.startsAt,
+      p_at_home: input.atHome,
+      p_address_id: input.addressId ?? null,
+      p_note: input.note ?? "",
+      p_payment: input.paymentMethod ?? "cash",
+      p_expected_total: input.expectedTotal,
+      p_sessions: input.sessions ?? [],
+    },
+    ["/bookings"],
+  )
+}
+
 export async function cancelBooking(bookingId: string, reason: string) {
   return rpc<void>("cancel_booking", { p_booking: bookingId, p_reason: reason }, ["/bookings", "/studio/jobs"])
 }
@@ -215,11 +273,6 @@ export async function addOnBooking(parentId: string, templateId: string, variant
     { p_parent: parentId, p_template: templateId, p_variant: variantId, p_quantity: quantity, p_note: note },
     ["/bookings", "/studio/jobs"],
   )
-}
-
-/** Add-ons chosen with a booking, chained right after it (20261008100100). */
-export async function attachAddons(parentId: string, items: { template: string; variant: string; quantity: number }[]) {
-  return rpc<string[]>("attach_addons", { p_parent: parentId, p_items: items }, ["/bookings", "/studio/jobs"])
 }
 
 /** 1–3 reference photos on an open request (20261016100000_job_references.sql). */
@@ -872,6 +925,12 @@ export async function bookingQuote(input: { proId: string; templateId: string; v
   if (!pro) return { ok: false, error: "Không tìm thấy đối tác." }
   return rpc("booking_quote", { p_pro: pro, p_template: input.templateId, p_variant: input.variantId,
     p_starts_at: input.startsAt, p_at_home: input.atHome, p_address_id: input.addressId, p_quantity: input.quantity })
+}
+
+export async function cartQuote(input: { proId: string; items: { template: string; variant: string; quantity: number }[]; startsAt: string; atHome: boolean; addressId: string | null }) {
+  const pro = await proIdFor(input.proId)
+  if (!pro) return { ok: false as const, error: "Không tìm thấy đối tác." }
+  return rpc<PriceQuote>("cart_quote", { p_pro: pro, p_items: input.items, p_starts_at: input.startsAt, p_at_home: input.atHome, p_address_id: input.addressId })
 }
 
 export async function bookingSessions(id: string) {

@@ -82,6 +82,17 @@ export const actions = {
     return api.fetchSlots(input)
   },
 
+  /** Which start times have room for the whole cart. */
+  async cartSlotsFor(input: {
+    proId: string
+    items: { template: string; variant: string; quantity: number }[]
+    date: string
+    atHome: boolean
+    addressId: string | null
+  }) {
+    return api.fetchCartSlots(input)
+  },
+
   /**
    * Which days from `from` (yyyy-mm-dd) have at least one bookable start time,
    * for up to 21 days. Same inputs and rules as slotsFor.
@@ -132,6 +143,32 @@ export const actions = {
       paymentMethod: input.paymentMethod,
       expectedTotal: input.expectedTotal,
       expectedUnit: input.expectedUnit,
+      sessions: input.sessions,
+    })
+    return result.ok ? { id: result.data } : { error: result.error }
+  },
+
+  async createCartBooking(input: {
+    proId: string
+    items: { template: string; variant: string; quantity: number }[]
+    date: string
+    time: string
+    atHome: boolean
+    addressId: string | null
+    note: string
+    paymentMethod: PaymentMethod
+    expectedTotal: number
+    sessions?: string[]
+  }): Promise<{ id: string } | { error: string }> {
+    const result = await api.createCartBooking({
+      proId: input.proId,
+      items: input.items,
+      startsAt: toTimestamptz(input.date, input.time),
+      atHome: input.atHome,
+      addressId: input.addressId,
+      note: input.note,
+      paymentMethod: input.paymentMethod,
+      expectedTotal: input.expectedTotal,
       sessions: input.sessions,
     })
     return result.ok ? { id: result.data } : { error: result.error }
@@ -192,10 +229,6 @@ export const actions = {
 
   async respondReschedule(bookingId: string, accept: boolean): Promise<Result> {
     return asResult(await api.respondReschedule(bookingId, accept))
-  },
-
-  async attachAddons(parentId: string, items: { template: string; variant: string; quantity: number }[]): Promise<Result> {
-    return asResult(await api.attachAddons(parentId, items))
   },
 
   async setJobReferences(jobId: string, paths: string[]): Promise<Result> {

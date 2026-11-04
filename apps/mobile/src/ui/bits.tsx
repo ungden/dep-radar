@@ -253,7 +253,7 @@ export function Line({ label, value, strong }: { label: string; value: string; s
       <Txt color={strong ? colors.ink : colors.inkSoft} w={strong ? 700 : 400} style={{ flexShrink: 1 }}>
         {label}
       </Txt>
-      <Txt w={strong ? 800 : 500} tabular style={{ flexShrink: 1, textAlign: stacked ? "left" : "right" }}>
+      <Txt w={strong ? 800 : 500} tabular style={{ flexShrink: 0, maxWidth: stacked ? "100%" : "70%", textAlign: stacked ? "left" : "right" }}>
         {value}
       </Txt>
     </View>
