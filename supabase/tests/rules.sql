@@ -495,7 +495,9 @@ begin
       -- the feed: reporting and reading interest counts, and the content check
       'log_work_events', 'work_stats_30d', 'banned_content',
       -- called by a row level security policy
-      'applied_to_casting'
+      'applied_to_casting',
+      -- a cart's start times, read-only like free_slots
+      'cart_slots'
     ]);
   assert msg is null, format('anon can execute: %s', msg);
 
@@ -553,7 +555,9 @@ begin
       -- transfers the bank reported with no pay code (20261103110000)
       'admin_unmatched_transfers', 'admin_resolve_transfer',
       -- the partner of a thread reads how often this customer has booked (20261105100000)
-      'customer_history'
+      'customer_history',
+      -- several services in one appointment (20261106100000)
+      'cart_slots', 'cart_quote', 'create_cart_booking'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 
@@ -2685,6 +2689,107 @@ begin
   perform public.admin_adjust_wallet(linh, -1000000, 'Trả lại số dư test (extras)');
   perform set_config('request.jwt.claim.sub', '', true);
   raise notice 'BOOKING EXTRAS RULES PASS';
+end $$;
+
+
+-- Several services in one appointment (20261106100000).
+do $$
+declare linh uuid; customer uuid; addr record; admin_id uuid; b uuid; line uuid; q jsonb; at timestamptz; slot_count int;
+  jobs_before int;
+  items jsonb := '[{"template":"nail-removal","variant":"remove"},{"template":"nail-extension","variant":"tips"}]';
+  monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
+begin
+  select id into linh from public.pros where slug = 'linh-pham';
+  select a.id into customer from public.accounts a where a.full_name = 'Ngọc Hân';
+  select * into addr from public.addresses where account_id = customer limit 1;
+  perform set_config('request.jwt.claim.sub', '', true);
+  insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+          (gen_random_uuid()::text||'-cart-admin@example.invalid'), jsonb_build_object('full_name', 'Quản trị Giỏ'), now(), now())
+  returning id into admin_id;
+  update public.accounts set is_admin = true where id = admin_id;
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.admin_adjust_wallet(linh, 1000000, 'Số dư cho test (giỏ)');
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+
+  raise notice 'a cart keeps to its rules';
+  begin
+    perform partner_private.cart_lines(linh, '[{"template":"nail-gel","variant":"hand"},{"template":"nail-extension","variant":"tips"}]', true);
+    assert false, 'two services that both include the polish';
+  exception when check_violation then assert sqlerrm like '%sơn móng%', sqlerrm;
+  end;
+  begin
+    perform partner_private.cart_lines(linh, '[{"template":"nail-design","variant":"design","quantity":10}]', true);
+    assert false, 'an add-on without a main service';
+  exception when check_violation then assert sqlerrm like '%dịch vụ chính%', sqlerrm;
+  end;
+  begin
+    perform partner_private.cart_lines(linh, '[{"template":"nail-removal","variant":"remove"},{"template":"nail-removal","variant":"remove-tips"}]', true);
+    assert false, 'two packages of one service';
+  exception when check_violation then null;
+  end;
+
+  raise notice 'only start times with room for the whole cart are offered';
+  select count(*), min(s) into slot_count, at from public.cart_slots(linh, items, monday + 12, true, addr.lat, addr.lng) s;
+  assert slot_count > 0, 'no start time for the cart';
+  assert slot_count <= (select count(*) from public.free_slots(linh, 'nail-removal', 'remove', 1, monday + 12, true, addr.lat, addr.lng)),
+    'the longer cart has more start times than one short line';
+
+  raise notice 'the quote adds up the lines, with one trip';
+  q := public.cart_quote(linh, items, at, true, addr.id);
+  assert jsonb_array_length(q->'lines') = 2, 'lines missing from the quote';
+  assert (q->>'durationMin')::int = 95, q::text;
+  assert (q->>'servicePrice')::int = (select sum((e->>'total')::int) from jsonb_array_elements(q->'lines') e), q::text;
+  assert (q->>'total')::int = (q->>'servicePrice')::int + (q->>'travelFee')::int + (q->>'urgentFee')::int, q::text;
+
+  raise notice 'a stale total books nothing';
+  begin
+    perform public.create_cart_booking(linh, items, at, true, addr.id, '', 'cash', (q->>'total')::int + 1000);
+    assert false, 'booked at a stale total';
+  exception when check_violation then null;
+  end;
+
+  raise notice 'the cart is created whole, and the lines add up to the quote';
+  b := public.create_cart_booking(linh, items, at, true, addr.id, 'Ghi chú', 'cash', (q->>'total')::int);
+  select id into line from public.bookings where parent_booking_id = b and in_cart;
+  assert line is not null, 'the second line is missing';
+  assert (select template_id from public.bookings where id = b) = 'nail-removal', 'lines out of order';
+  assert (select starts_at = (select ends_at from public.bookings where id = b) and travel_fee = 0 and urgent_fee = 0 from public.bookings where id = line),
+    'the line is not chained after the main booking';
+  assert (select sum(total) from public.bookings where id = b or parent_booking_id = b) = (q->>'total')::int, 'lines do not add up to the quote';
+  assert (select sum(commission) from public.bookings where id = b or parent_booking_id = b) = (q->>'commission')::int, 'commission does not add up to the quote';
+
+  raise notice 'a cart cannot be moved line by line';
+  begin
+    perform public.request_reschedule(b, at + interval '1 day');
+    assert false, 'moved the main booking away from its lines';
+  exception when check_violation then assert sqlerrm like '%nhiều món%', sqlerrm;
+  end;
+
+  raise notice 'the lines follow the main booking to the end, and each pays its fee';
+  perform set_config('request.jwt.claim.sub', linh::text, true);
+  select completed_jobs into jobs_before from public.pros where id = linh;
+  perform public.confirm_booking(b);
+  assert (select status from public.bookings where id = line) = 'confirmed', 'the line was not accepted';
+  update public.bookings set status = 'in_progress', started_at = now() where id = b;
+  assert (select status from public.bookings where id = line) = 'in_progress', 'the line did not start';
+  perform public.finish_booking(b, 'admin');
+  assert (select status from public.bookings where id = line) = 'completed', 'the line did not finish';
+  assert (select count(*) from public.wallet_entries where kind = 'commission' and booking_id in (b, line)) = 2, 'a fee is missing';
+  assert (select completed_jobs from public.pros where id = linh) = jobs_before + 1, 'one appointment counted as several jobs';
+
+  raise notice 'a no-show ends the lines too';
+  perform set_config('request.jwt.claim.sub', customer::text, true);
+  select min(s) into at from public.cart_slots(linh, items, monday + 12, true, addr.lat, addr.lng) s;
+  q := public.cart_quote(linh, items, at, true, addr.id);
+  b := public.create_cart_booking(linh, items, at, true, addr.id, '', 'cash', (q->>'total')::int);
+  update public.bookings set status = 'no_show', cancelled_at = now(), cancelled_by = 'customer' where id = b;
+  assert (select status from public.bookings where parent_booking_id = b) = 'cancelled', 'the line outlived a no-show';
+
+  perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  perform public.admin_adjust_wallet(linh, -1000000, 'Trả lại số dư test (giỏ)');
+  perform set_config('request.jwt.claim.sub', '', true);
+  raise notice 'SERVICE CART RULES PASS';
 end $$;
 
 
