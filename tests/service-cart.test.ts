@@ -25,6 +25,12 @@ describe("what a cart may hold", () => {
     expect(cartProblem([removal, line("nail-removal", "remove-tips")])).toContain("một gói")
   })
 
+  it("refuses to mix in what is delivered later or has a touch-up visit", () => {
+    expect(cartProblem([gel, line("photo-phone", "60m")])).toContain("đặt riêng")
+    expect(cartProblem([gel, line("brow-tattoo", "powder")])).toContain("đặt riêng")
+    expect(cartProblem([line("photo-phone", "60m")])).toBeNull()
+  })
+
   it("refuses an add-on with no main service of its kind", () => {
     expect(cartProblem([catEye])).toContain("dịch vụ chính")
     expect(cartProblem([line("makeup-daily", "basic"), catEye])).toBeTruthy()
@@ -96,6 +102,15 @@ describe("one appointment on screen", () => {
     expect(folded.endsAt).toBe("2026-11-06T03:30:00Z")
     expect(folded.quote).toMatchObject({ servicePrice: 180_000, travelFee: 20_000, total: 200_000, commission: 36_000, payout: 164_000 })
     expect(other.lines).toBeUndefined()
+  })
+
+  it("lists the lines in the order they happen, also when only date and time are known", () => {
+    const at = (id: string, cartParentId: string | null, time: string) => {
+      const { startsAt: _startsAt, endsAt: _endsAt, ...rest } = booking(id, cartParentId, 10_000)
+      return { ...rest, date: "2026-11-06", time }
+    }
+    const [folded] = foldCartLines([at("late", "a", "11:05"), at("early", "a", "10:45"), at("a", null, "10:00")])
+    expect(folded.lines?.map((l) => l.id)).toEqual(["a", "early", "late"])
   })
 
   it("keeps a line whose main booking is not in the list", () => {

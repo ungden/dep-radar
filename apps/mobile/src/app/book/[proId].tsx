@@ -64,7 +64,7 @@ function BookingFlow() {
   React.useEffect(() => { content.current?.scrollTo({ y: 0, animated: false }) }, [step])
   // Everything chosen, starting with the service the customer came from.
   const [cart, setCart] = React.useState<CartLine[] | null>(null)
-  const [cartNote, setCartNote] = React.useState<string | null>(null)
+  const [cartNote, setCartNote] = React.useState<{ templateId: string; text: string } | null>(null)
   const [atHomePref, setAtHomePref] = React.useState(true)
   const [date, setDate] = React.useState(addDays(todayISO(), 1))
   const [time, setTime] = React.useState<{ startsAt: string; time: string } | null>(null)
@@ -110,7 +110,7 @@ function BookingFlow() {
 
   const tap = (templateId: string, variantId: string) => {
     const result = toggleCartLine(lines, templateId, variantId)
-    if ("problem" in result) return setCartNote(result.problem)
+    if ("problem" in result) return setCartNote({ templateId, text: result.problem })
     setCartNote(null)
     setCart(result.lines)
     setTime(null)
@@ -325,10 +325,10 @@ function BookingFlow() {
                         </View>
                       )
                     })}
+                    {cartNote?.templateId === t.id ? <Txt v="meta" color={colors.danger}>{cartNote.text}</Txt> : null}
                   </View>
                 )
               })}
-            {cartNote ? <Txt v="meta" color={colors.danger}>{cartNote}</Txt> : null}
           </>
         ) : null}
 

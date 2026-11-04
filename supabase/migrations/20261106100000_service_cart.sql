@@ -136,6 +136,11 @@ begin
       if v.sessions > 1 and n > 1 then
         raise exception 'Gói nhiều buổi cần đặt riêng.' using errcode = 'check_violation';
       end if;
+      -- Delivery deadlines and touch-up visits are tracked on one booking, and a
+      -- line disappears into its main one on screen.
+      if n > 1 and (t.delivery_days is not null or coalesce(v.deliverable, t.deliverable) is not null or v.followup_days is not null) then
+        raise exception 'Món có giao ảnh, clip hoặc buổi dặm cần đặt riêng.' using errcode = 'check_violation';
+      end if;
       if (t.id || '/' || v.id) = any(chosen) then
         raise exception 'Mỗi món chỉ chọn một lần.' using errcode = 'check_violation';
       end if;

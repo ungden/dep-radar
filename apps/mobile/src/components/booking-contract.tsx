@@ -29,8 +29,10 @@ export function BookingContract({ booking: b }: { booking: BookingItem }) {
   if (!c) return null
   return <Card style={{ gap: 10 }}>
     <Txt w={700}>Phạm vi dịch vụ đã chốt</Txt>
-    <Txt>{c.variantLabel} · {c.tierLabel} · {c.durationMin} phút{c.sessions > 1 ? ` / buổi, ${c.sessions} buổi` : ""}</Txt>
-    {c.includes.map((x) => <Txt key={x} v="meta" color={colors.inkSoft}>• {x}</Txt>)}
+    {(b.lines?.flatMap((line) => line.contract ?? []) ?? [c]).map((scope) => <View key={`${scope.serviceName}/${scope.variantLabel}`} style={{ gap: 4 }}>
+      <Txt>{b.lines ? `${scope.serviceName} · ` : ""}{scope.variantLabel} · {scope.tierLabel} · {scope.quantity > 1 ? `× ${scope.quantity} · ` : ""}{scope.durationMin} phút{scope.sessions > 1 ? ` / buổi, ${scope.sessions} buổi` : ""}</Txt>
+      {scope.includes.map((x) => <Txt key={x} v="meta" color={colors.inkSoft}>• {x}</Txt>)}
+    </View>)}
     {c.deliverable && <Txt>Sản phẩm: {c.deliverable}{c.deliveryDays ? ` · giao trong ${c.deliveryDays} ngày` : ""} · {c.revisions} lượt sửa.</Txt>}
     {c.followupDays && <Txt>Gồm buổi dặm trong {c.followupDays} ngày, không thu thêm tiền.</Txt>}
     {appointments.loading && <Txt>Đang tải các buổi…</Txt>}

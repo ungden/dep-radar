@@ -2715,6 +2715,11 @@ begin
 
   raise notice 'a cart keeps to its rules';
   begin
+    perform partner_private.cart_lines(linh, '[{"template":"nail-gel","variant":"hand"},{"template":"photo-phone","variant":"60m"}]'::jsonb, true);
+    assert false, 'a line with a delivery in a cart';
+  exception when check_violation then assert sqlerrm like '%đặt riêng%', sqlerrm;
+  end;
+  begin
     perform partner_private.cart_lines(linh, '[{"template":"nail-gel","variant":"hand"},{"template":"nail-extension","variant":"tips"}]', true);
     assert false, 'two services that both include the polish';
   exception when check_violation then assert sqlerrm like '%sơn móng%', sqlerrm;

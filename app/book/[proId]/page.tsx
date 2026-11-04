@@ -134,7 +134,7 @@ function BookingFlow({ proId }: { proId: string }) {
     const v = getVariant(initialService.templateId, initialVariant)
     return [{ templateId: initialService.templateId, variantId: initialVariant, quantity: v ? serviceQuantity(v, Math.max(Number(params.get("qty")) || 0, cartDefaultQuantity(initialService.templateId, initialVariant))) : 1 }]
   })
-  const [cartNote, setCartNote] = React.useState<string | null>(null)
+  const [cartNote, setCartNote] = React.useState<{ templateId: string; text: string } | null>(null)
   const [date, setDate] = React.useState(partner?.date ?? restoredDate ?? addDays(todayISO(), 1))
   const [pickedTime, setTime] = React.useState<string | null>(partner?.time ?? (restoredDate ? restoredTime : null))
   const [usageScope, setUsageScope] = React.useState<UsageScope>(params.get("usage") === "commercial" ? "commercial" : "personal")
@@ -172,7 +172,7 @@ function BookingFlow({ proId }: { proId: string }) {
 
   const tap = (template: string, variantChoice: string) => {
     const result = toggleCartLine(lines, template, variantChoice)
-    if ("problem" in result) return setCartNote(result.problem)
+    if ("problem" in result) return setCartNote({ templateId: template, text: result.problem })
     setCartNote(null)
     setCart(result.lines)
   }
@@ -428,11 +428,11 @@ function BookingFlow({ proId }: { proId: string }) {
                       )
                     })}
                   </ul>
+                  {cartNote?.templateId === t.id && <p role="alert" className="mt-1.5 text-meta text-danger">{cartNote.text}</p>}
                 </li>
               )
             })}
           </ul>
-          {cartNote && <p role="alert" className="mt-3 text-meta text-danger">{cartNote}</p>}
         </section>
       )}
 

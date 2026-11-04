@@ -1,5 +1,5 @@
 import { getTemplate, getVariant, serviceDuration, serviceQuantity } from "./catalog"
-import type { PriceQuote } from "./types"
+import type { PriceQuote, ServiceContract } from "./types"
 
 /**
  * Several services of one Artist in one appointment. The database keeps each
@@ -46,6 +46,9 @@ export function cartProblem(lines: CartLine[]): string | null {
     if (!template || !variant) return "Có món không còn được cung cấp."
     if (template.addon && !categories.has(template.category)) return `"${template.name}" cần đi kèm một dịch vụ chính.`
     if ((variant.sessions ?? 1) > 1 && lines.length > 1) return "Gói nhiều buổi cần đặt riêng."
+    if (lines.length > 1 && (template.deliveryDays || template.deliverable || variant.deliverable || variant.followupDays)) {
+      return "Món có giao ảnh, clip hoặc buổi dặm cần đặt riêng."
+    }
     if (seen.has(cartLineKey(line))) return "Mỗi món chỉ chọn một lần."
     if (!template.addon && mains.has(template.id)) return "Mỗi dịch vụ chọn một gói."
     seen.add(cartLineKey(line))
@@ -100,6 +103,7 @@ export interface BookedLine {
   quantity: number
   durationMin: number
   servicePrice: number
+  contract?: ServiceContract
 }
 
 interface Foldable {
@@ -109,12 +113,17 @@ interface Foldable {
   quantity: number
   durationMin: number
   quote: PriceQuote
+  contract?: ServiceContract
   /** Only set on a line of a cart: add-ons made during a visit stay bookings of their own. */
   cartParentId?: string | null
   lines?: BookedLine[]
   endsAt?: string
   startsAt?: string
+  date?: string
+  time?: string
 }
+
+const startOf = (b: Foldable) => b.startsAt ?? `${b.date}T${b.time}`
 
 const bookedLine = (b: Foldable): BookedLine => ({
   id: b.id,
@@ -123,6 +132,7 @@ const bookedLine = (b: Foldable): BookedLine => ({
   quantity: b.quantity,
   durationMin: b.durationMin,
   servicePrice: b.quote.servicePrice,
+  contract: b.contract,
 })
 
 /**
@@ -141,7 +151,7 @@ export function foldCartLines<T extends Foldable>(bookings: T[]): T[] {
     .map((b) => {
       const extra = byParent.get(b.id)
       if (!extra) return b
-      const chain = [...extra].sort((x, y) => (x.startsAt ?? "").localeCompare(y.startsAt ?? ""))
+      const chain = [...extra].sort((x, y) => startOf(x).localeCompare(startOf(y)))
       const add = (pick: (q: PriceQuote) => number) => chain.reduce((sum, line) => sum + pick(line.quote), pick(b.quote))
       return {
         ...b,
