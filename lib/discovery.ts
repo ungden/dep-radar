@@ -1,5 +1,6 @@
 import { CATEGORIES, getTemplate } from "./catalog"
-import type { Category, CategoryId } from "./types"
+import { bayesianRating, rankScore } from "./trust"
+import type { Category, CategoryId, Pro } from "./types"
 
 /**
  * How customers find a person. Every category stays open, but Nail and Makeup
@@ -59,4 +60,40 @@ export function albumsOf<W extends { templateId: string; category: CategoryId }>
     by.set(category, [...(by.get(category) ?? []), w])
   }
   return priorityFirst(CATEGORIES.filter((c) => by.has(c.id))).map((c) => ({ category: c.id, works: by.get(c.id)! }))
+}
+
+/** How a customer can line up the people on the list. */
+export type ArtistSort = "near" | "popular" | "rated" | "new"
+
+export const ARTIST_SORTS: readonly { id: ArtistSort; label: string }[] = [
+  { id: "near", label: "Gần nhất" },
+  { id: "popular", label: "Đặt nhiều" },
+  { id: "rated", label: "Đánh giá cao" },
+  { id: "new", label: "Artist mới" },
+]
+
+const NEW_ARTIST_DAYS = 45
+
+/** Joined in the last weeks, or still waiting for a first completed job. */
+export function isNewArtist(pro: Pick<Pro, "joinedAt" | "stats">, now = Date.now()) {
+  if (pro.stats.completedJobs === 0) return true
+  return now - Date.parse(pro.joinedAt) < NEW_ARTIST_DAYS * 24 * 60 * 60 * 1000
+}
+
+/**
+ * The list in the chosen order. "Artist mới" keeps only new people, the most
+ * recent first. Without a distance someone goes after those who have one.
+ */
+export function sortArtists<T extends { pro: Pro; km: number | null }>(list: readonly T[], sort: ArtistSort, now = Date.now()): T[] {
+  const trust = (a: T, b: T) => rankScore(b.pro) - rankScore(a.pro)
+  const nearest = (a: T, b: T) => (a.km ?? Infinity) - (b.km ?? Infinity)
+  if (sort === "new") {
+    return list.filter((p) => isNewArtist(p.pro, now)).sort((a, b) => b.pro.joinedAt.localeCompare(a.pro.joinedAt) || nearest(a, b) || trust(a, b))
+  }
+  const by: Record<Exclude<ArtistSort, "new">, (a: T, b: T) => number> = {
+    near: (a, b) => nearest(a, b) || trust(a, b),
+    popular: (a, b) => b.pro.stats.completedJobs - a.pro.stats.completedJobs || trust(a, b),
+    rated: (a, b) => bayesianRating(b.pro.rating) - bayesianRating(a.pro.rating) || b.pro.stats.completedJobs - a.pro.stats.completedJobs,
+  }
+  return [...list].sort(by[sort])
 }

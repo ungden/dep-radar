@@ -1,5 +1,5 @@
 import { categoryLabel } from "../catalog"
-import { CHAT_NOTICE, CONDUCT, CONDUCT_CATEGORIES, PARTNER_PLEDGE, offAppHint } from "../conduct"
+import { CHAT_ASKS, CHAT_NOTICE, CONDUCT, CONDUCT_CATEGORIES, PARTNER_PLEDGE, customerNote, offAppHint } from "../conduct"
 import { chatState } from "../connection"
 import { POLICY } from "../pricing"
 
@@ -86,6 +86,17 @@ ${list(CHAT_NOTICE.points)}
 | Ví dụ tin nhắn | Dòng nhắc hiện ra |
 | --- | --- |
 ${hints}
+
+**Nhắc riêng cho Artist về khách** (web và app; chỉ Artist thấy, khi cuộc trò chuyện đang mở; chỉ dựa trên số lịch đã hoàn thành):
+
+- Khách chưa có lịch nào: "${customerNote({ withMe: 0, overall: 0 }).title}". ${customerNote({ withMe: 0, overall: 0 }).text}
+- Khách đã có lịch với người khác: "${customerNote({ withMe: 0, overall: 4 }).title}".
+- Khách đã đặt Artist này: "${customerNote({ withMe: 3, overall: 4 }).title}".
+
+Hai nút điền sẵn vào ô nhắn tin, Artist vẫn sửa được trước khi gửi:
+
+- Xin vị trí: "${CHAT_ASKS.location}"
+- Xác nhận lịch: "${CHAT_ASKS.confirm("14:00 12/11")}"
 
 **Khi nào nhắn được:** cuộc trò chuyện mở khi người làm nhận lịch và đóng khi lịch kết thúc.
 

@@ -2522,6 +2522,10 @@ export type Database = {
       }
       take_job: { Args: { p_job: string }; Returns: string }
       send_booking_reminders: { Args: never; Returns: number }
+      customer_history: {
+        Args: { p_thread: string }
+        Returns: { overall: number; with_me: number }[]
+      }
       send_location: {
         Args: { p_lat: number; p_lng: number; p_thread: string }
         Returns: string

@@ -3,11 +3,12 @@ import * as React from "react"
 import { AppState as NativeAppState } from "react-native"
 import * as AppleAuthentication from "expo-apple-authentication"
 import * as Crypto from "expo-crypto"
+import * as Location from "expo-location"
 import * as SecureStore from "expo-secure-store"
 import * as WebBrowser from "expo-web-browser"
 import { makeRedirectUri } from "expo-auth-session"
 import type { Session } from "@supabase/supabase-js"
-import { parseIdentifier, phoneEmail, travelDistanceKm } from "@/shared"
+import { distanceFromPointKm, parseIdentifier, phoneEmail, travelDistanceKm, type LatLng } from "@/shared"
 import { setMyPhone, switchRole as writeRole } from "@/data/actions"
 import { signInWithPassword as passwordSignIn, signUpWithPassword as passwordSignUp, type AuthResult } from "@/data/auth"
 import { readCache, writeCache } from "@/data/cache"
@@ -60,8 +61,14 @@ interface AppState {
   switchMode: (mode: "customer" | "pro") => Promise<void>
   /** Optimistic updates after a write succeeded. */
   patchMe: (fn: (me: MeData) => MeData) => void
-  /** Road distance from the customer's default address; null when they have none. */
+  /** Road distance from the customer's default address, else from where the phone is; null when neither is known. */
   distanceTo: (pro: Pick<AppPro, "city" | "district">) => number | null
+  /** Whether distances can be worked out: a saved address, or the phone's position. */
+  located: boolean
+  /** The customer said no to sharing their position and has no saved address. */
+  locationDenied: boolean
+  /** Asks the system the first time. The position stays on the phone. */
+  askLocation: () => Promise<void>
   /** Account ids this person blocked: hidden everywhere on this phone. */
   blocked: ReadonlySet<string>
   block: (accountId: string) => Promise<{ ok: boolean; message: string }>
@@ -413,9 +420,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   )
 
   const home = me.addresses.find((a) => a.isDefault) ?? me.addresses[0] ?? null
+  const [here, setHere] = React.useState<LatLng | null>(null)
+  const [locationDenied, setLocationDenied] = React.useState(false)
+  const readHere = React.useCallback(async () => {
+    const at = (await Location.getLastKnownPositionAsync()) ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }))
+    setHere([at.coords.latitude, at.coords.longitude])
+  }, [])
+  // Only someone who already said yes is read without a tap.
+  const needsHere = !home
+  React.useEffect(() => {
+    if (!needsHere) return
+    void Location.getForegroundPermissionsAsync()
+      .then((p) => {
+        if (p.granted) return readHere()
+        if (!p.canAskAgain) setLocationDenied(true)
+      })
+      .catch(() => {})
+  }, [needsHere, readHere])
+  const askLocation = React.useCallback(async () => {
+    try {
+      const p = await Location.requestForegroundPermissionsAsync()
+      setLocationDenied(!p.granted)
+      if (p.granted) await readHere()
+    } catch {
+      setLocationDenied(true)
+    }
+  }, [readHere])
   const distanceTo = React.useCallback(
-    (pro: Pick<AppPro, "city" | "district">) => (home ? travelDistanceKm(home.city, home.district, pro.city, pro.district) : null),
-    [home],
+    (pro: Pick<AppPro, "city" | "district">) => {
+      if (home) return travelDistanceKm(home.city, home.district, pro.city, pro.district)
+      return here ? distanceFromPointKm(here, pro.city, pro.district) : null
+    },
+    [home, here],
   )
 
   const value: AppState = {
@@ -446,6 +482,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     switchMode,
     patchMe: (fn) => setMe((m) => fn(m)),
     distanceTo,
+    located: Boolean(home || here),
+    locationDenied: !home && !here && locationDenied,
+    askLocation,
     blocked,
     block,
     unblock,

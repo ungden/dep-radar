@@ -9,6 +9,7 @@ import {
   serviceDuration,
   serviceLocationOpen,
   serviceQuantity,
+  isNewArtist,
   showsAverage,
   type Category,
   type CategoryId,
@@ -241,8 +242,8 @@ export function ArtistCard({
 }) {
   const open = () => router.push({ pathname: "/pros/[id]", params: serviceId ? { id: pro.id, service: serviceId } : { id: pro.id } })
   const a11y = `${pro.name}${pro.identity === "verified" ? ", đã xác minh" : ""}${price !== null ? `, giá từ ${formatPrice(price)}` : ""}`
-  const isNew = !showsAverage(pro.rating.count) && pro.stats.completedJobs === 0
-  const facts = [pro.stats.completedJobs > 0 ? `${pro.stats.completedJobs} lịch` : null, distanceKm !== null ? formatKm(distanceKm) : pro.district].filter(Boolean).join(" · ")
+  const isNew = isNewArtist(pro)
+  const facts = [pro.stats.completedJobs > 0 ? `${pro.stats.completedJobs} lịch` : null, distanceKm !== null ? `Cách bạn ${formatKm(distanceKm)}` : pro.district].filter(Boolean).join(" · ")
   const extra = photoCount - photos.length
   return (
     <Press onPress={open} accessibilityLabel={a11y} style={{ borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surface }}>

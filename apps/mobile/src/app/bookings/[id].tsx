@@ -3,7 +3,7 @@ import { Stack, router, useLocalSearchParams } from "expo-router"
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet"
 import { Alert, Linking, Platform, ScrollView, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { BLIND_NOTE, POLICY, bookingChatOpen, customerJobActions, reviewWindow, verticalOf } from "@/shared"
+import { BLIND_NOTE, POLICY, bookingChatOpen, customerJobActions, reviewWindow, travelDistanceKm, verticalOf } from "@/shared"
 import * as WebBrowser from "expo-web-browser"
 import {
   acceptDelivery,
@@ -26,7 +26,7 @@ import {
 } from "@/data/bookings"
 import { webLink } from "@/data/links"
 import { openThread } from "@/data/chat"
-import { formatCountdown, formatDateLong, formatDuration, formatPhone, formatPrice, localDate, localTime } from "@/data/format"
+import { formatCountdown, formatDateLong, formatDuration, formatKm, formatPhone, formatPrice, localDate, localTime } from "@/data/format"
 import type { Result } from "@/data/supabase"
 import { ReferencePhotos } from "@/components/reference-photos"
 import { BookingContract } from "@/components/booking-contract"
@@ -133,6 +133,7 @@ export default function BookingDetail() {
   if (!b) return <EmptyState title="Không tìm thấy lịch hẹn" />
 
   const iAmPro = b.pro.id === app.uid
+  const kmAway = iAmPro && b.atHome && app.myPro ? travelDistanceKm(app.myPro.city, app.myPro.district, b.city, b.district) : null
   const run = async (key: string, task: () => Promise<Result<unknown>>, done: string) => {
     setBusy(key)
     const res = await task()
@@ -273,6 +274,7 @@ export default function BookingDetail() {
       <Card>
         <Txt w={700}>Ở đâu</Txt>
         <Txt color={colors.inkSoft}>{place}</Txt>
+        {kmAway !== null ? <Txt v="meta" w={600} color={colors.accentDark}>Cách bạn {formatKm(kmAway)}</Txt> : null}
         {b.addressNote ? <Txt v="meta" color={colors.muted}>{b.addressNote}</Txt> : null}
         {b.note ? (
           <>

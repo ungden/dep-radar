@@ -188,6 +188,27 @@ begin
   assert (select amount from public.wallet_entries where booking_id = booking and kind = 'commission')
        = -(select commission from public.bookings where id = booking), 'the debit matches the quote';
 
+  raise notice 'only the partner of a thread reads how often the customer has booked';
+  declare
+    chat uuid;
+    h record;
+  begin
+    select id into chat from public.threads where booking_id = booking;
+    if chat is null then
+      insert into public.threads (customer_id, pro_id, booking_id, customer_name)
+        values (customer, linh, booking, 'Khách') returning id into chat;
+    end if;
+    perform set_config('request.jwt.claim.sub', linh::text, true);
+    select * into h from public.customer_history(chat);
+    assert h.with_me >= 1 and h.overall >= h.with_me, format('history: %s of %s', h.with_me, h.overall);
+    perform set_config('request.jwt.claim.sub', customer::text, true);
+    begin
+      perform public.customer_history(chat);
+      assert false, 'a customer read their own history as a partner would';
+    exception when insufficient_privilege then null;
+    end;
+  end;
+
   raise notice 'only the customer reviews, and only a finished job';
   perform set_config('request.jwt.claim.sub', customer::text, true);
   select rating_count into n from public.pros where id = linh;
@@ -530,7 +551,9 @@ begin
       -- the staff act on one post, order or booking (20261103100000)
       'admin_set_work_hidden', 'admin_cancel_booking', 'admin_complete_booking', 'admin_close_job', 'admin_renotify_job',
       -- transfers the bank reported with no pay code (20261103110000)
-      'admin_unmatched_transfers', 'admin_resolve_transfer'
+      'admin_unmatched_transfers', 'admin_resolve_transfer',
+      -- the partner of a thread reads how often this customer has booked (20261105100000)
+      'customer_history'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 

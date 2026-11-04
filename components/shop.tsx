@@ -1,5 +1,6 @@
 "use client"
 
+import { isNewArtist } from "@/lib/discovery"
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -185,7 +186,7 @@ export function artistFromPrice(services: readonly ProService[], proId: string, 
   return min
 }
 
-const formatKm = (km: number) => `${km.toFixed(1).replace(".", ",")} km`
+export const formatKm = (km: number) => `${km.toFixed(1).replace(".", ",")} km`
 
 function CardTag({ children, className }: { children: React.ReactNode; className: string }) {
   return <span className={cn("inline-flex max-w-full rounded-full px-3 py-1 text-[15px] font-semibold leading-[20px]", className)}>{children}</span>
@@ -222,9 +223,9 @@ export function ArtistCard({
   priority?: boolean
 }) {
   const reviewed = showsAverage(pro.rating.count)
-  const isNew = !reviewed && pro.stats.completedJobs === 0
+  const isNew = isNewArtist(pro)
   const extra = photoCount - photos.length
-  const facts = [pro.stats.completedJobs > 0 ? `${pro.stats.completedJobs} lịch` : null, km !== null ? formatKm(km) : pro.district].filter(Boolean).join(" · ")
+  const facts = [pro.stats.completedJobs > 0 ? `${pro.stats.completedJobs} lịch` : null, km !== null ? `Cách bạn ${formatKm(km)}` : pro.district].filter(Boolean).join(" · ")
   return (
     <Link href={href} className="group flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] bg-surface transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)]">
       {photos.length ? (

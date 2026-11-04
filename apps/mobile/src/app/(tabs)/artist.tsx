@@ -2,7 +2,7 @@ import * as React from "react"
 import { router, useLocalSearchParams } from "expo-router"
 import { FlatList, ScrollView, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { getTemplate } from "@/shared"
+import { ARTIST_SORTS, getTemplate, sortArtists, type ArtistSort } from "@/shared"
 import { fold } from "@/data/format"
 import { ProCardSkeleton } from "@/components/cards"
 import { OfflineNote } from "@/components/offline-note"
@@ -19,8 +19,8 @@ import { Txt } from "@/ui/text"
 /**
  * The second way to book: the customer picks the service they want, sees who
  * does it with that person's work, what they offer and their price, and
- * chooses. Only people
- * taking bookings; nearest first when we know the address.
+ * chooses. Only people taking bookings; nearest first when we know the
+ * address or the phone's position, and the customer can line them up otherwise.
  */
 export default function Artists() {
   const params = useLocalSearchParams<{ service?: string }>()
@@ -29,6 +29,7 @@ export default function Artists() {
   const insets = useSafeAreaInsets()
   const [service, setService] = React.useState<string | null>(params.service ?? null)
   const [query, setQuery] = React.useState("")
+  const [sort, setSort] = React.useState<ArtistSort>("near")
 
   // Arriving from a service page chooses that service, also when the tab was already open.
   React.useEffect(() => {
@@ -54,10 +55,20 @@ export default function Artists() {
 
   const chosen = service ? getTemplate(service) : undefined
   const needle = fold(query.trim())
-  const shown = people.filter(({ pro }) => {
-    if (needle && !fold(pro.name).includes(needle)) return false
-    return !chosen || browse.services.some((s) => s.proId === pro.id && s.templateId === chosen.id && s.active && Object.keys(s.prices).length)
-  })
+  // Nothing to measure from yet: the next best order, until the customer shares where they are.
+  const order = sort === "near" && !app.located ? "rated" : sort
+  const shown = sortArtists(
+    people.filter(({ pro }) => {
+      if (needle && !fold(pro.name).includes(needle)) return false
+      return !chosen || browse.services.some((s) => s.proId === pro.id && s.templateId === chosen.id && s.active && Object.keys(s.prices).length)
+    }),
+    order,
+  )
+  const sorts = app.locationDenied ? ARTIST_SORTS.filter((s) => s.id !== "near") : ARTIST_SORTS
+  const pickSort = (id: ArtistSort) => {
+    setSort(id)
+    if (id === "near" && !app.located) void app.askLocation()
+  }
 
   // Work of the chosen service first, so the card answers "how do they do this".
   const photosOf = (proId: string) => {
@@ -80,7 +91,6 @@ export default function Artists() {
 
   const loading = (!app.data || app.stale) && !app.dataError && app.configured
   const where = app.city ? ` ở ${app.city}` : ""
-  const hasAddress = app.me.addresses.length > 0
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
@@ -124,16 +134,32 @@ export default function Artists() {
         ListHeaderComponent={
           <View style={{ gap: 12 }}>
             <OfflineNote />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" style={{ marginHorizontal: -gutter }} contentContainerStyle={{ gap: 8, paddingHorizontal: gutter }}>
+              {sorts.map((s) => (
+                <Pill key={s.id} label={s.label} selected={order === s.id} onPress={() => pickSort(s.id)} />
+              ))}
+            </ScrollView>
+            {!app.located && !app.locationDenied ? (
+              <Press
+                onPress={() => pickSort("near")}
+                accessibilityRole="button"
+                accessibilityLabel="Bật vị trí để xem Artist gần bạn"
+                style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: radius.lg, backgroundColor: colors.surface }}
+              >
+                <Icon name="pin" size={20} color={colors.accent} />
+                <Txt v="meta" color={colors.inkSoft} style={{ flex: 1 }}>
+                  Bật vị trí để xem Artist gần bạn. Vị trí chỉ dùng để tính khoảng cách trên máy này.
+                </Txt>
+                <Txt v="meta" w={700} color={colors.accentDark}>
+                  Bật
+                </Txt>
+              </Press>
+            ) : null}
             {!loading && shown.length ? (
-              <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
-                <Txt v="meta" color={colors.muted} style={{ flexShrink: 1 }}>
-                  {shown.length} Artist{chosen ? ` làm ${chosen.name}` : ""}
-                  {where}
-                </Txt>
-                <Txt v="meta" w={600}>
-                  {hasAddress ? "Gần bạn trước" : "Đánh giá cao trước"}
-                </Txt>
-              </View>
+              <Txt v="meta" color={colors.muted}>
+                {shown.length} Artist{chosen ? ` làm ${chosen.name}` : ""}
+                {where}
+              </Txt>
             ) : null}
           </View>
         }
@@ -181,6 +207,8 @@ export default function Artists() {
             <ErrorNote text={app.dataError} onRetry={() => void app.refresh()} />
           ) : needle ? (
             <EmptyState title={`Không có Artist tên “${query.trim()}”`} text="Thử tên khác, hoặc bỏ bớt lựa chọn dịch vụ." />
+          ) : order === "new" && people.length ? (
+            <EmptyState title="Chưa có Artist mới" text="Xem các Artist đang nhận lịch gần bạn." action="Xem tất cả" onAction={() => setSort("near")} />
           ) : (
             <EmptyState
               title={chosen ? `Chưa có Artist làm ${chosen.name}${where}` : `Chưa có Artist nào${where}`}

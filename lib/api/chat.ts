@@ -146,6 +146,8 @@ export interface ThreadHeader {
   proSlug: string
   bookingId: string | null
   iAmPro: boolean
+  /** When the booking is, for the partner's message confirming it. */
+  startsAt: string | null
   /** 'waiting' until the freelancer accepts, 'open' while matched, then 'closed'. */
   chatStatus: ChatStatus
 }
@@ -189,7 +191,8 @@ export async function threadHeader(threadId: string): Promise<ThreadHeader | nul
       .from("threads")
       .select(`
         customer_id, pro_id, booking_id, customer_name,${legacy ? "" : " chat_status,"}
-        pro:pros!threads_pro_id_fkey (slug, display_name)
+        pro:pros!threads_pro_id_fkey (slug, display_name),
+        booking:bookings!threads_booking_id_fkey (starts_at)
       `)
       .eq("id", threadId)
       .maybeSingle(),
@@ -204,6 +207,7 @@ export async function threadHeader(threadId: string): Promise<ThreadHeader | nul
     proSlug: String(pro.slug ?? ""),
     bookingId: (row.booking_id as string | null) ?? null,
     iAmPro,
+    startsAt: (one(row.booking).starts_at as string | null) ?? null,
     chatStatus: statusOf(row, await legacyChatStatus(supabase, [row])),
   }
 }
@@ -270,6 +274,14 @@ export async function sendLocation(threadId: string, lat: number, lng: number): 
  * an update, because the row belongs to the other person: the function touches
  * read_at and nothing else, which a row-level policy could not guarantee.
  */
+/** For the partner: completed bookings of this customer, with them and overall. */
+export async function customerHistory(threadId: string): Promise<{ withMe: number; overall: number } | null> {
+  const supabase = await supabaseServer()
+  const { data, error } = await supabase.rpc("customer_history", { p_thread: threadId })
+  const row = error ? null : data?.[0]
+  return row ? { withMe: row.with_me, overall: row.overall } : null
+}
+
 export async function markThreadRead(threadId: string): Promise<void> {
   const supabase = await supabaseServer()
   await supabase.rpc("mark_thread_read", { p_thread: threadId })
