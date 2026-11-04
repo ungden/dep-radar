@@ -44,6 +44,10 @@ begin
       ('public.recount_completed_jobs()'::regprocedure,
        $old$where pro_id = new.pro_id and status = 'completed')$old$,
        $new$where pro_id = new.pro_id and status = 'completed' and not in_cart)$new$),
+      -- "Khách quen, đã đặt bạn N lần" counts appointments, not lines.
+      ('public.customer_history(uuid)'::regprocedure,
+       $old$where b.customer_id = t.customer_id and b.status = 'completed';$old$,
+       $new$where b.customer_id = t.customer_id and b.status = 'completed' and not b.in_cart;$new$),
       -- The lines are chained to the minute, and moving them together is not built yet.
       ('public.request_reschedule(uuid,timestamptz)'::regprocedure,
        $old$problem := public.availability_problem($old$,

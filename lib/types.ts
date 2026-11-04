@@ -1,3 +1,4 @@
+import type { BookedLine } from "./service-cart"
 /**
  * 360dep books people who help you look good on camera, in three trades:
  * beauty (the original business), photo & video, and models.
@@ -329,6 +330,10 @@ export interface Booking {
   paidAt?: string
   /** Set on a service added during another appointment ("Đặt thêm dịch vụ"). */
   parentBookingId?: string
+  /** The main booking of a cart this line belongs to (lib/service-cart.ts). */
+  cartParentId?: string | null
+  /** Every service of a cart, on its main booking. */
+  lines?: BookedLine[]
   /** When the partner said they set off ("Thợ đang di chuyển"); at-home jobs only. */
   departedAt?: string
   /** When the partner pressed "Bắt đầu". */

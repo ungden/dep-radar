@@ -1,4 +1,4 @@
-import { getTemplate, getVariant, verticalOf, type ServiceContract, type BookingStatus, type CategoryId, type PriceQuote } from "@/shared"
+import { getTemplate, getVariant, verticalOf, cartItems, foldCartLines, type BookedLine, type CartLine, type ServiceContract, type BookingStatus, type CategoryId, type PriceQuote } from "@/shared"
 import { localDate, localTime, toTimestamptz } from "./format"
 import { imageUrl } from "./links"
 import { one, rpc, selectWithFallback, supabase, type Row } from "./supabase"
@@ -53,6 +53,10 @@ export interface BookingItem {
   departedAt: string | null
   /** Paths in the private references bucket ("ảnh mẫu"), 0 to 3. */
   referencePhotos: string[]
+  /** The main booking of a cart this line belongs to; 20261106100000. */
+  cartParentId: string | null
+  /** Every service of a cart, on its main booking. */
+  lines?: BookedLine[]
   /** A new time one side proposed and the other has not answered. */
   rescheduleTo: string | null
   rescheduleBy: "customer" | "pro" | null
@@ -84,6 +88,8 @@ const WITH_CONNECTION = `${WITH_DELIVERY.replace("reviews (booking_id)", "review
   voucher_id, discount, customer_reviews (booking_id, rating, body, published_at)`
 // 20261007100200: the name kept on the booking (the freelancer reads the account only once accepted) and "Đã nhận tiền".
 const COLUMN_SETS = [
+  // 20261106100000: the lines of a cart.
+  `${WITH_CONNECTION}, service_contract, customer_name, paid_at, reschedule_to, reschedule_by, departed_at, reference_photos, parent_booking_id, in_cart`,
   // 20261008100100: the customer's reference photos.
   `${WITH_CONNECTION}, service_contract, customer_name, paid_at, reschedule_to, reschedule_by, departed_at, reference_photos`,
   `${WITH_CONNECTION}, service_contract, customer_name, paid_at, reschedule_to, reschedule_by, departed_at`,
@@ -161,6 +167,7 @@ function toBooking(row: Row): BookingItem {
     paidAt: row.paid_at ?? null,
     departedAt: row.departed_at ?? null,
     referencePhotos: Array.isArray(row.reference_photos) ? (row.reference_photos as string[]) : [],
+    cartParentId: row.in_cart ? (row.parent_booking_id ?? null) : null,
     rescheduleTo: row.reschedule_to ?? null,
     rescheduleBy: row.reschedule_by === "customer" || row.reschedule_by === "pro" ? row.reschedule_by : null,
     customer: { id: row.customer_id, name: customer.full_name || row.customer_name || "Khách hàng", phone: CONTACT_VISIBLE.includes(status) ? customer.phone || null : null },
@@ -186,13 +193,18 @@ export async function listBookings(uid: string, as: "customer" | "pro"): Promise
         .limit(200),
     COLUMN_SETS,
   )
-  return rows.map((r) => toBooking(r))
+  return foldCartLines(rows.map((r) => toBooking(r)))
 }
 
 export async function getBooking(id: string, _uid: string): Promise<BookingItem | null> {
   const rows = await selectWithFallback("booking", (c) => supabase.from("bookings").select(c).eq("id", id).limit(1), COLUMN_SETS)
   const row = rows[0]
-  return row ? toBooking(row) : null
+  if (!row) return null
+  // Without the cart column (an older database) a booking has no lines to fetch.
+  const lines = "in_cart" in row
+    ? await selectWithFallback("booking lines", (c) => supabase.from("bookings").select(c).eq("parent_booking_id", id).eq("in_cart", true), COLUMN_SETS.slice(0, 1))
+    : []
+  return foldCartLines([row, ...lines].map((r) => toBooking(r)))[0]
 }
 
 // Writes: the same RPCs, with the same arguments, as lib/api/actions.ts.
@@ -200,9 +212,7 @@ export async function getBooking(id: string, _uid: string): Promise<BookingItem 
 /** Bookable start times for one day, generated from the freelancer's own hours. */
 export async function fetchSlots(input: {
   proUuid: string
-  templateId: string
-  variantId: string
-  quantity: number
+  lines: CartLine[]
   date: string
   atHome: boolean
   addressId: string | null
@@ -221,11 +231,9 @@ export async function fetchSlots(input: {
     lat = (data as Row | null)?.lat ?? null
     lng = (data as Row | null)?.lng ?? null
   }
-  const { data, error } = await supabase.rpc("free_slots", {
+  const { data, error } = await supabase.rpc("cart_slots", {
     p_pro: input.proUuid,
-    p_template: input.templateId,
-    p_variant: input.variantId,
-    p_quantity: input.quantity,
+    p_items: cartItems(input.lines),
     p_date: input.date,
     p_at_home: input.atHome,
     p_lat: lat ?? undefined,
@@ -235,30 +243,26 @@ export async function fetchSlots(input: {
   return ((data ?? []) as string[]).map((startsAt) => ({ startsAt, time: localTime(startsAt) }))
 }
 
-export const createBooking = (input: {
+export const createCartBooking = (input: {
   proUuid: string
-  templateId: string
-  variantId: string
+  lines: CartLine[]
   startsAt: string
   atHome: boolean
   addressId: string | null
-  quantity: number
   note: string
   expectedTotal: number
-  expectedUnit: number
   sessions?: string[]
 }) =>
-  rpc<string>("create_booking_checked", {
+  rpc<string>("create_cart_booking", {
     p_pro: input.proUuid,
-    p_template: input.templateId,
-    p_variant: input.variantId,
+    p_items: cartItems(input.lines),
     p_starts_at: input.startsAt,
     p_at_home: input.atHome,
     p_address_id: input.addressId,
-    p_quantity: input.quantity,
     p_note: input.note,
     p_payment: "cash",
-    p_expected_total: input.expectedTotal, p_expected_unit: input.expectedUnit, p_sessions: input.sessions ?? [],
+    p_expected_total: input.expectedTotal,
+    p_sessions: input.sessions ?? [],
   })
 
 export const cancelBooking = (id: string, reason: string) => rpc("cancel_booking", { p_booking: id, p_reason: reason })

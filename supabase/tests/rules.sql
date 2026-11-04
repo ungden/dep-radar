@@ -2695,7 +2695,7 @@ end $$;
 -- Several services in one appointment (20261106100000).
 do $$
 declare linh uuid; customer uuid; addr record; admin_id uuid; b uuid; line uuid; q jsonb; at timestamptz; slot_count int;
-  jobs_before int;
+  jobs_before int; wallet_before int;
   items jsonb := '[{"template":"nail-removal","variant":"remove"},{"template":"nail-extension","variant":"tips"}]';
   monday date := current_date + (7 - ((extract(dow from current_date)::int + 6) % 7));
 begin
@@ -2709,6 +2709,7 @@ begin
   returning id into admin_id;
   update public.accounts set is_admin = true where id = admin_id;
   perform set_config('request.jwt.claim.sub', admin_id::text, true);
+  wallet_before := public.wallet_balance(linh);
   perform public.admin_adjust_wallet(linh, 1000000, 'Số dư cho test (giỏ)');
   perform set_config('request.jwt.claim.sub', customer::text, true);
 
@@ -2787,7 +2788,8 @@ begin
   assert (select status from public.bookings where parent_booking_id = b) = 'cancelled', 'the line outlived a no-show';
 
   perform set_config('request.jwt.claim.sub', admin_id::text, true);
-  perform public.admin_adjust_wallet(linh, -1000000, 'Trả lại số dư test (giỏ)');
+  -- Back to what it was, fees of the finished cart included: the suites after this one book with her.
+  perform public.admin_adjust_wallet(linh, wallet_before - public.wallet_balance(linh), 'Trả lại số dư test (giỏ)');
   perform set_config('request.jwt.claim.sub', '', true);
   raise notice 'SERVICE CART RULES PASS';
 end $$;

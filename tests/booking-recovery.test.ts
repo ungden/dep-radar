@@ -8,8 +8,8 @@ import type { AppState } from "@/lib/store"
 const mocks = vi.hoisted(() => ({ state: null as unknown as AppState, params: new URLSearchParams(), slots: vi.fn(), quote: vi.fn(), push: vi.fn(), create: vi.fn() }))
 vi.mock("next/navigation", () => ({ useParams: () => ({ proId: "qa" }), useSearchParams: () => mocks.params, useRouter: () => ({ push: mocks.push, refresh: vi.fn(), back: vi.fn() }) }))
 vi.mock("@/lib/store", async (original) => ({ ...await original<typeof import("@/lib/store")>(), useApp: () => mocks.state }))
-vi.mock("@/lib/api/actions", () => ({ bookingQuote: mocks.quote }))
-vi.mock("@/lib/client-actions", () => ({ actions: { slotsFor: mocks.slots, createBooking: mocks.create }, useAct: () => vi.fn() }))
+vi.mock("@/lib/api/actions", () => ({ cartQuote: mocks.quote }))
+vi.mock("@/lib/client-actions", () => ({ actions: { cartSlotsFor: mocks.slots, createCartBooking: mocks.create }, useAct: () => vi.fn() }))
 vi.mock("@/lib/uploads", () => ({ uploadImage: vi.fn() }))
 import BookPage from "@/app/book/[proId]/page"
 

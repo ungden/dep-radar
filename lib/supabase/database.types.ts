@@ -212,6 +212,7 @@ export type Database = {
           reference_photos: string[]
           customer_name: string
           parent_booking_id: string | null
+          in_cart: boolean
           address: string
           address_note: string
           at_home: boolean
@@ -271,6 +272,7 @@ export type Database = {
           reference_photos?: string[]
           customer_name?: string
           parent_booking_id?: string | null
+          in_cart?: boolean
           address?: string
           address_note?: string
           at_home: boolean
@@ -330,6 +332,7 @@ export type Database = {
           reference_photos?: string[]
           customer_name?: string
           parent_booking_id?: string | null
+          in_cart?: boolean
           address?: string
           address_note?: string
           at_home?: boolean
@@ -2525,6 +2528,18 @@ export type Database = {
       customer_history: {
         Args: { p_thread: string }
         Returns: { overall: number; with_me: number }[]
+      }
+      cart_slots: {
+        Args: { p_at_home?: boolean; p_date: string; p_items: Json; p_lat?: number; p_lng?: number; p_pro: string }
+        Returns: string[]
+      }
+      cart_quote: {
+        Args: { p_address_id: string | null; p_at_home: boolean; p_items: Json; p_pro: string; p_starts_at: string }
+        Returns: Json
+      }
+      create_cart_booking: {
+        Args: { p_address_id: string | null; p_at_home: boolean; p_expected_total: number; p_items: Json; p_note: string; p_payment: Database["public"]["Enums"]["payment_method"]; p_pro: string; p_sessions?: string[]; p_starts_at: string }
+        Returns: string
       }
       send_location: {
         Args: { p_lat: number; p_lng: number; p_thread: string }
