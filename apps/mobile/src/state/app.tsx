@@ -422,30 +422,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const home = me.addresses.find((a) => a.isDefault) ?? me.addresses[0] ?? null
   const [here, setHere] = React.useState<LatLng | null>(null)
   const [locationDenied, setLocationDenied] = React.useState(false)
-  const readHere = React.useCallback(async () => {
-    const at = (await Location.getLastKnownPositionAsync()) ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }))
-    setHere([at.coords.latitude, at.coords.longitude])
-  }, [])
-  // Only someone who already said yes is read without a tap.
+  // Someone who already said yes is read without a tap, but only from the last
+  // known position: asking for a fresh one can raise Android's accuracy dialog.
   const needsHere = !home
   React.useEffect(() => {
     if (!needsHere) return
     void Location.getForegroundPermissionsAsync()
-      .then((p) => {
-        if (p.granted) return readHere()
-        if (!p.canAskAgain) setLocationDenied(true)
+      .then(async (p) => {
+        if (!p.granted) {
+          if (!p.canAskAgain) setLocationDenied(true)
+          return
+        }
+        const at = await Location.getLastKnownPositionAsync()
+        if (at) setHere([at.coords.latitude, at.coords.longitude])
       })
       .catch(() => {})
-  }, [needsHere, readHere])
+  }, [needsHere])
   const askLocation = React.useCallback(async () => {
     try {
       const p = await Location.requestForegroundPermissionsAsync()
       setLocationDenied(!p.granted)
-      if (p.granted) await readHere()
+      if (!p.granted) return
+      const at = (await Location.getLastKnownPositionAsync()) ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }))
+      setHere([at.coords.latitude, at.coords.longitude])
     } catch {
       setLocationDenied(true)
     }
-  }, [readHere])
+  }, [])
   const distanceTo = React.useCallback(
     (pro: Pick<AppPro, "city" | "district">) => {
       if (home) return travelDistanceKm(home.city, home.district, pro.city, pro.district)
