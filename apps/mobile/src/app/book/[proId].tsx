@@ -515,7 +515,7 @@ function BookingFlow() {
                 </Txt>
                 {lines.map((line) => {
                   const v = getVariant(line.templateId, line.variantId)!
-                  return <Line key={cartLineKey(line)} label={`${getTemplate(line.templateId)!.name} · ${v.label}${v.perPerson ? ` × ${line.quantity}` : ""}`} value={formatPrice((priceOf(line) ?? 0) * line.quantity)} />
+                  return <Line key={cartLineKey(line)} label={`${getTemplate(line.templateId)!.name} · ${v.label}${v.perPerson ? ` × ${line.quantity} ${v.unit ?? "người"}` : ""}`} value={formatPrice((priceOf(line) ?? 0) * line.quantity)} />
                 })}
                 {quote.travelFee ? <Line label={`Phí di chuyển${quote.distanceKm !== null ? ` (~${formatKm(quote.distanceKm)})` : ""}`} value={formatPrice(quote.travelFee)} /> : null}
                 {quote.urgentFee ? <Line label="Phí gấp" value={formatPrice(quote.urgentFee)} /> : null}
