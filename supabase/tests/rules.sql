@@ -497,7 +497,9 @@ begin
       -- called by a row level security policy
       'applied_to_casting',
       -- a cart's start times, read-only like free_slots
-      'cart_slots'
+      'cart_slots',
+      -- a spa's start times with the beds left, read-only like cart_slots (20261108100000)
+      'cart_slot_beds'
     ]);
   assert msg is null, format('anon can execute: %s', msg);
 
@@ -557,7 +559,9 @@ begin
       -- the partner of a thread reads how often this customer has booked (20261105100000)
       'customer_history',
       -- several services in one appointment (20261106100000)
-      'cart_slots', 'cart_quote', 'create_cart_booking'
+      'cart_slots', 'cart_quote', 'create_cart_booking',
+      -- a spa's start times with the beds left (20261108100000)
+      'cart_slot_beds'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 
