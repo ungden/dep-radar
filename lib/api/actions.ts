@@ -110,6 +110,23 @@ export async function fetchSlots(input: {
   return { ok: true, data: ((data ?? []) as unknown as string[]).map((startsAt) => ({ startsAt, time: localTime(startsAt) })) }
 }
 
+/** A spa's start times, with how many beds stay free for the whole visit (cart_slot_beds). */
+export async function fetchCartSlotBeds(input: {
+  proId: string
+  items: { template: string; variant: string; quantity: number }[]
+  date: string
+}): Promise<ActionResult<{ startsAt: string; time: string; freeBeds: number }[]>> {
+  const supabase = await supabaseServer()
+  const pro = await proIdFor(input.proId)
+  if (!pro) return { ok: false, error: "Không tải được giờ trống. Thử lại nhé." }
+  const { data, error } = await supabase.rpc("cart_slot_beds", { p_pro: pro, p_items: input.items, p_date: input.date })
+  if (error) {
+    console.error("cart_slot_beds failed:", error.message)
+    return { ok: false, error: "Không tải được giờ trống. Kiểm tra kết nối và thử lại." }
+  }
+  return { ok: true, data: (data ?? []).map((r) => ({ startsAt: r.starts_at, time: localTime(r.starts_at), freeBeds: Number(r.free_beds) })) }
+}
+
 /** Start times with room for the whole cart. */
 export async function fetchCartSlots(input: {
   proId: string
@@ -681,6 +698,10 @@ export async function saveProProfile(input: {
   categories?: CategoryId[]
   city?: string
   district?: string
+  /** A spa (20261108100000): a place with beds and amenities. */
+  kind?: "artist" | "spa"
+  beds?: number
+  amenities?: string[]
 }): Promise<ActionResult> {
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()

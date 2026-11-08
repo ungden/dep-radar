@@ -1,12 +1,12 @@
 import * as React from "react"
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet"
 import { Stack, router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router"
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View, useWindowDimensions } from "react-native"
-import { providerLocationOpen, serviceLocationOpen, appointmentAt, CITIES, POLICY, buildQuote, cartItems, cartLineKey, cartMinutes, cartOrder, districtsOf, getTemplate, getVariant, isUrgent, perUnitSuffix, serviceDuration, toggleCartLine, travelDistanceKm, serviceQuantity, type CartLine, type PriceQuote } from "@/shared"
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, TextInput, View, useWindowDimensions } from "react-native"
+import { SPA, bedsLeftLabel, isSpa, listingLocationOpen, spaDirectionsLink, providerLocationOpen, appointmentAt, CITIES, POLICY, buildQuote, cartItems, cartLineKey, cartMinutes, cartOrder, districtsOf, getTemplate, getVariant, isUrgent, perUnitSuffix, serviceDuration, toggleCartLine, travelDistanceKm, serviceQuantity, type CartLine, type PriceQuote } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
 import { rpc } from "@/data/supabase"
 import { toTimestamptz } from "@/data/format"
-import { createCartBooking, fetchSlots } from "@/data/bookings"
+import { createCartBooking, fetchSlotBeds, fetchSlots } from "@/data/bookings"
 import { setBookingReferences, uploadReference } from "@/data/references"
 import { ReferencePicker, type PickedPhoto } from "@/components/reference-photos"
 import { addDays, formatDateLong, formatDuration, formatKm, formatPrice, todayISO, weekdayShort } from "@/data/format"
@@ -57,7 +57,7 @@ function BookingFlow() {
   const largeText = fontScale >= 1.5
 
   const listed = React.useMemo(
-    () => (pro ? (app.data?.services ?? []).filter((s) => s.proId === pro.id && providerLocationOpen(pro, studioBookingOpen) && s.active && Object.keys(s.prices).length && serviceLocationOpen(getTemplate(s.templateId), studioBookingOpen)) : []),
+    () => (pro ? (app.data?.services ?? []).filter((s) => s.proId === pro.id && providerLocationOpen(pro, studioBookingOpen) && s.active && Object.keys(s.prices).length && listingLocationOpen(getTemplate(s.templateId), pro, studioBookingOpen)) : []),
     [app.data, pro, studioBookingOpen],
   )
   const [step, setStep] = React.useState(1)
@@ -66,7 +66,9 @@ function BookingFlow() {
   const [cart, setCart] = React.useState<CartLine[] | null>(null)
   const [cartNote, setCartNote] = React.useState<{ templateId: string; text: string } | null>(null)
   const [atHomePref, setAtHomePref] = React.useState(true)
-  const [date, setDate] = React.useState(addDays(todayISO(), 1))
+  const spa = isSpa(pro)
+  // A spa is often booked for later today; an Artist needs time to travel.
+  const [date, setDate] = React.useState(addDays(todayISO(), spa ? 0 : 1))
   const [time, setTime] = React.useState<{ startsAt: string; time: string } | null>(null)
   const [addressId, setAddressId] = React.useState<string | null>(null)
   const [estCity, setEstCity] = React.useState<string | null>(null)
@@ -74,7 +76,7 @@ function BookingFlow() {
   const [note, setNote] = React.useState("")
   const [noteOpen, setNoteOpen] = React.useState(false)
   const [photos, setPhotos] = React.useState<PickedPhoto[]>([])
-  const [slots, setSlots] = React.useState<{ key: string; list: { startsAt: string; time: string }[] } | null>(null)
+  const [slots, setSlots] = React.useState<{ key: string; list: { startsAt: string; time: string; freeBeds?: number }[] } | null>(null)
   const [slotRetry, retrySlots] = React.useReducer((n: number) => n + 1, 0)
   const [slotError, setSlotError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
@@ -104,8 +106,8 @@ function BookingFlow() {
   const servicePrice = lines.reduce((sum, line) => sum + (priceOf(line) ?? 0) * line.quantity, 0)
   const minutes = cartMinutes(lines)
 
-  const canStudio = studioBookingOpen && Boolean(pro?.studioAddress)
-  const canHome = Boolean(pro?.homeService) && !lines.some((line) => getTemplate(line.templateId)?.studioOnly)
+  const canStudio = (studioBookingOpen || spa) && Boolean(pro?.studioAddress)
+  const canHome = !spa && Boolean(pro?.homeService) && !lines.some((line) => getTemplate(line.templateId)?.studioOnly)
   const atHome = canHome && (atHomePref || !canStudio)
 
   const tap = (templateId: string, variantId: string) => {
@@ -137,7 +139,7 @@ function BookingFlow() {
     let live = true
     setSlotError(null)
     setSlots(null)
-    fetchSlots({ proUuid: pro.uuid, lines, date, atHome, addressId: atHome ? chosenId : null })
+    ;(spa ? fetchSlotBeds({ proUuid: pro.uuid, lines, date }).then((list) => list.filter((x) => x.freeBeds > 0)) : fetchSlots({ proUuid: pro.uuid, lines, date, atHome, addressId: atHome ? chosenId : null }))
       .then((list) => live && setSlots({ key: slotKey, list }))
       .catch((e: Error) => live && setSlotError(e.message))
     return () => {
@@ -190,12 +192,12 @@ function BookingFlow() {
   if (doneId) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.canvas, paddingHorizontal: gutter, justifyContent: "center", gap: 12 }}>
-        <Stack.Screen options={{ title: "Đã gửi lịch", headerBackVisible: false, gestureEnabled: false, headerLeft: () => null, headerRight: () => null }} />
+        <Stack.Screen options={{ title: spa ? SPA.sent : "Đã gửi lịch", headerBackVisible: false, gestureEnabled: false, headerLeft: () => null, headerRight: () => null }} />
         <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: colors.successSoft, alignItems: "center", justifyContent: "center", alignSelf: "center" }}>
           <Icon name="check" size={30} color={colors.success} />
         </View>
         <Txt v="h2" center>
-          Đã gửi lịch hẹn
+          {spa ? SPA.sent : "Đã gửi lịch hẹn"}
         </Txt>
         <Txt color={colors.inkSoft} center>
           {pro.name} sẽ xem và nhận lịch trong vòng {POLICY.confirmWithinHours} giờ. Nhận xong, hai bên nhắn tin, gọi được cho nhau. Nếu không nhận, lịch tự huỷ và bạn không mất gì.
@@ -208,6 +210,7 @@ function BookingFlow() {
             router.push({ pathname: "/bookings/[id]", params: { id: doneId } })
           }}
         />
+        {spa && pro.studioAddress ? <Button label="Chỉ đường đến spa" variant="secondary" icon="pin" full onPress={() => void Linking.openURL(spaDirectionsLink(pro))} /> : null}
         <Button label="Về Khám phá" variant="ghost" full onPress={() => router.dismissAll()} />
       </View>
     )
@@ -267,7 +270,7 @@ function BookingFlow() {
     step === 1 ? "Xem giỏ" : step === 2 ? "Chọn giờ" : step === 3 ? "Tiếp tục" : !app.uid ? "Đăng nhập để đặt" : atHome && !address ? "Thêm địa chỉ" : !app.me.account?.phone ? "Thêm số điện thoại" : "Gửi lịch hẹn"
   const days = Array.from({ length: 14 }, (_, i) => addDays(todayISO(), i))
   const controlScale = Math.min(fontScale, controlMetrics.maxFontSizeMultiplier)
-  const slotColumns = Math.max(1, Math.min(4, Math.floor((width - gutter * 2 + SLOT_GAP) / (Math.max(76, 72 * controlScale) + SLOT_GAP))))
+  const slotColumns = Math.max(1, Math.min(spa && (pro.beds ?? 1) > 1 ? 3 : 4, Math.floor((width - gutter * 2 + SLOT_GAP) / (Math.max(76, 72 * controlScale) + SLOT_GAP))))
   const slotWidth = Math.floor((width - gutter * 2 - SLOT_GAP * (slotColumns - 1)) / slotColumns)
   const slotGroups = [
     { label: "Buổi sáng", from: 0, to: 12 },
@@ -334,7 +337,7 @@ function BookingFlow() {
 
         {step === 2 ? (
           <>
-            <Txt color={colors.inkSoft}>Một lịch, một Artist, làm liền nhau.</Txt>
+            <Txt color={colors.inkSoft}>{spa ? "Một lịch tại spa, các món làm liền nhau." : "Một lịch, một Artist, làm liền nhau."}</Txt>
             <View style={{ gap: 8 }}>
               {lines.map((line) => {
                 const t = getTemplate(line.templateId)!
@@ -365,7 +368,7 @@ function BookingFlow() {
               </View>
             ) : template ? (
               <Txt v="meta" color={colors.inkSoft}>
-                {atHome ? (template.onLocation ? "Làm tại địa điểm bạn chọn." : "Làm tại nhà bạn.") : `Làm tại studio: ${pro.studioAddress ?? ""}`}
+                {atHome ? (template.onLocation ? "Làm tại địa điểm bạn chọn." : "Làm tại nhà bạn.") : `${spa ? "Làm tại spa" : "Làm tại studio"}: ${pro.studioAddress ?? ""}`}
               </Txt>
             ) : null}
           </>
@@ -425,6 +428,11 @@ function BookingFlow() {
                           <Txt v="control" w={selected ? 600 : 500} tabular color={selected ? colors.accentDark : colors.ink}>
                             {s.time}
                           </Txt>
+                          {spa && (pro.beds ?? 1) > 1 && s.freeBeds ? (
+                            <Txt v="controlMeta" center numberOfLines={1} color={selected ? colors.accentDark : colors.muted}>
+                              {bedsLeftLabel(s.freeBeds)}
+                            </Txt>
+                          ) : null}
                         </Press>
                       )
                     })}
@@ -434,6 +442,12 @@ function BookingFlow() {
             ) : (
               <Txt color={colors.inkSoft}>Không còn giờ trống ngày này. Thử ngày khác nhé.</Txt>
             )}
+            {spa ? (
+              <View style={{ flexDirection: "row", gap: 10, padding: 14, borderRadius: radius.md, backgroundColor: colors.successSoft }}>
+                <Icon name="info" size={18} color={colors.success} />
+                <Txt v="meta" color={colors.ink} style={{ flex: 1 }}>{SPA.arrive}</Txt>
+              </View>
+            ) : null}
             {picked && isUrgent(date, picked.time) ? (
               <Txt v="meta" color={colors.warning}>
                 Lịch trong {POLICY.urgentWithinHours} giờ tới có phí gấp {formatPrice(POLICY.urgentFee)}.
@@ -496,8 +510,9 @@ function BookingFlow() {
               </View>
             ) : (
               <Card>
-                <Txt v="controlMeta" w={600}>Tại studio</Txt>
+                <Txt v="controlMeta" w={600}>{spa ? `Tại ${pro.name}` : "Tại studio"}</Txt>
                 <Txt color={colors.inkSoft}>{pro.studioAddress}</Txt>
+                {spa ? <Button label="Chỉ đường" variant="secondary" size="sm" icon="pin" onPress={() => void Linking.openURL(spaDirectionsLink(pro))} /> : null}
               </Card>
             )}
             {time && daySlots && !picked ? (
@@ -521,7 +536,7 @@ function BookingFlow() {
                 {quote.urgentFee ? <Line label="Phí gấp" value={formatPrice(quote.urgentFee)} /> : null}
                 <Line label={confirmedQuote ? "Tổng tiền" : "Tạm tính"} value={formatPrice(quote.total)} strong />
                 <Txt v="meta" color={colors.muted}>
-                  Thanh toán sau khi làm xong. {atHome ? "Khoảng cách ước tính theo phường/xã. " : ""}Giá được xác nhận lại khi gửi lịch. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để Artist kịp sắp xếp.
+                  {spa ? `${SPA.payAtSpa}.` : "Thanh toán sau khi làm xong."} {atHome ? "Khoảng cách ước tính theo phường/xã. " : ""}Giá được xác nhận lại khi gửi lịch. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để {spa ? "spa" : "Artist"} kịp sắp xếp.
                 </Txt>
               </Card>
             ) : null}

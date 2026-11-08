@@ -92,6 +92,7 @@ ${hints}
 - Khách chưa có lịch nào: "${customerNote({ withMe: 0, overall: 0 }).title}". ${customerNote({ withMe: 0, overall: 0 }).text}
 - Khách đã có lịch với người khác: "${customerNote({ withMe: 0, overall: 4 }).title}".
 - Khách đã đặt Artist này: "${customerNote({ withMe: 3, overall: 4 }).title}".
+- Với spa (khách tự đến, không có nút xin vị trí): ${customerNote({ withMe: 0, overall: 0, spa: true }).text}
 
 Hai nút điền sẵn vào ô nhắn tin, Artist vẫn sửa được trước khi gửi:
 

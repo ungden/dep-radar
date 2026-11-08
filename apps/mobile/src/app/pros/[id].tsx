@@ -2,11 +2,13 @@ import * as React from "react"
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet"
 import { Image } from "expo-image"
 import { Stack, router, useLocalSearchParams } from "expo-router"
-import { Alert, ScrollView, View, useWindowDimensions } from "react-native"
+import { Alert, Linking, ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { CATEGORY_TINTS, serviceLocationOpen, providerLocationOpen, categoryLabel, getTemplate, perUnitSuffix, showsAverage, verticalOf, type Pro, tierLabels } from "@/shared"
+import { CATEGORY_TINTS, SPA, SPA_TINT, hoursSummary, isSpa, listingLocationOpen, openState, spaAmenities, spaDirectionsLink, spaPhoto, providerLocationOpen, categoryLabel, getTemplate, perUnitSuffix, showsAverage, verticalOf, type Pro, tierLabels } from "@/shared"
 import { formatDuration, formatKm, formatPrice, formatRating, formatResponseTime } from "@/data/format"
 import { loadProExtras } from "@/data/public"
+import { imageUrl } from "@/data/links"
+import { PhotoBadge } from "@/components/tiles"
 import { replyReview } from "@/data/reviews"
 import { BookingBar } from "@/components/booking-bar"
 import { FollowButton } from "@/components/follow-button"
@@ -109,7 +111,7 @@ export default function ProProfile() {
 
   const works = app.data?.works.filter((w) => w.proId === pro.id) ?? []
   const reviews = app.data?.reviews.filter((r) => r.proId === pro.id && !hiddenReviews.has(r.id)) ?? []
-  const listings = app.data?.services.filter((s) => s.proId === pro.id && providerLocationOpen(pro, studioBookingOpen) && serviceLocationOpen(getTemplate(s.templateId), studioBookingOpen) && s.active && Object.keys(s.prices).length) ?? []
+  const listings = app.data?.services.filter((s) => s.proId === pro.id && providerLocationOpen(pro, studioBookingOpen) && listingLocationOpen(getTemplate(s.templateId), pro, studioBookingOpen) && s.active && Object.keys(s.prices).length) ?? []
   const km = app.distanceTo(pro)
   const response = formatResponseTime(pro.stats.responseMinutes)
   const isMe = app.uid === pro.uuid
@@ -124,6 +126,8 @@ export default function ProProfile() {
   const variant = priced.find((v) => v.id === picked.variant) ?? lowest
   const canBook = !isMe && pro.acceptingJobs && Boolean(currentTemplate && variant)
 
+  const spa = isSpa(pro)
+  const open = spa ? openState(pro.openingHours ?? []) : null
   const cell = (width - gutter * 2 - 8) / 3
   const cover = works.filter((w) => w.images[0]).slice(0, 3)
   const coverHeight = insets.top + 200
@@ -141,8 +145,13 @@ export default function ProProfile() {
       {safety.element}
       {reviewSafety.element}
 
-      {/* Their own work, edge to edge; nobody's picture stands in when there is none. */}
-      {cover.length ? (
+      {/* A spa shows its room; an Artist their own work, edge to edge, and nobody's picture stands in when there is none. */}
+      {spa ? (
+        <View style={{ height: insets.top + 240 }}>
+          <Image source={{ uri: cover[0]?.images[0] ?? imageUrl(spaPhoto(0)) }} style={{ flex: 1, backgroundColor: SPA_TINT.bg }} contentFit="cover" transition={150} accessible={false} />
+          {cover.length ? null : <View style={{ position: "absolute", left: 0, bottom: 48 }}><PhotoBadge text="Ảnh minh hoạ" position="tl" /></View>}
+        </View>
+      ) : cover.length ? (
         <View style={{ flexDirection: "row", gap: 2, height: coverHeight }}>
           {cover.map((w) => (
             <Image key={w.id} source={{ uri: w.images[0] }} style={{ flex: 1, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
@@ -171,16 +180,47 @@ export default function ProProfile() {
             {pro.identity === "verified" ? <VerifiedMark size={20} /> : null}
           </View>
           <Txt color={colors.inkSoft}>{pro.title || pro.categories.map(categoryLabel).join(" · ")}</Txt>
-          <Txt v="meta" color={colors.muted}>
-            {pro.district}, {pro.city}
-            {km !== null ? ` · cách bạn ${formatKm(km)}` : ""}
-          </Txt>
+          {spa ? null : (
+            <Txt v="meta" color={colors.muted}>
+              {pro.district}, {pro.city}
+              {km !== null ? ` · cách bạn ${formatKm(km)}` : ""}
+            </Txt>
+          )}
           {pro.identity === "verified" ? (
             <Txt v="meta" color={colors.success}>
               Đã xác minh danh tính bằng CCCD
             </Txt>
           ) : null}
         </View>
+
+        {spa ? (
+          <View style={{ gap: 12, marginTop: 4 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <Icon name="pin" size={18} color={colors.accent} />
+              <View style={{ flex: 1 }}>
+                <Txt>{pro.studioAddress}</Txt>
+                <Txt v="meta" color={colors.muted}>
+                  {pro.district}, {pro.city}
+                  {km !== null ? ` · cách bạn ${formatKm(km)}` : ""}
+                </Txt>
+              </View>
+              <Press onPress={() => void Linking.openURL(spaDirectionsLink(pro))} accessibilityRole="link" accessibilityLabel="Chỉ đường bằng Google Maps" style={{ minHeight: 40, paddingHorizontal: 14, borderRadius: radius.full, backgroundColor: colors.accentSoft, justifyContent: "center" }}>
+                <Txt v="meta" w={700} color={colors.accentDark}>
+                  Chỉ đường
+                </Txt>
+              </Press>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <Icon name="clock" size={18} color={colors.accent} />
+              <Txt style={{ flex: 1 }}>{hoursSummary(pro.openingHours ?? [])}</Txt>
+              {open ? (
+                <Txt v="meta" w={700} color={open.open ? colors.success : colors.muted}>
+                  {open.open ? "Đang mở" : open.label}
+                </Txt>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
 
         {/* Three real numbers, or the honest absence of one */}
         <View style={{ flexDirection: "row", paddingVertical: 14, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: hairline, borderColor: colors.line }}>
@@ -190,7 +230,7 @@ export default function ProProfile() {
             value={showsAverage(pro.rating.count) ? formatRating(pro.rating.average) : "Mới"}
             label={pro.rating.count > 0 ? `${pro.rating.count} đánh giá` : "chưa có đánh giá"}
           />
-          <Stat value={response ?? "—"} label={response ? "phản hồi" : "chưa đủ dữ liệu"} />
+          {spa ? <Stat value={String(pro.beds ?? 1)} label="giường" /> : <Stat value={response ?? "—"} label={response ? "phản hồi" : "chưa đủ dữ liệu"} />}
         </View>
 
         {/* What they do and what it costs: the decision, before the proof */}
@@ -247,7 +287,7 @@ export default function ProProfile() {
                         style={{ flexGrow: 1, flexBasis: "45%", paddingVertical: 10, paddingHorizontal: 12, borderRadius: radius.sm, backgroundColor: selected ? colors.accent : colors.surface }}
                       >
                         <Txt v="meta" color={selected ? colors.surface : colors.inkSoft}>
-                          {v.label} · {formatDuration(v.durationMin)}
+                          {/phút|giờ/.test(v.label) ? v.label : `${v.label} · ${formatDuration(v.durationMin)}`}
                         </Txt>
                         <Txt w={700} tabular color={selected ? colors.surface : colors.ink}>
                           {formatPrice(s.prices[v.id])}
@@ -290,6 +330,22 @@ export default function ProProfile() {
           ) : null}
         </View>
       </View>
+
+      {spa && spaAmenities(pro).length ? (
+        <View style={{ paddingHorizontal: gutter, paddingTop: 24, gap: 10 }}>
+          <Txt v="h2">Tiện nghi</Txt>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {spaAmenities(pro).map((a) => (
+              <View key={a.id} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.full, backgroundColor: colors.surface, borderWidth: hairline, borderColor: colors.line }}>
+                <Txt v="meta">{a.label}</Txt>
+              </View>
+            ))}
+          </View>
+          <Txt v="meta" color={colors.muted}>
+            {SPA.payAtSpa}.
+          </Txt>
+        </View>
+      ) : null}
 
       {/* Photos and clips */}
       <View style={{ paddingHorizontal: gutter, paddingTop: 24, gap: 10 }}>
@@ -400,8 +456,8 @@ export default function ProProfile() {
           </View>
         ) : null}
         <Card style={{ borderWidth: hairline, borderColor: colors.line }}>
-          <Info label="Hình thức" value={[pro.homeService ? "Đến tận nơi" : null, studioBookingOpen && pro.studioAddress ? "Tại studio" : null].filter(Boolean).join(" · ") || "Chưa ghi"} />
-          {studioBookingOpen && pro.studioAddress ? <Info label="Studio" value={pro.studioAddress} /> : null}
+          <Info label="Hình thức" value={spa ? "Khách đến spa" : [pro.homeService ? "Đến tận nơi" : null, studioBookingOpen && pro.studioAddress ? "Tại studio" : null].filter(Boolean).join(" · ") || "Chưa ghi"} />
+          {spa ? <Info label="Địa chỉ" value={pro.studioAddress ?? ""} /> : studioBookingOpen && pro.studioAddress ? <Info label="Studio" value={pro.studioAddress} /> : null}
           {pro.homeService ? <Info label="Đi xa tối đa" value={`${pro.maxTravelKm} km`} /> : null}
           {pro.areas.length ? <Info label="Khu vực" value={pro.areas.join(", ")} /> : null}
           {pro.yearsExp > 0 ? <Info label="Kinh nghiệm" value={`${pro.yearsExp} năm`} /> : null}
@@ -443,7 +499,7 @@ export default function ProProfile() {
         <BookingBar
           title={current && variant ? `${formatPrice(current.prices[variant.id])}${perUnitSuffix(variant)}` : null}
           note={currentTemplate && variant ? `${currentTemplate.name} · ${variant.label}` : undefined}
-          action={pro.acceptingJobs ? "Chọn lịch" : "Đang tạm nghỉ"}
+          action={pro.acceptingJobs ? (spa ? "Chọn giờ" : "Chọn lịch") : "Đang tạm nghỉ"}
           disabled={!canBook}
           onPress={() => router.push({ pathname: "/book/[proId]", params: { proId: pro.id, template: currentTemplate?.id ?? "", variant: variant?.id ?? "" } })}
         />

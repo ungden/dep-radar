@@ -6,6 +6,8 @@ import { one, rpc, selectWithFallback, supabase, type Row } from "./supabase"
 /** A booking as either side sees it. Same reads as lib/api/bookings.ts. */
 export interface BookingItem {
   id: string
+  /** The spa bed this booking holds (1 for an Artist). */
+  seat: number
   status: BookingStatus
   startsAt: string
   endsAt: string
@@ -88,6 +90,8 @@ const WITH_CONNECTION = `${WITH_DELIVERY.replace("reviews (booking_id)", "review
   voucher_id, discount, customer_reviews (booking_id, rating, body, published_at)`
 // 20261007100200: the name kept on the booking (the freelancer reads the account only once accepted) and "Đã nhận tiền".
 const COLUMN_SETS = [
+  // 20261108100000: the bed a spa booking holds.
+  `${WITH_CONNECTION}, service_contract, customer_name, paid_at, reschedule_to, reschedule_by, departed_at, reference_photos, parent_booking_id, in_cart, seat`,
   // 20261106100000: the lines of a cart.
   `${WITH_CONNECTION}, service_contract, customer_name, paid_at, reschedule_to, reschedule_by, departed_at, reference_photos, parent_booking_id, in_cart`,
   // 20261008100100: the customer's reference photos.
@@ -168,6 +172,7 @@ function toBooking(row: Row): BookingItem {
     departedAt: row.departed_at ?? null,
     referencePhotos: Array.isArray(row.reference_photos) ? (row.reference_photos as string[]) : [],
     cartParentId: row.in_cart ? (row.parent_booking_id ?? null) : null,
+    seat: Number(row.seat ?? 1),
     rescheduleTo: row.reschedule_to ?? null,
     rescheduleBy: row.reschedule_by === "customer" || row.reschedule_by === "pro" ? row.reschedule_by : null,
     customer: { id: row.customer_id, name: customer.full_name || row.customer_name || "Khách hàng", phone: CONTACT_VISIBLE.includes(status) ? customer.phone || null : null },
@@ -202,12 +207,19 @@ export async function getBooking(id: string, _uid: string): Promise<BookingItem 
   if (!row) return null
   // Without the cart column (an older database) a booking has no lines to fetch.
   const lines = "in_cart" in row
-    ? await selectWithFallback("booking lines", (c) => supabase.from("bookings").select(c).eq("parent_booking_id", id).eq("in_cart", true), COLUMN_SETS.slice(0, 1))
+    ? await selectWithFallback("booking lines", (c) => supabase.from("bookings").select(c).eq("parent_booking_id", id).eq("in_cart", true), COLUMN_SETS.slice(0, 2))
     : []
   return foldCartLines([row, ...lines].map((r) => toBooking(r)))[0]
 }
 
 // Writes: the same RPCs, with the same arguments, as lib/api/actions.ts.
+
+/** A spa's start times for one day, with how many beds stay free for the whole visit (cart_slot_beds). */
+export async function fetchSlotBeds(input: { proUuid: string; lines: CartLine[]; date: string }): Promise<{ startsAt: string; time: string; freeBeds: number }[]> {
+  const { data, error } = await supabase.rpc("cart_slot_beds", { p_pro: input.proUuid, p_items: cartItems(input.lines), p_date: input.date })
+  if (error) throw new Error("Không tải được giờ trống. Thử lại nhé.")
+  return ((data ?? []) as { starts_at: string; free_beds: number }[]).map((r) => ({ startsAt: r.starts_at, time: localTime(r.starts_at), freeBeds: Number(r.free_beds) }))
+}
 
 /** Bookable start times for one day, generated from the freelancer's own hours. */
 export async function fetchSlots(input: {

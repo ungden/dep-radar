@@ -1,4 +1,5 @@
 import { serviceLocationOpen } from "./launch"
+import type { ProKind } from "./types"
 import { getTemplate } from "./catalog"
 import type { CategoryId, ReviewStatus } from "./types"
 
@@ -11,6 +12,7 @@ export interface PartnerSetup {
     studio_address: string | null; max_travel_km: number; equipment: string | null;
     avatar_path: string | null; hours_confirmed: boolean; terms_accepted_at: string | null;
     published: boolean; accepting_jobs: boolean; review_status: ReviewStatus;
+    kind?: ProKind; beds?: number; amenities?: string[];
     review_note: string | null; identity_status: string;
   } | null
   services: { template_id: string; active: boolean; prices: Record<string, number>; notes?: Record<string, string> }[]
@@ -20,10 +22,12 @@ export interface PartnerSetup {
 
 export function partnerProgress(setup: PartnerSetup, studioBookingOpen = false): { label: string; done: boolean; href: string }[] {
   const p = setup.profile
+  const spa = p?.kind === "spa"
+  const onSite = studioBookingOpen || spa
   return [
     { label: PARTNER_STEPS[0], done: Boolean(p?.categories.length), href: "/studio/onboarding" },
-    { label: PARTNER_STEPS[1], done: setup.services.some((s) => s.active && serviceLocationOpen(getTemplate(s.template_id), studioBookingOpen) && Object.keys(s.prices).length > 0), href: "/studio/services" },
-    { label: PARTNER_STEPS[2], done: Boolean(p && (p.home_service || (studioBookingOpen && p.studio_address?.trim()))), href: "/studio/profile/edit#noi-phuc-vu" },
+    { label: PARTNER_STEPS[1], done: setup.services.some((s) => s.active && serviceLocationOpen(getTemplate(s.template_id), onSite) && Object.keys(s.prices).length > 0), href: "/studio/services" },
+    { label: PARTNER_STEPS[2], done: Boolean(p && ((p.home_service && !spa) || (onSite && p.studio_address?.trim()))), href: "/studio/profile/edit#noi-phuc-vu" },
     { label: PARTNER_STEPS[3], done: Boolean(p?.hours_confirmed && setup.hours.length), href: "/studio/profile/edit#gio-lam" },
     { label: PARTNER_STEPS[4], done: setup.workCount > 0, href: "/studio/works" },
     { label: PARTNER_STEPS[5], done: p?.review_status === "approved", href: "/studio/profile/edit#mo-ho-so" },

@@ -82,6 +82,11 @@ export const actions = {
     return api.fetchSlots(input)
   },
 
+  /** A spa's start times with the beds left. */
+  async cartSlotBedsFor(input: { proId: string; items: { template: string; variant: string; quantity: number }[]; date: string }) {
+    return api.fetchCartSlotBeds(input)
+  },
+
   /** Which start times have room for the whole cart. */
   async cartSlotsFor(input: {
     proId: string

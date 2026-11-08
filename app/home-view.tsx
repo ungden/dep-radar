@@ -3,12 +3,13 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { RotateCcw, User, X } from "lucide-react"
+import { ChevronRight, Leaf, RotateCcw, User, X } from "lucide-react"
 import { bookingImage } from "@/components/booking-card"
 import { DataUnavailable } from "@/components/data-unavailable"
 import { MobileLinks } from "@/components/mobile-links"
 import { CatalogTile, CategoryBubble, CitySelect, IllustrationBadge, ServiceTile, notYetOffered } from "@/components/shop"
-import { DEMO_DATA_LIVE } from "@/lib/launch"
+import { DEMO_DATA_LIVE, isSpa } from "@/lib/launch"
+import { SPA, SPA_RING_INDEX, SPA_TINT, spaPhoto } from "@/lib/spa"
 import { CATEGORIES } from "@/lib/catalog"
 import { categoryPhoto } from "@/lib/design/photos"
 import { priorityFirst } from "@/lib/discovery"
@@ -35,14 +36,17 @@ export function HomeView() {
   const { city } = state
   const studioBookingOpen = state.platform?.studioBookingOpen
 
+  // Spas have their own page (/spa); the services here are the Artists'.
+  const artists = React.useMemo(() => state.pros.filter((p) => !isSpa(p)), [state.pros])
+  const spas = state.pros.filter((p) => isSpa(p) && p.published && p.acceptingJobs && (!city || p.city === city))
   const offers = React.useMemo(
-    () => serviceOffers({ studioBookingOpen, pros: state.pros, proServices: state.proServices, works: state.works, city, vertical: "all" }),
-    [state.pros, state.proServices, state.works, city, studioBookingOpen],
+    () => serviceOffers({ studioBookingOpen, pros: artists, proServices: state.proServices, works: state.works, city, vertical: "all" }),
+    [artists, state.proServices, state.works, city, studioBookingOpen],
   )
   const offered = offers.slice(0, SERVICES_FIRST)
   const rest = notYetOffered(offers, CATEGORIES, studioBookingOpen, SERVICES_FIRST - offered.length)
 
-  // Nail and Makeup lead, then whatever is on offer here.
+  // Makeup and Nail lead, then whatever is on offer here.
   const rail = priorityFirst(categoryRow(CATEGORIES, offers, "all", CATEGORIES.length + 1).ordered)
   const worksHere = state.works.filter((w) => w.images[0] && (!city || getPro(state, w.proId)?.city === city))
   const photoOf = (c: CategoryId) => worksHere.find((w) => w.category === c)?.images[0] ?? categoryPhoto(c)
@@ -69,7 +73,10 @@ export function HomeView() {
         </h1>
         <nav aria-label="Danh mục" className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto px-4 md:mx-0 md:gap-2.5 md:px-0">
           {rail.map((c, i) => (
-            <CategoryBubble key={c.id} category={c} photo={photoOf(c.id)} href={`/search?category=${c.id}`} className={cn(i >= RAIL_WIDE && "lg:hidden")} />
+            <React.Fragment key={c.id}>
+              {spas.length && i === SPA_RING_INDEX ? <SpaBubble photo={worksHere.find((w) => spas.some((s) => s.id === w.proId))?.images[0] ?? spaPhoto(0)} /> : null}
+              <CategoryBubble category={c} photo={photoOf(c.id)} href={`/search?category=${c.id}`} className={cn(i >= (spas.length ? RAIL_WIDE - 1 : RAIL_WIDE) && "lg:hidden")} />
+            </React.Fragment>
           ))}
           <Link href="/search" className="group flex w-[84px] shrink-0 flex-col items-center gap-2 md:w-[100px]">
             <span className="block p-[5px]">
@@ -141,9 +148,36 @@ export function HomeView() {
         )}
       </section>
 
+      {spas.length ? (
+        <Link href="/spa" className="mt-8 flex items-center gap-4 rounded-[var(--radius-lg)] bg-surface p-4 transition-shadow hover:shadow-[var(--shadow-raised)] md:mt-10 md:p-5">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-[var(--radius-md)]" style={{ background: SPA_TINT.bg, color: SPA_TINT.fg }}>
+            <Leaf className="size-6" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-bold">{SPA.row}</span>
+            <span className="block truncate text-meta text-ink-soft">{SPA.rowText}</span>
+          </span>
+          <ChevronRight className="size-5 text-muted" aria-hidden />
+        </Link>
+      ) : null}
+
       {/* The footer is desktop-only; on a phone these are the links it would have given. */}
       <MobileLinks className="mt-10" />
     </div>
+  )
+}
+
+/** The Spa ring: not a category, the way to the spas (/spa). */
+function SpaBubble({ photo }: { photo: string }) {
+  return (
+    <Link href="/spa" className="group flex w-[84px] shrink-0 flex-col items-center gap-2 md:w-[100px]">
+      <span className="block rounded-full border-2 p-[3px] transition-transform duration-200 group-hover:-translate-y-0.5" style={{ borderColor: SPA_TINT.fg }}>
+        <span className="relative block size-[66px] overflow-hidden rounded-full md:size-[80px]" style={{ background: SPA_TINT.bg }}>
+          <Image src={photo} alt="" fill sizes="160px" className="object-cover" />
+        </span>
+      </span>
+      <span className="block text-center text-meta font-medium leading-[20px] text-ink md:text-[16px]">{SPA.ring}</span>
+    </Link>
   )
 }
 

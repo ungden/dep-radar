@@ -10,7 +10,7 @@ import { ArtistCard, CitySelect, artistFromPrice } from "@/components/shop"
 import { ButtonLink, EmptyState, PageSkeleton } from "@/components/ui"
 import { CATEGORIES, categoryLabel, getTemplate } from "@/lib/catalog"
 import { ARTIST_SORTS, sortArtists, type ArtistSort } from "@/lib/discovery"
-import { providerLocationOpen } from "@/lib/launch"
+import { isSpa, providerLocationOpen } from "@/lib/launch"
 import { moveRadio } from "@/lib/radio-navigation"
 import { distanceToCustomer, useApp } from "@/lib/store"
 import { rankScore } from "@/lib/trust"
@@ -59,7 +59,7 @@ function ChooseArtist() {
   const people = React.useMemo(
     () =>
       state.pros
-        .filter((p) => providerLocationOpen(p, studioBookingOpen) && p.published && p.acceptingJobs && (!city || p.city === city))
+        .filter((p) => !isSpa(p) && providerLocationOpen(p, studioBookingOpen) && p.published && p.acceptingJobs && (!city || p.city === city))
         .map((pro) => ({ pro, km: kmOf(pro.id) }))
         .sort((a, b) => (a.km !== null && b.km !== null && a.km !== b.km ? a.km - b.km : rankScore(b.pro) - rankScore(a.pro))),
     [state.pros, studioBookingOpen, city, kmOf],

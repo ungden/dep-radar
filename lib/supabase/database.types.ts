@@ -208,6 +208,7 @@ export type Database = {
       }
       bookings: {
         Row: {
+          seat: number
           departed_at: string | null
           reference_photos: string[]
           customer_name: string
@@ -1302,6 +1303,9 @@ export type Database = {
       }
       pros: {
         Row: {
+          amenities: string[]
+          beds: number
+          kind: string
           start_label: string | null
           accepting_jobs: boolean
           adult: boolean | null
@@ -1342,6 +1346,9 @@ export type Database = {
           reviewed_at: string | null
         }
         Insert: {
+          amenities?: string[]
+          beds?: number
+          kind?: string
           start_label?: string | null
           accepting_jobs?: boolean
           adult?: boolean | null
@@ -1382,6 +1389,9 @@ export type Database = {
           reviewed_at?: string | null
         }
         Update: {
+          amenities?: string[]
+          beds?: number
+          kind?: string
           start_label?: string | null
           accepting_jobs?: boolean
           adult?: boolean | null
@@ -2528,6 +2538,10 @@ export type Database = {
       customer_history: {
         Args: { p_thread: string }
         Returns: { overall: number; with_me: number }[]
+      }
+      cart_slot_beds: {
+        Args: { p_date: string; p_items: Json; p_pro: string }
+        Returns: { free_beds: number; starts_at: string }[]
       }
       cart_slots: {
         Args: { p_at_home?: boolean; p_date: string; p_items: Json; p_lat?: number; p_lng?: number; p_pro: string }

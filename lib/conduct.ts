@@ -51,9 +51,10 @@ export const CHAT_NOTICE = {
  * counts of completed bookings. It never suggests taking money up front, which
  * CHAT_NOTICE tells the customer not to pay.
  */
-export function customerNote({ withMe, overall }: { withMe: number; overall: number }): { regular: boolean; title: string; text: string | null } {
+export function customerNote({ withMe, overall, spa = false }: { withMe: number; overall: number; spa?: boolean }): { regular: boolean; title: string; text: string | null } {
   if (withMe > 0) return { regular: true, title: `Khách quen, đã đặt bạn ${withMe} lần`, text: null }
-  const text = "Nhắn xác nhận và xin vị trí trước khi đi để tránh đi uổng công."
+  // A spa does not travel: the customer comes, so only the time is worth confirming.
+  const text = spa ? "Nhắn xác nhận giờ đến để giữ giường cho khách." : "Nhắn xác nhận và xin vị trí trước khi đi để tránh đi uổng công."
   if (overall > 0) return { regular: false, title: `Khách mới với bạn, đã có ${overall} lịch hoàn thành trên 360đẹp`, text }
   return { regular: false, title: "Khách đặt lần đầu", text }
 }

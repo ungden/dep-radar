@@ -30,5 +30,6 @@ export * from "@shared/conduct"
 export * from "@shared/chat-location"
 export * from "@shared/discovery"
 export * from "@shared/service-cart"
+export * from "@shared/spa"
 
 export * from "../../../lib/appointments"

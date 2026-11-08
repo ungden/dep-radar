@@ -2,7 +2,7 @@ import * as React from "react"
 import { Image } from "expo-image"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import { ScrollView, View, useWindowDimensions } from "react-native"
-import { CATEGORY_TINTS, providerLocationOpen, categoryLabel, excludes, getTemplate, placeLabel, rankScore, listedOptions, serviceDuration, serviceQuantity, showsAverage } from "@/shared"
+import { CATEGORY_TINTS, isSpa, providerLocationOpen, categoryLabel, excludes, getTemplate, placeLabel, rankScore, listedOptions, serviceDuration, serviceQuantity, showsAverage } from "@/shared"
 import { formatDuration, formatKm, formatPrice } from "@/data/format"
 import { type AppPro, type AppWork } from "@/data/public"
 import { PostCard } from "@/components/cards"
@@ -41,7 +41,7 @@ export default function ServiceScreen() {
     if (!data || !template) return { ranked: [] as AppPro[], elsewhere: 0, works: [] as AppWork[] }
     const offers = (p: AppPro) =>
       data.services.some((s) => s.proId === p.id && s.templateId === template.id && s.active && listedOptions(template, s.prices, app.studioBookingOpen).some((o) => priceOk(o.minimumTotal)))
-    const all = data.pros.filter((p) => providerLocationOpen(p, app.studioBookingOpen) && p.published && offers(p) && !app.blocked.has(p.uuid) && (params.verified !== "1" || p.identity === "verified") && (params.place !== "home" || (p.homeService && !template.studioOnly)) && (params.place !== "studio" || Boolean(p.studioAddress)) && (params.place !== "location" || template.onLocation))
+    const all = data.pros.filter((p) => !isSpa(p) && providerLocationOpen(p, app.studioBookingOpen) && p.published && offers(p) && !app.blocked.has(p.uuid) && (params.verified !== "1" || p.identity === "verified") && (params.place !== "home" || (p.homeService && !template.studioOnly)) && (params.place !== "studio" || Boolean(p.studioAddress)) && (params.place !== "location" || template.onLocation))
     const near = all.filter((p) => !city || p.city === city)
     const ranked = [...near].sort((a, b) => {
       if (a.acceptingJobs !== b.acceptingJobs) return a.acceptingJobs ? -1 : 1

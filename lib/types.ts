@@ -133,6 +133,8 @@ export interface RatingSummary {
   count: number
 }
 
+export type ProKind = "artist" | "spa"
+
 export interface Pro {
   /** Public, readable id used in URLs. */
   id: string
@@ -148,6 +150,15 @@ export interface Pro {
   district: string
   areas: string[]
   homeService: boolean
+  /** "spa": a place customers go to, with several beds (owner, 08/11/2026). Absent means a travelling Artist. */
+  kind?: ProKind
+  /** How many customers a spa serves at once; 1 for an Artist. */
+  beds?: number
+  /** A spa's amenities, from SPA_AMENITIES (lib/spa.ts). */
+  amenities?: string[]
+  /** A spa's opening hours (its working_hours), for "Đang mở · đến 21:00". */
+  openingHours?: { weekday: number; startMin: number; endMin: number }[]
+  /** An Artist's studio, or a spa's own address. */
   studioAddress?: string
   /** The partner's own start point label (set_start_point), when they set one; else the district centre. */
   startLabel?: string

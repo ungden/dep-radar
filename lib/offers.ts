@@ -1,4 +1,4 @@
-import { providerLocationOpen, serviceLocationOpen } from "./launch"
+import { isSpa, providerLocationOpen, serviceLocationOpen } from "./launch"
 import { CATALOG, serviceDuration, serviceQuantity, verticalOf } from "./catalog"
 import type { VerticalFilter } from "./feed"
 import type { Category, CategoryId, Pro, ProService, ServiceTemplate, ServiceVariant, Work } from "./types"
@@ -55,7 +55,7 @@ export function serviceOffers(input: {
     const pro = inScope.get(listing.proId)
     const template = CATALOG.find((t) => t.id === listing.templateId)
     if (!pro || !template || !listing.active) continue
-    const options = listedOptions(template, listing.prices, input.studioBookingOpen).filter((option) => !input.priceFilter || input.priceFilter(option.minimumTotal))
+    const options = listedOptions(template, listing.prices, input.studioBookingOpen || isSpa(pro)).filter((option) => !input.priceFilter || input.priceFilter(option.minimumTotal))
     if (!options.length) continue
     const entry = byTemplate.get(listing.templateId) ?? { pros: [], options: [] }
     if (!entry.pros.some((p) => p.id === pro.id)) entry.pros.push(pro)

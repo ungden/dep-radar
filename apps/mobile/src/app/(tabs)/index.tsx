@@ -3,12 +3,13 @@ import { Image } from "expo-image"
 import { router } from "expo-router"
 import { ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { CATEGORIES, categoryRow, serviceOffers, type CategoryId } from "@/shared"
+import { CATEGORIES, SPA, SPA_RING_INDEX, SPA_TINT, categoryRow, priorityFirst, serviceOffers, spaPhoto, type CategoryId } from "@/shared"
 import { OfflineNote } from "@/components/offline-note"
 import { CatalogTile, CategoryRail, PhotoBadge, Section, ServiceTile, TileGrid, TileSkeleton, illustration, notYetOffered, tileWidth } from "@/components/tiles"
 import { TopBar } from "@/components/top-bar"
 import { useApp } from "@/state/app"
 import { useBrowse } from "@/state/derived"
+import { imageUrl } from "@/data/links"
 import { colors, gutter, radius } from "@/theme"
 import { EmptyState, ErrorNote } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
@@ -36,11 +37,17 @@ export default function Explore() {
 
   // browse.* leaves out people this person blocked.
   const offers = React.useMemo(
-    () => (app.data ? serviceOffers({ studioBookingOpen: app.studioBookingOpen, pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical: "all" }) : []),
+    () => (app.data ? serviceOffers({ studioBookingOpen: app.studioBookingOpen, pros: browse.artists, proServices: browse.services, works: browse.works, city: app.city, vertical: "all" }) : []),
     [app.data, browse, app.city, app.studioBookingOpen],
   )
-  // Every category, most on offer here first.
-  const rail = React.useMemo(() => categoryRow(CATEGORIES, offers, "all", CATEGORIES.length + 1), [offers])
+  // Every category, Makeup and Nail first, then the most on offer here.
+  const rail = React.useMemo(() => {
+    const row = categoryRow(CATEGORIES, offers, "all", CATEGORIES.length + 1)
+    return { ...row, ordered: priorityFirst(row.ordered) }
+  }, [offers])
+  // Spas are a second line beside the Artists: one ring and one quiet row, only where there are some.
+  const spas = browse.spas
+  const spaCover = spas.map((s) => browse.photosOf.get(s.pro.id)?.[0]).find(Boolean) ?? imageUrl(spaPhoto(0))
   const soonCategories = React.useMemo(() => new Set(CATEGORIES.filter((c) => !rail.offered.has(c.id)).map((c) => c.id)), [rail])
 
   const offered = offers.slice(0, SERVICES_FIRST)
@@ -99,7 +106,7 @@ export default function Explore() {
           >
             <Icon name="search" size={16} color={colors.muted} />
             <Txt color={colors.muted} numberOfLines={1} style={{ flex: 1 }}>
-              Nail, makeup, tên Artist…
+              Makeup, nail, tên Artist…
             </Txt>
           </Press>
         </View>
@@ -113,6 +120,7 @@ export default function Explore() {
           photoFor={(c) => browse.photoFor(c) ?? illustration(c)}
           onChange={(c) => openList(c)}
           onAll={() => openList()}
+          extra={spas.length ? { index: SPA_RING_INDEX, label: SPA.ring, photo: spaCover, ring: SPA_TINT.fg, bg: SPA_TINT.bg, onPress: () => router.push("/spa") } : undefined}
         />
 
         {/* The two ways to book, side by side */}
@@ -162,6 +170,27 @@ export default function Explore() {
           <Section title={`Dịch vụ${where}`} action="Xem tất cả" onAction={() => openList()} />
           <View style={{ paddingHorizontal: gutter }}>{services}</View>
         </View>
+
+        {spas.length ? (
+          <View style={{ paddingHorizontal: gutter }}>
+            <Press
+              onPress={() => router.push("/spa")}
+              accessibilityLabel={`${SPA.row}. ${SPA.rowText}`}
+              style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: radius.lg, backgroundColor: colors.surface }}
+            >
+              <View style={{ width: 48, height: 48, borderRadius: radius.md, backgroundColor: SPA_TINT.bg, alignItems: "center", justifyContent: "center" }}>
+                <Icon name="leaf" size={22} color={SPA_TINT.fg} />
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Txt w={700}>{SPA.row}</Txt>
+                <Txt v="meta" color={colors.inkSoft} numberOfLines={1}>
+                  {SPA.rowText}
+                </Txt>
+              </View>
+              <Icon name="right" size={18} color={colors.muted} />
+            </Press>
+          </View>
+        ) : null}
         {/* Tuyển mẫu (working as a model) is partner work: reached from Tôi > Trở thành đối tác, not from here. */}
       </ScrollView>
     </View>

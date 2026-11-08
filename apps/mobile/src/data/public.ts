@@ -34,6 +34,8 @@ export const PRO_SELECT = `
   years_exp, accepting_jobs, published, identity_status, rating_avg, rating_count,
   completed_jobs, response_minutes, created_at
 `
+/** With what a spa adds (20261108100000); the plain columns are the fallback. */
+const PRO_COLUMNS = [`${PRO_SELECT}, kind, beds, amenities`, PRO_SELECT]
 
 const WORK_BASE = "id, slug, pro_id, template_id, title, description, image_paths, sort_order, created_at"
 const WORK_FULL = `${WORK_BASE}, kind, video_path`
@@ -69,6 +71,7 @@ export function toPro(row: Row): AppPro {
     rating: { average: Number(row.rating_avg ?? 0), count: row.rating_count ?? 0 },
     lat: row.lat ?? null,
     lng: row.lng ?? null,
+    ...(row.kind === "spa" ? { kind: "spa" as const, beds: Number(row.beds ?? 1), amenities: (row.amenities ?? []) as string[] } : {}),
   }
 }
 
@@ -115,6 +118,14 @@ async function forPros(label: string, ids: string[] | null, build: Build, column
   return parts.flat()
 }
 
+/** Opening hours of the spas among these rows: a spa card says whether it is open now. */
+async function spaHours(proRows: Row[]): Promise<Row[]> {
+  const ids = proRows.filter((p) => p.kind === "spa").map((p) => String(p.id))
+  if (!ids.length) return []
+  const { data, error } = await supabase.from("working_hours").select("pro_id, weekday, start_min, end_min").in("pro_id", ids)
+  return error ? [] : ((data ?? []) as Row[])
+}
+
 /** Interest over 30 days: an RPC on the web (work_stats_30d()). Without it every post ranks as "average appeal". */
 async function loadStats(): Promise<Row[]> {
   const viaRpc = await supabase.rpc("work_stats_30d")
@@ -136,23 +147,24 @@ export async function loadPublic(ownId: string | null, city: string | null): Pro
         const q = supabase.from("pros").select(c).eq("published", true).is("suspended_at", null)
         return city ? q.eq("city", city) : q
       },
-      [PRO_SELECT],
+      PRO_COLUMNS,
     ),
     // The freelancer's own profile, which is not listed until it is published.
-    ownId ? supabase.from("pros").select(PRO_SELECT).eq("id", ownId).maybeSingle() : Promise.resolve({ data: null }),
+    ownId ? selectWithFallback("own pro", (c) => supabase.from("pros").select(c).eq("id", ownId), PRO_COLUMNS) : Promise.resolve([] as Row[]),
   ])
-  const own = (ownPro as { data: Row | null }).data
+  const own = (ownPro as Row[])[0] ?? null
   if (own && !proRows.some((p) => p.id === own.id)) proRows.push(own)
   const ids = city ? proRows.map((p) => String(p.id)) : null
 
-  const [workRows, reviewRows, priceRows, listingRows, statRows] = await Promise.all([
+  const [workRows, reviewRows, priceRows, listingRows, statRows, hourRows] = await Promise.all([
     forPros("works", ids, (c) => supabase.from("works").select(c).order("sort_order"), [WORK_FULL, WORK_BASE]),
     forPros("reviews", ids, (c) => supabase.from("reviews").select(c).is("hidden_at", null).order("created_at", { ascending: false }), REVIEW_COLUMNS),
     forPros("prices", ids, (c) => supabase.from("pro_service_prices").select(c), [PRICE_NOTE_COLUMNS, PRICE_COLUMNS]),
     forPros("listings", ids, (c) => supabase.from("pro_services").select(c), [LISTING_COLUMNS]),
     loadStats(),
+    spaHours(proRows),
   ])
-  return assemble(proRows, workRows, reviewRows, priceRows, listingRows, statRows)
+  return assemble(proRows, workRows, reviewRows, priceRows, listingRows, statRows, hourRows)
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -162,21 +174,18 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
  * chat, a quote), with their works, prices and reviews. Null when not listed.
  */
 export async function loadOnePro(slugOrId: string): Promise<PublicData | null> {
-  const { data } = await supabase
-    .from("pros")
-    .select(PRO_SELECT)
-    .eq(UUID.test(slugOrId) ? "id" : "slug", slugOrId)
-    .maybeSingle()
-  const row = data as Row | null
+  const rows = await selectWithFallback("pro", (c) => supabase.from("pros").select(c).eq(UUID.test(slugOrId) ? "id" : "slug", slugOrId).limit(1), PRO_COLUMNS)
+  const row = rows[0] ?? null
   if (!row) return null
   const ids = [String(row.id)]
-  const [workRows, reviewRows, priceRows, listingRows] = await Promise.all([
+  const [workRows, reviewRows, priceRows, listingRows, hourRows] = await Promise.all([
     forPros("works", ids, (c) => supabase.from("works").select(c).order("sort_order"), [WORK_FULL, WORK_BASE]),
     forPros("reviews", ids, (c) => supabase.from("reviews").select(c).is("hidden_at", null).order("created_at", { ascending: false }), REVIEW_COLUMNS),
     forPros("prices", ids, (c) => supabase.from("pro_service_prices").select(c), [PRICE_NOTE_COLUMNS, PRICE_COLUMNS]),
     forPros("listings", ids, (c) => supabase.from("pro_services").select(c), [LISTING_COLUMNS]),
+    spaHours([row]),
   ])
-  return assemble([row], workRows, reviewRows, priceRows, listingRows, [])
+  return assemble([row], workRows, reviewRows, priceRows, listingRows, [], hourRows)
 }
 
 /** Which freelancer a work link (slug or id) belongs to. */
@@ -204,8 +213,12 @@ export function mergePublic(base: PublicData, extra: PublicData): PublicData {
   }
 }
 
-function assemble(proRows: Row[], workRows: Row[], reviewRows: Row[], priceRows: Row[], listingRows: Row[], statRows: Row[]): PublicData {
+function assemble(proRows: Row[], workRows: Row[], reviewRows: Row[], priceRows: Row[], listingRows: Row[], statRows: Row[], hourRows: Row[] = []): PublicData {
   const pros = proRows.map(toPro)
+  for (const pro of pros) {
+    if (pro.kind !== "spa") continue
+    pro.openingHours = hourRows.filter((h) => h.pro_id === pro.uuid).map((h) => ({ weekday: Number(h.weekday), startMin: Number(h.start_min), endMin: Number(h.end_min) }))
+  }
   const slugOf = new Map(pros.map((p) => [p.uuid, p.id]))
 
   // Works of freelancers who are neither listed nor the viewer are not shown.

@@ -8,7 +8,7 @@ import * as Location from "expo-location"
 import * as WebBrowser from "expo-web-browser"
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { CHAT_ASKS, LOCATION_DENIED, LOCATION_FAILED, chatState, directionsLink, distanceFromPointKm, locationConfirm, roundPoint, vnTime } from "@/shared"
+import { isSpa, CHAT_ASKS, LOCATION_DENIED, LOCATION_FAILED, chatState, directionsLink, distanceFromPointKm, locationConfirm, roundPoint, vnTime } from "@/shared"
 import {
   CHAT_MAX_PHOTOS,
   customerHistory,
@@ -346,7 +346,8 @@ export default function Conversation() {
               {askHistory && history ? (
                 <CustomerNote
                   history={history}
-                  onAskLocation={gotLocation ? undefined : () => write(CHAT_ASKS.location)}
+                  spa={isSpa(pro)}
+                  onAskLocation={gotLocation || isSpa(pro) ? undefined : () => write(CHAT_ASKS.location)}
                   onConfirm={header?.startsAt ? () => write(CHAT_ASKS.confirm(vnTime(new Date(header.startsAt!)))) : undefined}
                 />
               ) : null}

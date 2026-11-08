@@ -48,8 +48,8 @@ export function ConductNote() {
 }
 
 /** For the partner, above the conversation: who this customer is, and the two messages worth sending before leaving home. */
-export function CustomerNote({ history, onAskLocation, onConfirm }: { history: { withMe: number; overall: number }; onAskLocation?: () => void; onConfirm?: () => void }) {
-  const note = customerNote(history)
+export function CustomerNote({ history, spa, onAskLocation, onConfirm }: { history: { withMe: number; overall: number }; spa?: boolean; onAskLocation?: () => void; onConfirm?: () => void }) {
+  const note = customerNote({ ...history, spa })
   return (
     <View style={{ marginBottom: 12, padding: 14, gap: 8, borderRadius: radius.lg, backgroundColor: note.regular ? colors.successSoft : colors.highlightSoft }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>

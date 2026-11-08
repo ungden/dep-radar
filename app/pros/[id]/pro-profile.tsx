@@ -6,8 +6,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
+  BedDouble,
   CalendarDays,
   Camera,
+  Clock,
   Car,
   Check,
   ChevronLeft,
@@ -24,6 +26,7 @@ import {
 import { LevelBadge, whereLabel } from "@/components/beauty"
 import { FollowButton } from "@/components/follow-button"
 import { ServiceMenu } from "@/components/service-menu"
+import { IllustrationBadge } from "@/components/shop"
 import { TradeDot } from "@/components/trade"
 import { RatingSummaryBlock, ReviewItem, VerifiedBadge, VerifiedMark } from "@/components/trust"
 import { Avatar, BottomBar, ButtonLink, Chip, EmptyState, Tabs } from "@/components/ui"
@@ -34,6 +37,8 @@ import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp, 
 import { personWord, tradesOf } from "@/lib/trade"
 import type { CategoryId, ModelProfile, Pro, Work } from "@/lib/types"
 import { showsAverage } from "@/lib/connection"
+import { isSpa } from "@/lib/launch"
+import { SPA, SPA_TINT, hoursSummary, openState, spaAmenities, spaDirectionsLink, spaPhoto } from "@/lib/spa"
 import { cn, formatPrice, formatResponseTime, parseISODate } from "@/lib/utils"
 
 type Tab = "works" | "services" | "reviews" | "about"
@@ -114,6 +119,8 @@ function ListedProfile({ pro }: { pro: Pro }) {
     .map((w) => (w.kind === "before_after" && w.images[1] ? w.images[1] : w.images[0]))
     .filter(Boolean)
     .slice(0, 3)
+  // A spa without photos yet shows a labelled illustration of a room.
+  if (isSpa(pro) && !covers.length) covers.push(spaPhoto(0))
   const back = () => (window.history.length > 1 ? router.back() : router.push("/"))
 
   return (
@@ -129,6 +136,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
           {covers.map((src, i) => (
             <div key={src + i} className={cn("relative h-full", i > 0 && "hidden md:block")}>
               <Image src={src} alt="" fill priority={i === 0} sizes="(min-width: 768px) 400px, 100vw" className="object-cover" />
+              {src === spaPhoto(0) ? <IllustrationBadge className="bottom-3 left-3" /> : null}
             </div>
           ))}
         </div>
@@ -180,6 +188,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
           ))}
         </div>
         <VerifiedBadge pro={pro} className="mt-3" />
+        {isSpa(pro) ? <SpaFacts pro={pro} /> : null}
 
         {/* On a phone the booking facts sit under the name, where the
             computer's side card would be: open or not, from what price, how far
@@ -461,6 +470,44 @@ function WorkGrid({ works }: { works: Work[] }) {
 }
 
 /** Where and how they work, in the trade's own words. */
+/** Where the spa is, when it is open, how many beds and what it offers (owner, 08/11/2026). */
+function SpaFacts({ pro }: { pro: Pro }) {
+  const open = openState(pro.openingHours ?? [])
+  const amenities = spaAmenities(pro)
+  return (
+    <div className="mt-4 space-y-3 rounded-[var(--radius-lg)] border border-line bg-surface p-4">
+      <div className="flex items-start gap-3">
+        <MapPin className="mt-0.5 size-4 shrink-0 text-accent" />
+        <p className="flex-1 text-body">
+          {pro.studioAddress}
+          <span className="block text-meta text-muted">{pro.district}, {pro.city}</span>
+        </p>
+        <a href={spaDirectionsLink(pro)} target="_blank" rel="noreferrer" className="inline-flex h-10 shrink-0 items-center rounded-full bg-accent-soft px-4 text-meta font-bold text-accent-dark hover:bg-[#F8DCE6]">
+          Chỉ đường
+        </a>
+      </div>
+      <p className="flex items-center gap-3 text-body">
+        <Clock className="size-4 shrink-0 text-accent" />
+        <span className="flex-1">{hoursSummary(pro.openingHours ?? [])}</span>
+        <span className={cn("text-meta font-bold", open.open ? "text-success" : "text-muted")}>{open.open ? "Đang mở" : open.label}</span>
+      </p>
+      <p className="flex items-center gap-3 text-body">
+        <BedDouble className="size-4 shrink-0 text-accent" />
+        {pro.beds ?? 1} giường · {SPA.payAtSpa.toLowerCase()}
+      </p>
+      {amenities.length ? (
+        <ul className="flex flex-wrap gap-2 pt-1">
+          {amenities.map((a) => (
+            <li key={a.id} className="rounded-full px-3 py-1 text-meta font-medium" style={{ background: SPA_TINT.bg, color: SPA_TINT.fg }}>
+              {a.label}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  )
+}
+
 function WhereFacts({ pro, className }: { pro: Pro; className?: string }) {
   const studioBookingOpen = useApp().platform?.studioBookingOpen ?? false
 
@@ -477,7 +524,12 @@ function WhereFacts({ pro, className }: { pro: Pro; className?: string }) {
           {km !== null && <span className="text-ink-soft"> · cách bạn khoảng {km.toLocaleString("vi-VN")} km</span>}
         </span>
       </li>
-      {pro.homeService ? (
+      {isSpa(pro) ? (
+        <li className="flex items-start gap-2.5">
+          <Store className="mt-0.5 size-4 shrink-0 text-muted" />
+          Khách đến spa: {pro.studioAddress}
+        </li>
+      ) : pro.homeService ? (
         <li className="flex items-start gap-2.5">
           <Home className="mt-0.5 size-4 shrink-0 text-muted" />
           {onlyOnLocation
@@ -538,7 +590,7 @@ function About({ pro }: { pro: Pro }) {
               Nhận lịch ở {pro.areas.join(", ")}
             </li>
           )}
-          {studioBookingOpen && pro.studioAddress && (
+          {studioBookingOpen && pro.studioAddress && !isSpa(pro) && (
             <li className="flex items-start gap-2.5">
               <Store className="mt-0.5 size-4 shrink-0 text-muted" />
               Studio: {pro.studioAddress}

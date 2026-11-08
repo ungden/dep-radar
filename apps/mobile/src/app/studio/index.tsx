@@ -6,6 +6,8 @@ import { addDays, formatCountdown, formatDateLong, formatPrice, localDate, today
 import { AcceptingSwitch } from "@/components/accepting-switch"
 import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
 import { PartnerAppointments } from "@/components/partner-appointments"
+import { BedBoard } from "@/components/bed-board"
+import { isSpa } from "@/shared"
 import { StudioHeader } from "@/components/studio-header"
 import { useApp } from "@/state/app"
 import { useNow } from "@/state/keyboard"
@@ -33,6 +35,7 @@ export default function Today() {
   const today = todayISO()
   const monday = addDays(today, -((new Date(`${today}T00:00:00Z`).getUTCDay() + 6) % 7))
   const toAccept = all.filter((b) => b.status === "pending").sort((a, b) => a.confirmBy.localeCompare(b.confirmBy))
+  const spa = isSpa(app.myPro)
   const todays = all.filter((b) => b.date === today && ["confirmed", "in_progress"].includes(b.status)).sort((a, b) => a.time.localeCompare(b.time))
   const week = all.filter((b) => b.status === "completed" && b.completedAt && localDate(b.completedAt) >= monday)
   const earned = week.reduce((sum, b) => sum + b.quote.payout, 0)
@@ -112,7 +115,7 @@ export default function Today() {
                       </Txt>
                     </View>
                     <Txt v="meta" color={colors.inkSoft}>
-                      {b.customer.name} · {b.atHome ? b.district : "Tại studio"} · {b.time}, {b.date.split("-").reverse().join("/")}
+                      {b.customer.name} · {b.atHome ? b.district : spa ? "Tại spa" : "Tại studio"} · {b.time}, {b.date.split("-").reverse().join("/")}
                     </Txt>
                   </Press>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -147,6 +150,13 @@ export default function Today() {
               Hôm nay trống lịch.{next ? ` Lịch gần nhất: ${next.time}, ${next.date.split("-").reverse().join("/")}.` : ""}
             </Txt>
           ) : null}
+          {spa && app.myPro ? (
+            <BedBoard
+              beds={app.myPro.beds ?? 1}
+              bookings={all.filter((b) => b.date === today)}
+              hours={(app.myPro.openingHours ?? []).filter((h) => h.weekday === new Date(`${today}T00:00:00Z`).getUTCDay())}
+            />
+          ) : null}
           {todays.length ? (
             <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 20 }}>
               {todays.map((b, i) => (
@@ -162,7 +172,7 @@ export default function Today() {
                   <View style={{ flex: 1, gap: 2 }}>
                     <Txt w={600}>{b.serviceName}</Txt>
                     <Txt v="meta" color={colors.inkSoft} numberOfLines={1}>
-                      {b.customer.name} · {b.atHome ? b.district : "Tại studio"}
+                      {b.customer.name} · {b.atHome ? b.district : spa ? `Giường ${b.seat}` : "Tại studio"}
                     </Txt>
                   </View>
                   <Icon name="right" size={14} color={colors.muted} />

@@ -1,6 +1,7 @@
 "use client"
 
-import { serviceLocationOpen } from "@/lib/launch"
+import { isSpa, listingLocationOpen } from "@/lib/launch"
+import { SPA, bedsLeftLabel, spaDirectionsLink } from "@/lib/spa"
 
 import * as React from "react"
 import { Suspense } from "react"
@@ -62,7 +63,7 @@ function BookGate() {
   const requested = getTemplate(params.get("service") ?? "")
   const pro = proView(state, proId)
 
-  if (!pro || !bookableServicesOf(state, proId).length || (requested && !serviceLocationOpen(requested, studioBookingOpen))) {
+  if (!pro || !bookableServicesOf(state, proId).length || (requested && !listingLocationOpen(requested, pro, studioBookingOpen))) {
     return (
       <div className="mx-auto max-w-2xl">
         <PageHeader back title="Đặt lịch" />
@@ -152,7 +153,8 @@ function BookingFlow({ proId }: { proId: string }) {
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   const [doneId, setDoneId] = React.useState<string | null>(null)
-  const [atHomePref, setAtHome] = React.useState(!studioBookingOpen || params.get("place") !== "studio")
+  const spa = isSpa(pro)
+  const [atHomePref, setAtHome] = React.useState(!spa && (!studioBookingOpen || params.get("place") !== "studio"))
 
   const priceOfLine = (line: Pick<CartLine, "templateId" | "variantId">) => priceOf(state, proId, line.templateId, line.variantId)
   const lines = cartOrder(cart.filter((line) => priceOfLine(line) !== null))
@@ -167,8 +169,8 @@ function BookingFlow({ proId }: { proId: string }) {
   const items = cartItems(lines)
   const itemsKey = JSON.stringify(items)
   const studioOnly = lines.some((line) => getTemplate(line.templateId)?.studioOnly)
-  const canStudio = studioBookingOpen && Boolean(pro.studioAddress)
-  const atHome = !studioOnly && (atHomePref || !canStudio)
+  const canStudio = (studioBookingOpen || spa) && Boolean(pro.studioAddress)
+  const atHome = !spa && !studioOnly && (atHomePref || !canStudio)
 
   const tap = (template: string, variantChoice: string) => {
     const result = toggleCartLine(lines, template, variantChoice)
@@ -205,12 +207,13 @@ function BookingFlow({ proId }: { proId: string }) {
   // without an address the server measures from the freelancer's own location.
   const [slotRetry, retrySlots] = React.useReducer((n: number) => n + 1, 0)
   const slotKey = [proId, itemsKey, date, atHome, addressId, slotRetry].join("|")
-  const [loaded, setLoaded] = React.useState<{ key: string; list?: { startsAt: string; time: string }[]; error?: string } | null>(null)
+  const [loaded, setLoaded] = React.useState<{ key: string; list?: { startsAt: string; time: string; freeBeds?: number }[]; error?: string } | null>(null)
   React.useEffect(() => {
     if (!items.length) return
     let live = true
-    void actions
-      .cartSlotsFor({ proId, items, date, atHome, addressId })
+    void (spa
+      ? actions.cartSlotBedsFor({ proId, items, date }).then((r) => (r.ok ? { ok: true as const, data: r.data.filter((x) => x.freeBeds > 0) } : r))
+      : actions.cartSlotsFor({ proId, items, date, atHome, addressId }))
       .then((result) => { if (live) setLoaded({ key: slotKey, ...(result.ok ? { list: result.data } : { error: result.error }) }) })
       .catch(() => { if (live) setLoaded({ key: slotKey, error: "Không tải được giờ trống. Kiểm tra kết nối và thử lại." }) })
     return () => {
@@ -324,7 +327,7 @@ function BookingFlow({ proId }: { proId: string }) {
         <span className="flex size-20 items-center justify-center rounded-full bg-success-soft text-success">
           <CheckCircle2 className="size-10" />
         </span>
-        <h1 className="mt-5 text-[28px] font-bold tracking-tight">Đã gửi yêu cầu đặt lịch</h1>
+        <h1 className="mt-5 text-[28px] font-bold tracking-tight">{spa ? SPA.sent : "Đã gửi yêu cầu đặt lịch"}</h1>
         <p className="mt-2 text-body text-ink-soft">
           {pro.name} xem lịch {time} · {formatDateLong(date)} và bấm nhận trong app
           {responseTime ? `, thường trong ${responseTime}` : ""}. Nhận rồi thì hai bên nhắn tin, gọi được cho nhau trong lịch hẹn.
@@ -336,6 +339,11 @@ function BookingFlow({ proId }: { proId: string }) {
           <ButtonLink href={`/bookings/${doneId}`} size="lg">
             Xem lịch hẹn
           </ButtonLink>
+          {spa && pro.studioAddress ? (
+            <ButtonLink href={spaDirectionsLink(pro)} variant="soft" target="_blank" rel="noreferrer">
+              Chỉ đường đến spa
+            </ButtonLink>
+          ) : null}
           <ButtonLink href="/" variant="ghost">
             Về trang khám phá
           </ButtonLink>
@@ -444,7 +452,16 @@ function BookingFlow({ proId }: { proId: string }) {
               hours are free, so it comes before the time. */}
           <section className="mt-6 rounded-2xl bg-surface p-4 shadow-[var(--shadow-soft)]">
             <h2 className="mb-3 font-semibold">Làm ở đâu?</h2>
-            <div className={cn("grid gap-2", studioBookingOpen && "grid-cols-2")}>
+            {spa ? (
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-body">
+                  <span className="flex items-center gap-1.5 font-semibold"><Store className="size-4" /> Tại {pro.name}</span>
+                  <span className="text-ink-soft">{pro.studioAddress}, {pro.district}</span>
+                </p>
+                <a href={spaDirectionsLink(pro)} target="_blank" rel="noreferrer" className="inline-flex h-10 shrink-0 items-center rounded-full bg-accent-soft px-4 text-meta font-bold text-accent-dark">Chỉ đường</a>
+              </div>
+            ) : null}
+            <div className={cn("grid gap-2", spa && "hidden", studioBookingOpen && "grid-cols-2")}>
               <PlaceOption
                 active={atHome}
                 disabled={studioOnly || !pro.homeService}
@@ -504,7 +521,8 @@ function BookingFlow({ proId }: { proId: string }) {
                 {quote.travelFee === 0 ? " Miễn phí di chuyển." : ` Phí di chuyển ${formatPrice(quote.travelFee)}.`}
               </p>
             )}
-            {!atHome && canStudio && <p className="mt-2 text-label text-ink-soft">Studio: {pro.studioAddress}</p>}
+            {!atHome && canStudio && !spa && <p className="mt-2 text-label text-ink-soft">Studio: {pro.studioAddress}</p>}
+            {spa && <p className="mt-3 text-label text-ink-soft">{SPA.arrive} {SPA.payAtSpa}.</p>}
           </section>
 
           <section className="mt-6">
@@ -575,6 +593,9 @@ function BookingFlow({ proId }: { proId: string }) {
                       )}
                     >
                       {slot.time}
+                      {spa && (pro.beds ?? 1) > 1 && slot.freeBeds ? (
+                        <span className={cn("block text-[12px] leading-[14px]", active ? "text-white/80" : "text-muted")}>{bedsLeftLabel(slot.freeBeds)}</span>
+                      ) : null}
                       {urgent && (
                         <span className="absolute -right-1 -top-2.5 inline-flex items-center gap-0.5 rounded-full bg-warning px-1.5 text-label font-semibold leading-[18px] text-white">
                           <Zap className="size-3" aria-hidden />
@@ -638,7 +659,7 @@ function BookingFlow({ proId }: { proId: string }) {
             <SummaryRow label="Địa điểm" onEdit={() => setStep(2)}>
               <span className="mb-0.5 flex items-center gap-1 text-label font-normal text-accent">
                 {atHome ? <Home className="size-3.5" /> : <Store className="size-3.5" />}
-                {atHome ? placeLabelText : "Tại studio"}
+                {atHome ? placeLabelText : spa ? `Tại ${pro.name}` : "Tại studio"}
               </span>
               {atHome
                 ? chosen

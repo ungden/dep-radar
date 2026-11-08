@@ -1,6 +1,6 @@
 "use client"
 
-import { providerLocationOpen } from "@/lib/launch"
+import { isSpa, providerLocationOpen } from "@/lib/launch"
 
 import * as React from "react"
 import { Suspense } from "react"
@@ -110,7 +110,8 @@ function SearchView() {
   // What is for sale, as on the home page: a service somebody in scope lists,
   // matched on the service itself -- its name, description and category.
   const services = React.useMemo(() => {
-    const pros = state.pros.filter(proOk)
+    // Spas have their own page (/spa).
+    const pros = state.pros.filter((p) => proOk(p) && !isSpa(p))
     const list = serviceOffers({ studioBookingOpen: state.platform?.studioBookingOpen, pros, proServices: state.proServices, works: state.works, city: city || null, vertical, priceFilter: maxPrice ? (total) => total <= maxPrice : undefined }).filter(
       (o) =>
         (!category || o.template.category === category) &&
