@@ -1568,13 +1568,10 @@ begin
   perform public.notify(other_customer, 'push_test', 'Thử thông báo', 'Nội dung thử', '/me');
   assert exists (select 1 from public.notifications where account_id = other_customer and kind = 'push_test'),
     'a notification with a phone to push to was not written';
-  if to_regclass('net.http_request_queue') is not null then
-    execute 'select count(*) from net.http_request_queue where url = $1'
-      into n using 'https://exp.host/--/api/v2/push/send';
-    assert n > 0, 'no push was queued for the notification';
-  else
-    raise notice 'pg_net is not installed here; the push itself is not exercised';
-  end if;
+  select count(*) into n
+    from partner_private.push_deliveries d join public.notifications v on v.id=d.notification_id
+    where v.account_id=other_customer and v.kind='push_test' and d.account_id=other_customer and d.status='pending';
+  assert n = 10, 'the durable push queue did not capture the active devices exactly once';
   -- Nothing real to send to: leave no tokens behind for the API tests' notifications.
   delete from public.push_tokens where token like 'ExponentPushToken[rules-test-%';
 
