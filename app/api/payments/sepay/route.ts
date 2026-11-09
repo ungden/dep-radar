@@ -41,20 +41,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: "Database unavailable" }, { status: 500 })
   }
 
-  // One transaction, one reference: whichever memo credits first, the others
-  // can no longer (the ref is unique among top-ups).
-  for (const memo of memoCandidates(tx.content, tx.code)) {
-    const { data, error } = await admin.rpc("record_bank_topup", { p_content: memo, p_amount: tx.amount, p_ref: tx.ref })
-    if (error) {
-      // Logged without the memo or the amount: the reference is enough to find it.
-      console.error("sepay webhook: record_bank_topup failed for", tx.ref, error.message)
-      return NextResponse.json({ success: false, error: "Database error" }, { status: 500 })
-    }
-    if (data === true) return NextResponse.json({ success: true, credited: true })
+  const { data, error } = await admin.rpc("record_marketplace_transfer" as never, {
+    p_ref: tx.ref, p_content: tx.content, p_amount: tx.amount, p_code: tx.code,
+    p_memos: memoCandidates(tx.content, tx.code),
+    p_account: tx.account, p_sub: tx.subAccount,
+    p_va: process.env.SEPAY_RECEIVING_VA?.trim() || null,
+  } as never)
+  if (error || !["credited", "duplicate", "unmatched", "other_account"].includes(String(data))) {
+    console.error("sepay webhook: transaction not recorded", tx.ref, error?.code)
+    return NextResponse.json({ success: false, error: "Database error" }, { status: 500 })
   }
-  // No pay code in the memo, or this transaction was already credited. The
-  // first kind waits in Tài chính for the staff; the database skips the second.
-  const { error: unmatched } = await admin.rpc("record_unmatched_transfer" as never, { p_ref: tx.ref, p_content: tx.content, p_amount: tx.amount } as never)
-  if (unmatched) console.error("sepay webhook: record_unmatched_transfer failed for", tx.ref, unmatched.message)
-  return NextResponse.json({ success: true, credited: false })
+  return NextResponse.json({ success: true, credited: data === "credited" })
 }

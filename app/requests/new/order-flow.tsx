@@ -1,5 +1,6 @@
 "use client"
 
+import { requestCopy } from "@/lib/request-copy"
 import * as React from "react"
 import { Suspense } from "react"
 import Image from "next/image"
@@ -11,15 +12,16 @@ import { ReferenceUpload, type RefUpload } from "@/components/reference-photos"
 import { RequireSession } from "@/components/require-session"
 import { CategoryBubble, IllustrationBadge } from "@/components/shop"
 import { PageSkeleton, inputClass } from "@/components/ui"
-import { CATEGORIES, getTemplate, serviceDuration, serviceQuantity, templatesByCategory, tierLabels } from "@/lib/catalog"
+import { getTemplate, serviceDuration, serviceQuantity, tierLabels } from "@/lib/catalog"
 import { actions } from "@/lib/client-actions"
 import { needsConductNote } from "@/lib/conduct"
 import { categoryPhoto } from "@/lib/design/photos"
-import { POLICY, isUrgent } from "@/lib/pricing"
+import { POLICY, isUrgent, isTooSoon } from "@/lib/pricing"
+import { REQUEST_GOALS, canRequestService, requestCategories, requestSelection, requestTemplates, requestVariants } from "@/lib/request-goals"
 import { moveRadio } from "@/lib/radio-navigation"
 import { useApp, useRefresh } from "@/lib/store"
 import type { CategoryId, PaymentMethod, ServiceTemplate } from "@/lib/types"
-import { addDays, cn, formatDateLong, formatDuration, formatPrice, localTime, todayISO, weekdayShort } from "@/lib/utils"
+import { addDays, cn, formatDateLong, formatDuration, formatPrice, todayISO, weekdayShort } from "@/lib/utils"
 
 /**
  * Đặt theo dịch vụ, one question to a screen: which package and level, when,
@@ -54,9 +56,7 @@ const DRAFT_KEY = "dep360_order_draft"
 const cta = "inline-flex min-h-[54px] items-center justify-center rounded-[var(--radius-md)] bg-accent px-6 text-[17px] font-bold text-white transition-colors hover:bg-accent-dark disabled:pointer-events-none disabled:opacity-40"
 const softButton = "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-accent-soft px-[18px] text-meta font-bold text-accent-dark transition-colors hover:bg-[#F8DCE6]"
 
-const bookable = (t: ServiceTemplate) => !t.addon
-const firstOf = (c: CategoryId) => templatesByCategory(c).filter(bookable)[0]
-const nowTime = () => localTime(new Date().toISOString())
+const firstOf = (c: CategoryId) => requestTemplates(c)[0]
 
 type Draft = {
   /** The link they arrived by: a different one starts over instead of resuming. */
@@ -79,8 +79,8 @@ function readDraft(origin: string): Draft | null {
     if (!raw) return null
     const draft = JSON.parse(raw) as Draft
     const template = getTemplate(draft.templateId)
-    if (draft.origin !== origin || !template || template.addon || template.category !== draft.category) return null
-    if (!template.variants.some((v) => v.id === draft.variantId) || !FEE_CHOICES.includes(draft.feeLimit)) return null
+    if (draft.origin !== origin || !template || !canRequestService(template) || template.category !== draft.category) return null
+    if (!requestVariants(template).some((v) => v.id === draft.variantId) || !FEE_CHOICES.includes(draft.feeLimit)) return null
     return draft
   } catch {
     return null
@@ -133,18 +133,17 @@ function OrderForm() {
   const { session } = state
 
   // Arriving from a service or a trade: start on that one.
-  const askedTemplate = getTemplate(params.get("service") ?? "")
-  const asked = askedTemplate && bookable(askedTemplate) ? askedTemplate : undefined
-  const askedCategory = CATEGORIES.find((c) => c.id === params.get("category"))?.id
-  const origin = `${params.get("service") ?? ""}|${params.get("category") ?? ""}`
+  const asked = requestSelection(params.get("service"), params.get("variant"))
+  const askedCategory = requestCategories.find((c) => c.id === params.get("category"))?.id
+  const origin = `${params.get("service") ?? ""}|${params.get("category") ?? ""}|${params.get("variant") ?? ""}`
   const [start] = React.useState(() => {
     const draft = readDraft(origin)
-    const template = draft ? getTemplate(draft.templateId)! : (asked ?? firstOf(askedCategory ?? "nail"))
+    const template = draft ? getTemplate(draft.templateId)! : (asked?.template ?? (askedCategory ? firstOf(askedCategory) : getTemplate("makeup-party")!))
     return {
       draft,
       category: template.category,
       templateId: template.id,
-      variantId: draft?.variantId ?? template.variants[0].id,
+      variantId: draft?.variantId ?? asked?.variant.id ?? requestSelection(template.id)!.variant.id,
       date: draft && draft.date >= todayISO() ? draft.date : addDays(todayISO(), 2),
     }
   })
@@ -171,9 +170,9 @@ function OrderForm() {
 
   const addressId = state.addresses.some((a) => a.id === pickedAddress) ? pickedAddress : defaultAddressId(state.addresses)
   const chosenAddress = state.addresses.find((a) => a.id === addressId)
-  const templates = templatesByCategory(category).filter(bookable)
+  const templates = requestTemplates(category)
   const tpl = templates.find((t) => t.id === templateId) ?? templates[0]
-  const variant = tpl.variants.find((v) => v.id === variantId) ?? tpl.variants[0]
+  const variant = requestSelection(tpl.id, variantId)!.variant
   const atHome = atHomePref && !tpl.studioOnly
   const heads = serviceQuantity(variant, quantity)
   // post_job fixes the price per person at one of the catalogue's levels.
@@ -197,8 +196,7 @@ function OrderForm() {
 
   const today = todayISO()
   const days = Array.from({ length: DAYS_AHEAD }, (_, i) => addDays(today, i))
-  const now = nowTime()
-  const openTimes = TIME_OPTIONS.filter((t) => date > today || t > now)
+  const openTimes = TIME_OPTIONS.filter((t) => !isTooSoon(date, t))
   const timeOk = openTimes.includes(time) && date >= today
   const packageOk = (variant.sessions ?? 1) === 1 && atHome
   const canContinue = stepIndex === 0 ? packageOk : stepIndex === 1 ? timeOk : true
@@ -299,10 +297,17 @@ function OrderForm() {
             <>
               <Question ref={heading}>{picking ? "Bạn cần làm gì?" : "Chọn gói và mức giá"}</Question>
 
+              <p className="text-ink-soft">{requestCopy.vi.noArtist}</p>
               {picking ? (
                 <div className="space-y-5">
+                  <div className="flex flex-wrap gap-2" aria-label="Nhu cầu thường chọn">
+                    {REQUEST_GOALS.map((g) => <button key={g.templateId} type="button" className={softButton} onClick={() => {
+                      const choice = requestSelection(g.templateId, g.variantId)
+                      if (choice) { setCategory(choice.template.category); pickTemplate(choice.template); setVariantId(choice.variant.id); setPicking(false) }
+                    }}>{g.label}</button>)}
+                  </div>
                   <div role="radiogroup" aria-label="Danh mục" className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:gap-x-2 md:gap-y-4 md:overflow-visible md:px-0">
-                    {CATEGORIES.map((c) => (
+                    {requestCategories.map((c) => (
                       <CategoryBubble
                         key={c.id}
                         category={c}
@@ -339,7 +344,7 @@ function OrderForm() {
 
               <Group title="Chọn gói">
                 <div role="radiogroup" aria-label="Gói" className="grid gap-3 md:grid-cols-2">
-                  {tpl.variants.map((v) => (
+                  {requestVariants(tpl).map((v) => (
                     <Option key={v.id} title={v.label} note={`${formatDuration(v.durationMin)} · từ ${formatPrice(v.minPrice)}${v.perPerson ? " / người" : ""}`} selected={v.id === variant.id} onPick={() => pickVariant(v.id)} />
                   ))}
                 </div>
@@ -505,6 +510,7 @@ function OrderForm() {
                     maxLength={300}
                   />
                 </label>
+                <p className="mt-2 text-meta text-muted">{requestCopy.vi.privacy}</p>
                 <p className="mb-2 mt-4 font-semibold">Ảnh mẫu (không bắt buộc, tối đa 3)</p>
                 <p className="mb-3 text-meta text-muted">Tone makeup, kiểu tóc, mẫu nail bạn muốn. Artist xem trước khi nhận đơn.</p>
                 {session ? <ReferenceUpload value={refs} onChange={setRefs} onError={setError} /> : <p className="text-meta text-ink-soft">Bạn thêm ảnh mẫu được sau khi đăng nhập.</p>}

@@ -2,7 +2,7 @@
 
 import { watchStudioBookingSetting } from "./booking-features"
 import { supabaseBrowser } from "./supabase/client"
-import { providerLocationOpen, serviceLocationOpen } from "./launch"
+import { listingLocationOpen, providerLocationOpen } from "./launch"
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
@@ -79,7 +79,7 @@ export function servicesOf(s: AppState, proId: string, includeInactive = false):
   if (!pro) return []
   const mine = s.session?.proId === pro.id
   const list = mine ? s.myServices : s.proServices.filter((x) => x.proId === pro.id)
-  return list.filter((x) => includeInactive || (x.active && providerLocationOpen(pro, s.platform?.studioBookingOpen) && serviceLocationOpen(getTemplate(x.templateId), s.platform?.studioBookingOpen)))
+  return list.filter((x) => includeInactive || (x.active && providerLocationOpen(pro, s.platform?.studioBookingOpen) && listingLocationOpen(getTemplate(x.templateId), pro, s.platform?.studioBookingOpen)))
 }
 
 /** What can be booked on its own: everything listed but the add-ons (nail art per finger…). */

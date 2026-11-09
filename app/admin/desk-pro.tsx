@@ -239,7 +239,7 @@ export function ProDrawer({ proId, onClose, run }: { proId: string; onClose: () 
                   <Fact label="Tham gia" value={localDate(detail.createdAt)} />
                   <Fact label="Gửi duyệt" value={detail.requestedAt ? timeAgo(detail.requestedAt) : "Chưa"} />
                   <Fact label="Job xong" value={`${detail.completedJobs}${detail.ratingCount ? ` · ★ ${detail.rating.toFixed(1)} (${detail.ratingCount})` : ""}`} />
-                  <Fact label="Phục vụ" value={[detail.homeService ? "Tại nhà" : null, detail.studioAddress ? "Tại tiệm" : null].filter(Boolean).join(", ") || "—"} />
+                  <Fact label="Phục vụ" value={detail.spaBeds !== null ? `Spa, ${detail.spaBeds} giường · ${detail.studioAddress ?? "chưa có địa chỉ"}` : [detail.homeService ? "Tại nhà" : null, detail.studioAddress ? "Tại tiệm" : null].filter(Boolean).join(", ") || "—"} />
                   <Fact label="Kinh nghiệm" value={detail.yearsExp ? `${detail.yearsExp} năm` : "—"} />
                   <Fact label="Mã nạp" value={detail.payCode ?? "—"} />
                 </dl>

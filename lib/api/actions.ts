@@ -110,6 +110,23 @@ export async function fetchSlots(input: {
   return { ok: true, data: ((data ?? []) as unknown as string[]).map((startsAt) => ({ startsAt, time: localTime(startsAt) })) }
 }
 
+/** A spa's start times, with how many beds stay free for the whole visit (cart_slot_beds). */
+export async function fetchCartSlotBeds(input: {
+  proId: string
+  items: { template: string; variant: string; quantity: number }[]
+  date: string
+}): Promise<ActionResult<{ startsAt: string; time: string; freeBeds: number }[]>> {
+  const supabase = await supabaseServer()
+  const pro = await proIdFor(input.proId)
+  if (!pro) return { ok: false, error: "Không tải được giờ trống. Thử lại nhé." }
+  const { data, error } = await supabase.rpc("cart_slot_beds", { p_pro: pro, p_items: input.items, p_date: input.date })
+  if (error) {
+    console.error("cart_slot_beds failed:", error.message)
+    return { ok: false, error: "Không tải được giờ trống. Kiểm tra kết nối và thử lại." }
+  }
+  return { ok: true, data: (data ?? []).map((r) => ({ startsAt: r.starts_at, time: localTime(r.starts_at), freeBeds: Number(r.free_beds) })) }
+}
+
 /** Start times with room for the whole cart. */
 export async function fetchCartSlots(input: {
   proId: string
@@ -215,6 +232,7 @@ export async function createBooking(input: {
 
 /** The whole cart in one transaction: a line that no longer fits leaves nothing behind. */
 export async function createCartBooking(input: {
+  operationId: string
   proId: string
   items: { template: string; variant: string; quantity: number }[]
   startsAt: string
@@ -228,8 +246,9 @@ export async function createCartBooking(input: {
   const pro = await proIdFor(input.proId)
   if (!pro) return { ok: false as const, error: "Không tìm thấy chuyên viên." }
   return rpc<string>(
-    "create_cart_booking",
+    "create_cart_booking_once",
     {
+      p_operation_id: input.operationId,
       p_pro: pro,
       p_items: input.items,
       p_starts_at: input.startsAt,
@@ -681,6 +700,10 @@ export async function saveProProfile(input: {
   categories?: CategoryId[]
   city?: string
   district?: string
+  /** A spa (20261108100000): a place with beds and amenities. */
+  kind?: "artist" | "spa"
+  beds?: number
+  amenities?: string[]
 }): Promise<ActionResult> {
   const supabase = await supabaseServer()
   const { data: auth } = await supabase.auth.getUser()
@@ -952,4 +975,10 @@ export async function partnerAppointments() {
   if (error) throw new Error(messageFor(error))
   type Appointment = { id: string; booking_id: string; sequence: number; starts_at: string; duration_min: number; confirmed: boolean; booking: { status: string; service_contract: { serviceName: string } } }
   return (data as unknown as Appointment[]).filter((s) => ["pending", "confirmed", "in_progress", "completed"].includes(s.booking.status)).map((s) => ({ ...s, serviceName: s.booking.service_contract.serviceName }))
+}
+
+export async function noteMarketplaceStep(flow: string, step: "opened" | "slot_chosen" | "confirmation" | "failed" | "created") {
+  if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(flow)) return
+  const client = await supabaseServer()
+  await client.rpc("note_marketplace_step" as never, { p_flow: flow, p_step: step } as never)
 }

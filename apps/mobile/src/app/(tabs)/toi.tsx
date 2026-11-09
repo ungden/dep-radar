@@ -39,9 +39,9 @@ export default function Me() {
   const shownEmail = account?.email && !isPhoneEmail(account.email) ? account.email : null
 
   // Only for someone who already has a partner profile; everyone else sees one quiet row at the bottom.
-  const toPartner = async () => {
+  const toPartner = async (board = false) => {
     await app.switchMode("pro")
-    router.replace("/studio")
+    router.replace(board ? "/studio/viec-moi" : "/studio")
   }
 
   const deleteAccount = () =>
@@ -125,6 +125,8 @@ export default function Me() {
 
       {app.myPro ? (
         <Section>
+          <Row icon="megaphone" label="Đơn khách đang cần" onPress={() => void toPartner(true)} />
+          <Divider style={{ marginLeft: 52 }} />
           <Row icon="swap" label="Chuyển sang 360dep Đối tác" onPress={() => void toPartner()} />
         </Section>
       ) : null}

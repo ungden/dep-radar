@@ -480,6 +480,8 @@ export interface AdminProDetail {
   area: string
   homeService: boolean
   studioAddress: string | null
+  /** A spa (20261108100000) and its beds. */
+  spaBeds: number | null
   yearsExp: number | null
   avatar: string | null
   phone: string | null
@@ -591,6 +593,7 @@ export async function adminProDetail(proId: string): Promise<ActionResult<AdminP
       area: [p.district, p.city].filter(Boolean).join(", "),
       homeService: Boolean(p.home_service),
       studioAddress: p.studio_address ?? null,
+      spaBeds: p.kind === "spa" ? Number(p.beds ?? 1) : null,
       yearsExp: p.years_exp ?? null,
       avatar: p.avatar_path ?? null,
       phone: accountRes.data?.phone ?? null,

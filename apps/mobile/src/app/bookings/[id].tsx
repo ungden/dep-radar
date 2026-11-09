@@ -29,6 +29,7 @@ import { openThread } from "@/data/chat"
 import { formatCountdown, formatDateLong, formatDuration, formatKm, formatPhone, formatPrice, localDate, localTime } from "@/data/format"
 import type { Result } from "@/data/supabase"
 import { ReferencePhotos } from "@/components/reference-photos"
+import { BookingPayment } from "@/components/booking-payment"
 import { BookingContract } from "@/components/booking-contract"
 import { VoucherCard } from "@/components/booking-voucher"
 import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
@@ -116,7 +117,6 @@ export default function BookingDetail() {
     setReasonFor("decline")
     setReason("")
     reasonSheet.open()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [askDecline])
 
   if (!app.uid) return <EmptyState title="Cần đăng nhập" action="Đăng nhập" onAction={() => router.push("/login")} />
@@ -315,6 +315,7 @@ export default function BookingDetail() {
         ) : null}
       </Card>
 
+      <BookingPayment key={b.id} id={b.id} customer={!iAmPro} status={b.status} paid={Boolean(b.paidAt)} />
       {voucherOpen && app.uid ? <VoucherCard booking={b} uid={app.uid} onChanged={() => void booking.reload()} /> : null}
 
       <Card>
@@ -404,7 +405,7 @@ export default function BookingDetail() {
         {/* "Đã nhận tiền": the freelancer's record that the customer paid. */}
         {b.paidAt ? (
           <Txt v="meta" color={colors.success} center>
-            {iAmPro ? "Bạn" : b.pro.name} đã xác nhận nhận tiền lúc {at(b.paidAt)}.
+            {b.paymentMethod === "online" ? "Hệ thống đã nhận QR" : `${iAmPro ? "Bạn" : b.pro.name} đã xác nhận nhận tiền`} lúc {at(b.paidAt)}.
           </Txt>
         ) : iAmPro && (b.status === "in_progress" || b.status === "completed") ? (
           <Button label="Đã nhận tiền" icon="check" variant="secondary" full busy={busy === "paid"} onPress={() => void run("paid", () => confirmPaymentReceived(b.id), "Đã lưu xác nhận nhận tiền")} />

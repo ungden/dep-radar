@@ -142,11 +142,11 @@ describe("distance from the customer's own location", () => {
   })
 })
 
-describe("Nail and Makeup first", () => {
-  it("moves Nail and Makeup to the front and keeps the rest in order", () => {
+describe("Makeup and Nail first", () => {
+  it("moves Makeup and Nail to the front and keeps the rest in order", () => {
     const shuffled = [...CATEGORIES].reverse()
     const ids = priorityFirst(shuffled).map((c) => c.id)
-    expect(ids.slice(0, 2)).toEqual(["nail", "makeup"])
+    expect(ids.slice(0, 2)).toEqual(["makeup", "nail"])
     expect(ids.slice(2)).toEqual(shuffled.map((c) => c.id).filter((id) => id !== "nail" && id !== "makeup"))
   })
 
@@ -154,7 +154,7 @@ describe("Nail and Makeup first", () => {
     const ordered = CATEGORIES.filter((c) => c.vertical === "beauty").reverse()
     const pinned = pinPriority({ ordered, row: ordered.slice(0, 4), more: true }, "skincare")
     expect(pinned.row).toHaveLength(4)
-    expect(pinned.row.slice(0, 2).map((c) => c.id)).toEqual(["nail", "makeup"])
+    expect(pinned.row.slice(0, 2).map((c) => c.id)).toEqual(["makeup", "nail"])
     expect(pinned.row.at(-1)!.id).toBe("skincare")
   })
 
@@ -167,8 +167,8 @@ describe("Nail and Makeup first", () => {
       { id: "4", templateId: "nail-design", category: "makeup" as const },
     ]
     const albums = albumsOf(works)
-    expect(albums.map((a) => a.category)).toEqual(["nail", "makeup", "hair"])
-    expect(albums[0].works.map((w) => w.id)).toEqual(["3", "4"])
+    expect(albums.map((a) => a.category)).toEqual(["makeup", "nail", "hair"])
+    expect(albums[1].works.map((w) => w.id)).toEqual(["3", "4"])
   })
 })
 

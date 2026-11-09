@@ -13,8 +13,8 @@ export default function RequestsPage() {
         title="Yêu cầu của tôi"
         back="/bookings"
         action={
-          <ButtonLink href="/requests/new" size="sm" variant="soft">
-            <Plus className="size-4" /> Đăng
+          <ButtonLink href="/dat-lich" size="sm" variant="soft">
+            <Plus className="size-4" /> Yêu cầu mới
           </ButtonLink>
         }
       />
@@ -34,7 +34,7 @@ function RequestList() {
         icon={<Megaphone className="size-6" />}
         title="Bạn chưa đăng yêu cầu nào"
         text="Chọn dịch vụ và giờ, người làm gần bạn được báo. Ai nhận trước sẽ làm với giá niêm yết."
-        action={<ButtonLink href="/requests/new">Đăng yêu cầu</ButtonLink>}
+        action={<ButtonLink href="/dat-lich">Đăng yêu cầu</ButtonLink>}
       />
     )
   }

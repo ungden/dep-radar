@@ -3,14 +3,14 @@ import { bayesianRating, rankScore } from "./trust"
 import type { Category, CategoryId, Pro } from "./types"
 
 /**
- * How customers find a person. Every category stays open, but Nail and Makeup
- * are what most customers come for, so they come first and the list of people
- * opens on Nail.
+ * How customers find a person. Every category stays open, but Makeup and Nail
+ * are what most customers come for, so they come first (Makeup is the main
+ * business, owner 08/11/2026) and the list of people opens on Nail.
  */
-export const PRIORITY_CATEGORIES: readonly CategoryId[] = ["nail", "makeup"]
+export const PRIORITY_CATEGORIES: readonly CategoryId[] = ["makeup", "nail"]
 export const DEFAULT_CATEGORY: CategoryId = "nail"
 
-/** The same categories with Nail and Makeup moved to the front; the rest keep their order. */
+/** The same categories with Makeup and Nail moved to the front; the rest keep their order. */
 export function priorityFirst<T extends Pick<Category, "id">>(categories: readonly T[]): T[] {
   const rank = (c: T) => {
     const i = PRIORITY_CATEGORIES.indexOf(c.id)

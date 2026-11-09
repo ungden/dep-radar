@@ -6,6 +6,8 @@ import { CalendarDays, ChevronRight, Megaphone } from "lucide-react"
 import { BookingCard } from "@/components/booking-card"
 import { RequireSession } from "@/components/require-session"
 import { ButtonLink, EmptyState, PageHeader, Tabs } from "@/components/ui"
+import { rebookCart } from "@/lib/service-cart"
+import { formatPrice } from "@/lib/utils"
 import { useApp } from "@/lib/store"
 import type { BookingStatus } from "@/lib/types"
 
@@ -67,11 +69,14 @@ function BookingsView() {
           { value: "cancelled", label: "Đã huỷ" },
         ]}
       />
+      {tab === "completed" && list.length > 0 && <p className="mt-3 text-meta text-ink-soft">{list.length} lịch hoàn thành · {formatPrice(list.reduce((sum, b) => sum + b.quote.total - b.discount, 0))} giá trị lịch</p>}
       {list.length ? (
         <ul className="mt-4 space-y-3">
-          {list.map((b) => (
+          {list.map((b, i) => (
             <li key={b.id}>
+              {tab !== "upcoming" && list[i - 1]?.date.slice(0, 7) !== b.date.slice(0, 7) && <h2 className="mb-2 mt-5 text-lead font-semibold">Tháng {Number(b.date.slice(5, 7))}/{b.date.slice(0, 4)}</h2>}
               <BookingCard booking={b} />
+              {tab === "completed" && <Link href={`/book/${b.proId}?cart=${encodeURIComponent(rebookCart(b))}`} className="flex min-h-11 items-center justify-end px-2 text-meta font-semibold text-accent-dark">Đặt lại</Link>}
             </li>
           ))}
         </ul>

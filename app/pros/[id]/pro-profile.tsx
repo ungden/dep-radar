@@ -6,8 +6,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
+  BedDouble,
   CalendarDays,
   Camera,
+  Clock,
   Car,
   Check,
   ChevronLeft,
@@ -24,16 +26,19 @@ import {
 import { LevelBadge, whereLabel } from "@/components/beauty"
 import { FollowButton } from "@/components/follow-button"
 import { ServiceMenu } from "@/components/service-menu"
+import { IllustrationBadge } from "@/components/shop"
 import { TradeDot } from "@/components/trade"
 import { RatingSummaryBlock, ReviewItem, VerifiedBadge, VerifiedMark } from "@/components/trust"
 import { Avatar, BottomBar, ButtonLink, Chip, EmptyState, Tabs } from "@/components/ui"
-import { CATEGORIES, categoryLabel, verticalOf } from "@/lib/catalog"
+import { CATEGORIES, categoryLabel, getTemplate, serviceQuantity, verticalOf } from "@/lib/catalog"
 import { albumsOf } from "@/lib/discovery"
 import { TRAVEL_FEE_SUMMARY, travelFeeFor } from "@/lib/pricing"
 import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp, worksOf } from "@/lib/store"
 import { personWord, tradesOf } from "@/lib/trade"
 import type { CategoryId, ModelProfile, Pro, Work } from "@/lib/types"
 import { showsAverage } from "@/lib/connection"
+import { isSpa } from "@/lib/launch"
+import { SPA, SPA_TINT, hoursSummary, openState, spaAmenities, spaDirectionsLink, spaPhoto } from "@/lib/spa"
 import { cn, formatPrice, formatResponseTime, parseISODate } from "@/lib/utils"
 
 type Tab = "works" | "services" | "reviews" | "about"
@@ -86,7 +91,18 @@ function ListedProfile({ pro }: { pro: Pro }) {
   const works = worksOf(state, pro.id)
   const services = servicesOf(state, pro.id)
   const reviews = reviewsOf(state, pro.id)
-  const from = fromPrice(state, pro.id)
+  const requestedService = services.find((s) => s.templateId === params.get("service"))
+  const requestedVariant = params.get("variant")
+  const hasPackage = Boolean(requestedService && requestedVariant && requestedService.prices[requestedVariant] != null)
+  const bookingParams = new URLSearchParams()
+  if (hasPackage && requestedService && requestedVariant) {
+    bookingParams.set("service", requestedService.templateId)
+    bookingParams.set("variant", requestedVariant)
+    if (params.get("work")) bookingParams.set("work", params.get("work")!)
+  }
+  const bookingHref = `/book/${pro.id}${bookingParams.size ? "?" + bookingParams : ""}`
+  const variant = requestedService && requestedVariant ? getTemplate(requestedService.templateId)?.variants.find((v) => v.id === requestedVariant) : undefined
+  const from = hasPackage && requestedService && requestedVariant && variant ? requestedService.prices[requestedVariant] * serviceQuantity(variant) : fromPrice(state, pro.id)
   const own = state.session?.proId === pro.id
   // The category the customer came from (a card in the Nail list opens on Nail).
   const rawAlbum = params.get("album")
@@ -97,7 +113,10 @@ function ListedProfile({ pro }: { pro: Pro }) {
   const [chosen, setChosen] = React.useState<Tab | null>(null)
   const tab = chosen ?? fallback
   const [withPhotos, setWithPhotos] = React.useState(false)
-  const shownReviews = withPhotos ? reviews.filter((r) => r.photo) : reviews
+  const [stars, setStars] = React.useState(0)
+  const [reviewLimit, setReviewLimit] = React.useState(6)
+  const filteredReviews = reviews.filter((r) => (!withPhotos || r.photo) && (!stars || r.rating === stars))
+  const shownReviews = filteredReviews.slice(0, reviewLimit)
   const tabsRef = React.useRef<HTMLDivElement>(null)
 
   // Arriving from a link to the price list or the reviews: go straight there.
@@ -114,6 +133,8 @@ function ListedProfile({ pro }: { pro: Pro }) {
     .map((w) => (w.kind === "before_after" && w.images[1] ? w.images[1] : w.images[0]))
     .filter(Boolean)
     .slice(0, 3)
+  // A spa without photos yet shows a labelled illustration of a room.
+  if (isSpa(pro) && !covers.length) covers.push(spaPhoto(0))
   const back = () => (window.history.length > 1 ? router.back() : router.push("/"))
 
   return (
@@ -129,6 +150,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
           {covers.map((src, i) => (
             <div key={src + i} className={cn("relative h-full", i > 0 && "hidden md:block")}>
               <Image src={src} alt="" fill priority={i === 0} sizes="(min-width: 768px) 400px, 100vw" className="object-cover" />
+              {src === spaPhoto(0) ? <IllustrationBadge className="bottom-3 left-3" /> : null}
             </div>
           ))}
         </div>
@@ -180,6 +202,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
           ))}
         </div>
         <VerifiedBadge pro={pro} className="mt-3" />
+        {isSpa(pro) ? <SpaFacts pro={pro} /> : null}
 
         {/* On a phone the booking facts sit under the name, where the
             computer's side card would be: open or not, from what price, how far
@@ -232,7 +255,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
                 <EmptyState title="Chưa có tác phẩm" text={`${pro.name} chưa đăng tác phẩm nào.`} />
               ))}
 
-            {tab === "services" && <ServiceMenu proId={pro.id} bookable={!own} initialCategory={album} />}
+            {tab === "services" && <ServiceMenu proId={pro.id} bookable={!own} initialCategory={album} initialService={requestedService?.templateId} initialVariant={requestedVariant ?? undefined} workId={params.get("work") ?? undefined} />}
 
             {tab === "reviews" && (
               <div id={REVIEWS_ANCHOR} className="mt-5 scroll-mt-24">
@@ -249,6 +272,11 @@ function ListedProfile({ pro }: { pro: Pro }) {
                     </Chip>
                   )}
                 </div>
+                <label className="mb-3 inline-flex min-h-11 items-center gap-2 text-meta">Số sao
+                  <select value={stars} onChange={(e) => { setStars(Number(e.target.value)); setReviewLimit(6) }} className="rounded-md border border-line px-2 py-2">
+                    <option value={0}>Tất cả</option>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} sao</option>)}
+                  </select>
+                </label>
                 {shownReviews.length ? (
                   <ul className="mt-2 divide-y divide-line">
                     {shownReviews.map((r) => (
@@ -258,6 +286,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
                 ) : (
                   <EmptyState title={withPhotos ? "Chưa có đánh giá kèm ảnh" : "Chưa có đánh giá"} />
                 )}
+              {filteredReviews.length > reviewLimit && <button type="button" className="mt-3 min-h-11 font-semibold text-accent-dark" onClick={() => setReviewLimit((n) => n + 6)}>Xem thêm đánh giá</button>}
               </div>
             )}
 
@@ -289,7 +318,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
                   {pro.acceptingJobs ? "Đang nhận lịch" : "Tạm nghỉ nhận lịch mới"}
                 </p>
                 <WhereFacts pro={pro} className="mt-4" />
-                <BookButton pro={pro} disabled={!services.length} className="mt-5 w-full" />
+                <BookButton href={bookingHref} pro={pro} disabled={!services.length} className="mt-5 w-full" />
                 <p className="mt-2 text-meta text-muted">{MATCH_NOTE(pro.name)}</p>
                 {services.length > 0 && (
                   <button
@@ -322,7 +351,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
                 {pro.acceptingJobs ? "Đang nhận lịch" : "Tạm nghỉ nhận lịch"}
               </p>
             </div>
-            <BookButton pro={pro} disabled={!services.length} size="lg" className="shrink-0 px-8" />
+            <BookButton href={bookingHref} pro={pro} disabled={!services.length} size="lg" className="shrink-0 px-8" />
           </div>
         </BottomBar>
       )}
@@ -330,7 +359,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
   )
 }
 
-function BookButton({ pro, disabled, size, className }: { pro: Pro; disabled?: boolean; size?: "md" | "lg"; className?: string }) {
+function BookButton({ href, pro, disabled, size, className }: { href: string; pro: Pro; disabled?: boolean; size?: "md" | "lg"; className?: string }) {
   if (disabled || !pro.acceptingJobs)
     return (
       <span
@@ -345,8 +374,8 @@ function BookButton({ pro, disabled, size, className }: { pro: Pro; disabled?: b
       </span>
     )
   return (
-    <ButtonLink href={`/book/${pro.id}`} size={size} className={className}>
-      Đặt lịch
+    <ButtonLink href={href} size={size} className={className}>
+      Chọn ngày giờ
     </ButtonLink>
   )
 }
@@ -461,6 +490,44 @@ function WorkGrid({ works }: { works: Work[] }) {
 }
 
 /** Where and how they work, in the trade's own words. */
+/** Where the spa is, when it is open, how many beds and what it offers (owner, 08/11/2026). */
+function SpaFacts({ pro }: { pro: Pro }) {
+  const open = openState(pro.openingHours ?? [])
+  const amenities = spaAmenities(pro)
+  return (
+    <div className="mt-4 space-y-3 rounded-[var(--radius-lg)] border border-line bg-surface p-4">
+      <div className="flex items-start gap-3">
+        <MapPin className="mt-0.5 size-4 shrink-0 text-accent" />
+        <p className="flex-1 text-body">
+          {pro.studioAddress}
+          <span className="block text-meta text-muted">{pro.district}, {pro.city}</span>
+        </p>
+        <a href={spaDirectionsLink(pro)} target="_blank" rel="noreferrer" className="inline-flex h-10 shrink-0 items-center rounded-full bg-accent-soft px-4 text-meta font-bold text-accent-dark hover:bg-[#F8DCE6]">
+          Chỉ đường
+        </a>
+      </div>
+      <p className="flex items-center gap-3 text-body">
+        <Clock className="size-4 shrink-0 text-accent" />
+        <span className="flex-1">{hoursSummary(pro.openingHours ?? [])}</span>
+        <span className={cn("text-meta font-bold", open.open ? "text-success" : "text-muted")}>{open.open ? "Đang mở" : open.label}</span>
+      </p>
+      <p className="flex items-center gap-3 text-body">
+        <BedDouble className="size-4 shrink-0 text-accent" />
+        {pro.beds ?? 1} giường · {SPA.payAtSpa.toLowerCase()}
+      </p>
+      {amenities.length ? (
+        <ul className="flex flex-wrap gap-2 pt-1">
+          {amenities.map((a) => (
+            <li key={a.id} className="rounded-full px-3 py-1 text-meta font-medium" style={{ background: SPA_TINT.bg, color: SPA_TINT.fg }}>
+              {a.label}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  )
+}
+
 function WhereFacts({ pro, className }: { pro: Pro; className?: string }) {
   const studioBookingOpen = useApp().platform?.studioBookingOpen ?? false
 
@@ -477,7 +544,12 @@ function WhereFacts({ pro, className }: { pro: Pro; className?: string }) {
           {km !== null && <span className="text-ink-soft"> · cách bạn khoảng {km.toLocaleString("vi-VN")} km</span>}
         </span>
       </li>
-      {pro.homeService ? (
+      {isSpa(pro) ? (
+        <li className="flex items-start gap-2.5">
+          <Store className="mt-0.5 size-4 shrink-0 text-muted" />
+          Khách đến spa: {pro.studioAddress}
+        </li>
+      ) : pro.homeService ? (
         <li className="flex items-start gap-2.5">
           <Home className="mt-0.5 size-4 shrink-0 text-muted" />
           {onlyOnLocation
@@ -538,7 +610,7 @@ function About({ pro }: { pro: Pro }) {
               Nhận lịch ở {pro.areas.join(", ")}
             </li>
           )}
-          {studioBookingOpen && pro.studioAddress && (
+          {studioBookingOpen && pro.studioAddress && !isSpa(pro) && (
             <li className="flex items-start gap-2.5">
               <Store className="mt-0.5 size-4 shrink-0 text-muted" />
               Studio: {pro.studioAddress}

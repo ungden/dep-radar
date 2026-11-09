@@ -1,7 +1,7 @@
 import { SUPABASE_URL } from "./supabase"
 
 /** The live web app. Some things (account deletion, full settings) still happen there. */
-export const WEB_URL = "https://www.360dep.vn"
+export const WEB_URL = (__DEV__ && process.env.EXPO_PUBLIC_WEB_URL) || "https://www.360dep.vn"
 
 /**
  * Image columns hold either a full URL (uploaded to Storage) or a path like

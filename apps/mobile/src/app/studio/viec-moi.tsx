@@ -1,5 +1,5 @@
-import { Image } from "expo-image"
-import { PhotoBadge, Pill, illustration } from "@/components/tiles"
+import { requestCopy } from "@/shared"
+import { Pill } from "@/components/tiles"
 import * as React from "react"
 import { FlashList } from "@shopify/flash-list"
 import { router, useIsFocused } from "expo-router"
@@ -53,7 +53,7 @@ export default function NewJobs() {
 
   const take = async (j: JobItem) => {
     setBusy(j.id)
-    const res = await takeJob(j.id)
+    const res = await takeJob(j.id).catch(() => ({ ok: false as const, error: "Chưa kết nối được máy chủ. Tải lại bảng đơn rồi thử lại." }))
     setBusy(null)
     if (res.ok) {
       haptic.success()
@@ -68,10 +68,10 @@ export default function NewJobs() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
-      <StudioHeader title="Việc mới" subtitle="Ai nhận trước được việc">
+      <StudioHeader title={requestCopy.vi.board} subtitle={requestCopy.vi.boardHint}>
         <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: gutter, paddingTop: 4, paddingBottom: 8 }}>
           <Pill label="Bạn nhận được" selected={scope === "match"} onCanvas={false} onPress={() => setScope("match")} />
-          <Pill label="Tất cả" selected={scope === "all"} onCanvas={false} onPress={() => setScope("all")} />
+          <Pill label="Cùng khu vực" selected={scope === "all"} onCanvas={false} onPress={() => setScope("all")} />
         </View>
       </StudioHeader>
       {!pro.published || !pro.acceptingJobs ? (
@@ -96,10 +96,6 @@ export default function NewJobs() {
           const why = problem(j)
           return (
             <View style={{ marginBottom: 20, borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surface, opacity: why ? 0.72 : 1 }}>
-              <View style={{ height: 132 }}>
-                <Image source={{ uri: illustration(t?.category ?? "nail", j.district.length) }} style={{ flex: 1, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
-                <PhotoBadge text="Ảnh minh hoạ" position="tl" />
-              </View>
               <View style={{ padding: 18, gap: 12 }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
                   <View style={{ flex: 1, gap: 2 }}>
@@ -147,7 +143,9 @@ export default function NewJobs() {
                           {j.eligibility?.payout != null ? formatPrice(j.eligibility.payout) : "—"}
                         </Txt>
                       </View>
-                      <Button label="Nhận việc" size="sm" busy={busy === j.id} disabled={Boolean(busy)} style={{ borderRadius: radius.full, paddingHorizontal: 20 }} onPress={() => void take(j)} />
+                      <Button label="Nhận việc" size="sm" busy={busy === j.id} disabled={Boolean(busy)} style={{ borderRadius: radius.full, paddingHorizontal: 20 }} onPress={() => Alert.alert("Nhận đơn này?", "Lịch sẽ được xác nhận ngay nếu đơn vẫn còn.", [
+                        { text: "Xem tiếp", style: "cancel" }, { text: "Nhận đơn", onPress: () => void take(j) },
+                      ])} />
                     </>
                   )}
                 </View>
@@ -172,7 +170,7 @@ export default function NewJobs() {
             <EmptyState
               title="Chưa có yêu cầu mới"
               text={scope === "match" ? "Không có yêu cầu nào đúng gói bạn niêm yết và trong phạm vi bạn đi. Có yêu cầu bạn nhận được, 360dep báo ngay." : undefined}
-              action={scope === "match" ? "Xem tất cả" : undefined}
+              action={scope === "match" ? "Xem đơn cùng khu vực" : undefined}
               onAction={() => setScope("all")}
             />
           )

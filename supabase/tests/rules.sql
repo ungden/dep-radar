@@ -213,9 +213,7 @@ begin
   perform set_config('request.jwt.claim.sub', customer::text, true);
   select rating_count into n from public.pros where id = linh;
   perform public.write_review(booking, 5, array['Đúng giờ'], 'Rất hài lòng với buổi làm này.');
-  -- Blind until the freelancer has reviewed the customer (or 14 days pass).
-  assert (select published_at is null from public.reviews where booking_id = booking), 'the review was public at once';
-  assert (select rating_count from public.pros where id = linh) = n, 'a blind review moved the rating';
+  assert (select published_at is not null from public.reviews where booking_id = booking), 'the customer review was not published';
   perform set_config('request.jwt.claim.sub', linh::text, true);
   perform public.review_customer(booking, 5, 'Khách dễ thương, đúng giờ.');
   assert (select published_at is not null from public.reviews where booking_id = booking), 'both written, still blind';
@@ -497,7 +495,9 @@ begin
       -- called by a row level security policy
       'applied_to_casting',
       -- a cart's start times, read-only like free_slots
-      'cart_slots'
+      'cart_slots',
+      -- a spa's start times with the beds left, read-only like cart_slots (20261108100000)
+      'cart_slot_beds', 'note_marketplace_step'
     ]);
   assert msg is null, format('anon can execute: %s', msg);
 
@@ -557,7 +557,12 @@ begin
       -- the partner of a thread reads how often this customer has booked (20261105100000)
       'customer_history',
       -- several services in one appointment (20261106100000)
-      'cart_slots', 'cart_quote', 'create_cart_booking'
+      'cart_slots', 'cart_quote', 'create_cart_booking',
+      -- a spa's start times with the beds left (20261108100000)
+      'cart_slot_beds',
+      'add_customer_note', 'support_desk', 'support_marketplace_signals', 'note_marketplace_step',
+      'booking_checkout', 'request_booking_cashout', 'admin_booking_money', 'support_assisted_booking', 'claim_campaign_voucher', 'admin_voucher_campaign',
+      'unregister_push_token', 'register_push_token_v2', 'create_cart_booking_once'
     ]);
   assert msg is null, format('authenticated can execute: %s', msg);
 
@@ -1563,13 +1568,10 @@ begin
   perform public.notify(other_customer, 'push_test', 'Thử thông báo', 'Nội dung thử', '/me');
   assert exists (select 1 from public.notifications where account_id = other_customer and kind = 'push_test'),
     'a notification with a phone to push to was not written';
-  if to_regclass('net.http_request_queue') is not null then
-    execute 'select count(*) from net.http_request_queue where url = $1'
-      into n using 'https://exp.host/--/api/v2/push/send';
-    assert n > 0, 'no push was queued for the notification';
-  else
-    raise notice 'pg_net is not installed here; the push itself is not exercised';
-  end if;
+  select count(*) into n
+    from partner_private.push_deliveries d join public.notifications v on v.id=d.notification_id
+    where v.account_id=other_customer and v.kind='push_test' and d.account_id=other_customer and d.status='pending';
+  assert n = 10, 'the durable push queue did not capture the active devices exactly once';
   -- Nothing real to send to: leave no tokens behind for the API tests' notifications.
   delete from public.push_tokens where token like 'ExponentPushToken[rules-test-%';
 
@@ -1742,7 +1744,7 @@ begin
   perform set_config('request.jwt.claim.sub', friend::text, true);
 
   ---------------------------------------------------------------------------
-  raise notice 'reviews: blind, tagged, in a window, one reply';
+  raise notice 'reviews: immediate, tagged, in a window, one reply';
   begin
     perform public.write_review(b, 2, array['Đúng giờ'], 'Không như mong đợi lắm.');
     assert false, 'two stars without saying what went wrong';
@@ -1753,26 +1755,18 @@ begin
     assert false, 'a tag outside the list';
   exception when check_violation then null;
   end;
-  perform public.write_review(b, 2, array['Trễ giờ'], 'Đến trễ nửa tiếng, làm hơi vội.');
+  begin
+    perform public.write_review(b, 4, array['Tay nghề tốt'], 'Xin ảnh nude');
+    assert false, 'prohibited content was published';
+  exception when check_violation then null;
+  end;
   perform public.write_review(b, 4, array['Tay nghề tốt'], 'Đến trễ chút nhưng làm đẹp.');
-  assert (select rating from public.reviews where booking_id = b) = 4, 'a blind review could not be changed';
-
-  -- The public, and the freelancer, do not see it yet.
   perform set_config('request.jwt.claim.sub', '', true);
   set local role anon;
   select count(*) into n from public.reviews where booking_id = b;
   reset role;
-  assert n = 0, 'a blind review was public';
+  assert n = 1, 'the valid review is not public';
   perform set_config('request.jwt.claim.sub', linh::text, true);
-  set local role authenticated;
-  select count(*) into n from public.reviews where booking_id = b;
-  reset role;
-  assert n = 0, 'the freelancer read the review before writing theirs';
-  begin
-    perform public.reply_review(b, 'Cảm ơn em');
-    assert false, 'a reply to a blind review';
-  exception when check_violation then null;
-  end;
   begin
     perform public.review_customer(b, 1, 'Tệ');
     assert false, 'one star without a reason';
@@ -1838,6 +1832,14 @@ begin
   exception when check_violation then null;
   end;
   perform set_config('request.jwt.claim.sub', '', true);
+  perform public.auto_complete_bookings();
+  assert (select status from public.bookings where id = b2) = 'confirmed', 'a visit without a start was completed';
+  update public.bookings set status = 'in_progress', started_at = starts_at where id = b2;
+  insert into public.reports (reporter_id, target_account_id, booking_id, reason)
+    values (friend, linh, b2, 'other');
+  perform public.auto_complete_bookings();
+  assert (select status from public.bookings where id = b2) = 'in_progress', 'a disputed job was completed automatically';
+  update public.reports set status = 'resolved' where booking_id = b2;
   perform public.auto_complete_bookings();
   assert (select status from public.bookings where id = b2) = 'completed', 'a forgotten job stayed open';
 
@@ -2756,7 +2758,16 @@ begin
   end;
 
   raise notice 'the cart is created whole, and the lines add up to the quote';
-  b := public.create_cart_booking(linh, items, at, true, addr.id, 'Ghi chú', 'cash', (q->>'total')::int);
+  declare operation uuid := gen_random_uuid();
+  begin
+    b := public.create_cart_booking_once(operation, linh, items, at, true, addr.id, 'Ghi chú', 'cash', (q->>'total')::int, '{}');
+    assert b = public.create_cart_booking_once(operation, linh, items, at, true, addr.id, 'Ghi chú', 'cash', (q->>'total')::int, '{}'), 'retry made a different order';
+    begin
+      perform public.create_cart_booking_once(operation, linh, items, at, true, addr.id, 'Thay đổi', 'cash', (q->>'total')::int, '{}');
+      assert false, 'retry accepted a different payload';
+    exception when check_violation then null;
+    end;
+  end;
   select id into line from public.bookings where parent_booking_id = b and in_cart;
   assert line is not null, 'the second line is missing';
   assert (select template_id from public.bookings where id = b) = 'nail-removal', 'lines out of order';

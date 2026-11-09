@@ -6,7 +6,7 @@ import { tabBarProps } from "@/ui/native-tabs"
 
 const TABS = [
   { name: "index", label: "Hôm nay", sf: "house", md: "home" },
-  { name: "viec-moi", label: "Việc mới", sf: "bolt", md: "bolt" },
+  { name: "viec-moi", label: "Đơn khách", sf: "bolt", md: "bolt" },
   { name: "dang", label: "Đăng", sf: "plus", md: "add" },
   { name: "lich", label: "Lịch", sf: "calendar", md: "calendar_month" },
   { name: "toi", label: "Tôi", sf: "person", md: "person" },

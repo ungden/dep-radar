@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { OrderFlowPage } from "../requests/new/order-flow"
 
 export const metadata: Metadata = {
-  title: "Đặt theo dịch vụ",
+  title: "Đặt theo nhu cầu",
   description: "Chọn dịch vụ, giờ và địa chỉ với giá niêm yết. Artist gần bạn được báo, ai nhận trước sẽ làm.",
   alternates: { canonical: "/dat-lich" },
 }

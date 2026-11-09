@@ -378,7 +378,7 @@ describe.skipIf(!configured)("row level security over the API", () => {
     const admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } })
     const { data: booking } = await admin
       .from("bookings")
-      .select("id, pro_id, customer_id")
+      .select("id, pro_id, customer_id, completed_at")
       .eq("status", "completed")
       .eq("customer_id", customerId)
       // The newest: an older seeded one is past the 14-day window, and which one
@@ -386,13 +386,20 @@ describe.skipIf(!configured)("row level security over the API", () => {
       .order("completed_at", { ascending: false })
       .limit(1)
       .single()
-    const written = await client(tokenFor(booking!.pro_id)).rpc("review_customer", {
-      p_booking: booking!.id,
-      p_rating: 5,
-      p_body: "Khách đúng giờ.",
-    })
-    // Once per booking: a second run of this suite finds it already written.
-    if (written.error) expect(written.error.message).toMatch(/đã đánh giá/)
+    const existing = await admin.from("customer_reviews").select("booking_id").eq("booking_id", booking!.id).maybeSingle()
+    if (!existing.data) {
+      // The saved local seed may be weeks old. Exercise the write within the real window.
+      const changed = await admin.from("bookings").update({ completed_at: new Date().toISOString() }).eq("id", booking!.id)
+      expect(changed.error).toBeNull()
+      try {
+        const written = await client(tokenFor(booking!.pro_id)).rpc("review_customer", {
+          p_booking: booking!.id, p_rating: 5, p_body: "Khách đúng giờ.",
+        })
+        expect(written.error).toBeNull()
+      } finally {
+        await admin.from("bookings").update({ completed_at: booking!.completed_at }).eq("id", booking!.id)
+      }
+    }
 
     const byAnon = await client().from("customer_reviews").select("booking_id")
     expect(byAnon.data ?? []).toHaveLength(0)

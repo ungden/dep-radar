@@ -29,7 +29,7 @@ export default function OccasionScreen() {
         <Txt color={colors.inkSoft}>{occasion.subtitle}</Txt>
       </View>
       {templates.map((t, i) => {
-        const people = browse.pros
+        const people = browse.artists
           .filter((p) => browse.services.some((s) => s.proId === p.id && s.templateId === t.id && s.active && Object.keys(s.prices).length))
           .map((p) => ({ pro: p, km: app.distanceTo(p) }))
           .sort((a, b) => (a.km ?? 999) - (b.km ?? 999))

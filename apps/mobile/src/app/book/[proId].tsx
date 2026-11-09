@@ -1,12 +1,14 @@
 import * as React from "react"
+import * as Crypto from "expo-crypto"
+import * as SecureStore from "expo-secure-store"
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet"
 import { Stack, router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router"
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View, useWindowDimensions } from "react-native"
-import { providerLocationOpen, serviceLocationOpen, appointmentAt, CITIES, POLICY, buildQuote, cartItems, cartLineKey, cartMinutes, cartOrder, districtsOf, getTemplate, getVariant, isUrgent, perUnitSuffix, serviceDuration, toggleCartLine, travelDistanceKm, serviceQuantity, type CartLine, type PriceQuote } from "@/shared"
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, TextInput, View, useWindowDimensions } from "react-native"
+import { SPA, bedsLeftLabel, isSpa, listingLocationOpen, spaDirectionsLink, providerLocationOpen, appointmentAt, CITIES, POLICY, buildQuote, cartItems, cartLineKey, cartMinutes, cartOrder, cartProblem, districtsOf, getTemplate, getVariant, isUrgent, perUnitSuffix, serviceDuration, toggleCartLine, travelDistanceKm, serviceQuantity, type CartLine, type PriceQuote } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
 import { rpc } from "@/data/supabase"
 import { toTimestamptz } from "@/data/format"
-import { createCartBooking, fetchSlots } from "@/data/bookings"
+import { createCartBooking, fetchSlotBeds, fetchSlots } from "@/data/bookings"
 import { setBookingReferences, uploadReference } from "@/data/references"
 import { ReferencePicker, type PickedPhoto } from "@/components/reference-photos"
 import { addDays, formatDateLong, formatDuration, formatKm, formatPrice, todayISO, weekdayShort } from "@/data/format"
@@ -47,7 +49,7 @@ export default function Book() {
 function BookingFlow() {
   const studioBookingOpen = useApp().studioBookingOpen
 
-  const params = useLocalSearchParams<{ proId: string; template?: string; variant?: string }>()
+  const params = useLocalSearchParams<{ proId: string; template?: string; variant?: string; work?: string; date?: string; time?: string; cart?: string }>()
   const app = useApp()
   const pro = usePro(params.proId)
   const navigation = useNavigation()
@@ -57,24 +59,26 @@ function BookingFlow() {
   const largeText = fontScale >= 1.5
 
   const listed = React.useMemo(
-    () => (pro ? (app.data?.services ?? []).filter((s) => s.proId === pro.id && providerLocationOpen(pro, studioBookingOpen) && s.active && Object.keys(s.prices).length && serviceLocationOpen(getTemplate(s.templateId), studioBookingOpen)) : []),
+    () => (pro ? (app.data?.services ?? []).filter((s) => s.proId === pro.id && providerLocationOpen(pro, studioBookingOpen) && s.active && Object.keys(s.prices).length && listingLocationOpen(getTemplate(s.templateId), pro, studioBookingOpen)) : []),
     [app.data, pro, studioBookingOpen],
   )
-  const [step, setStep] = React.useState(1)
-  React.useEffect(() => { content.current?.scrollTo({ y: 0, animated: false }) }, [step])
+  const [stepChoice, setStep] = React.useState<number | null>(null)
   // Everything chosen, starting with the service the customer came from.
   const [cart, setCart] = React.useState<CartLine[] | null>(null)
   const [cartNote, setCartNote] = React.useState<{ templateId: string; text: string } | null>(null)
   const [atHomePref, setAtHomePref] = React.useState(true)
-  const [date, setDate] = React.useState(addDays(todayISO(), 1))
-  const [time, setTime] = React.useState<{ startsAt: string; time: string } | null>(null)
+  const spa = isSpa(pro)
+  // A spa is often booked for later today; an Artist needs time to travel.
+  const restoredDate = params.date && /^\d{4}-\d{2}-\d{2}$/.test(params.date) && params.date >= todayISO() && params.date <= addDays(todayISO(), 13) ? params.date : null
+  const [date, setDate] = React.useState(restoredDate ?? addDays(todayISO(), spa ? 0 : 1))
+  const [time, setTime] = React.useState<{ startsAt: string; time: string } | null>(() => restoredDate && params.time && /^([01]\d|2[0-3]):[0-5]\d$/.test(params.time) ? { time: params.time, startsAt: toTimestamptz(restoredDate, params.time) } : null)
   const [addressId, setAddressId] = React.useState<string | null>(null)
   const [estCity, setEstCity] = React.useState<string | null>(null)
   const [estDistrict, setEstDistrict] = React.useState<string | null>(null)
   const [note, setNote] = React.useState("")
   const [noteOpen, setNoteOpen] = React.useState(false)
   const [photos, setPhotos] = React.useState<PickedPhoto[]>([])
-  const [slots, setSlots] = React.useState<{ key: string; list: { startsAt: string; time: string }[] } | null>(null)
+  const [slots, setSlots] = React.useState<{ key: string; list: { startsAt: string; time: string; freeBeds?: number }[] } | null>(null)
   const [slotRetry, retrySlots] = React.useReducer((n: number) => n + 1, 0)
   const [slotError, setSlotError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
@@ -91,21 +95,35 @@ function BookingFlow() {
 
   const priceOf = (line: Pick<CartLine, "templateId" | "variantId">) => listed.find((l) => l.templateId === line.templateId)?.prices[line.variantId]
   const cameFrom = React.useMemo<CartLine[]>(() => {
+    if (params.cart) {
+      const parts = params.cart.split(",")
+      if (parts.length > 10) return []
+      const restored = parts.flatMap((part) => {
+        const [key, count] = part.split(":")
+        const [templateId, variantId] = key.split("/")
+        const variant = getVariant(templateId, variantId)
+        const listing = listed.find((l) => l.templateId === templateId)
+        return variant && listing?.prices[variantId] != null ? [{ templateId, variantId, quantity: serviceQuantity(variant, Math.floor(Number(count)) || 1) }] : []
+      })
+      return restored.length === parts.length && !cartProblem(restored) ? restored : []
+    }
     const t = params.template ? getTemplate(params.template) : undefined
     const listing = t && !t.addon ? listed.find((l) => l.templateId === t.id) : undefined
-    const v = listing ? (t!.variants.find((o) => o.id === params.variant && listing.prices[o.id] != null) ?? t!.variants.find((o) => listing.prices[o.id] != null)) : undefined
-    return t && v ? [{ templateId: t.id, variantId: v.id, quantity: serviceQuantity(v, v.unit ? 10 : 1) }] : []
-  }, [listed, params.template, params.variant])
+    const v = listing ? t!.variants.find((o) => (!params.variant || o.id === params.variant) && listing.prices[o.id] != null) : undefined
+    return t && v ? [{ templateId: t.id, variantId: v.id, quantity: serviceQuantity(v) }] : []
+  }, [listed, params.template, params.variant, params.cart])
   // Only what this Artist still lists, whatever was chosen a moment ago.
-  const lines = React.useMemo(() => cartOrder((cart ?? cameFrom).filter((line) => priceOf(line) != null)), [cart, cameFrom, listed]) // eslint-disable-line react-hooks/exhaustive-deps
+  const lines = React.useMemo(() => cartOrder((cart ?? cameFrom).filter((line) => priceOf(line) != null)), [cart, cameFrom, listed])
+  const step = stepChoice ?? (cameFrom.length ? 3 : 1)
+  React.useEffect(() => { content.current?.scrollTo({ y: 0, animated: false }) }, [step])
   const main = lines[0]
   const template = main ? getTemplate(main.templateId) : undefined
   const variant = main ? getVariant(main.templateId, main.variantId) : undefined
   const servicePrice = lines.reduce((sum, line) => sum + (priceOf(line) ?? 0) * line.quantity, 0)
   const minutes = cartMinutes(lines)
 
-  const canStudio = studioBookingOpen && Boolean(pro?.studioAddress)
-  const canHome = Boolean(pro?.homeService) && !lines.some((line) => getTemplate(line.templateId)?.studioOnly)
+  const canStudio = (studioBookingOpen || spa) && Boolean(pro?.studioAddress)
+  const canHome = !spa && Boolean(pro?.homeService) && !lines.some((line) => getTemplate(line.templateId)?.studioOnly)
   const atHome = canHome && (atHomePref || !canStudio)
 
   const tap = (templateId: string, variantId: string) => {
@@ -137,15 +155,23 @@ function BookingFlow() {
     let live = true
     setSlotError(null)
     setSlots(null)
-    fetchSlots({ proUuid: pro.uuid, lines, date, atHome, addressId: atHome ? chosenId : null })
+    ;(spa ? fetchSlotBeds({ proUuid: pro.uuid, lines, date }).then((list) => list.filter((x) => x.freeBeds > 0)) : fetchSlots({ proUuid: pro.uuid, lines, date, atHome, addressId: atHome ? chosenId : null }))
       .then((list) => live && setSlots({ key: slotKey, list }))
       .catch((e: Error) => live && setSlotError(e.message))
     return () => {
       live = false
     }
-  }, [slotKey, step, slotRetry]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [slotKey, step, slotRetry])
   const daySlots = slots?.key === slotKey ? slots.list : null
-  const picked = time && daySlots?.some((s) => s.startsAt === time.startsAt) ? time : null
+  const picked = time ? daySlots?.find((s) => Date.parse(s.startsAt) === Date.parse(time.startsAt)) ?? null : null
+
+  const signalId = React.useRef<string | null>(null)
+  const signal = React.useCallback((stage: "opened" | "slot_chosen" | "confirmation" | "failed" | "created") => {
+    signalId.current ??= Crypto.randomUUID()
+    void rpc("note_marketplace_step", { p_flow: signalId.current, p_step: stage }).catch(() => {})
+  }, [])
+  React.useEffect(() => { signal("opened") }, [signal])
+  React.useEffect(() => { if (picked) signal("slot_chosen"); if (step === 4) signal("confirmation") }, [picked, step, signal])
 
   const quoteKey = [slotKey, picked?.startsAt, app.uid, app.me?.account?.phone].join("|")
   const [quoteRetry, retryQuote] = React.useReducer((n: number) => n + 1, 0)
@@ -158,7 +184,7 @@ function BookingFlow() {
     setVerified(null)
     void rpc<PriceQuote>("cart_quote", { p_pro: pro.uuid, p_items: cartItems(lines), p_starts_at: picked.startsAt, p_at_home: atHome, p_address_id: atHome ? chosenId : null }).then((r) => { if (live) setVerified({ key: quoteKey, ...(r.ok ? { quote: r.data } : { error: r.error }) }) }).catch(() => { if (live) setVerified({ key: quoteKey, error: "Không xác nhận được tổng tiền. Kiểm tra kết nối và thử lại." }) })
     return () => { live = false }
-  }, [quoteKey, quoteRetry]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [quoteKey, quoteRetry])
   const confirmedQuote = verified?.key === quoteKey ? verified.quote : null
   const quote = confirmedQuote ?? (picked ? buildQuote({ servicePrice, atHome, distanceKm: km, urgent: isUrgent(date, picked.time) }) : null)
 
@@ -190,12 +216,12 @@ function BookingFlow() {
   if (doneId) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.canvas, paddingHorizontal: gutter, justifyContent: "center", gap: 12 }}>
-        <Stack.Screen options={{ title: "Đã gửi lịch", headerBackVisible: false, gestureEnabled: false, headerLeft: () => null, headerRight: () => null }} />
+        <Stack.Screen options={{ title: spa ? SPA.sent : "Đã gửi lịch", headerBackVisible: false, gestureEnabled: false, headerLeft: () => null, headerRight: () => null }} />
         <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: colors.successSoft, alignItems: "center", justifyContent: "center", alignSelf: "center" }}>
           <Icon name="check" size={30} color={colors.success} />
         </View>
         <Txt v="h2" center>
-          Đã gửi lịch hẹn
+          {spa ? SPA.sent : "Đã gửi lịch hẹn"}
         </Txt>
         <Txt color={colors.inkSoft} center>
           {pro.name} sẽ xem và nhận lịch trong vòng {POLICY.confirmWithinHours} giờ. Nhận xong, hai bên nhắn tin, gọi được cho nhau. Nếu không nhận, lịch tự huỷ và bạn không mất gì.
@@ -208,6 +234,7 @@ function BookingFlow() {
             router.push({ pathname: "/bookings/[id]", params: { id: doneId } })
           }}
         />
+        {spa && pro.studioAddress ? <Button label="Chỉ đường đến spa" variant="secondary" icon="pin" full onPress={() => void Linking.openURL(spaDirectionsLink(pro))} /> : null}
         <Button label="Về Khám phá" variant="ghost" full onPress={() => router.dismissAll()} />
       </View>
     )
@@ -215,7 +242,9 @@ function BookingFlow() {
 
   const addAddress = () => router.push({ pathname: "/dia-chi/sua", params: { city, district: district ?? "" } })
 
+  const submitting = React.useRef(false)
   const submit = async () => {
+    if (submitting.current) return
     if (!app.uid) return router.push("/login")
     if (atHome && !address) return addAddress()
     if (!app.me.account?.phone) return router.push("/so-dien-thoai")
@@ -223,10 +252,11 @@ function BookingFlow() {
     if (!confirmedQuote) return setError(verified?.error ?? "Đang kiểm tra tổng tiền.")
     const secondAt = appointmentAt(secondDate, secondTime)
     if ((variant?.sessions ?? 1) > 1 && (!secondAt || secondAt <= picked.startsAt)) return setError("Chọn ngày, giờ hợp lệ cho buổi thứ hai sau buổi đầu.")
+    submitting.current = true
     setBusy(true)
     setError(null)
     try {
-    const res = await createCartBooking({
+    const payload = {
       proUuid: pro.uuid,
       lines,
       startsAt: picked.startsAt,
@@ -235,11 +265,18 @@ function BookingFlow() {
       note: note.trim(),
       expectedTotal: confirmedQuote.total,
       sessions: (variant?.sessions ?? 1) > 1 ? [secondAt!] : [],
-    })
+    }
+    const retryKey = "dep360_booking_" + await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, JSON.stringify([app.uid, payload]))
+    const operationId = await SecureStore.getItemAsync(retryKey) ?? Crypto.randomUUID()
+    await SecureStore.setItemAsync(retryKey, operationId)
+    const res = await createCartBooking({ ...payload, operationId })
+    if (res.ok) await SecureStore.deleteItemAsync(retryKey).catch(() => {})
     if (!res.ok) {
+      signal("failed")
       haptic.error()
       return setError(res.error)
     }
+    signal("created")
     // The booking stands; its reference photos follow, and a failure only says so.
     if (photos.length && app.uid) {
       try {
@@ -256,8 +293,8 @@ function BookingFlow() {
     void app.refreshMe()
     // The confirmation call is time-critical; this is the moment to ask.
     void askForPushPermission(app.uid)
-    } catch { setError("Không gửi được lịch. Kiểm tra kết nối và thử lại.") }
-    finally { setBusy(false) }
+    } catch { signal("failed"); setError("Không gửi được lịch. Kiểm tra kết nối và thử lại.") }
+    finally { submitting.current = false; setBusy(false) }
   }
 
   const next = () => (step < 4 ? setStep(step + 1) : void submit())
@@ -267,7 +304,7 @@ function BookingFlow() {
     step === 1 ? "Xem giỏ" : step === 2 ? "Chọn giờ" : step === 3 ? "Tiếp tục" : !app.uid ? "Đăng nhập để đặt" : atHome && !address ? "Thêm địa chỉ" : !app.me.account?.phone ? "Thêm số điện thoại" : "Gửi lịch hẹn"
   const days = Array.from({ length: 14 }, (_, i) => addDays(todayISO(), i))
   const controlScale = Math.min(fontScale, controlMetrics.maxFontSizeMultiplier)
-  const slotColumns = Math.max(1, Math.min(4, Math.floor((width - gutter * 2 + SLOT_GAP) / (Math.max(76, 72 * controlScale) + SLOT_GAP))))
+  const slotColumns = Math.max(1, Math.min(spa && (pro.beds ?? 1) > 1 ? 3 : 4, Math.floor((width - gutter * 2 + SLOT_GAP) / (Math.max(76, 72 * controlScale) + SLOT_GAP))))
   const slotWidth = Math.floor((width - gutter * 2 - SLOT_GAP * (slotColumns - 1)) / slotColumns)
   const slotGroups = [
     { label: "Buổi sáng", from: 0, to: 12 },
@@ -284,7 +321,7 @@ function BookingFlow() {
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.canvas }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}>
       <Stack.Screen
         options={{
-          title: step === 1 ? "Chọn món" : step === 2 ? "Giỏ của bạn" : step === 3 ? "Chọn giờ" : "Xác nhận lịch",
+          title: step === 1 ? "Chọn dịch vụ" : step === 2 ? "Giỏ của bạn" : step === 3 ? "Chọn giờ" : "Xác nhận lịch",
           gestureEnabled: !dirty,
           headerLeft: step > 1 ? () => <IconButton name="back" label="Quay lại bước trước" onPress={() => setStep(step - 1)} /> : undefined,
           headerRight: () => <IconButton name="close" label="Đóng" onPress={() => router.back()} />,
@@ -298,6 +335,7 @@ function BookingFlow() {
           <Txt v="controlMeta" color={colors.inkSoft}>{step}/4</Txt>
         </View>
 
+        {step === 1 && (params.template || params.cart) && !cameFrom.length ? <Txt color={colors.inkSoft}>Gói trước đó không còn khả dụng. Chọn lại dịch vụ.</Txt> : null}
         {step === 1 ? (
           <>
             <Txt color={colors.inkSoft}>Chọn các món bạn muốn {pro.name} làm trong một lần hẹn.</Txt>
@@ -311,7 +349,7 @@ function BookingFlow() {
                     <Txt v="control" w={600}>{t.name}</Txt>
                     {t.variants.filter((v) => l.prices[v.id] != null).map((v) => {
                       const line = lines.find((c) => c.templateId === t.id && c.variantId === v.id)
-                      const count = line?.quantity ?? serviceQuantity(v, v.unit ? 10 : 1)
+                      const count = line?.quantity ?? serviceQuantity(v)
                       return (
                         <View key={v.id} style={{ gap: 6 }}>
                           <Option
@@ -334,7 +372,7 @@ function BookingFlow() {
 
         {step === 2 ? (
           <>
-            <Txt color={colors.inkSoft}>Một lịch, một Artist, làm liền nhau.</Txt>
+            <Txt color={colors.inkSoft}>{spa ? "Một lịch tại spa, các món làm liền nhau." : "Một lịch, một Artist, làm liền nhau."}</Txt>
             <View style={{ gap: 8 }}>
               {lines.map((line) => {
                 const t = getTemplate(line.templateId)!
@@ -349,12 +387,12 @@ function BookingFlow() {
                       <Txt v="control" w={600} tabular>{formatPrice((priceOf(line) ?? 0) * line.quantity)}</Txt>
                     </View>
                     {v.perPerson ? <Counter variant={v} line={line} onChange={setCount} /> : null}
-                    <Button label="Bỏ món này" variant="ghost" size="sm" onPress={() => tap(line.templateId, line.variantId)} />
+                    <Button label="Bỏ dịch vụ này" variant="ghost" size="sm" onPress={() => tap(line.templateId, line.variantId)} />
                   </Card>
                 )
               })}
             </View>
-            <Button label={lines.length ? `Thêm món khác của ${pro.name}` : "Chọn món"} icon="plus" variant="secondary" full onPress={() => setStep(1)} />
+            <Button label={lines.length ? `Thêm dịch vụ khác của ${pro.name}` : "Chọn dịch vụ"} icon="plus" variant="secondary" full onPress={() => setStep(1)} />
             {template && canHome && canStudio ? (
               <View style={{ gap: 8 }}>
                 <Txt v="controlMeta" w={600}>
@@ -365,7 +403,7 @@ function BookingFlow() {
               </View>
             ) : template ? (
               <Txt v="meta" color={colors.inkSoft}>
-                {atHome ? (template.onLocation ? "Làm tại địa điểm bạn chọn." : "Làm tại nhà bạn.") : `Làm tại studio: ${pro.studioAddress ?? ""}`}
+                {atHome ? (template.onLocation ? "Làm tại địa điểm bạn chọn." : "Làm tại nhà bạn.") : `${spa ? "Làm tại spa" : "Làm tại studio"}: ${pro.studioAddress ?? ""}`}
               </Txt>
             ) : null}
           </>
@@ -373,6 +411,7 @@ function BookingFlow() {
 
         {step === 3 ? (
           <>
+            <Button label="Xem hoặc thêm dịch vụ" variant="secondary" size="sm" onPress={() => setStep(2)} />
             <Txt color={colors.inkSoft}>Chỉ hiện giờ đủ {formatDuration(minutes)} làm liền.</Txt>
             {largeText ? <DateField compact label="Ngày hẹn" hideLabel value={date} onChange={chooseDate} maxDate={days[days.length - 1]} /> : <View style={{ gap: 12 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -425,6 +464,11 @@ function BookingFlow() {
                           <Txt v="control" w={selected ? 600 : 500} tabular color={selected ? colors.accentDark : colors.ink}>
                             {s.time}
                           </Txt>
+                          {spa && (pro.beds ?? 1) > 1 && s.freeBeds ? (
+                            <Txt v="controlMeta" center numberOfLines={1} color={selected ? colors.accentDark : colors.muted}>
+                              {bedsLeftLabel(s.freeBeds)}
+                            </Txt>
+                          ) : null}
                         </Press>
                       )
                     })}
@@ -434,6 +478,12 @@ function BookingFlow() {
             ) : (
               <Txt color={colors.inkSoft}>Không còn giờ trống ngày này. Thử ngày khác nhé.</Txt>
             )}
+            {spa ? (
+              <View style={{ flexDirection: "row", gap: 10, padding: 14, borderRadius: radius.md, backgroundColor: colors.successSoft }}>
+                <Icon name="info" size={18} color={colors.success} />
+                <Txt v="meta" color={colors.ink} style={{ flex: 1 }}>{SPA.arrive}</Txt>
+              </View>
+            ) : null}
             {picked && isUrgent(date, picked.time) ? (
               <Txt v="meta" color={colors.warning}>
                 Lịch trong {POLICY.urgentWithinHours} giờ tới có phí gấp {formatPrice(POLICY.urgentFee)}.
@@ -496,8 +546,9 @@ function BookingFlow() {
               </View>
             ) : (
               <Card>
-                <Txt v="controlMeta" w={600}>Tại studio</Txt>
+                <Txt v="controlMeta" w={600}>{spa ? `Tại ${pro.name}` : "Tại studio"}</Txt>
                 <Txt color={colors.inkSoft}>{pro.studioAddress}</Txt>
+                {spa ? <Button label="Chỉ đường" variant="secondary" size="sm" icon="pin" onPress={() => void Linking.openURL(spaDirectionsLink(pro))} /> : null}
               </Card>
             )}
             {time && daySlots && !picked ? (
@@ -521,7 +572,7 @@ function BookingFlow() {
                 {quote.urgentFee ? <Line label="Phí gấp" value={formatPrice(quote.urgentFee)} /> : null}
                 <Line label={confirmedQuote ? "Tổng tiền" : "Tạm tính"} value={formatPrice(quote.total)} strong />
                 <Txt v="meta" color={colors.muted}>
-                  Thanh toán sau khi làm xong. {atHome ? "Khoảng cách ước tính theo phường/xã. " : ""}Giá được xác nhận lại khi gửi lịch. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để Artist kịp sắp xếp.
+                  {spa ? `${SPA.payAtSpa}.` : "Thanh toán sau khi làm xong."} {atHome ? "Khoảng cách ước tính theo phường/xã. " : ""}Giá được xác nhận lại khi gửi lịch. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để {spa ? "spa" : "Artist"} kịp sắp xếp.
                 </Txt>
               </Card>
             ) : null}

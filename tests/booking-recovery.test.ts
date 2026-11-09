@@ -8,7 +8,7 @@ import type { AppState } from "@/lib/store"
 const mocks = vi.hoisted(() => ({ state: null as unknown as AppState, params: new URLSearchParams(), slots: vi.fn(), quote: vi.fn(), push: vi.fn(), create: vi.fn() }))
 vi.mock("next/navigation", () => ({ useParams: () => ({ proId: "qa" }), useSearchParams: () => mocks.params, useRouter: () => ({ push: mocks.push, refresh: vi.fn(), back: vi.fn() }) }))
 vi.mock("@/lib/store", async (original) => ({ ...await original<typeof import("@/lib/store")>(), useApp: () => mocks.state }))
-vi.mock("@/lib/api/actions", () => ({ cartQuote: mocks.quote }))
+vi.mock("@/lib/api/actions", () => ({ cartQuote: mocks.quote, noteMarketplaceStep: vi.fn().mockResolvedValue(undefined) }))
 vi.mock("@/lib/client-actions", () => ({ actions: { cartSlotsFor: mocks.slots, createCartBooking: mocks.create }, useAct: () => vi.fn() }))
 vi.mock("@/lib/uploads", () => ({ uploadImage: vi.fn() }))
 import BookPage from "@/app/book/[proId]/page"
@@ -87,7 +87,7 @@ describe("booking recovery", () => {
   it("distinguishes an availability error from a full calendar and retains the chosen day on retry", async () => {
     mocks.params.delete("time")
     mocks.slots.mockResolvedValueOnce({ ok: false, error: "Không tải được giờ trống." })
-    await render(); await click("Tiếp tục")
+    await render()
     expect(host.textContent).toContain("Không tải được giờ trống.")
     expect(host.textContent).not.toContain("đã kín lịch")
     await click("Thử tải lại giờ trống")

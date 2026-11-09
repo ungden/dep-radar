@@ -16,6 +16,7 @@ import { verticalOf } from "@/lib/catalog"
 import { actions, useAct } from "@/lib/client-actions"
 import { proView, servicesOf, useApp, useRefresh, worksOf } from "@/lib/store"
 import { uploadImage } from "@/lib/uploads"
+import { SPA, SPA_AMENITIES, MAX_SPA_BEDS } from "@/lib/spa"
 import { cn, todayISO } from "@/lib/utils"
 import { DEFAULT_WORKING_WINDOWS } from "@/lib/working-hours"
 import { IDENTITY_REQUIRED_FOR_PARTNERS } from "@/lib/launch"
@@ -58,6 +59,10 @@ function ProfileEditor() {
   const [maxTravelKm, setMaxTravelKm] = React.useState(pro.maxTravelKm)
   const [avatar, setAvatar] = React.useState(pro.avatar ?? null)
   const [equipment, setEquipment] = React.useState(pro.equipment ?? "")
+  const [kind, setKind] = React.useState<"artist" | "spa">(pro.kind === "spa" ? "spa" : "artist")
+  const [beds, setBeds] = React.useState(pro.beds ?? 2)
+  const [amenities, setAmenities] = React.useState<string[]>(pro.amenities ?? [])
+  const spa = kind === "spa"
   const shoots = pro.categories.some((c) => verticalOf(c) === "photo")
   const models = pro.categories.some((c) => verticalOf(c) === "model")
   const [error, setError] = React.useState<string | null>(null)
@@ -82,8 +87,10 @@ function ProfileEditor() {
       bio,
       avatarPath: avatar,
       studioAddress: studio,
-      homeService: !studioBookingOpen || homeService,
+      homeService: spa ? false : !studioBookingOpen || homeService,
       maxTravelKm,
+      kind,
+      ...(spa ? { beds, amenities } : {}),
       ...(shoots ? { equipment } : {}),
     })
     setBusy(false)
@@ -157,6 +164,38 @@ function ProfileEditor() {
         </Field>
       )}
 
+      <Card className="space-y-3 p-4">
+        <p className="text-body font-semibold">Bạn là</p>
+        <div role="radiogroup" aria-label="Loại đối tác" className="grid gap-2 sm:grid-cols-2">
+          {([["artist", SPA.artistKind, SPA.artistKindText], ["spa", SPA.partnerKind, SPA.partnerKindText]] as const).map(([value, label, text]) => (
+            <button key={value} type="button" role="radio" aria-checked={kind === value} onClick={() => setKind(value)} className={cn("rounded-[var(--radius-md)] border p-3 text-left", kind === value ? "border-accent bg-accent-soft" : "border-line bg-surface hover:border-ink")}>
+              <span className="block font-semibold">{label}</span>
+              <span className="block text-label text-ink-soft">{text}</span>
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {spa ? (
+        <Card id="noi-phuc-vu" className="space-y-4 p-4">
+          <Field label="Địa chỉ spa (số nhà, tên đường)" hint={`Khách đến đây. Phường/xã: ${pro.district}, ${pro.city}; đổi ở "Sửa nghề và khu vực phục vụ".`}>
+            <input className={inputClass} value={studio} onChange={(e) => setStudio(e.target.value)} />
+          </Field>
+          <Field label={`Số giường làm cùng lúc (1–${MAX_SPA_BEDS})`} hint="Mỗi giường nhận một khách tại một thời điểm. Ít nhân viên hơn số giường thì ghi theo số nhân viên.">
+            <input className={inputClass} type="number" min={1} max={MAX_SPA_BEDS} value={beds} onChange={(e) => setBeds(Math.max(1, Math.min(MAX_SPA_BEDS, Number(e.target.value) || 1)))} />
+          </Field>
+          <div>
+            <p className="mb-2 text-meta font-semibold">Tiện nghi</p>
+            <div className="flex flex-wrap gap-2">
+              {SPA_AMENITIES.map((a) => (
+                <button key={a.id} type="button" aria-pressed={amenities.includes(a.id)} onClick={() => setAmenities((s) => (s.includes(a.id) ? s.filter((x) => x !== a.id) : [...s, a.id]))} className={cn("h-10 rounded-full border px-4 text-meta font-semibold", amenities.includes(a.id) ? "border-accent bg-accent-soft text-accent-dark" : "border-line bg-surface hover:border-ink")}>
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </Card>
+      ) : (
       <Card id="noi-phuc-vu" className="space-y-3 p-4">
         <div className="flex items-center gap-3">
           <div className="flex-1">
@@ -191,6 +230,7 @@ function ProfileEditor() {
           <input className={inputClass} value={studio} onChange={(e) => setStudio(e.target.value)} />
         </Field>}
       </Card>
+      )}
 
       {models && <ModelCardEditor />}
 
@@ -376,7 +416,7 @@ function PublishBox({ hasService, hasWork, hours }: { hasService: boolean; hasWo
 
   // Publishing requires hours explicitly confirmed in the database.
   const hoursReady = hours.saved
-  const locationReady = Boolean(pro.homeService || (studioBookingOpen && pro.studioAddress?.trim()))
+  const locationReady = Boolean((pro.homeService && pro.kind !== "spa") || ((studioBookingOpen || pro.kind === "spa") && pro.studioAddress?.trim()))
   // Identity is asked before the profile is shown (lib/launch.ts); a pending case may be sent, it goes live once verified.
   const identityReady = !IDENTITY_REQUIRED_FOR_PARTNERS || pro.identity === "verified" || pro.identity === "pending"
   const ready = hasService && hasWork && hoursReady && locationReady && identityReady

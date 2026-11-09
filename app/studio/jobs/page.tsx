@@ -1,5 +1,6 @@
 "use client"
 
+import { requestCopy } from "@/lib/request-copy"
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { BriefcaseBusiness, Car } from "lucide-react"
@@ -18,7 +19,7 @@ import { formatPrice } from "@/lib/utils"
 export default function StudioJobsPage() {
   return (
     <div className="mx-auto max-w-3xl md:pt-4">
-      <PageHeader title="Việc mới" />
+      <PageHeader title={requestCopy.vi.board} />
       <RequireSession role="pro">
         <JobBoard />
       </RequireSession>
@@ -94,7 +95,7 @@ function JobBoard() {
           Phù hợp (≤ {pro.maxTravelKm} km)
         </Chip>
         <Chip active={scope === "all"} onClick={() => setScope("all")}>
-          Tất cả
+          Cùng khu vực
         </Chip>
       </div>
       {jobs.length ? (

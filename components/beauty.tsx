@@ -344,12 +344,12 @@ export function LevelBadge({ proId, category, className }: { proId: string; cate
  * With `category` (the one being browsed) the level, the starting price and
  * the photos are that category's; without it the level is their main one.
  */
-export function ProCard({ pro: basePro, category, className }: { pro: Pro; category?: CategoryId | null; className?: string }) {
+export function ProCard({ pro: basePro, category, className, price, serviceHref }: { pro: Pro; category?: CategoryId | null; className?: string; price?: number | null; serviceHref?: string }) {
   const state = useApp()
   const { point: here } = useHere()
   const pro = proView(state, basePro.id) ?? basePro
   const levelCategory = category ?? mainCategoryOf(state, pro.id)
-  const from = category ? categoryFromPrice(state, pro.id, category) : fromPrice(state, pro.id)
+  const from = price !== undefined ? price : category ? categoryFromPrice(state, pro.id, category) : fromPrice(state, pro.id)
   const photos = worksOf(state, pro.id)
     .filter((w) => !category || w.category === category)
     .map((w) => w.images[0])
@@ -357,7 +357,7 @@ export function ProCard({ pro: basePro, category, className }: { pro: Pro; categ
     .slice(0, 3)
   return (
     <Link
-      href={`/pros/${pro.id}${category ? `?album=${category}` : ""}`}
+      href={serviceHref ?? `/pros/${pro.id}${category ? `?album=${category}` : ""}`}
       className={cn("group block rounded-[var(--radius-lg)] border border-line bg-surface p-3.5 transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)]", className)}
     >
       <div className="flex items-center gap-3">

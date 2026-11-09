@@ -66,6 +66,7 @@ Hãy chốt giờ, địa chỉ, dịch vụ và giá ngay trong tin nhắn này
 - Khách chưa có lịch nào: "Khách đặt lần đầu". Nhắn xác nhận và xin vị trí trước khi đi để tránh đi uổng công.
 - Khách đã có lịch với người khác: "Khách mới với bạn, đã có 4 lịch hoàn thành trên 360đẹp".
 - Khách đã đặt Artist này: "Khách quen, đã đặt bạn 3 lần".
+- Với spa (khách tự đến, không có nút xin vị trí): Nhắn xác nhận giờ đến để giữ giường cho khách.
 
 Hai nút điền sẵn vào ô nhắn tin, Artist vẫn sửa được trước khi gửi:
 

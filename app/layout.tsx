@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
-import { Fraunces, Inter } from "next/font/google"
+import "@fontsource-variable/inter"
+import "@fontsource-variable/fraunces"
 import "./globals.css"
 
 import { AppShell } from "@/components/layout/app-shell"
@@ -10,23 +11,6 @@ import { StoreProvider } from "@/lib/store"
 import { headers } from "next/headers"
 import { emptySnapshot, loadDeskSnapshot, loadSnapshot } from "@/lib/api/snapshot"
 import { backendEnabled } from "@/lib/supabase/env"
-
-// Inter reads crisply at 13-16px, where most of the app's text lives; its
-// Vietnamese marks (ặ, ễ, ở) are drawn, not stacked from fallbacks.
-const body = Inter({
-  subsets: ["latin", "vietnamese"],
-  variable: "--font-body",
-  display: "swap",
-})
-
-// Editorial titles only (hero, collections): `font-display`.
-const serif = Fraunces({
-  subsets: ["latin", "vietnamese"],
-  weight: ["600", "700"],
-  variable: "--font-serif",
-  display: "swap",
-})
-
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -70,7 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const desk = /^\/admin(\/|$)/.test((await headers()).get("x-pathname") ?? "")
   const snapshot = backendEnabled ? await (desk ? loadDeskSnapshot() : loadSnapshot()) : { ...emptySnapshot, catalogError: true, worksError: true }
   return (
-    <html lang="vi" className={`${body.variable} ${serif.variable}`}>
+    <html lang="vi">
       <body className="min-h-dvh">
         <a
           href="#main"

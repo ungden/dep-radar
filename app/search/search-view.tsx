@@ -1,6 +1,6 @@
 "use client"
 
-import { providerLocationOpen } from "@/lib/launch"
+import { isSpa, providerLocationOpen } from "@/lib/launch"
 
 import * as React from "react"
 import { Suspense } from "react"
@@ -83,7 +83,7 @@ function SearchView() {
   // Distance only means something once we know where the customer is.
   const sort: Sort = rawSort === "near" && !hasAddress ? "match" : rawSort
   const rawTab = params.get("tab")
-  const mode: Mode = rawTab === "pros" || rawTab === "works" ? rawTab : "services"
+
 
   const setParams = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams(params.toString())
@@ -110,7 +110,8 @@ function SearchView() {
   // What is for sale, as on the home page: a service somebody in scope lists,
   // matched on the service itself -- its name, description and category.
   const services = React.useMemo(() => {
-    const pros = state.pros.filter(proOk)
+    // Spas have their own page (/spa).
+    const pros = state.pros.filter((p) => proOk(p) && !isSpa(p))
     const list = serviceOffers({ studioBookingOpen: state.platform?.studioBookingOpen, pros, proServices: state.proServices, works: state.works, city: city || null, vertical, priceFilter: maxPrice ? (total) => total <= maxPrice : undefined }).filter(
       (o) =>
         (!category || o.template.category === category) &&
@@ -158,27 +159,32 @@ function SearchView() {
   }, [state, proOk, vertical, category, comesToYou, maxPrice, query, sort, now])
 
   const pros = React.useMemo(() => {
-    // With a category chosen, "Từ ..." is that category's price, as on the card.
-    const priceOf = (proId: string) => {
-      const prices = servicesOf(state, proId).flatMap((listing) => {
-        const t = getTemplate(listing.templateId)
-        return !t || (category && t.category !== category) || (vertical !== "all" && verticalOf(t.category) !== vertical) || (comesToYou && t.studioOnly) ? [] : listedOptions(t, listing.prices, state.platform?.studioBookingOpen).map((o) => o.minimumTotal)
-      })
-      return prices.length ? Math.min(...prices) : null
-    }
+    const optionsByPro = new Map<string, { price: number; template: string; variant: string }>()
     const list = state.pros.filter((p) => {
-      if (!proOk(p)) return false
+      if (!proOk(p) || isSpa(p)) return false
       if (vertical !== "all" && !p.categories.some((c) => verticalOf(c) === vertical)) return false
       if (category && !p.categories.includes(category)) return false
-      const price = priceOf(p.id)
-      if (maxPrice && (price === null || price > maxPrice)) return false
-      return matchesQuery(proText(state, p), query)
+      if (!matchesQuery(proText(state, p), query)) return false
+      for (const listing of servicesOf(state, p.id)) {
+        const t = getTemplate(listing.templateId)
+        if (!t || t.addon || (category && t.category !== category) || (vertical !== "all" && verticalOf(t.category) !== vertical) || (comesToYou && t.studioOnly)) continue
+        for (const o of listedOptions(t, listing.prices, state.platform?.studioBookingOpen)) {
+          if ((!maxPrice || o.minimumTotal <= maxPrice) && o.minimumTotal < (optionsByPro.get(p.id)?.price ?? Infinity)) {
+            optionsByPro.set(p.id, { price: o.minimumTotal, template: t.id, variant: o.variant.id })
+          }
+        }
+      }
+      return !(category || maxPrice) || optionsByPro.has(p.id)
     })
-    if (sort === "near")
-      return [...list].sort((a, b) => (distanceToCustomer(state, a.id) ?? Infinity) - (distanceToCustomer(state, b.id) ?? Infinity))
-    if (sort === "price") return [...list].sort((a, b) => (priceOf(a.id) ?? Infinity) - (priceOf(b.id) ?? Infinity))
-    return sortPros(state, list, "match")
+    const sorted = sort === "near"
+      ? [...list].sort((a, b) => (distanceToCustomer(state, a.id) ?? Infinity) - (distanceToCustomer(state, b.id) ?? Infinity))
+      : sort === "price"
+        ? [...list].sort((a, b) => (optionsByPro.get(a.id)?.price ?? Infinity) - (optionsByPro.get(b.id)?.price ?? Infinity))
+        : sortPros(state, list, "match")
+    return sorted.map((pro) => ({ pro, option: optionsByPro.get(pro.id) }))
   }, [state, proOk, vertical, category, maxPrice, query, sort, comesToYou])
+  const mode: Mode = rawTab === "pros" || rawTab === "works" || rawTab === "services" ? rawTab
+    : query && !services.length && pros.length ? "pros" : "services"
 
   const active = [cityParam !== null && city !== (state.city ?? ""), maxPrice, verifiedOnly, openOnly, comesToYou, sort !== "match"].filter(
     Boolean,
@@ -267,7 +273,7 @@ function SearchView() {
         <div>
           <Tabs
             value={mode}
-            onChange={(m) => setParams({ tab: m === "services" ? null : m })}
+            onChange={(m) => setParams({ tab: m })}
             items={[
               { value: "services", label: `Dịch vụ (${services.length})` },
               { value: "works", label: `Tác phẩm (${works.length})` },
@@ -298,9 +304,9 @@ function SearchView() {
             )
           ) : pros.length ? (
             <ul className="mt-5 grid gap-3 md:grid-cols-2 md:gap-4">
-              {pros.map((p) => (
-                <li key={p.id}>
-                  <ProCard pro={p} category={category} className="h-full" />
+              {pros.map(({ pro, option }) => (
+                <li key={pro.id}>
+                  <ProCard pro={pro} category={category} price={option?.price ?? null} serviceHref={option ? `/pros/${pro.id}?service=${option.template}&variant=${option.variant}&tab=services` : undefined} className="h-full" />
                 </li>
               ))}
             </ul>

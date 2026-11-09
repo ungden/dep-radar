@@ -164,6 +164,8 @@ const PRO_SELECT = `${PRO_BASE}, equipment`
 const OWN_PRO_SELECT = `${PRO_SELECT}, review_status, review_note`
 /** And where they leave from, when they set it (20261008100000). */
 const OWN_PRO_SELECT_START = `${OWN_PRO_SELECT}, start_label`
+/** What a spa adds (20261108100000). */
+const SPA_COLUMNS = ", kind, beds, amenities"
 const REVIEW_STATUSES: ReviewStatus[] = ["draft", "pending", "approved", "changes_requested", "rejected"]
 
 /*
@@ -226,6 +228,7 @@ function toPro(row: Row, model?: Row): Pro & { uuid: string } {
     reviewStatus: REVIEW_STATUSES.includes(row.review_status) ? row.review_status : undefined,
     reviewNote: row.review_note || undefined,
     startLabel: row.start_label || undefined,
+    ...(row.kind === "spa" ? { kind: "spa" as const, beds: Number(row.beds ?? 1), amenities: (row.amenities ?? []) as string[] } : {}),
   }
 }
 
@@ -261,20 +264,21 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
   const [prosRes, ownProRes, worksRes, reviewsRes, pricesRes, listingsRes, modelsRes, statsRes, castingsRes, platformRes] =
     await Promise.all([
       orLegacy((legacy) =>
-        supabase.from("pros").select(legacy ? PRO_BASE : PRO_SELECT).eq("published", true).is("suspended_at", null),
+        supabase.from("pros").select(legacy >= 2 ? PRO_BASE : legacy === 1 ? PRO_SELECT : PRO_SELECT + SPA_COLUMNS).eq("published", true).is("suspended_at", null),
+        2,
       ),
       // The caller's own profile is not in that list until it is published, and
       // without it their studio cannot see their own services or works.
-      // Generations: 1 = before start_label, 2 = before the review columns, 3 = before equipment.
+      // Generations: 1 = before spas, 2 = before start_label, 3 = before the review columns, 4 = before equipment.
       me
         ? orLegacy(
             (legacy) =>
               supabase
                 .from("pros")
-                .select(legacy >= 3 ? PRO_BASE : legacy === 2 ? PRO_SELECT : legacy === 1 ? OWN_PRO_SELECT : OWN_PRO_SELECT_START)
+                .select(legacy >= 4 ? PRO_BASE : legacy === 3 ? PRO_SELECT : legacy === 2 ? OWN_PRO_SELECT : legacy === 1 ? OWN_PRO_SELECT_START : OWN_PRO_SELECT_START + SPA_COLUMNS)
                 .eq("id", me)
                 .maybeSingle(),
-            3,
+            4,
           )
         : Promise.resolve({ data: null, error: null }),
       orLegacy((legacy) =>
@@ -341,6 +345,16 @@ export async function loadSnapshot(): Promise<AppSnapshot> {
     else pros[at] = toPro(own, modelOf.get(own.id))
   }
   const slugOf = new Map(pros.map((p) => [p.uuid, p.id]))
+
+  // A spa card says whether it is open now: its opening hours are its working hours.
+  const spaIds = pros.filter((p) => p.kind === "spa").map((p) => p.uuid)
+  if (spaIds.length) {
+    const { data: hourRows } = await supabase.from("working_hours").select("pro_id, weekday, start_min, end_min").in("pro_id", spaIds)
+    for (const pro of pros) {
+      if (pro.kind !== "spa") continue
+      pro.openingHours = ((hourRows ?? []) as Row[]).filter((h) => h.pro_id === pro.uuid).map((h) => ({ weekday: Number(h.weekday), startMin: Number(h.start_min), endMin: Number(h.end_min) }))
+    }
+  }
 
   const workRows = rowsOf("works", worksRes)
   const works: Work[] = workRows.map((row: Row) => {

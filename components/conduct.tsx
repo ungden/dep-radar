@@ -57,8 +57,8 @@ export function ChatNotice({ defaultOpen }: { defaultOpen?: boolean }) {
 }
 
 /** For the partner, above the conversation: who this customer is, and the two messages worth sending before leaving home. */
-export function CustomerNote({ history, onAskLocation, onConfirm }: { history: { withMe: number; overall: number }; onAskLocation?: () => void; onConfirm?: () => void }) {
-  const note = customerNote(history)
+export function CustomerNote({ history, spa, onAskLocation, onConfirm }: { history: { withMe: number; overall: number }; spa?: boolean; onAskLocation?: () => void; onConfirm?: () => void }) {
+  const note = customerNote({ ...history, spa })
   const Mark = note.regular ? Heart : UserPlus
   return (
     <div className={cn("mb-3 rounded-[var(--radius-lg)] p-3.5", note.regular ? "bg-success-soft" : "bg-highlight-soft")}>

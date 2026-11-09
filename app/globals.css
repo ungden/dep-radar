@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+:root {
+  --font-body: "Inter Variable";
+  --font-serif: "Fraunces Variable";
+}
+
 @theme {
   /* Inter for everything you read and tap; Fraunces only for editorial titles
      (hero, collections), where a serif gives the page a voice. Both carry the

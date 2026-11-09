@@ -30,5 +30,13 @@ export * from "@shared/conduct"
 export * from "@shared/chat-location"
 export * from "@shared/discovery"
 export * from "@shared/service-cart"
+export * from "@shared/spa"
 
 export * from "../../../lib/appointments"
+
+export * from "@shared/marketplace-feed"
+
+export * from "@shared/request-goals"
+export * from "@shared/request-copy"
+
+export * from "@shared/payments/vietqr"

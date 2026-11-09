@@ -2,11 +2,13 @@ import * as React from "react"
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet"
 import { Image } from "expo-image"
 import { Stack, router, useLocalSearchParams } from "expo-router"
-import { Alert, ScrollView, View, useWindowDimensions } from "react-native"
+import { Alert, Linking, ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { CATEGORY_TINTS, serviceLocationOpen, providerLocationOpen, categoryLabel, getTemplate, perUnitSuffix, showsAverage, verticalOf, type Pro, tierLabels } from "@/shared"
-import { formatDuration, formatKm, formatPrice, formatRating, formatResponseTime } from "@/data/format"
+import { SPA, SPA_TINT, hoursSummary, isSpa, listingLocationOpen, openState, spaAmenities, spaDirectionsLink, spaPhoto, providerLocationOpen, categoryLabel, getTemplate, serviceQuantity, perUnitSuffix, showsAverage, verticalOf, type Pro, tierLabels } from "@/shared"
+import { formatDuration, formatKm, formatPrice, formatRating } from "@/data/format"
 import { loadProExtras } from "@/data/public"
+import { imageUrl } from "@/data/links"
+import { PhotoBadge } from "@/components/tiles"
 import { replyReview } from "@/data/reviews"
 import { BookingBar } from "@/components/booking-bar"
 import { FollowButton } from "@/components/follow-button"
@@ -32,18 +34,20 @@ const REVIEWS_FIRST = 3
 export default function ProProfile() {
   const studioBookingOpen = useApp().studioBookingOpen
 
-  const params = useLocalSearchParams<{ id: string; tab?: string; service?: string }>()
+  const params = useLocalSearchParams<{ id: string; tab?: string; service?: string; variant?: string; work?: string }>()
   const app = useApp()
   const { pro, searching } = useProLookup(params.id)
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
   const [allWorks, setAllWorks] = React.useState(false)
   const [allReviews, setAllReviews] = React.useState(false)
+  const [reviewFilter, setReviewFilter] = React.useState(0)
+  const [withPhotos, setWithPhotos] = React.useState(false)
   // Arriving to read reviews (after writing one) lands on them.
   const scroller = React.useRef<ScrollView>(null)
   const landed = React.useRef(params.tab !== "reviews")
   // The service being looked at, with the customer's package; both start from where they came from.
-  const [picked, setPicked] = React.useState<{ template?: string; variant?: string }>({ template: params.service })
+  const [picked, setPicked] = React.useState<{ template?: string; variant?: string }>({ template: params.service, variant: params.variant })
   const [extras, setExtras] = React.useState<{ equipment?: string; model?: Pro["model"] }>({})
 
   const isMine = Boolean(pro && app.uid === pro.uuid)
@@ -109,9 +113,8 @@ export default function ProProfile() {
 
   const works = app.data?.works.filter((w) => w.proId === pro.id) ?? []
   const reviews = app.data?.reviews.filter((r) => r.proId === pro.id && !hiddenReviews.has(r.id)) ?? []
-  const listings = app.data?.services.filter((s) => s.proId === pro.id && providerLocationOpen(pro, studioBookingOpen) && serviceLocationOpen(getTemplate(s.templateId), studioBookingOpen) && s.active && Object.keys(s.prices).length) ?? []
+  const listings = app.data?.services.filter((s) => s.proId === pro.id && providerLocationOpen(pro, studioBookingOpen) && listingLocationOpen(getTemplate(s.templateId), pro, studioBookingOpen) && s.active && Object.keys(s.prices).length) ?? []
   const km = app.distanceTo(pro)
-  const response = formatResponseTime(pro.stats.responseMinutes)
   const isMe = app.uid === pro.uuid
   const photoPeople = pro.categories.some((c) => verticalOf(c) === "photo")
   // Add-ons are chosen on the booking screen, on top of a main service.
@@ -124,11 +127,13 @@ export default function ProProfile() {
   const variant = priced.find((v) => v.id === picked.variant) ?? lowest
   const canBook = !isMe && pro.acceptingJobs && Boolean(currentTemplate && variant)
 
+  const spa = isSpa(pro)
+  const open = spa ? openState(pro.openingHours ?? []) : null
   const cell = (width - gutter * 2 - 8) / 3
   const cover = works.filter((w) => w.images[0]).slice(0, 3)
-  const coverHeight = insets.top + 200
   const shownWorks = allWorks ? works : works.slice(0, WORKS_FIRST)
-  const shownReviews = allReviews ? reviews : reviews.slice(0, REVIEWS_FIRST)
+  const filteredReviews = reviews.filter((r) => (!reviewFilter || r.rating === reviewFilter) && (!withPhotos || r.photo))
+  const shownReviews = allReviews ? filteredReviews : filteredReviews.slice(0, REVIEWS_FIRST)
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
@@ -141,57 +146,63 @@ export default function ProProfile() {
       {safety.element}
       {reviewSafety.element}
 
-      {/* Their own work, edge to edge; nobody's picture stands in when there is none. */}
-      {cover.length ? (
-        <View style={{ flexDirection: "row", gap: 2, height: coverHeight }}>
-          {cover.map((w) => (
-            <Image key={w.id} source={{ uri: w.images[0] }} style={{ flex: 1, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
-          ))}
+      {spa ? (
+        <View style={{ paddingTop: insets.top + 46, paddingHorizontal: gutter, height: insets.top + 226, gap: 4, flexDirection: "row" }}>
+          <Image source={{ uri: cover[0]?.images[0] ?? imageUrl(spaPhoto(0)) }} style={{ flex: 2, borderRadius: radius.md, backgroundColor: SPA_TINT.bg }} contentFit="cover" transition={150} accessible={false} />
+          {cover.length > 1 ? <View style={{ flex: 1, gap: 4 }}>
+            {cover.slice(1, 3).map((w) => <Image key={w.id} source={{ uri: w.images[0] }} style={{ flex: 1, borderRadius: radius.sm }} contentFit="cover" accessible={false} />)}
+          </View> : null}
+          {cover.length ? null : <View style={{ position: "absolute", left: gutter, bottom: 8 }}><PhotoBadge text="Ảnh minh hoạ" position="tl" /></View>}
         </View>
-      ) : (
-        <View style={{ height: insets.top + 96, backgroundColor: CATEGORY_TINTS[pro.categories[0] ?? "nail"].bg }} />
-      )}
+      ) : null}
 
-      <View style={{ paddingHorizontal: gutter, gap: 14 }}>
-        <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginTop: -40 }}>
-          <View style={{ borderWidth: 4, borderColor: colors.canvas, borderRadius: 48 }}>
-            <Avatar name={pro.name} uri={pro.avatar} artist tone={pro.tone} size={80} />
+      <View style={{ paddingHorizontal: gutter, paddingTop: spa ? 12 : insets.top + 56, gap: 12 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          {!spa ? <Avatar name={pro.name} uri={pro.avatar} artist tone={pro.tone} size={72} /> : null}
+          <View style={{ flex: 1, gap: 3 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}><Txt v="h1" style={{ flexShrink: 1 }}>{pro.name}</Txt>{pro.identity === "verified" ? <VerifiedMark size={16} /> : null}</View>
+            {spa ? <Txt v="meta" w={700} color={colors.success}>Đến spa</Txt> : <Txt color={colors.inkSoft}>{pro.title || pro.categories.map(categoryLabel).join(" · ")}</Txt>}
           </View>
-          {!isMe ? (
-            <View>
-              <FollowButton proUuid={pro.uuid} name={pro.name} />
+          {!isMe ? <FollowButton proUuid={pro.uuid} name={pro.name} /> : null}
+        </View>
+        {!spa ? <Txt v="meta" color={colors.inkSoft}>
+          Phục vụ: {pro.district}, {pro.city}{km !== null ? ` · cách bạn ${formatKm(km)}` : ""}{pro.homeService ? " · Đến tận nơi" : ""}
+        </Txt> : null}
+        {spa ? (
+          <View style={{ gap: 12, marginTop: 4 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <Icon name="pin" size={18} color={colors.accent} />
+              <View style={{ flex: 1 }}>
+                <Txt>{pro.studioAddress}</Txt>
+                <Txt v="meta" color={colors.muted}>
+                  {pro.district}, {pro.city}
+                  {km !== null ? ` · cách bạn ${formatKm(km)}` : ""}
+                </Txt>
+              </View>
+              <Press onPress={() => void Linking.openURL(spaDirectionsLink(pro))} accessibilityRole="link" accessibilityLabel="Chỉ đường bằng Google Maps" style={{ minHeight: 40, paddingHorizontal: 14, borderRadius: radius.full, backgroundColor: colors.accentSoft, justifyContent: "center" }}>
+                <Txt v="meta" w={700} color={colors.accentDark}>
+                  Chỉ đường
+                </Txt>
+              </Press>
             </View>
-          ) : null}
-        </View>
-        <View style={{ gap: 3 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <Txt v="h1" style={{ flexShrink: 1 }}>
-              {pro.name}
-            </Txt>
-            {pro.identity === "verified" ? <VerifiedMark size={20} /> : null}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <Icon name="clock" size={18} color={colors.accent} />
+              <Txt style={{ flex: 1 }}>{hoursSummary(pro.openingHours ?? [])}</Txt>
+              {open ? (
+                <Txt v="meta" w={700} color={open.open ? colors.success : colors.muted}>
+                  {open.open ? "Đang mở" : open.label}
+                </Txt>
+              ) : null}
+            </View>
           </View>
-          <Txt color={colors.inkSoft}>{pro.title || pro.categories.map(categoryLabel).join(" · ")}</Txt>
-          <Txt v="meta" color={colors.muted}>
-            {pro.district}, {pro.city}
-            {km !== null ? ` · cách bạn ${formatKm(km)}` : ""}
-          </Txt>
-          {pro.identity === "verified" ? (
-            <Txt v="meta" color={colors.success}>
-              Đã xác minh danh tính bằng CCCD
-            </Txt>
-          ) : null}
-        </View>
+        ) : null}
 
-        {/* Three real numbers, or the honest absence of one */}
-        <View style={{ flexDirection: "row", paddingVertical: 14, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: hairline, borderColor: colors.line }}>
-          <Stat value={String(pro.stats.completedJobs)} label="lịch đã xong" />
-          <Stat
-            star={showsAverage(pro.rating.count)}
-            value={showsAverage(pro.rating.count) ? formatRating(pro.rating.average) : "Mới"}
-            label={pro.rating.count > 0 ? `${pro.rating.count} đánh giá` : "chưa có đánh giá"}
-          />
-          <Stat value={response ?? "—"} label={response ? "phản hồi" : "chưa đủ dữ liệu"} />
-        </View>
+        {pro.stats.completedJobs || pro.rating.count ? (
+          <Txt v="meta" color={colors.inkSoft}>
+            {[pro.stats.completedJobs ? `${pro.stats.completedJobs} lịch hoàn thành` : null,
+              pro.rating.count ? `${showsAverage(pro.rating.count) ? formatRating(pro.rating.average) + " sao · " : ""}${pro.rating.count} đánh giá` : null].filter(Boolean).join(" · ")}
+          </Txt>
+        ) : null}
 
         {/* What they do and what it costs: the decision, before the proof */}
         <View style={{ gap: 10, marginTop: 10 }}>
@@ -247,7 +258,7 @@ export default function ProProfile() {
                         style={{ flexGrow: 1, flexBasis: "45%", paddingVertical: 10, paddingHorizontal: 12, borderRadius: radius.sm, backgroundColor: selected ? colors.accent : colors.surface }}
                       >
                         <Txt v="meta" color={selected ? colors.surface : colors.inkSoft}>
-                          {v.label} · {formatDuration(v.durationMin)}
+                          {/phút|giờ/.test(v.label) ? v.label : `${v.label} · ${formatDuration(v.durationMin)}`}
                         </Txt>
                         <Txt w={700} tabular color={selected ? colors.surface : colors.ink}>
                           {formatPrice(s.prices[v.id])}
@@ -291,9 +302,25 @@ export default function ProProfile() {
         </View>
       </View>
 
+      {spa && spaAmenities(pro).length ? (
+        <View style={{ paddingHorizontal: gutter, paddingTop: 24, gap: 10 }}>
+          <Txt v="h2">Tiện nghi</Txt>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {spaAmenities(pro).map((a) => (
+              <View key={a.id} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.full, backgroundColor: colors.surface, borderWidth: hairline, borderColor: colors.line }}>
+                <Txt v="meta">{a.label}</Txt>
+              </View>
+            ))}
+          </View>
+          <Txt v="meta" color={colors.muted}>
+            {SPA.payAtSpa}.
+          </Txt>
+        </View>
+      ) : null}
+
       {/* Photos and clips */}
       <View style={{ paddingHorizontal: gutter, paddingTop: 24, gap: 10 }}>
-        <Heading title="Ảnh và clip" count={works.length} first={WORKS_FIRST} open={allWorks} onToggle={() => setAllWorks((v) => !v)} />
+        <Heading title={spa ? "Không gian spa" : "Tác phẩm"} count={works.length} first={WORKS_FIRST} open={allWorks} onToggle={() => setAllWorks((v) => !v)} />
         {works.length ? (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
             {shownWorks.map((w) => (
@@ -324,8 +351,14 @@ export default function ProProfile() {
           scroller.current?.scrollTo({ y: e.nativeEvent.layout.y, animated: false })
         }}
       >
-        <Heading title="Khách đánh giá" count={reviews.length} first={REVIEWS_FIRST} open={allReviews} onToggle={() => setAllReviews((v) => !v)} />
-        {reviews.length ? (
+        <Heading title="Khách đánh giá" count={filteredReviews.length} first={REVIEWS_FIRST} open={allReviews} onToggle={() => setAllReviews((v) => !v)} />
+        {reviews.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+          {[0, 5, 4, 3, 2, 1].map((n) => <Press key={n} accessibilityRole="button" accessibilityState={{ selected: n === reviewFilter }} onPress={() => { setReviewFilter(n); setAllReviews(false) }}
+            style={{ paddingHorizontal: 10, minHeight: 44, justifyContent: "center", backgroundColor: n === reviewFilter ? colors.accentSoft : colors.surface, borderRadius: radius.full }}><Txt v="meta">{n ? `${n} sao` : "Tất cả"}</Txt></Press>)}
+          <Press accessibilityRole="button" accessibilityState={{ selected: withPhotos }} onPress={() => { setWithPhotos((v) => !v); setAllReviews(false) }}
+            style={{ paddingHorizontal: 10, minHeight: 44, justifyContent: "center", backgroundColor: withPhotos ? colors.accentSoft : colors.surface, borderRadius: radius.full }}><Txt v="meta">Có ảnh</Txt></Press>
+        </ScrollView> : null}
+        {filteredReviews.length ? (
           shownReviews.map((r) => (
             <View key={r.id} style={{ padding: 14, gap: 6, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: hairline, borderColor: colors.line }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
@@ -400,8 +433,8 @@ export default function ProProfile() {
           </View>
         ) : null}
         <Card style={{ borderWidth: hairline, borderColor: colors.line }}>
-          <Info label="Hình thức" value={[pro.homeService ? "Đến tận nơi" : null, studioBookingOpen && pro.studioAddress ? "Tại studio" : null].filter(Boolean).join(" · ") || "Chưa ghi"} />
-          {studioBookingOpen && pro.studioAddress ? <Info label="Studio" value={pro.studioAddress} /> : null}
+          <Info label="Hình thức" value={spa ? "Khách đến spa" : [pro.homeService ? "Đến tận nơi" : null, studioBookingOpen && pro.studioAddress ? "Tại studio" : null].filter(Boolean).join(" · ") || "Chưa ghi"} />
+          {spa ? <Info label="Địa chỉ" value={pro.studioAddress ?? ""} /> : studioBookingOpen && pro.studioAddress ? <Info label="Studio" value={pro.studioAddress} /> : null}
           {pro.homeService ? <Info label="Đi xa tối đa" value={`${pro.maxTravelKm} km`} /> : null}
           {pro.areas.length ? <Info label="Khu vực" value={pro.areas.join(", ")} /> : null}
           {pro.yearsExp > 0 ? <Info label="Kinh nghiệm" value={`${pro.yearsExp} năm`} /> : null}
@@ -441,11 +474,11 @@ export default function ProProfile() {
       <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top, backgroundColor: "rgba(250,248,245,0.88)" }} />
       {!isMe ? (
         <BookingBar
-          title={current && variant ? `${formatPrice(current.prices[variant.id])}${perUnitSuffix(variant)}` : null}
+          title={current && variant ? formatPrice(current.prices[variant.id] * serviceQuantity(variant)) : null}
           note={currentTemplate && variant ? `${currentTemplate.name} · ${variant.label}` : undefined}
-          action={pro.acceptingJobs ? "Chọn lịch" : "Đang tạm nghỉ"}
+          action={pro.acceptingJobs ? "Chọn ngày giờ" : "Đang tạm nghỉ"}
           disabled={!canBook}
-          onPress={() => router.push({ pathname: "/book/[proId]", params: { proId: pro.id, template: currentTemplate?.id ?? "", variant: variant?.id ?? "" } })}
+          onPress={() => router.push({ pathname: "/book/[proId]", params: { proId: pro.id, template: currentTemplate?.id ?? "", variant: variant?.id ?? "", ...(params.work ? { work: params.work } : {}) } })}
         />
       ) : null}
     </View>
@@ -466,22 +499,6 @@ function Heading({ title, count, first, open, onToggle }: { title: string; count
           </Txt>
         </Press>
       ) : null}
-    </View>
-  )
-}
-
-function Stat({ value, label, star }: { value: string; label: string; star?: boolean }) {
-  return (
-    <View style={{ flex: 1, alignItems: "center", gap: 2, paddingHorizontal: 4 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-        {star ? <Icon name="star" size={15} color={colors.highlight} /> : null}
-        <Txt v="lead" w={700} tabular numberOfLines={1}>
-          {value}
-        </Txt>
-      </View>
-      <Txt v="meta" color={colors.muted} center numberOfLines={1}>
-        {label}
-      </Txt>
     </View>
   )
 }

@@ -3,7 +3,7 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { webLink } from "@/data/links"
 import { ActivityIndicator, ScrollView, TextInput, View } from "react-native"
-import { allowsPackageNote, CATEGORIES, CITIES, districtsOf, getTemplate, PACKAGE_NOTE_MAX, partnerTemplatesByCategory, perUnitSuffix, tierLabels, PRICE_LEVEL_NOTE, PARTNER_STEPS, partnerProgress, DEFAULT_WORKING_WINDOWS, IDENTITY_VERIFICATION_OPEN, PARTNER_PLEDGE, type PartnerSetup, type CategoryId } from "@/shared"
+import { allowsPackageNote, CATEGORIES, CITIES, districtsOf, getTemplate, PACKAGE_NOTE_MAX, partnerTemplatesByCategory, perUnitSuffix, tierLabels, PRICE_LEVEL_NOTE, PARTNER_STEPS, partnerProgress, DEFAULT_WORKING_WINDOWS, IDENTITY_VERIFICATION_OPEN, PARTNER_PLEDGE, SPA, SPA_AMENITIES, SPA_CATEGORIES, MAX_SPA_BEDS, type PartnerSetup, type CategoryId, type ProKind } from "@/shared"
 import { rpc, supabase } from "@/data/supabase"
 import { useApp } from "@/state/app"
 import { colors, gutter, radius, fonts, hairline } from "@/theme"
@@ -18,7 +18,7 @@ export default function PartnerProfile() {
   const studioBookingOpen = useApp().studioBookingOpen
 
   const app = useApp()
-  const params = useLocalSearchParams<{ step?: string }>()
+  const params = useLocalSearchParams<{ step?: string; kind?: string }>()
   const [step, setStep] = React.useState(Math.min(5, Math.max(0, Number(params.step) || 0)))
   const [setup, setSetup] = React.useState<PartnerSetup | null>(null)
   const [error, setError] = React.useState<string | null>(null)
@@ -32,6 +32,11 @@ export default function PartnerProfile() {
   const [studio, setStudio] = React.useState("")
   const [radiusKm, setRadiusKm] = React.useState("10")
   const [equipment, setEquipment] = React.useState("")
+  // A spa (owner, 08/11/2026): a place with beds, where customers come.
+  const [kind, setKind] = React.useState<ProKind>(params.kind === "spa" ? "spa" : "artist")
+  const [spaName, setSpaName] = React.useState("")
+  const [beds, setBeds] = React.useState("2")
+  const [amenities, setAmenities] = React.useState<string[]>([])
   const [hours, setHours] = React.useState<{ weekday: number; start: string; end: string }[]>([])
   const [agree, setAgree] = React.useState(false)
   const [editing, setEditing] = React.useState<string | null>(null)
@@ -48,6 +53,7 @@ export default function PartnerProfile() {
       const p = r.data.profile
       setTitle(p.title); setBio(p.bio); setCategories(p.categories); setCity(p.city); setDistrict(p.district)
       setHome(p.home_service); setStudio(p.studio_address ?? ""); setRadiusKm(String(p.max_travel_km)); setEquipment(p.equipment ?? "")
+      setKind(p.kind === "spa" ? "spa" : "artist"); setSpaName(p.display_name ?? ""); setBeds(String(p.beds ?? 2)); setAmenities(p.amenities ?? [])
       setHours(r.data.hours.map((h) => ({ weekday: h.weekday, start: timeLabel(h.startMin), end: timeLabel(h.endMin) })))
     }
   }, [])
@@ -77,8 +83,18 @@ export default function PartnerProfile() {
   if (!app.me.account?.phone) return <View style={{ padding: gutter, gap: 12 }}><Txt>Thêm số điện thoại để khách liên hệ sau khi bạn nhận lịch.</Txt><Button label="Thêm số điện thoại" onPress={() => router.push("/so-dien-thoai")} /></View>
   if (!setup) return <View style={{ padding: gutter, gap: 12 }}>{error ? <><Txt color={colors.danger}>{error}</Txt><Button label="Thử lại" onPress={() => void load(true)} /></> : <ActivityIndicator />}</View>
   const tpl = editing ? getTemplate(editing) : null
+  const spa = kind === "spa"
   const steps = partnerProgress(setup, studioBookingOpen)
-  const offered = categories.flatMap((c) => partnerTemplatesByCategory(c, studioBookingOpen))
+  const offered = categories.flatMap((c) => partnerTemplatesByCategory(c, studioBookingOpen || spa))
+  const stepLabel = (i: number) => (spa && i === 2 ? "Cơ sở" : spa && i === 3 ? "Giờ mở cửa" : PARTNER_STEPS[i])
+  const bedCount = Number(beds)
+  const bedsOk = Number.isInteger(bedCount) && bedCount >= 1 && bedCount <= MAX_SPA_BEDS
+  // Saving step 0. A new spa is created as a partner first, then told it is a spa.
+  const saveFirstStep = async () => {
+    const spaProfile = spa ? { kind: "spa", displayName: spaName.trim(), studioAddress: studio.trim(), homeService: false } : { kind: "artist" }
+    if (setup.profile) return void mutate("save_partner_profile", { p_profile: { categories, city, district, title, ...spaProfile } }, 1)
+    if (await mutate("create_partner", { p_categories: categories, p_city: city, p_district: district, p_title: title })) void mutate("save_partner_profile", { p_profile: spaProfile }, 1)
+  }
   // Opening a service starts at its top; saving it comes back to it in the list.
   const openService = (id: string) => {
     setEditing(id)
@@ -92,15 +108,20 @@ export default function PartnerProfile() {
   }
   return <ScrollView ref={scroller} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" style={{ backgroundColor: colors.canvas }} contentContainerStyle={{ padding: gutter, paddingBottom: 80, gap: 18 }}>
     <Txt v="h2">Hồ sơ đối tác</Txt>
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{PARTNER_STEPS.map((label, i) => <Choice key={label} label={`${steps[i].done ? "✓" : i + 1} ${label}`} active={step === i} disabled={busy || (!setup.profile && i > 0)} onPress={() => { setStep(i); setEditing(null) }} />)}</View>
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{PARTNER_STEPS.map((label, i) => <Choice key={label} label={`${steps[i].done ? "✓" : i + 1} ${stepLabel(i)}`} active={step === i} disabled={busy || (!setup.profile && i > 0)} onPress={() => { setStep(i); setEditing(null) }} />)}</View>
     {error && <Txt color={colors.danger}>{error}</Txt>}
     {step === 0 && <>
-      <Txt color={colors.inkSoft}>Chọn đúng các nghề bạn cung cấp. Bỏ nghề sẽ tạm ẩn dịch vụ thuộc nghề đó.</Txt>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{CATEGORIES.map((c) => <Choice key={c.id} label={c.label + (c.vertical === "model" ? " · sắp mở" : "")} disabled={busy || c.vertical === "model"} active={categories.includes(c.id)} onPress={() => setCategories((s) => s.includes(c.id) ? s.filter((x) => x !== c.id) : [...s, c.id])} />)}</View>
+      <Txt w={700}>Bạn là</Txt>
+      <Choice label={`${!spa ? "✓ " : ""}${SPA.artistKind} · ${SPA.artistKindText}`} active={!spa} disabled={busy} onPress={() => setKind("artist")} />
+      <Choice label={`${spa ? "✓ " : ""}${SPA.partnerKind} · ${SPA.partnerKindText}`} active={spa} disabled={busy} onPress={() => { setKind("spa"); setCategories((s) => s.filter((c) => (SPA_CATEGORIES as readonly string[]).includes(c))) }} />
+      {spa && <Field label="Tên spa" value={spaName} onChange={setSpaName} />}
+      <Txt color={colors.inkSoft}>Chọn đúng các {spa ? "dịch vụ" : "nghề"} bạn cung cấp. Bỏ {spa ? "dịch vụ" : "nghề"} sẽ tạm ẩn các gói thuộc nhóm đó.</Txt>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{CATEGORIES.filter((c) => !spa || (SPA_CATEGORIES as readonly string[]).includes(c.id)).map((c) => <Choice key={c.id} label={c.label + (c.vertical === "model" ? " · sắp mở" : "")} disabled={busy || c.vertical === "model"} active={categories.includes(c.id)} onPress={() => setCategories((s) => s.includes(c.id) ? s.filter((x) => x !== c.id) : [...s, c.id])} />)}</View>
       <Field label="Dòng giới thiệu" value={title} onChange={setTitle} />
       <Txt w={700}>Thành phố</Txt><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{CITIES.map((c) => <Choice key={c} label={c} active={city === c} onPress={() => { setCity(c); if (!districtsOf(c).includes(district)) setDistrict("") }} />)}</View>
-      <Txt w={700}>Phường / xã nơi bạn làm</Txt><WardPicker city={city} value={district} onChange={(choice) => { setCity(choice.city); setDistrict(choice.district) }} />
-      <Button label="Lưu & chọn dịch vụ" busy={busy} disabled={!categories.length || title.trim().length < 3 || !districtsOf(city).includes(district)} onPress={() => void mutate(setup.profile ? "save_partner_profile" : "create_partner", setup.profile ? { p_profile: { categories, city, district, title } } : { p_categories: categories, p_city: city, p_district: district, p_title: title }, 1)} />
+      <Txt w={700}>{spa ? "Phường / xã của spa" : "Phường / xã nơi bạn làm"}</Txt><WardPicker city={city} value={district} onChange={(choice) => { setCity(choice.city); setDistrict(choice.district) }} />
+      {spa && <Field label="Số nhà, tên đường" value={studio} onChange={setStudio} />}
+      <Button label="Lưu & chọn dịch vụ" busy={busy} disabled={!categories.length || title.trim().length < 3 || !districtsOf(city).includes(district) || (spa && (spaName.trim().length < 2 || studio.trim().length < 5))} onPress={() => void saveFirstStep()} />
     </>}
     {step === 1 && <>
       <Txt color={colors.inkSoft}>{PRICE_LEVEL_NOTE} Chỉ bật những gói bạn thực hiện được.</Txt>
@@ -143,7 +164,16 @@ export default function PartnerProfile() {
       </>}
       <Button label="Tiếp tục: nơi phục vụ" variant="secondary" onPress={() => { setEditing(null); setStep(2) }} />
     </>}
-    {step === 2 && <>
+    {step === 2 && spa && <>
+      <Txt color={colors.inkSoft}>Khách đến spa của bạn: {[studio, district, city].filter(Boolean).join(", ")}. Đổi địa chỉ ở bước 1.</Txt>
+      <Field label={`Số giường làm cùng lúc (1–${MAX_SPA_BEDS})`} value={beds} onChange={setBeds} numeric />
+      <Txt v="meta" color={colors.muted}>Mỗi giường nhận một khách tại một thời điểm. Ít nhân viên hơn số giường thì ghi theo số nhân viên.</Txt>
+      <Txt w={700}>Tiện nghi</Txt>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{SPA_AMENITIES.map((a) => <Choice key={a.id} label={`${amenities.includes(a.id) ? "✓ " : ""}${a.label}`} active={amenities.includes(a.id)} onPress={() => setAmenities((s) => (s.includes(a.id) ? s.filter((x) => x !== a.id) : [...s, a.id]))} />)}</View>
+      <Field label="Giới thiệu spa" value={bio} onChange={setBio} multiline />
+      <Button label="Lưu & chọn giờ mở cửa" busy={busy} disabled={!bedsOk || !studio.trim()} onPress={() => void mutate("save_partner_profile", { p_profile: { kind: "spa", homeService: false, studioAddress: studio, beds: bedCount, amenities, bio } }, 3)} />
+    </>}
+    {step === 2 && !spa && <>
       {studioBookingOpen ? <Choice label={home ? "✓ Nhận tại nhà / địa điểm khách" : "Nhận tại nhà / địa điểm khách"} active={home} onPress={() => setHome(!home)} /> : <Txt>Nhận lịch freelancer đến nhà hoặc địa điểm khách chọn.</Txt>}
       <Field label="Bán kính phục vụ (1–30 km)" value={radiusKm} onChange={setRadiusKm} numeric />
       {studioBookingOpen && <Field label="Địa chỉ studio (nếu có)" value={studio} onChange={setStudio} />}

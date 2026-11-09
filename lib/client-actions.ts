@@ -82,6 +82,11 @@ export const actions = {
     return api.fetchSlots(input)
   },
 
+  /** A spa's start times with the beds left. */
+  async cartSlotBedsFor(input: { proId: string; items: { template: string; variant: string; quantity: number }[]; date: string }) {
+    return api.fetchCartSlotBeds(input)
+  },
+
   /** Which start times have room for the whole cart. */
   async cartSlotsFor(input: {
     proId: string
@@ -149,6 +154,7 @@ export const actions = {
   },
 
   async createCartBooking(input: {
+    operationId: string
     proId: string
     items: { template: string; variant: string; quantity: number }[]
     date: string
@@ -161,6 +167,7 @@ export const actions = {
     sessions?: string[]
   }): Promise<{ id: string } | { error: string }> {
     const result = await api.createCartBooking({
+      operationId: input.operationId,
       proId: input.proId,
       items: input.items,
       startsAt: toTimestamptz(input.date, input.time),

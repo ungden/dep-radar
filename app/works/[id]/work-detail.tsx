@@ -10,7 +10,7 @@ import { CategoryTag } from "@/components/trade"
 import { VerifiedMark } from "@/components/trust"
 import { PostCard, SaveWorkButton, whereLabel } from "@/components/beauty"
 import { Avatar, ButtonLink } from "@/components/ui"
-import { getTemplate } from "@/lib/catalog"
+import { getTemplate, serviceDuration, serviceQuantity } from "@/lib/catalog"
 import { trackWork } from "@/lib/feed-events"
 import { POLICY } from "@/lib/pricing"
 import { proView, servicesOf, useApp, worksOf } from "@/lib/store"
@@ -20,7 +20,7 @@ import type { Pro, ServiceTemplate } from "@/lib/types"
 import { showsAverage } from "@/lib/connection"
 import { cn, formatDuration, formatPrice, ratingText } from "@/lib/utils"
 
-export function WorkDetail({ workId }: { workId: string }) {
+export function WorkDetail({ workId, initialVariant }: { workId: string; initialVariant?: string }) {
   const router = useRouter()
   const state = useApp()
   const work = state.works.find((w) => w.id === workId)
@@ -29,8 +29,8 @@ export function WorkDetail({ workId }: { workId: string }) {
 
   const listing = work && pro ? servicesOf(state, pro.id).find((x) => x.templateId === work.templateId) : undefined
   const offered = listing && tpl ? tpl.variants.filter((v) => listing.prices[v.id] !== undefined) : []
-  const [variantId, setVariantId] = React.useState<string | null>(null)
-  const variant = offered.find((v) => v.id === variantId) ?? offered[0]
+  const [variantId, setVariantId] = React.useState<string | null>(initialVariant ?? null)
+  const variant = offered.find((v) => v.id === variantId) ?? [...offered].sort((a, b) => listing!.prices[a.id] * serviceQuantity(a) - listing!.prices[b.id] * serviceQuantity(b))[0]
 
   // One "open" per page view, however often React runs the effect.
   const opened = React.useRef<string | null>(null)
@@ -54,9 +54,9 @@ export function WorkDetail({ workId }: { workId: string }) {
   }
 
   const own = state.session?.proId === pro.id
-  const bookable = Boolean(listing && variant) && !own
-  const from = offered.length ? Math.min(...offered.map((v) => listing!.prices[v.id])) : null
-  const bookHref = variant ? `/book/${pro.id}?service=${tpl.id}&variant=${variant.id}` : `/pros/${pro.id}?tab=services`
+  const bookable = Boolean(listing && variant) && !own && pro.acceptingJobs
+  const total = variant && listing ? listing.prices[variant.id] * serviceQuantity(variant) : null
+  const bookHref = variant ? `/book/${pro.id}?service=${tpl.id}&variant=${variant.id}&work=${encodeURIComponent(work.id)}` : `/pros/${pro.id}?tab=services`
   const onBook = () => trackWork(work.dbId, "book_click")
 
   // The same service by someone else, in the city the customer is browsing:
@@ -104,7 +104,7 @@ export function WorkDetail({ workId }: { workId: string }) {
         <header className="pt-5 md:col-start-2 md:row-start-1 md:pt-0">
           <CategoryTag category={work.category} href={`/search?category=${work.category}`} />
           <h1 className="mt-3 text-[26px] font-bold leading-tight tracking-tight md:text-[34px]">{work.title}</h1>
-          <ProRow pro={pro} own={own} />
+          <ProRow pro={pro} own={own} context={variant ? `?tab=services&service=${tpl.id}&variant=${variant.id}&work=${encodeURIComponent(work.id)}` : ""} />
           {work.description && <p className="mt-4 whitespace-pre-line text-body leading-relaxed text-ink">{work.description}</p>}
         </header>
 
@@ -144,9 +144,9 @@ export function WorkDetail({ workId }: { workId: string }) {
               <>
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="text-body font-bold">{tpl.name}</p>
-                  {from !== null && (
+                  {total !== null && (
                     <p className="shrink-0 text-body text-muted">
-                      Từ <span className="text-lead font-bold text-ink">{formatPrice(from)}</span>
+                      <span className="text-lead font-bold text-ink">{formatPrice(total)}</span>
                     </p>
                   )}
                 </div>
@@ -169,17 +169,17 @@ export function WorkDetail({ workId }: { workId: string }) {
                           <span className="block text-body font-semibold leading-snug">{v.label}</span>
                           <span className="mt-0.5 flex items-center gap-1 text-meta text-muted">
                             <Clock className="size-3.5" />
-                            {formatDuration(v.durationMin)}
+                            {formatDuration(serviceDuration(v, serviceQuantity(v)))}
                             {v.perPerson ? " · mỗi người" : ""}
                           </span>
                         </span>
-                        <span className="shrink-0 text-body font-bold">{formatPrice(listing.prices[v.id])}</span>
+                        <span className="shrink-0 text-body font-bold">{formatPrice(listing.prices[v.id] * serviceQuantity(v))}</span>
                       </button>
                     )
                   })}
                 </div>
                 <ButtonLink href={bookHref} onClick={onBook} size="lg" className="mt-4 hidden w-full md:flex">
-                  Đặt lịch · {formatPrice(listing.prices[variant.id])}
+                  Chọn ngày giờ · {total === null ? "" : formatPrice(total)}
                 </ButtonLink>
                 <p className="mt-3 text-meta leading-relaxed text-muted">
                   Sau khi bạn đặt, {pro.name} nhận lịch trong app trong vòng {POLICY.confirmWithinHours} giờ; nhận rồi thì hai bên
@@ -244,13 +244,10 @@ export function WorkDetail({ workId }: { workId: string }) {
             <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-meta text-muted">{tpl.name}</p>
-                <p className="truncate text-body font-semibold leading-tight">{variant.label}</p>
+                <p className="truncate text-body font-semibold leading-tight">{total === null ? variant.label : formatPrice(total)}</p>
               </div>
               <ButtonLink href={bookHref} onClick={onBook} size="lg" className="shrink-0 px-6">
-                {/* Until a package is picked, the cheapest one sets the price. */}
-                {variantId === null && from !== null
-                  ? `Từ ${formatPrice(from)} · Đặt lịch`
-                  : `Đặt lịch · ${formatPrice(listing.prices[variant.id])}`}
+                Chọn ngày giờ
               </ButtonLink>
             </div>
           </div>
@@ -265,11 +262,11 @@ function rankOf(state: ReturnType<typeof useApp>, proId: string) {
   return p ? rankScore(p) : 0
 }
 
-function ProRow({ pro, own }: { pro: Pro; own: boolean }) {
+function ProRow({ pro, own, context }: { pro: Pro; own: boolean; context: string }) {
   const state = useApp()
   return (
     <div className="mt-4 flex items-center gap-3">
-      <Link href={`/pros/${pro.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+      <Link href={`/pros/${pro.id}${context}`} className="flex min-w-0 flex-1 items-center gap-3">
         <Avatar name={pro.name} tone={pro.tone} src={pro.avatar} size={48} />
         <span className="min-w-0">
           <span className="flex items-center gap-1.5 text-body font-bold">

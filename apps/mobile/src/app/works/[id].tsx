@@ -2,7 +2,7 @@ import * as React from "react"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import { ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { categoryLabel, getTemplate, verticalOf } from "@/shared"
+import { categoryLabel, featuredOption, getTemplate, listingLocationOpen, serviceDuration, serviceQuantity, verticalOf } from "@/shared"
 import { formatDuration, formatKm, formatPrice } from "@/data/format"
 import { BookingBar } from "@/components/booking-bar"
 import { PostCard } from "@/components/cards"
@@ -19,7 +19,8 @@ import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
 
 export default function WorkDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id, variant: requested } = useLocalSearchParams<{ id: string; variant?: string }>()
+  const [choice, choose] = React.useState<string | undefined>(requested)
   const app = useApp()
   const browse = useBrowse()
   const insets = useSafeAreaInsets()
@@ -28,13 +29,14 @@ export default function WorkDetail() {
   const work = app.data?.works.find((w) => w.id === id || w.dbId === id)
   const pro = work ? app.data?.pros.find((p) => p.id === work.proId) : undefined
   const template = work ? getTemplate(work.templateId) : undefined
-  const listing = work && pro ? app.data?.services.find((s) => s.proId === pro.id && s.templateId === work.templateId && s.active) : undefined
+  const listing = work && pro ? app.data?.services.find((s) => s.proId === pro.id && s.templateId === work.templateId && s.active && listingLocationOpen(template, pro, app.studioBookingOpen)) : undefined
   const variants = template && listing ? template.variants.filter((v) => listing.prices[v.id] != null) : []
-  const price = variants.length ? Math.min(...variants.map((v) => listing!.prices[v.id])) : null
+  const option = listing && template ? featuredOption(template.id, listing.prices, app.studioBookingOpen, choice) ?? featuredOption(template.id, listing.prices, app.studioBookingOpen) : undefined
+  const price = option?.minimumTotal ?? null
   const km = pro ? app.distanceTo(pro) : null
 
   const similar = React.useMemo(
-    () => (work ? browse.works.filter((w) => w.category === work.category && w.proId !== work.proId).slice(0, 6) : []),
+    () => (work ? browse.works.filter((w) => !w.hiddenReason && w.id !== work.id && w.proId === work.proId).slice(0, 6) : []),
     [browse.works, work],
   )
   const safety = useSafetyMenu(
@@ -64,7 +66,7 @@ export default function WorkDetail() {
   const book = () => {
     if (!pro) return
     if (!listing) router.push({ pathname: "/pros/[id]", params: { id: pro.id, tab: "gia" } })
-    else router.push({ pathname: "/book/[proId]", params: { proId: pro.id, template: work.templateId } })
+    else router.push({ pathname: "/book/[proId]", params: { proId: pro.id, template: work.templateId, variant: option?.variant.id ?? "", work: work.id } })
   }
   const vertical = verticalOf(work.category)
 
@@ -87,7 +89,7 @@ export default function WorkDetail() {
         <View style={{ paddingTop: insets.top + 44 }}>
           {work.video ? <Clip uri={work.video} maxHeight={height * 0.72} /> : null}
           {work.video && work.images.length ? <View style={{ height: 12 }} /> : null}
-          {!work.video || work.images.length ? <PhotoPager images={work.images} recyclingKey={work.id} /> : null}
+          {!work.video || work.images.length ? <PhotoPager compact images={work.images} recyclingKey={work.id} /> : null}
         </View>
 
         <View style={{ paddingHorizontal: gutter, paddingTop: 20, gap: 16 }}>
@@ -102,14 +104,14 @@ export default function WorkDetail() {
             <Txt v="h2">{work.title}</Txt>
             {price !== null ? (
               <Txt v="lead" w={700} tabular>
-                Từ {formatPrice(price)}
+                {formatPrice(price)} · {formatDuration(option?.durationMin ?? 0)}
               </Txt>
             ) : null}
           </View>
 
           {pro ? (
             <Press
-              onPress={() => router.push({ pathname: "/pros/[id]", params: { id: pro.id } })}
+              onPress={() => router.push({ pathname: "/pros/[id]", params: { id: pro.id, service: work.templateId, variant: option?.variant.id ?? "", work: work.id } })}
               accessibilityLabel={`Xem hồ sơ ${pro.name}`}
               style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.md, padding: 12 }}
             >
@@ -140,18 +142,19 @@ export default function WorkDetail() {
                 Gói và giá
               </Txt>
               {variants.map((v) => (
-                <View key={v.id} style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 10, borderBottomWidth: hairline, borderBottomColor: colors.line, gap: 12 }}>
+                <Press key={v.id} accessibilityRole="radio" accessibilityState={{ checked: option?.variant.id === v.id }} onPress={() => choose(v.id)}
+                  style={{ minHeight: 48, flexDirection: "row", justifyContent: "space-between", padding: 10, borderRadius: radius.sm, borderBottomWidth: hairline, borderBottomColor: colors.line, gap: 12, backgroundColor: option?.variant.id === v.id ? colors.accentSoft : colors.surface }}>
                   <View style={{ flex: 1 }}>
                     <Txt w={600}>{v.label}</Txt>
                     <Txt v="meta" color={colors.muted}>
-                      {formatDuration(v.durationMin)}
-                      {v.perPerson ? " · mỗi người" : ""}
+                      {formatDuration(serviceDuration(v, serviceQuantity(v)))}
+                      {v.perPerson ? ` · từ ${serviceQuantity(v)} ${v.unit ?? "người"}` : ""}
                     </Txt>
                   </View>
                   <Txt w={700} tabular>
-                    {formatPrice(listing!.prices[v.id])}
+                    {formatPrice(listing!.prices[v.id] * serviceQuantity(v))}
                   </Txt>
-                </View>
+                </Press>
               ))}
               {template?.deliverable ? (
                 <Txt v="meta" color={colors.inkSoft} style={{ paddingTop: 6 }}>
@@ -164,9 +167,15 @@ export default function WorkDetail() {
             <Txt color={colors.inkSoft}>{pro.name} chưa đặt giá cho dịch vụ này trên 360dep.</Txt>
           ) : null}
 
+          {template?.includes.length ? <View style={{ gap: 4 }}>
+            <Txt v="lead" w={700}>Chi tiết dịch vụ</Txt>
+            {template.includes.map((item) => <Txt key={item} color={colors.inkSoft}>• {item}</Txt>)}
+            {pro?.homeService && !template.studioOnly ? <Txt v="meta" color={colors.muted}>Phí di chuyển tính theo địa chỉ.</Txt> : null}
+          </View> : null}
+
           {similar.length ? (
             <View style={{ gap: 12, paddingTop: 8 }}>
-              <SectionHeader title="Mẫu tương tự" />
+              <SectionHeader title={`Mẫu khác của ${pro?.name ?? "chuyên viên"}`} />
               <View style={{ flexDirection: "row", flexWrap: "wrap", marginHorizontal: -6 }}>
                 {similar.map((w) => {
                   const p = browse.proById.get(w.proId)
@@ -184,9 +193,9 @@ export default function WorkDetail() {
 
       {pro && app.uid !== pro.uuid ? (
         <BookingBar
-          title={price !== null ? `Từ ${formatPrice(price)}` : null}
+          title={price !== null ? formatPrice(price) : null}
           note={!pro.acceptingJobs ? `${pro.name} đang tạm nghỉ nhận lịch.` : undefined}
-          action={listing ? "Đặt lịch" : "Xem bảng giá"}
+          action={listing ? "Chọn ngày giờ" : "Xem bảng giá"}
           disabled={!pro.acceptingJobs && Boolean(listing)}
           onPress={book}
         />

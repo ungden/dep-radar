@@ -1,6 +1,6 @@
 "use client"
 
-import { serviceLocationOpen } from "@/lib/launch"
+import { isSpa, serviceLocationOpen } from "@/lib/launch"
 
 import Image from "next/image"
 import Link from "next/link"
@@ -45,7 +45,7 @@ export function ServiceView({ templateId }: { templateId: string }) {
   if (state.catalogError) return <div className="py-8"><DataUnavailable /></div>
 
   const offering = (p: Pro) => servicesOf(state, p.id).find((s) => s.templateId === templateId)
-  const all = state.pros.filter((p) => p.published && offering(p) && proOk(p) && optionsOf(p).length > 0)
+  const all = state.pros.filter((p) => !isSpa(p) && p.published && offering(p) && proOk(p) && optionsOf(p).length > 0)
   const near = all.filter((p) => !city || p.city === city)
   const elsewhere = all.filter((p) => city && p.city !== city)
 

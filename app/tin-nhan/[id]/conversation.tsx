@@ -3,6 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { isSpa } from "@/lib/launch"
 import { Ban, Flag, ImagePlus, MapPin, MoreHorizontal, Navigation, Send } from "lucide-react"
 import { ChatNotice, CustomerNote, OffAppHint } from "@/components/conduct"
 import { ReportButton } from "@/components/report-button"
@@ -45,6 +46,7 @@ export function Conversation({
   history: { withMe: number; overall: number } | null
 }) {
   const state = useApp()
+  const mySpaPro = state.session?.proId ? state.pros.find((p) => p.id === state.session!.proId) : undefined
   const [messages, setMessages] = React.useState(initial)
   const [draft, setDraft] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
@@ -172,7 +174,8 @@ export function Conversation({
       {history && canSend && (
         <CustomerNote
           history={history}
-          onAskLocation={gotLocation ? undefined : () => setDraft(CHAT_ASKS.location)}
+          spa={isSpa(mySpaPro)}
+          onAskLocation={gotLocation || isSpa(mySpaPro) ? undefined : () => setDraft(CHAT_ASKS.location)}
           onConfirm={startsAt ? () => setDraft(CHAT_ASKS.confirm(vnTime(new Date(startsAt)))) : undefined}
         />
       )}

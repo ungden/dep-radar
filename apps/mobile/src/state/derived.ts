@@ -1,5 +1,5 @@
 import * as React from "react"
-import { providerLocationOpen, rankScore, verticalOf, type CategoryId, type VerticalFilter } from "@/shared"
+import { isSpa, providerLocationOpen, rankScore, verticalOf, type CategoryId, type VerticalFilter } from "@/shared"
 import { fromPrice, type AppPro, type AppWork } from "@/data/public"
 import { useApp } from "./app"
 
@@ -8,6 +8,9 @@ export function useBrowse() {
   const { data, city, me, distanceTo, blocked, studioBookingOpen } = useApp()
   return React.useMemo(() => {
     const pros = (data?.pros ?? []).filter((p) => providerLocationOpen(p, studioBookingOpen) && p.published && (!city || p.city === city) && !blocked.has(p.uuid))
+    // Spas have their own list (app/spa); everything else here is about Artists.
+    const artists = pros.filter((p) => !isSpa(p))
+    const spas = pros.filter((p) => isSpa(p) && p.acceptingJobs)
     const proIds = new Set(pros.map((p) => p.id))
     const works = (data?.works ?? []).filter((w) => proIds.has(w.proId))
     const proById = new Map((data?.pros ?? []).map((p) => [p.id, p]))
@@ -34,7 +37,7 @@ export function useBrowse() {
      * know the customer's address, otherwise by the same trust score as /pros.
      */
     const peopleFor = (v: VerticalFilter) =>
-      pros
+      artists
         .filter((p) => p.acceptingJobs && inVertical(p, v))
         .map((p) => ({ pro: p, km: distanceTo(p) }))
         .sort((a, b) => {
@@ -42,8 +45,15 @@ export function useBrowse() {
           return rankScore(b.pro) - rankScore(a.pro)
         })
 
+    /** Spas here, nearest first when we know where the customer is. */
+    const spasNear = spas
+      .map((p) => ({ pro: p, km: distanceTo(p) }))
+      .sort((a, b) => (a.km !== null && b.km !== null && a.km !== b.km ? a.km - b.km : rankScore(b.pro) - rankScore(a.pro)))
+
     return {
       pros,
+      artists,
+      spas: spasNear,
       works,
       proById,
       services,
@@ -53,7 +63,7 @@ export function useBrowse() {
       inVertical,
       worksIn,
       peopleFor,
-      priceOf: (proId: string, templateId?: string) => fromPrice(services, proId, templateId, studioBookingOpen),
+      priceOf: (proId: string, templateId?: string) => fromPrice(services, proId, templateId, studioBookingOpen || isSpa(proById.get(proId))),
       /** A real photo for a category, for bubbles and occasion cards. */
       photoFor: (category: CategoryId): string | undefined =>
         (works.find((w) => w.category === category && w.images[0]) ?? data?.works.find((w) => w.category === category && w.images[0]))

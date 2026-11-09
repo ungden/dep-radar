@@ -75,7 +75,7 @@ export default function ServiceList() {
     if (!app.data) return []
     const all = serviceOffers({
       studioBookingOpen: app.studioBookingOpen,
-      pros: browse.pros,
+      pros: browse.artists,
       proServices: browse.services,
       works: browse.works,
       city: app.city,
@@ -94,7 +94,7 @@ export default function ServiceList() {
   const soonScope = category === "all" ? scope : scope.filter((c) => c.id === category)
   // Price and reviews describe people, so a filtered list leaves the rest of the catalogue out.
   const allHere = React.useMemo(
-    () => (app.data ? serviceOffers({ studioBookingOpen: app.studioBookingOpen, pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical }) : []),
+    () => (app.data ? serviceOffers({ studioBookingOpen: app.studioBookingOpen, pros: browse.artists, proServices: browse.services, works: browse.works, city: app.city, vertical }) : []),
     [app.data, app.studioBookingOpen, app.city, browse, vertical],
   )
   const filtered = price !== "any" || trust !== "any"

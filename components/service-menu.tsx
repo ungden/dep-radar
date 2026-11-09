@@ -16,11 +16,15 @@ export function ServiceMenu({
   proId,
   bookable = true,
   initialCategory = null,
+  initialService, initialVariant, workId,
 }: {
   proId: string
   bookable?: boolean
   /** Opens on this category when the person lists something in it. */
   initialCategory?: CategoryId | null
+  initialService?: string
+  initialVariant?: string
+  workId?: string
 }) {
   const state = useApp()
   const pro = getPro(state, proId)
@@ -29,7 +33,7 @@ export function ServiceMenu({
     initialCategory && services.some((s) => getTemplate(s.templateId)!.category === initialCategory) ? initialCategory : "all",
   )
   const cats = Array.from(new Set(services.map((s) => getTemplate(s.templateId)!.category)))
-  const shown = services.filter((s) => cat === "all" || getTemplate(s.templateId)!.category === cat)
+  const shown = services.filter((s) => cat === "all" || getTemplate(s.templateId)!.category === cat).sort((a, b) => Number(b.templateId === initialService) - Number(a.templateId === initialService))
 
   if (!services.length)
     return (
@@ -57,7 +61,7 @@ export function ServiceMenu({
       <ul className="space-y-3">
         {shown.map((s) => (
           <li key={s.id}>
-            <ServiceCard pro={pro} proId={proId} service={s} bookable={bookable} />
+            <ServiceCard pro={pro} proId={proId} service={s} bookable={bookable} initialVariant={s.templateId === initialService ? initialVariant : undefined} workId={s.templateId === initialService ? workId : undefined} />
           </li>
         ))}
       </ul>
@@ -71,11 +75,11 @@ export function ServiceMenu({
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
-function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: string; service: ProService; bookable: boolean }) {
+function ServiceCard({ pro, proId, service, bookable, initialVariant, workId }: { pro?: Pro; proId: string; service: ProService; bookable: boolean; initialVariant?: string; workId?: string }) {
   const state = useApp()
   const tpl = getTemplate(service.templateId)!
   const variants = tpl.variants.filter((v) => service.prices[v.id] !== undefined)
-  const [variantId, setVariantId] = React.useState(variants[0]?.id)
+  const [variantId, setVariantId] = React.useState(initialVariant ?? variants[0]?.id)
   const [open, setOpen] = React.useState(false)
   const variant = variants.find((v) => v.id === variantId) ?? variants[0]
   if (!variant) return null
@@ -145,7 +149,7 @@ function ServiceCard({ pro, proId, service, bookable }: { pro?: Pro; proId: stri
         {bookable && tpl.addon ? (
           <span className="max-w-[9rem] text-right text-label text-muted">Chọn thêm khi đặt lịch dịch vụ chính</span>
         ) : bookable && (
-          <ButtonLink href={`/book/${proId}?service=${tpl.id}&variant=${variant.id}`} className="px-6">
+          <ButtonLink href={`/book/${proId}?service=${tpl.id}&variant=${variant.id}${workId ? `&work=${encodeURIComponent(workId)}` : ""}`} className="px-6">
             Đặt
           </ButtonLink>
         )}

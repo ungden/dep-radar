@@ -325,10 +325,14 @@ export const CATALOG: ServiceTemplate[] = [
     name: "Gội đầu dưỡng sinh",
     description: "Gội, massage da đầu và cổ vai, sấy khô.",
     includes: ["Gội 2 lần", "Massage da đầu, cổ vai", "Sấy tạo phồng nhẹ"],
-    variants: byDuration([
-      [45, [130, 180, 250]],
-      [60, [180, 240, 300]],
-    ]),
+    variants: [
+      ...byDuration([
+        [45, [130, 180, 250]],
+        [60, [180, 240, 300]],
+      ]),
+      // Spas sell it as a combo (owner, 08/11/2026); priced above 60 phút gội alone.
+      v("combo90", "90 phút, kèm massage cổ vai gáy", 90, [250, 320, 450]),
+    ],
     studioOnly: true,
   },
   {

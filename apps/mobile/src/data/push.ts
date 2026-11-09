@@ -2,10 +2,10 @@ import * as React from "react"
 import Constants from "expo-constants"
 import * as Notifications from "expo-notifications"
 import * as SecureStore from "expo-secure-store"
-import { Platform } from "react-native"
+import { AppState, Platform } from "react-native"
 import { isThreadOpen } from "./chat"
 import { openLink } from "./routes"
-import { rpcOptional } from "./supabase"
+import { rpcOptional, supabase } from "./supabase"
 
 /**
  * Push notifications.
@@ -64,30 +64,72 @@ export async function pushPermissionGranted(): Promise<boolean> {
   }
 }
 
-/** Sends this phone's token for the signed-in person. Never asks for permission itself. */
-export async function registerPushToken(uid: string): Promise<void> {
-  try {
-    if (!(await pushPermissionGranted())) return
-    const id = projectId()
-    if (!id) {
-      if (__DEV__) console.warn("push: no EAS projectId in app.json extra.eas.projectId; token not registered")
-      return
-    }
-    const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId: id })
-    // Once per person and token; a new sign-in or a new token sends again.
-    const sent = await SecureStore.getItemAsync(SENT_KEY)
-    if (sent === `${uid}:${token}`) return
-    const res = await rpcOptional("register_push_token", { p_token: token, p_platform: Platform.OS })
-    if (res.ok) await SecureStore.setItemAsync(SENT_KEY, `${uid}:${token}`)
-  } catch {
-    // Simulators have no push token; nothing to register.
-  }
+let pending = Promise.resolve()
+let signingOut = false
+
+function serial(work: () => Promise<void>) {
+  pending = pending.then(work, work)
+  return pending
 }
 
-export async function forgetPushToken() {
-  // TODO(db): no unregister RPC yet; the server should drop tokens of signed-out
-  // devices when Expo reports them as DeviceNotRegistered.
-  await SecureStore.deleteItemAsync(SENT_KEY).catch(() => {})
+/** Refresh the lease without asking for permissions on app open. */
+export function registerPushToken(uid: string): Promise<void> {
+  if (signingOut) return Promise.resolve()
+  return serial(async () => {
+    try {
+      const session = await supabase.auth.getSession()
+      if (session.data.session?.user.id !== uid || !(await pushPermissionGranted())) return
+      const id = projectId()
+      if (!id) return
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const result = await Promise.race([
+        Notifications.getExpoPushTokenAsync({ projectId: id }),
+        new Promise<null>((resolve) => { timer = setTimeout(() => resolve(null), 3000) }),
+      ]).finally(() => { if (timer) clearTimeout(timer) })
+      if (!result || signingOut) return
+      const token = result.data
+      const marker = `${uid}:${token}`
+      const sent = await SecureStore.getItemAsync(SENT_KEY)
+      if (sent?.startsWith(marker + ":") && Date.now() - Number(sent.slice(marker.length + 1)) < 12 * 3600_000) return
+      const abort = new AbortController()
+      const deadline = setTimeout(() => abort.abort(), 2500)
+      try {
+        const { error } = await supabase.rpc("register_push_token_v2", { p_token: token, p_platform: Platform.OS }).abortSignal(abort.signal)
+        if (!error) await SecureStore.setItemAsync(SENT_KEY, `${marker}:${Date.now()}`)
+      } finally { clearTimeout(deadline) }
+    } catch {
+      // Foregrounding the app tries again.
+    }
+  })
+}
+
+export function watchPushLease(uid: string) {
+  const sub = AppState.addEventListener("change", (state) => { if (state === "active") void registerPushToken(uid) })
+  return () => sub.remove()
+}
+
+export async function signOutPush() {
+  signingOut = true
+  try {
+    await serial(async () => {
+      const sent = await SecureStore.getItemAsync(SENT_KEY).catch(() => null)
+      const token = sent?.match(/Expo(?:nent)?PushToken\[[A-Za-z0-9_-]+\]/)?.[0]
+      if (token) {
+        let timer: ReturnType<typeof setTimeout> | undefined
+        try {
+          await Promise.race([
+            rpcOptional("unregister_push_token", { p_token: token }),
+            new Promise<void>((resolve) => { timer = setTimeout(resolve, 2500) }),
+          ])
+        } catch { /* Offline: the server uses a generic alert and the token lease expires. */ }
+        finally { if (timer) clearTimeout(timer) }
+      }
+      await SecureStore.deleteItemAsync(SENT_KEY).catch(() => {})
+      await Notifications.dismissAllNotificationsAsync().catch(() => {})
+      await Notifications.clearLastNotificationResponseAsync().catch(() => {})
+    })
+    await supabase.auth.signOut({ scope: "local" })
+  } finally { signingOut = false }
 }
 
 let handled: string | null = null

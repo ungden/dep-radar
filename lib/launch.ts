@@ -41,5 +41,15 @@ export const DEFAULT_STUDIO_BOOKING_OPEN = false
 export const serviceLocationOpen = (template: Pick<ServiceTemplate, "studioOnly"> | undefined, studioBookingOpen = DEFAULT_STUDIO_BOOKING_OPEN) =>
   Boolean(template) && (studioBookingOpen || !template?.studioOnly)
 
-export const providerLocationOpen = (pro: Pick<Pro, "homeService">, studioBookingOpen = DEFAULT_STUDIO_BOOKING_OPEN) =>
-  studioBookingOpen || pro.homeService
+/** A spa (owner, 08/11/2026) is a place customers go to, open whatever the studio switch says. */
+export const isSpa = (pro: Pick<Pro, "kind"> | null | undefined) => pro?.kind === "spa"
+
+export const providerLocationOpen = (pro: Pick<Pro, "homeService" | "kind">, studioBookingOpen = DEFAULT_STUDIO_BOOKING_OPEN) =>
+  studioBookingOpen || pro.homeService || isSpa(pro)
+
+/** One partner's listing of a service: a spa may list what is only done on site. */
+export const listingLocationOpen = (
+  template: Pick<ServiceTemplate, "studioOnly"> | undefined,
+  pro: Pick<Pro, "kind"> | null | undefined,
+  studioBookingOpen = DEFAULT_STUDIO_BOOKING_OPEN,
+) => serviceLocationOpen(template, studioBookingOpen || isSpa(pro))
