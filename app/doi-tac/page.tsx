@@ -80,6 +80,19 @@ export default function PartnerPage() {
         <span className="absolute bottom-3 right-3 rounded-full bg-black/40 px-2.5 py-1 text-[11px] font-medium text-white/90 backdrop-blur">Ảnh minh hoạ</span>
       </section>
 
+      <section className="mt-6 grid gap-3 sm:grid-cols-2" aria-label="Loại hồ sơ đối tác">
+        {[{ kind: "artist", title: "Artist", detail: "Bạn đến nơi khách chọn để làm đẹp hoặc chụp ảnh." },
+          { kind: "spa", title: "Spa / cơ sở", detail: "Khách đến cơ sở của bạn, đặt theo giờ và sức chứa." }].map(({ kind, title, detail }) => (
+          <div key={kind} className="space-y-2 rounded-xl border border-line bg-surface p-4">
+            <h2 className="text-lead font-bold">{title}</h2><p className="text-meta text-ink-soft">{detail}</p>
+            <div className="flex flex-wrap gap-4">
+              <a href={`dep360://ho-so-doi-tac?kind=${kind}`} className="inline-flex min-h-11 items-center font-semibold text-accent-dark">Mở app</a>
+              <Link href={`/login?role=pro&next=${encodeURIComponent(`/studio/onboarding?kind=${kind}`)}`} className="inline-flex min-h-11 items-center font-semibold">Đăng ký trên web</Link>
+            </div>
+          </div>
+        ))}
+      </section>
+
       <section className="mt-12">
         <p className="eyebrow">Cách làm việc</p>
         <h2 className="mt-1.5 text-[24px] font-extrabold tracking-tight md:text-[30px]">Rõ việc, rõ phí từ ngày đầu</h2>

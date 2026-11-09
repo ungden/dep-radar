@@ -199,6 +199,9 @@ export function AdminDesk({
             {tab !== "overview" && <ChevronRight className="hidden size-3.5 text-muted sm:inline" aria-hidden />}
             <span className={cn("truncate font-medium text-ink", tab === "overview" && "sm:hidden")}>{current?.label}</span>
           </nav>
+          <ShopLink href="/admin/cskh" className="inline-flex h-9 items-center rounded-md px-2 text-meta font-semibold text-accent-dark hover:bg-accent-soft">Bàn CSKH</ShopLink>
+          {tab === "finance" && <ShopLink href="/admin/uu-dai" className="inline-flex h-9 items-center rounded-md px-2 text-meta font-semibold text-accent-dark hover:bg-accent-soft">Mã ưu đãi</ShopLink>}
+          {tab === "finance" && <ShopLink href="/admin/thanh-toan" className="inline-flex h-9 items-center rounded-md px-2 text-meta font-semibold text-accent-dark hover:bg-accent-soft">Thu / chi QR</ShopLink>}
           <ShopLink href="/" className="hidden h-8 items-center gap-1.5 rounded-md px-2.5 text-meta text-ink-soft hover:bg-subtle hover:text-ink sm:inline-flex">
             <ExternalLink className="size-4" aria-hidden /> Trang khách
           </ShopLink>
@@ -279,6 +282,7 @@ export function AdminDesk({
 
           {tab === "customers" && <CustomersPanel />}
 
+          {tab === "finance" && <ShopLink href="/admin/uu-dai" className="inline-flex h-9 items-center rounded-md px-2 text-meta font-semibold text-accent-dark hover:bg-accent-soft">Mã ưu đãi</ShopLink>}
           {tab === "finance" && <FinancePanel pros={pros} />}
 
           {tab === "help" && <HelpQuestionsPanel />}

@@ -1,13 +1,14 @@
 "use client"
 
+import { requestCopy } from "@/lib/request-copy"
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ChevronRight, Leaf, RotateCcw, User, X } from "lucide-react"
+import { ChevronRight, Leaf, RotateCcw, X } from "lucide-react"
 import { bookingImage } from "@/components/booking-card"
 import { DataUnavailable } from "@/components/data-unavailable"
 import { MobileLinks } from "@/components/mobile-links"
-import { CatalogTile, CategoryBubble, CitySelect, IllustrationBadge, ServiceTile, notYetOffered } from "@/components/shop"
+import { CategoryBubble } from "@/components/shop"
 import { DEMO_DATA_LIVE, isSpa } from "@/lib/launch"
 import { SPA, SPA_RING_INDEX, SPA_TINT, spaPhoto } from "@/lib/spa"
 import { CATEGORIES } from "@/lib/catalog"
@@ -16,21 +17,15 @@ import { priorityFirst } from "@/lib/discovery"
 import { categoryRow, serviceOffers } from "@/lib/offers"
 import { getPro, useApp } from "@/lib/store"
 import type { Booking, CategoryId } from "@/lib/types"
-import { cn } from "@/lib/utils"
+import { cn, formatDuration, formatPrice } from "@/lib/utils"
+import { REQUEST_GOALS } from "@/lib/request-goals"
+import { rebookCart } from "@/lib/service-cart"
+import { editorialTemplates, marketplaceFeed } from "@/lib/marketplace-feed"
 
 const DEMO_KEY = "dep360_demo_notice"
-const SERVICES_FIRST = 8
 /** Categories a wide screen shows beside the headline; a phone swipes through all of them. */
 const RAIL_WIDE = 5
-const BOOK_PHOTO = { category: "nail", index: 1 } as const
 
-/**
- * The home page asks one question, how the customer wants to book: choose a
- * service and let an Artist take the order, or choose the Artist. Under it, the
- * services themselves with real prices: what people offer here first, then the
- * rest of the catalogue, which can still be requested. As the app's Khám phá
- * (apps/mobile/src/app/(tabs)/index.tsx). Browsing never asks for a sign-in.
- */
 export function HomeView() {
   const state = useApp()
   const { city } = state
@@ -43,25 +38,14 @@ export function HomeView() {
     () => serviceOffers({ studioBookingOpen, pros: artists, proServices: state.proServices, works: state.works, city, vertical: "all" }),
     [artists, state.proServices, state.works, city, studioBookingOpen],
   )
-  const offered = offers.slice(0, SERVICES_FIRST)
-  const rest = notYetOffered(offers, CATEGORIES, studioBookingOpen, SERVICES_FIRST - offered.length)
-
-  // Makeup and Nail lead, then whatever is on offer here.
   const rail = priorityFirst(categoryRow(CATEGORIES, offers, "all", CATEGORIES.length + 1).ordered)
-  const worksHere = state.works.filter((w) => w.images[0] && (!city || getPro(state, w.proId)?.city === city))
-  const photoOf = (c: CategoryId) => worksHere.find((w) => w.category === c)?.images[0] ?? categoryPhoto(c)
-  // A picture under "Artist" must not be an illustration: real work, or just the icon.
-  const realWork = worksHere[0]?.images[0]
-
-  // Illustrations take turns within a category, so two tiles never share one,
-  // and pass over the one on the "Đặt theo dịch vụ" card.
-  const turns = new Map<CategoryId, number>()
-  const nextTurn = (c: CategoryId) => {
-    const n = turns.get(c) ?? 0
-    turns.set(c, n + 1)
-    return c === BOOK_PHOTO.category && n >= BOOK_PHOTO.index ? n + 1 : n
-  }
-
+  const [following, setFollowing] = React.useState(false)
+  const [limit, setLimit] = React.useState(8)
+  const feed = React.useMemo(() => marketplaceFeed({
+    pros: artists, services: state.proServices, works: state.works, city, studioOpen: studioBookingOpen, following: following ? new Set(state.followedPros) : undefined,
+  }), [artists, state.proServices, state.works, city, studioBookingOpen, following, state.followedPros])
+  const editorial = following ? [] : editorialTemplates(new Set(feed.map((entry) => entry.template.id)), studioBookingOpen).slice(0, Math.max(0, 4 - feed.length))
+  const photoOf = (c: CategoryId) => feed.find((item) => item.template.category === c && item.photo)?.photo ?? categoryPhoto(c)
   return (
     <div className="roomy pt-5 md:pt-10">
       {DEMO_DATA_LIVE && <DemoNotice />}
@@ -74,7 +58,7 @@ export function HomeView() {
         <nav aria-label="Danh mục" className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto px-4 md:mx-0 md:gap-2.5 md:px-0">
           {rail.map((c, i) => (
             <React.Fragment key={c.id}>
-              {spas.length && i === SPA_RING_INDEX ? <SpaBubble photo={worksHere.find((w) => spas.some((s) => s.id === w.proId))?.images[0] ?? spaPhoto(0)} /> : null}
+              {spas.length && i === SPA_RING_INDEX ? <SpaBubble photo={state.works.find((w) => spas.some((s) => s.id === w.proId))?.images[0] ?? spaPhoto(0)} /> : null}
               <CategoryBubble category={c} photo={photoOf(c.id)} href={`/search?category=${c.id}`} className={cn(i >= (spas.length ? RAIL_WIDE - 1 : RAIL_WIDE) && "lg:hidden")} />
             </React.Fragment>
           ))}
@@ -87,67 +71,52 @@ export function HomeView() {
         </nav>
       </div>
 
-      <Rebook />
-
-      <section aria-labelledby="dat-the-nao" className="mt-8 md:mt-11">
-        <h2 id="dat-the-nao" className="text-[20px] font-bold tracking-[-0.02em] md:text-[22px]">Bạn muốn đặt thế nào?</h2>
-        <div className="mt-3 grid gap-3 md:mt-4 md:grid-cols-2 md:gap-6">
-          <WayToBook
-            href="/dat-lich"
-            title="Đặt theo dịch vụ"
-            text="Chọn dịch vụ và giờ, Artist rảnh sẽ nhận đơn."
-            action="Đặt ngay"
-            primary
-            picture={
-              <>
-                <Image src={categoryPhoto(BOOK_PHOTO.category, BOOK_PHOTO.index)} alt="" fill priority sizes="(min-width: 768px) 280px, 40vw" className="object-cover" />
-                <IllustrationBadge className="left-2.5 top-2.5" />
-              </>
-            }
-          />
-          <WayToBook
-            href="/pros"
-            title="Tự chọn Artist"
-            text="Xem tác phẩm và giá, chọn người bạn thích."
-            action="Xem Artist"
-            picture={
-              realWork ? (
-                <Image src={realWork} alt="" fill sizes="(min-width: 768px) 280px, 40vw" className="object-cover" />
-              ) : (
-                <span className="flex size-full items-center justify-center bg-accent-soft text-accent">
-                  <User className="size-14 stroke-[1.5]" aria-hidden />
-                </span>
-              )
-            }
-          />
+      <section aria-label={requestCopy.vi.title} className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-accent-soft px-4 py-2">
+        <Link href="/dat-lich" className="inline-flex min-h-11 items-center gap-2">
+          <span><strong className="block text-accent-dark">{requestCopy.vi.title}</strong><span className="block text-meta text-ink-soft">{requestCopy.vi.summary}</span></span>
+          <ChevronRight className="size-4 text-accent-dark" aria-hidden />
+        </Link>
+        <div className="flex flex-wrap gap-1.5">
+          {REQUEST_GOALS.map((g) => <Link key={g.templateId} href={`/dat-lich?service=${g.templateId}&variant=${g.variantId}`} className="inline-flex min-h-11 items-center rounded-full bg-surface px-3 text-meta font-semibold text-accent-dark">{g.label}</Link>)}
         </div>
       </section>
-
-      <section aria-labelledby="dich-vu" className="mt-9 md:mt-14">
+      <section aria-labelledby="danh-cho-ban" className="mt-6 md:mt-9">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-            <h2 id="dich-vu" className="text-[20px] font-bold tracking-[-0.02em] md:text-[22px]">Dịch vụ</h2>
-            {/* On a phone the bar on top has this. */}
-            <CitySelect value={city} variant="chip" className="hidden md:inline-flex" />
+          <h2 id="danh-cho-ban" className="sr-only">Khám phá tác phẩm</h2>
+          <div className="flex gap-4" aria-label="Nguồn tác phẩm">
+            <button type="button" aria-pressed={!following} onClick={() => { setFollowing(false); setLimit(8) }} className="min-h-11 font-bold aria-pressed:text-accent-dark">Dành cho bạn</button>
+            <button type="button" aria-pressed={following} onClick={() => { setFollowing(true); setLimit(8) }} className="min-h-11 font-bold aria-pressed:text-accent-dark">Theo dõi</button>
           </div>
-          <Link href="/search" className="inline-flex min-h-11 shrink-0 items-center text-meta font-semibold text-accent-dark hover:underline md:text-[16px]">
-            Xem tất cả
-          </Link>
+          <Link href="/search" className="inline-flex min-h-11 items-center text-meta font-semibold text-accent-dark">Xem tất cả</Link>
         </div>
-        {state.catalogError ? (
-          <DataUnavailable />
-        ) : (
-          <div className="mt-3 grid grid-cols-2 gap-3 md:gap-6 lg:grid-cols-4">
-            {offered.map((o, i) => (
-              <ServiceTile key={o.template.id} offer={o} index={o.photo ? 0 : nextTurn(o.template.category)} priority={i < 4} />
-            ))}
-            {rest.map((t, i) => (
-              <CatalogTile key={t.id} template={t} index={nextTurn(t.category)} priority={offered.length + i < 4} />
-            ))}
+        {state.catalogError ? <DataUnavailable /> : feed.length || editorial.length ? (
+          <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-6 md:gap-6 lg:grid-cols-4">
+            {feed.slice(0, limit).map(({ id, pro, work, template, option, photo }, i) => {
+              const href = work ? `/works/${work.id}?variant=${option.variant.id}` : `/pros/${pro.id}?service=${template.id}&variant=${option.variant.id}&tab=services`
+              return <Link key={id} href={href} className="group min-w-0 rounded-[var(--radius-md)]">
+                <span className="relative flex aspect-[5/4] items-center justify-center overflow-hidden rounded-[var(--radius-md)] bg-accent-soft">
+                  {photo ? <Image src={photo} alt="" fill priority={i < 4} sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover" />
+                    : <span aria-hidden className="grid size-14 place-items-center rounded-full bg-surface font-bold text-accent-dark">{pro.name.slice(0, 1)}</span>}
+                </span>
+                <span className="mt-2 block truncate text-meta font-bold">{pro.name}</span>
+                <span className="block font-semibold group-hover:underline">{template.name}</span>
+                <span className="block text-meta text-ink-soft"><strong className="text-accent-dark">{formatPrice(option.minimumTotal)}</strong> · {formatDuration(option.durationMin)}</span>
+                <span className="block text-meta text-muted">{!pro.acceptingJobs ? "Tạm nghỉ nhận lịch" : pro.homeService && !template.studioOnly ? "Tại nhà" : "Tại cơ sở"}{option.minimumQuantity > 1 ? ` · từ ${option.minimumQuantity} người` : ""}</span>
+              </Link>
+            })}
+            {editorial.map((template) => <Link key={template.id} href={`/dich-vu/${template.id}`} className="group min-w-0">
+              <span className="relative block aspect-[5/4] overflow-hidden rounded-[var(--radius-md)] bg-accent-soft">
+                <Image src={categoryPhoto(template.category, template.id === "makeup-bridal" ? 1 : template.id === "makeup-daily" ? 2 : 0)} alt="" fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover" />
+                <span className="absolute bottom-2 left-2 rounded bg-surface px-2 py-1 text-label">Ảnh minh hoạ</span>
+              </span>
+              <span className="mt-2 block font-semibold group-hover:underline">{template.name}</span>
+              <span className="block text-meta text-ink-soft">Gợi ý dịch vụ</span>
+              <span className="block text-meta font-bold text-accent-dark">Xem gói và gửi nhu cầu</span>
+            </Link>)}
           </div>
-        )}
+        ) : <p className="mt-3 text-ink-soft">{following ? "Chưa có tác phẩm từ chuyên viên bạn theo dõi." : "Chưa có dịch vụ tại khu vực này. Bạn có thể xem danh mục hoặc gửi nhu cầu."}</p>}
+        {feed.length > limit && <button type="button" className="mt-4 min-h-11 font-semibold text-accent-dark" onClick={() => setLimit((n) => n + 12)}>Xem thêm tác phẩm</button>}
       </section>
-
       {spas.length ? (
         <Link href="/spa" className="mt-8 flex items-center gap-4 rounded-[var(--radius-lg)] bg-surface p-4 transition-shadow hover:shadow-[var(--shadow-raised)] md:mt-10 md:p-5">
           <span className="flex size-12 shrink-0 items-center justify-center rounded-[var(--radius-md)]" style={{ background: SPA_TINT.bg, color: SPA_TINT.fg }}>
@@ -161,6 +130,11 @@ export function HomeView() {
         </Link>
       ) : null}
 
+      <Rebook />
+      <div className="mt-7 flex flex-wrap gap-5 text-meta font-semibold text-accent-dark">
+        <Link href="/dat-lich" className="inline-flex min-h-11 items-center">Gửi nhu cầu</Link>
+        <Link href="/pros" className="inline-flex min-h-11 items-center">Xem chuyên viên</Link>
+      </div>
       {/* The footer is desktop-only; on a phone these are the links it would have given. */}
       <MobileLinks className="mt-10" />
     </div>
@@ -177,27 +151,6 @@ function SpaBubble({ photo }: { photo: string }) {
         </span>
       </span>
       <span className="block text-center text-meta font-medium leading-[20px] text-ink md:text-[16px]">{SPA.ring}</span>
-    </Link>
-  )
-}
-
-/** One of the two ways to book: a picture beside what it means and one button. The whole card is the link. */
-function WayToBook({ href, title, text, action, primary, picture }: { href: string; title: string; text: string; action: string; primary?: boolean; picture: React.ReactNode }) {
-  return (
-    <Link href={href} className="group flex min-h-[176px] overflow-hidden rounded-[var(--radius-xl)] bg-surface transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)] md:min-h-[256px]">
-      <span className="relative w-[40%] shrink-0 bg-subtle md:w-[45%]">{picture}</span>
-      <span className="flex min-w-0 flex-1 flex-col items-start p-4 md:px-7 md:py-6">
-        <span className="block text-[20px] font-bold leading-tight tracking-[-0.02em] md:text-[26px]">{title}</span>
-        <span className="mt-1.5 block text-meta leading-[1.4] text-ink-soft md:mt-2 md:text-body">{text}</span>
-        <span
-          className={cn(
-            "mt-auto inline-flex h-11 items-center rounded-full px-[18px] text-meta font-bold transition-colors",
-            primary ? "bg-accent text-white group-hover:bg-accent-dark" : "bg-accent-soft text-accent-dark group-hover:bg-[#F8DCE6]",
-          )}
-        >
-          {action}
-        </span>
-      </span>
     </Link>
   )
 }
@@ -228,7 +181,7 @@ function Rebook() {
           const image = bookingImage(state, b)
           return (
             <li key={b.id} className="w-[260px] shrink-0 md:w-auto">
-              <Link href={`/book/${b.proId}?service=${b.templateId}&variant=${b.variantId}`} className="flex items-center gap-3 rounded-[var(--radius-lg)] bg-surface p-3 hover:shadow-[var(--shadow-soft)]">
+              <Link href={`/book/${b.proId}?cart=${encodeURIComponent(rebookCart(b))}`} className="flex items-center gap-3 rounded-[var(--radius-lg)] bg-surface p-3 hover:shadow-[var(--shadow-soft)]">
                 <span className="relative size-14 shrink-0 overflow-hidden rounded-[var(--radius-md)] bg-subtle">
                   {image && <Image src={image} alt="" fill sizes="56px" className="object-cover" />}
                 </span>

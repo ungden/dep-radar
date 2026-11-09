@@ -6,7 +6,7 @@ import { Photo } from "@/ui/bits"
 import { Txt } from "@/ui/text"
 
 /** Full-bleed photos, swiped sideways, 4:5, with a quiet counter below. */
-export function PhotoPager({ images, recyclingKey }: { images: string[]; recyclingKey?: string }) {
+export function PhotoPager({ images, recyclingKey, compact = false }: { images: string[]; recyclingKey?: string; compact?: boolean }) {
   const { width } = useWindowDimensions()
   const [page, setPage] = React.useState(0)
   if (!images.length) return <Photo ratio={aspect.photo} rounded={0} style={{ width }} />
@@ -20,7 +20,7 @@ export function PhotoPager({ images, recyclingKey }: { images: string[]; recycli
         keyExtractor={(uri, i) => `${i}:${uri}`}
         renderItem={({ item, index }) => (
           <View accessible accessibilityLabel={`Ảnh ${index + 1} trên ${images.length}`}>
-            <Photo uri={item} rounded={0} style={{ width }} recyclingKey={`${recyclingKey}:${index}`} />
+            <Photo uri={item} rounded={0} style={{ width, ...(compact ? { aspectRatio: 1.55 } : {}) }} recyclingKey={`${recyclingKey}:${index}`} />
           </View>
         )}
         onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / width))}

@@ -29,9 +29,8 @@ type ReviewPhoto = { uri: string; width: number; height: number; url?: string }
 
 /**
  * Review a finished booking: stars, tags, a few words, up to three result
- * photos. Same write_review RPC as the web. Within 14 days of completion; blind
- * (and still editable) until the freelancer has reviewed the customer too, or
- * the 14 days end. Three stars or fewer asks what went wrong. Photos are
+ * photos. Within 14 days of completion. Once published, a review cannot be edited.
+ * Three stars or fewer asks what went wrong. Photos are
  * re-encoded on the phone first, which drops their GPS position.
  */
 export default function WriteReview() {
@@ -158,7 +157,7 @@ export default function WriteReview() {
       if (!res.ok) throw new Error(res.error)
       haptic.success()
       leaving.current = true
-      // Published at once when the freelancer has already reviewed the customer.
+      // Check publication after the write; older servers can still hold a review.
       const after = await getMyReview(b.id).catch(() => null)
       setSubmitted({ published: Boolean(after?.publishedAt) })
       void app.refresh()
@@ -252,7 +251,7 @@ export default function WriteReview() {
         </View>
 
         <Txt v="meta" color={colors.muted}>
-          Còn {win.daysLeft} ngày để {editing ? "sửa" : "đánh giá"}. {BLIND_NOTE} Đánh giá được gắn nhãn “Đã đặt qua 360dep”; Artist không xoá được, chỉ trả lời công khai.
+          Còn {win.daysLeft} ngày để {editing ? "sửa" : "đánh giá"}. Đánh giá hiện công khai thì không sửa được nữa. Đánh giá được gắn nhãn “Đã đặt qua 360dep”; Artist không xoá được, chỉ trả lời công khai.
         </Txt>
         {error ? <ErrorNote text={error} /> : null}
       </ScrollView>

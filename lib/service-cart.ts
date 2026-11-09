@@ -98,6 +98,8 @@ export const cartItems = (lines: CartLine[]) =>
 /** A line of an appointment already booked, as the customer and the partner see it. */
 export interface BookedLine {
   id: string
+  templateId?: string
+  variantId?: string
   serviceName: string
   variantLabel: string
   quantity: number
@@ -108,6 +110,8 @@ export interface BookedLine {
 
 interface Foldable {
   id: string
+  templateId?: string
+  variantId?: string
   serviceName: string
   variantLabel: string
   quantity: number
@@ -127,6 +131,7 @@ const startOf = (b: Foldable) => b.startsAt ?? `${b.date}T${b.time}`
 
 const bookedLine = (b: Foldable): BookedLine => ({
   id: b.id,
+  ...(b.templateId ? { templateId: b.templateId, variantId: b.variantId } : {}),
   serviceName: b.serviceName,
   variantLabel: b.variantLabel,
   quantity: b.quantity,
@@ -168,4 +173,12 @@ export function foldCartLines<T extends Foldable>(bookings: T[]): T[] {
         },
       }
     })
+}
+
+/** Deep links restore only service choices; prices and time are always revalidated. */
+export function rebookCart(booking: CartLine & { lines?: BookedLine[] }) {
+  const full = booking.lines?.length && booking.lines.every((line) => line.templateId && line.variantId)
+    ? booking.lines.map((line) => ({ templateId: line.templateId!, variantId: line.variantId!, quantity: line.quantity }))
+    : [booking]
+  return full.map((line) => `${cartLineKey(line)}:${line.quantity}`).join(",")
 }

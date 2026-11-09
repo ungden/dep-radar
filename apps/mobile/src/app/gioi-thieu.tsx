@@ -3,6 +3,7 @@ import { router } from "expo-router"
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, Share, TextInput, View } from "react-native"
 import { formatDateLong, formatPrice, localDate } from "@/data/format"
 import { claimReferral, isUsable, loadReferral, referralLink, type ReferralReward, type ReferralSettings, type Voucher } from "@/data/referrals"
+import { rpcOptional } from "@/data/supabase"
 import { useApp } from "@/state/app"
 import { useAsync } from "@/state/use-async"
 import { colors, fonts, gutter, radius } from "@/theme"
@@ -22,6 +23,8 @@ export default function Referral() {
   const info = useAsync(app.uid ? () => loadReferral(app.uid!) : null, [app.uid])
   const [code, setCode] = React.useState("")
   const [claiming, setClaiming] = React.useState(false)
+  const [campaignCode, setCampaignCode] = React.useState("")
+  const [claimingCampaign, setClaimingCampaign] = React.useState(false)
 
   if (!app.uid) return <EmptyState title="Cần đăng nhập" text="Đăng nhập để lấy mã giới thiệu của bạn." action="Đăng nhập" onAction={() => router.push("/login")} />
   if (info.loading && !info.value)
@@ -150,6 +153,24 @@ export default function Referral() {
 
         <View style={{ gap: 8 }}>
           <Txt v="title">Voucher của bạn</Txt>
+          <Card style={{ gap: 10 }}>
+            <Txt w={600}>Có mã ưu đãi?</Txt>
+            <TextInput accessibilityLabel="Mã ưu đãi" placeholder="Nhập mã ưu đãi" maxLength={20}
+              autoCapitalize="characters" autoCorrect={false} value={campaignCode}
+              onChangeText={(value) => setCampaignCode(value.toUpperCase())}
+              style={{ minHeight: 46, borderColor: colors.line, borderWidth: 1, borderRadius: radius.md, paddingHorizontal: 12, color: colors.ink, fontFamily: fonts[500], fontSize: 17 }} />
+            <Button label="Nhận voucher" busy={claimingCampaign} disabled={campaignCode.trim().length < 5} onPress={async () => {
+              setClaimingCampaign(true)
+              try {
+                const result = await rpcOptional("claim_campaign_voucher", { p_code: campaignCode })
+                if (!result.ok) return Alert.alert("Chưa nhận được voucher", result.error)
+                setCampaignCode("")
+                void info.reload()
+                Alert.alert("Đã nhận voucher", "Bạn có thể chọn voucher từ chi tiết lịch hẹn.")
+              } catch { Alert.alert("Mất kết nối", "Vui lòng thử lại.") }
+              finally { setClaimingCampaign(false) }
+            }} />
+          </Card>
           {r.vouchers.length ? (
             <Card style={{ gap: 0, paddingVertical: 4 }}>
               {[...r.vouchers]

@@ -70,6 +70,8 @@ export async function middleware(request: NextRequest) {
       login.search = `?next=${encodeURIComponent(path)}`
       return NextResponse.redirect(login)
     }
+    // This desk enforces support/admin roles in its database RPC.
+    if (path === "/admin/cskh") return response
     const { data: account } = await supabase
       .from("accounts")
       .select("is_admin")

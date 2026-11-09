@@ -18,7 +18,7 @@ export default function PartnerProfile() {
   const studioBookingOpen = useApp().studioBookingOpen
 
   const app = useApp()
-  const params = useLocalSearchParams<{ step?: string }>()
+  const params = useLocalSearchParams<{ step?: string; kind?: string }>()
   const [step, setStep] = React.useState(Math.min(5, Math.max(0, Number(params.step) || 0)))
   const [setup, setSetup] = React.useState<PartnerSetup | null>(null)
   const [error, setError] = React.useState<string | null>(null)
@@ -33,7 +33,7 @@ export default function PartnerProfile() {
   const [radiusKm, setRadiusKm] = React.useState("10")
   const [equipment, setEquipment] = React.useState("")
   // A spa (owner, 08/11/2026): a place with beds, where customers come.
-  const [kind, setKind] = React.useState<ProKind>("artist")
+  const [kind, setKind] = React.useState<ProKind>(params.kind === "spa" ? "spa" : "artist")
   const [spaName, setSpaName] = React.useState("")
   const [beds, setBeds] = React.useState("2")
   const [amenities, setAmenities] = React.useState<string[]>([])

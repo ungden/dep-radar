@@ -2,7 +2,9 @@ import * as React from "react"
 import { FlashList } from "@shopify/flash-list"
 import { router } from "expo-router"
 import { View } from "react-native"
-import { isUpcoming, listBookings } from "@/data/bookings"
+import { isUpcoming, listBookings, type BookingItem } from "@/data/bookings"
+import { formatPrice } from "@/data/format"
+import { rebookCart } from "@/shared"
 import { BookingRow } from "@/components/booking-row"
 import { PageBand } from "@/components/page-band"
 import { SignInGate } from "@/components/sign-in-gate"
@@ -29,6 +31,17 @@ export default function MyBookings() {
       ? all.filter(isUpcoming).sort((a, b) => a.startsAt.localeCompare(b.startsAt))
       : all.filter((b) => !isUpcoming(b))
 
+  const completed = all.filter((b) => b.status === "completed")
+  const rows: ({ id: string; month: string } | BookingItem)[] = []
+  let lastMonth = ""
+  for (const booking of list) {
+    if (tab === "past" && lastMonth !== booking.date.slice(0, 7)) {
+      lastMonth = booking.date.slice(0, 7)
+      rows.push({ id: "month-" + lastMonth, month: `Tháng ${Number(lastMonth.slice(5))}/${lastMonth.slice(0, 4)}` })
+    }
+    rows.push(booking)
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
       <PageBand title="Lịch hẹn">
@@ -43,17 +56,21 @@ export default function MyBookings() {
       </PageBand>
       <FlashList
         contentInsetAdjustmentBehavior="automatic"
-        data={list}
+        data={rows}
         keyExtractor={(b) => b.id}
         contentContainerStyle={{ padding: gutter }}
-        renderItem={({ item }) => (
+        renderItem={({ item }) => "month" in item ? (
+          <Txt v="lead" w={700} style={{ paddingVertical: 10 }}>{item.month}</Txt>
+        ) : (
           <View style={{ paddingBottom: 10 }}>
             <BookingRow booking={item} as="customer" />
+            {item.status === "completed" && item.pro.slug ? <Press onPress={() => router.push({ pathname: "/book/[proId]", params: { proId: item.pro.slug, cart: rebookCart(item) } })} style={{ minHeight: 44, alignSelf: "flex-end", justifyContent: "center", paddingHorizontal: 12 }}><Txt color={colors.accentDark} w={600}>Đặt lại</Txt></Press> : null}
           </View>
         )}
         refreshControl={refreshControl(bookings.refreshing, () => void bookings.refresh())}
         ListHeaderComponent={
           <View style={{ gap: 10, paddingBottom: 10 }}>
+            {tab === "past" && completed.length ? <Txt v="meta" color={colors.inkSoft}>{completed.length} lịch hoàn thành · {formatPrice(completed.reduce((n, b) => n + b.quote.total - b.discount, 0))} giá trị lịch</Txt> : null}
             <Press
               onPress={() => router.push("/yeu-cau")}
               accessibilityLabel="Đơn theo dịch vụ"

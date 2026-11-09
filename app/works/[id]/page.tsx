@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 }
 
-export default async function WorkPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function WorkPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ variant?: string }> }) {
   const work = await getWorkBySlug((await params).id)
   if (!work) notFound()
-  return <WorkDetail workId={work.slug} />
+  return <WorkDetail workId={work.slug} initialVariant={(await searchParams).variant} />
 }

@@ -15,7 +15,7 @@ import { readCache, writeCache } from "@/data/cache"
 import { myThreadIds } from "@/data/chat"
 import { emptyMe, loadMe, type MeData } from "@/data/me"
 import { loadOnePro, loadPublic, mergePublic, proOfWork, type AppPro, type PublicData } from "@/data/public"
-import { forgetPushToken, registerPushToken } from "@/data/push"
+import { signOutPush, registerPushToken, watchPushLease } from "@/data/push"
 import { blockUser, fileReport, loadServerBlocks, readLocalBlocks, unblockUser, writeLocalBlocks } from "@/data/safety"
 import { backendConfigured, supabase } from "@/data/supabase"
 import { hasAcceptedTerms, rememberTerms } from "@/data/terms"
@@ -285,7 +285,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     })
     void hasAcceptedTerms(uid).then((v) => live && setTermsAccepted(v))
     void registerPushToken(uid)
+    const stopPushLease = watchPushLease(uid)
     return () => {
+      stopPushLease()
       live = false
     }
   }, [uid])
@@ -402,8 +404,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   )
 
   const signOut = React.useCallback(async () => {
-    await forgetPushToken()
-    await supabase.auth.signOut()
+    await signOutPush()
     setMe(emptyMe)
   }, [])
 

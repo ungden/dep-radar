@@ -20,7 +20,6 @@ import {
   type VerticalFilter,
 } from "@/shared"
 import { fold } from "@/data/format"
-import type { AppPro } from "@/data/public"
 import { ProCard, ProCardSkeleton } from "@/components/cards"
 import { ServiceTile, tileWidth } from "@/components/tiles"
 import { OfflineNote } from "@/components/offline-note"
@@ -96,7 +95,8 @@ export default function Search() {
   const people = React.useMemo(() => {
     const q = words(query)
     const services = browse.services
-    const out = browse.pros.filter((p) => {
+    const offersByPro = new Map<string, { price: number; template: string; variant: string }>()
+    const out = browse.artists.filter((p) => {
       if (!providerLocationOpen(p, studioBookingOpen)) return false
       if (filters.vertical !== "all" && !p.categories.some((c) => verticalOf(c) === filters.vertical)) return false
       if (filters.category && !p.categories.includes(filters.category)) return false
@@ -108,20 +108,25 @@ export default function Search() {
       if (filters.place === "studio" && !p.studioAddress) return false
       if (filters.place === "location" && !templates.some((t) => t.onLocation)) return false
       const inCategory = filters.category ? listed.filter((s) => getTemplate(s.templateId)?.category === filters.category) : listed
-      const prices = inCategory.flatMap((s) => { const t = getTemplate(s.templateId); return t && (filters.vertical === "all" || verticalOf(t.category) === filters.vertical) && (filters.place !== "home" || !t.studioOnly) && (filters.place !== "location" || t.onLocation) ? listedOptions(t, s.prices, app.studioBookingOpen).map((o) => o.minimumTotal) : [] })
-      if (filters.price !== "any" && !prices.some((price) => priceOk(filters.price, price))) return false
+      const options = inCategory.flatMap((s) => {
+        const t = getTemplate(s.templateId)
+        if (!t || t.addon || (filters.vertical !== "all" && verticalOf(t.category) !== filters.vertical) || (filters.place === "home" && t.studioOnly) || (filters.place === "location" && !t.onLocation)) return []
+        return listedOptions(t, s.prices, studioBookingOpen).filter((o) => priceOk(filters.price, o.minimumTotal)).map((o) => ({ price: o.minimumTotal, template: t.id, variant: o.variant.id }))
+      })
+      const option = options.sort((a, b) => a.price - b.price)[0]
+      if ((filters.price !== "any" || filters.category || filters.place === "location") && !option) return false
+      if (option) offersByPro.set(p.id, option)
       if (!q.length) return true
       const haystack = fold(
         [p.name, p.title, placeWords(p.city, p.district), ...p.areas, ...p.categories.map((c) => CATEGORIES.find((x) => x.id === c)?.label ?? ""), ...templates.map((t) => t.name)].join(" "),
       )
       return q.every((word) => haystack.includes(word))
     })
-    const price = (p: AppPro) => browse.priceOf(p.id) ?? Number.POSITIVE_INFINITY
     return out
-      .map((pro) => ({ pro, km: app.distanceTo(pro) }))
+      .map((pro) => ({ pro, km: app.distanceTo(pro), price: offersByPro.get(pro.id)?.price ?? null, offer: offersByPro.get(pro.id) }))
       .sort((a, b) => {
         if (sort === "near") { const da = a.km ?? Infinity; const db = b.km ?? Infinity; return da === db ? 0 : da - db }
-        if (sort === "cheap") return price(a.pro) - price(b.pro)
+        if (sort === "cheap") return (a.price ?? Infinity) - (b.price ?? Infinity)
         return rankScore(b.pro) - rankScore(a.pro)
       })
   }, [browse, filters, query, sort, app, studioBookingOpen])
@@ -129,7 +134,7 @@ export default function Search() {
   // The same cards as Khám phá: a service someone here offers, from its lowest real price.
   const services = React.useMemo(() => {
     const q = words(query)
-    const all = serviceOffers({ studioBookingOpen, pros: browse.pros, proServices: browse.services, works: browse.works, city: app.city, vertical: filters.vertical,
+    const all = serviceOffers({ studioBookingOpen, pros: browse.artists, proServices: browse.services, works: browse.works, city: app.city, vertical: filters.vertical,
       proFilter: (p) => (!filters.verified || p.identity === "verified") && (filters.place !== "home" || p.homeService) && (filters.place !== "studio" || Boolean(p.studioAddress)),
       priceFilter: (total) => priceOk(filters.price, total),
     })
@@ -305,7 +310,7 @@ export default function Search() {
           keyboardDismissMode="on-drag"
           renderItem={({ item }) => (
             <View style={{ paddingBottom: 12 }}>
-              <ProCard pro={item.pro} photos={browse.photosOf.get(item.pro.id) ?? []} price={browse.priceOf(item.pro.id)} distanceKm={item.km} />
+              <ProCard pro={item.pro} photos={browse.photosOf.get(item.pro.id) ?? []} price={item.price} distanceKm={item.km} offer={item.offer} />
             </View>
           )}
           refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}

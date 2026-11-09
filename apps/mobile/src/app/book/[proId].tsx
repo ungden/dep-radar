@@ -1,8 +1,10 @@
 import * as React from "react"
+import * as Crypto from "expo-crypto"
+import * as SecureStore from "expo-secure-store"
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet"
 import { Stack, router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router"
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, TextInput, View, useWindowDimensions } from "react-native"
-import { SPA, bedsLeftLabel, isSpa, listingLocationOpen, spaDirectionsLink, providerLocationOpen, appointmentAt, CITIES, POLICY, buildQuote, cartItems, cartLineKey, cartMinutes, cartOrder, districtsOf, getTemplate, getVariant, isUrgent, perUnitSuffix, serviceDuration, toggleCartLine, travelDistanceKm, serviceQuantity, type CartLine, type PriceQuote } from "@/shared"
+import { SPA, bedsLeftLabel, isSpa, listingLocationOpen, spaDirectionsLink, providerLocationOpen, appointmentAt, CITIES, POLICY, buildQuote, cartItems, cartLineKey, cartMinutes, cartOrder, cartProblem, districtsOf, getTemplate, getVariant, isUrgent, perUnitSuffix, serviceDuration, toggleCartLine, travelDistanceKm, serviceQuantity, type CartLine, type PriceQuote } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
 import { rpc } from "@/data/supabase"
 import { toTimestamptz } from "@/data/format"
@@ -47,7 +49,7 @@ export default function Book() {
 function BookingFlow() {
   const studioBookingOpen = useApp().studioBookingOpen
 
-  const params = useLocalSearchParams<{ proId: string; template?: string; variant?: string }>()
+  const params = useLocalSearchParams<{ proId: string; template?: string; variant?: string; work?: string; date?: string; time?: string; cart?: string }>()
   const app = useApp()
   const pro = usePro(params.proId)
   const navigation = useNavigation()
@@ -60,16 +62,16 @@ function BookingFlow() {
     () => (pro ? (app.data?.services ?? []).filter((s) => s.proId === pro.id && providerLocationOpen(pro, studioBookingOpen) && s.active && Object.keys(s.prices).length && listingLocationOpen(getTemplate(s.templateId), pro, studioBookingOpen)) : []),
     [app.data, pro, studioBookingOpen],
   )
-  const [step, setStep] = React.useState(1)
-  React.useEffect(() => { content.current?.scrollTo({ y: 0, animated: false }) }, [step])
+  const [stepChoice, setStep] = React.useState<number | null>(null)
   // Everything chosen, starting with the service the customer came from.
   const [cart, setCart] = React.useState<CartLine[] | null>(null)
   const [cartNote, setCartNote] = React.useState<{ templateId: string; text: string } | null>(null)
   const [atHomePref, setAtHomePref] = React.useState(true)
   const spa = isSpa(pro)
   // A spa is often booked for later today; an Artist needs time to travel.
-  const [date, setDate] = React.useState(addDays(todayISO(), spa ? 0 : 1))
-  const [time, setTime] = React.useState<{ startsAt: string; time: string } | null>(null)
+  const restoredDate = params.date && /^\d{4}-\d{2}-\d{2}$/.test(params.date) && params.date >= todayISO() && params.date <= addDays(todayISO(), 13) ? params.date : null
+  const [date, setDate] = React.useState(restoredDate ?? addDays(todayISO(), spa ? 0 : 1))
+  const [time, setTime] = React.useState<{ startsAt: string; time: string } | null>(() => restoredDate && params.time && /^([01]\d|2[0-3]):[0-5]\d$/.test(params.time) ? { time: params.time, startsAt: toTimestamptz(restoredDate, params.time) } : null)
   const [addressId, setAddressId] = React.useState<string | null>(null)
   const [estCity, setEstCity] = React.useState<string | null>(null)
   const [estDistrict, setEstDistrict] = React.useState<string | null>(null)
@@ -93,13 +95,27 @@ function BookingFlow() {
 
   const priceOf = (line: Pick<CartLine, "templateId" | "variantId">) => listed.find((l) => l.templateId === line.templateId)?.prices[line.variantId]
   const cameFrom = React.useMemo<CartLine[]>(() => {
+    if (params.cart) {
+      const parts = params.cart.split(",")
+      if (parts.length > 10) return []
+      const restored = parts.flatMap((part) => {
+        const [key, count] = part.split(":")
+        const [templateId, variantId] = key.split("/")
+        const variant = getVariant(templateId, variantId)
+        const listing = listed.find((l) => l.templateId === templateId)
+        return variant && listing?.prices[variantId] != null ? [{ templateId, variantId, quantity: serviceQuantity(variant, Math.floor(Number(count)) || 1) }] : []
+      })
+      return restored.length === parts.length && !cartProblem(restored) ? restored : []
+    }
     const t = params.template ? getTemplate(params.template) : undefined
     const listing = t && !t.addon ? listed.find((l) => l.templateId === t.id) : undefined
-    const v = listing ? (t!.variants.find((o) => o.id === params.variant && listing.prices[o.id] != null) ?? t!.variants.find((o) => listing.prices[o.id] != null)) : undefined
-    return t && v ? [{ templateId: t.id, variantId: v.id, quantity: serviceQuantity(v, v.unit ? 10 : 1) }] : []
-  }, [listed, params.template, params.variant])
+    const v = listing ? t!.variants.find((o) => (!params.variant || o.id === params.variant) && listing.prices[o.id] != null) : undefined
+    return t && v ? [{ templateId: t.id, variantId: v.id, quantity: serviceQuantity(v) }] : []
+  }, [listed, params.template, params.variant, params.cart])
   // Only what this Artist still lists, whatever was chosen a moment ago.
-  const lines = React.useMemo(() => cartOrder((cart ?? cameFrom).filter((line) => priceOf(line) != null)), [cart, cameFrom, listed]) // eslint-disable-line react-hooks/exhaustive-deps
+  const lines = React.useMemo(() => cartOrder((cart ?? cameFrom).filter((line) => priceOf(line) != null)), [cart, cameFrom, listed])
+  const step = stepChoice ?? (cameFrom.length ? 3 : 1)
+  React.useEffect(() => { content.current?.scrollTo({ y: 0, animated: false }) }, [step])
   const main = lines[0]
   const template = main ? getTemplate(main.templateId) : undefined
   const variant = main ? getVariant(main.templateId, main.variantId) : undefined
@@ -145,9 +161,17 @@ function BookingFlow() {
     return () => {
       live = false
     }
-  }, [slotKey, step, slotRetry]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [slotKey, step, slotRetry])
   const daySlots = slots?.key === slotKey ? slots.list : null
-  const picked = time && daySlots?.some((s) => s.startsAt === time.startsAt) ? time : null
+  const picked = time ? daySlots?.find((s) => Date.parse(s.startsAt) === Date.parse(time.startsAt)) ?? null : null
+
+  const signalId = React.useRef<string | null>(null)
+  const signal = React.useCallback((stage: "opened" | "slot_chosen" | "confirmation" | "failed" | "created") => {
+    signalId.current ??= Crypto.randomUUID()
+    void rpc("note_marketplace_step", { p_flow: signalId.current, p_step: stage }).catch(() => {})
+  }, [])
+  React.useEffect(() => { signal("opened") }, [signal])
+  React.useEffect(() => { if (picked) signal("slot_chosen"); if (step === 4) signal("confirmation") }, [picked, step, signal])
 
   const quoteKey = [slotKey, picked?.startsAt, app.uid, app.me?.account?.phone].join("|")
   const [quoteRetry, retryQuote] = React.useReducer((n: number) => n + 1, 0)
@@ -160,7 +184,7 @@ function BookingFlow() {
     setVerified(null)
     void rpc<PriceQuote>("cart_quote", { p_pro: pro.uuid, p_items: cartItems(lines), p_starts_at: picked.startsAt, p_at_home: atHome, p_address_id: atHome ? chosenId : null }).then((r) => { if (live) setVerified({ key: quoteKey, ...(r.ok ? { quote: r.data } : { error: r.error }) }) }).catch(() => { if (live) setVerified({ key: quoteKey, error: "Không xác nhận được tổng tiền. Kiểm tra kết nối và thử lại." }) })
     return () => { live = false }
-  }, [quoteKey, quoteRetry]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [quoteKey, quoteRetry])
   const confirmedQuote = verified?.key === quoteKey ? verified.quote : null
   const quote = confirmedQuote ?? (picked ? buildQuote({ servicePrice, atHome, distanceKm: km, urgent: isUrgent(date, picked.time) }) : null)
 
@@ -218,7 +242,9 @@ function BookingFlow() {
 
   const addAddress = () => router.push({ pathname: "/dia-chi/sua", params: { city, district: district ?? "" } })
 
+  const submitting = React.useRef(false)
   const submit = async () => {
+    if (submitting.current) return
     if (!app.uid) return router.push("/login")
     if (atHome && !address) return addAddress()
     if (!app.me.account?.phone) return router.push("/so-dien-thoai")
@@ -226,10 +252,11 @@ function BookingFlow() {
     if (!confirmedQuote) return setError(verified?.error ?? "Đang kiểm tra tổng tiền.")
     const secondAt = appointmentAt(secondDate, secondTime)
     if ((variant?.sessions ?? 1) > 1 && (!secondAt || secondAt <= picked.startsAt)) return setError("Chọn ngày, giờ hợp lệ cho buổi thứ hai sau buổi đầu.")
+    submitting.current = true
     setBusy(true)
     setError(null)
     try {
-    const res = await createCartBooking({
+    const payload = {
       proUuid: pro.uuid,
       lines,
       startsAt: picked.startsAt,
@@ -238,11 +265,18 @@ function BookingFlow() {
       note: note.trim(),
       expectedTotal: confirmedQuote.total,
       sessions: (variant?.sessions ?? 1) > 1 ? [secondAt!] : [],
-    })
+    }
+    const retryKey = "dep360_booking_" + await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, JSON.stringify([app.uid, payload]))
+    const operationId = await SecureStore.getItemAsync(retryKey) ?? Crypto.randomUUID()
+    await SecureStore.setItemAsync(retryKey, operationId)
+    const res = await createCartBooking({ ...payload, operationId })
+    if (res.ok) await SecureStore.deleteItemAsync(retryKey).catch(() => {})
     if (!res.ok) {
+      signal("failed")
       haptic.error()
       return setError(res.error)
     }
+    signal("created")
     // The booking stands; its reference photos follow, and a failure only says so.
     if (photos.length && app.uid) {
       try {
@@ -259,8 +293,8 @@ function BookingFlow() {
     void app.refreshMe()
     // The confirmation call is time-critical; this is the moment to ask.
     void askForPushPermission(app.uid)
-    } catch { setError("Không gửi được lịch. Kiểm tra kết nối và thử lại.") }
-    finally { setBusy(false) }
+    } catch { signal("failed"); setError("Không gửi được lịch. Kiểm tra kết nối và thử lại.") }
+    finally { submitting.current = false; setBusy(false) }
   }
 
   const next = () => (step < 4 ? setStep(step + 1) : void submit())
@@ -287,7 +321,7 @@ function BookingFlow() {
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.canvas }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}>
       <Stack.Screen
         options={{
-          title: step === 1 ? "Chọn món" : step === 2 ? "Giỏ của bạn" : step === 3 ? "Chọn giờ" : "Xác nhận lịch",
+          title: step === 1 ? "Chọn dịch vụ" : step === 2 ? "Giỏ của bạn" : step === 3 ? "Chọn giờ" : "Xác nhận lịch",
           gestureEnabled: !dirty,
           headerLeft: step > 1 ? () => <IconButton name="back" label="Quay lại bước trước" onPress={() => setStep(step - 1)} /> : undefined,
           headerRight: () => <IconButton name="close" label="Đóng" onPress={() => router.back()} />,
@@ -301,6 +335,7 @@ function BookingFlow() {
           <Txt v="controlMeta" color={colors.inkSoft}>{step}/4</Txt>
         </View>
 
+        {step === 1 && (params.template || params.cart) && !cameFrom.length ? <Txt color={colors.inkSoft}>Gói trước đó không còn khả dụng. Chọn lại dịch vụ.</Txt> : null}
         {step === 1 ? (
           <>
             <Txt color={colors.inkSoft}>Chọn các món bạn muốn {pro.name} làm trong một lần hẹn.</Txt>
@@ -314,7 +349,7 @@ function BookingFlow() {
                     <Txt v="control" w={600}>{t.name}</Txt>
                     {t.variants.filter((v) => l.prices[v.id] != null).map((v) => {
                       const line = lines.find((c) => c.templateId === t.id && c.variantId === v.id)
-                      const count = line?.quantity ?? serviceQuantity(v, v.unit ? 10 : 1)
+                      const count = line?.quantity ?? serviceQuantity(v)
                       return (
                         <View key={v.id} style={{ gap: 6 }}>
                           <Option
@@ -352,12 +387,12 @@ function BookingFlow() {
                       <Txt v="control" w={600} tabular>{formatPrice((priceOf(line) ?? 0) * line.quantity)}</Txt>
                     </View>
                     {v.perPerson ? <Counter variant={v} line={line} onChange={setCount} /> : null}
-                    <Button label="Bỏ món này" variant="ghost" size="sm" onPress={() => tap(line.templateId, line.variantId)} />
+                    <Button label="Bỏ dịch vụ này" variant="ghost" size="sm" onPress={() => tap(line.templateId, line.variantId)} />
                   </Card>
                 )
               })}
             </View>
-            <Button label={lines.length ? `Thêm món khác của ${pro.name}` : "Chọn món"} icon="plus" variant="secondary" full onPress={() => setStep(1)} />
+            <Button label={lines.length ? `Thêm dịch vụ khác của ${pro.name}` : "Chọn dịch vụ"} icon="plus" variant="secondary" full onPress={() => setStep(1)} />
             {template && canHome && canStudio ? (
               <View style={{ gap: 8 }}>
                 <Txt v="controlMeta" w={600}>
@@ -376,6 +411,7 @@ function BookingFlow() {
 
         {step === 3 ? (
           <>
+            <Button label="Xem hoặc thêm dịch vụ" variant="secondary" size="sm" onPress={() => setStep(2)} />
             <Txt color={colors.inkSoft}>Chỉ hiện giờ đủ {formatDuration(minutes)} làm liền.</Txt>
             {largeText ? <DateField compact label="Ngày hẹn" hideLabel value={date} onChange={chooseDate} maxDate={days[days.length - 1]} /> : <View style={{ gap: 12 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>

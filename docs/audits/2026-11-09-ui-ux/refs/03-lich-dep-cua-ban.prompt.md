@@ -1,0 +1,21 @@
+Create a realistic, excellent production-quality mobile app redesign for Vietnamese beauty marketplace "360đẹp". Direction name "Lịch đẹp của bạn". Use attached current app screenshot as grounding for product and existing core functions, while inventing a distinctly task-first information hierarchy. One single app screen only, never a multi-option board.
+
+TARGET DIMENSIONS: 390 x 844 logical mobile pixels, high-resolution portrait aspect ratio. Output app content only, edge to edge. NO phone bezel/body, OS status bar, clock, battery, signal, notch, Dynamic Island, home indicator, rounded device mask, browser chrome, device shadows, perspective or surrounding background. All content fits above anchored navigation.
+
+User: Vietnamese customer who already knows what beauty service they need. Outcome: select a service, choose where/when, then check suitable providers. No fake appointment confirmed state, no fake availability or reviews. Existing marketplace supports makeup/nail at home and a developing spa branch; provide "Tại nhà" / "Đến spa" as a stable context choice. Avoid the old "Đặt theo dịch vụ" vs "Tự chọn Artist" decision upfront. Current date anchor is Monday 9 November 2026 in Asia/Ho_Chi_Minh. If showing tomorrow use "Ngày mai, 10/11". Do not promise the shown time is available; button must CHECK suitable providers.
+
+DESIGN LANGUAGE: quiet premium native app, more functional and structured than a beauty magazine. Mostly clean warm white #FAF8F5 / white surfaces, dark ink #141213. Deep rose #BB3460 one main CTA and selected markers. Inter everywhere including a bold black compact brand wordmark; no large serif slogans. Body17px, secondary15px, primary heading28px, minimum44px targets, gutter20. Use subtle dividers and spacing, not a giant surrounding form card. All inputs flat grouped rows. Few rounded corners 12-16, no heavy shadows or gradients, no many pill filters. Photos should feel natural and expensive, not generic clip art. Only one hero task plus one supporting content section.
+
+LAYOUT:
+Compact top line "360đẹp" and a small message icon. Small heading "Dành một giờ cho bạn" and secondary text "Chọn dịch vụ, tìm người phù hợp."
+A clean segmented contextual selector "Tại nhà" selected rose underline, "Đến spa".
+Section label "Bạn muốn làm gì?" and TWO excellent horizontal selection rows, each with 64x64 photographic thumbnail on left, middle service/title and duration, right clear radio/check:
+- First SELECTED: natural Vietnamese party-makeup face thumbnail, "Makeup dự tiệc", "60 phút · 1 người", price "Từ 450.000đ" black or rose bold. Use only a thin rose left edge or check; no large pink filled card.
+- Second: nude manicure thumbnail, "Sơn gel trơn", "45 phút · 1 người", "Từ 130.000đ". Simple divider; no separate enclosing cards.
+Each row enough height to avoid cramped text; thumbs not portrait posters. Discreet text "Ảnh minh hoạ" below section, not multiple distracting badges.
+Below section use two editable grouped rows with consistent fine-line icons and chevrons: location row "Khu vực" with "Bình Thạnh, TP.HCM", calendar row "Khi nào?" with "Ngày mai, 10/11". No time slot grid.
+One strong full-width rose primary button "Tìm chuyên viên phù hợp" ~50px high. Short practical supporting note below in gray "Xem giá và giờ trống trước khi đặt." This flow is checking, not final booking.
+At bottom of content one petite supporting discovery block: horizontally cropped editorial photo of a serene spa space on right with text left "Muốn thư giãn tại spa?" and a quiet link "Khám phá spa". Keep smaller than main task, use base surface or very subtle beige only. Do not include fictitious number of venues.
+Pinned SOLID white bottom navigation, four consistent fine-line icons with labels: "Khám phá" selected, "Artist", "Lịch hẹn", "Tôi". No floating glass pill; does not cover content.
+
+Art direct a polished functional beauty-booking product. Clearly readable Vietnamese diacritics and sensible spacing. It must feel easier and more refined than the current screenshot, with a visible path to checking suitable providers, no redundant giant mode cards, and no screen cramming.

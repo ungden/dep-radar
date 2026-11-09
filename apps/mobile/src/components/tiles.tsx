@@ -357,7 +357,9 @@ export function CategoryRail({
   onAll,
   soon,
   extra,
+  compact = false,
 }: {
+  compact?: boolean
   items: readonly Category[]
   photoFor: (id: CategoryId) => string | undefined
   value?: CategoryId | "all"
@@ -368,8 +370,8 @@ export function CategoryRail({
   /** One more ring that is not a category (Spa), placed after `extra.index` categories. */
   extra?: { index: number; label: string; photo?: string; ring: string; bg: string; onPress: () => void }
 }) {
-  const SIZE = 68
-  const LABEL = 84
+  const SIZE = compact ? 48 : 68
+  const LABEL = compact ? 55 : 84
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: gutter - 4, gap: 4 }}>
       {items.flatMap((c, i) => {
@@ -378,7 +380,7 @@ export function CategoryRail({
           <Press key="extra" onPress={extra.onPress} accessibilityRole="button" accessibilityLabel={extra.label} style={{ width: LABEL, alignItems: "center", gap: 6 }}>
             <View style={{ width: SIZE + 4, height: SIZE + 4, borderRadius: (SIZE + 4) / 2, padding: 2, borderWidth: 2, borderColor: extra.ring }}>
               <View style={{ flex: 1, borderRadius: SIZE / 2, overflow: "hidden", backgroundColor: extra.bg }}>
-                {extra.photo ? <Image source={{ uri: extra.photo }} style={{ flex: 1 }} contentFit="cover" transition={150} accessible={false} /> : null}
+                {extra.photo ? <Image source={{ uri: extra.photo }} style={{ flex: 1 }} contentFit="cover" transition={150} accessible={false} /> : <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><Icon name="leaf" size={23} color={extra.ring} /></View>}
               </View>
             </View>
             <Txt v="meta" w={500} center numberOfLines={2} style={{ fontSize: 14, lineHeight: 18 }}>
@@ -421,7 +423,7 @@ export function CategoryRail({
             </Txt>
           </Press>
         )
-        return ring ? [ring, tile] : [tile]
+        return ring ? (extra && extra.index >= items.length ? [tile, ring] : [ring, tile]) : [tile]
       })}
       {onAll ? (
         <Press onPress={onAll} accessibilityLabel="Tất cả dịch vụ" style={{ width: LABEL, alignItems: "center", gap: 6 }}>

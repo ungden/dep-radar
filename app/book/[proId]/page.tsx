@@ -16,9 +16,9 @@ import { PriceBreakdown } from "@/components/price-breakdown"
 import { VerifiedMark } from "@/components/trust"
 import { Avatar, BottomBar, Button, ButtonLink, Card, EmptyState, PageHeader, Skeleton, inputClass, PageSkeleton } from "@/components/ui"
 import { getTemplate, getVariant, getVertical, perUnitSuffix, verticalOf, serviceQuantity, serviceDuration } from "@/lib/catalog"
-import { cartDefaultQuantity, cartItems, cartLineKey, cartMinutes, cartOrder, toggleCartLine, type CartLine } from "@/lib/service-cart"
+import { cartDefaultQuantity, cartItems, cartLineKey, cartMinutes, cartOrder, cartProblem, toggleCartLine, type CartLine } from "@/lib/service-cart"
 import { appointmentAt } from "@/lib/appointments"
-import { cartQuote } from "@/lib/api/actions"
+import { cartQuote, noteMarketplaceStep } from "@/lib/api/actions"
 import { actions } from "@/lib/client-actions"
 import { formatPhone } from "@/lib/auth/phone"
 import { CITIES, districtsOf, travelDistanceKm } from "@/lib/geo"
@@ -100,7 +100,9 @@ function BookingFlow({ proId }: { proId: string }) {
   const isOwnProfile = session?.proId === pro.id
   const paused = !pro.acceptingJobs
 
-  const initialService = services.find((s) => s.templateId === params.get("service")) ?? services[0]
+  const requestedService = services.find((s) => s.templateId === params.get("service"))
+  const requestedVariant = params.get("variant")
+  const initialService = requestedService ?? services[0]
   const initialVariant =
     params.get("variant") && initialService.prices[params.get("variant")!] !== undefined
       ? params.get("variant")!
@@ -125,18 +127,25 @@ function BookingFlow({ proId }: { proId: string }) {
   // Everything chosen, starting with the service the customer came from. A link
   // back from signing in carries the whole cart: "template/variant:count,…".
   const [cart, setCart] = React.useState<CartLine[]>(() => {
-    const restored = (params.get("cart") ?? "").split(",").flatMap((part) => {
-      const [key, count] = part.split(":")
-      const [templateId, variantId] = key.split("/")
-      const v = templateId && variantId ? getVariant(templateId, variantId) : undefined
-      return v ? [{ templateId, variantId, quantity: serviceQuantity(v, Number(count) || 1) }] : []
-    })
-    if (restored.length) return restored
+    if (params.has("cart")) {
+      const parts = (params.get("cart") ?? "").split(",")
+      if (parts.length > 10) return []
+      const restored = parts.flatMap((part) => {
+        const [key, count] = part.split(":")
+        const [templateId, variantId] = key.split("/")
+        const v = templateId && variantId ? getVariant(templateId, variantId) : undefined
+        const service = servicesOf(state, proId).find((item) => item.templateId === templateId)
+        return v && service?.prices[variantId] != null
+          ? [{ templateId, variantId, quantity: serviceQuantity(v, Math.floor(Number(count)) || 1) }] : []
+      })
+      return restored.length === parts.length && !cartProblem(restored) ? restored : []
+    }
+    if (params.has("service") && (!requestedService || (requestedVariant && requestedService.prices[requestedVariant] == null))) return []
     const v = getVariant(initialService.templateId, initialVariant)
-    return [{ templateId: initialService.templateId, variantId: initialVariant, quantity: v ? serviceQuantity(v, Math.max(Number(params.get("qty")) || 0, cartDefaultQuantity(initialService.templateId, initialVariant))) : 1 }]
+    return [{ templateId: initialService.templateId, variantId: initialVariant, quantity: v ? serviceQuantity(v, Number(params.get("qty")) || 1) : 1 }]
   })
   const [cartNote, setCartNote] = React.useState<{ templateId: string; text: string } | null>(null)
-  const [date, setDate] = React.useState(partner?.date ?? restoredDate ?? addDays(todayISO(), 1))
+  const [date, setDate] = React.useState(partner?.date ?? restoredDate ?? addDays(todayISO(), isSpa(pro) ? 0 : 1))
   const [pickedTime, setTime] = React.useState<string | null>(partner?.time ?? (restoredDate ? restoredTime : null))
   const [usageScope, setUsageScope] = React.useState<UsageScope>(params.get("usage") === "commercial" ? "commercial" : "personal")
   const [consentRepost, setConsentRepost] = React.useState(params.get("repost") === "1")
@@ -145,7 +154,7 @@ function BookingFlow({ proId }: { proId: string }) {
   // Signed out there is no saved address yet: a district is enough to estimate
   // the travel fee. The real address is saved after signing in.
   const [area, setArea] = React.useState<{ city: string; district: string }>(restoredArea ?? { city: pro.city, district: "" })
-  const [note, setNote] = React.useState(params.get("note") ?? "")
+  const [note, setNote] = React.useState("")
   // Reference photos: paths in the private references bucket, with a local preview.
   const [refs, setRefs] = React.useState<{ path: string; preview: string }[]>([])
   const [refBusy, setRefBusy] = React.useState(false)
@@ -192,7 +201,7 @@ function BookingFlow({ proId }: { proId: string }) {
 
   // Back from signing in with everything chosen: straight to the summary,
   // unless the address still has to be saved.
-  const [step, setStep] = React.useState(() => (restoredDate && restoredTime && !partner ? (atHome && !address ? 2 : 3) : 1))
+  const [step, setStep] = React.useState(() => (restoredDate && restoredTime && !partner ? (atHome && !address ? 2 : 3) : (lines.length && (requestedService || params.has("cart")) ? 2 : 1)))
 
   // Each step starts at its top, not where the last one was scrolled to.
   React.useEffect(() => {
@@ -254,12 +263,21 @@ function BookingFlow({ proId }: { proId: string }) {
   const ready = Boolean(time) && locationOk
   const canNext = step === 1 ? lines.length > 0 : ready
 
+  const signalId = React.useRef<string | null>(null)
+  const signal = React.useCallback((stage: "opened" | "slot_chosen" | "confirmation" | "failed" | "created") => {
+    if (typeof crypto.randomUUID !== "function") return
+    signalId.current ??= crypto.randomUUID()
+    void noteMarketplaceStep(signalId.current, stage).catch(() => {})
+  }, [])
+  React.useEffect(() => { signal("opened") }, [signal])
+  React.useEffect(() => { if (pickedTime) signal("slot_chosen"); if (step === 3) signal("confirmation") }, [pickedTime, step, signal])
+
   // Everything chosen so far, so signing in does not start the booking over.
   const resumeUrl = () => {
     const q = new URLSearchParams({ service: templateId, variant: variantId, date })
     if (time) q.set("time", time)
     q.set("cart", lines.map((line) => `${cartLineKey(line)}:${line.quantity}`).join(","))
-    if (note.trim()) q.set("note", note.trim().slice(0, 500))
+    if (params.get("work")) q.set("work", params.get("work")!)
     if (!atHome) q.set("place", "studio")
     if (atHome && area.district) {
       q.set("city", area.city)
@@ -271,7 +289,10 @@ function BookingFlow({ proId }: { proId: string }) {
     return `/book/${proId}?${q}`
   }
 
+  const submitting = React.useRef(false)
+  const retry = React.useRef<{ fingerprint: string; id: string } | null>(null)
   const submit = async () => {
+    if (submitting.current) return
     setError(null)
     if (!session) {
       router.push(`/login?next=${encodeURIComponent(resumeUrl())}`)
@@ -279,8 +300,9 @@ function BookingFlow({ proId }: { proId: string }) {
     }
     if (!confirmedQuote) return setError(verified?.error ?? "Đang xác nhận tổng tiền. Thử lại sau.")
     if (multiple && (!appointmentAt(secondDate, secondTime) || Date.parse(appointmentAt(secondDate, secondTime)!) <= Date.parse(toTimestamptz(date, time!)))) return setError("Chọn ngày, giờ hợp lệ cho buổi thứ hai sau buổi đầu.")
+    submitting.current = true
     setBusy(true)
-    const res = await actions.createCartBooking({
+    const payload = {
       proId,
       items,
       date,
@@ -291,12 +313,27 @@ function BookingFlow({ proId }: { proId: string }) {
       paymentMethod: payment,
       expectedTotal: confirmedQuote.total,
       sessions: multiple ? [toTimestamptz(secondDate, secondTime)] : [],
-    })
+    }
+    try {
+    const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(payload)))
+    const fingerprint = Array.from(new Uint8Array(bytes), (n) => n.toString(16).padStart(2, "0")).join("")
+    const key = "dep360_booking_" + fingerprint
+    let operationId = retry.current?.fingerprint === fingerprint ? retry.current.id : undefined
+    try { operationId ??= sessionStorage.getItem(key) ?? undefined } catch { /* private browser */ }
+    operationId ??= crypto.randomUUID()
+    retry.current = { fingerprint, id: operationId }
+    try { sessionStorage.setItem(key, operationId) } catch { /* use the in-memory retry */ }
+    const res = await actions.createCartBooking({ ...payload, operationId })
+    if ("id" in res) {
+      try { sessionStorage.removeItem(key) } catch { /* private browser */ }
+    }
     if ("error" in res) {
+      signal("failed")
       setBusy(false)
       setError(res.error)
       return
     }
+    signal("created")
     // The booking exists either way; these only add to it, so a failure is
     // reported on the confirmation screen rather than undoing the booking.
     if (refs.length) {
@@ -313,6 +350,13 @@ function BookingFlow({ proId }: { proId: string }) {
     }
     setBusy(false)
     setDoneId(res.id)
+    } catch {
+      signal("failed")
+      setError("Không gửi được lịch. Kiểm tra kết nối và thử lại.")
+    } finally {
+      submitting.current = false
+      setBusy(false)
+    }
   }
 
   const trade = verticalOf(tpl.category)
@@ -358,6 +402,8 @@ function BookingFlow({ proId }: { proId: string }) {
     <div className="mx-auto max-w-2xl">
       <PageHeader title={step === 3 ? "Xác nhận đặt lịch" : "Đặt lịch"} back onBack={step > 1 ? () => setStep((s) => s - 1) : undefined} />
 
+      {step === 1 && !cart.length && (params.has("cart") || params.has("service")) &&
+        <p role="status" className="my-3 rounded-md bg-accent-soft p-3 text-meta">Gói trước đó không còn khả dụng. Bạn có thể chọn gói khác bên dưới.</p>}
       <Stepper step={step} onJump={(s) => s < step && setStep(s)} />
 
       <Card className="mb-4 flex items-center gap-3 p-3">
@@ -806,7 +852,7 @@ function BookingFlow({ proId }: { proId: string }) {
               {(
                 [
                   ["cash", "Trả trực tiếp sau khi làm", `Tiền mặt hoặc chuyển khoản cho ${pro.name}.`, HandCoins, true],
-                  ["online", "Thanh toán online (sắp có)", "Đang tích hợp cổng thanh toán.", CreditCard, false],
+                  ["online", "Chuyển khoản QR", "Nếu khả dụng, QR sẽ hiện trong chi tiết sau khi đối tác nhận lịch.", CreditCard, false],
                 ] as const
               ).map(([value, label, hint, Icon, available]) => (
                 <button

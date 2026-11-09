@@ -1,11 +1,12 @@
+import { requestCopy } from "@/shared"
 import * as React from "react"
 import { Stack, router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router"
 import { Image } from "expo-image"
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View, useWindowDimensions } from "react-native"
 import Animated, { FadeIn } from "react-native-reanimated"
-import { CATEGORIES, POLICY, getTemplate, templatesByCategory, tierLabels, serviceQuantity, isUrgent, type CategoryId } from "@/shared"
+import { POLICY, REQUEST_GOALS, requestCategories, requestSelection, requestTemplates, requestVariants, tierLabels, serviceQuantity, isUrgent, isTooSoon, isSpa, type CategoryId } from "@/shared"
 import { takeLastSavedAddress } from "@/data/addresses"
-import { addDays, formatDateLong, formatDuration, formatPrice, localTime, todayISO, weekdayShort } from "@/data/format"
+import { addDays, formatDateLong, formatDuration, formatPrice, todayISO, weekdayShort } from "@/data/format"
 import { askForPushPermission } from "@/data/push"
 import { setJobReferences, uploadReference } from "@/data/references"
 import { postJob, requestPrice } from "@/data/requests"
@@ -47,17 +48,14 @@ export default function NewRequest() {
   const app = useApp()
   const keyboard = useKeyboardVisible()
   const navigation = useNavigation()
-  const params = useLocalSearchParams<{ template?: string }>()
-  const given = React.useMemo(() => {
-    const t = params.template ? getTemplate(params.template) : undefined
-    return t && !t.addon ? t : undefined
-  }, [params.template])
-  const first = given ? 1 : 0
-  const [step, setStep] = React.useState(first)
+  const params = useLocalSearchParams<{ template?: string; variant?: string }>()
+  const given = requestSelection(params.template, params.variant)
+  const initial = given ?? requestSelection("makeup-party", "makeup")!
+  const [step, setStep] = React.useState(given ? 1 : 0)
   const { width } = useWindowDimensions()
-  const [category, setCategory] = React.useState<CategoryId>(given?.category ?? "nail")
-  const [templateId, setTemplateId] = React.useState(given?.id ?? templatesByCategory("nail")[0].id)
-  const [variantId, setVariantId] = React.useState((given ?? templatesByCategory("nail")[0]).variants[0].id)
+  const [category, setCategory] = React.useState<CategoryId>(initial.template.category)
+  const [templateId, setTemplateId] = React.useState(initial.template.id)
+  const [variantId, setVariantId] = React.useState(initial.variant.id)
   const [quantity, setQuantity] = React.useState(1)
   /** The chosen price level per person; null is "Tiêu chuẩn". */
   const [feeLimit, setFeeLimit] = React.useState<number>(POLICY.nearTravelFee)
@@ -94,9 +92,9 @@ export default function NewRequest() {
 
   const close = <IconButton name="close" label="Đóng" onPress={() => router.back()} />
   const back = <IconButton name="back" label="Quay lại" onPress={() => setStep((n) => n - 1)} />
-  const templates = templatesByCategory(category)
+  const templates = requestTemplates(category)
   const tpl = templates.find((t) => t.id === templateId) ?? templates[0]
-  const variant = tpl.variants.find((v) => v.id === variantId) ?? tpl.variants[0]
+  const variant = requestSelection(tpl.id, variantId)!.variant
   const heads = serviceQuantity(variant, quantity)
   const price = requestPrice(variant, tier)
   const labels = tierLabels(variant)
@@ -112,7 +110,7 @@ export default function NewRequest() {
     Boolean(app.data) &&
     !app.data?.pros.some(
       (p) =>
-        p.published &&
+        !isSpa(p) && p.homeService && p.published &&
         p.acceptingJobs &&
         !app.blocked.has(p.uuid) &&
         (!area || p.city === area) &&
@@ -120,16 +118,15 @@ export default function NewRequest() {
     )
 
   const name = STEPS[step]
-  const now = localTime(new Date())
-  const openTimes = TIMES.filter((t) => date > todayISO() || t > now)
+  const openTimes = TIMES.filter((t) => !isTooSoon(date, t))
   const canContinue =
     name === "package" ? (variant.sessions ?? 1) === 1 && !tpl.studioOnly : name === "service" ? !tpl.studioOnly : name === "when" ? openTimes.includes(time) : true
   const timeWidth = Math.floor((width - gutter * 2 - 20) / 3)
 
   const pickCategory = (c: CategoryId) => {
     setCategory(c)
-    const first = templatesByCategory(c)[0]
-    pickVariant(first.id, first.variants[0].id)
+    const first = requestTemplates(c)[0]
+    pickVariant(first.id, requestSelection(first.id)!.variant.id)
   }
   // A different package has different levels: start again from its "Tiêu chuẩn" one.
   const pickVariant = (template: string, id: string) => {
@@ -139,10 +136,14 @@ export default function NewRequest() {
     setQuantity(1)
   }
 
+  const submitting = React.useRef(false)
   const submit = async () => {
+    if (submitting.current) return
+    if (!openTimes.includes(time)) return setError("Hãy chọn giờ còn đủ thời gian để chuyên viên nhận và di chuyển.")
     if (!app.uid) return router.push("/login")
     if (!chosen) return router.push({ pathname: "/dia-chi/sua", params: { city: app.city ?? "" } })
     if (!app.me.account?.phone) return router.push("/so-dien-thoai")
+    submitting.current = true
     setBusy(true)
     setError(null)
     // Photos go up first, so partners told about the order can already see them.
@@ -150,6 +151,7 @@ export default function NewRequest() {
     try {
       for (const p of photos) paths.push(await uploadReference(app.uid, p))
     } catch (e) {
+      submitting.current = false
       setBusy(false)
       haptic.error()
       return setError(`Chưa tải được ảnh mẫu: ${e instanceof Error ? e.message : "lỗi kết nối"}`)
@@ -165,16 +167,18 @@ export default function NewRequest() {
       description: description.trim(),
       price,
       maxTotal,
-    })
+    }).catch(() => ({ ok: false as const, error: "Chưa gửi được yêu cầu. Kiểm tra kết nối và thử lại." }))
     if (!res.ok) {
+      submitting.current = false
       setBusy(false)
       haptic.error()
       return setError(res.error)
     }
     if (paths.length) {
-      const sentPhotos = await setJobReferences(res.data, paths)
+      const sentPhotos = await setJobReferences(res.data, paths).catch(() => ({ ok: false as const, error: "Kiểm tra kết nối rồi thử lại." }))
       if (!sentPhotos.ok) Alert.alert("Đã gửi đơn", `Nhưng chưa gắn được ảnh mẫu: ${sentPhotos.error}`)
     }
+    submitting.current = false
     setBusy(false)
     haptic.success()
     setSent(true)
@@ -188,19 +192,26 @@ export default function NewRequest() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.canvas }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}>
-      <Stack.Screen options={{ gestureEnabled: !dirty, headerRight: () => close, headerLeft: step > first ? () => back : undefined }} />
-      <View style={{ height: 3, marginHorizontal: gutter, borderRadius: 2, backgroundColor: colors.line }} accessibilityLabel={`Bước ${step + 1 - first} trên ${STEPS.length - first}`}>
-        <View style={{ height: 3, width: `${((step + 1 - first) / (STEPS.length - first)) * 100}%`, borderRadius: 2, backgroundColor: colors.accent }} />
+      <Stack.Screen options={{ gestureEnabled: !dirty, headerRight: () => close, headerLeft: step > 0 ? () => back : undefined }} />
+      <View style={{ height: 3, marginHorizontal: gutter, borderRadius: 2, backgroundColor: colors.line }} accessibilityLabel={`Bước ${step + 1} trên ${STEPS.length}`}>
+        <View style={{ height: 3, width: `${((step + 1) / (STEPS.length)) * 100}%`, borderRadius: 2, backgroundColor: colors.accent }} />
       </View>
       <ScrollView key={name} contentContainerStyle={{ padding: gutter, paddingTop: 24, paddingBottom: 40 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <Animated.View entering={FadeIn.duration(220)} style={{ gap: 32 }}>
           {name === "service" ? (
             <>
-              <Question title="Bạn cần làm gì?" />
-              <CategoryTiles items={CATEGORIES.map((c) => ({ id: c.id, label: c.label }))} value={category} onChange={(id) => pickCategory(id as CategoryId)} />
+              <Question title={requestCopy.vi.goalPrompt} />
+              <Txt color={colors.inkSoft}>{requestCopy.vi.noArtist}</Txt>
+              <View style={{ gap: 8 }}>
+                {REQUEST_GOALS.map((g) => <Option key={g.templateId} title={g.label} selected={false} onPress={() => {
+                  const choice = requestSelection(g.templateId, g.variantId)
+                  if (choice) { setCategory(choice.template.category); pickVariant(choice.template.id, choice.variant.id); setStep(1) }
+                }} />)}
+              </View>
+              <CategoryTiles items={requestCategories.map((c) => ({ id: c.id, label: c.label }))} value={category} onChange={(id) => pickCategory(id as CategoryId)} />
               <View style={{ gap: 12 }}>
                 {templates.filter((t) => !t.addon).map((t) => (
-                  <Option key={t.id} title={t.name} selected={t.id === tpl.id} onPress={() => pickVariant(t.id, t.variants[0].id)} />
+                  <Option key={t.id} title={t.name} selected={t.id === tpl.id} onPress={() => pickVariant(t.id, requestSelection(t.id)!.variant.id)} />
                 ))}
               </View>
               {tpl.studioOnly ? (
@@ -234,7 +245,7 @@ export default function NewRequest() {
               </Press>
               <View style={{ gap: 12 }}>
                 <Txt v="title">Chọn gói</Txt>
-                {tpl.variants.map((v) => (
+                {requestVariants(tpl).map((v) => (
                   <Option key={v.id} title={v.label} note={formatDuration(v.durationMin)} selected={v.id === variant.id} onPress={() => pickVariant(tpl.id, v.id)} />
                 ))}
                 {variant.perPerson ? (
@@ -385,6 +396,7 @@ export default function NewRequest() {
                   accessibilityLabel="Mô tả thêm"
                   style={{ minHeight: 96, backgroundColor: colors.surface, borderRadius: radius.md, padding: 16, fontFamily: fonts[400], fontSize: 17, color: colors.ink, textAlignVertical: "top" }}
                 />
+                <Txt v="meta" color={colors.muted}>{requestCopy.vi.privacy}</Txt>
                 <ReferencePicker value={photos} onChange={setPhotos} disabled={busy} />
                 <Txt v="meta" color={colors.muted}>
                   Tối đa 3 ảnh kiểu bạn muốn. Artist xem trước khi nhận đơn.

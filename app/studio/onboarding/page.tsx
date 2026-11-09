@@ -1,10 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { WardSelect } from "@/components/ward-select"
 import { Button, Field, PageHeader, inputClass } from "@/components/ui"
 import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
+import { SPA_CATEGORIES } from "@/lib/spa"
 import { CATEGORIES, VERTICALS } from "@/lib/catalog"
 import { fetchPartnerSetup, saveProProfile } from "@/lib/api/actions"
 import { becomePro } from "@/lib/auth/actions"
@@ -21,10 +22,15 @@ import { PartnerProgress } from "@/components/partner-progress"
  * so asking for all of that up front would only lose people at step one.
  * The hours are saved here with defaults; the rest is the studio checklist.
  */
-export default function OnboardingPage() { return <RequireSession><OnboardingForm /></RequireSession> }
+export default function OnboardingPage() { return <RequireSession><React.Suspense fallback={<p className="p-4">Đang tải hồ sơ…</p>}><OnboardingForm /></React.Suspense></RequireSession> }
 
 function OnboardingForm() {
   const router = useRouter()
+  const params = useSearchParams()
+  const [kind, setKind] = React.useState<"artist" | "spa">(params.get("kind") === "spa" ? "spa" : "artist")
+  const [spaName, setSpaName] = React.useState("")
+  const [spaAddress, setSpaAddress] = React.useState("")
+  const spa = kind === "spa"
   const { session } = useApp()
   const [title, setTitle] = React.useState("")
   const [city, setCity] = React.useState(CITIES[0])
@@ -36,14 +42,14 @@ function OnboardingForm() {
   React.useEffect(() => {
     if (!session?.proId) return
     let live = true
-    void fetchPartnerSetup().then(({ profile: p }) => { if (live && p) { setTitle(p.title); setCity(p.city); setDistrict(p.district); setCategories(p.categories) } }).catch((e: Error) => { if (live) setError(e.message) })
+    void fetchPartnerSetup().then(({ profile: p }) => { if (live && p) { setTitle(p.title); setCity(p.city); setDistrict(p.district); setCategories(p.categories); setKind(p.kind === "spa" ? "spa" : "artist"); setSpaName(p.display_name ?? ""); setSpaAddress(p.studio_address ?? "") } }).catch((e: Error) => { if (live) setError(e.message) })
     return () => { live = false }
   }, [session?.proId])
 
   const toggle = (id: CategoryId) =>
     setCategories((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]))
 
-  const valid = title.trim().length >= 3 && categories.length > 0 && districtsOf(city).includes(district)
+  const valid = title.trim().length >= 3 && categories.length > 0 && districtsOf(city).includes(district) && (!spa || (spaName.trim().length >= 2 && spaAddress.trim().length >= 5))
 
   return (
     <div className="mx-auto max-w-lg pb-24">
@@ -60,23 +66,46 @@ function OnboardingForm() {
           if (!valid) return
           setBusy(true)
           setError(null)
-          const result = session?.proId
-            ? await saveProProfile({ title: title.trim(), city, district, categories })
-            : await becomePro({ title: title.trim(), city, district, categories })
-          if (!result.ok) { setBusy(false); return setError(result.error) }
-          setBusy(false)
-          router.replace("/studio/services")
+          const profile = { title: title.trim(), city, district, categories }
+          try {
+            if (!session?.proId) {
+              const created = await becomePro(profile)
+              if (!created.ok) return setError(created.error)
+            }
+            const result = await saveProProfile({
+              ...profile, kind, ...(spa ? { displayName: spaName.trim(), studioAddress: spaAddress.trim(), homeService: false } : {}),
+            })
+            if (!result.ok) return setError(result.error)
+            router.replace("/studio/services")
+            router.refresh()
+          } catch { setError("Chưa lưu được hồ sơ. Thử lại khi có kết nối.") }
+          finally { setBusy(false) }
         }}
       >
+        <fieldset className="space-y-3">
+          <legend className="font-semibold">Bạn muốn mở hồ sơ nào?</legend>
+          <div className="flex flex-wrap gap-4">
+            {(["artist","spa"] as const).map((option) => <label key={option} className="inline-flex min-h-11 items-center gap-2">
+              <input type="radio" name="kind" checked={kind === option} onChange={() => {
+                setKind(option)
+                if (option === "spa") setCategories((old) => old.filter((id) => (SPA_CATEGORIES as readonly string[]).includes(id)))
+              }} /> {option === "spa" ? "Spa / cơ sở" : "Artist"}
+            </label>)}
+          </div>
+          {spa && <>
+            <Field label="Tên cơ sở"><input className={inputClass} value={spaName} onChange={(e) => setSpaName(e.target.value)} maxLength={80} /></Field>
+            <Field label="Địa chỉ khách đến"><input className={inputClass} value={spaAddress} onChange={(e) => setSpaAddress(e.target.value)} maxLength={160} /></Field>
+          </>}
+        </fieldset>
         <div>
           <p className="mb-2 text-body font-semibold">Bạn nhận làm việc gì?</p>
           <p className="-mt-1 mb-3 text-meta text-muted">Chọn một hoặc nhiều. Bạn chỉ đăng được dịch vụ thuộc những mục đã chọn.</p>
           <div className="space-y-3">
-            {VERTICALS.map((v) => (
+            {VERTICALS.filter((v) => !spa || v.id === "beauty").map((v) => (
               <div key={v.id}>
                 <p className="mb-1.5 text-meta text-muted">{v.label}</p>
                 <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.filter((c) => c.vertical === v.id).map((c) => {
+                  {CATEGORIES.filter((c) => c.vertical === v.id && (!spa || (SPA_CATEGORIES as readonly string[]).includes(c.id))).map((c) => {
                     // Model services need a verified identity, which opens later (lib/launch.ts).
                     const later = !IDENTITY_VERIFICATION_OPEN && c.vertical === "model"
                     return (

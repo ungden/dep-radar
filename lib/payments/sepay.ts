@@ -46,7 +46,7 @@ export function memoCandidates(content: string, code?: string | null): string[] 
 
 export type SepayTransaction =
   /** Money in: credit it, if the memo names a freelancer. */
-  | { kind: "in"; ref: string; content: string; code: string; amount: number }
+  | { kind: "in"; ref: string; content: string; code: string; amount: number; account: string; subAccount: string }
   /** Nothing to do (money out, zero amount), but not an error: answer 200 so SePay does not retry. */
   | { kind: "ignore"; reason: string }
   /** Not a SePay transaction at all. */
@@ -65,15 +65,16 @@ export function parseSepay(body: unknown): SepayTransaction {
   if (!body || typeof body !== "object") return { kind: "invalid", reason: "body is not an object" }
   const b = body as Record<string, unknown>
   const id = text(b.id).trim()
-  if (!id) return { kind: "invalid", reason: "no transaction id" }
+  if (id === "0") return { kind: "ignore", reason: "test transaction" }
+  if (!/^[1-9][0-9]{0,23}$/.test(id)) return { kind: "invalid", reason: "invalid transaction id" }
   if (b.transferType !== "in") return { kind: "ignore", reason: `transferType ${text(b.transferType) || "missing"}` }
   const amount = typeof b.transferAmount === "number" ? b.transferAmount : Number(text(b.transferAmount))
-  if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
+  if (!Number.isSafeInteger(amount) || amount <= 0 || amount > 2_147_483_647) {
     return { kind: "ignore", reason: "no positive whole amount" }
   }
   // The memo the freelancer typed ("DEPAB23CD"). Banks sometimes put it only
   // in the full description, so fall back to that. `code` is the payment code
   // SePay itself recognised in it, if any.
   const content = [text(b.content), text(b.description)].map((s) => s.trim()).find(Boolean) ?? ""
-  return { kind: "in", ref: `sepay:${id}`, content, code: text(b.code).trim(), amount }
+  return { kind: "in", ref: `sepay:${id}`, content, code: text(b.code).trim(), amount, account: text(b.accountNumber).trim(), subAccount: text(b.subAccount).trim() }
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { BookingPayment } from "@/components/booking-payment"
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -182,6 +183,7 @@ function BookingDetail() {
         )}
       </Card>
 
+      <BookingPayment id={booking.id} customer={!isPro} />
       <PriceBreakdown quote={booking.quote} paymentMethod={booking.paymentMethod} forPro={isPro} discount={booking.discount} />
       {isCustomer && <VoucherPanel booking={booking} />}
 

@@ -78,7 +78,7 @@ function SpaList() {
         </div>
       ) : null}
       <div className="mt-3 flex flex-wrap gap-2">
-        <Toggle active solid>Gần nhất</Toggle>
+        <Toggle active solid>{spas.some((s) => s.distance !== null) ? "Gần nhất" : "Phù hợp"}</Toggle>
         <Toggle active={openOnly} onClick={() => setOpenOnly((v) => !v)}>Đang mở cửa</Toggle>
         <Toggle active={ratedOnly} onClick={() => setRatedOnly((v) => !v)}>★ 4,5+</Toggle>
       </div>
@@ -136,7 +136,7 @@ function SpaCard({ spa, distance, index, listings, service, photo }: { spa: Pro;
     }
   }, [spa.id, shown?.templateId, first?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const bookHref = (variant?: string) => `/book/${spa.id}${shown ? `?service=${shown.templateId}&variant=${variant ?? first?.id ?? ""}` : ""}`
+  const bookHref = (variant?: string, time?: string) => `/book/${spa.id}${shown ? `?service=${shown.templateId}&variant=${variant ?? first?.id ?? ""}${time ? `&date=${todayISO()}&time=${encodeURIComponent(time)}` : ""}` : ""}`
 
   return (
     <article className="overflow-hidden rounded-[var(--radius-lg)] bg-surface">
@@ -174,7 +174,7 @@ function SpaCard({ spa, distance, index, listings, service, photo }: { spa: Pro;
             <p className="text-meta text-muted">Còn chỗ hôm nay</p>
             <div className="mt-2 grid grid-cols-4 gap-2">
               {today.map((s) => (
-                <Link key={s.startsAt} href={bookHref()} className="flex h-10 items-center justify-center rounded-[var(--radius-sm)] bg-accent-soft text-meta font-bold text-accent-dark hover:bg-[#F8DCE6]">
+                <Link key={s.startsAt} href={bookHref(undefined, s.time)} className="flex h-10 items-center justify-center rounded-[var(--radius-sm)] bg-accent-soft text-meta font-bold text-accent-dark hover:bg-[#F8DCE6]">
                   {s.time}
                 </Link>
               ))}

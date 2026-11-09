@@ -114,17 +114,19 @@ export function ProCard({
   photos,
   price,
   distanceKm,
+  offer,
   width,
 }: {
   pro: AppPro
   photos: string[]
   price: number | null
   distanceKm: number | null
+  offer?: { template: string; variant: string }
   width?: number
 }) {
   return (
     <Press
-      onPress={() => router.push({ pathname: "/pros/[id]", params: { id: pro.id } })}
+      onPress={() => router.push({ pathname: "/pros/[id]", params: { id: pro.id, ...(offer ? { service: offer.template, variant: offer.variant } : {}) } })}
       accessibilityLabel={`${pro.name}, ${pro.title}`}
       style={{ width, ...card, padding: 12, gap: 10 }}
     >

@@ -1,5 +1,7 @@
 "use client"
 
+import { CampaignCode } from "./campaign-code"
+
 import * as React from "react"
 import Link from "next/link"
 import { Gift, PauseCircle, Ticket, UserPlus } from "lucide-react"
@@ -78,6 +80,7 @@ export function ReferralView({ code, rewards }: { code: string | null; rewards: 
         paused
       )}
       <Rewards rewards={rewards} />
+      <CampaignCode />
       <Vouchers vouchers={state.vouchers} />
     </div>
   )

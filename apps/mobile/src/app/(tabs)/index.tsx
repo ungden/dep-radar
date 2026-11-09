@@ -1,198 +1,160 @@
+import { requestCopy } from "@/shared"
 import * as React from "react"
 import { Image } from "expo-image"
 import { router } from "expo-router"
-import { ScrollView, View, useWindowDimensions } from "react-native"
+import { FlatList, ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { CATEGORIES, SPA, SPA_RING_INDEX, SPA_TINT, categoryRow, priorityFirst, serviceOffers, spaPhoto, type CategoryId } from "@/shared"
+import { CATEGORIES, REQUEST_GOALS, SPA, SPA_TINT, editorialTemplates, marketplaceFeed, type CategoryId, type MarketplaceTile, type ServiceTemplate } from "@/shared"
 import { OfflineNote } from "@/components/offline-note"
-import { CatalogTile, CategoryRail, PhotoBadge, Section, ServiceTile, TileGrid, TileSkeleton, illustration, notYetOffered, tileWidth } from "@/components/tiles"
+import { CategoryRail, Section, TileSkeleton, illustration, tileWidth } from "@/components/tiles"
+import { TextTabs } from "@/components/switches"
 import { TopBar } from "@/components/top-bar"
 import { useApp } from "@/state/app"
 import { useBrowse } from "@/state/derived"
-import { imageUrl } from "@/data/links"
+import { formatDuration, formatPrice } from "@/data/format"
 import { colors, gutter, radius } from "@/theme"
-import { EmptyState, ErrorNote } from "@/ui/bits"
+import { Avatar, EmptyState, ErrorNote } from "@/ui/bits"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
 
-/** Services on the first screen; the rest one tap away in the list. */
-const SERVICES_FIRST = 6
+function loadingData(app: ReturnType<typeof useApp>) {
+  return (!app.data || app.stale) && !app.dataError && app.configured
+}
+
+function EditorialTile({ template, width }: { template: ServiceTemplate; width: number }) {
+  return <Press onPress={() => router.push({ pathname: "/dich-vu/[id]", params: { id: template.id } })} style={{ width, gap: 5 }}
+    accessibilityLabel={`${template.name}, gợi ý dịch vụ, ảnh minh hoạ`}>
+    <View style={{ height: width * 0.88, borderRadius: radius.md, overflow: "hidden", backgroundColor: colors.accentSoft }}>
+      <Image source={{ uri: illustration(template.category, template.id === "makeup-bridal" ? 1 : template.id === "makeup-daily" ? 2 : 0) }} style={{ flex: 1 }} contentFit="cover" />
+      <View style={{ position: "absolute", bottom: 6, left: 6, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, backgroundColor: colors.surface }}>
+        <Txt v="label">Ảnh minh hoạ</Txt>
+      </View>
+    </View>
+    <Txt w={600} numberOfLines={2}>{template.name}</Txt>
+    <Txt v="meta" color={colors.inkSoft}>Gợi ý dịch vụ</Txt>
+    <Txt v="meta" color={colors.accentDark} w={700}>Xem gói và gửi nhu cầu</Txt>
+  </Press>
+}
 
 const openList = (category?: CategoryId) => router.push(category ? { pathname: "/dich-vu", params: { category } } : "/dich-vu")
+const categories = (["makeup", "nail", "hair", "photophone"] as const).map((id) => ({ ...CATEGORIES.find((c) => c.id === id)!, ...(id === "photophone" ? { label: "Chụp ảnh" } : {}) }))
 
-/**
- * Khám phá asks one question first, how the customer wants to book: choose a
- * service and let an Artist take the order, or choose the Artist. Under it,
- * the services themselves. What people offer here comes first, then the rest
- * of the catalogue, which can still be requested.
- */
+function WorkTile({ entry, width }: { entry: MarketplaceTile; width: number }) {
+  const { pro, work, template, option, photo } = entry
+  const open = () => work
+    ? router.push({ pathname: "/works/[id]", params: { id: work.id, variant: option.variant.id } })
+    : router.push({ pathname: "/pros/[id]", params: { id: pro.id, service: template.id, variant: option.variant.id } })
+  return (
+    <Press onPress={open} style={{ width, gap: 5 }} accessibilityLabel={`${work?.title ?? template.name}, ${pro.name}, ${formatPrice(option.minimumTotal)}`}>
+      <View style={{ height: width * 0.88, borderRadius: radius.md, borderCurve: "continuous", overflow: "hidden", backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center" }}>
+        {photo ? <Image source={{ uri: photo }} recyclingKey={entry.id} contentFit="cover" style={{ width: "100%", height: "100%" }} /> : <Avatar name={pro.name} uri={pro.avatar} artist tone={pro.tone} size={56} />}
+      </View>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+        <Avatar name={pro.name} uri={pro.avatar} artist tone={pro.tone} size={22} />
+        <Txt v="meta" w={700} style={{ flex: 1 }} numberOfLines={1}>{pro.name}</Txt>
+      </View>
+      <Txt w={600} numberOfLines={2}>{template.name}</Txt>
+      <Txt v="meta" color={colors.accentDark} w={700} tabular>{formatPrice(option.minimumTotal)} <Txt v="meta" color={colors.inkSoft}>· {formatDuration(option.durationMin)}</Txt></Txt>
+      <Txt v="meta" color={colors.muted}>{!pro.acceptingJobs ? "Tạm nghỉ nhận lịch" : pro.homeService && !template.studioOnly ? "Tại nhà" : "Tại cơ sở"}{option.minimumQuantity > 1 ? ` · từ ${option.minimumQuantity} người` : ""}</Txt>
+    </Press>
+  )
+}
+
 export default function Explore() {
   const app = useApp()
   const browse = useBrowse()
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
   const tile = tileWidth(width)
-
-  // browse.* leaves out people this person blocked.
-  const offers = React.useMemo(
-    () => (app.data ? serviceOffers({ studioBookingOpen: app.studioBookingOpen, pros: browse.artists, proServices: browse.services, works: browse.works, city: app.city, vertical: "all" }) : []),
-    [app.data, browse, app.city, app.studioBookingOpen],
-  )
-  // Every category, Makeup and Nail first, then the most on offer here.
-  const rail = React.useMemo(() => {
-    const row = categoryRow(CATEGORIES, offers, "all", CATEGORIES.length + 1)
-    return { ...row, ordered: priorityFirst(row.ordered) }
-  }, [offers])
-  // Spas are a second line beside the Artists: one ring and one quiet row, only where there are some.
+  const [tab, setTab] = React.useState<"for-you" | "following">("for-you")
+  const [limit, setLimit] = React.useState(4)
+  const feed = React.useMemo(() => marketplaceFeed({
+    pros: browse.artists, works: browse.works, services: browse.services, city: app.city,
+    studioOpen: app.studioBookingOpen, following: tab === "following" ? browse.followedSlugs : undefined,
+  }), [browse, app.city, app.studioBookingOpen, tab])
+  const supplements = tab === "for-you" && !loadingData(app) && (!app.dataError || app.data)
+    ? editorialTemplates(new Set(feed.map((entry) => entry.template.id)), app.studioBookingOpen).slice(0, Math.max(0, 4 - feed.length))
+    : []
+  const display = [...feed.slice(0, limit), ...supplements]
   const spas = browse.spas
-  const spaCover = spas.map((s) => browse.photosOf.get(s.pro.id)?.[0]).find(Boolean) ?? imageUrl(spaPhoto(0))
-  const soonCategories = React.useMemo(() => new Set(CATEGORIES.filter((c) => !rail.offered.has(c.id)).map((c) => c.id)), [rail])
-
-  const offered = offers.slice(0, SERVICES_FIRST)
-  const rest = React.useMemo(() => notYetOffered(offers, CATEGORIES, app.studioBookingOpen, SERVICES_FIRST - offered.length), [offers, app.studioBookingOpen, offered.length])
-
-  // Illustrations take turns within a category, so two tiles never share one.
-  const turns = new Map<CategoryId, number>()
-  const nextTurn = (c: CategoryId) => {
-    const n = turns.get(c) ?? 0
-    turns.set(c, n + 1)
-    return n
-  }
-
-  // Nothing yet, or the city just changed and its catalogue is on the way.
-  const loadingFirst = (!app.data || app.stale) && !app.dataError && app.configured
-  const where = app.city ? ` ở ${app.city}` : ""
-  // A real work when anyone has posted one; a picture under "Artist" must not be an illustration.
-  const realWork = browse.works.find((w) => w.images[0])?.images[0]
-
-  let services: React.ReactNode
-  if (loadingFirst) {
-    services = (
-      <TileGrid>
-        {[0, 1, 2, 3].map((i) => (
-          <TileSkeleton key={i} width={tile} />
-        ))}
-      </TileGrid>
-    )
-  } else if (!app.configured) {
-    services = <EmptyState title="App chưa kết nối máy chủ" text="Chưa tải được dịch vụ. Vui lòng thử lại sau." />
-  } else if (app.dataError && !app.data) {
-    services = <ErrorNote text={app.dataError} onRetry={() => void app.refresh()} />
-  } else {
-    services = (
-      <TileGrid>
-        {offered.map((o) => (
-          <ServiceTile key={o.template.id} offer={o} width={tile} brief index={o.photo ? 0 : nextTurn(o.template.category)} />
-        ))}
-        {rest.map((t) => (
-          <CatalogTile key={t.id} template={t} width={tile} brief index={nextTurn(t.category)} />
-        ))}
-      </TileGrid>
-    )
-  }
+  const spaCover = spas.map((s) => browse.photosOf.get(s.pro.id)?.[0]).find(Boolean)
+  const loading = loadingData(app)
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
-      {/* A flat bar that stays put; the page scrolls under it. */}
-      <View style={{ backgroundColor: colors.accentSoft, paddingTop: insets.top, paddingBottom: 10, gap: 6 }}>
+      <View style={{ paddingTop: insets.top, paddingBottom: 8, gap: 5 }}>
         <TopBar />
         <View style={{ paddingHorizontal: gutter }}>
-          <Press
-            onPress={() => router.push({ pathname: "/tim", params: { focus: "1" } })}
-            accessibilityLabel="Tìm dịch vụ hoặc Artist"
-            style={{ minHeight: 40, borderRadius: radius.sm, backgroundColor: colors.surface, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12 }}
-          >
-            <Icon name="search" size={16} color={colors.muted} />
-            <Txt color={colors.muted} numberOfLines={1} style={{ flex: 1 }}>
-              Makeup, nail, tên Artist…
-            </Txt>
+          <Press onPress={() => router.push({ pathname: "/tim", params: { focus: "1" } })} accessibilityLabel="Tìm dịch vụ hoặc Artist"
+            style={{ minHeight: 44, borderRadius: radius.md, backgroundColor: colors.subtle, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12 }}>
+            <Icon name="search" size={17} color={colors.muted} />
+            <Txt color={colors.muted} numberOfLines={1} style={{ flex: 1 }}>Makeup, nail, tên Artist…</Txt>
           </Press>
         </View>
       </View>
-      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ paddingTop: 20, paddingBottom: 32, gap: 36 }} refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}>
-        <OfflineNote />
-        {/* Categories, as pictures; a tap opens that category's list. */}
-        <CategoryRail
-          items={rail.ordered}
-          soon={app.data ? soonCategories : undefined}
-          photoFor={(c) => browse.photoFor(c) ?? illustration(c)}
-          onChange={(c) => openList(c)}
-          onAll={() => openList()}
-          extra={spas.length ? { index: SPA_RING_INDEX, label: SPA.ring, photo: spaCover, ring: SPA_TINT.fg, bg: SPA_TINT.bg, onPress: () => router.push("/spa") } : undefined}
-        />
-
-        {/* The two ways to book, side by side */}
-        <View style={{ paddingHorizontal: gutter, gap: 12 }}>
-          <Txt v="title">Bạn muốn đặt thế nào?</Txt>
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <Press
-              onPress={() => router.push("/yeu-cau/moi")}
-              accessibilityLabel="Đặt theo dịch vụ. Chọn dịch vụ và giờ, Artist rảnh sẽ nhận đơn."
-              style={{ flex: 1, borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surface }}
-            >
-              <View style={{ height: 112 }}>
-                <Image source={{ uri: illustration("nail", 1) }} style={{ flex: 1, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
-                <PhotoBadge text="Ảnh minh hoạ" position="tl" />
+      <FlatList
+        data={loading ? [] : display}
+        numColumns={2}
+        keyExtractor={(entry) => "pro" in entry ? entry.id : `editorial-${entry.id}`}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ paddingBottom: 30 }}
+        columnWrapperStyle={{ paddingHorizontal: gutter, justifyContent: "space-between", paddingBottom: 14 }}
+        renderItem={({ item }) => "pro" in item ? <WorkTile entry={item} width={tile} /> : <EditorialTile template={item} width={tile} />}
+        refreshControl={refreshControl(app.loading && Boolean(app.data), () => void app.refresh())}
+        ListHeaderComponent={<View style={{ paddingBottom: 10 }}>
+          <OfflineNote />
+          <CategoryRail compact items={categories} photoFor={(c) => browse.photoFor(c) ?? illustration(c)} onChange={openList} onAll={() => openList()}
+            extra={{ index: 4, label: SPA.ring, photo: spaCover, ring: SPA_TINT.fg, bg: SPA_TINT.bg, onPress: () => router.push("/spa") }} />
+          <View style={{ marginHorizontal: gutter, marginTop: 10, backgroundColor: colors.accentSoft, borderRadius: radius.md }}>
+            <Press onPress={() => router.push("/yeu-cau/moi")} accessibilityRole="link"
+              accessibilityLabel="Đặt theo nhu cầu. Chuyên viên phù hợp sẽ nhận."
+              style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingVertical: 8, minHeight: 48 }}>
+              <Icon name="megaphone" size={17} color={colors.accentDark} />
+              <View style={{ flex: 1 }}>
+                <Txt w={700} color={colors.accentDark}>{requestCopy.vi.title}</Txt>
+                <Txt v="meta" color={colors.inkSoft}>{requestCopy.vi.summary}</Txt>
               </View>
-              <View style={{ padding: 14, gap: 4 }}>
-                <Txt w={700}>Đặt theo dịch vụ</Txt>
-                <Txt v="meta" color={colors.inkSoft}>
-                  Chọn dịch vụ và giờ, Artist rảnh sẽ nhận đơn
-                </Txt>
-              </View>
-            </Press>
-            <Press
-              onPress={() => router.navigate("/artist")}
-              accessibilityLabel="Tự chọn Artist. Xem tác phẩm và giá, chọn người bạn thích."
-              style={{ flex: 1, borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surface }}
-            >
-              {realWork ? (
-                <Image source={{ uri: realWork }} style={{ height: 112, backgroundColor: colors.subtle }} contentFit="cover" transition={150} accessible={false} />
-              ) : (
-                <View style={{ height: 112, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center" }}>
-                  <Icon name="person" size={40} color={colors.accent} />
-                </View>
-              )}
-              <View style={{ padding: 14, gap: 4 }}>
-                <Txt w={700}>Tự chọn Artist</Txt>
-                <Txt v="meta" color={colors.inkSoft}>
-                  Xem tác phẩm và giá, chọn người bạn thích
-                </Txt>
-              </View>
+              <Icon name="right" size={16} color={colors.accentDark} />
             </Press>
           </View>
-        </View>
-
-        {/* The services */}
-        <View style={{ gap: 12 }}>
-          <Section title={`Dịch vụ${where}`} action="Xem tất cả" onAction={() => openList()} />
-          <View style={{ paddingHorizontal: gutter }}>{services}</View>
-        </View>
-
-        {spas.length ? (
-          <View style={{ paddingHorizontal: gutter }}>
-            <Press
-              onPress={() => router.push("/spa")}
-              accessibilityLabel={`${SPA.row}. ${SPA.rowText}`}
-              style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: radius.lg, backgroundColor: colors.surface }}
-            >
-              <View style={{ width: 48, height: 48, borderRadius: radius.md, backgroundColor: SPA_TINT.bg, alignItems: "center", justifyContent: "center" }}>
-                <Icon name="leaf" size={22} color={SPA_TINT.fg} />
-              </View>
-              <View style={{ flex: 1, gap: 2 }}>
-                <Txt w={700}>{SPA.row}</Txt>
-                <Txt v="meta" color={colors.inkSoft} numberOfLines={1}>
-                  {SPA.rowText}
-                </Txt>
-              </View>
-              <Icon name="right" size={18} color={colors.muted} />
-            </Press>
+          <TextTabs items={[{ value: "for-you", label: "Dành cho bạn" }, { value: "following", label: "Theo dõi" }]} value={tab}
+            onChange={(next) => { setTab(next); setLimit(4) }} />
+        </View>}
+        ListEmptyComponent={<View style={{ paddingHorizontal: gutter }}>
+          {loading ? <View style={{ flexDirection: "row", justifyContent: "space-between" }}><TileSkeleton width={tile} /><TileSkeleton width={tile} /></View>
+            : app.dataError && !app.data ? <ErrorNote text={app.dataError} onRetry={() => void app.refresh()} />
+            : <EmptyState title={tab === "following" ? "Chưa có tác phẩm đang theo dõi" : "Chưa có dịch vụ tại khu vực này"}
+                action={tab === "following" ? "Khám phá Artist" : "Xem danh mục"} onAction={() => tab === "following" ? router.navigate("/artist") : openList()} />}
+        </View>}
+        ListFooterComponent={<View style={{ paddingTop: 8, gap: 16 }}>
+          {feed.length > limit ? <Press accessibilityRole="button" onPress={() => setLimit((n) => n + 12)} style={{ minHeight: 44, alignItems: "center", justifyContent: "center" }}><Txt color={colors.accentDark} w={700}>Xem thêm tác phẩm</Txt></Press> : null}
+          {spas.length ? <View style={{ gap: 8 }}>
+            <View style={{ paddingHorizontal: gutter }}><Section title="Spa gần bạn" action="Xem tất cả" onAction={() => router.push("/spa")} /></View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: gutter, gap: 10 }}>
+              {spas.slice(0, 8).map(({ pro }) => {
+                const photo = browse.photosOf.get(pro.id)?.[0]
+                return <Press key={pro.id} onPress={() => router.push({ pathname: "/pros/[id]", params: { id: pro.id } })}
+                  style={{ width: 168, padding: 10, gap: 5, borderRadius: radius.md, backgroundColor: SPA_TINT.bg }}>
+                  {photo ? <Image source={{ uri: photo }} style={{ height: 66, borderRadius: radius.sm }} /> : null}
+                  <Txt w={700} numberOfLines={1}>{pro.name}</Txt><Txt v="meta" color={colors.inkSoft} numberOfLines={1}>{pro.district}</Txt>
+                </Press>
+              })}
+            </ScrollView>
+          </View> : null}
+          <View style={{ paddingHorizontal: gutter, gap: 8 }}>
+            <Section title={requestCopy.vi.title} action="Xem dịch vụ" onAction={() => router.push("/yeu-cau/moi")} />
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {REQUEST_GOALS.map((g) => <Press key={g.templateId}
+                onPress={() => router.push({ pathname: "/yeu-cau/moi", params: { template: g.templateId, variant: g.variantId } })}
+                style={{ minHeight: 44, justifyContent: "center", borderRadius: radius.full, paddingHorizontal: 12, backgroundColor: colors.accentSoft }}>
+                <Txt v="meta" w={600} color={colors.accentDark}>{g.label}</Txt>
+              </Press>)}
+            </View>
           </View>
-        ) : null}
-        {/* Tuyển mẫu (working as a model) is partner work: reached from Tôi > Trở thành đối tác, not from here. */}
-      </ScrollView>
+        </View>}
+      />
     </View>
   )
 }

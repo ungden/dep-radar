@@ -117,7 +117,7 @@ export function CustomersPanel() {
                   <Tr className={cn(c.suspendedAt && "bg-danger-soft/30")}>
                     <Td>
                       <span className="flex flex-wrap items-center gap-1.5 font-medium">
-                        {c.name}
+                        <Link className="font-semibold text-accent-dark hover:underline" href={`/admin/cskh?customer=${c.id}`}>{c.name}</Link>
                         {c.isPro && <Badge>Đối tác</Badge>}
                         {c.suspendedAt && <Badge tone="danger">Đã khoá</Badge>}
                       </span>

@@ -154,6 +154,7 @@ export const actions = {
   },
 
   async createCartBooking(input: {
+    operationId: string
     proId: string
     items: { template: string; variant: string; quantity: number }[]
     date: string
@@ -166,6 +167,7 @@ export const actions = {
     sessions?: string[]
   }): Promise<{ id: string } | { error: string }> {
     const result = await api.createCartBooking({
+      operationId: input.operationId,
       proId: input.proId,
       items: input.items,
       startsAt: toTimestamptz(input.date, input.time),

@@ -141,8 +141,8 @@ export function SpaCard({ spa, km, index, photo, listings, service }: { spa: App
     }
   }, [spa.uuid, shown?.templateId, first?.id])
 
-  const book = (variantId?: string) =>
-    router.push({ pathname: "/book/[proId]", params: { proId: spa.id, ...(shown ? { template: shown.templateId, variant: variantId ?? first?.id ?? "" } : {}) } })
+  const book = (variantId?: string, time?: string) =>
+    router.push({ pathname: "/book/[proId]", params: { proId: spa.id, ...(shown ? { template: shown.templateId, variant: variantId ?? first?.id ?? "", ...(time ? { time, date: todayISO() } : {}) } : {}) } })
   const profile = () => router.push({ pathname: "/pros/[id]", params: shown ? { id: spa.id, service: shown.templateId } : { id: spa.id } })
 
   return (
@@ -203,7 +203,7 @@ export function SpaCard({ spa, km, index, photo, listings, service }: { spa: App
             </Txt>
             <View style={{ flexDirection: "row", gap: 8 }}>
               {today.map((s) => (
-                <Press key={s.startsAt} onPress={() => book()} accessibilityLabel={`Đặt lúc ${s.time}`} style={{ flex: 1, height: 40, borderRadius: radius.sm, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center" }}>
+                <Press key={s.startsAt} onPress={() => book(undefined, s.time)} accessibilityLabel={`Đặt lúc ${s.time}`} style={{ flex: 1, height: 40, borderRadius: radius.sm, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center" }}>
                   <Txt v="meta" w={700} color={colors.accentDark}>
                     {s.time}
                   </Txt>

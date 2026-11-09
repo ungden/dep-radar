@@ -30,7 +30,7 @@ import { IllustrationBadge } from "@/components/shop"
 import { TradeDot } from "@/components/trade"
 import { RatingSummaryBlock, ReviewItem, VerifiedBadge, VerifiedMark } from "@/components/trust"
 import { Avatar, BottomBar, ButtonLink, Chip, EmptyState, Tabs } from "@/components/ui"
-import { CATEGORIES, categoryLabel, verticalOf } from "@/lib/catalog"
+import { CATEGORIES, categoryLabel, getTemplate, serviceQuantity, verticalOf } from "@/lib/catalog"
 import { albumsOf } from "@/lib/discovery"
 import { TRAVEL_FEE_SUMMARY, travelFeeFor } from "@/lib/pricing"
 import { distanceToCustomer, fromPrice, proView, reviewsOf, servicesOf, useApp, worksOf } from "@/lib/store"
@@ -91,7 +91,18 @@ function ListedProfile({ pro }: { pro: Pro }) {
   const works = worksOf(state, pro.id)
   const services = servicesOf(state, pro.id)
   const reviews = reviewsOf(state, pro.id)
-  const from = fromPrice(state, pro.id)
+  const requestedService = services.find((s) => s.templateId === params.get("service"))
+  const requestedVariant = params.get("variant")
+  const hasPackage = Boolean(requestedService && requestedVariant && requestedService.prices[requestedVariant] != null)
+  const bookingParams = new URLSearchParams()
+  if (hasPackage && requestedService && requestedVariant) {
+    bookingParams.set("service", requestedService.templateId)
+    bookingParams.set("variant", requestedVariant)
+    if (params.get("work")) bookingParams.set("work", params.get("work")!)
+  }
+  const bookingHref = `/book/${pro.id}${bookingParams.size ? "?" + bookingParams : ""}`
+  const variant = requestedService && requestedVariant ? getTemplate(requestedService.templateId)?.variants.find((v) => v.id === requestedVariant) : undefined
+  const from = hasPackage && requestedService && requestedVariant && variant ? requestedService.prices[requestedVariant] * serviceQuantity(variant) : fromPrice(state, pro.id)
   const own = state.session?.proId === pro.id
   // The category the customer came from (a card in the Nail list opens on Nail).
   const rawAlbum = params.get("album")
@@ -102,7 +113,10 @@ function ListedProfile({ pro }: { pro: Pro }) {
   const [chosen, setChosen] = React.useState<Tab | null>(null)
   const tab = chosen ?? fallback
   const [withPhotos, setWithPhotos] = React.useState(false)
-  const shownReviews = withPhotos ? reviews.filter((r) => r.photo) : reviews
+  const [stars, setStars] = React.useState(0)
+  const [reviewLimit, setReviewLimit] = React.useState(6)
+  const filteredReviews = reviews.filter((r) => (!withPhotos || r.photo) && (!stars || r.rating === stars))
+  const shownReviews = filteredReviews.slice(0, reviewLimit)
   const tabsRef = React.useRef<HTMLDivElement>(null)
 
   // Arriving from a link to the price list or the reviews: go straight there.
@@ -241,7 +255,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
                 <EmptyState title="Chưa có tác phẩm" text={`${pro.name} chưa đăng tác phẩm nào.`} />
               ))}
 
-            {tab === "services" && <ServiceMenu proId={pro.id} bookable={!own} initialCategory={album} />}
+            {tab === "services" && <ServiceMenu proId={pro.id} bookable={!own} initialCategory={album} initialService={requestedService?.templateId} initialVariant={requestedVariant ?? undefined} workId={params.get("work") ?? undefined} />}
 
             {tab === "reviews" && (
               <div id={REVIEWS_ANCHOR} className="mt-5 scroll-mt-24">
@@ -258,6 +272,11 @@ function ListedProfile({ pro }: { pro: Pro }) {
                     </Chip>
                   )}
                 </div>
+                <label className="mb-3 inline-flex min-h-11 items-center gap-2 text-meta">Số sao
+                  <select value={stars} onChange={(e) => { setStars(Number(e.target.value)); setReviewLimit(6) }} className="rounded-md border border-line px-2 py-2">
+                    <option value={0}>Tất cả</option>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} sao</option>)}
+                  </select>
+                </label>
                 {shownReviews.length ? (
                   <ul className="mt-2 divide-y divide-line">
                     {shownReviews.map((r) => (
@@ -267,6 +286,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
                 ) : (
                   <EmptyState title={withPhotos ? "Chưa có đánh giá kèm ảnh" : "Chưa có đánh giá"} />
                 )}
+              {filteredReviews.length > reviewLimit && <button type="button" className="mt-3 min-h-11 font-semibold text-accent-dark" onClick={() => setReviewLimit((n) => n + 6)}>Xem thêm đánh giá</button>}
               </div>
             )}
 
@@ -298,7 +318,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
                   {pro.acceptingJobs ? "Đang nhận lịch" : "Tạm nghỉ nhận lịch mới"}
                 </p>
                 <WhereFacts pro={pro} className="mt-4" />
-                <BookButton pro={pro} disabled={!services.length} className="mt-5 w-full" />
+                <BookButton href={bookingHref} pro={pro} disabled={!services.length} className="mt-5 w-full" />
                 <p className="mt-2 text-meta text-muted">{MATCH_NOTE(pro.name)}</p>
                 {services.length > 0 && (
                   <button
@@ -331,7 +351,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
                 {pro.acceptingJobs ? "Đang nhận lịch" : "Tạm nghỉ nhận lịch"}
               </p>
             </div>
-            <BookButton pro={pro} disabled={!services.length} size="lg" className="shrink-0 px-8" />
+            <BookButton href={bookingHref} pro={pro} disabled={!services.length} size="lg" className="shrink-0 px-8" />
           </div>
         </BottomBar>
       )}
@@ -339,7 +359,7 @@ function ListedProfile({ pro }: { pro: Pro }) {
   )
 }
 
-function BookButton({ pro, disabled, size, className }: { pro: Pro; disabled?: boolean; size?: "md" | "lg"; className?: string }) {
+function BookButton({ href, pro, disabled, size, className }: { href: string; pro: Pro; disabled?: boolean; size?: "md" | "lg"; className?: string }) {
   if (disabled || !pro.acceptingJobs)
     return (
       <span
@@ -354,8 +374,8 @@ function BookButton({ pro, disabled, size, className }: { pro: Pro; disabled?: b
       </span>
     )
   return (
-    <ButtonLink href={`/book/${pro.id}`} size={size} className={className}>
-      Đặt lịch
+    <ButtonLink href={href} size={size} className={className}>
+      Chọn ngày giờ
     </ButtonLink>
   )
 }

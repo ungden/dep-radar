@@ -88,7 +88,7 @@ function Navigator() {
       <Stack.Screen name="dia-chi/index" options={{ title: "Địa chỉ" }} />
       <Stack.Screen name="dia-chi/sua" options={{ title: "Địa chỉ", presentation: "modal" }} />
       <Stack.Screen name="yeu-cau/index" options={{ title: "Đơn theo dịch vụ" }} />
-      <Stack.Screen name="yeu-cau/moi" options={{ title: "Đặt theo dịch vụ", presentation: "modal" }} />
+      <Stack.Screen name="yeu-cau/moi" options={{ title: "Đặt theo nhu cầu", presentation: "modal" }} />
       <Stack.Screen name="yeu-cau/[id]" options={{ title: "" }} />
       <Stack.Screen name="danh-gia/[bookingId]" options={{ title: "Đánh giá", presentation: "modal" }} />
       <Stack.Screen name="tuyen-mau/index" options={{ title: "Tuyển mẫu" }} />

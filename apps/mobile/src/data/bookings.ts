@@ -257,6 +257,7 @@ export async function fetchSlots(input: {
 
 export const createCartBooking = (input: {
   proUuid: string
+  operationId: string
   lines: CartLine[]
   startsAt: string
   atHome: boolean
@@ -265,7 +266,8 @@ export const createCartBooking = (input: {
   expectedTotal: number
   sessions?: string[]
 }) =>
-  rpc<string>("create_cart_booking", {
+  rpc<string>("create_cart_booking_once", {
+    p_operation_id: input.operationId,
     p_pro: input.proUuid,
     p_items: cartItems(input.lines),
     p_starts_at: input.startsAt,

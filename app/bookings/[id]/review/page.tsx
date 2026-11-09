@@ -216,7 +216,7 @@ function ReviewForm() {
       </div>
 
       <div className="space-y-1.5 text-label text-muted">
-        <p>{BLIND_NOTE}</p>
+        <p>Đánh giá hiện công khai thì không sửa được nữa.</p>
         <p>
           Bạn sửa được tới khi đánh giá hiện (còn {period.daysLeft} ngày). Đánh giá được gắn nhãn “Đã đặt qua 360dep”; người làm không thể xoá, chỉ
           trả lời công khai một lần.

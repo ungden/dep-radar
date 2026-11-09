@@ -232,6 +232,7 @@ export async function createBooking(input: {
 
 /** The whole cart in one transaction: a line that no longer fits leaves nothing behind. */
 export async function createCartBooking(input: {
+  operationId: string
   proId: string
   items: { template: string; variant: string; quantity: number }[]
   startsAt: string
@@ -245,8 +246,9 @@ export async function createCartBooking(input: {
   const pro = await proIdFor(input.proId)
   if (!pro) return { ok: false as const, error: "Không tìm thấy chuyên viên." }
   return rpc<string>(
-    "create_cart_booking",
+    "create_cart_booking_once",
     {
+      p_operation_id: input.operationId,
       p_pro: pro,
       p_items: input.items,
       p_starts_at: input.startsAt,
@@ -973,4 +975,10 @@ export async function partnerAppointments() {
   if (error) throw new Error(messageFor(error))
   type Appointment = { id: string; booking_id: string; sequence: number; starts_at: string; duration_min: number; confirmed: boolean; booking: { status: string; service_contract: { serviceName: string } } }
   return (data as unknown as Appointment[]).filter((s) => ["pending", "confirmed", "in_progress", "completed"].includes(s.booking.status)).map((s) => ({ ...s, serviceName: s.booking.service_contract.serviceName }))
+}
+
+export async function noteMarketplaceStep(flow: string, step: "opened" | "slot_chosen" | "confirmation" | "failed" | "created") {
+  if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(flow)) return
+  const client = await supabaseServer()
+  await client.rpc("note_marketplace_step" as never, { p_flow: flow, p_step: step } as never)
 }
