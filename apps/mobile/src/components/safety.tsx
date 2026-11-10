@@ -60,7 +60,7 @@ export function useSafetyMenu(target: Target | null) {
   const confirmBlock = () => {
     const accountId = target?.accountId
     if (!target || !accountId) return
-    Alert.alert(`Chặn ${target.name}?`, "Bạn sẽ không thấy hồ sơ, bài đăng và tin nhắn của người này nữa, và 360dep được báo để xem xét. Bỏ chặn được trong Tôi.", [
+    Alert.alert(`Chặn ${target.name}?`, "Bạn sẽ không thấy hồ sơ, bài đăng và tin nhắn của người này nữa, và 360đẹp được báo để xem xét. Bỏ chặn được trong Tôi.", [
       { text: "Thôi", style: "cancel" },
       {
         text: "Chặn",
@@ -130,7 +130,7 @@ export function useSafetyMenu(target: Target | null) {
     >
       {sent ? (
         <View style={{ gap: 12 }}>
-          <Txt color={colors.inkSoft}>Cảm ơn bạn. Đội ngũ 360dep sẽ xem trong 24 giờ và liên hệ nếu cần thêm thông tin.</Txt>
+          <Txt color={colors.inkSoft}>Cảm ơn bạn. Đội ngũ 360đẹp sẽ xem trong 24 giờ và liên hệ nếu cần thêm thông tin.</Txt>
           <Button label="Theo dõi trong Báo cáo của tôi" variant="secondary" onPress={() => {
             sheet.close()
             router.push("/bao-cao")
@@ -144,7 +144,7 @@ export function useSafetyMenu(target: Target | null) {
         </View>
       ) : (
         <>
-          <Txt color={colors.inkSoft}>Báo cáo được gửi riêng cho 360dep, người kia không biết ai báo cáo.</Txt>
+          <Txt color={colors.inkSoft}>Báo cáo được gửi riêng cho 360đẹp, người kia không biết ai báo cáo.</Txt>
           <View style={{ gap: 8 }} accessibilityRole="radiogroup">
             {REPORT_REASONS.map((r) => {
               const selected = r === reason

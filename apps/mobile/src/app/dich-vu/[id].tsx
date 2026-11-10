@@ -161,7 +161,7 @@ export default function ServiceScreen() {
         {/* Way one: an Artist takes the order */}
         <View style={{ marginHorizontal: gutter, marginTop: -8, padding: 14, gap: 10, borderRadius: radius.lg, backgroundColor: colors.accentSoft }}>
           <View style={{ gap: 2 }}>
-            <Txt v="title">Để Artist nhận đơn</Txt>
+            <Txt v="title">Đặt theo nhu cầu</Txt>
             <Txt v="meta" color={colors.inkSoft}>
               Bạn chọn gói và giờ, Artist nhận trước sẽ đến.
             </Txt>

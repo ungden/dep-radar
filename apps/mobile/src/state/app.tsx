@@ -313,7 +313,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setBlocked(next)
       await writeLocalBlocks(uid, [...next])
       const res = await blockUser(accountId)
-      if (res.ok) return { ok: true, message: "Đã chặn. Bạn sẽ không thấy người này nữa, và 360dep đã được báo để xem xét trong 24 giờ." }
+      if (res.ok) return { ok: true, message: "Đã chặn. Bạn sẽ không thấy người này nữa, và 360đẹp đã được báo để xem xét trong 24 giờ." }
       // TODO(db): until block_user exists the block lives on this phone only.
       return {
         ok: true,

@@ -105,7 +105,7 @@ export const ServiceTile = React.memo(function ServiceTile({
   const { template, pros, fromPrice } = offer
   const photo = offer.photo ?? illustration(template.category, index)
   const rating = offerRating(pros)
-  const who = pros.length === 1 ? pros[0].name : `${pros.length} người nhận`
+  const who = pros.length === 1 ? pros[0].name : `${pros.length} Artist`
   const price = `${formatPrice(fromPrice)}${offer.variant.perPerson ? "/người" : ""}`
   return (
     <Press
@@ -155,7 +155,7 @@ export function CatalogTile({ template, width, index = 0, brief = false }: { tem
   return (
     <Press
       onPress={() => router.push({ pathname: "/dich-vu/[id]", params: { id: template.id } })}
-      accessibilityLabel={`${template.name}, từ ${formatPrice(start.tiers[0])}, ảnh minh hoạ`}
+      accessibilityLabel={`${template.name}, từ ${formatPrice(start.tiers[0])}, chưa có Artist nhận, đặt theo nhu cầu, ảnh minh hoạ`}
       style={{ width, gap: 8 }}
     >
       <View>
@@ -178,6 +178,9 @@ export function CatalogTile({ template, width, index = 0, brief = false }: { tem
             {formatDuration(serviceDuration(start, serviceQuantity(start)))}
           </Txt>
         )}
+        <Txt v="meta" w={600} color={colors.warning} numberOfLines={1}>
+          Chưa có Artist · gửi nhu cầu
+        </Txt>
       </View>
     </Press>
   )

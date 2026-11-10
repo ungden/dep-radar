@@ -19,7 +19,7 @@ import { Txt } from "@/ui/text"
 export default function MyRequests() {
   const { uid } = useApp()
   const requests = useAsync(uid ? () => listMyRequests(uid) : null, [uid])
-  if (!uid) return <SignInGate title="Đơn theo dịch vụ" text="Đăng nhập để đặt theo dịch vụ và xem Artist nào đã nhận." />
+  if (!uid) return <SignInGate title="Đơn theo nhu cầu" text="Đăng nhập để đặt theo nhu cầu và xem Artist nào đã nhận." />
 
   return (
     <>
@@ -84,8 +84,8 @@ export default function MyRequests() {
           ) : requests.error ? null : (
             <EmptyState
               title="Bạn chưa có đơn nào"
-              text="Chọn dịch vụ, giờ và nơi làm. Giá theo bảng giá 360dep; Artist nhận trước sẽ đến."
-              action="Đặt theo dịch vụ"
+              text="Chọn dịch vụ, giờ và nơi làm. Giá theo bảng giá 360đẹp; Artist nhận trước sẽ đến."
+              action="Đặt theo nhu cầu"
               onAction={() => router.push("/yeu-cau/moi")}
             />
           )

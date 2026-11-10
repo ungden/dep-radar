@@ -53,8 +53,8 @@ export default function AddEmail() {
         <InfoNote
           text={
             done.pending
-              ? `360dep đã gửi link xác nhận tới ${done.email}. Bấm link trong thư để hoàn tất; chưa xác nhận thì email chưa dùng được để lấy lại mật khẩu.`
-              : `Từ giờ, khi quên mật khẩu, 360dep gửi link đặt lại tới ${done.email}.`
+              ? `360đẹp đã gửi link xác nhận tới ${done.email}. Bấm link trong thư để hoàn tất; chưa xác nhận thì email chưa dùng được để lấy lại mật khẩu.`
+              : `Từ giờ, khi quên mật khẩu, 360đẹp gửi link đặt lại tới ${done.email}.`
           }
         />
         <Txt color={colors.inkSoft}>Bạn vẫn đăng nhập bằng số điện thoại và mật khẩu như cũ.</Txt>
@@ -70,7 +70,7 @@ export default function AddEmail() {
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: gutter, gap: 16 }}>
         <Txt v="h2">Thêm email để lấy lại mật khẩu khi quên</Txt>
         <Txt color={colors.inkSoft}>
-          Bạn đăng ký bằng số điện thoại nên 360dep chưa có cách gửi link đặt lại mật khẩu cho bạn. Thêm email bạn đang dùng: 360dep gửi một link xác nhận, bấm link là xong.
+          Bạn đăng ký bằng số điện thoại nên 360đẹp chưa có cách gửi link đặt lại mật khẩu cho bạn. Thêm email bạn đang dùng: 360đẹp gửi một link xác nhận, bấm link là xong.
         </Txt>
         {hasReal && user?.email ? <InfoNote text={`Tài khoản đã có email ${maskEmail(user.email)}.`} /> : null}
         {pending ? <InfoNote text={`Đang chờ xác nhận ${pending}. Mở email và bấm link; không thấy thư thì xem mục Spam, hoặc gửi lại bên dưới.`} /> : null}

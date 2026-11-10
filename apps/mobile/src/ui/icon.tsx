@@ -64,6 +64,10 @@ const ICONS = {
   gift: { ios: "gift", android: "redeem" },
   share: { ios: "square.and.arrow.up", android: "share" },
   download: { ios: "arrow.down.to.line", android: "download" },
+  wallet: { ios: "wallet.bifold", android: "account_balance_wallet" },
+  copy: { ios: "doc.on.doc", android: "content_copy" },
+  dayOff: { ios: "calendar.badge.minus", android: "event_busy" },
+  bolt: { ios: "bolt", android: "bolt" },
 } as const
 
 export type IconName = keyof typeof ICONS

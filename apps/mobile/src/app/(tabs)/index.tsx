@@ -34,7 +34,7 @@ function EditorialTile({ template, width }: { template: ServiceTemplate; width: 
     </View>
     <Txt w={600} numberOfLines={2}>{template.name}</Txt>
     <Txt v="meta" color={colors.inkSoft}>Gợi ý dịch vụ</Txt>
-    <Txt v="meta" color={colors.accentDark} w={700}>Xem gói và gửi nhu cầu</Txt>
+    <Txt v="meta" color={colors.accentDark} w={700}>Xem gói và giá</Txt>
   </Press>
 }
 
@@ -144,7 +144,7 @@ export default function Explore() {
             </ScrollView>
           </View> : null}
           <View style={{ paddingHorizontal: gutter, gap: 8 }}>
-            <Section title={requestCopy.vi.title} action="Xem dịch vụ" onAction={() => router.push("/yeu-cau/moi")} />
+            <Section title={requestCopy.vi.title} action="Bắt đầu" onAction={() => router.push("/yeu-cau/moi")} />
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               {REQUEST_GOALS.map((g) => <Press key={g.templateId}
                 onPress={() => router.push({ pathname: "/yeu-cau/moi", params: { template: g.templateId, variant: g.variantId } })}

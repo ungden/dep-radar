@@ -1,10 +1,10 @@
 export const requestCopy = {
   vi: {
     title: "Đặt theo nhu cầu",
-    summary: "Chọn dịch vụ, chuyên viên phù hợp sẽ nhận.",
+    summary: "Chọn dịch vụ, Artist phù hợp sẽ nhận.",
     goalPrompt: "Bạn muốn làm gì?",
-    noArtist: "Bạn không cần chọn chuyên viên. Người phù hợp nhận trước sẽ làm.",
-    privacy: "Chỉ ghi yêu cầu về dịch vụ. Địa chỉ cụ thể và liên hệ được chia sẻ sau khi chuyên viên nhận.",
+    noArtist: "Bạn không cần chọn Artist. Artist phù hợp nhận trước sẽ làm.",
+    privacy: "Chỉ ghi yêu cầu về dịch vụ. Địa chỉ cụ thể và liên hệ được chia sẻ sau khi Artist nhận.",
     bridal: "Makeup cô dâu",
     nails: "Làm nail",
     party: "Makeup dự tiệc",

@@ -164,7 +164,7 @@ export default function WorkDetail() {
               ) : null}
             </View>
           ) : pro ? (
-            <Txt color={colors.inkSoft}>{pro.name} chưa đặt giá cho dịch vụ này trên 360dep.</Txt>
+            <Txt color={colors.inkSoft}>{pro.name} chưa đặt giá cho dịch vụ này trên 360đẹp.</Txt>
           ) : null}
 
           {template?.includes.length ? <View style={{ gap: 4 }}>
@@ -175,7 +175,7 @@ export default function WorkDetail() {
 
           {similar.length ? (
             <View style={{ gap: 12, paddingTop: 8 }}>
-              <SectionHeader title={`Mẫu khác của ${pro?.name ?? "chuyên viên"}`} />
+              <SectionHeader title={`Mẫu khác của ${pro?.name ?? "Artist"}`} />
               <View style={{ flexDirection: "row", flexWrap: "wrap", marginHorizontal: -6 }}>
                 {similar.map((w) => {
                   const p = browse.proById.get(w.proId)

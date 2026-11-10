@@ -12,7 +12,7 @@ export function SignInGate({ title, text, footer }: { title: string; text: strin
       <PageBand title={title} />
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ flexGrow: 1, paddingTop: 8, paddingHorizontal: gutter, paddingBottom: 96 }}>
       <View style={{ flex: 1, justifyContent: "center" }}>
-        <EmptyState title="Bạn chưa đăng nhập" text={text} action="Đăng nhập" onAction={() => router.push("/login")} />
+        <EmptyState title="Bạn chưa đăng nhập" text={text} action="Đăng nhập" onAction={() => router.push({ pathname: "/login", params: { home: "1" } })} />
       </View>
       {footer}
       </ScrollView>

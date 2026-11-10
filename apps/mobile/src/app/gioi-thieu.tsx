@@ -50,7 +50,7 @@ export default function Referral() {
     const link = referralLink(r.code)
     // The link is in the message; passing it as `url` too makes iOS show it twice.
     await Share.share({
-      message: `Mình đặt làm đẹp, chụp ảnh qua 360dep. Nhập mã ${r.code} khi đăng ký, lần đầu dùng dịch vụ từ ${formatPrice(s.minTotal)} cả hai được voucher ${formatPrice(s.customerAmount)}: ${link}`,
+      message: `Mình đặt làm đẹp, chụp ảnh qua 360đẹp. Nhập mã ${r.code} khi đăng ký, lần đầu dùng dịch vụ từ ${formatPrice(s.minTotal)} cả hai được voucher ${formatPrice(s.customerAmount)}: ${link}`,
     }).catch(() => {})
   }
 
@@ -187,7 +187,7 @@ export default function Referral() {
           )}
           {r.vouchers.some((v) => isUsable(v)) ? (
             <Txt v="meta" color={colors.muted}>
-              Chọn voucher trong trang lịch hẹn, trước giờ hẹn. Bạn trả Artist số tiền đã trừ voucher; 360dep trả phần voucher cho Artist.
+              Chọn voucher trong trang lịch hẹn, trước giờ hẹn. Bạn trả Artist số tiền đã trừ voucher; 360đẹp trả phần voucher cho Artist.
             </Txt>
           ) : null}
         </View>
@@ -200,7 +200,7 @@ function Rules({ s }: { s: ReferralSettings }) {
   return (
     <Card>
       <Txt w={700}>Cách nhận thưởng</Txt>
-      <Rule n={1} text="Bạn bè đăng ký 360dep và nhập mã của bạn trong 30 ngày đầu." />
+      <Rule n={1} text="Bạn bè đăng ký 360đẹp và nhập mã của bạn trong 30 ngày đầu." />
       <Rule
         n={2}
         text={`Khi họ hoàn thành lịch hẹn đầu tiên từ ${formatPrice(s.minTotal)} (với Artist khác bạn), cả hai nhận voucher ${formatPrice(s.customerAmount)}, dùng trong ${s.voucherDays} ngày.`}
@@ -238,7 +238,7 @@ function RewardRow({ reward: w, isPro }: { reward: ReferralReward; isPro: boolea
       : "Bạn bè bạn giới thiệu đã dùng dịch vụ lần đầu"
     : w.kind === "pro"
       ? "Quà giới thiệu: bạn đã xong 3 job đầu tiên"
-      : "Quà cho lần đầu dùng 360dep qua lời giới thiệu"
+      : "Quà cho lần đầu dùng 360đẹp qua lời giới thiệu"
   // A freelancer's "3 jobs" reward goes to the wallet; everything else is a voucher.
   const form = w.kind === "pro" && isPro ? "cộng vào ví" : "voucher"
   return (

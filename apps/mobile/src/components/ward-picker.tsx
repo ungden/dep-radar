@@ -64,7 +64,7 @@ export function WardPicker({
       const here = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
       const point = { lat: here.coords.latitude, lng: here.coords.longitude }
       const ward = wardOfPoint([point.lat, point.lng])
-      if (!ward) return setError("Vị trí này ngoài khu vực 360dep đang phục vụ (Hà Nội, TP.HCM, Đà Nẵng).")
+      if (!ward) return setError("Vị trí này ngoài khu vực 360đẹp đang phục vụ (Hà Nội, TP.HCM, Đà Nẵng).")
       pick({ ...ward, point })
     } catch {
       setError(LOCATION_FAILED)

@@ -87,7 +87,7 @@ function Navigator() {
       <Stack.Screen name="da-luu" options={{ title: "Đã lưu" }} />
       <Stack.Screen name="dia-chi/index" options={{ title: "Địa chỉ" }} />
       <Stack.Screen name="dia-chi/sua" options={{ title: "Địa chỉ", presentation: "modal" }} />
-      <Stack.Screen name="yeu-cau/index" options={{ title: "Đơn theo dịch vụ" }} />
+      <Stack.Screen name="yeu-cau/index" options={{ title: "Đơn theo nhu cầu" }} />
       <Stack.Screen name="yeu-cau/moi" options={{ title: "Đặt theo nhu cầu", presentation: "modal" }} />
       <Stack.Screen name="yeu-cau/[id]" options={{ title: "" }} />
       <Stack.Screen name="danh-gia/[bookingId]" options={{ title: "Đánh giá", presentation: "modal" }} />
@@ -102,7 +102,8 @@ function Navigator() {
       <Stack.Screen name="them-email" options={{ title: "Email lấy lại mật khẩu" }} />
       <Stack.Screen name="doi-mat-khau" options={{ title: "Mật khẩu", presentation: "modal" }} />
       <Stack.Screen name="ho-so-doi-tac" options={{ title: "Hồ sơ đối tác" }} />
-      <Stack.Screen name="doi-tac" options={{ title: "360dep Đối tác" }} />
+      <Stack.Screen name="vi" options={{ title: "Ví" }} />
+      <Stack.Screen name="doi-tac" options={{ title: "360đẹp Đối tác" }} />
       <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
     </Stack>
   )

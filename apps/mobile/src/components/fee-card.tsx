@@ -1,4 +1,5 @@
 import { Image } from "expo-image"
+import { router } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { Share, View } from "react-native"
 import { formatPrice } from "@/data/format"
@@ -36,7 +37,7 @@ export function FeeCard({ fee }: { fee: FeeInfo | undefined }) {
         Thanh toán phí {formatPrice(amount)} để nhận đơn tiếp
       </Txt>
       <Txt v="meta" color={colors.warning}>
-        Phí 360dep của lịch hẹn đã hoàn thành. Chưa thanh toán thì bạn chưa nhận được lịch hay việc mới; ví cập nhật khi 360dep nhận được tiền.
+        Phí 360đẹp của lịch hẹn đã hoàn thành. Chưa thanh toán thì bạn chưa nhận được lịch hay việc mới; ví tự cập nhật sau 1–2 phút khi ghi đúng nội dung.
       </Txt>
       {fee.bank && memo ? (
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, gap: 4 }}>
@@ -65,13 +66,13 @@ export function FeeCard({ fee }: { fee: FeeInfo | undefined }) {
       ) : (
         <View style={{ gap: 8 }}>
           <Txt v="meta" color={colors.warning}>
-            Nhân viên 360dep sẽ liên hệ hướng dẫn chuyển khoản.
+            Nhân viên 360đẹp sẽ liên hệ hướng dẫn chuyển khoản.
             {memo ? ` Khi chuyển, ghi nội dung: ${memo}.` : ""}
           </Txt>
           <Button label="Liên hệ hỗ trợ" size="sm" variant="secondary" onPress={() => void WebBrowser.openBrowserAsync(webLink("/tro-giup"))} />
         </View>
       )}
-      <Button label="Xem ví (mở trên web)" icon="external" size="sm" variant="ghost" onPress={() => void WebBrowser.openBrowserAsync(webLink("/studio/wallet"))} />
+      <Button label="Mở ví" icon="wallet" size="sm" variant="ghost" onPress={() => router.push("/vi")} />
     </Card>
   )
 }

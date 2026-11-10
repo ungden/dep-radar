@@ -18,7 +18,7 @@ export default function Partner() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.canvas }} contentContainerStyle={{ padding: gutter, gap: 16 }}>
-      <Txt v="h2">Trở thành đối tác 360dep</Txt>
+      <Txt v="h2">Trở thành đối tác 360đẹp</Txt>
       <Txt color={colors.inkSoft}>
         Dành cho thợ làm đẹp, người chụp ảnh, quay clip và người mẫu. Tài khoản khách của bạn giữ nguyên; phần đối tác tách riêng.
       </Txt>

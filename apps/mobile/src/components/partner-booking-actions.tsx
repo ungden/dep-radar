@@ -26,7 +26,7 @@ export function ActionRow({ label, danger, last, onPress }: { label: string; dan
 }
 
 /** A new time for a confirmed booking. The customer answers on their booking; request_reschedule checks the slot. */
-export function RescheduleButton({ onSend }: { onSend: (date: string, time: string) => Promise<unknown> }) {
+export function RescheduleButton({ onSend, other = "Khách" }: { onSend: (date: string, time: string) => Promise<unknown>; other?: string }) {
   const sheet = useSheet()
   const [date, setDate] = React.useState(addDays(todayISO(), 1))
   const [time, setTime] = React.useState("10:00")
@@ -52,7 +52,7 @@ export function RescheduleButton({ onSend }: { onSend: (date: string, time: stri
           />
         }
       >
-        <Txt color={colors.inkSoft}>Khách đồng ý thì lịch mới có hiệu lực. Chưa trả lời thì giữ giờ cũ.</Txt>
+        <Txt color={colors.inkSoft}>{other} đồng ý thì giờ mới có hiệu lực. Chưa trả lời thì giữ giờ cũ.</Txt>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {days.map((d) => {
             const selected = d === date

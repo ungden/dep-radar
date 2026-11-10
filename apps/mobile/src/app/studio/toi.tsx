@@ -4,7 +4,8 @@ import * as WebBrowser from "expo-web-browser"
 import { ScrollView, View } from "react-native"
 import { formatPrice } from "@/data/format"
 import { webLink } from "@/data/links"
-import { supabase } from "@/data/supabase"
+import { IDENTITY_VERIFICATION_OPEN } from "@/shared"
+import { usePartnerReview } from "@/state/partner-review"
 import { AcceptingSwitch } from "@/components/accepting-switch"
 import { useFee } from "@/components/fee-card"
 import { StudioHeader } from "@/components/studio-header"
@@ -15,36 +16,11 @@ import { Icon, type IconName } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
 
-/**
- * Where the profile's review stands (20260929100000). Publishing itself is on
- * the web; the app only says whether it is waiting or what to fix. Null while
- * loading, and on a database without the review columns.
- */
-function useReview(uid: string | null) {
-  const [review, setReview] = React.useState<{ status: string; note: string } | null>(null)
-  React.useEffect(() => {
-    if (!uid) return
-    let live = true
-    void supabase
-      .from("pros")
-      .select("review_status, review_note")
-      .eq("id", uid)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (live && data) setReview({ status: String(data.review_status ?? ""), note: String(data.review_note ?? "") })
-      })
-    return () => {
-      live = false
-    }
-  }, [uid])
-  return review
-}
-
 export default function StudioMe() {
   const app = useApp()
   const pro = app.myPro
   const fee = useFee(app.uid ?? null)
-  const review = useReview(app.uid ?? null)
+  const review = usePartnerReview(app.uid ?? null)
   if (!pro || !app.uid) return null
   const pending = !pro.published && review?.status === "pending"
   const refused = !pro.published && (review?.status === "changes_requested" || review?.status === "rejected")
@@ -91,7 +67,7 @@ export default function StudioMe() {
           <Press
             onPress={() => router.push("/ho-so-doi-tac?step=5")}
             accessibilityRole="link"
-            accessibilityLabel="Sửa hồ sơ và gửi duyệt lại, mở trên web"
+            accessibilityLabel="Sửa hồ sơ và gửi duyệt lại"
             style={{ backgroundColor: colors.warningSoft, borderRadius: radius.md, padding: 16, gap: 6 }}
           >
             <Txt w={700} color={colors.warning}>
@@ -122,18 +98,18 @@ export default function StudioMe() {
           <AcceptingSwitch />
         </View>
 
-        <Press onPress={web("/studio/wallet")} accessibilityRole="link" accessibilityLabel="Ví và phí 360dep, mở trên web" style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 20 }}>
+        <Press onPress={() => router.push("/vi")} accessibilityRole="button" accessibilityLabel={fee.owing ? "Ví: đang nợ phí. Trả phí" : "Ví"} style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 20 }}>
           <View style={{ flex: 1, gap: 2 }}>
             <Txt v="meta" color={colors.muted}>
-              Số dư ví
+              {fee.owing ? "Phí cần chuyển" : "Số dư ví"}
             </Txt>
             <Txt v="h2" tabular color={fee.owing ? colors.danger : colors.ink}>
-              {fee.value ? formatPrice(fee.value.balance) : "—"}
+              {fee.value ? formatPrice(Math.abs(fee.value.balance)) : "—"}
             </Txt>
           </View>
           <View style={{ minHeight: 38, paddingHorizontal: 18, borderRadius: radius.full, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center" }}>
             <Txt v="meta" w={700} color={colors.accentDark}>
-              Nạp ví
+              {fee.owing ? "Trả phí" : "Mở ví"}
             </Txt>
           </View>
         </Press>
@@ -141,19 +117,26 @@ export default function StudioMe() {
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg }}>
           <Row icon="briefcase" label="Dịch vụ và bảng giá" internal onPress={() => router.push("/ho-so-doi-tac?step=1")} />
           <Divider style={{ marginLeft: 52 }} />
-          <Row icon="clock" label="Giờ làm việc" internal onPress={() => router.push("/ho-so-doi-tac?step=3")} />
+          <Row icon="clock" label="Giờ làm việc và ngày nghỉ" internal onPress={() => router.navigate("/studio/lich")} />
+          <Divider style={{ marginLeft: 52 }} />
+          <Row icon="pin" label="Khu vực phục vụ" internal onPress={() => router.push("/ho-so-doi-tac?step=2")} />
           <Divider style={{ marginLeft: 52 }} />
           <Row icon="person" label="Sửa hồ sơ" internal onPress={() => router.push("/ho-so-doi-tac?step=0")} />
           <Divider style={{ marginLeft: 52 }} />
-          <Row icon="photos" label="Quản lý tác phẩm" internal onPress={() => router.push("/ho-so-doi-tac?step=4")} />
+          <Row icon="photos" label="Tác phẩm của tôi" internal onPress={() => router.push({ pathname: "/pros/[id]", params: { id: pro.id } })} />
           <Divider style={{ marginLeft: 52 }} />
-          <Row icon="briefcase" label="Network MCN của tôi" onPress={web("/studio/network")} />
-          <Divider style={{ marginLeft: 52 }} />
-          <Row icon="verified" label="Xác minh danh tính" onPress={web("/studio/verify")} />
+          <Row icon="wallet" label="Ví và tài khoản nhận tiền" internal onPress={() => router.push("/vi")} />
         </View>
-        <Txt v="meta" color={colors.muted}>
-          Ví, network MCN và xác minh danh tính mở trên web; bạn có thể cần đăng nhập lại.
-        </Txt>
+
+        <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg }}>
+          <Row icon="briefcase" label="Nhóm MCN của tôi" onPress={web("/studio/network")} />
+          {IDENTITY_VERIFICATION_OPEN ? (
+            <>
+              <Divider style={{ marginLeft: 52 }} />
+              <Row icon="verified" label="Xác minh danh tính" onPress={web("/studio/verify")} />
+            </>
+          ) : null}
+        </View>
 
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg }}>
           <Row icon="share" label="Ảnh portfolio để đăng mạng xã hội" internal onPress={() => router.push("/anh-portfolio")} />
