@@ -1,14 +1,11 @@
-import { Image } from "expo-image"
 import { router } from "expo-router"
-import * as WebBrowser from "expo-web-browser"
-import { Share, View } from "react-native"
+import { View } from "react-native"
 import { formatPrice } from "@/data/format"
-import { webLink } from "@/data/links"
-import { feeMemo, feeQrUrl, loadFee, owes, type FeeInfo } from "@/data/wallet"
+import { loadFee, owes, type FeeInfo } from "@/data/wallet"
 import { useAsync } from "@/state/use-async"
 import { colors, radius } from "@/theme"
-import { Button } from "@/ui/button"
-import { Card, Line } from "@/ui/bits"
+import { Icon } from "@/ui/icon"
+import { Press } from "@/ui/press"
 import { Txt } from "@/ui/text"
 
 /** The freelancer's wallet, read on focus. `enabled` false skips the read (a customer, or nothing to accept). */
@@ -21,58 +18,34 @@ export function useFee(uid: string | null, enabled = true) {
 export const OWING_NOTE = "Thanh toán phí của đơn trước để nhận đơn mới."
 
 /**
- * Shown while the wallet is below zero: the fee of the last completed job,
- * and how to pay it. A transfer with the memo "DEP<code>" is credited by
- * 360dep (staff or the bank's notice) and accepting works again by itself.
- * Nothing is shown when nothing is owed.
+ * Shown while the wallet is below zero: one line with what is owed and the
+ * way to pay it. The QR, memo and history live on the wallet screen (/vi),
+ * so a list or a booking is not pushed down by a bank form. Nothing is shown
+ * when nothing is owed.
  */
 export function FeeCard({ fee }: { fee: FeeInfo | undefined }) {
   if (!fee || !owes(fee)) return null
-  const amount = -fee.balance
-  const memo = feeMemo(fee)
-  const qr = feeQrUrl(fee)
   return (
-    <Card style={{ backgroundColor: colors.warningSoft, gap: 10 }}>
-      <Txt v="lead" w={800} color={colors.warning}>
-        Thanh toán phí {formatPrice(amount)} để nhận đơn tiếp
-      </Txt>
-      <Txt v="meta" color={colors.warning}>
-        Phí 360đẹp của lịch hẹn đã hoàn thành. Chưa thanh toán thì bạn chưa nhận được lịch hay việc mới; ví tự cập nhật sau 1–2 phút khi ghi đúng nội dung.
-      </Txt>
-      {fee.bank && memo ? (
-        <View style={{ backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, gap: 4 }}>
-          {qr ? (
-            <Image
-              source={{ uri: qr }}
-              style={{ width: 220, height: 260, alignSelf: "center", marginBottom: 6 }}
-              contentFit="contain"
-              accessibilityLabel={`Mã QR chuyển ${formatPrice(amount)}, nội dung ${memo}`}
-            />
-          ) : null}
-          <Line label="Số tiền" value={formatPrice(amount)} strong />
-          <Line label="Số tài khoản" value={fee.bank.accountNo} />
-          {fee.bank.accountName ? <Line label="Chủ tài khoản" value={fee.bank.accountName} /> : null}
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12, paddingVertical: 4 }}>
-            <Txt color={colors.inkSoft}>Nội dung</Txt>
-            <Txt w={800} selectable tabular>
-              {memo}
-            </Txt>
-          </View>
-          <Txt v="meta" color={colors.muted}>
-            Ghi đúng nội dung để tiền vào ví của bạn. Giữ vào nội dung để sao chép.
-          </Txt>
-          <Button label="Chia sẻ nội dung" icon="send" size="sm" variant="secondary" onPress={() => void Share.share({ message: memo })} />
-        </View>
-      ) : (
-        <View style={{ gap: 8 }}>
-          <Txt v="meta" color={colors.warning}>
-            Nhân viên 360đẹp sẽ liên hệ hướng dẫn chuyển khoản.
-            {memo ? ` Khi chuyển, ghi nội dung: ${memo}.` : ""}
-          </Txt>
-          <Button label="Liên hệ hỗ trợ" size="sm" variant="secondary" onPress={() => void WebBrowser.openBrowserAsync(webLink("/tro-giup"))} />
-        </View>
-      )}
-      <Button label="Mở ví" icon="wallet" size="sm" variant="ghost" onPress={() => router.push("/vi")} />
-    </Card>
+    <Press
+      onPress={() => router.push("/vi")}
+      accessibilityRole="button"
+      accessibilityLabel={`Phí cần chuyển ${formatPrice(-fee.balance)}. Trả phí`}
+      style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.warningSoft, borderRadius: radius.lg, padding: 16 }}
+    >
+      <Icon name="wallet" size={22} color={colors.warning} />
+      <View style={{ flex: 1 }}>
+        <Txt w={700} color={colors.warning}>
+          Phí cần chuyển {formatPrice(-fee.balance)}
+        </Txt>
+        <Txt v="meta" color={colors.warning}>
+          Chuyển xong mới nhận được đơn mới.
+        </Txt>
+      </View>
+      <View style={{ minHeight: 38, paddingHorizontal: 16, borderRadius: radius.full, backgroundColor: colors.surface, justifyContent: "center" }}>
+        <Txt v="meta" w={700} color={colors.accentDark}>
+          Trả phí
+        </Txt>
+      </View>
+    </Press>
   )
 }

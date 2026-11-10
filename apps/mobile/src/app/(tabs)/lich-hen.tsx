@@ -75,7 +75,7 @@ export default function MyBookings() {
     if (job.confirmDone) return { text: "xác nhận đã làm xong", button: { label: "Xác nhận đã xong", busy: busy === b.id, onPress: () => confirmDone(b) } }
     if (b.delivery?.deliveredAt && !b.delivery.acceptedAt) return { text: "xem file và xác nhận đã nhận", button: { ...open, label: "Xem file" } }
     if (b.status === "completed" && !b.reviewed && reviewWindow(b.completedAt, new Date(now)).open)
-      return { text: "đánh giá buổi làm", button: { label: "Viết đánh giá", onPress: () => router.push({ pathname: "/danh-gia/[bookingId]", params: { bookingId: b.id } }) } }
+      return { text: "đánh giá buổi làm", soft: true, button: { label: "Viết đánh giá", onPress: () => router.push({ pathname: "/danh-gia/[bookingId]", params: { bookingId: b.id } }) } }
     const lapsed = b.status === "declined" || b.status === "expired" || (b.status === "cancelled" && b.cancelledBy === "pro")
     if (lapsed && b.pro.slug && now - Date.parse(b.cancelledAt ?? b.confirmBy) < RECENT)
       return {

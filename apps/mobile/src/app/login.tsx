@@ -97,8 +97,8 @@ export default function Login() {
     // A partner who signs in from a tab has work waiting in Studio, not in the customer's tabs.
     const partner = home === "1" && user ? (await supabase.from("pros").select("id").eq("id", user.id).maybeSingle()).data : null
     if (partner && user) {
+      // Studio's layout marks the session as partner mode once the account has loaded.
       await switchRole(user.id, "pro")
-      await app.refreshMe()
       router.dismissAll()
       return router.replace("/studio")
     }

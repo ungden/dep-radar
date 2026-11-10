@@ -1,3 +1,4 @@
+import * as React from "react"
 import { Redirect } from "expo-router"
 import { NativeTabs } from "expo-router/unstable-native-tabs"
 import { countPendingForPro } from "@/data/bookings"
@@ -16,7 +17,14 @@ const TABS = [
 
 /** Studio: the freelancer's side of the same app, on the system's own tab bar. */
 export default function StudioTabs() {
-  const { uid, myPro, data } = useApp()
+  const { uid, myPro, data, me, switchMode } = useApp()
+  // Being in Studio is partner mode: say so once per visit, so the next launch opens here too.
+  const marked = React.useRef(false)
+  React.useEffect(() => {
+    if (marked.current || !uid || !myPro || !me.account) return
+    marked.current = true
+    if (me.account.activeRole !== "pro") void switchMode("pro")
+  }, [uid, myPro, me.account, switchMode])
   // Bookings waiting for an answer, on the tab that lists them.
   const waiting = useBadgeCount(uid && myPro ? () => countPendingForPro(uid) : null, uid)
   if (data && (!uid || !myPro)) return <Redirect href="/" />

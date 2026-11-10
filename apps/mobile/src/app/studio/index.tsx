@@ -4,7 +4,7 @@ import { ScrollView, View } from "react-native"
 import { listBookings, type BookingItem } from "@/data/bookings"
 import { addDays, formatDateLong, formatPrice, localDate, todayISO } from "@/data/format"
 import { AcceptingSwitch } from "@/components/accepting-switch"
-import { useFee } from "@/components/fee-card"
+import { FeeCard, useFee } from "@/components/fee-card"
 import { PartnerAppointments } from "@/components/partner-appointments"
 import { PendingBookingCard, UpcomingJobCard } from "@/components/partner-cards"
 import { BedBoard } from "@/components/bed-board"
@@ -85,24 +85,7 @@ export default function Today() {
 
         {pro && !pro.published ? <ProfileState status={review?.status ?? ""} note={review?.note ?? ""} /> : null}
 
-        {owed > 0 ? (
-          <Press onPress={() => router.push("/vi")} accessibilityRole="button" accessibilityLabel={`Phí cần chuyển ${formatPrice(owed)}. Trả phí`} style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.warningSoft, borderRadius: radius.lg, padding: 16 }}>
-            <Icon name="wallet" size={22} color={colors.warning} />
-            <View style={{ flex: 1 }}>
-              <Txt w={700} color={colors.warning}>
-                Phí cần chuyển {formatPrice(owed)}
-              </Txt>
-              <Txt v="meta" color={colors.warning}>
-                Chuyển xong mới nhận được đơn mới.
-              </Txt>
-            </View>
-            <View style={{ minHeight: 38, paddingHorizontal: 16, borderRadius: radius.full, backgroundColor: colors.surface, justifyContent: "center" }}>
-              <Txt v="meta" w={700} color={colors.accentDark}>
-                Trả phí
-              </Txt>
-            </View>
-          </Press>
-        ) : null}
+        {fee.owing ? <FeeCard fee={fee.value} /> : null}
 
         {bookings.loading || toAccept.length ? (
           <View style={{ gap: 12 }}>

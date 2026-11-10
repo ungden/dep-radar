@@ -76,17 +76,18 @@ export function BookingRow({ booking, as, todo }: { booking: BookingItem; as: "c
     <View style={{ backgroundColor: colors.surface, borderRadius: radius.md, overflow: "hidden" }}>
       <View style={{ backgroundColor: colors.warningSoft, paddingHorizontal: 14, paddingVertical: 8 }}>
         <Txt v="meta" w={700} color={colors.warning}>
-          Cần bạn: {todo.text}
+          {todo.text.charAt(0).toUpperCase() + todo.text.slice(1)}
         </Txt>
       </View>
       {row}
       {todo.button ? (
         <View style={{ paddingHorizontal: 14, paddingBottom: 14 }}>
-          <Button label={todo.button.label} full busy={todo.button.busy} onPress={todo.button.onPress} />
+          <Button label={todo.button.label} variant={todo.soft ? "secondary" : "primary"} full busy={todo.button.busy} onPress={todo.button.onPress} />
         </View>
       ) : null}
     </View>
   )
 }
 
-export type ToDo = { text: string; button?: { label: string; onPress: () => void; busy?: boolean } }
+/** `soft`: worth doing, not urgent (a review); its button is tinted, not filled. */
+export type ToDo = { text: string; soft?: boolean; button?: { label: string; onPress: () => void; busy?: boolean } }
