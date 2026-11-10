@@ -4,7 +4,8 @@ import * as WebBrowser from "expo-web-browser"
 import { ScrollView, View } from "react-native"
 import { formatPrice } from "@/data/format"
 import { webLink } from "@/data/links"
-import { IDENTITY_VERIFICATION_OPEN } from "@/shared"
+import { IDENTITY_VERIFICATION_OPEN, hasMcnMembership } from "@/shared"
+import { rpcOptional } from "@/data/supabase"
 import { usePartnerReview } from "@/state/partner-review"
 import { AcceptingSwitch } from "@/components/accepting-switch"
 import { useFee } from "@/components/fee-card"
@@ -21,6 +22,18 @@ export default function StudioMe() {
   const pro = app.myPro
   const fee = useFee(app.uid ?? null)
   const review = usePartnerReview(app.uid ?? null)
+  // MCN is opened for chosen partners only: the row shows with an invite or a membership.
+  const [inNetwork, setInNetwork] = React.useState(false)
+  React.useEffect(() => {
+    if (!app.uid) return
+    let live = true
+    void rpcOptional<{ memberships?: { status: string; isMine: boolean }[] }>("mcn_workspace", {}).then((r) => {
+      if (live && r.ok) setInNetwork(hasMcnMembership(r.data?.memberships))
+    })
+    return () => {
+      live = false
+    }
+  }, [app.uid])
   if (!pro || !app.uid) return null
   const pending = !pro.published && review?.status === "pending"
   const refused = !pro.published && (review?.status === "changes_requested" || review?.status === "rejected")
@@ -128,15 +141,13 @@ export default function StudioMe() {
           <Row icon="wallet" label="Ví và tài khoản nhận tiền" internal onPress={() => router.push("/vi")} />
         </View>
 
-        <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg }}>
-          <Row icon="briefcase" label="Nhóm MCN của tôi" onPress={web("/studio/network")} />
-          {IDENTITY_VERIFICATION_OPEN ? (
-            <>
-              <Divider style={{ marginLeft: 52 }} />
-              <Row icon="verified" label="Xác minh danh tính" onPress={web("/studio/verify")} />
-            </>
-          ) : null}
-        </View>
+        {inNetwork || IDENTITY_VERIFICATION_OPEN ? (
+          <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg }}>
+            {inNetwork ? <Row icon="briefcase" label="Nhóm MCN của tôi" onPress={web("/studio/network")} /> : null}
+            {inNetwork && IDENTITY_VERIFICATION_OPEN ? <Divider style={{ marginLeft: 52 }} /> : null}
+            {IDENTITY_VERIFICATION_OPEN ? <Row icon="verified" label="Xác minh danh tính" onPress={web("/studio/verify")} /> : null}
+          </View>
+        ) : null}
 
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg }}>
           <Row icon="share" label="Ảnh portfolio để đăng mạng xã hội" internal onPress={() => router.push("/anh-portfolio")} />

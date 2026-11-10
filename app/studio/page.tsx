@@ -14,6 +14,8 @@ import { RequestCard } from "@/components/request-card"
 import { RequireSession } from "@/components/require-session"
 import { buttonClass, Card, LogoMark, Toggle } from "@/components/ui"
 import { IDENTITY_VERIFICATION_OPEN } from "@/lib/launch"
+import { hasMcnMembership } from "@/lib/mcn-types"
+import { supabaseBrowser } from "@/lib/supabase/client"
 import { jobEligibility } from "@/lib/api/actions"
 import { POLICY } from "@/lib/pricing"
 import { actions, useAct } from "@/lib/client-actions"
@@ -36,8 +38,26 @@ export default function StudioPage() {
   )
 }
 
+/** MCN is opened for chosen partners only (owner, 10/11/2026): the shortcut shows with an invite or a membership. */
+function useInNetwork() {
+  const [inNetwork, setInNetwork] = React.useState(false)
+  React.useEffect(() => {
+    let live = true
+    void supabaseBrowser()
+      .rpc("mcn_workspace" as never)
+      .then(({ data }) => {
+        if (live) setInNetwork(hasMcnMembership((data as { memberships?: { status: string; isMine: boolean }[] } | null)?.memberships))
+      })
+    return () => {
+      live = false
+    }
+  }, [])
+  return inNetwork
+}
+
 function Dashboard() {
   const state = useApp()
+  const inNetwork = useInNetwork()
   const act = useAct()
   const proId = state.session!.proId!
   const pro = proView(state, proId)!
@@ -196,7 +216,7 @@ function Dashboard() {
             text={waitingApplicants ? `${waitingApplicants} người đang chờ bạn chọn` : myCastings.length ? `${myCastings.length} tin đang mở` : "Tìm mẫu luyện tay, chụp portfolio"}
           />
           <Shortcut href="/studio/services" icon={<Tags className="size-5" />} title="Bảng giá" text="Dịch vụ và giá của bạn" />
-          <Shortcut href="/studio/network" icon={<Users className="size-5" />} title="Network của tôi" text="Lời mời MCN, quyền lợi & hợp tác" />
+          {inNetwork ? <Shortcut href="/studio/network" icon={<Users className="size-5" />} title="Nhóm MCN của tôi" text="Lời mời, quyền lợi & hợp tác" /> : null}
           <Shortcut href="/studio/thanh-toan" icon={<QrCode className="size-5" />} title="Nhận tiền & mã QR" text="Tài khoản ngân hàng, QR cho khách quét" />
           <Shortcut href="/tro-giup?ban=doi-tac" icon={<CircleHelp className="size-5" />} title="Trợ giúp đối tác" text="Phí, vắng mặt, tranh chấp, hỏi trợ lý" />
           <Shortcut href="/studio/profile/edit" icon={<UserRoundPen className="size-5" />} title="Hồ sơ & giờ làm" text="Giới thiệu, khu vực, lịch tuần" />
