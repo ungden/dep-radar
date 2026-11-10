@@ -130,9 +130,9 @@ export default function Me() {
         <Divider style={{ marginLeft: 52 }} />
         <Row icon="home" label="Địa chỉ" detail={app.me.addresses.length ? String(app.me.addresses.length) : undefined} onPress={() => router.push("/dia-chi")} />
         <Divider style={{ marginLeft: 52 }} />
-        <Row icon="chat" label="Tin nhắn" onPress={() => router.push("/tin-nhan")} />
+        <Row icon="chat" label="Tin nhắn" detail={app.me.unreadMessages ? `${app.me.unreadMessages} mới` : undefined} onPress={() => router.push("/tin-nhan")} />
         <Divider style={{ marginLeft: 52 }} />
-        <Row icon="bell" label="Thông báo" onPress={() => router.push("/thong-bao")} />
+        <Row icon="bell" label="Thông báo" detail={app.me.unreadNotifications ? `${app.me.unreadNotifications} mới` : undefined} onPress={() => router.push("/thong-bao")} />
         <Divider style={{ marginLeft: 52 }} />
         <Row icon="gift" label="Giới thiệu bạn bè và voucher" onPress={() => router.push("/gioi-thieu")} />
       </Section>

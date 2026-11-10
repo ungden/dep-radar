@@ -79,7 +79,7 @@ export default function NewRequest() {
     }, []),
   )
 
-  const dirty = !sent && (Boolean(description.trim()) || photos.length > 0)
+  const dirty = !sent && (step > 1 || timeChosen || Boolean(description.trim()) || photos.length > 0)
   const leaving = React.useRef(false)
   React.useEffect(() => {
     if (!dirty) return
@@ -362,13 +362,13 @@ export default function NewRequest() {
               </View>
               <View style={{ gap: 12 }}>
                 <View style={{ gap: 2 }}>
-                  <Txt v="title">Phí di chuyển tối đa</Txt>
+                  <Txt v="title">Artist ở xa tới đâu?</Txt>
                   <Txt v="meta" color={colors.muted}>
-                    Artist ở xa hơn mức này sẽ không nhận được đơn.
+                    Xa hơn thì phí di chuyển cao hơn, nhưng nhiều Artist nhận được đơn hơn.
                   </Txt>
                 </View>
                 {[POLICY.nearTravelFee, POLICY.travelFeeCap].map((n) => (
-                  <Option key={n} title={formatPrice(n)} selected={n === feeLimit} onPress={() => setFeeLimit(n)} />
+                  <Option key={n} title={n === POLICY.nearTravelFee ? `Gần tôi, dưới ${POLICY.nearTravelKm} km` : "Xa hơn cũng được"} trailing={n === POLICY.nearTravelFee ? formatPrice(n) : `tối đa ${formatPrice(n)}`} selected={n === feeLimit} onPress={() => setFeeLimit(n)} />
                 ))}
               </View>
             </>

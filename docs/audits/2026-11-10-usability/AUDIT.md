@@ -108,4 +108,6 @@ Chủ yêu cầu "làm lần lượt đến hết". Ảnh app sau khi sửa tron
 | 4 | Tên gọi: "Đặt theo nhu cầu", "Đơn theo nhu cầu", "Artist" (bỏ chuyên viên/người làm/người nhận), "360đẹp" trong mọi câu chữ. | C11, K12 |
 | 4 | Hồ sơ đối tác: mở từ Studio để sửa một phần thì chỉ hiện phần đó rồi quay lại; đăng ký mới có thanh tiến độ thay cho 6 chip; giờ làm theo từng thứ (Từ – Đến, nghỉ trưa, áp Thứ 2 cho cả tuần); tóm tắt phí 3 dòng trước khi gửi duyệt. | K8, K14 |
 
-Chưa làm: nhóm MCN và xác minh danh tính vẫn mở web (xác minh đang tắt nên đã ẩn); chưa có lưới quản lý tác phẩm riêng (dòng "Tác phẩm của tôi" mở hồ sơ công khai); "Gửi / chép" mở bảng chia sẻ của hệ thống vì app chưa có module clipboard (cần build mới). Chưa thử Android và máy thật.
+Bổ sung 11/11: Studio có màn **Tác phẩm của tôi** (xem, xoá, đăng mới); giờ làm gọn thành chọn ngày + một khung giờ, cần thì mở từng ngày; đăng ký đối tác bước đầu tách hai màn (làm gì / ở đâu); nút Sao chép nội dung chuyển khoản chép thật; form địa chỉ mới chỉ hỏi nơi ở, tên gọi và ghi chú để mở thêm; dòng gói ở trang dịch vụ bấm được; Khám phá chỉ còn một lối "Đặt theo nhu cầu"; Lịch hẹn có nút tin nhắn; MCN chỉ hiện với người có lời mời hoặc đang trong nhóm; trang chính sách không còn sập khi mất kết nối database.
+
+Chưa làm: nhóm MCN (với người trong nhóm) và xác minh danh tính (đang tắt) vẫn trên web. Chưa thử Android và máy thật.

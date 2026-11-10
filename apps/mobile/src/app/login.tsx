@@ -257,7 +257,7 @@ export default function Login() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
               <View style={{ flex: 1, height: 1, backgroundColor: colors.line }} />
               <Txt v="meta" color={colors.muted}>
-                hoặc dùng email
+                hoặc dùng email, số điện thoại
               </Txt>
               <View style={{ flex: 1, height: 1, backgroundColor: colors.line }} />
             </View>

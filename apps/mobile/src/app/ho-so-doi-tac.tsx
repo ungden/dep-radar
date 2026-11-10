@@ -41,6 +41,10 @@ export default function PartnerProfile() {
   const [amenities, setAmenities] = React.useState<string[]>([])
   const [hours, setHours] = React.useState<{ weekday: number; start: string; end: string }[]>([])
   const [agree, setAgree] = React.useState(false)
+  // Working hours: the same every working day unless the partner asks for more.
+  const [perDay, setPerDay] = React.useState(false)
+  // Sign-up, first step: what you do, then where.
+  const [firstPart, setFirstPart] = React.useState<"what" | "where">("what")
   const [editing, setEditing] = React.useState<string | null>(null)
   const [prices, setPrices] = React.useState<Record<string, number>>({})
   // The partner's own words on each package (makeup); empty means the catalogue's "Bao gồm".
@@ -122,7 +126,7 @@ export default function PartnerProfile() {
         <View style={{ flexDirection: "row", gap: 4 }}>
           {PARTNER_STEPS.map((label, i) => (
             <Press key={label} accessibilityRole="button" accessibilityLabel={`Bước ${i + 1}: ${stepLabel(i)}${steps[i].done ? ", đã xong" : ""}`} disabled={busy || (!setup.profile && i > 0)} onPress={() => { setStep(i); setEditing(null) }} style={{ flex: 1, paddingVertical: 8 }}>
-              <View style={{ height: 4, borderRadius: 2, backgroundColor: i === step ? colors.accent : steps[i].done ? colors.accentSoft : colors.line }} />
+              <View style={{ height: 4, borderRadius: 2, backgroundColor: i === step || steps[i].done ? colors.accent : colors.line, opacity: i === step || !steps[i].done ? 1 : 0.35 }} />
             </Press>
           ))}
         </View>
@@ -131,17 +135,22 @@ export default function PartnerProfile() {
     )}
     {error && <Txt color={colors.danger}>{error}</Txt>}
     {step === 0 && <>
+      {editOnly || firstPart === "what" ? <>
       <Txt w={700}>Bạn là</Txt>
       <Choice label={`${!spa ? "✓ " : ""}${SPA.artistKind} · ${SPA.artistKindText}`} active={!spa} disabled={busy} onPress={() => setKind("artist")} />
       <Choice label={`${spa ? "✓ " : ""}${SPA.partnerKind} · ${SPA.partnerKindText}`} active={spa} disabled={busy} onPress={() => { setKind("spa"); setCategories((s) => s.filter((c) => (SPA_CATEGORIES as readonly string[]).includes(c))) }} />
       {spa && <Field label="Tên spa" value={spaName} onChange={setSpaName} />}
       <Txt color={colors.inkSoft}>Chọn đúng các {spa ? "dịch vụ" : "nghề"} bạn cung cấp. Bỏ {spa ? "dịch vụ" : "nghề"} sẽ tạm ẩn các gói thuộc nhóm đó.</Txt>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{CATEGORIES.filter((c) => !spa || (SPA_CATEGORIES as readonly string[]).includes(c.id)).map((c) => <Choice key={c.id} label={c.label + (c.vertical === "model" ? " · sắp mở" : "")} disabled={busy || c.vertical === "model"} active={categories.includes(c.id)} onPress={() => setCategories((s) => s.includes(c.id) ? s.filter((x) => x !== c.id) : [...s, c.id])} />)}</View>
+      </> : null}
+      {!editOnly && firstPart === "what" ? <Button full label="Tiếp tục" disabled={!categories.length || (spa && spaName.trim().length < 2)} onPress={() => setFirstPart("where")} /> : <>
+      {!editOnly ? <Press accessibilityRole="button" onPress={() => setFirstPart("what")} style={{ alignSelf: "flex-start", minHeight: 36, justifyContent: "center" }}><Txt v="meta" w={600} color={colors.accentDark}>‹ Đổi {spa ? "dịch vụ" : "nghề"}</Txt></Press> : null}
       <Field label="Dòng giới thiệu" value={title} onChange={setTitle} />
       <Txt w={700}>Thành phố</Txt><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{CITIES.map((c) => <Choice key={c} label={c} active={city === c} onPress={() => { setCity(c); if (!districtsOf(c).includes(district)) setDistrict("") }} />)}</View>
       <Txt w={700}>{spa ? "Phường / xã của spa" : "Phường / xã nơi bạn làm"}</Txt><WardPicker city={city} value={district} onChange={(choice) => { setCity(choice.city); setDistrict(choice.district) }} />
       {spa && <Field label="Số nhà, tên đường" value={studio} onChange={setStudio} />}
       <Button full label={editOnly ? "Lưu" : "Lưu & chọn dịch vụ"} busy={busy} disabled={!categories.length || title.trim().length < 3 || !districtsOf(city).includes(district) || (spa && (spaName.trim().length < 2 || studio.trim().length < 5))} onPress={() => void saveFirstStep()} />
+      </>}
     </>}
     {step === 1 && <>
       <Txt color={colors.inkSoft}>{PRICE_LEVEL_NOTE} Chỉ bật những gói bạn thực hiện được.</Txt>
@@ -204,6 +213,24 @@ export default function PartnerProfile() {
     {step === 3 && <>
       <Txt color={colors.inkSoft}>Khách chỉ thấy giờ trống trong khung này. Ngày nghỉ lẻ báo ở tab Lịch.</Txt>
       {!hours.length && <Button label="Dùng giờ gợi ý T2–T7, 9:00–19:00" variant="secondary" onPress={() => setHours(DEFAULT_WORKING_WINDOWS.map((h) => ({ weekday: h.weekday, start: timeLabel(h.startMin), end: timeLabel(h.endMin) })))} />}
+      {!perDay && sameEveryDay(hours) ? <>
+        <Txt w={700}>Ngày làm</Txt>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          {[1, 2, 3, 4, 5, 6, 0].map((d) => {
+            const on = hours.some((h) => h.weekday === d)
+            const name = d === 0 ? "CN" : `T${d + 1}`
+            return <Press key={d} haptic="select" accessibilityRole="checkbox" accessibilityState={{ checked: on }} accessibilityLabel={d === 0 ? "Chủ nhật" : `Thứ ${d + 1}`} onPress={() => setHours((s) => on ? s.filter((w) => w.weekday !== d) : [...s, { start: s[0]?.start ?? "09:00", end: s[0]?.end ?? "19:00", weekday: d }])} style={{ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: on ? colors.accent : colors.surface }}><Txt v="meta" w={700} color={on ? colors.surface : colors.inkSoft}>{name}</Txt></Press>
+          })}
+        </View>
+        {hours.length ? <>
+          <Txt w={700}>Giờ làm</Txt>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <View style={{ flex: 1 }}><TimeField label="Từ" value={hours[0].start} onChange={(x) => setHours((s) => s.map((w) => ({ ...w, start: x })))} /></View>
+            <View style={{ flex: 1 }}><TimeField allowEndOfDay label="Đến" value={hours[0].end} onChange={(x) => setHours((s) => s.map((w) => ({ ...w, end: x })))} /></View>
+          </View>
+          <Press accessibilityRole="button" onPress={() => setPerDay(true)} style={{ alignSelf: "flex-start", minHeight: 40, justifyContent: "center" }}><Txt v="meta" w={600} color={colors.accentDark}>Mỗi ngày một giờ khác, hoặc nghỉ trưa</Txt></Press>
+        </> : null}
+      </> : <>
       <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 16 }}>
         {[1, 2, 3, 4, 5, 6, 0].map((d, row) => {
           const own = hours.map((h, i) => ({ h, i })).filter((x) => x.h.weekday === d)
@@ -230,6 +257,7 @@ export default function PartnerProfile() {
         })}
       </View>
       {hours.some((h) => h.weekday === 1) && <Button label="Áp giờ Thứ 2 cho Thứ 3 – Thứ 7" variant="ghost" onPress={() => setHours((s) => { const mon = s.filter((w) => w.weekday === 1); return [...s.filter((w) => w.weekday === 0 || w.weekday === 1), ...[2, 3, 4, 5, 6].flatMap((d) => mon.map((w) => ({ ...w, weekday: d })))] })} />}
+      </>}
       <Button full label={editOnly ? "Lưu giờ làm" : "Lưu & tiếp tục"} busy={busy} disabled={!hours.length || hours.some((h) => !/^\d{2}:\d{2}$/.test(h.start) || !/^\d{2}:\d{2}$/.test(h.end) || !Number.isFinite(minutes(h.start)) || !Number.isFinite(minutes(h.end)) || minutes(h.start) >= minutes(h.end))} onPress={() => void mutate("confirm_partner_hours", { p_windows: hours.map((h) => ({ weekday: h.weekday, startMin: minutes(h.start), endMin: minutes(h.end) })) }, 4)} />
     </>}
     {step === 4 && <><Txt>Bạn đã có {setup.workCount} tác phẩm hợp lệ. Đăng ảnh công việc thực tế để khách xem trước khi đặt.</Txt><Button label="Đăng tác phẩm" onPress={() => router.push("/studio/dang")} /><Button label="Cập nhật số tác phẩm" variant="secondary" onPress={() => void load()} /><Button label="Tiếp tục: gửi duyệt" onPress={() => setStep(5)} /></>}
@@ -261,6 +289,10 @@ export default function PartnerProfile() {
   </ScrollView>
 }
 const EDIT_TITLE: Record<number, string> = { 0: "Hồ sơ của bạn", 1: "Dịch vụ và bảng giá", 2: "Khu vực phục vụ", 3: "Giờ làm việc" }
+/** One window a day, the same on every working day: the short form can show it. */
+function sameEveryDay(hours: { weekday: number; start: string; end: string }[]) {
+  return new Set(hours.map((h) => h.weekday)).size === hours.length && new Set(hours.map((h) => `${h.start}-${h.end}`)).size <= 1
+}
 function timeLabel(m: number) { return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}` }
 function minutes(s: string) { const [h, m] = s.split(":").map(Number); return h >= 0 && h <= 24 && m >= 0 && m < 60 && (h < 24 || m === 0) ? h * 60 + m : NaN }
 function PackageNote({ value, onChange, fallback }: { value: string; onChange: (s: string) => void; fallback: string }) {

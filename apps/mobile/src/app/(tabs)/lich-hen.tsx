@@ -13,6 +13,7 @@ import { TextTabs } from "@/components/switches"
 import { useApp } from "@/state/app"
 import { useAsync } from "@/state/use-async"
 import { colors, gutter, radius } from "@/theme"
+import { IconButton } from "@/ui/button"
 import { EmptyState, ErrorNote, Skeleton } from "@/ui/bits"
 import { haptic } from "@/ui/haptics"
 import { Press } from "@/ui/press"
@@ -34,7 +35,7 @@ const RECENT = 2 * 24 * 3_600_000
  * request sent a minute ago is never "Chưa có lịch sắp tới".
  */
 export default function MyBookings() {
-  const { uid } = useApp()
+  const { uid, me } = useApp()
   const [tab, setTab] = React.useState<"upcoming" | "past">("upcoming")
   const bookings = useAsync(uid ? () => listBookings(uid, "customer") : null, [uid])
   const requests = useAsync(uid ? () => listMyRequests(uid) : null, [uid])
@@ -122,7 +123,7 @@ export default function MyBookings() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
-      <PageBand title="Lịch hẹn">
+      <PageBand title="Lịch hẹn" right={<IconButton name="chat" label="Tin nhắn" badge={me.unreadMessages} onPress={() => router.push("/tin-nhan")} />}>
         <TextTabs
           items={[
             { value: "upcoming", label: "Sắp tới" },

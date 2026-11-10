@@ -300,7 +300,8 @@ function BookingFlow() {
 
   const next = () => (step < 4 ? setStep(step + 1) : void submit())
   // The last step never dead-ends: signed out it leads to sign-in, without an address to the address form.
-  const canNext = step <= 2 ? lines.length > 0 : step === 3 ? Boolean(picked) : Boolean(picked) && !tooFar
+  const secondOk = (variant?.sessions ?? 1) <= 1 || Boolean(picked && appointmentAt(secondDate, secondTime) && appointmentAt(secondDate, secondTime)! > picked.startsAt)
+  const canNext = step <= 2 ? lines.length > 0 : step === 3 ? Boolean(picked) : Boolean(picked) && !tooFar && secondOk
   const action =
     step === 1 ? "Xem giỏ" : step === 2 ? "Chọn giờ" : step === 3 ? "Tiếp tục" : !app.uid ? "Đăng nhập để đặt" : atHome && !address ? "Thêm địa chỉ" : !app.me.account?.phone ? "Thêm số điện thoại" : "Gửi lịch hẹn"
   const days = Array.from({ length: 14 }, (_, i) => addDays(todayISO(), i))

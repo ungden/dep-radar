@@ -1,3 +1,4 @@
+import { LogBox } from "react-native"
 import * as React from "react"
 import { Inter_400Regular } from "@expo-google-fonts/inter/400Regular"
 import { Inter_500Medium } from "@expo-google-fonts/inter/500Medium"
@@ -15,6 +16,9 @@ import { AppProvider, useApp } from "@/state/app"
 import { colors, fonts } from "@/theme"
 
 void SplashScreen.preventAutoHideAsync()
+
+// Development only: React Native's own notices, nothing the app can act on.
+LogBox.ignoreLogs(["Sending `onAnimatedValueUpdate`", "Clipboard has been extracted"])
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -103,6 +107,7 @@ function Navigator() {
       <Stack.Screen name="doi-mat-khau" options={{ title: "Mật khẩu", presentation: "modal" }} />
       <Stack.Screen name="ho-so-doi-tac" options={{ title: "Hồ sơ đối tác" }} />
       <Stack.Screen name="vi" options={{ title: "Ví" }} />
+      <Stack.Screen name="tac-pham" options={{ title: "Tác phẩm" }} />
       <Stack.Screen name="doi-tac" options={{ title: "360đẹp Đối tác" }} />
       <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
     </Stack>

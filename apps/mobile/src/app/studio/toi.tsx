@@ -136,7 +136,7 @@ export default function StudioMe() {
           <Divider style={{ marginLeft: 52 }} />
           <Row icon="person" label="Sửa hồ sơ" internal onPress={() => router.push("/ho-so-doi-tac?step=0")} />
           <Divider style={{ marginLeft: 52 }} />
-          <Row icon="photos" label="Tác phẩm của tôi" internal onPress={() => router.push({ pathname: "/pros/[id]", params: { id: pro.id } })} />
+          <Row icon="photos" label="Tác phẩm của tôi" internal onPress={() => router.push("/tac-pham")} />
           <Divider style={{ marginLeft: 52 }} />
           <Row icon="wallet" label="Ví và tài khoản nhận tiền" internal onPress={() => router.push("/vi")} />
         </View>

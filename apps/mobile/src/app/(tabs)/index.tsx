@@ -4,7 +4,7 @@ import { Image } from "expo-image"
 import { router } from "expo-router"
 import { FlatList, ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { CATEGORIES, REQUEST_GOALS, SPA, SPA_TINT, editorialTemplates, marketplaceFeed, type CategoryId, type MarketplaceTile, type ServiceTemplate } from "@/shared"
+import { CATEGORIES, SPA, SPA_TINT, editorialTemplates, marketplaceFeed, type CategoryId, type MarketplaceTile, type ServiceTemplate } from "@/shared"
 import { OfflineNote } from "@/components/offline-note"
 import { CategoryRail, Section, TileSkeleton, illustration, tileWidth } from "@/components/tiles"
 import { TextTabs } from "@/components/switches"
@@ -143,16 +143,6 @@ export default function Explore() {
               })}
             </ScrollView>
           </View> : null}
-          <View style={{ paddingHorizontal: gutter, gap: 8 }}>
-            <Section title={requestCopy.vi.title} action="Bắt đầu" onAction={() => router.push("/yeu-cau/moi")} />
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              {REQUEST_GOALS.map((g) => <Press key={g.templateId}
-                onPress={() => router.push({ pathname: "/yeu-cau/moi", params: { template: g.templateId, variant: g.variantId } })}
-                style={{ minHeight: 44, justifyContent: "center", borderRadius: radius.full, paddingHorizontal: 12, backgroundColor: colors.accentSoft }}>
-                <Txt v="meta" w={600} color={colors.accentDark}>{g.label}</Txt>
-              </Press>)}
-            </View>
-          </View>
         </View>}
       />
     </View>

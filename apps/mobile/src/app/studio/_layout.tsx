@@ -8,7 +8,7 @@ import { colors } from "@/theme"
 import { tabBarProps } from "@/ui/native-tabs"
 
 const TABS = [
-  { name: "index", label: "Hôm nay", sf: "house", md: "home" },
+  { name: "index", label: "Việc", sf: "house", md: "home" },
   { name: "viec-moi", label: "Đơn", sf: "bolt", md: "bolt" },
   { name: "dang", label: "Đăng", sf: "plus", md: "add" },
   { name: "lich", label: "Lịch", sf: "calendar", md: "calendar_month" },

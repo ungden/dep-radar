@@ -378,7 +378,7 @@ export default function BookingDetail() {
       </Card>
 
       <BookingContract booking={b} />
-      {b.status === "completed" && b.delivery && !b.delivery.acceptedAt && <Txt color={colors.warning}>{b.delivery.deliveredAt ? "Chờ khách xác nhận sản phẩm" : "Xong buổi làm · chờ giao sản phẩm"}</Txt>}
+      {b.status === "completed" && b.delivery && !b.delivery.acceptedAt && <Txt color={colors.warning}>{b.delivery.deliveredAt ? (iAmPro ? "Chờ khách xác nhận đã nhận file" : "Xem file rồi bấm Đã nhận đủ file") : iAmPro ? "Xong buổi làm · bạn cần giao file" : `Xong buổi làm · chờ ${b.pro.name} giao file`}</Txt>}
       <Card>
         {b.lines ? b.lines.map((line) => <Line key={line.id} label={`${line.serviceName} · ${line.variantLabel}${line.quantity > 1 ? ` × ${line.quantity}` : ""}`} value={formatPrice(line.servicePrice)} />) : <Line label="Dịch vụ" value={formatPrice(b.quote.servicePrice)} />}
         {b.quote.travelFee ? <Line label="Phí di chuyển" value={formatPrice(b.quote.travelFee)} /> : null}

@@ -3,7 +3,7 @@ import { Image } from "expo-image"
 import { File, Paths } from "expo-file-system"
 import { Asset, requestPermissionsAsync } from "expo-media-library"
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet"
-import { Alert, ScrollView, Share, View } from "react-native"
+import { Alert, Clipboard, ScrollView, View } from "react-native"
 import { formatPrice, localDate } from "@/data/format"
 import {
   feeMemo,
@@ -122,9 +122,9 @@ export default function Wallet() {
                     <Txt w={800} selectable tabular>
                       {memo}
                     </Txt>
-                    <Press onPress={() => void Share.share({ message: memo })} accessibilityLabel={`Gửi nội dung ${memo}`} style={{ minHeight: 36, paddingHorizontal: 12, borderRadius: radius.full, backgroundColor: colors.accentSoft, justifyContent: "center" }}>
+                    <Press onPress={() => { Clipboard.setString(memo); haptic.success(); toast.show("Đã chép nội dung chuyển khoản") }} accessibilityLabel={`Sao chép nội dung ${memo}`} style={{ minHeight: 36, paddingHorizontal: 12, borderRadius: radius.full, backgroundColor: colors.accentSoft, justifyContent: "center" }}>
                       <Txt v="meta" w={700} color={colors.accentDark}>
-                        Gửi / chép
+                        Sao chép
                       </Txt>
                     </Press>
                   </View>
