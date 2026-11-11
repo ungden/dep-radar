@@ -61,7 +61,7 @@ export default function Reports() {
         keyboardShouldPersistTaps="handled"
       >
         <Txt color={colors.inkSoft}>
-          Gặp vấn đề trong lúc dùng 360dep hoặc sau buổi làm? Gửi kèm ảnh, clip làm bằng chứng. Đội ngũ xem trong 24 giờ làm việc, có thể hỏi
+          Gặp vấn đề trong lúc dùng 360đẹp hoặc sau buổi làm? Gửi kèm ảnh, clip làm bằng chứng. Đội ngũ xem trong 24 giờ làm việc, có thể hỏi
           thêm, và báo kết quả tại đây. Phía bên kia không biết ai báo.
         </Txt>
         {writing ? (
@@ -192,7 +192,7 @@ function ReportItem({ uid, report: r, onChanged }: { uid: string; report: MyRepo
       {r.staffQuestion && open ? (
         <View style={{ backgroundColor: colors.warningSoft, borderRadius: radius.md, padding: 10 }}>
           <Txt>
-            <Txt w={700}>360dep cần thêm thông tin: </Txt>
+            <Txt w={700}>360đẹp cần thêm thông tin: </Txt>
             {r.staffQuestion}
           </Txt>
         </View>
@@ -221,7 +221,7 @@ function ReportItem({ uid, report: r, onChanged }: { uid: string; report: MyRepo
           <TextInput
             value={note}
             onChangeText={setNote}
-            placeholder={r.staffQuestion ? "Trả lời câu hỏi của 360dep" : "Thêm chi tiết hoặc diễn biến mới"}
+            placeholder={r.staffQuestion ? "Trả lời câu hỏi của 360đẹp" : "Thêm chi tiết hoặc diễn biến mới"}
             placeholderTextColor={colors.muted}
             multiline
             maxLength={1000}

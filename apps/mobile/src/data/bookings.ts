@@ -290,6 +290,8 @@ export const confirmBookingDone = (id: string) => rpc("confirm_booking_done", { 
 export const reportProNoShow = (id: string, detail: string) => rpc("report_pro_no_show", { p_booking: id, p_detail: detail })
 /** The customer's answer to being marked absent, within 24 hours (20260924100700_no_show_hold.sql). */
 export const disputeNoShow = (id: string, reason: string) => rpc<string>("dispute_no_show", { p_booking: id, p_reason: reason })
+/** The partner's answer to a customer saying they never came, within 24 hours (20261007100200_dispute_tools.sql). */
+export const disputeProNoShow = (id: string, reason: string) => rpc<string>("dispute_pro_no_show", { p_booking: id, p_reason: reason })
 export const markNoShow = (id: string, reason: string) => rpc("mark_no_show", { p_booking: id, p_reason: reason })
 export const requestReschedule = (id: string, date: string, time: string) => rpc("request_reschedule", { p_booking: id, p_starts_at: toTimestamptz(date, time) })
 export const deliverBooking = (id: string, url: string, note: string) => rpc("deliver_booking", { p_booking: id, p_url: url, p_note: note })
@@ -336,4 +338,28 @@ export async function listPartnerAppointments(uid: string) {
   if (error) throw new Error("Không tải được các buổi tiếp theo. Thử lại khi có mạng.")
   type Appointment = { id: string; booking_id: string; sequence: number; starts_at: string; duration_min: number; confirmed: boolean; booking: { status: string; service_contract: { serviceName: string } } }
   return (data as unknown as Appointment[]).filter((s) => ["pending", "confirmed", "in_progress", "completed"].includes(s.booking.status)).map((s) => ({ ...s, serviceName: s.booking.service_contract.serviceName }))
+}
+
+/** Bookings waiting for this partner's answer, for the Studio tab badge. */
+export async function countPendingForPro(uid: string): Promise<number> {
+  const { count } = await supabase
+    .from("bookings")
+    .select("id", { count: "exact", head: true })
+    .eq("pro_id", uid)
+    .eq("status", "pending")
+    .gt("confirm_by", new Date().toISOString())
+  return count ?? 0
+}
+
+/**
+ * Bookings where the customer has something to do: confirm a job whose time
+ * has come, or answer the partner's new time. For the Lịch hẹn tab badge.
+ */
+export async function countCustomerToDo(uid: string): Promise<number> {
+  const nowIso = new Date().toISOString()
+  const [started, moved] = await Promise.all([
+    supabase.from("bookings").select("id", { count: "exact", head: true }).eq("customer_id", uid).in("status", ["confirmed", "in_progress"]).lt("starts_at", nowIso).is("parent_booking_id", null),
+    supabase.from("bookings").select("id", { count: "exact", head: true }).eq("customer_id", uid).eq("status", "confirmed").eq("reschedule_by", "pro").not("reschedule_to", "is", null),
+  ])
+  return (started.count ?? 0) + (moved.count ?? 0)
 }

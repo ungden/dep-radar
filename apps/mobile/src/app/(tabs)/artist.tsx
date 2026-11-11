@@ -180,13 +180,13 @@ export default function Artists() {
             <Press
               onPress={() => router.push(chosen ? { pathname: "/yeu-cau/moi", params: { template: chosen.id } } : "/yeu-cau/moi")}
               accessibilityRole="button"
-              accessibilityLabel="Đặt theo dịch vụ, Artist sẽ vào nhận đơn"
+              accessibilityLabel="Đặt theo nhu cầu, Artist phù hợp sẽ nhận"
               style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 18, marginTop: 20, marginBottom: 8, borderRadius: radius.lg, backgroundColor: colors.highlightSoft }}
             >
               <View style={{ flex: 1, gap: 2 }}>
                 <Txt w={700}>Chưa thấy Artist hợp ý?</Txt>
                 <Txt v="meta" color={colors.inkSoft}>
-                  Đặt theo dịch vụ, Artist sẽ vào nhận đơn.
+                  Đặt theo nhu cầu, Artist phù hợp sẽ nhận.
                 </Txt>
               </View>
               <View style={{ minHeight: 34, paddingHorizontal: 14, borderRadius: radius.full, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}>
@@ -213,7 +213,7 @@ export default function Artists() {
             <EmptyState
               title={chosen ? `Chưa có Artist làm ${chosen.name}${where}` : `Chưa có Artist nào${where}`}
               text="Bạn vẫn đặt được theo dịch vụ, Artist mới vào sẽ thấy đơn của bạn."
-              action="Đặt theo dịch vụ"
+              action="Đặt theo nhu cầu"
               onAction={() => router.push(chosen ? { pathname: "/yeu-cau/moi", params: { template: chosen.id } } : "/yeu-cau/moi")}
             />
           )

@@ -57,7 +57,7 @@ export default function PortfolioImages() {
     try {
       const permission = await requestPermissionsAsync(true, ["photo"])
       if (!permission.granted) {
-        Alert.alert("Cần quyền lưu ảnh", "Cho phép 360dep thêm ảnh vào thư viện trong Cài đặt để lưu ảnh portfolio.")
+        Alert.alert("Cần quyền lưu ảnh", "Cho phép 360đẹp thêm ảnh vào thư viện trong Cài đặt để lưu ảnh portfolio.")
         return
       }
       const file = await download()

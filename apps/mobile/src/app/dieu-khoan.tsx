@@ -11,10 +11,10 @@ import { Icon } from "@/ui/icon"
 import { Txt } from "@/ui/text"
 
 const POINTS = [
-  "360dep không dung thứ nội dung phản cảm hay người dùng lạm dụng. Không đăng hay gửi nội dung khiêu dâm, bạo lực, thù ghét, lừa đảo hoặc xúc phạm người khác.",
-  "Không yêu cầu hay chuyển tiền cọc ngoài lịch hẹn. 360dep không bao giờ thu phí hồ sơ.",
-  "Bấm ⋯ trên hồ sơ, tác phẩm, cuộc trò chuyện, hoặc Báo cáo dưới một đánh giá, để báo cáo hay chặn người làm bạn khó chịu. Người bị chặn biến mất khỏi máy bạn ngay và 360dep được báo.",
-  "360dep xử lý mọi báo cáo trong 24 giờ: gỡ nội dung vi phạm và khoá tài khoản đã đăng nội dung đó.",
+  "360đẹp không dung thứ nội dung phản cảm hay người dùng lạm dụng. Không đăng hay gửi nội dung khiêu dâm, bạo lực, thù ghét, lừa đảo hoặc xúc phạm người khác.",
+  "Không yêu cầu hay chuyển tiền cọc ngoài lịch hẹn. 360đẹp không bao giờ thu phí hồ sơ.",
+  "Bấm ⋯ trên hồ sơ, tác phẩm, cuộc trò chuyện, hoặc Báo cáo dưới một đánh giá, để báo cáo hay chặn người làm bạn khó chịu. Người bị chặn biến mất khỏi máy bạn ngay và 360đẹp được báo.",
+  "360đẹp xử lý mọi báo cáo trong 24 giờ: gỡ nội dung vi phạm và khoá tài khoản đã đăng nội dung đó.",
 ]
 
 /**
@@ -50,7 +50,7 @@ export default function Terms() {
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
       <ScrollView contentContainerStyle={{ padding: gutter, gap: 16 }}>
         <Txt v="h2">{reading ? "Điều khoản sử dụng" : "Trước khi bắt đầu"}</Txt>
-        <Txt color={colors.inkSoft}>360dep là nơi khách và người làm gặp nhau. Để ai cũng an toàn, bạn đồng ý với điều khoản sử dụng:</Txt>
+        <Txt color={colors.inkSoft}>360đẹp là nơi khách và Artist gặp nhau. Để ai cũng an toàn, bạn đồng ý với điều khoản sử dụng:</Txt>
         <View style={{ backgroundColor: colors.surface, borderRadius: radius.md, padding: 16, gap: 12 }}>
           {POINTS.map((p) => (
             <View key={p} style={{ flexDirection: "row", gap: 10 }}>

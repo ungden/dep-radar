@@ -251,7 +251,7 @@ export default function WriteReview() {
         </View>
 
         <Txt v="meta" color={colors.muted}>
-          Còn {win.daysLeft} ngày để {editing ? "sửa" : "đánh giá"}. Đánh giá hiện công khai thì không sửa được nữa. Đánh giá được gắn nhãn “Đã đặt qua 360dep”; Artist không xoá được, chỉ trả lời công khai.
+          Còn {win.daysLeft} ngày để {editing ? "sửa" : "đánh giá"}. Đánh giá hiện công khai thì không sửa được nữa. Đánh giá được gắn nhãn “Đã đặt qua 360đẹp”; Artist không xoá được, chỉ trả lời công khai.
         </Txt>
         {error ? <ErrorNote text={error} /> : null}
       </ScrollView>

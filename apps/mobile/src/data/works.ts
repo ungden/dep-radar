@@ -91,3 +91,36 @@ export async function saveWork(
   if (error) return { ok: false, error: messageFor(error) }
   return { ok: true, data: (data as { id: string }).id }
 }
+
+/** One of the partner's own works, for managing them. */
+export interface MyWork {
+  id: string
+  slug: string
+  title: string
+  templateId: string
+  cover: string | null
+  photos: number
+}
+
+export async function listMyWorks(uid: string): Promise<MyWork[]> {
+  const { data, error } = await supabase
+    .from("works")
+    .select("id, slug, title, template_id, image_paths")
+    .eq("pro_id", uid)
+    .order("created_at", { ascending: false })
+  if (error) throw new Error("Không tải được tác phẩm. Kiểm tra kết nối rồi thử lại.")
+  return ((data ?? []) as Record<string, any>[]).map((w) => ({
+    id: w.id,
+    slug: w.slug || w.id,
+    title: w.title ?? "",
+    templateId: w.template_id,
+    cover: w.image_paths?.[0] ?? null,
+    photos: w.image_paths?.length ?? 0,
+  }))
+}
+
+/** Same as the web's deleteWork: own rows only, by the "pro removes own works" policy. */
+export async function deleteWork(id: string): Promise<Result> {
+  const { error } = await supabase.from("works").delete().eq("id", id)
+  return error ? { ok: false, error: messageFor(error, "Chưa xoá được tác phẩm. Thử lại nhé.") } : { ok: true, data: undefined }
+}

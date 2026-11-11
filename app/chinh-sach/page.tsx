@@ -1,3 +1,4 @@
+import { MCN_POLICY } from "@/lib/mcn"
 import { getMcnPolicy } from "@/lib/api/mcn"
 import type { Metadata } from "next"
 import Link from "next/link"
@@ -24,7 +25,8 @@ const pct = (n: number) => `${Math.round(n * 100)}%`
  * (commission, wallet).
  */
 export default async function PolicyPage() {
-  const mcnPolicy=await getMcnPolicy()
+  // The published numbers when the database is unreachable: a legal page should not go down with it.
+  const mcnPolicy=await getMcnPolicy().catch(()=>MCN_POLICY)
   return (
     <div className="mx-auto max-w-2xl md:pt-4">
       <PageHeader title="Chính sách phí & đặt lịch" back />

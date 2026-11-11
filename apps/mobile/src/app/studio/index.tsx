@@ -1,16 +1,18 @@
 import * as React from "react"
 import { router } from "expo-router"
-import { Alert, ScrollView, View } from "react-native"
-import { confirmBooking, listBookings, type BookingItem } from "@/data/bookings"
-import { addDays, formatCountdown, formatDateLong, formatPrice, localDate, todayISO } from "@/data/format"
+import { ScrollView, View } from "react-native"
+import { listBookings, type BookingItem } from "@/data/bookings"
+import { addDays, formatDateLong, formatPrice, localDate, todayISO } from "@/data/format"
 import { AcceptingSwitch } from "@/components/accepting-switch"
-import { FeeCard, OWING_NOTE, useFee } from "@/components/fee-card"
+import { FeeCard, useFee } from "@/components/fee-card"
 import { PartnerAppointments } from "@/components/partner-appointments"
+import { PendingBookingCard, UpcomingJobCard } from "@/components/partner-cards"
 import { BedBoard } from "@/components/bed-board"
-import { isSpa } from "@/shared"
+import { isSpa, travelDistanceKm } from "@/shared"
 import { StudioHeader } from "@/components/studio-header"
 import { useApp } from "@/state/app"
 import { useNow } from "@/state/keyboard"
+import { usePartnerReview } from "@/state/partner-review"
 import { useAsync } from "@/state/use-async"
 import { colors, gutter, hairline, radius } from "@/theme"
 import { Button } from "@/ui/button"
@@ -19,38 +21,41 @@ import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
 import { refreshControl } from "@/ui/refresh"
 import { Txt } from "@/ui/text"
+import { useToast } from "@/ui/toast"
 
-/** The freelancer's home: a fee to pay first, bookings to accept, where to be today, what this week earned. */
+/**
+ * The partner's home, in the order they act on it: bookings waiting for an
+ * answer, the jobs coming up with the next button to press, then money.
+ * Before the profile is live it says what is left instead.
+ */
 export default function Today() {
   const app = useApp()
   const uid = app.uid
+  const pro = app.myPro
   const bookings = useAsync(uid ? () => listBookings(uid, "pro") : null, [uid])
   const fee = useFee(uid)
-  const [busy, setBusy] = React.useState<string | null>(null)
+  const review = usePartnerReview(uid)
+  const toast = useToast(112)
   const all = bookings.value ?? []
   const hasPending = all.some((b) => b.status === "pending")
-  // Ticks only while a confirmation countdown is on screen.
-  const now = useNow(hasPending)
+  const now = useNow(true)
 
   const today = todayISO()
   const monday = addDays(today, -((new Date(`${today}T00:00:00Z`).getUTCDay() + 6) % 7))
   const toAccept = all.filter((b) => b.status === "pending").sort((a, b) => a.confirmBy.localeCompare(b.confirmBy))
-  const spa = isSpa(app.myPro)
-  const todays = all.filter((b) => b.date === today && ["confirmed", "in_progress"].includes(b.status)).sort((a, b) => a.time.localeCompare(b.time))
+  const spa = isSpa(pro)
+  const upcoming = all
+    .filter((b) => (b.status === "confirmed" || b.status === "in_progress") && b.date <= addDays(today, 7))
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+  const later = all.filter((b) => b.status === "confirmed" && b.date > addDays(today, 7)).length
   const week = all.filter((b) => b.status === "completed" && b.completedAt && localDate(b.completedAt) >= monday)
-  const earned = week.reduce((sum, b) => sum + b.quote.payout, 0)
-  const next = all
-    .filter((b) => b.status === "confirmed" && b.date > today)
-    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0]
+  const kept = week.reduce((sum, b) => sum + b.quote.payout, 0)
+  const owed = fee.owing && fee.value ? -fee.value.balance : 0
+  const km = (b: BookingItem) => (b.atHome && pro ? travelDistanceKm(pro.city, pro.district, b.city, b.district) : null)
 
-  const accept = async (b: BookingItem) => {
-    setBusy(b.id)
-    const res = await confirmBooking(b.id)
-    setBusy(null)
-    if (!res.ok) {
-      void fee.reload()
-      return Alert.alert("Chưa nhận được lịch", res.error)
-    }
+  const accepted = (b: BookingItem) => {
+    bookings.setValue((list) => list?.map((x) => (x.id === b.id ? { ...x, status: "confirmed" } : x)))
+    toast.show(`Đã nhận lịch của ${b.customer.name}`)
     void bookings.reload()
   }
 
@@ -58,13 +63,13 @@ export default function Today() {
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
       <StudioHeader title="Hôm nay" subtitle={formatDateLong(today)}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: gutter, paddingTop: 8, paddingBottom: 12 }}>
-          {app.myPro?.published ? (
+          {pro?.published ? (
             <>
-              <Txt w={600}>{app.myPro.acceptingJobs ? "Đang nhận lịch mới" : "Đang tạm nghỉ"}</Txt>
+              <Txt w={600}>{pro.acceptingJobs ? "Đang nhận lịch mới" : "Đang tạm nghỉ"}</Txt>
               <AcceptingSwitch />
             </>
           ) : (
-            <Txt w={600}>Hồ sơ chưa hiện với khách, xem ở tab Tôi</Txt>
+            <Txt w={600}>Hồ sơ chưa hiện với khách</Txt>
           )}
         </View>
       </StudioHeader>
@@ -77,113 +82,121 @@ export default function Today() {
         })}
       >
         {bookings.error ? <ErrorNote text={bookings.error} onRetry={() => void bookings.reload()} /> : null}
-        {fee.owing ? <FeeCard fee={fee.value} /> : null}
 
-        <Card>
-          <Txt v="meta" color={colors.muted}>
-            Tuần này bạn nhận
-          </Txt>
-          <Txt v="hero" tabular>
-            {formatPrice(earned)}
-          </Txt>
-          <Txt v="meta" color={colors.inkSoft}>
-            {week.length} lịch đã xong, tính từ thứ 2, sau phí 360dep
-          </Txt>
-        </Card>
+        {pro && !pro.published ? <ProfileState status={review?.status ?? ""} note={review?.note ?? ""} /> : null}
+
+        {fee.owing ? <FeeCard fee={fee.value} /> : null}
 
         {bookings.loading || toAccept.length ? (
           <View style={{ gap: 12 }}>
-            <Txt v="title">Cần trả lời</Txt>
-            {bookings.loading ? <Skeleton style={{ height: 160, borderRadius: radius.lg }} /> : null}
-            {toAccept.length && fee.owing ? (
-              <Txt v="meta" color={colors.warning}>
-                {OWING_NOTE}
-              </Txt>
-            ) : null}
-            {toAccept.map((b) => {
-              const left = Date.parse(b.confirmBy) - now
-              const urgent = left > 0 && left < 30 * 60_000
-              return (
-                <Card key={b.id}>
-                  <Press onPress={() => router.push({ pathname: "/bookings/[id]", params: { id: b.id } })} accessibilityLabel={`${b.serviceName}, ${b.customer.name}. Xem chi tiết`} style={{ gap: 2 }}>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
-                      <Txt v="lead" style={{ flex: 1 }}>
-                        {b.serviceName}, {b.variantLabel}
-                      </Txt>
-                      <Txt v="lead" w={700} tabular color={colors.accentDark}>
-                        {formatPrice(b.quote.payout)}
-                      </Txt>
-                    </View>
-                    <Txt v="meta" color={colors.inkSoft}>
-                      {b.customer.name} · {b.atHome ? b.district : spa ? "Tại spa" : "Tại studio"} · {b.time}, {b.date.split("-").reverse().join("/")}
-                    </Txt>
-                  </Press>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                    <Icon name="clock" size={16} color={urgent ? colors.danger : colors.warning} />
-                    <Txt v="meta" w={600} color={urgent ? colors.danger : colors.warning}>
-                      {left > 0 ? `Còn ${formatCountdown(left)} để nhận` : "Quá hạn nhận"}
-                    </Txt>
-                  </View>
-                  <View style={{ flexDirection: "row", gap: 10, marginTop: 6 }}>
-                    <View style={{ flex: 1 }}>
-                      <Button label="Nhận lịch" full busy={busy === b.id} disabled={fee.owing} onPress={() => void accept(b)} />
-                    </View>
-                    <Button label="Từ chối" variant="secondary" onPress={() => router.push({ pathname: "/bookings/[id]", params: { id: b.id, decline: "1" } })} />
-                  </View>
-                </Card>
-              )
-            })}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Txt v="title">Cần bạn trả lời</Txt>
+              {toAccept.length ? (
+                <View style={{ minWidth: 24, height: 24, borderRadius: 12, paddingHorizontal: 7, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}>
+                  <Txt v="meta" w={700} color={colors.surface} tabular>
+                    {toAccept.length}
+                  </Txt>
+                </View>
+              ) : null}
+            </View>
+            {bookings.loading && !bookings.value ? <Skeleton style={{ height: 200, borderRadius: radius.lg }} /> : null}
+            {toAccept.map((b) => (
+              <PendingBookingCard key={b.id} booking={b} now={now} km={km(b)} spa={spa} blocked={fee.owing} onAccepted={accepted} onFailed={() => void fee.reload()} />
+            ))}
           </View>
         ) : null}
 
         <View style={{ gap: 12 }}>
           <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
-            <Txt v="title">Lịch hôm nay</Txt>
+            <Txt v="title">Sắp tới</Txt>
             <Press onPress={() => router.navigate("/studio/lich")} accessibilityRole="link" style={{ minHeight: 32, justifyContent: "center" }}>
               <Txt v="meta" w={600} color={colors.accentDark}>
                 Xem lịch
               </Txt>
             </Press>
           </View>
-          {!bookings.loading && !todays.length ? (
-            <Txt color={colors.inkSoft}>
-              Hôm nay trống lịch.{next ? ` Lịch gần nhất: ${next.time}, ${next.date.split("-").reverse().join("/")}.` : ""}
-            </Txt>
-          ) : null}
-          {spa && app.myPro ? (
+          {spa && pro ? (
             <BedBoard
-              beds={app.myPro.beds ?? 1}
+              beds={pro.beds ?? 1}
               bookings={all.filter((b) => b.date === today)}
-              hours={(app.myPro.openingHours ?? []).filter((h) => h.weekday === new Date(`${today}T00:00:00Z`).getUTCDay())}
+              hours={(pro.openingHours ?? []).filter((h) => h.weekday === new Date(`${today}T00:00:00Z`).getUTCDay())}
             />
           ) : null}
-          {todays.length ? (
-            <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 20 }}>
-              {todays.map((b, i) => (
-                <Press
-                  key={b.id}
-                  onPress={() => router.push({ pathname: "/bookings/[id]", params: { id: b.id } })}
-                  accessibilityLabel={`${b.time}, ${b.serviceName}, ${b.customer.name}`}
-                  style={{ flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 18, borderTopWidth: i ? hairline : 0, borderTopColor: colors.line }}
-                >
-                  <Txt v="title" tabular style={{ width: 62 }}>
-                    {b.time}
-                  </Txt>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <Txt w={600}>{b.serviceName}</Txt>
-                    <Txt v="meta" color={colors.inkSoft} numberOfLines={1}>
-                      {b.customer.name} · {b.atHome ? b.district : spa ? `Giường ${b.seat}` : "Tại studio"}
-                    </Txt>
-                  </View>
-                  <Icon name="right" size={14} color={colors.muted} />
-                </Press>
-              ))}
-            </View>
+          {!bookings.loading && !upcoming.length ? (
+            <Txt color={colors.inkSoft}>{hasPending ? "Chưa có lịch đã nhận trong 7 ngày tới." : "7 ngày tới chưa có lịch."}{later ? ` Còn ${later} lịch xa hơn trong tab Lịch.` : ""}</Txt>
+          ) : null}
+          {upcoming.slice(0, 5).map((b) => (
+            <UpcomingJobCard key={b.id} booking={b} now={now} spa={spa} />
+          ))}
+          {upcoming.length > 5 ? (
+            <Txt v="meta" color={colors.muted}>
+              Còn {upcoming.length - 5} lịch nữa trong tab Lịch.
+            </Txt>
           ) : null}
         </View>
 
         <PartnerAppointments date={today} reloadKey={bookings.value} />
+
+        <View style={{ gap: 12 }}>
+          <Txt v="title">Tiền tuần này</Txt>
+          <Press onPress={() => router.push("/vi")} accessibilityRole="button" accessibilityLabel="Mở ví" style={{ backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 18 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", paddingVertical: 16 }}>
+              <View style={{ gap: 2 }}>
+                <Txt>Bạn giữ</Txt>
+                <Txt v="meta" color={colors.muted}>
+                  {week.length} lịch xong từ thứ 2, đã trừ phí
+                </Txt>
+              </View>
+              <Txt v="title" tabular color={colors.accentDark}>
+                {formatPrice(kept)}
+              </Txt>
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 16, borderTopWidth: hairline, borderTopColor: colors.line }}>
+              <Txt>{owed > 0 ? "Phí cần chuyển 360đẹp" : "Số dư ví"}</Txt>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Txt w={700} tabular color={owed > 0 ? colors.danger : colors.ink}>
+                  {fee.value ? formatPrice(owed > 0 ? owed : fee.value.balance) : "—"}
+                </Txt>
+                <Icon name="right" size={14} color={colors.muted} />
+              </View>
+            </View>
+          </Press>
+        </View>
       </ScrollView>
+      {toast.element}
     </View>
+  )
+}
+
+/** Before the profile is live: what is left, or that it is waiting, or what to fix. */
+function ProfileState({ status, note }: { status: string; note: string }) {
+  const pending = status === "pending"
+  const refused = status === "changes_requested" || status === "rejected"
+  return (
+    <Card style={{ backgroundColor: refused ? colors.warningSoft : colors.surface, gap: 10 }}>
+      <Txt v="title" color={refused ? colors.warning : colors.ink}>
+        {pending ? "Hồ sơ đang chờ duyệt" : refused ? "Hồ sơ cần sửa" : "Hồ sơ chưa xong"}
+      </Txt>
+      {pending ? (
+        <Txt color={colors.inkSoft}>Thường xong trong 24 giờ, 360đẹp báo bạn ngay. Trong lúc chờ, đăng thêm tác phẩm để khách tin bạn hơn.</Txt>
+      ) : refused ? (
+        note
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .map((line) => (
+            <Txt key={line} color={colors.warning}>
+              • {line}
+            </Txt>
+          ))
+      ) : (
+        <Txt color={colors.inkSoft}>Làm nốt các bước rồi gửi duyệt. Khách chỉ thấy bạn sau khi hồ sơ được duyệt.</Txt>
+      )}
+      {pending ? (
+        <Button label="Đăng tác phẩm" icon="plus" variant="secondary" full onPress={() => router.navigate("/studio/dang")} />
+      ) : (
+        <Button label={refused ? "Sửa và gửi duyệt lại" : "Làm tiếp hồ sơ"} full onPress={() => router.push({ pathname: "/ho-so-doi-tac", params: refused ? { step: "5" } : {} })} />
+      )}
+    </Card>
   )
 }

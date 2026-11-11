@@ -119,7 +119,7 @@ export function EvidencePicker({
         ) : null}
       </View>
       <Txt v="meta" color={colors.muted}>
-        Tối đa {max} tệp, clip dài tối đa {VIDEO_MAX_SECONDS} giây. Chỉ bạn và đội ngũ 360dep xem được.
+        Tối đa {max} tệp, clip dài tối đa {VIDEO_MAX_SECONDS} giây. Chỉ bạn và đội ngũ 360đẹp xem được.
       </Txt>
     </View>
   )

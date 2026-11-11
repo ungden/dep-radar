@@ -20,7 +20,7 @@ import { Txt } from "@/ui/text"
 const SAFETY = [
   "Người tuyển không bao giờ được yêu cầu bạn chuyển tiền: không cọc, không phí hồ sơ.",
   "Tin có thù lao và tin tuyển mẫu ảnh chỉ mở cho người đã xác minh danh tính.",
-  "360dep không nhận tin chụp nội y, khoả thân hay nội dung nhạy cảm.",
+  "360đẹp không nhận tin chụp nội y, khoả thân hay nội dung nhạy cảm.",
   "Gặp ở nơi công khai hoặc studio có địa chỉ; báo người thân lịch của bạn.",
 ]
 
@@ -152,7 +152,7 @@ export default function CastingDetail() {
             {application.status === "pending" ? <Button label="Rút ứng tuyển" variant="secondary" size="sm" onPress={withdraw} /> : null}
           </Card>
         ) : c.mine ? (
-          <Txt color={colors.inkSoft}>Đây là tin của bạn. Xem người ứng tuyển trong 360dep Đối tác trên web.</Txt>
+          <Txt color={colors.inkSoft}>Đây là tin của bạn. Xem người ứng tuyển trong 360đẹp Đối tác trên web.</Txt>
         ) : !canApply ? (
           <Txt w={700}>Tin đã đủ người hoặc đã đóng.</Txt>
         ) : app.uid ? (

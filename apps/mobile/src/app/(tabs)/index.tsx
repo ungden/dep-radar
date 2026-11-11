@@ -4,7 +4,7 @@ import { Image } from "expo-image"
 import { router } from "expo-router"
 import { FlatList, ScrollView, View, useWindowDimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { CATEGORIES, REQUEST_GOALS, SPA, SPA_TINT, editorialTemplates, marketplaceFeed, type CategoryId, type MarketplaceTile, type ServiceTemplate } from "@/shared"
+import { CATEGORIES, SPA, SPA_TINT, editorialTemplates, marketplaceFeed, type CategoryId, type MarketplaceTile, type ServiceTemplate } from "@/shared"
 import { OfflineNote } from "@/components/offline-note"
 import { CategoryRail, Section, TileSkeleton, illustration, tileWidth } from "@/components/tiles"
 import { TextTabs } from "@/components/switches"
@@ -34,7 +34,7 @@ function EditorialTile({ template, width }: { template: ServiceTemplate; width: 
     </View>
     <Txt w={600} numberOfLines={2}>{template.name}</Txt>
     <Txt v="meta" color={colors.inkSoft}>Gợi ý dịch vụ</Txt>
-    <Txt v="meta" color={colors.accentDark} w={700}>Xem gói và gửi nhu cầu</Txt>
+    <Txt v="meta" color={colors.accentDark} w={700}>Xem gói và giá</Txt>
   </Press>
 }
 
@@ -143,16 +143,6 @@ export default function Explore() {
               })}
             </ScrollView>
           </View> : null}
-          <View style={{ paddingHorizontal: gutter, gap: 8 }}>
-            <Section title={requestCopy.vi.title} action="Xem dịch vụ" onAction={() => router.push("/yeu-cau/moi")} />
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              {REQUEST_GOALS.map((g) => <Press key={g.templateId}
-                onPress={() => router.push({ pathname: "/yeu-cau/moi", params: { template: g.templateId, variant: g.variantId } })}
-                style={{ minHeight: 44, justifyContent: "center", borderRadius: radius.full, paddingHorizontal: 12, backgroundColor: colors.accentSoft }}>
-                <Txt v="meta" w={600} color={colors.accentDark}>{g.label}</Txt>
-              </Press>)}
-            </View>
-          </View>
         </View>}
       />
     </View>

@@ -66,7 +66,7 @@ export default function PostWork() {
 
   const fromCamera = async () => {
     const perm = await ImagePicker.requestCameraPermissionsAsync()
-    if (!perm.granted) return Alert.alert("Chưa có quyền camera", "Bật quyền camera cho 360dep trong Cài đặt để chụp ảnh tác phẩm.")
+    if (!perm.granted) return Alert.alert("Chưa có quyền camera", "Bật quyền camera cho 360đẹp trong Cài đặt để chụp ảnh tác phẩm.")
     const res = await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 1, exif: false })
     if (!res.canceled) add(res.assets)
   }
@@ -74,7 +74,7 @@ export default function PostWork() {
   const pickVideo = async (camera: boolean) => {
     if (camera) {
       const perm = await ImagePicker.requestCameraPermissionsAsync()
-      if (!perm.granted) return Alert.alert("Chưa có quyền camera", "Bật quyền camera cho 360dep trong Cài đặt.")
+      if (!perm.granted) return Alert.alert("Chưa có quyền camera", "Bật quyền camera cho 360đẹp trong Cài đặt.")
     }
     const options: ImagePicker.ImagePickerOptions = {
       mediaTypes: ["videos"],

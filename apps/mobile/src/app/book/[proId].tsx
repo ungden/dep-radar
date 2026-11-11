@@ -23,7 +23,7 @@ import { ConductNote } from "@/components/conduct"
 import { needsConductNote } from "@/shared"
 import { colors, controlMetrics, fonts, gutter, radius, hairline } from "@/theme"
 import { Button, IconButton } from "@/ui/button"
-import { Card, Chip, EmptyState, ErrorNote, Line } from "@/ui/bits"
+import { Avatar, Card, Chip, EmptyState, ErrorNote, Line } from "@/ui/bits"
 import { haptic } from "@/ui/haptics"
 import { Icon } from "@/ui/icon"
 import { Press } from "@/ui/press"
@@ -56,6 +56,8 @@ function BookingFlow() {
   const keyboard = useKeyboardVisible()
   const { width, fontScale } = useWindowDimensions()
   const content = React.useRef<ScrollView>(null)
+  // Above every early return: the hook count must not change when the booking is sent.
+  const submitting = React.useRef(false)
   const largeText = fontScale >= 1.5
 
   const listed = React.useMemo(
@@ -242,7 +244,6 @@ function BookingFlow() {
 
   const addAddress = () => router.push({ pathname: "/dia-chi/sua", params: { city, district: district ?? "" } })
 
-  const submitting = React.useRef(false)
   const submit = async () => {
     if (submitting.current) return
     if (!app.uid) return router.push("/login")
@@ -299,7 +300,8 @@ function BookingFlow() {
 
   const next = () => (step < 4 ? setStep(step + 1) : void submit())
   // The last step never dead-ends: signed out it leads to sign-in, without an address to the address form.
-  const canNext = step <= 2 ? lines.length > 0 : step === 3 ? Boolean(picked) : Boolean(picked) && !tooFar
+  const secondOk = (variant?.sessions ?? 1) <= 1 || Boolean(picked && appointmentAt(secondDate, secondTime) && appointmentAt(secondDate, secondTime)! > picked.startsAt)
+  const canNext = step <= 2 ? lines.length > 0 : step === 3 ? Boolean(picked) : Boolean(picked) && !tooFar && secondOk
   const action =
     step === 1 ? "Xem giỏ" : step === 2 ? "Chọn giờ" : step === 3 ? "Tiếp tục" : !app.uid ? "Đăng nhập để đặt" : atHome && !address ? "Thêm địa chỉ" : !app.me.account?.phone ? "Thêm số điện thoại" : "Gửi lịch hẹn"
   const days = Array.from({ length: 14 }, (_, i) => addDays(todayISO(), i))
@@ -312,7 +314,14 @@ function BookingFlow() {
     { label: "Buổi tối", from: 18, to: 24 },
   ].map(group => ({ ...group, slots: daySlots?.filter(slot => Number(slot.time.slice(0, 2)) >= group.from && Number(slot.time.slice(0, 2)) < group.to) ?? [] })).filter(group => group.slots.length)
   const chooseDate = (value: string) => { setDate(value); setTime(null) }
-  const cartSummary = lines.length ? `${lines.length} món · ${formatDuration(minutes)}` : "Chưa chọn món"
+  const cartSummary = lines.length ? `${lines.length} dịch vụ · ${formatDuration(minutes)}` : "Chưa chọn dịch vụ"
+  // Came with a service chosen: only time and confirmation are left, so count two steps, not four.
+  const firstStep = cameFrom.length && step >= 3 ? 3 : 1
+  const stepCount = 4 - firstStep + 1
+  const stepAt = step - firstStep + 1
+  // What a first-time customer still has to do before "Gửi lịch hẹn", said once instead of three surprises.
+  const stillNeeded = [!app.uid && "đăng nhập", atHome && !address && (template?.onLocation ? "địa điểm" : "địa chỉ"), !app.me.account?.phone && "số điện thoại"].filter(Boolean) as string[]
+  const whatWithWhom = lines.length ? `${getTemplate(lines[0].templateId)?.name ?? ""}${lines.length > 1 ? ` + ${lines.length - 1} dịch vụ` : ""}` : ""
   const priceLabel = step <= 2 || !quote ? cartSummary : confirmedQuote ? "Tổng tiền" : "Tạm tính"
   const displayedPrice = formatPrice(quote?.total ?? servicePrice)
   const needsQuote = Boolean(app.uid && app.me.account?.phone && picked && (!atHome || address))
@@ -328,17 +337,27 @@ function BookingFlow() {
         }}
       />
       <ScrollView ref={content} style={{ flex: 1 }} contentContainerStyle={{ padding: gutter, gap: 16, paddingBottom: 24 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }} accessibilityLabel={`Bước ${step} trên 4`} accessible>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }} accessibilityLabel={`Bước ${stepAt} trên ${stepCount}`} accessible>
           <View style={{ flex: 1, flexDirection: "row", gap: 6 }}>
-            {[1, 2, 3, 4].map(number => <View key={number} style={{ flex: 1, height: 3, borderRadius: 2, backgroundColor: number <= step ? colors.accent : colors.subtleStrong }} />)}
+            {Array.from({ length: stepCount }, (_, i) => i + 1).map(number => <View key={number} style={{ flex: 1, height: 3, borderRadius: 2, backgroundColor: number <= stepAt ? colors.accent : colors.subtleStrong }} />)}
           </View>
-          <Txt v="controlMeta" color={colors.inkSoft}>{step}/4</Txt>
+          <Txt v="controlMeta" color={colors.inkSoft}>{stepAt}/{stepCount}</Txt>
         </View>
+        {step >= 3 && lines.length ? (
+          <Press onPress={() => setStep(2)} accessibilityRole="button" accessibilityLabel={`${whatWithWhom} với ${pro.name}. Sửa hoặc thêm dịch vụ`} style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.md, padding: 12 }}>
+            <Avatar name={pro.name} uri={pro.avatar} artist tone={pro.tone} size={40} />
+            <View style={{ flex: 1, gap: 2 }}>
+              <Txt v="control" w={600} numberOfLines={1}>{whatWithWhom}</Txt>
+              <Txt v="controlMeta" color={colors.inkSoft} numberOfLines={1}>{pro.name} · {formatDuration(minutes)}</Txt>
+            </View>
+            <Txt v="controlMeta" w={600} color={colors.accentDark}>Sửa</Txt>
+          </Press>
+        ) : null}
 
         {step === 1 && (params.template || params.cart) && !cameFrom.length ? <Txt color={colors.inkSoft}>Gói trước đó không còn khả dụng. Chọn lại dịch vụ.</Txt> : null}
         {step === 1 ? (
           <>
-            <Txt color={colors.inkSoft}>Chọn các món bạn muốn {pro.name} làm trong một lần hẹn.</Txt>
+            <Txt color={colors.inkSoft}>Chọn các dịch vụ bạn muốn {pro.name} làm trong một lần hẹn.</Txt>
             {listed
               .filter((l) => !getTemplate(l.templateId)!.addon || lines.some((line) => getTemplate(line.templateId)?.category === getTemplate(l.templateId)!.category))
               .sort((x, y) => Number(Boolean(getTemplate(x.templateId)!.addon)) - Number(Boolean(getTemplate(y.templateId)!.addon)))
@@ -372,7 +391,7 @@ function BookingFlow() {
 
         {step === 2 ? (
           <>
-            <Txt color={colors.inkSoft}>{spa ? "Một lịch tại spa, các món làm liền nhau." : "Một lịch, một Artist, làm liền nhau."}</Txt>
+            <Txt color={colors.inkSoft}>{spa ? "Một lịch tại spa, các dịch vụ làm liền nhau." : "Một lịch, một Artist, làm liền nhau."}</Txt>
             <View style={{ gap: 8 }}>
               {lines.map((line) => {
                 const t = getTemplate(line.templateId)!
@@ -411,8 +430,7 @@ function BookingFlow() {
 
         {step === 3 ? (
           <>
-            <Button label="Xem hoặc thêm dịch vụ" variant="secondary" size="sm" onPress={() => setStep(2)} />
-            <Txt color={colors.inkSoft}>Chỉ hiện giờ đủ {formatDuration(minutes)} làm liền.</Txt>
+            <Txt color={colors.inkSoft}>Giờ {pro.name} còn trống đủ {formatDuration(minutes)}:</Txt>
             {largeText ? <DateField compact label="Ngày hẹn" hideLabel value={date} onChange={chooseDate} maxDate={days[days.length - 1]} /> : <View style={{ gap: 12 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Icon name="calendar" size={20} color={colors.accentDark} />
@@ -494,6 +512,14 @@ function BookingFlow() {
 
         {step === 4 && template ? (
           <>
+            {stillNeeded.length ? (
+              <View style={{ flexDirection: "row", gap: 10, alignItems: "flex-start", backgroundColor: colors.accentSoft, borderRadius: radius.md, padding: 14 }}>
+                <Icon name="info" size={18} color={colors.accentDark} />
+                <Txt v="controlMeta" color={colors.accentDark} style={{ flex: 1 }}>
+                  Trước khi gửi, còn {stillNeeded.join(", ")}. Lựa chọn của bạn vẫn giữ nguyên.
+                </Txt>
+              </View>
+            ) : null}
             {atHome ? (
               <View style={{ gap: 8 }}>
                 <Txt v="lead" w={700}>
@@ -571,9 +597,11 @@ function BookingFlow() {
                 {quote.travelFee ? <Line label={`Phí di chuyển${quote.distanceKm !== null ? ` (~${formatKm(quote.distanceKm)})` : ""}`} value={formatPrice(quote.travelFee)} /> : null}
                 {quote.urgentFee ? <Line label="Phí gấp" value={formatPrice(quote.urgentFee)} /> : null}
                 <Line label={confirmedQuote ? "Tổng tiền" : "Tạm tính"} value={formatPrice(quote.total)} strong />
-                <Txt v="meta" color={colors.muted}>
-                  {spa ? `${SPA.payAtSpa}.` : "Thanh toán sau khi làm xong."} {atHome ? "Khoảng cách ước tính theo phường/xã. " : ""}Giá được xác nhận lại khi gửi lịch. Huỷ trước giờ hẹn không mất phí; nên huỷ trước {POLICY.freeCancelHours} tiếng để {spa ? "spa" : "Artist"} kịp sắp xếp.
-                </Txt>
+                <View style={{ gap: 4, paddingTop: 4 }}>
+                  <Txt v="meta" color={colors.inkSoft}>• {spa ? `${SPA.payAtSpa}.` : `Trả ${pro.name} sau khi làm xong.`}</Txt>
+                  <Txt v="meta" color={colors.inkSoft}>• Huỷ trước giờ hẹn không mất phí; nên báo trước {POLICY.freeCancelHours} tiếng.</Txt>
+                  {atHome ? <Txt v="meta" color={colors.muted}>• Phí di chuyển ước tính theo phường/xã.</Txt> : null}
+                </View>
               </Card>
             ) : null}
             {noteOpen ? <View style={{ gap: 8 }}>

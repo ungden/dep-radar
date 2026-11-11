@@ -1,6 +1,6 @@
 import * as React from "react"
 import * as AppleAuthentication from "expo-apple-authentication"
-import { Stack, router } from "expo-router"
+import { Stack, router, useLocalSearchParams } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -10,6 +10,7 @@ import { webLink } from "@/data/links"
 import { loadSupportZalo } from "@/data/support"
 import { agreedBeforeSignIn, hasAcceptedTerms, rememberAgreementBeforeSignIn } from "@/data/terms"
 import { supabase } from "@/data/supabase"
+import { switchRole } from "@/data/actions"
 import { Field, InfoNote, PasswordField } from "@/components/auth-fields"
 import { useApp } from "@/state/app"
 import { colors, gutter, radius } from "@/theme"
@@ -34,6 +35,8 @@ type Busy = "password" | "forgot" | "google" | "apple" | null
  */
 export default function Login() {
   const app = useApp()
+  // Opened from a tab (not mid-booking): a partner goes straight to Studio after signing in.
+  const { home } = useLocalSearchParams<{ home?: string }>()
   const insets = useSafeAreaInsets()
   const [mode, setMode] = React.useState<Mode>("signin")
   const [identifier, setIdentifier] = React.useState("")
@@ -89,9 +92,17 @@ export default function Login() {
     const agreed = user ? await hasAcceptedTerms(user.id) : true
     const needsEmail = Boolean(user && needsRecoveryEmail(user) && !(await recoveryEmailAsked(user.id)))
     const after = needsEmail ? "email" : "back"
-    if (!agreed) router.replace({ pathname: "/dieu-khoan", params: { next: after } })
-    else if (after === "email") router.replace({ pathname: "/them-email", params: { first: "1" } })
-    else router.back()
+    if (!agreed) return router.replace({ pathname: "/dieu-khoan", params: { next: after } })
+    if (after === "email") return router.replace({ pathname: "/them-email", params: { first: "1" } })
+    // A partner who signs in from a tab has work waiting in Studio, not in the customer's tabs.
+    const partner = home === "1" && user ? (await supabase.from("pros").select("id").eq("id", user.id).maybeSingle()).data : null
+    if (partner && user) {
+      // Studio's layout marks the session as partner mode once the account has loaded.
+      await switchRole(user.id, "pro")
+      router.dismissAll()
+      return router.replace("/studio")
+    }
+    router.back()
   }
 
   const run = async (which: Exclude<Busy, null | "forgot">) => {
@@ -194,7 +205,7 @@ export default function Login() {
             haptic="select"
             accessibilityRole="checkbox"
             accessibilityState={{ checked: agreed }}
-            accessibilityLabel="Tôi đồng ý với Điều khoản sử dụng của 360dep"
+            accessibilityLabel="Tôi đồng ý với Điều khoản sử dụng của 360đẹp"
             style={{
               width: 44,
               height: 44,
@@ -213,7 +224,7 @@ export default function Login() {
             <Txt v="meta" w={700} color={colors.accent} onPress={() => router.push({ pathname: "/dieu-khoan", params: { mode: "read" } })}>
               Điều khoản sử dụng
             </Txt>{" "}
-            của 360dep và chính sách xử lý nội dung vi phạm trong điều khoản.
+            của 360đẹp và chính sách xử lý nội dung vi phạm trong điều khoản.
           </Txt>
         </View>
 
@@ -246,7 +257,7 @@ export default function Login() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
               <View style={{ flex: 1, height: 1, backgroundColor: colors.line }} />
               <Txt v="meta" color={colors.muted}>
-                hoặc dùng email
+                hoặc dùng email, số điện thoại
               </Txt>
               <View style={{ flex: 1, height: 1, backgroundColor: colors.line }} />
             </View>
@@ -324,7 +335,7 @@ export default function Login() {
             <Txt v="meta" w={600} color={colors.accent}>
               điều khoản và chính sách
             </Txt>{" "}
-            của 360dep.
+            của 360đẹp.
           </Txt>
         </Press>
       </ScrollView>

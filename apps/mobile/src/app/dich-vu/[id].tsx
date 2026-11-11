@@ -9,7 +9,7 @@ import { PostCard } from "@/components/cards"
 import { illustration, offerRating } from "@/components/tiles"
 import { useApp } from "@/state/app"
 import { ConductNote } from "@/components/conduct"
-import { needsConductNote } from "@/shared"
+import { needsConductNote, requestSelection } from "@/shared"
 import { colors, gutter, radius, hairline } from "@/theme"
 import { Button } from "@/ui/button"
 import { Avatar, Card, Divider, EmptyState, ErrorNote, Photo, Rating, Skeleton, VerifiedMark } from "@/ui/bits"
@@ -67,6 +67,8 @@ export default function ServiceScreen() {
 
   // Nobody to book: 360đẹp's own price bands are still the real starting prices.
   const packages = availablePackages.length || minTotal || maxTotal ? availablePackages : template.variants.map((variant) => ({ variant, price: variant.tiers[0] }))
+  // A package row opens the order for that package, when it can be ordered this way.
+  const requestable = (variantId: string) => requestSelection(template.id, variantId)?.variant.id === variantId
 
   // Who can be booked right now, and from how much.
   const bookable = ranked.filter((p) => p.acceptingJobs)
@@ -161,7 +163,7 @@ export default function ServiceScreen() {
         {/* Way one: an Artist takes the order */}
         <View style={{ marginHorizontal: gutter, marginTop: -8, padding: 14, gap: 10, borderRadius: radius.lg, backgroundColor: colors.accentSoft }}>
           <View style={{ gap: 2 }}>
-            <Txt v="title">Để Artist nhận đơn</Txt>
+            <Txt v="title">Đặt theo nhu cầu</Txt>
             <Txt v="meta" color={colors.inkSoft}>
               Bạn chọn gói và giờ, Artist nhận trước sẽ đến.
             </Txt>
@@ -208,14 +210,15 @@ export default function ServiceScreen() {
             <Txt v="title" w={700}>Gói & giá</Txt>
             {packages.length ? packages.map(({ variant: v, price }, i) => <View key={v.id}>
               {i > 0 && <Divider />}
-              <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12, paddingVertical: 14 }}>
+              <Press onPress={requestable(v.id) ? () => router.push({ pathname: "/yeu-cau/moi", params: { template: template.id, variant: v.id } }) : undefined} accessibilityRole={requestable(v.id) ? "button" : "text"} accessibilityLabel={`${v.label}, từ ${formatPrice(price)}${requestable(v.id) ? ". Đặt gói này" : ""}`} style={{ flexDirection: "row", alignItems: "flex-start", gap: 12, paddingVertical: 14 }}>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Txt w={600}>{v.label}</Txt>
                   <Txt v="meta" color={colors.inkSoft}>{formatDuration(serviceDuration(v, serviceQuantity(v)))}</Txt>
                   {(v.minQuantity ?? 1) > 1 && <Txt v="meta" color={colors.inkSoft}>Tối thiểu {v.minQuantity} người · từ {formatPrice(price * v.minQuantity!)}/nhóm</Txt>}
                 </View>
                 <Txt w={700} tabular color={colors.accentDark}>Từ {formatPrice(price)}{v.perPerson ? "/người" : ""}</Txt>
-              </View>
+                {requestable(v.id) ? <Icon name="right" size={14} color={colors.muted} style={{ marginTop: 5 }} /> : null}
+              </Press>
             </View>) : <Txt color={colors.inkSoft} style={{ marginVertical: 12 }}>Chưa có gói phù hợp với lựa chọn này.</Txt>}
             <Button label={showPriceFrame ? "Ẩn khung giá tham khảo" : "Xem khung 3 mức giá"} variant="ghost" full onPress={() => setShowPriceFrame((v) => !v)} />
             {showPriceFrame && <View style={{ gap: 16, marginTop: 12 }}>

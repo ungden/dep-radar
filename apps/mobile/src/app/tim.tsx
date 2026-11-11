@@ -183,9 +183,9 @@ export default function Search() {
         text={
           active.length
             ? "Thử bỏ bớt bộ lọc, hoặc đăng yêu cầu để Artist nhận việc."
-            : `Đăng yêu cầu, Artist${app.city ? ` ở ${app.city}` : ""} sẽ thấy và nhận việc. Không mất phí đăng.`
+            : `Đặt theo nhu cầu: Artist${app.city ? ` ở ${app.city}` : ""} phù hợp sẽ nhận. Không mất phí.`
         }
-        action="Đăng yêu cầu"
+        action="Đặt theo nhu cầu"
         onAction={() => router.push("/yeu-cau/moi")}
       />
       {active.length ? <Button label="Bỏ tất cả bộ lọc" variant="ghost" full onPress={() => setFilters(NONE)} /> : null}

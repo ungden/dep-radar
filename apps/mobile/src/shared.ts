@@ -40,3 +40,4 @@ export * from "@shared/request-goals"
 export * from "@shared/request-copy"
 
 export * from "@shared/payments/vietqr"
+export { hasMcnMembership } from "@shared/mcn-types"

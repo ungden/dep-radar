@@ -64,7 +64,7 @@ export default function Me() {
             haptic.success()
             await app.signOut()
             router.replace("/")
-            Alert.alert("Đã xoá tài khoản", "Cảm ơn bạn đã dùng 360dep.")
+            Alert.alert("Đã xoá tài khoản", "Cảm ơn bạn đã dùng 360đẹp.")
           },
         },
       ],
@@ -88,6 +88,20 @@ export default function Me() {
           ) : null}
         </View>
       </View>
+      {app.myPro ? (
+        <Press onPress={() => void toPartner()} accessibilityRole="button" accessibilityLabel="Mở Studio đối tác" style={{ flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: colors.accent, borderRadius: radius.md, padding: 16 }}>
+          <Icon name="swap" size={22} color={colors.surface} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <Txt w={700} color={colors.surface}>
+              Mở Studio đối tác
+            </Txt>
+            <Txt v="meta" color={colors.surface}>
+              Nhận lịch, xem lịch làm và ví của bạn.
+            </Txt>
+          </View>
+          <Icon name="right" size={14} color={colors.surface} />
+        </Press>
+      ) : null}
       {!account?.phone ? (
         <Press onPress={() => router.push("/so-dien-thoai")} style={{ backgroundColor: colors.warningSoft, borderRadius: radius.md, padding: 14 }}>
           <Txt w={700} color={colors.warning}>
@@ -112,24 +126,16 @@ export default function Me() {
       <Section>
         <Row icon="heart" label="Đã lưu" detail={app.me.savedWorkIds.length ? String(app.me.savedWorkIds.length) : undefined} onPress={() => router.push("/da-luu")} />
         <Divider style={{ marginLeft: 52 }} />
-        <Row icon="megaphone" label="Đơn theo dịch vụ" onPress={() => router.push("/yeu-cau")} />
+        <Row icon="megaphone" label="Đơn theo nhu cầu" onPress={() => router.push("/yeu-cau")} />
         <Divider style={{ marginLeft: 52 }} />
         <Row icon="home" label="Địa chỉ" detail={app.me.addresses.length ? String(app.me.addresses.length) : undefined} onPress={() => router.push("/dia-chi")} />
         <Divider style={{ marginLeft: 52 }} />
-        <Row icon="chat" label="Tin nhắn" onPress={() => router.push("/tin-nhan")} />
+        <Row icon="chat" label="Tin nhắn" detail={app.me.unreadMessages ? `${app.me.unreadMessages} mới` : undefined} onPress={() => router.push("/tin-nhan")} />
         <Divider style={{ marginLeft: 52 }} />
-        <Row icon="bell" label="Thông báo" onPress={() => router.push("/thong-bao")} />
+        <Row icon="bell" label="Thông báo" detail={app.me.unreadNotifications ? `${app.me.unreadNotifications} mới` : undefined} onPress={() => router.push("/thong-bao")} />
         <Divider style={{ marginLeft: 52 }} />
         <Row icon="gift" label="Giới thiệu bạn bè và voucher" onPress={() => router.push("/gioi-thieu")} />
       </Section>
-
-      {app.myPro ? (
-        <Section>
-          <Row icon="megaphone" label="Đơn khách đang cần" onPress={() => void toPartner(true)} />
-          <Divider style={{ marginLeft: 52 }} />
-          <Row icon="swap" label="Chuyển sang 360dep Đối tác" onPress={() => void toPartner()} />
-        </Section>
-      ) : null}
 
       <Section>
         <Row icon="edit" label={account?.phone ? "Đổi số điện thoại" : "Thêm số điện thoại"} onPress={() => router.push("/so-dien-thoai")} />
@@ -161,9 +167,9 @@ export default function Me() {
       {app.myPro ? null : (
         <Press onPress={() => router.push("/doi-tac")} accessibilityRole="link" style={{ paddingVertical: 8, paddingHorizontal: 8 }}>
           <Txt v="meta" color={colors.muted} center>
-            Bạn là thợ, người chụp ảnh hay người mẫu?{" "}
+            Bạn làm makeup, nail, chụp ảnh hay mở spa?{" "}
             <Txt v="meta" w={600} color={colors.accentDark}>
-              Trở thành đối tác 360dep
+              Trở thành đối tác 360đẹp
             </Txt>
           </Txt>
         </Press>

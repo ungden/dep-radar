@@ -90,3 +90,12 @@ export interface McnApplication {
   bankAccount: string
   bankHolder: string
 }
+
+/**
+ * MCN is opened partner by partner (owner, 10/11/2026): almost every Artist
+ * works alone, so the network entry only shows to someone with a live invite
+ * or membership. Ended, declined and expired ones count as none.
+ */
+export function hasMcnMembership(memberships: { status: string; isMine: boolean }[] | null | undefined) {
+  return Boolean(memberships?.some((m) => m.isMine && (m.status === "active" || m.status === "invited")))
+}

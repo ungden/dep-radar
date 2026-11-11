@@ -64,6 +64,9 @@ export default function NewRequest() {
   const [photos, setPhotos] = React.useState<PickedPhoto[]>([])
   const [date, setDate] = React.useState(addDays(todayISO(), 2))
   const [time, setTime] = React.useState("16:00")
+  // Nothing is chosen for the customer: a service and a time are picked, not accepted by pressing "Tiếp tục".
+  const [serviceChosen, setServiceChosen] = React.useState(Boolean(given))
+  const [timeChosen, setTimeChosen] = React.useState(false)
   const [addressId, setAddressId] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -76,7 +79,7 @@ export default function NewRequest() {
     }, []),
   )
 
-  const dirty = !sent && (Boolean(description.trim()) || photos.length > 0)
+  const dirty = !sent && (step > 1 || timeChosen || Boolean(description.trim()) || photos.length > 0)
   const leaving = React.useRef(false)
   React.useEffect(() => {
     if (!dirty) return
@@ -120,7 +123,7 @@ export default function NewRequest() {
   const name = STEPS[step]
   const openTimes = TIMES.filter((t) => !isTooSoon(date, t))
   const canContinue =
-    name === "package" ? (variant.sessions ?? 1) === 1 && !tpl.studioOnly : name === "service" ? !tpl.studioOnly : name === "when" ? openTimes.includes(time) : true
+    name === "package" ? (variant.sessions ?? 1) === 1 && !tpl.studioOnly : name === "service" ? serviceChosen && !tpl.studioOnly : name === "when" ? timeChosen && openTimes.includes(time) : true
   const timeWidth = Math.floor((width - gutter * 2 - 20) / 3)
 
   const pickCategory = (c: CategoryId) => {
@@ -130,6 +133,7 @@ export default function NewRequest() {
   }
   // A different package has different levels: start again from its "Tiêu chuẩn" one.
   const pickVariant = (template: string, id: string) => {
+    setServiceChosen(true)
     setTemplateId(template)
     setVariantId(id)
     setTier(null)
@@ -139,7 +143,7 @@ export default function NewRequest() {
   const submitting = React.useRef(false)
   const submit = async () => {
     if (submitting.current) return
-    if (!openTimes.includes(time)) return setError("Hãy chọn giờ còn đủ thời gian để chuyên viên nhận và di chuyển.")
+    if (!openTimes.includes(time)) return setError("Hãy chọn giờ còn đủ thời gian để Artist nhận và di chuyển.")
     if (!app.uid) return router.push("/login")
     if (!chosen) return router.push({ pathname: "/dia-chi/sua", params: { city: app.city ?? "" } })
     if (!app.me.account?.phone) return router.push("/so-dien-thoai")
@@ -211,7 +215,7 @@ export default function NewRequest() {
               <CategoryTiles items={requestCategories.map((c) => ({ id: c.id, label: c.label }))} value={category} onChange={(id) => pickCategory(id as CategoryId)} />
               <View style={{ gap: 12 }}>
                 {templates.filter((t) => !t.addon).map((t) => (
-                  <Option key={t.id} title={t.name} selected={t.id === tpl.id} onPress={() => pickVariant(t.id, requestSelection(t.id)!.variant.id)} />
+                  <Option key={t.id} title={t.name} selected={serviceChosen && t.id === tpl.id} onPress={() => pickVariant(t.id, requestSelection(t.id)!.variant.id)} />
                 ))}
               </View>
               {tpl.studioOnly ? (
@@ -315,12 +319,12 @@ export default function NewRequest() {
                     </Txt>
                     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
                       {times.map((t) => {
-                        const selected = t === time
+                        const selected = timeChosen && t === time
                         return (
                           <Press
                             key={t}
                             haptic="select"
-                            onPress={() => setTime(t)}
+                            onPress={() => { setTime(t); setTimeChosen(true) }}
                             accessibilityState={{ selected }}
                             style={{ width: timeWidth, height: 48, borderRadius: radius.md, alignItems: "center", justifyContent: "center", backgroundColor: selected ? colors.accent : colors.surface }}
                           >
@@ -358,13 +362,13 @@ export default function NewRequest() {
               </View>
               <View style={{ gap: 12 }}>
                 <View style={{ gap: 2 }}>
-                  <Txt v="title">Phí di chuyển tối đa</Txt>
+                  <Txt v="title">Artist ở xa tới đâu?</Txt>
                   <Txt v="meta" color={colors.muted}>
-                    Artist ở xa hơn mức này sẽ không nhận được đơn.
+                    Xa hơn thì phí di chuyển cao hơn, nhưng nhiều Artist nhận được đơn hơn.
                   </Txt>
                 </View>
                 {[POLICY.nearTravelFee, POLICY.travelFeeCap].map((n) => (
-                  <Option key={n} title={formatPrice(n)} selected={n === feeLimit} onPress={() => setFeeLimit(n)} />
+                  <Option key={n} title={n === POLICY.nearTravelFee ? `Gần tôi, dưới ${POLICY.nearTravelKm} km` : "Xa hơn cũng được"} trailing={n === POLICY.nearTravelFee ? formatPrice(n) : `tối đa ${formatPrice(n)}`} selected={n === feeLimit} onPress={() => setFeeLimit(n)} />
                 ))}
               </View>
             </>
@@ -414,9 +418,9 @@ export default function NewRequest() {
       <BookingBar
         inline
         keyboard={keyboard}
-        title={formatPrice(price * heads)}
-        note={heads > 1 ? `${formatPrice(price)} × ${heads} người, chưa gồm phí di chuyển` : "Chưa gồm phí di chuyển"}
-        action={name !== "confirm" ? "Tiếp tục" : busy ? "Đang gửi…" : !app.uid ? "Đăng nhập để đặt" : !chosen ? "Thêm địa chỉ" : "Tìm Artist"}
+        title={serviceChosen ? formatPrice(price * heads) : "Chọn dịch vụ"}
+        note={!serviceChosen ? "Giá hiện khi bạn chọn" : heads > 1 ? `${formatPrice(price)} × ${heads} người, chưa gồm phí di chuyển` : "Chưa gồm phí di chuyển"}
+        action={name !== "confirm" ? (name === "when" && !timeChosen ? "Chọn giờ" : "Tiếp tục") : busy ? "Đang gửi…" : !app.uid ? "Đăng nhập để đặt" : !chosen ? "Thêm địa chỉ" : !app.me.account?.phone ? "Thêm số điện thoại" : "Tìm Artist"}
         disabled={name === "confirm" ? !valid : !canContinue}
         busy={busy}
         onPress={() => (name === "confirm" ? void submit() : setStep((n) => n + 1))}

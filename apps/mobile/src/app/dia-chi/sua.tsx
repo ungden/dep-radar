@@ -31,6 +31,8 @@ export default function EditAddress() {
   const [detail, setDetail] = React.useState(existing?.detail ?? "")
   const [note, setNote] = React.useState(existing?.note ?? "")
   const [isDefault, setIsDefault] = React.useState(existing ? existing.isDefault : app.me.addresses.length === 0)
+  // A new address asks where; a name, a note and "default" are there if wanted.
+  const [more, setMore] = React.useState(Boolean(existing))
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -82,14 +84,6 @@ export default function EditAddress() {
         }}
       />
       <ScrollView contentContainerStyle={{ padding: gutter, gap: 20 }} keyboardShouldPersistTaps="handled">
-        <Group title="Tên gọi">
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {LABELS.map((l) => (
-              <Chip key={l} label={l} selected={label === l} onPress={() => setLabel(l)} />
-            ))}
-          </View>
-          <TextInput value={label} onChangeText={setLabel} selectTextOnFocus maxLength={40} placeholder="Nhà" placeholderTextColor={colors.muted} style={[input, { height: 48 }]} accessibilityLabel="Tên gọi địa chỉ" />
-        </Group>
         <Group title="Thành phố">
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {CITIES.map((c) => (
@@ -136,6 +130,16 @@ export default function EditAddress() {
             accessibilityLabel="Số nhà, tên đường"
           />
         </Group>
+        {more ? (
+          <>
+        <Group title="Tên gọi">
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {LABELS.map((l) => (
+              <Chip key={l} label={l} selected={label === l} onPress={() => setLabel(l)} />
+            ))}
+          </View>
+          <TextInput value={label} onChangeText={setLabel} selectTextOnFocus maxLength={40} placeholder="Nhà" placeholderTextColor={colors.muted} style={[input, { height: 48 }]} accessibilityLabel="Tên gọi địa chỉ" />
+        </Group>
         <Group title="Ghi chú cho Artist">
           <TextInput
             value={note}
@@ -157,6 +161,10 @@ export default function EditAddress() {
           </View>
           <Switch value={isDefault} onValueChange={setIsDefault} trackColor={{ true: colors.accent, false: colors.subtleStrong }} accessibilityLabel="Địa chỉ mặc định" />
         </View>
+          </>
+        ) : (
+          <Button label="Thêm tên gọi, ghi chú cho Artist" variant="ghost" full onPress={() => setMore(true)} />
+        )}
         {error ? <ErrorNote text={error} /> : null}
         {existing ? <Button label="Xoá địa chỉ" variant="danger" icon="trash" full onPress={remove} /> : null}
       </ScrollView>

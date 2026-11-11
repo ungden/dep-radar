@@ -35,9 +35,9 @@ export function VoucherCard({ booking: b, uid, onChanged }: { booking: BookingIt
   if (b.voucherId && b.discount > 0) {
     return (
       <Card>
-        <Txt w={700}>Voucher 360dep −{formatPrice(b.discount)}</Txt>
+        <Txt w={700}>Voucher 360đẹp −{formatPrice(b.discount)}</Txt>
         <Txt v="meta" color={colors.inkSoft}>
-          Bạn trả {b.pro.name} {formatPrice(Math.max(0, b.quote.total - b.discount))}; 360dep trả phần voucher cho Artist khi xong. Lịch không diễn ra thì voucher được trả lại.
+          Bạn trả {b.pro.name} {formatPrice(Math.max(0, b.quote.total - b.discount))}; 360đẹp trả phần voucher cho Artist khi xong. Lịch không diễn ra thì voucher được trả lại.
         </Txt>
         <Button label="Bỏ voucher" size="sm" variant="secondary" busy={busy === "remove"} onPress={() => void act("remove", () => removeVoucher(b.id))} />
       </Card>

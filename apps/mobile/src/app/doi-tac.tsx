@@ -18,20 +18,20 @@ export default function Partner() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.canvas }} contentContainerStyle={{ padding: gutter, gap: 16 }}>
-      <Txt v="h2">Trở thành đối tác 360dep</Txt>
+      <Txt v="h2">Trở thành đối tác 360đẹp</Txt>
       <Txt color={colors.inkSoft}>
-        Dành cho thợ làm đẹp, người chụp ảnh, quay clip và người mẫu. Tài khoản khách của bạn giữ nguyên; phần đối tác tách riêng.
+        Dành cho Artist làm đẹp, chụp ảnh, quay clip, spa và người mẫu. Tài khoản khách của bạn giữ nguyên; phần đối tác tách riêng.
       </Txt>
       <Option
         icon={<CategoryIcon id="camera" size={36} />}
-        title="Thợ, người chụp ảnh, quay clip"
+        title="Artist, chụp ảnh, quay clip, spa"
         text="Mở hồ sơ đối tác, đăng dịch vụ và bảng giá, nhận lịch từ khách. Lưu từng bước ngay trong app."
         onPress={() => void openProfile()}
       />
       <Option
         icon={<CategoryIcon id="model-photo" size={36} />}
         title="Người mẫu"
-        text="Xem tin tuyển mẫu: làm mẫu cho thợ, được làm đẹp miễn phí hoặc có thù lao."
+        text="Xem tin tuyển mẫu: làm mẫu cho Artist, được làm đẹp miễn phí hoặc có thù lao."
         onPress={() => router.push("/tuyen-mau")}
       />
     </ScrollView>
